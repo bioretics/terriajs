@@ -43,10 +43,10 @@ const MyDataTab = createReactClass({
                                 <button type='button'
                                         onClick={this.onBackButtonClicked}
                                         className={Styles.btnBackToMyData}>
-                                    Back
+                                    Indietro
                                 </button>
                             </If>
-                            <h3 className={Styles.h3}>Adding your own data</h3>
+                            <h3 className={Styles.h3}>Aggiungi</h3>
                             <AddData terria={this.props.terria}
                                      viewState={this.props.viewState}/>
                         </div>
@@ -54,8 +54,7 @@ const MyDataTab = createReactClass({
                     <If condition={this.hasUserAddedData()}>
                         <div className={Styles.addedData}>
                             <p className={Styles.explanation}>
-                                Data added in this way is not saved or made visible to others unless you explicitly share
-                                it by using the Share panel.
+                                I layer aggiunti in questo modo non sono salvati o resi visibili ad altri a meno di una esplicita condivisione tramite la funzione "Condividi".
                             </p>
                             <ul className={Styles.dataCatalog}>
                                 <DataCatalogGroup group={this.props.terria.catalog.userAddedDataGroup}
@@ -64,7 +63,7 @@ const MyDataTab = createReactClass({
                             <button type='button'
                                     onClick={this.onAddMoreDataButtonClicked}
                                     className={Styles.btnAddMoreData}>
-                                Add more data
+                                Aggiungi
                             </button>
                         </div>
                     </If>

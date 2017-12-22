@@ -46,7 +46,7 @@ const MappablePreview = createReactClass({
                 </If>
                 <button type='button' onClick={this.toggleOnMap}
                         className={Styles.btnAdd}>
-                    {this.props.previewed.isEnabled ? 'Remove from the map' : 'Add to the map'}
+                    {this.props.previewed.isEnabled ? 'Rimuovi dalla mappa' : 'Aggiungi alla mappa'}
                 </button>
                 <div className={Styles.previewedInfo}>
                     <h3 className={Styles.h3}>{catalogItem.name}</h3>

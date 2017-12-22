@@ -50,7 +50,7 @@ const Tabs = createReactClass({
         } else {
             return [
                 {
-                    name: 'Data Catalogue',
+                    name: 'Catalogo',
                     title: 'data-catalog',
                     category: 'data-catalog',
                     panel: <DataCatalogTab terria={this.props.terria}

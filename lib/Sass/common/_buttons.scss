@@ -26,7 +26,8 @@ $btn-setting-size: 35px;
     box-shadow: none;
     border-color: transparent;
     outline: none;
-    opacity: 0.9;
+    opacity: 0.75;
+    background: lighten($color-primary, 10%);
   }
 }
 

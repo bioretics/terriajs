@@ -84,7 +84,7 @@ const SidePanel = createReactClass({
                                searchText={searchState.locationSearchText} />
                     <div className={Styles.addData}>
                         <button type='button' onClick={this.onAddDataClicked} className={Styles.button}>
-                            <Icon glyph={Icon.GLYPHS.add}/>Add data
+                            <Icon glyph={Icon.GLYPHS.add}/>Aggiungi layer
                         </button>
                     </div>
                 </div>
@@ -102,14 +102,13 @@ const SidePanel = createReactClass({
                         </When>
                         <Otherwise>
                             <div className={Styles.workbenchEmpty}>
-                                <div>Your workbench is empty</div>
-                                <p><strong>Click &apos;Add data&apos; above to:</strong></p>
+                                <div>Il pannello dei layer è vuoto</div>
+                                <p><strong>Clicca su 'Aggiungi layer' per:</strong></p>
                                 <ul>
-                                    <li>Browse the Data Catalogue</li>
-                                    <li>Load your own data onto the map</li>
+                                    <li>visionare il catalogo corrente</li>
+                                    <li>caricare nuovi dati</li>
                                 </ul>
-                                <p><Icon glyph={Icon.GLYPHS.bulb}/><strong>TIP:</strong> <em>All your active data sets will be listed
-                                    here</em></p>
+                                <p><Icon glyph={Icon.GLYPHS.bulb}/><strong>INFO:</strong> <em>Tutti i layer attivi saranno elencati qui</em></p>
                             </div>
                         </Otherwise>
                     </Choose>

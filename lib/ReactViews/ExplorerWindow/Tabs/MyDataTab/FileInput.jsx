@@ -15,7 +15,7 @@ const FileInput = createReactClass({
 
     getInitialState() {
         return {
-            value: 'Browse for local data',
+            value: 'Cerca layer locali',
             hovered: false
         };
     },
@@ -37,7 +37,7 @@ const FileInput = createReactClass({
                 <input type='file' onChange={this.handleChange} accept={this.props.accept} className={Styles.input}/>
                 <label
                     className={classNames(Styles.btn, {[Styles.btnHover]: this.state.hovered})}>
-                    {this.state.value ? this.state.value : 'Browse for local data'}
+                    {this.state.value ? this.state.value : 'Cerca layer locali'}
                 </label>
             </form>
         );

@@ -66,7 +66,7 @@ const WorkbenchItem = createReactClass({
                         <li className={Styles.visibilityColumn}>
                             <button type='button'
                                     onClick={this.toggleVisibility}
-                                    title="Data show/hide"
+                                    title="Mostra/nascondi layer sulla mappa"
                                     className={Styles.btnVisibility}>
                                     {workbenchItem.isShown ? <Icon glyph={Icon.GLYPHS.checkboxOn}/> : <Icon glyph={Icon.GLYPHS.checkboxOff}/>}
                             </button>

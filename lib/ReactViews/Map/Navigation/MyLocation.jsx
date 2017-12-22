@@ -60,8 +60,8 @@ const MyLocation = createReactClass({
         } else {
             this.props.terria.error.raiseEvent(new TerriaError({
                 sender: this,
-                title: 'Error getting location',
-                message: 'Your browser cannot provide your location.'
+                title: 'Impossibile rilevare la posizione',
+                message: 'Il browser non support la rilevazione di posizione.'
             }));
         }
     },
@@ -84,7 +84,7 @@ const MyLocation = createReactClass({
             this.props.terria.currentViewer.zoomTo(rectangle);
         }
 
-        this._marker.name = 'My Location';
+        this._marker.name = 'La mia posizione';
         this._marker.data = {
             type: 'Feature',
             geometry: {
@@ -162,7 +162,7 @@ const MyLocation = createReactClass({
 
         return <div className={Styles.toolButton}>
                   <button type='button' className={toggleStyle}
-                          title='go to my location'
+                          title='Vai alla tua posizione'
                           onClick={this.handleCick}>
                           <Icon glyph={Icon.GLYPHS.geolocation}/>
                   </button>

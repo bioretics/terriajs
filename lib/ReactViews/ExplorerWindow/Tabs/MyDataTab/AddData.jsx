@@ -105,10 +105,10 @@ const AddData = createReactClass({
     renderTabs() {
         const tabs = [{
             id: 'local',
-            caption: 'Add Local Data'
+            caption: 'Aggiungi layer dal PC'
         }, {
             id: 'web',
-            caption: 'Add Web Data'
+            caption: 'Aggiungi layer dal Web'
         }];
 
         return (
@@ -144,21 +144,20 @@ const AddData = createReactClass({
             <div className={Styles.tabPanels}>
                 <If condition={this.state.activeTab === 'local'}>
                     <section className={Styles.tabPanel}>
-                        <label className={Styles.label}><strong>Step 1:</strong> Select type of file to add: </label>
+                        <label className={Styles.label}><strong>Step 1:</strong> Seleziona il tipo di layer da aggiungere: </label>
                         <Dropdown options={localDataType} selected={this.state.localDataType}
                                   selectOption={this.selectLocalOption} matchWidth={true} theme={dropdownTheme}/>
-                        <label className={Styles.label}><strong>Step 2:</strong> Select a local data file to add:
+                        <label className={Styles.label}><strong>Step 2:</strong> Seleziona il layer:
                         </label>
                         <FileInput accept={dataTypes.join(',')} onChange={this.handleUploadFile}/>
                     </section>
                 </If>
                 <If condition={this.state.activeTab === 'web'}>
                     <section className={Styles.tabPanel}>
-                        <label className={Styles.label}><strong>Step 1:</strong> Select type of file to add: </label>
+                        <label className={Styles.label}><strong>Step 1:</strong> Seleziona il tipo di layer da aggiungere: </label>
                         <Dropdown options={remoteDataType} selected={this.state.remoteDataType}
                                   selectOption={this.selectRemoteOption} matchWidth={true} theme={dropdownTheme}/>
-                        <label className={Styles.label}><strong>Step 2:</strong> Enter the URL of the data file or web
-                            service:
+                        <label className={Styles.label}><strong>Step 2:</strong> Inserire URL del file o del web service:
                         </label>
                         <form className={Styles.urlInput}>
                             <input value={this.state.remoteUrl} onChange={this.onRemoteUrlChange}
@@ -166,7 +165,7 @@ const AddData = createReactClass({
                                    type='text'
                                    placeholder='e.g. http://data.gov.au/geoserver/wms'/>
                             <button type='submit' onClick={this.handleUrl} className={Styles.urlInputBtn}>
-                                Add
+                                Aggiungi
                             </button>
                         </form>
                     </section>

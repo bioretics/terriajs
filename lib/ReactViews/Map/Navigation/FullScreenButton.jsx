@@ -38,7 +38,7 @@ const FullScreenButton = createReactClass({
 
     renderButtonText() {
         if (this.props.viewState.isMapFullScreen) {
-            return <span className={Styles.exit}>Show Workbench</span>;
+            return <span className={Styles.exit}>Indietro</span>;
         } else {
             return <Icon glyph={Icon.GLYPHS.expand}/>;
         }
@@ -51,7 +51,7 @@ const FullScreenButton = createReactClass({
         const btnTitle = this.props.viewState.isMapFullScreen? "Show workbench": "Hide workbench";
         return (
             <div className={Styles.fullScreen}>
-                <button type='button' onClick={this.toggleFullScreen} title={btnTitle}
+                <button type='button' onClick={this.toggleFullScreen} title='Tutto schermo'
                         className={btnClassName}><span>{this.renderButtonText()}</span></button>
             </div>
         );

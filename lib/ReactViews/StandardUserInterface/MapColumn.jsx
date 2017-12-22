@@ -13,8 +13,23 @@ import FeatureDetection from 'terriajs-cesium/Source/Core/FeatureDetection';
 import classNames from "classnames";
 
 import Styles from './map-column.scss';
+import Styles2 from '../Feedback/feedback-button.scss';
+import Icon from "../Icon.jsx";
 
 const isIE = FeatureDetection.isInternetExplorer();
+
+var flags = {
+    moveForward : false,
+    moveBackward : false,
+    moveUp : false,
+    moveDown : false,
+    moveLeft : false,
+    moveRight : false,
+    rotateUp : false,
+    rotateDown : false,
+    rotateLeft : false,
+    rotateRight : false
+};
 
 /**
  * Right-hand column that contains the map, controls that sit over the map and sometimes the bottom dock containing
@@ -75,9 +90,62 @@ const MapColumn = createReactClass({
         }
     },
 
+    onKeyDown(event) {
+        //this.props.terria.clock.onTick.addEventListener(keyboardTickFunc.bind(undefined, this.props));
+
+        var flagName = getFlagForKeyCode(event.key);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = true;
+            keyboardTickFunc(this.props);
+        }
+    },
+
+    onKeyUp(event) {
+        //this.props.terria.clock.onTick.removeEventListener(keyboardTickFunc);
+
+        var flagName = getFlagForKeyCode(event.key);
+        if (typeof flagName !== 'undefined') {
+            flags[flagName] = false;
+        }
+    },
+
+    /*onMoveUp() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onMoveDown() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onMoveLeft() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onMoveRight() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onRotateUp() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onRotateDown() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onRotateLeft() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },
+    onRotateRight() {
+        getFlagForKeyCode('w');
+        keyboardTickFunc(this.props);
+    },*/
+
     render() {
+        const keyboardControlDescription = 'Navigazione della mappa da tastiera\n  w = zoom in\n  s = zoom out\n  q = muovi in su\n  e = muovi in giù\n  d = muovi a sinistra\n  a = muovi a destra\n  r = ruota in su\n  f = ruota in giù\n  z = ruota a sinistra\n  x = ruota a destra';
         return (
-            <div className={Styles.mapInner}>
+            <div className={Styles.mapInner} onKeyDown={this.onKeyDown} onKeyUp={this.onKeyUp}>
                 <div className={Styles.mapRow}>
                     <div className={classNames(Styles.mapCell, Styles.mapCellMap)} ref={this.newMapCell}>
                         <div className={Styles.mapWrapper}
@@ -96,6 +164,49 @@ const MapColumn = createReactClass({
                             <div className={Styles.feedbackButtonWrapper}>
                                 <FeedbackButton viewState={this.props.viewState}/>
                             </div>
+                        </If>
+                        <If condition={!this.props.viewState.useSmallScreenInterface && !this.props.viewState.hideMapUi()}>
+                            <div className={Styles.feedbackButtonWrapper}>
+                                <div className={Styles2.feedback}>
+                                    <button type='button' className={Styles2.btnFeedback} title={keyboardControlDescription}>
+                                        <span>Naviga da tastiera</span>
+                                    </button>
+                                </div>
+                            </div>
+                            {/*<div className={Styles.feedbackButtonWrapper}>
+                                <div className={Styles2.feedback}>
+                                    <button type='button' title="Muovi a sinistra" className={Styles2.btnFeedback} onClick={this.onMoveLeft}>
+                                        <Icon glyph={Icon.GLYPHS.left}/>
+                                    </button>
+                                    <button type='button' title="Muovi a destra" className={Styles2.btnFeedback} onClick={this.onMoveRight}>
+                                        <Icon glyph={Icon.GLYPHS.right}/>
+                                    </button>
+                                </div>
+                                <div className={Styles2.feedback}>
+                                    <button type='button' title="Muovi in alto" className={Styles2.btnFeedback} onClick={this.onMoveUp}>
+                                        <Icon glyph={Icon.GLYPHS.up}/>
+                                    </button>
+                                    <button type='button' title="Muovi in basso" className={Styles2.btnFeedback} onClick={this.onMoveDown}>
+                                        <Icon glyph={Icon.GLYPHS.down}/>
+                                    </button>
+                                </div>
+                                <div className={Styles2.feedback}>
+                                    <button type='button' title="Ruota in su" className={Styles2.btnFeedback} onClick={this.onRotateUp}>
+                                        <Icon glyph={Icon.GLYPHS.globe_rot}/>
+                                    </button>
+                                    <button type='button' title="Ruota in giù" className={Styles2.btnFeedback} onClick={this.onRotateDown}>
+                                        <Icon glyph={Icon.GLYPHS.globe_rot2}/>
+                                    </button>
+                                </div>
+                                <div className={Styles2.feedback}>
+                                    <button type='button' title="Ruota a sinistra" className={Styles2.btnFeedback} onClick={this.onRotateLeft}>
+                                        <Icon glyph={Icon.GLYPHS.rotate_left}/>
+                                    </button>
+                                    <button type='button' title="Ruota a destra" className={Styles2.btnFeedback} onClick={this.onRotateRight}>
+                                        <Icon glyph={Icon.GLYPHS.rotate_right}/>
+                                    </button>
+                                </div>
+                            </div>*/}
                         </If>
                     </div>
                     <If condition={this.props.terria.configParameters.printDisclaimer}>
@@ -118,5 +229,73 @@ const MapColumn = createReactClass({
         );
     },
 });
+
+function getFlagForKeyCode(keyCode) {
+    switch (keyCode) {
+    case 'w':
+        return 'moveForward';
+    case 's':
+        return 'moveBackward';
+    case 'q':
+        return 'moveUp';
+    case 'e':
+        return 'moveDown';
+    case 'd':
+        return 'moveRight';
+    case 'a':
+        return 'moveLeft';
+    case 'r':
+        return 'rotateUp';
+    case 'f':
+        return 'rotateDown';
+    case 'z':
+        return 'rotateLeft';
+    case 'x':
+        return 'rotateRight';                
+    default:
+        return undefined;
+    }
+}
+
+function keyboardTickFunc(props) {
+    var scene = props.terria.cesium.scene;
+    var ellipsoid = scene.globe.ellipsoid;
+    var camera = scene.camera;
+    var cameraHeight = ellipsoid.cartesianToCartographic(camera.position).height;
+    var moveRate = cameraHeight / 100.0;
+
+    if (flags.moveForward) {
+        camera.moveForward(moveRate);
+    }
+    if (flags.moveBackward) {
+        camera.moveBackward(moveRate);
+    }
+    if (flags.moveUp) {
+        camera.moveUp(moveRate);
+    }
+    if (flags.moveDown) {
+        camera.moveDown(moveRate);
+    }
+    if (flags.moveLeft) {
+        camera.moveLeft(moveRate);
+    }
+    if (flags.moveRight) {
+        camera.moveRight(moveRate);
+    }
+    if(flags.rotateUp) {
+        camera.lookUp();
+    }
+    if(flags.rotateDown) {
+        camera.lookDown();
+    }
+    if(flags.rotateLeft) {
+        camera.lookLeft();
+    }
+    if(flags.rotateRight) {
+        camera.lookRight();
+    }
+
+    props.terria.currentViewer.notifyRepaintRequired();
+}
 
 export default MapColumn;

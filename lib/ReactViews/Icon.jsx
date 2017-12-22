@@ -59,6 +59,12 @@ const GLYPHS = {
     splitter: require('../../wwwroot/images/icons/splitter.svg'),
     splitterOn: require('../../wwwroot/images/icons/splitterOn.svg'),
     splitterOff: require('../../wwwroot/images/icons/splitterOff.svg'),
+	up: require('../../wwwroot/images/icons/up.svg'),
+    down: require('../../wwwroot/images/icons/down.svg'),
+    globe_rot: require('../../wwwroot/images/icons/globe_rotate.svg'),
+    globe_rot2: require('../../wwwroot/images/icons/globe_rotate_2.svg'),
+    rotate_left: require('../../wwwroot/images/icons/rotate-left.svg'),
+    rotate_right: require('../../wwwroot/images/icons/rotate-right.svg'),
 };
 
 const Icon = createReactClass({

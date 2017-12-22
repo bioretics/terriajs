@@ -68,7 +68,7 @@ const SharePanel = createReactClass({
                 .otherwise(() => {
                     this.setUnshortenedUrl();
                     this.setState({
-                        errorMessage: 'An error occurred while attempting to shorten the URL.  Please check your internet connection and try again.'
+                        errorMessage: 'Errore nel tentativo di abbreviazione URL.  Controllare la connessione internet e riprovare.'
                     });
                 });
         } else {
@@ -193,9 +193,9 @@ const SharePanel = createReactClass({
 
         return (
             <MenuPanel theme={dropdownTheme}
-                       btnText="Share"
+                       btnText="Condividi"
                        viewState={this.props.viewState}
-                       btnTitle="Share your map with others"
+                       btnTitle="Condividi la mappa corrente"
                        onOpenChanged={this.onOpenChanged}
                        smallScreen={this.props.viewState.useSmallScreenInterface}>
                 <If condition={this.state.isOpen}>

@@ -33,7 +33,7 @@ export default createReactClass({
 
     getDefaultProps() {
         return {
-            placeholder: 'Search',
+            placeholder: 'Cerca',
             alwaysShowClear: false,
             autoFocus: false
         };

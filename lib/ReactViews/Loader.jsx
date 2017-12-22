@@ -14,7 +14,7 @@ const Loader = createReactClass({
     getDefaultProps() {
         return {
             className: '',
-            message: 'Loading...'
+            message: 'Ricerca in corso...'
         };
     },
 
@@ -26,7 +26,7 @@ const Loader = createReactClass({
     render() {
         return <span className={Styles.loader}>
                   <Icon glyph={Icon.GLYPHS.loader}/>
-                  <span>{this.props.message || 'Loading'}</span>
+                  <span>{this.props.message || 'Ricerca in corso...'}</span>
                </span>;
     },
 });

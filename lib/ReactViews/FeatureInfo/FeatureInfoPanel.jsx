@@ -110,12 +110,12 @@ const FeatureInfoPanel = createReactClass({
             // feature info shows up becuase data has been added for the first time
             if (this.props.viewState.firstTimeAddingData) {
                 this.props.viewState.firstTimeAddingData = false;
-                return "Click on the map to learn more about a location";
+                return "Clicka sulla mappa per avere informazioni sul luogo";
             }
             // if clicking on somewhere that has no data
-            return "No data is available here - try another location.";
+            return "Non ci sono dati per questo luogo";
         } else {
-            return "Click 'Add Data' to add data to the map.";
+            return "Clicka 'Aggiungi' per aggiungere layers alla mappa";
         }
     },
 
@@ -135,10 +135,10 @@ const FeatureInfoPanel = createReactClass({
                 aria-hidden={!viewState.featureInfoPanelIsVisible}>
                 <div className={Styles.header}>
                     <button type='button' onClick={ this.toggleCollapsed } className={Styles.btnPanelHeading}>
-                        Feature Information
+                        Informazioni
                     </button>
                     <button type='button' onClick={ this.close } className={Styles.btnCloseFeature}
-                            title="Close data panel">
+                            title="Chiudi">
                         <Icon glyph={Icon.GLYPHS.close}/>
                     </button>
                 </div>

@@ -8,9 +8,9 @@ import defaultValue from 'terriajs-cesium/Source/Core/defaultValue';
 import Styles from './data-catalog-item.scss';
 
 const STATE_TO_TITLE = {
-    loading: 'Loading...',
-    remove: 'Remove',
-    add: 'Add'
+    loading: 'Caricamento...',
+    remove: 'Rimuovi',
+    add: 'Aggiungi'
 };
 
 const STATE_TO_ICONS = {

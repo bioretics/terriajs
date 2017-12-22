@@ -99,20 +99,20 @@ const ViewingControls = createReactClass({
         return (
             <ul className={Styles.control}>
                 <If condition={item.canZoomTo}>
-                    <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.zoomTo} title="Zoom to extent" className={Styles.btn}>Zoom To Extent</button></li>
+                    <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.zoomTo} title="Zoom sull'intera estensione del layer" className={Styles.btn}>Zoom sul layer</button></li>
                 </If>
                 <If condition={item.tableStructure && item.tableStructure.sourceFeature}>
-                    <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.openFeature} title="Zoom to data" className={Styles.btn}>Zoom To</button></li>
+                    <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.openFeature} title="Zoom sull'intera estensione del layer" className={Styles.btn}>Zoom sul layer</button></li>
                 </If>
                 <If condition={item.showsInfo}>
-                    <li className={classNames(Styles.info, classList)}><button type='button' onClick={this.previewItem} className={Styles.btn} title='info'>About This Data</button></li>
+                    <li className={classNames(Styles.info, classList)}><button type='button' onClick={this.previewItem} className={Styles.btn} title='Mostra le informazioni riguardanti il layer'>Metadati</button></li>
                 </If>
                 <If condition={canSplit}>
                     <li className={classNames(Styles.split, classList)}><button type='button' onClick={this.splitItem} title="Duplicate and show splitter" className={Styles.btn}>Split</button></li>
                 </If>
                 <li className={classNames(Styles.remove, classList)}>
-                    <button type='button' onClick={this.removeFromMap} title="Remove this data" className={Styles.btn}>
-                        Remove <Icon glyph={Icon.GLYPHS.remove}/>
+                    <button type='button' onClick={this.removeFromMap} title="Rimuove il layer" className={Styles.btn}>
+                        Rimuovi <Icon glyph={Icon.GLYPHS.remove}/>
                     </button>
                 </li>
             </ul>

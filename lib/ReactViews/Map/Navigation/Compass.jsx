@@ -117,12 +117,12 @@ const Compass = createReactClass({
             opacity: ''
         };
 
-        const description = 'Drag outer ring: rotate view.\nDrag inner gyroscope: free orbit.\nDouble-click: reset view.\nTIP: You can also free orbit by holding the CTRL key and dragging the map.';
+        const description = 'Trascinando l\'anello esterno: ruota la vista.\nTrascinando il giroscopio interno: movimento libero.\nDoppio-click: reset vista.\nSi può attivare il movimento libero anche premendo il tasto CTRL e trascinando la mappa.';
 
         return (
             <div className={Styles.compass} title ={description} onMouseDown ={this.handleMouseDown} onDoubleClick ={this.handleDoubleClick} onMouseUp ={this.resetRotater}>
               <div className={Styles.outerRing} style={outerCircleStyle}></div>
-              <div className={Styles.innerRing} title='Click and drag to rotate the camera'></div>
+              <div className={Styles.innerRing} title='Clicka a trascina per ruotare la camera'></div>
               <div className={Styles.rotationMarker} style={rotationMarkerStyle}></div>
             </div>
         );

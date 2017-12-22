@@ -24,9 +24,9 @@ const Workbench = createReactClass({
     render() {
         return (
             <div className={Styles.workbench}>
-                <BadgeBar label="Data Sets" badge={this.props.terria.nowViewing.items.length}>
+                <BadgeBar label="Layers" badge={this.props.terria.nowViewing.items.length}>
                     <button type='button' onClick={this.removeAll} className={Styles.removeButton}>
-                        Remove All <Icon glyph={Icon.GLYPHS.remove}/>
+                        Rimuovi tutti <Icon glyph={Icon.GLYPHS.remove}/>
                     </button>
                 </BadgeBar>
                 <WorkbenchList viewState={this.props.viewState} terria={this.props.terria}/>

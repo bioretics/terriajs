@@ -9,6 +9,7 @@ import SharePanel from './Panels/SharePanel/SharePanel.jsx';
 import ToolsPanel from './Panels/ToolsPanel/ToolsPanel.jsx';
 
 import FullScreenButton from './Navigation/FullScreenButton.jsx';
+import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
 import ObserveModelMixin from '../ObserveModelMixin';
 
 import Styles from './menu-bar.scss';
@@ -53,6 +54,9 @@ const MenuBar = createReactClass({
                         <ToolsPanel terria={this.props.terria}
                                     viewState={this.props.viewState}/>
                     </li>}
+					<li className={Styles.menuItem}>
+                        <NavigationHelpButton terria={this.props.terria} viewState={this.props.viewState}/>
+                    </li>
                     <If condition={!this.props.viewState.useSmallScreenInterface}>
                         <For each="element" of={this.props.menuItems} index="i">
                             <li className={Styles.menuItem} key={i}>

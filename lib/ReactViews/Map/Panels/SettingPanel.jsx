@@ -27,7 +27,7 @@ const SettingPanel = createReactClass({
 
     getDefaultProps() {
         return {
-            viewerModes: ['3D Terrain', '3D Smooth', '2D']
+            viewerModes: ['3D', '2D inclinato', '2D']
         };
     },
 
@@ -95,10 +95,10 @@ const SettingPanel = createReactClass({
         };
 
         return (
-            <MenuPanel theme={dropdownTheme} btnTitle="Change view" btnText="Map" viewState={this.props.viewState}
+            <MenuPanel theme={dropdownTheme} btnTitle="Cambia vista o mappa base" btnText="Viste" viewState={this.props.viewState}
                        smallScreen={this.props.viewState.useSmallScreenInterface}>
                 <div className={classNames(Styles.viewer, DropdownStyles.section)}>
-                    <label className={DropdownStyles.heading}> Map View </label>
+                    <label className={DropdownStyles.heading}> Vista della mappa </label>
                     <ul className={Styles.viewerSelector}>
                         <For each="viewerMode" of={this.props.viewerModes} index="i">
                             <li key={i} className={Styles.listItem}>
@@ -111,7 +111,7 @@ const SettingPanel = createReactClass({
                     </ul>
                 </div>
                 <div className={classNames(Styles.baseMap, DropdownStyles.section)}>
-                    <label className={DropdownStyles.heading}> Base Map </label>
+                    <label className={DropdownStyles.heading}> Mappa base </label>
                     <label className={DropdownStyles.subHeading}>{this.state.activeMap}</label>
                     <ul className={Styles.baseMapSelector}>
                         <For each="baseMap" index="i" of={this.props.allBaseMaps}>

@@ -129,7 +129,7 @@ const ZoomControl = createReactClass({
                         </button>
                     </li>
                     <li>
-                        <button type='button' onClick={this.zoomReset} className={Styles.refresh} title='reset zoom'>
+                        <button type='button' onClick={this.zoomReset} className={Styles.refresh} title='Visuale di default'>
                             <Icon glyph={Icon.GLYPHS.refresh}/>
                         </button>
                     </li>

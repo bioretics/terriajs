@@ -57,7 +57,7 @@ const DataPreviewMap = createReactClass({
                 (e.sender && e.sender.nowViewingCatalogItem === this.props.previewedCatalogItem)) {
                 this._errorPreviewingCatalogItem = true;
                 this.setState({
-                    previewBadgeText: 'NO PREVIEW AVAILABLE'
+                    previewBadgeText: 'Nessuna antemprima disponibile'
                 });
             }
         });
@@ -152,7 +152,7 @@ const DataPreviewMap = createReactClass({
 
                         if (this._errorPreviewingCatalogItem) {
                             this.setState({
-                                previewBadgeText: 'NO PREVIEW AVAILABLE'
+                                previewBadgeText: 'Nessuna antemprima disponibile'
                             });
                         } else if (that.removePreviewFromMap) {
                             this.setState({
@@ -160,12 +160,12 @@ const DataPreviewMap = createReactClass({
                             });
                         } else {
                             this.setState({
-                                previewBadgeText: 'NO PREVIEW AVAILABLE'
+                                previewBadgeText: 'Nessuna antemprima disponibile'
                             });
                         }
                     } else {
                         this.setState({
-                            previewBadgeText: 'NO PREVIEW AVAILABLE'
+                            previewBadgeText: 'Nessuna antemprima disponibile'
                         });
                     }
 

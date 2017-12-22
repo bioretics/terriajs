@@ -38,9 +38,9 @@ const SidebarSearch = createReactClass({
         return (
             <div className={Styles.search}>
                 <div className={Styles.results}>
-                    <BadgeBar label="Search Results" badge={searchResultCount}>
+                    <BadgeBar label="Risultati della ricerca" badge={searchResultCount}>
                         <button type='button' onClick={this.backToNowViewing}
-                                className={Styles.btnDone}>Done
+                                className={Styles.btnDone}>Fatto
                         </button>
                     </BadgeBar>
                     <div className={Styles.resultsContent}>
