@@ -102,7 +102,7 @@ const SidePanel = createReactClass({
                         </When>
                         <Otherwise>
                             <div className={Styles.workbenchEmpty}>
-                                <div>Il pannello dei layer è vuoto</div>
+                                <div>Il pannello dei layer Ã¨ vuoto</div>
                                 <p><strong>Clicca su 'Aggiungi layer' per:</strong></p>
                                 <ul>
                                     <li>visionare il catalogo corrente</li>
