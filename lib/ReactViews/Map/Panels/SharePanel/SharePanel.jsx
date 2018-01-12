@@ -131,7 +131,7 @@ const SharePanel = createReactClass({
             <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
                 <button onClick={this.onShortenClicked}>
                     {this.shouldShorten() ? <Icon glyph={Icon.GLYPHS.checkboxOn}/> : <Icon glyph={Icon.GLYPHS.checkboxOff}/>}
-                    Shorten the share URL
+                    Abbrevia l'URL
                 </button>
             </div>
         </If>
@@ -139,22 +139,37 @@ const SharePanel = createReactClass({
     },
 
     renderNormal(iframeCode, shareImgStyle, shareUrlTextBox) {
+        const btnStyle = {
+            font: '14px Open Sans',
+            textDecorationLine: 'none',
+            backgroundColor: '#1ac9f6',
+            color: '#ffffff',
+            padding: '8px 8px 8px 8px',
+          };
       return (
         <div>
           <div className={DropdownStyles.section}>
               <a className={Styles.link} href={this.state.imageUrl} target='_blank'><div className={Styles.imgShare} style={shareImgStyle}></div></a>
           </div>
+          {/* Esplicitata la possibilità di salvare su disco lo screenshot della mappa */}
+          <div className={Styles.clipboard}>
+              <a style={btnStyle} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
+          </div>
           <div className={Styles.clipboard}><Clipboard source={shareUrlTextBox} id='share-url'/></div>
           <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
               <div className={Styles.btnWrapper}>
                   <button type='button' onClick={this.toggleAdvancedOptions} className={Styles.btnAdvanced}>
-                      <span>Advanced options</span>
+                      <span>Opzioni avanzate</span>
                       {this.advancedOptions()? <Icon glyph={Icon.GLYPHS.opened}/> : <Icon glyph={Icon.GLYPHS.closed}/>}
                   </button>
               </div>
               <If condition={this.advancedOptions()}>
+                {/* Aggiunto salvataggio su disco di un file di "progetto" della mappa corrente (tramite salvataggio shareUrl) */}
                 <div className={DropdownStyles.section}>
-                    <p className={Styles.paragraph}>To embed, copy this code to embed this map into an HTML page:</p>
+                    <a style={btnStyle} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.txt">Salva mappa corrente</a>
+                </div>
+                <div className={DropdownStyles.section}>
+                    <p className={Styles.paragraph}>Per includere la mappa in una pagina HTML usare questo codice:</p>
                     <input className={Styles.field} type="text" readOnly placeholder={this.state.placeholder}
                         value={iframeCode}
                         onClick={e => e.target.select()}/>
@@ -163,7 +178,7 @@ const SharePanel = createReactClass({
                     <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
                         <button onClick={this.onShortenClicked}>
                             {this.shouldShorten() ? <Icon glyph={Icon.GLYPHS.checkboxOn}/> : <Icon glyph={Icon.GLYPHS.checkboxOff}/>}
-                            Shorten the share URL using a web service
+                            Abbrevia l'URL
                         </button>
                     </div>
                 </If>
