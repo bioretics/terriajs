@@ -3,6 +3,7 @@ import React from 'react';
 import Styles from './clipboard.scss';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import defined from 'terriajs-cesium/Source/Core/defined';
 
 export default class Clipboard extends React.Component {
   constructor(props) {
@@ -34,9 +35,11 @@ export default class Clipboard extends React.Component {
   }
 
   resetTooltip() {
-    this.setState({
-      tooltip: null
-    });
+    if(defined(this.state.tooltip)){
+      this.setState({
+        tooltip: null
+      });
+    }
   }
 
   render() {
