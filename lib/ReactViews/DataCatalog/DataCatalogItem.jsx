@@ -13,9 +13,9 @@ import ObserveModelMixin from '../ObserveModelMixin';
 import raiseErrorOnRejectedPromise from '../../Models/raiseErrorOnRejectedPromise';
 
 const STATE_TO_TITLE = {
-    loading: 'Loading...',
-    remove: 'Remove this item',
-    add: 'Add this item. Hold down "shift" to keep the data catalogue open.'
+    loading: 'Caricamento...',
+    remove: 'Rimuovi elemento',
+    add: 'Aggiungi questo elemento e chiudi la finestra; tieni premuto il tasto "Shift" per aggiungerlo lasciando aperta la finestra.'
 };
 
 // Individual dataset

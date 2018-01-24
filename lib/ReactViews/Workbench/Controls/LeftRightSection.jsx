@@ -40,9 +40,9 @@ const LeftRightSection = createReactClass({
         }
         return (
             <div className={Styles.leftRightSection}>
-                <button type='button' onClick={this.goLeft} className={classNames(Styles.goLeft, {[Styles.isActive]: splitDirection === ImagerySplitDirection.LEFT})} title='Show on the left side'>Left</button>
-                <button type='button' onClick={this.goBoth} className={classNames(Styles.goBoth, {[Styles.isActive]: splitDirection === ImagerySplitDirection.NONE})} title='Show on both sides'>Both</button>
-                <button type='button' onClick={this.goRight} className={classNames(Styles.goRight, {[Styles.isActive]: splitDirection === ImagerySplitDirection.RIGHT})} title='Show on the right side'>Right</button>
+                <button type='button' onClick={this.goLeft} className={classNames(Styles.goLeft, {[Styles.isActive]: splitDirection === ImagerySplitDirection.LEFT})} title='Mostra sul lato sinistro'>Sinistra</button>
+                <button type='button' onClick={this.goBoth} className={classNames(Styles.goBoth, {[Styles.isActive]: splitDirection === ImagerySplitDirection.NONE})} title='Mostra su entrambi i lati'>Entrambi</button>
+                <button type='button' onClick={this.goRight} className={classNames(Styles.goRight, {[Styles.isActive]: splitDirection === ImagerySplitDirection.RIGHT})} title='Mostra sul lato destro'>Destra</button>
             </div>
         );
     }

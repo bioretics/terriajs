@@ -108,7 +108,7 @@ const ViewingControls = createReactClass({
                     <li className={classNames(Styles.info, classList)}><button type='button' onClick={this.previewItem} className={Styles.btn} title='Mostra le informazioni riguardanti il layer'>Metadati</button></li>
                 </If>
                 <If condition={canSplit}>
-                    <li className={classNames(Styles.split, classList)}><button type='button' onClick={this.splitItem} title="Duplicate and show splitter" className={Styles.btn}>Split</button></li>
+                    <li className={classNames(Styles.split, classList)}><button type='button' onClick={this.splitItem} title="Duplica la mappa e mostra lo splitter" className={Styles.btn}>Split</button></li>
                 </If>
                 <li className={classNames(Styles.remove, classList)}>
                     <button type='button' onClick={this.removeFromMap} title="Rimuove il layer" className={Styles.btn}>

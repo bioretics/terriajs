@@ -84,16 +84,16 @@ const TimelineControls = createReactClass({
     render() {
         return (
             <div className={Styles.controls}>
-                <button type='button' className={Styles.timelineControl} onClick={this.gotoStart} title="Go to beginning">
+                <button type='button' className={Styles.timelineControl} onClick={this.gotoStart} title="Vai all'inizio">
                     <Icon glyph={Icon.GLYPHS.backToStart}/>
                 </button>
-                <button type='button' className={Styles.timelineControl} onClick={this.togglePlay} title="Play">
+                <button type='button' className={Styles.timelineControl} onClick={this.togglePlay} title="Avvia/Ferma">
                     {this.isPlaying() ? <Icon glyph={Icon.GLYPHS.pause}/> : <Icon glyph={Icon.GLYPHS.play}/>}
                 </button>
-                <button type='button' className={Styles.timelineControl} onClick={this.playSlower} title="Play Slower">
+                <button type='button' className={Styles.timelineControl} onClick={this.playSlower} title="Avvia lento">
                     <Icon glyph={Icon.GLYPHS.backward}/>
                 </button>
-                <button type='button' className={Styles.timelineControl} onClick={this.playFaster} title="Play Faster">
+                <button type='button' className={Styles.timelineControl} onClick={this.playFaster} title="Avvia veloce">
                     <Icon glyph={Icon.GLYPHS.forward}/>
                 </button>
             </div>

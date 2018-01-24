@@ -27,7 +27,7 @@ const Tabs = createReactClass({
         }
 
         const myDataTab = {
-            name: 'My Data',
+            name: 'Altri dati',
             title: 'my-data',
             category: 'my-data',
             panel: <MyDataTab terria={this.props.terria}
@@ -44,7 +44,7 @@ const Tabs = createReactClass({
                 panel: <DataCatalogTab terria={this.props.terria}
                                        viewState={this.props.viewState}
                                        items={member.items || [member]}
-                                       searchPlaceholder="Search whole catalogue"
+                                       searchPlaceholder="Cerca nel catalogo"
                 />
             })), [myDataTab]);
         } else {
