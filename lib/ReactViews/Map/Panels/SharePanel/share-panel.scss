@@ -26,6 +26,11 @@
   composes: btn--share from '../../../../Sass/common/_buttons.scss';
 }
 
+.button {
+  composes: btn from '../../../../Sass/common/_buttons.scss';
+  composes: btn-primary from '../../../../Sass/common/_buttons.scss';
+}
+
 .img--share {
   width: 100%;
   height: $share-panel-width / 4*3;

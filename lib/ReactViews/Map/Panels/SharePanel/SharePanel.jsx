@@ -14,6 +14,8 @@ import Styles from './share-panel.scss';
 import DropdownStyles from '../panel.scss';
 import Icon from "../../../Icon.jsx";
 
+import fileDialog from './file-dialog.min.js'
+
 const SharePanel = createReactClass({
     displayName: 'SharePanel',
     mixins: [ObserverModelMixin],
@@ -121,7 +123,20 @@ const SharePanel = createReactClass({
         }
     },
 
+    /* Function to load map config from a file */
+    loadMapFromFile() {
+        fileDialog({ multiple: false, accept: 'txt,json' })
+            .then(file => {
+                if(file.length == 1){
+                    var reader = new FileReader();
+                    reader.onload = ( function(e) { window.location = e.target.result; } );
+                    reader.readAsText(file[0]);
+                } 
+            })
+    },
+
     renderSmallScreen(iframeCode, shareImgStyle, shareUrlTextBox) {
+        input.style.opacity = 0;
       return (<div>
         <div className={Styles.clipboard}><Clipboard source={shareUrlTextBox} id='share-url'/></div>
         <div className={DropdownStyles.section}>
@@ -145,17 +160,23 @@ const SharePanel = createReactClass({
             backgroundColor: '#1ac9f6',
             color: '#ffffff',
             padding: '8px 8px 8px 8px',
+            margin: '8px 8px 8px 8px',
           };
       return (
         <div>
           <div className={DropdownStyles.section}>
               <a className={Styles.link} href={this.state.imageUrl} target='_blank'><div className={Styles.imgShare} style={shareImgStyle}></div></a>
           </div>
-          {/* Esplicitata la possibilità di salvare su disco lo screenshot della mappa */}
-          <div className={Styles.clipboard}>
-              <a style={btnStyle} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
+          {/* Added feature to save map screenshot on disk */}
+          <div className={DropdownStyles.section}>
+              <a className={Styles.button} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
           </div>
-          <div className={Styles.clipboard}><Clipboard source={shareUrlTextBox} id='share-url'/></div>
+          {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
+          <div>
+            <p><a className={Styles.button} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.txt">Salva mappa corrente</a></p>
+            <p><button className={Styles.button} onClick={this.loadMapFromFile}>Carica mappa da file</button></p>
+          </div>
+          <div className={Styles.clipboard}><Clipboard ref='share-url' source={shareUrlTextBox} id='share-url'/></div>
           <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
               <div className={Styles.btnWrapper}>
                   <button type='button' onClick={this.toggleAdvancedOptions} className={Styles.btnAdvanced}>
@@ -164,10 +185,6 @@ const SharePanel = createReactClass({
                   </button>
               </div>
               <If condition={this.advancedOptions()}>
-                {/* Aggiunto salvataggio su disco di un file di "progetto" della mappa corrente (tramite salvataggio shareUrl) */}
-                <div className={DropdownStyles.section}>
-                    <a style={btnStyle} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.txt">Salva mappa corrente</a>
-                </div>
                 <div className={DropdownStyles.section}>
                     <p className={Styles.paragraph}>Per includere la mappa in una pagina HTML usare questo codice:</p>
                     <input className={Styles.field} type="text" readOnly placeholder={this.state.placeholder}
