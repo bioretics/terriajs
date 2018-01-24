@@ -15,13 +15,19 @@ import { SEARCH_MARKER_DATA_SOURCE_NAME } from '../Search/SearchMarkerUtils';
 import Styles from './feature-info-panel.scss';
 import classNames from 'classnames';
 
+
+import Ellipsoid from 'terriajs-cesium/Source/Core/Ellipsoid';
+import CesiumMath from 'terriajs-cesium/Source/Core/Math';
+
 const FeatureInfoPanel = createReactClass({
     displayName: 'FeatureInfoPanel',
     mixins: [ObserveModelMixin],
 
     propTypes: {
         terria: PropTypes.object.isRequired,
-        viewState: PropTypes.object.isRequired
+        viewState: PropTypes.object.isRequired,
+        lat: PropTypes.string,
+        lon: PropTypes.string
     },
 
     componentDidMount() {
@@ -59,6 +65,13 @@ const FeatureInfoPanel = createReactClass({
             this._pickedFeaturesSubscription.dispose();
             this._pickedFeaturesSubscription = undefined;
         }
+    },
+
+    getInitialState() {
+        return {
+            lat: '-',
+            lon: '-'
+        };
     },
 
     getFeatureInfoCatalogItems() {
@@ -119,6 +132,16 @@ const FeatureInfoPanel = createReactClass({
         }
     },
 
+    formatCartographicAsString(value) {
+        if (!defined(value)) {
+            this.state.lat = '-';
+            this.state.lon = '-';
+        }
+    
+        this.state.lat = Math.abs(CesiumMath.toDegrees(value.latitude)).toFixed(5) + '°' + (value.latitude < 0 ? 'S ' : 'N ');
+        this.state.lon = Math.abs(CesiumMath.toDegrees(value.longitude)).toFixed(5) + '°' + (value.longitude < 0 ? 'W' : 'E');
+    },
+
     render() {
         const terria = this.props.terria;
         const viewState = this.props.viewState;
@@ -128,6 +151,13 @@ const FeatureInfoPanel = createReactClass({
             [Styles.isCollapsed]: viewState.featureInfoPanelIsCollapsed,
             [Styles.isVisible]: viewState.featureInfoPanelIsVisible
         });
+
+        if (defined(terria.pickedFeatures))
+        {
+            var cartographicCoords = Ellipsoid.WGS84.cartesianToCartographic(this.props.terria.pickedFeatures.pickPosition);
+            this.formatCartographicAsString(cartographicCoords);
+        }
+
         return (
 
             <div
@@ -157,6 +187,14 @@ const FeatureInfoPanel = createReactClass({
                         </Otherwise>
                     </Choose>
                 </ul>
+                <div>
+                    <Choose>
+                        <When condition={defined(terria.pickedFeatures)}>
+                            <div ><span>Lat:   </span><span>{this.state.lat}</span></div>
+                            <div ><span>Lon:   </span><span>{this.state.lon}</span></div>
+                        </When>
+                    </Choose>
+                </div>
             </div>
         );
     },
