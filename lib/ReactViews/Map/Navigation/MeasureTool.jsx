@@ -31,7 +31,7 @@ const MeasureTool = createReactClass({
             userDrawing: new UserDrawing(
                 {
                     terria: this.props.terria,
-                    messageHeader: "Measure Tool",
+                    messageHeader: "Misura",
                     allowPolygon: false,
                     onPointClicked: this.onPointClicked,
                     onPointMoved: this.onPointMoved,
@@ -190,7 +190,7 @@ const MeasureTool = createReactClass({
     render() {
         return <div className={Styles.toolButton}>
                   <button type='button' className={Styles.btn}
-                          title='measure distance between two points'
+                          title='misura la distanza fra una serie di punti'
                           onClick={this.handleClick}>
                           <Icon glyph={Icon.GLYPHS.measure}/>
                   </button>
