@@ -1,11 +1,41 @@
 @import '~terriajs-variables';
 @import '../../../Sass/common/mixins';
 
-.setting-panel {
+
+.coords-panel {
+  font-size: $font-size-mid-small;
 }
 
 .dropdown-inner {
   width: $setting-panel;
+  @include transform-origin(50%, top);
+}
+
+.coordsField{
+  composes: field from '../../../Sass/common/_form.scss';
+  background: $overlay;
+  color: #ddd!important;
+  &::selection {
+    background: $color-primary; /* WebKit/Blink Browsers */
+    color: #fff;
+  }
+  &::-moz-selection {
+    background: $color-primary; /* Gecko Browsers */
+    color: #fff;
+  }
+}
+.crsSelect{
+  composes: field from '../../../Sass/common/_form.scss';
+  background: #633636;
+  color: #ddd!important;
+  &::selection {
+    background: $overlay; /* WebKit/Blink Browsers */
+    color: #fff;
+  }
+  &::-moz-selection {
+    background: $overlay; /* Gecko Browsers */
+    color: #fff;
+  }
 }
 
 .viewer-selector,
@@ -20,7 +50,7 @@
   padding: $padding-mini;
 
   composes: col from '../../../Sass/common/_base.scss';
-  composes: col-5 from '../../../Sass/common/_base.scss';
+  composes: col-4 from '../../../Sass/common/_base.scss';
 }
 
 .btn--viewer {
@@ -51,41 +81,11 @@
   composes: btn-grey from '../../../Sass/common/_buttons.scss';
 
   color: $text-light;
-  padding: $padding-mini;
   width: 60px;
+  height: 30px;
 
   &.is-active{
     border: 1px solid rgba(255, 255, 255, 0.5);
-  }
-}
-
-.btn--base-map {
-    padding: 0;
-    position: relative;
-    display: block;
-    line-height: 1.2;
-    border: 1px solid transparent;
-    img {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
-    &:hover,
-    &:focus {
-      border: $border-style;
-    }
-    svg{
-      position: absolute;
-      right: 0;
-      top: 0;
-      fill: #ffffff;
-      z-index: 1;
-      width: 22px;
-      border-radius: $radius-small;
-      height: 22px;
-    }
-  &.is-active {
-    border: 2px solid $turquoise-blue;
   }
 }
 

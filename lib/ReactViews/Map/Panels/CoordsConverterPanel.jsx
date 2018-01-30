@@ -166,10 +166,18 @@ const CoordsConverterPanel = createReactClass({
         this.props.terria.currentViewer.zoomTo(rectangle, 2.0);
     },
 
+    clearCoord(event) {
+        this.setState({
+            x: '',
+            y: ''
+        });
+    },
+
     render() {
         const dropdownTheme = {
-            btn: Styles.btnShare,
-            inner: Styles.dropdownInner
+            btn: Styles.btnCoords,
+            outer: Styles.coordsPanel,
+            inner: Styles.dropdownInner,
         };
 
         return (
@@ -194,7 +202,7 @@ const CoordsConverterPanel = createReactClass({
                             <label>CRS sorgente</label>
                         </p>
                         <p>
-                            <select style={{color: 'gray'}} onChange={this.changedS} defaultValue={this.state.sCrs} >
+                            <select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
                                 { this.props.epsgList.map(function(epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; }) }
                             </select>
                         </p>
@@ -202,23 +210,23 @@ const CoordsConverterPanel = createReactClass({
                             CRS destinazione
                         </p>
                         <p>
-                            <select style={{color: 'gray'}} onChange={this.changedT} defaultValue={this.state.tCrs} >
+                            <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
                                 { this.props.epsgList.map(function(epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; }) }
                             </select>
                         </p>
                     </div>
                     <div className={classNames(DropdownStyles.section, Styles.section)}>
                         <p>
-                            <label>Coord X</label>
+                            <label>X / Longitude</label>
                         </p>
                         <p>
-                            <input type="text" name="coordX" style={{color: 'gray'}} onChange={this.changedX} value={this.state.x} />
+                            <input className={Styles.coordsField} type="text" name="coordX" onChange={this.changedX} value={this.state.x} />
                         </p>
                         <p>
-                            <label>Coord Y</label>
+                            <label>Y / Latitude</label>
                         </p>
                         <p>
-                            <input type="text" name="coordY" style={{color: 'gray'}} onChange={this.changedY} value={this.state.y} />
+                            <input className={Styles.coordsField} type="text" name="coordY" onChange={this.changedY} value={this.state.y} />
                         </p>
                     </div>
                     <div className={classNames(Styles.viewer, DropdownStyles.section)}>
@@ -229,13 +237,16 @@ const CoordsConverterPanel = createReactClass({
                             <li className={Styles.listItem}>
                                 <button className={Styles.btnCoord} onClick={this.onGoTo}>Vai a</button>
                             </li>
+                            <li className={Styles.listItem}>
+                                <button className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
+                            </li>
                         </ul>
                         <p/>
                         <p/>
                     </div>
-                    <div style={{border: 'solid gray'}}>
-                        <label>Coordinate convertite</label>
-                        <p id="conversionOutput"></p>
+                    <div className={classNames(Styles.viewer, DropdownStyles.section)}>
+                        <label>Coordinate convertite:</label>
+                        <p className={Styles.shareUrlfield} id="conversionOutput"></p>
                     </div>
                 </If>
             </MenuPanel>
