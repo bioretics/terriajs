@@ -122,7 +122,7 @@ const Compass = createReactClass({
         return (
             <div className={Styles.compass} title ={description} onMouseDown ={this.handleMouseDown} onDoubleClick ={this.handleDoubleClick} onMouseUp ={this.resetRotater}>
               <div className={Styles.outerRing} style={outerCircleStyle}></div>
-              <div className={Styles.innerRing} title='Clicka a trascina per ruotare la camera'></div>
+              <div className={Styles.innerRing} title='Clicca a trascina per ruotare la camera'></div>
               <div className={Styles.rotationMarker} style={rotationMarkerStyle}></div>
             </div>
         );

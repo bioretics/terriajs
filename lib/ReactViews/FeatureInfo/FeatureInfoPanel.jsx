@@ -123,12 +123,12 @@ const FeatureInfoPanel = createReactClass({
             // feature info shows up becuase data has been added for the first time
             if (this.props.viewState.firstTimeAddingData) {
                 this.props.viewState.firstTimeAddingData = false;
-                return "Clicka sulla mappa per avere informazioni sul luogo";
+                return "Clicca sulla mappa per avere informazioni sul luogo";
             }
             // if clicking on somewhere that has no data
             return "Non ci sono dati per questo luogo";
         } else {
-            return "Clicka 'Aggiungi' per aggiungere layers alla mappa";
+            return "Nessun layer presente nel punto";
         }
     },
 
@@ -187,7 +187,7 @@ const FeatureInfoPanel = createReactClass({
                         </Otherwise>
                     </Choose>
                 </ul>
-                <div>
+                <div className={Styles.body}>
                     <Choose>
                         <When condition={defined(terria.pickedFeatures)}>
                             <div ><span>Lat:   </span><span>{this.state.lat}</span></div>

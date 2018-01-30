@@ -68,7 +68,7 @@ describe('UserDrawing', function() {
         var options = { terria: terria };
         var userDrawing = new UserDrawing(options);
 
-        expect(userDrawing._getDialogMessage()).toEqual("<div><strong>Draw on Map</strong></br><i>Clicka per aggiungere un punto</i></div>");
+        expect(userDrawing._getDialogMessage()).toEqual("<div><strong>Draw on Map</strong></br><i>Clicca per aggiungere un punto</i></div>");
     });
 
     it('getDialogMessage contains callback message if callback is specified', function() {
@@ -76,7 +76,7 @@ describe('UserDrawing', function() {
                         onMakeDialogMessage: function() { return "HELLO"; }};
         var userDrawing = new UserDrawing(options);
 
-        expect(userDrawing._getDialogMessage()).toEqual("<div><strong>Draw on Map</strong></br>HELLO</br><i>Clicka per aggiungere un punto</i></div>");
+        expect(userDrawing._getDialogMessage()).toEqual("<div><strong>Draw on Map</strong></br>HELLO</br><i>Clicca per aggiungere un punto</i></div>");
     });
     it('listens for user picks on map after entering drawing mode', function() {
         var options = { terria: terria };
