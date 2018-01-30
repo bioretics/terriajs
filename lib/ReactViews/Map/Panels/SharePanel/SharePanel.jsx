@@ -125,7 +125,7 @@ const SharePanel = createReactClass({
 
     /* Function to load map config from a file */
     loadMapFromFile() {
-        fileDialog({ multiple: false, accept: 'txt,json' })
+        fileDialog({ multiple: false, accept: '.geo3d' })
             .then(file => {
                 if(file.length == 1){
                     var reader = new FileReader();
@@ -154,14 +154,6 @@ const SharePanel = createReactClass({
     },
 
     renderNormal(iframeCode, shareImgStyle, shareUrlTextBox) {
-        const btnStyle = {
-            font: '14px Open Sans',
-            textDecorationLine: 'none',
-            backgroundColor: '#1ac9f6',
-            color: '#ffffff',
-            padding: '8px 8px 8px 8px',
-            margin: '8px 8px 8px 8px',
-          };
       return (
         <div>
           <div className={DropdownStyles.section}>
@@ -173,7 +165,7 @@ const SharePanel = createReactClass({
           </div>
           {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
           <div>
-            <p><a className={Styles.button} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.txt">Salva mappa corrente</a></p>
+            <p><a className={Styles.button} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.geo3d">Salva mappa corrente</a></p>
             <p><button className={Styles.button} onClick={this.loadMapFromFile}>Carica mappa da file</button></p>
           </div>
           <div className={Styles.clipboard}><Clipboard ref='share-url' source={shareUrlTextBox} id='share-url'/></div>
