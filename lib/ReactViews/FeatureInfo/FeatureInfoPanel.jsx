@@ -1,6 +1,8 @@
 'use strict';
 
 import defined from 'terriajs-cesium/Source/Core/defined';
+import CesiumMath from 'terriajs-cesium/Source/Core/Math';
+import Ellipsoid from 'terriajs-cesium/Source/Core/Ellipsoid';
 import FeatureInfoCatalogItem from './FeatureInfoCatalogItem.jsx';
 import Loader from '../Loader.jsx';
 import ObserveModelMixin from '../ObserveModelMixin';
@@ -10,7 +12,8 @@ import PropTypes from 'prop-types';
 import knockout from 'terriajs-cesium/Source/ThirdParty/knockout';
 import Entity from 'terriajs-cesium/Source/DataSources/Entity';
 import Icon from "../Icon.jsx";
-import { SEARCH_MARKER_DATA_SOURCE_NAME } from '../Search/SearchMarkerUtils';
+import { LOCATION_MARKER_DATA_SOURCE_NAME, addMarker, removeMarker, markerVisible } from '../../Models/LocationMarkerUtils';
+import prettifyCoordinates from '../../Map/prettifyCoordinates';
 
 import Styles from './feature-info-panel.scss';
 import classNames from 'classnames';
@@ -49,10 +52,13 @@ const FeatureInfoPanel = createReactClass({
                 }
                 if (defined(pickedFeatures.allFeaturesAvailablePromise)) {
                     pickedFeatures.allFeaturesAvailablePromise.then(() => {
-                        terria.selectedFeature = pickedFeatures.features.filter(featureHasInfo)[0];
-                        if (!defined(terria.selectedFeature) && (pickedFeatures.features.length > 0)) {
+                        // We only show features that are associated with a catalog item, so make sure the one we select to be
+                        // open initially is one we're actually going to show.
+                        const featuresShownAtAll = pickedFeatures.features.filter(x => defined(determineCatalogItem(terria.nowViewing, x)));
+                        terria.selectedFeature = featuresShownAtAll.filter(featureHasInfo)[0];
+                        if (!defined(terria.selectedFeature) && (featuresShownAtAll.length > 0)) {
                             // Handles the case when no features have info - still want something to be open.
-                            terria.selectedFeature = pickedFeatures.features[0];
+                            terria.selectedFeature = featuresShownAtAll[0];
                         }
                     });
                 }
@@ -142,6 +148,58 @@ const FeatureInfoPanel = createReactClass({
         this.state.lon = Math.abs(CesiumMath.toDegrees(value.longitude)).toFixed(5) + '°' + (value.longitude < 0 ? 'W' : 'E');
     },
 
+    addManualMarker(longitude, latitude) {
+        addMarker(this.props.terria, {
+            name: "User Selection",
+            location: {
+                latitude: latitude,
+                longitude: longitude
+            }
+        });
+    },
+
+    pinClicked(longitude, latitude) {
+        if (!markerVisible(this.props.terria)) {
+            this.addManualMarker(longitude, latitude);
+        } else {
+            removeMarker(this.props.terria);
+        }
+    },
+
+    locationUpdated(longitude, latitude) {
+        if (defined(latitude) && defined (longitude) && markerVisible(this.props.terria)) {
+            removeMarker(this.props.terria);
+            this.addManualMarker(longitude, latitude);
+        }
+    },
+
+    renderLocationItem(cartesianPosition) {
+        const catographic = Ellipsoid.WGS84.cartesianToCartographic(cartesianPosition);
+        const latitude = CesiumMath.toDegrees(catographic.latitude);
+        const longitude = CesiumMath.toDegrees(catographic.longitude);
+        const pretty = prettifyCoordinates(longitude, latitude);
+        this.locationUpdated(longitude, latitude);
+
+        const that = this;
+        const pinClicked = function() {
+            that.pinClicked(longitude, latitude);
+        };
+
+        const locationButtonStyle = markerVisible(this.props.terria) ? Styles.btnLocationSelected : Styles.btnLocation;
+
+        return (
+            <div className={Styles.location}>
+                <span>Lat / Lon&nbsp;</span>
+                <span>
+                    {pretty.latitude + ", " + pretty.longitude}
+                    <button type='button' onClick={pinClicked}  className={locationButtonStyle}>
+                        <Icon glyph={Icon.GLYPHS.location}/>
+                    </button>
+                </span>
+            </div>
+        );
+    },
+
     render() {
         const terria = this.props.terria;
         const viewState = this.props.viewState;
@@ -152,14 +210,31 @@ const FeatureInfoPanel = createReactClass({
             [Styles.isVisible]: viewState.featureInfoPanelIsVisible
         });
 
-        if (defined(terria.pickedFeatures))
-        {
-            var cartographicCoords = Ellipsoid.WGS84.cartesianToCartographic(this.props.terria.pickedFeatures.pickPosition);
-            this.formatCartographicAsString(cartographicCoords);
+        let position;
+        if (defined(terria.selectedFeature) && defined(terria.selectedFeature.position)) {
+            // If the clock is avaliable then use it, otherwise don't.
+            let clock;
+            if (defined(terria.clock)) {
+                clock = terria.clock.currentTime;
+            }
+
+            // If there is a selected feature then use the feature location.
+            position = terria.selectedFeature.position.getValue(clock);
+
+            // If position is invalid then don't use it.
+            // This seems to be fixing the symptom rather then the cause, but don't know what is the true cause this ATM.
+            if (isNaN(position.x) || isNaN(position.y) || isNaN(position.z)) {
+                position = undefined;
+            }
+        }
+        if (!defined(position)) {
+            // Otherwise use the location picked.
+            if (defined(terria.pickedFeatures) && defined(terria.pickedFeatures.pickPosition)) {
+                position = terria.pickedFeatures.pickPosition;
+            }
         }
 
         return (
-
             <div
                 className={panelClassName}
                 aria-hidden={!viewState.featureInfoPanelIsVisible}>
@@ -186,6 +261,9 @@ const FeatureInfoPanel = createReactClass({
                             {featureInfoCatalogItems}
                         </Otherwise>
                     </Choose>
+                    <If condition={position}>
+                        <li>{this.renderLocationItem(position)}</li>
+                    </If>
                 </ul>
                 <div className={Styles.body}>
                     <Choose>
@@ -254,9 +332,9 @@ function determineCatalogItem(nowViewing, feature) {
     if (defined(feature.entityCollection) && defined(feature.entityCollection.owner)) {
         const dataSource = feature.entityCollection.owner;
 
-        if (dataSource.name === SEARCH_MARKER_DATA_SOURCE_NAME) {
+        if (dataSource.name === LOCATION_MARKER_DATA_SOURCE_NAME) {
             return {
-                name: 'Search Marker'
+                name: 'Location Marker'
             };
         }
 

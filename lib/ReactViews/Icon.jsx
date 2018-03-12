@@ -65,6 +65,9 @@ const GLYPHS = {
     globe_rot2: require('../../wwwroot/images/icons/globe_rotate_2.svg'),
     rotate_left: require('../../wwwroot/images/icons/rotate-left.svg'),
     rotate_right: require('../../wwwroot/images/icons/rotate-right.svg'),
+    previous: require('../../wwwroot/images/icons/previous.svg'),
+    next: require('../../wwwroot/images/icons/next.svg'),
+    timeline: require('../../wwwroot/images/icons/timeline.svg'),
 };
 
 const Icon = createReactClass({
