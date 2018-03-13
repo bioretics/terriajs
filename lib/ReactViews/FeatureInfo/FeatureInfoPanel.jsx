@@ -19,9 +19,6 @@ import Styles from './feature-info-panel.scss';
 import classNames from 'classnames';
 
 
-import Ellipsoid from 'terriajs-cesium/Source/Core/Ellipsoid';
-import CesiumMath from 'terriajs-cesium/Source/Core/Math';
-
 const FeatureInfoPanel = createReactClass({
     displayName: 'FeatureInfoPanel',
     mixins: [ObserveModelMixin],
@@ -265,14 +262,14 @@ const FeatureInfoPanel = createReactClass({
                         <li>{this.renderLocationItem(position)}</li>
                     </If>
                 </ul>
-                <div className={Styles.body}>
+                {/*<div className={Styles.body}>
                     <Choose>
                         <When condition={defined(terria.pickedFeatures)}>
                             <div ><span>Lat:   </span><span>{this.state.lat}</span></div>
                             <div ><span>Lon:   </span><span>{this.state.lon}</span></div>
                         </When>
                     </Choose>
-                </div>
+                </div>*/}
             </div>
         );
     },
