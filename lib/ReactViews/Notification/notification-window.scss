@@ -16,8 +16,6 @@
 
   a {
     @include link($dark);
-    color: blue;
-    font-weight: bold;
   }
   pre{
       display: block;
