@@ -3,6 +3,17 @@
 Change Log
 ==========
 
+### rer3d_1.6.1 - 22/03/2018
+* Updated package.json.
+* Changed link color to be more readable.
+
+
+### rer3d_1.6.0 - 13/03/2018
+* Fix pull merge error in FeatureInfoPanel.jsx.
+* Merge pull request 'pr/4' from TerriaJS/terriajs.
+* Added check of ImageryLayerFeatureInfo to avoid the execution of unsafe.
+
+
 ### 5.6.2
 
 * Renamed search marker to location marker.
