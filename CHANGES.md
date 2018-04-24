@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+### rer3d_1.6.2 - 24/04/2018
+* Fixed "All White" basemap.
+
+
 ### rer3d_1.6.1 - 22/03/2018
 * Updated package.json.
 * Changed link color to be more readable.
