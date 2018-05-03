@@ -3,6 +3,11 @@
 Change Log
 ==========
 
+### rer3d_1.6.4 - 03/05/2018
+* Fixed mistyped in global style.
+* Exception risen if added a WMS layer with incompatible CRS.
+
+
 ### rer3d_1.6.3 - 24/04/2018
 * Removed old pics.
 
