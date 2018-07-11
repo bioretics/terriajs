@@ -3,6 +3,22 @@
 Change Log
 ==========
 
+### rer3d_1.7.0 - 11/07/2018
+* Message translated into Italian.
+* Fixed double results and added location data for SearchResultViewModel in NominatimSearchProviderViewModel.
+* Added a nbsp char in singleRowHtml Tooltip.
+* Added 'styles' to forbidden tags in parseCustomMarkdownToReact so that WMS and WFS HTML styles are ignored.
+* Working on calculation of elevation of WFS polylines.
+* Allowed area 2D measure and used mouse coords (with height data) in MeasureTool; the points are saved for in Terria state for elevation computation.
+* Changed tooltip offset in Chart.
+* Added elevationPoints array for elevation computation.
+* Changed chart-height from 250px to 500px.
+* Reduced workbench height to add elevation sidebar.
+* Added SidebarElevation with elevation data.
+* Added SidebarElevation into SidePanel.
+* BingMapsSearchProviderViewModel title changed from 'Locations' to 'Bing Locations'.
+
+
 ### rer3d_1.6.4 - 03/05/2018
 * Fixed mistyped in global style.
 * Exception risen if added a WMS layer with incompatible CRS.
