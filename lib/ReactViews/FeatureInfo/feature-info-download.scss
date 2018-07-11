@@ -23,6 +23,7 @@
 
 .dropdown__list {
   display: flex;
+  background-color: $dark-lighter;
   li a {
     @if variable-exists(text-link) {
       color: $text-link;

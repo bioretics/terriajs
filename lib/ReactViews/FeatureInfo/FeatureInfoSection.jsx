@@ -42,7 +42,8 @@ const FeatureInfoSection = createReactClass({
         position: PropTypes.object,
         catalogItem: PropTypes.object,  // Note this may not be known (eg. WFS).
         isOpen: PropTypes.bool,
-        onClickHeader: PropTypes.func
+        onClickHeader: PropTypes.func,
+        terria: PropTypes.object,
     },
 
     getInitialState() {
@@ -179,6 +180,39 @@ const FeatureInfoSection = createReactClass({
         });
     },
 
+    /*drawElevationProfile() {
+        console.log("prova_1");
+        if (this.props.feature) {
+            console.log("prova_2");
+            if (this.props.feature.polyline) {
+                console.log("prova_3");
+                const chartPoints = [];
+                const terrainProvider = this.props.terria.cesium.scene.terrainProvider;
+                let positions = this.props.feature.polyline.positions.getValue();
+                //sampleTerrainMostDetailed(terrainProvider, positions)
+
+                console.log("prova_35555: " + positions);
+                console.log("prova_35555: " + terrainProvider);
+                positions = [(4490977.9801631095, 4373814.268863809, 1171430.2571243462),(4490972.013725027, 4373819.011654966, 1171435.3880353018),(4490965.80181585, 4373821.1633279715, 1171451.0633190607)]
+                sampleTerrain(terrainProvider, 10, positions)
+                .then(function(raisedPositionsCartographic) {
+                    console.log("qwery_1")
+                    for (let i = 0; i < raisedPositionsCartographic.length; ++i) {
+
+                        chartPoints.push({ x: i + 1, y: Math.round(raisedPositionsCartographic[i].height) });
+                    }
+                    const chartData = new ChartData(chartPoints,
+                        { categoryName: 'elevation', name: 'elevation', units: 'm', color: 'red' });
+                    const _html = <Chart data={[chartData]} />;
+
+                    console.log(_html);
+                    this.props.terria.elevationPoints = _html;
+                });
+                console.log("prova_4");
+            }
+        }
+    },*/
+
     render() {
         const catalogItemName = (this.props.catalogItem && this.props.catalogItem.name) || '';
         let baseFilename = catalogItemName;
@@ -224,6 +258,11 @@ const FeatureInfoSection = createReactClass({
                                         {reactInfo.timeSeriesChart}
                                     </div>
                                 </If>
+                                {/*<div>
+                                    <button type="button" onClick={this.drawElevationProfile} className={Styles.rawDataButton}>
+                                        Profilo altimetrico
+                                    </button>
+                                </div>*/}
                                 <If condition={defined(reactInfo.downloadableData)}>
                                     <FeatureInfoDownload key='download'
                                         viewState={this.props.viewState}
@@ -673,7 +712,8 @@ function getInfoAsReactComponent(that) {
         hasRawData: !!rawDataHtml,
         timeSeriesChartTitle: timeSeriesChartTitle,
         timeSeriesChart: timeSeriesChart,
-        downloadableData: downloadableData
+        downloadableData: downloadableData,
+        isVectorial: that.props.feature && that.props.feature.polyline ? true : false
     };
 }
 

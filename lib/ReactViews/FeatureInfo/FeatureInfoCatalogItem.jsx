@@ -51,6 +51,7 @@ const FeatureInfoCatalogItem = createReactClass({
                         template={featureInfoTemplate}
                         isOpen={feature === terria.selectedFeature}
                         onClickHeader={this.props.onToggleOpen}
+                        terria={this.props.terria}
                     />
                 );
             });
