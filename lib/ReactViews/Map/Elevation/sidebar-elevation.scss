@@ -1,0 +1,66 @@
+@import '../../../Sass/common/mixins';
+@import '~terriajs-variables';
+@import '../Navigation/nav';
+
+.toolButton {
+  display: inline-block;
+
+  @media print {
+    display: none;
+  }
+}
+
+.btnDistance3D{
+  composes: btn from '../../../Sass/common/_buttons.scss';
+  composes: btn-primary from '../../../Sass/common/_buttons.scss';
+  width: 70px;
+}
+
+.viewerSelector{
+  composes: clearfix from '../../../Sass/common/_base.scss';
+  composes: list-reset from '../../../Sass/common/_base.scss';
+
+  margin: 0 -$padding-mini;
+
+  list-style: none;
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+}
+
+.listItem {
+  padding: $padding-mini;
+  composes: col from '../../../Sass/common/_base.scss';
+  display: inline-block;
+}
+
+.distanceField{
+  composes: field from '../../../Sass/common/_form.scss';
+  background: $overlay;
+}
+
+.bearingField{
+  composes: field from '../../../Sass/common/_form.scss';
+  background: $overlay;
+  width: 60%;
+  text-align: center;
+}
+
+.elevation {
+  color: $text-light;
+  font-size: $font-size-mid-small;
+  padding: $padding;
+  background: $overlay;
+  border: dashed 1px rgba(255, 255, 255, 0.5);
+  margin: $padding-small;
+}
+
+.btn--done {
+  composes: btn from '../../../Sass/common/_buttons.scss';
+  composes: btn from '../../badge-bar.scss';
+  composes: btn--tertiary-dark from '../../../Sass/common/_buttons.scss';
+  padding: 5px;
+  font-size: $font-size-mid-mini;
+  border-radius: 2px;
+}
+
