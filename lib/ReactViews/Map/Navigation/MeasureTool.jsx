@@ -16,23 +16,29 @@ const PolygonHierarchy = require('terriajs-cesium/Source/Core/PolygonHierarchy.j
 const Cartesian3 = require('terriajs-cesium/Source/Core/Cartesian3.js');
 const VertexFormat = require('terriajs-cesium/Source/Core/VertexFormat.js');
 
+const Cartographic = require('terriajs-cesium/Source/Core/Cartographic');
+
+
 const MeasureTool = createReactClass({
     displayName: 'MeasureTool',
     mixins: [ObserveModelMixin],
 
     propTypes: {
-        terria: PropTypes.object
+        terria: PropTypes.object,
+        mouseCoords: PropTypes.object.isRequired
     },
 
+    // allowPolygon setted to true
     getInitialState() {
         return {
             totalDistanceMetres: 0,
             totalAreaMetresSquared: 0,
+            drawnPointsPositions: [],
             userDrawing: new UserDrawing(
                 {
                     terria: this.props.terria,
-                    messageHeader: "Misura",
-                    allowPolygon: false,
+                    messageHeader: "Misura 2D",
+                    allowPolygon: true,
                     onPointClicked: this.onPointClicked,
                     onPointMoved: this.onPointMoved,
                     onCleanUp: this.onCleanUp,
@@ -70,10 +76,9 @@ const MeasureTool = createReactClass({
 
     updateDistance(pointEntities) {
         this.setState({ totalDistanceMetres: 0 });
-        if (pointEntities.entities.values.length < 1) {
+        if (pointEntities.entities.values.length < 2) {
             return;
         }
-
         const prevPoint = pointEntities.entities.values[0];
         let prevPointPos = prevPoint.position.getValue(this.props.terria.clock.currentTime);
         for (let i=1; i < pointEntities.entities.values.length; i++) {
@@ -160,13 +165,24 @@ const MeasureTool = createReactClass({
     },
 
     onCleanUp() {
-        this.setState({totalDistanceMetres: 0});
-        this.setState({totalAreaMetresSquared: 0});
+        this.setState({ totalDistanceMetres: 0 });
+        this.setState({ totalAreaMetresSquared: 0 });
+        this.state.drawnPointsPositions.length = 0;
     },
 
     onPointClicked(pointEntities) {
+        const mouseCoord = this.props.mouseCoords;
+        const carto = new Cartographic(CesiumMath.toRadians(parseFloat(mouseCoord.longitude)),
+            CesiumMath.toRadians(parseFloat(mouseCoord.latitude)),
+            parseInt(mouseCoord.elevation));
+        const positions = this.state.drawnPointsPositions;
+        positions.push(carto);
+        this.setState({ drawnPointsPositions: positions });
+
         this.updateDistance(pointEntities);
         this.updateArea(pointEntities);
+
+        this.props.terria.elevationPoints = this.state.drawnPointsPositions;
     },
 
     onPointMoved(pointEntities) {
