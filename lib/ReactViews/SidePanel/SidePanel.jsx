@@ -15,6 +15,9 @@ import { removeMarker } from '../../Models/LocationMarkerUtils';
 
 import Styles from './side-panel.scss';
 
+
+import SidebarElevation from '../Map/Elevation/SidebarElevation.jsx';
+
 const SidePanel = createReactClass({
     displayName: 'SidePanel',
     mixins: [ObserveModelMixin],
@@ -75,6 +78,8 @@ const SidePanel = createReactClass({
     render() {
         const searchState = this.props.viewState.searchState;
 
+        this.props.terria.currentViewer.notifyRepaintRequired();
+
         return (
             <div className={Styles.workBench}>
                 <div className={Styles.header}>
@@ -113,6 +118,12 @@ const SidePanel = createReactClass({
                         </Otherwise>
                     </Choose>
                 </div>
+                <If condition={this.props.terria.elevationPoints}>
+                    <SidebarElevation
+                        terria={this.props.terria}
+                        viewState={this.props.viewState}
+                        isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
+                </If>
             </div>
         );
     },
