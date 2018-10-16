@@ -168,7 +168,7 @@ const MobileHeader = createReactClass({
                                         <SearchBox searchText={searchState.catalogSearchText}
                                                    onSearchTextChanged={this.changeCatalogSearchText}
                                                    onDoSearch={this.searchCatalog}
-                                                   searchBoxLabel="Cerca catalogo"
+                                                   placeholder="Cerca catalogo"
                                                    onClear={this.closeCatalogSearch}
                                                    autoFocus={true} />
                                     </When>

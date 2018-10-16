@@ -19,7 +19,8 @@ const FeatureInfoCatalogItem = createReactClass({
         catalogItem: PropTypes.object,
         terria: PropTypes.object.isRequired,
         viewState: PropTypes.object.isRequired,
-        onToggleOpen: PropTypes.func.isRequired
+        onToggleOpen: PropTypes.func.isRequired,
+        printView: PropTypes.bool
     },
 
     render() {
@@ -49,9 +50,9 @@ const FeatureInfoCatalogItem = createReactClass({
                         feature={feature}
                         position={terria.pickedFeatures && terria.pickedFeatures.pickPosition}
                         template={featureInfoTemplate}
-                        isOpen={feature === terria.selectedFeature}
+                        isOpen={feature === terria.selectedFeature || this.props.printView}
                         onClickHeader={this.props.onToggleOpen}
-                        terria={this.props.terria}
+                        printView={this.props.printView}
                     />
                 );
             });

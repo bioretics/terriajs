@@ -62,9 +62,6 @@ const ViewingControls = createReactClass({
     splitItem() {
         const item = this.props.item;
         item.splitDirection = ImagerySplitDirection.RIGHT;
-        if (item.canUseOwnClock) {
-            item.useOwnClock = true;
-        }
         const serializedItem = item.serializeToJson();
         serializedItem.name = serializedItem.name + ' (copy)';
         serializedItem.splitDirection = ImagerySplitDirection.LEFT;
@@ -72,6 +69,11 @@ const ViewingControls = createReactClass({
 
         const newItem = createCatalogMemberFromType(item.type, item.terria);
         newItem.updateFromJson(serializedItem);
+
+        if (newItem.useOwnClock === false) {
+            newItem.useOwnClock = true;
+        }
+
         // newItem is added to terria.nowViewing automatically by the "isEnabled" observable on CatalogItem (see isEnabledChanged).
         // However, nothing adds it to terria.catalog automatically, which is required so the new item can be shared.
         addUserCatalogMember(item.terria, newItem, {open: false, zoomTo: false});
@@ -91,6 +93,11 @@ const ViewingControls = createReactClass({
         this.props.viewState.switchMobileView(this.props.viewState.mobileViewOptions.preview);
     },
 
+    exportData() {
+        const item = this.props.item;
+        item.exportData();
+    },
+
     render() {
         const item = this.props.item;
         const canZoom = item.canZoomTo || (item.tableStructure && item.tableStructure.sourceFeature);
@@ -100,15 +107,23 @@ const ViewingControls = createReactClass({
             <ul className={Styles.control}>
                 <If condition={item.canZoomTo}>
                     <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.zoomTo} title="Zoom sull'intera estensione del layer" className={Styles.btn}>Zoom sul layer</button></li>
+                    <span className={Styles.separator}/>
                 </If>
                 <If condition={item.tableStructure && item.tableStructure.sourceFeature}>
                     <li className={classNames(Styles.zoom, classList)}><button type='button' onClick={this.openFeature} title="Zoom sull'intera estensione del layer" className={Styles.btn}>Zoom sul layer</button></li>
+                    <span className={Styles.separator}/>
                 </If>
                 <If condition={item.showsInfo}>
                     <li className={classNames(Styles.info, classList)}><button type='button' onClick={this.previewItem} className={Styles.btn} title='Mostra le informazioni riguardanti il layer'>Metadati</button></li>
+                    <span className={Styles.separator}/>
                 </If>
                 <If condition={canSplit}>
                     <li className={classNames(Styles.split, classList)}><button type='button' onClick={this.splitItem} title="Duplica la mappa e mostra lo splitter" className={Styles.btn}>Split</button></li>
+                    <span className={Styles.separator}/>
+                </If>
+                <If condition={defined(item.linkedWcsUrl)}>
+                    <li className={classNames(Styles.info, classList)}><button type='button' onClick={this.exportData} className={Styles.btn} title='Esporta i dati della mappa'>Esporta</button></li>
+                    <span className={Styles.separator}/>
                 </If>
                 <li className={classNames(Styles.remove, classList)}>
                     <button type='button' onClick={this.removeFromMap} title="Rimuove il layer" className={Styles.btn}>

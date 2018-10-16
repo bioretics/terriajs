@@ -9,8 +9,6 @@ import SharePanel from './Panels/SharePanel/SharePanel.jsx';
 import CoordsConverterPanel from './Panels/CoordsConverterPanel.jsx';
 import ToolsPanel from './Panels/ToolsPanel/ToolsPanel.jsx';
 
-import FullScreenButton from './Navigation/FullScreenButton.jsx';
-import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
 import ObserveModelMixin from '../ObserveModelMixin';
 
 import Styles from './menu-bar.scss';
@@ -40,12 +38,11 @@ const MenuBar = createReactClass({
             <div className={Styles.menuArea}>
                 <ul className={Styles.menu}>
                     <li className={Styles.menuItem}>
-                        <FullScreenButton terria={this.props.terria} viewState={this.props.viewState}/>
-                    </li>
-                    <li className={Styles.menuItem}>
-                        <SettingPanel terria={this.props.terria}
-                                      allBaseMaps={this.props.allBaseMaps}
-                                      viewState={this.props.viewState}/>
+                        <SettingPanel
+                            terria={this.props.terria}
+                            allBaseMaps={this.props.allBaseMaps}
+                            viewState={this.props.viewState}
+                        />
                     </li>
                     <li className={Styles.menuItem}>
                         <SharePanel terria={this.props.terria}
@@ -72,7 +69,7 @@ const MenuBar = createReactClass({
                 </ul>
             </div>
         );
-    },
+    }
 });
 
 export default MenuBar;

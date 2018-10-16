@@ -10,7 +10,8 @@ import ObserveModelMixin from '../ObserveModelMixin';
 import SearchBox from '../Search/SearchBox.jsx';
 import SidebarSearch from '../Search/SidebarSearch.jsx';
 import Workbench from '../Workbench/Workbench.jsx';
-import Icon from "../Icon.jsx";
+import Icon from '../Icon.jsx';
+import FullScreenButton from './FullScreenButton.jsx';
 import { removeMarker } from '../../Models/LocationMarkerUtils';
 
 import Styles from './side-panel.scss';
@@ -83,10 +84,19 @@ const SidePanel = createReactClass({
         return (
             <div className={Styles.workBench}>
                 <div className={Styles.header}>
-                    <SearchBox onSearchTextChanged={this.changeSearchText}
-                               onDoSearch={this.search}
-                               onFocus={this.startLocationSearch}
-                               searchText={searchState.locationSearchText} />
+                    <FullScreenButton
+                        terria={this.props.terria}
+                        viewState={this.props.viewState}
+                        minified={true}
+                        animationDuration={250}
+                    />
+                    <SearchBox
+                        onSearchTextChanged={this.changeSearchText}
+                        onDoSearch={this.search}
+                        onFocus={this.startLocationSearch}
+                        searchText={searchState.locationSearchText}
+                        placeholder='Search for locations'
+                    />
                     <div className={Styles.addData}>
                         <button type='button' onClick={this.onAddDataClicked} className={Styles.button}>
                             <Icon glyph={Icon.GLYPHS.add}/>Aggiungi layer
@@ -101,14 +111,17 @@ const SidePanel = createReactClass({
                                 viewState={this.props.viewState}
                                 isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
                         </When>
-                        <When
-                            condition={this.props.terria.nowViewing.items && this.props.terria.nowViewing.items.length > 0}>
+                        <When condition={this.props.terria.nowViewing.items && this.props.terria.nowViewing.items.length > 0}>
                             <Workbench viewState={this.props.viewState} terria={this.props.terria} />
                         </When>
                         <Otherwise>
                             <div className={Styles.workbenchEmpty}>
                                 <div>Il pannello dei layer è vuoto</div>
-                                <p><strong>Clicca su 'Aggiungi layer' per:</strong></p>
+                                <p>
+                                    <strong>
+                                        Click su &apos;Aggiungi layer&apos; per:
+                                    </strong>
+                                </p>
                                 <ul>
                                     <li>visionare il catalogo corrente</li>
                                     <li>caricare nuovi dati</li>
@@ -126,7 +139,7 @@ const SidePanel = createReactClass({
                 </If>
             </div>
         );
-    },
+    }
 });
 
 module.exports = SidePanel;
