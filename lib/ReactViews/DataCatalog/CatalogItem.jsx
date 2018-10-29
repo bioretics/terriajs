@@ -10,13 +10,15 @@ import Styles from './data-catalog-item.scss';
 const STATE_TO_TITLE = {
     loading: 'Caricamento...',
     remove: 'Rimuovi',
-    add: 'Aggiungi'
+    add: 'Aggiungi',
+    trash: 'Rimuovi dal catalogo'
 };
 
 const STATE_TO_ICONS = {
     loading: <Icon glyph={Icon.GLYPHS.loader}/>,
     remove: <Icon glyph={Icon.GLYPHS.remove}/>,
     add: <Icon glyph={Icon.GLYPHS.add}/>,
+    trash: <Icon glyph={Icon.GLYPHS.trashcan}/>,
     stats: <Icon glyph={Icon.GLYPHS.barChart}/>,
     preview: <Icon glyph={Icon.GLYPHS.right}/>
 };

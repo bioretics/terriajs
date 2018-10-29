@@ -39,6 +39,15 @@ Change Log
 * Fix pull merge error in FeatureInfoPanel.jsx.
 * Merge pull request 'pr/4' from TerriaJS/terriajs.
 * Added check of ImageryLayerFeatureInfo to avoid the execution of unsafe.
+## v6.2.3
+
+* Changed the "My Data" interface to be much more intuitive and tweaked the visual style of the catalog.
+* Made it possible to configure the compass control's colors using CSS.
+
+### v6.2.2
+
+* Removed the Terria logo from the preview map and made the credit there smaller.
+* Fall back to the style name in the workbench styles dropdown when no title is given for a style in WMS GetCapabilities.
 
 ### v6.2.1
 
@@ -419,7 +428,7 @@ Change Log
 ### 4.8.2
 
 * Fixed a bug that prevented a `shareUrl` specified in `config.json` from actually being used by the `ShareDataService`.
-* Adding a JSON init file by dropping it on the map or selecting it from the My Data tab no longer adds an entry to the Workbench and User-Added Data catalog.
+* Adding a JSON init file by dropping it on the map or selecting it from the My Data tab no longer adds an entry to the Workbench and My Data catalog.
 * WPS return type can now be `application/vnd.terriajs.catalog-member+json` which allows a json catalog member to be returned in WPS along with the usual attributes to control display.
 * `chartLineColor` tableStyle attribute added, allowing per column specification of chart line color.
 * Fixed a bug that caused a `WebMapServiceCatalogItem` inside a `WebMapServiceCatalogGroup` to revert to defaults from GetCapabilities instead of using shared properties.
