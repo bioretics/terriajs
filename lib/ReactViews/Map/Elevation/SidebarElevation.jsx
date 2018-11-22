@@ -29,11 +29,35 @@ const SidebarElevation = createReactClass({
 
     getInitialState() {
         return {
-            totalDistance3DMetres: 0
+            totalDistance3DMetres: 0,
+            max: undefined,
+            min: undefined,
+            updateFor3D: false
+            //stepDistance3DMetres: [],
         };
     },
 
+    componentDidUpdate(prevProps, prevState) {
+        if(prevState.updateFor3D === this.state.updateFor3D){
+            if (this.state.updateFor3D === false) {
+                /*const positions = this.props.terria.elevationPoints;
+                const maxH = Math.max.apply(Math, positions.map(function(o) { return o.height; }));
+                const minH = Math.min.apply(Math, positions.map(function(o) { return o.height; }));
+                this.setState({ max: maxH, min: minH });*/
+                
+                this.setState({ totalDistance3DMetres: undefined, max: undefined, min: undefined });
+            }
+            else {
+                this.setState({ updateFor3D: false });
+            }
+        }
+    },
+
     prettifyNumber(number, squared) {
+        if(typeof number == 'undefined') {
+            return 0;
+        }
+
         if (number <= 0) {
             return "";
         }
@@ -50,6 +74,7 @@ const SidebarElevation = createReactClass({
                 number = number / 1000.0;
             }
         }
+
         number = number.toFixed(2);
         // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
         number = number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -61,39 +86,48 @@ const SidebarElevation = createReactClass({
     },
 
     getColorRamp() {
-        var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
+        var elevationRamp = [0.0, 0.5, 1.0];
+        //var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
         //var slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2)/2, 0.87, 0.91, 1.0];
         var ramp = document.createElement('canvas');
-        ramp.width = 9000;
+        ramp.width = 4000;
         ramp.height = 1;
         var ctx = ramp.getContext('2d');
 
-        var values = elevationRamp;
+        var grd = ctx.createLinearGradient(0, 0, 100, 0);
+        /*grd.addColorStop(elevationRamp[0], '#ffffff00'); //white
+        grd.addColorStop(elevationRamp[1], '#2747E090'); //blue
+        grd.addColorStop(elevationRamp[2], '#D33B7D90'); //pink
+        grd.addColorStop(elevationRamp[3], '#D3303890'); //red
+        grd.addColorStop(elevationRamp[4], '#FF974290'); //orange
+        grd.addColorStop(elevationRamp[5], '#ffd70090'); //yellow
+        grd.addColorStop(elevationRamp[6], '#ffffff00'); //white*/
 
-        /*grd.addColorStop(values[0], '#00000040'); //black
-        grd.addColorStop(values[1], '#2747E040'); //blue
-        grd.addColorStop(values[2], '#D33B7D40'); //pink
-        grd.addColorStop(values[3], '#D3303840'); //red
-        grd.addColorStop(values[4], '#FF974240'); //orange
-        grd.addColorStop(values[5], '#ffd70040'); //yellow
-        grd.addColorStop(values[6], '#ffffff40'); //white*/
+        grd.addColorStop(elevationRamp[0], '#ffffff00'); //white*/
+        grd.addColorStop(elevationRamp[1], '#D3303890'); //red
+        grd.addColorStop(elevationRamp[2], '#ffffff00'); //white*/
 
-        //ctx.fillStyle = grd;
+        ctx.fillStyle = grd;
         //ctx.fillRect(0, 0, 100, 1);
 
-        ctx.fillStyle = '#FF0000B0';
-        ctx.fillRect(150, 0, 160, 1);
+        //ctx.fillStyle = '#FF0000B0';
+        ctx.fillRect(0, 0, 4000, 1);
 
         return ramp;
     },
 
     colorByElevationThreshold() {
-        /*var material = CesiumMaterial.fromType('ElevationRamp');
+        const min = 300;
+        const max = 500;
+        console.log(min);
+        console.log(max);
+        const scene = this.props.terria.cesium.scene;
+        var material = CesiumMaterial.fromType('ElevationRamp');
         var shadingUniforms = material.uniforms;
-        shadingUniforms.minimumHeight = 0;
-        shadingUniforms.maximumHeight = 9000;
+        shadingUniforms.minimumHeight = min;
+        shadingUniforms.maximumHeight = max;
         shadingUniforms.image = this.getColorRamp();
-        scene.globe.material = material;*/
+        scene.globe.material = material;
     },
 
     /**
@@ -101,6 +135,7 @@ const SidebarElevation = createReactClass({
 */
     updateDistance3D() {
         this.setState({ totalDistance3DMetres: 0 });
+        //this.setState({ totalDistance3DMetres: 0, stepDistance3DMetres: undefined });
         const positions = this.props.terria.elevationPoints;
         const scene = this.props.terria.cesium.scene;
 
@@ -128,16 +163,21 @@ const SidebarElevation = createReactClass({
             .then(function (raisedPositionsCartographic) {
                 let dist = 0;
 
+                const maxH = Math.max.apply(Math, raisedPositionsCartographic.map(function(o) { return o.height; }));
+                const minH = Math.min.apply(Math, raisedPositionsCartographic.map(function(o) { return o.height; }));
+
                 // Conversion from Cartographic to Cartesian3.
                 let raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartographic);
 
                 // Sum the 3D length of each segment.
                 for (let i = 1; i < raisedPositions.length; ++i) {
-                    dist += Cartesian3.distance(raisedPositions[i], raisedPositions[i - 1]);
+                    let tmpDist = Cartesian3.distance(raisedPositions[i], raisedPositions[i - 1]);
+                    dist += tmpDist;
                 }
 
                 // Set new value in state.
-                that.setState({ totalDistance3DMetres: dist });
+                that.setState({ totalDistance3DMetres: dist, max: maxH, min: minH, updateFor3D: true });
+                //that.setState({ totalDistance3DMetres: dist, stepDistance3DMetres: dist3d, updateFor3D: false });
                 // Update React UI.
                 that.state.userDrawing.causeUpdate();
             });
@@ -175,10 +215,17 @@ const SidebarElevation = createReactClass({
 
     render() {
         const chartPoints = [];
+        const distData = [];
         const positions = this.props.terria.elevationPoints;
         if (positions.length > 1) {
             for (let i = 0; i < positions.length; ++i) {
                 chartPoints.push({ x: i + 1, y: Math.round(positions[i].height) });
+                if (i === 0) {
+                    distData.push(0);
+                }
+                else {
+                    distData.push(positions[i]);
+                }
             }
         }
         const chartData = new ChartData(chartPoints, { categoryName: 'altitudine', name: 'elevation', units: 'm', color: 'white' });
@@ -190,8 +237,6 @@ const SidebarElevation = createReactClass({
         return (
             <div>
                 <If condition={this.props.terria.elevationPoints}>
-                    <p />
-                    <p />
                     <div className={Styles.elevation}>
                         <font color="white">
                             <center><b>Distanza 3D</b></center>
@@ -206,6 +251,19 @@ const SidebarElevation = createReactClass({
                                 <li className={Styles.listItem}>
                                     <input className={Styles.distanceField} type="text" readOnly
                                         value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
+                                </li>
+                            </ul>
+                            <br />
+                            <ul className={Styles.viewerSelector}>
+                                <li className={Styles.listItem}>
+                                    <center><b>Alt. Min</b></center>
+                                    <center><input className={Styles.bearingField} type="text" readOnly
+                                        value={this.prettifyNumber(this.state.min)} /></center>
+                                </li>
+                                <li className={Styles.listItem}>
+                                    <center><b>Alt. Max</b></center>
+                                    <center><input className={Styles.bearingField} type="text" readOnly
+                                        value={this.prettifyNumber(this.state.max)} /></center>
                                 </li>
                             </ul>
                             <br />
@@ -230,7 +288,47 @@ const SidebarElevation = createReactClass({
                             <div >
                                 <Chart data={[chartData]} height={200} />
                             </div>
-                            <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Fatto</button>
+                            <br />
+                            <hr />
+                            <br />
+                            <center><b>Dettaglio tappe</b></center>
+                            <div>
+                                <ul className={Styles.table}>
+                                    <li className={Styles.colsmall}>#</li>
+                                    <li className={Styles.colnormal}>Altitudine</li>
+                                    <li className={Styles.colnormal}>Dislivello</li>
+                                    <li className={Styles.colnormal}>Distanza</li>
+                                </ul>
+                                <For each="item" index="idx" of={positions}>
+                                    <ul className={Styles.table} key={idx}>
+                                        <li className={Styles.colsmall}>{idx + 1}</li>
+                                        <li className={Styles.colnormal}>{item.height}</li>
+                                        <Choose>
+                                            {/*<When condition={this.props.terria.elevationPoints && }>
+                                                <li className={Styles.colnormal}>{this.prettifyNumber(this.state.stepDistance3DMetres[idx])}</li>
+                                            </When>*/}
+                                            <When condition={idx > 0}>
+                                                <li className={Styles.colnormal}>{item.height - positions[idx - 1].height}</li>
+                                            </When>
+                                            <Otherwise>
+                                                <li className={Styles.colnormal}></li>
+                                            </Otherwise>
+                                        </Choose>
+                                        <Choose>
+                                            <When condition={this.props.terria.stepDistanceMetres && idx > 0 && this.props.terria.stepDistanceMetres.length > 0}>
+                                                <li className={Styles.colnormal}>{this.props.terria.stepDistanceMetres[idx]}</li>
+                                            </When>
+                                            <Otherwise>
+                                                <li className={Styles.colnormal}></li>
+                                            </Otherwise>
+                                        </Choose>
+                                    </ul>
+                                </For>
+                            </div>
+                            <hr />
+                            <br />
+                            {/*<button type='button' onClick={this.colorByElevationThreshold} className={Styles.btnDone}>COLORA</button>*/}
+                            <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
                         </font>
                     </div>
                 </If>

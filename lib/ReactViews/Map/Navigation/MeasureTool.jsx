@@ -34,6 +34,7 @@ const MeasureTool = createReactClass({
             totalDistanceMetres: 0,
             totalAreaMetresSquared: 0,
             drawnPointsPositions: [],
+            stepDistanceMetres: [],
             userDrawing: new UserDrawing(
                 {
                     terria: this.props.terria,
@@ -79,23 +80,28 @@ const MeasureTool = createReactClass({
         if (pointEntities.entities.values.length < 2) {
             return;
         }
+        const dist2d = [0.0];
         const prevPoint = pointEntities.entities.values[0];
         let prevPointPos = prevPoint.position.getValue(this.props.terria.clock.currentTime);
         for (let i=1; i < pointEntities.entities.values.length; i++) {
             const currentPoint = pointEntities.entities.values[i];
             const currentPointPos = currentPoint.position.getValue(this.props.terria.clock.currentTime);
 
-            this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + this.getGeodesicDistance(prevPointPos,
-                                                                                                           currentPointPos)});
+            const tmpDist = this.getGeodesicDistance(prevPointPos, currentPointPos);
+            this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + tmpDist});
+            dist2d.push(this.prettifyNumber(tmpDist));
 
             prevPointPos = currentPointPos;
         }
         if (this.state.userDrawing.closeLoop) {
             const firstPoint = pointEntities.entities.values[0];
             const firstPointPos = firstPoint.position.getValue(this.props.terria.clock.currentTime);
-            this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + this.getGeodesicDistance(prevPointPos,
-                                                                                                           firstPointPos)});
+            const tmpDist = this.getGeodesicDistance(prevPointPos, firstPointPos);
+            this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + tmpDist});
+            dist2d.push(this.prettifyNumber(tmpDist));
         }
+
+        this.setState({ stepDistanceMetres: dist2d });
     },
 
     updateArea(pointEntities) {
@@ -168,6 +174,7 @@ const MeasureTool = createReactClass({
         this.setState({ totalDistanceMetres: 0 });
         this.setState({ totalAreaMetresSquared: 0 });
         this.state.drawnPointsPositions.length = 0;
+        this.state.stepDistanceMetres.length = 0;
     },
 
     onPointClicked(pointEntities) {
@@ -183,6 +190,7 @@ const MeasureTool = createReactClass({
         this.updateArea(pointEntities);
 
         this.props.terria.elevationPoints = this.state.drawnPointsPositions;
+        this.props.terria.stepDistanceMetres = this.state.stepDistanceMetres;
     },
 
     onPointMoved(pointEntities) {

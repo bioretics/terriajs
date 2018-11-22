@@ -47,12 +47,24 @@
 }
 
 .elevation {
+  composes: list-reset from '../../../Sass/common/_base.scss';
+  composes: scrollbars from '../../../Sass/common/_base.scss';
+
   color: $text-light;
   font-size: $font-size-mid-small;
   padding: $padding;
   background: $overlay;
   border: dashed 1px rgba(255, 255, 255, 0.5);
   margin: $padding-small;
+
+  position: relative;
+  height: calc(100vh - #{$workbench-header + $logo-height});
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  @media (max-width : $sm) {
+    height: calc(100% - #{$mobile-modal-top-height});
+  }
 }
 
 .btn--done {
@@ -62,5 +74,23 @@
   padding: 5px;
   font-size: $font-size-mid-mini;
   border-radius: 2px;
+  float: right;
 }
 
+ul.table {
+  list-style-type: none;
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  padding: 0;
+}
+li.colsmall {
+  display: table-cell;
+  width: 10%;
+  text-align: right;
+}
+li.colnormal {
+  display: table-cell;
+  width: 30%;
+  text-align: right;
+}
