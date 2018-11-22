@@ -24,7 +24,7 @@ const CoordsConverterPanel = createReactClass({
     propTypes: {
         terria: PropTypes.object,
         userPropWhiteList: PropTypes.array,
-        isOpen: PropTypes.bool,
+        //isOpen: PropTypes.bool,
         viewState: PropTypes.object.isRequired,
         epsgList: PropTypes.array,
         x: PropTypes.string,
@@ -35,18 +35,19 @@ const CoordsConverterPanel = createReactClass({
 
     getDefaultProps() {
         return {
-            isOpen: false,
+            //isOpen: false,
             epsgList: [
-                {code: 4326, text: 'WGS 84'}, 
-                {code: 32632, text: 'UTM zone 32N'}, {code: 32633, text: 'UTM zone 33N'}, 
-                {code: 4265, text: 'Monte Mario'}, {code: 3003, text: 'Monte Mario / Italy zone 1'}, {code: 3004, text: 'Monte Mario / Italy zone 2'}, {code: 4806, text: 'Monte Mario (Rome)'}, 
-                {code: 4230, text: 'ED50'}, {code: 23032, text: 'ED50 / UTM zone 32N'}, {code: 23033, text: 'ED50 / UTM zone 33N'}, 
-                {code: 4258, text: 'ETRS89'}, {code: 25832, text: 'ETRS89 / UTM zone 32N'}, {code: 25833, text: 'ETRS89 / UTM zone 33N'} ]
+                { code: 4326, text: 'WGS 84' },
+                { code: 32632, text: 'UTM zone 32N' }, { code: 32633, text: 'UTM zone 33N' },
+                { code: 4265, text: 'Monte Mario' }, { code: 3003, text: 'Monte Mario / Italy zone 1' }, { code: 3004, text: 'Monte Mario / Italy zone 2' }, { code: 4806, text: 'Monte Mario (Rome)' },
+                { code: 4230, text: 'ED50' }, { code: 23032, text: 'ED50 / UTM zone 32N' }, { code: 23033, text: 'ED50 / UTM zone 33N' },
+                { code: 4258, text: 'ETRS89' }, { code: 25832, text: 'ETRS89 / UTM zone 32N' }, { code: 25833, text: 'ETRS89 / UTM zone 33N' }]
         };
     },
 
     getInitialState() {
         return {
+            isOpen: false,
             sCrs: this.props.epsgList[0].code,
             tCrs: this.props.epsgList[0].code,
             x: '',
@@ -54,22 +55,24 @@ const CoordsConverterPanel = createReactClass({
         };
     },
 
-    onOpenChanged(open) {
+    /*onOpenChanged(open) {
         this.setState({
             isOpen: open
         });
+    },*/
 
-        /*if (open) {
-            
-        }*/
+    changeOpenState(open) {
+        this.setState({
+            isOpen: open
+        });
     },
 
     changedX(event) {
-        this.setState({x: event.target.value});
+        this.setState({ x: event.target.value });
     },
 
     changedY(event) {
-        this.setState({y: event.target.value});
+        this.setState({ y: event.target.value });
     },
 
     changedS(event) {
@@ -139,15 +142,14 @@ const CoordsConverterPanel = createReactClass({
             if (xhr.readyState == 4 && xhr.status == 200) {
                 document.getElementById("conversionOutput").innerHTML = xhr.responseText;
             }
-            else {
+            /*else {
                 console.log('XMLHttpRequest: readyState = ' + xhr.readyState + '  ;  status = ' + xhr.status);
-            }
+            }*/
         }
     },
 
     onLoadPickedCoords(event) {
-        if (defined(this.props.terria.pickedFeatures))
-        {
+        if (defined(this.props.terria.pickedFeatures)) {
             var cartographicCoords = Ellipsoid.WGS84.cartesianToCartographic(this.props.terria.pickedFeatures.pickPosition);
 
             const latitude = CesiumMath.toDegrees(cartographicCoords.latitude);
@@ -173,6 +175,74 @@ const CoordsConverterPanel = createReactClass({
         });
     },
 
+    renderContent() {
+
+        return (<div>
+            <div className={classNames(DropdownStyles.header)}>
+                <label className={DropdownStyles.heading}>CONVERTITORE DI COORDINATE</label>
+            </div>
+            <div>
+                <p>
+                    <label>Coordinate ultimo click:     </label>
+                    <button className={Styles.btnCoordLoad} onClick={this.onLoadPickedCoords}>Carica</button>
+                </p>
+            </div>
+
+            <div className={classNames(DropdownStyles.section, Styles.section)}>
+                <p>
+                    <label>CRS sorgente</label>
+                </p>
+                <p>
+                    <select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
+                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; })}
+                    </select>
+                </p>
+                <p>
+                    CRS destinazione
+                        </p>
+                <p>
+                    <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
+                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; })}
+                    </select>
+                </p>
+            </div>
+            <div className={classNames(DropdownStyles.section, Styles.section)}>
+                <p>
+                    <label>X / Longitude</label>
+                </p>
+                <p>
+                    <input className={Styles.coordsField} type="text" name="coordX" onChange={this.changedX} value={this.state.x} />
+                </p>
+                <p>
+                    <label>Y / Latitude</label>
+                </p>
+                <p>
+                    <input className={Styles.coordsField} type="text" name="coordY" onChange={this.changedY} value={this.state.y} />
+                </p>
+            </div>
+            <div className={classNames(Styles.viewer, DropdownStyles.section)}>
+                <ul className={classNames(Styles.viewerSelector)}>
+                    <li className={Styles.listItem}>
+                        <input className={Styles.btnCoord} type="button" value="Converti" onClick={(event) => this.loadRes(this.state.x, this.state.y, this.state.sCrs, this.state.tCrs, event)} />
+                    </li>
+                    <li className={Styles.listItem}>
+                        <button className={Styles.btnCoord} onClick={this.onGoTo}>Vai a</button>
+                    </li>
+                    <li className={Styles.listItem}>
+                        <button className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
+                    </li>
+                </ul>
+                <p />
+                <p />
+            </div>
+            <div className={classNames(Styles.viewer, DropdownStyles.section)}>
+                <label>Coordinate convertite:</label>
+                <p className={Styles.shareUrlfield} id="conversionOutput"></p>
+            </div>
+        </div>
+        )
+    },
+
     render() {
         const dropdownTheme = {
             btn: Styles.btnCoords,
@@ -181,75 +251,19 @@ const CoordsConverterPanel = createReactClass({
         };
 
         return (
-            <MenuPanel theme={dropdownTheme}
-                       btnText="Coordinate"
-                       viewState={this.props.viewState}
-                       btnTitle="Convertitore di coordinate"
-                       onOpenChanged={this.onOpenChanged}>
-                <If condition={this.state.isOpen}>
-                    <div className={classNames(DropdownStyles.header)}>
-                        <label className={DropdownStyles.heading}>CONVERTITORE DI COORDINATE</label>
-                    </div>
-                    <div>
-                        <p>
-                            <label>Coordinate ultimo click:     </label>
-                            <button className={Styles.btnCoordLoad} onClick={this.onLoadPickedCoords}>Carica</button>
-                        </p>
-                    </div>
-
-                    <div className={classNames(DropdownStyles.section, Styles.section)}>
-                        <p>
-                            <label>CRS sorgente</label>
-                        </p>
-                        <p>
-                            <select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
-                                { this.props.epsgList.map(function(epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; }) }
-                            </select>
-                        </p>
-                        <p>
-                            CRS destinazione
-                        </p>
-                        <p>
-                            <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
-                                { this.props.epsgList.map(function(epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; }) }
-                            </select>
-                        </p>
-                    </div>
-                    <div className={classNames(DropdownStyles.section, Styles.section)}>
-                        <p>
-                            <label>X / Longitude</label>
-                        </p>
-                        <p>
-                            <input className={Styles.coordsField} type="text" name="coordX" onChange={this.changedX} value={this.state.x} />
-                        </p>
-                        <p>
-                            <label>Y / Latitude</label>
-                        </p>
-                        <p>
-                            <input className={Styles.coordsField} type="text" name="coordY" onChange={this.changedY} value={this.state.y} />
-                        </p>
-                    </div>
-                    <div className={classNames(Styles.viewer, DropdownStyles.section)}>
-                        <ul className={classNames(Styles.viewerSelector)}>
-                            <li className={Styles.listItem}>
-                                <input className={Styles.btnCoord} type="button" value="Converti" onClick={(event)=>this.loadRes(this.state.x, this.state.y, this.state.sCrs, this.state.tCrs, event)} />
-                            </li>
-                            <li className={Styles.listItem}>
-                                <button className={Styles.btnCoord} onClick={this.onGoTo}>Vai a</button>
-                            </li>
-                            <li className={Styles.listItem}>
-                                <button className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
-                            </li>
-                        </ul>
-                        <p/>
-                        <p/>
-                    </div>
-                    <div className={classNames(Styles.viewer, DropdownStyles.section)}>
-                        <label>Coordinate convertite:</label>
-                        <p className={Styles.shareUrlfield} id="conversionOutput"></p>
-                    </div>
-                </If>
-            </MenuPanel>
+            <div>
+                <MenuPanel theme={dropdownTheme}
+                    btnText="Coordinate"
+                    viewState={this.props.viewState}
+                    btnTitle="Convertitore di coordinate"
+                    isOpen={this.state.isOpen}
+                    onOpenChanged={this.changeOpenState}
+                    smallScreen={this.props.viewState.useSmallScreenInterface}>
+                    <If condition={this.state.isOpen}>
+                        {this.renderContent()}
+                    </If>
+                </MenuPanel>
+            </div>
         );
     },
 });

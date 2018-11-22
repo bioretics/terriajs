@@ -1,24 +1,24 @@
 'use strict';
-const React = require('react');
+import React from 'react';
+import PropTypes from 'prop-types';
+import createReactClass from 'create-react-class';
 import ObserveModelMixin from '../../ObserveModelMixin';
-import triggerResize from '../../../Core/triggerResize';
-import Styles from './full_screen_button.scss';
+import Styles from './navigation_help_button.scss';
 import classNames from "classnames";
-import Icon from "../../Icon.jsx";
 
 // 
-const NavigationHelpButton = React.createClass({
+const NavigationHelpButton = createReactClass({
+    displayName: 'Come navigare',
     mixins: [ObserveModelMixin],
 
     propTypes: {
-        terria: React.PropTypes.object,
-        viewState: React.PropTypes.object.isRequired,
-        animationDuration: React.PropTypes.number // Defaults to 1 millisecond.
+        terria: PropTypes.object,
+        viewState: PropTypes.object.isRequired
     },
 
     getInitialState() {
         return {
-            isActive: false
+            //isActive: false
         };
     },
     showNavigationHelp() {
@@ -58,13 +58,11 @@ const NavigationHelpButton = React.createClass({
     },
 
     render() {
-        const btnClassName = classNames(Styles.btn, {
-            [Styles.isActive]: this.props.viewState.isMapFullScreen
-        });
         return (
-            <div className={Styles.fullScreen}>
-                <button type='button' onClick={this.showNavigationHelp} title='Mostra le istruzioni per la navigazione della mappa'
-                        className={btnClassName}><span>{this.renderButtonText()}</span></button>
+            <div>
+                <button className={Styles.btn} type='button' onClick={this.showNavigationHelp} title='Mostra le istruzioni per la navigazione della mappa'>
+                    <span>{this.renderButtonText()}</span>
+                </button>
             </div>
         );
     }

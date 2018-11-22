@@ -119,7 +119,7 @@ const SharePanel = createReactClass({
 
         if (this.shouldShorten()) {
             this.setState({
-                placeholder: 'Shortening...'
+                placeholder: 'Abbreviando...'
             });
 
             buildShortShareLink(this.props.terria)
@@ -229,6 +229,18 @@ const SharePanel = createReactClass({
         }
     },
 
+    /* Function to load map config from a file */
+    loadMapFromFile() {
+        fileDialog({ multiple: false, accept: '.geo3d' })
+            .then(file => {
+                if (file.length == 1) {
+                    var reader = new FileReader();
+                    reader.onload = (function (e) { window.location = e.target.result; });
+                    reader.readAsText(file[0]);
+                }
+            })
+    },
+
     renderContent() {
         const iframeCode = this.state.shareUrl.length ?
             `<iframe style="width: 720px; height: 600px; border: none;" src="${this.state.shareUrl}" allowFullScreen mozAllowFullScreen webkitAllowFullScreen></iframe>`
@@ -241,40 +253,55 @@ const SharePanel = createReactClass({
         return (
             <div>
                 <div className={Styles.clipboard}><Clipboard source={shareUrlTextBox} id='share-url' /></div>
-                <div className={DropdownStyles.section}>
-                    <div>Print Map</div>
-                    <div className={Styles.explanation}>Open a printable version of this map.</div>
-                    <div>
-                        <button className={Styles.printButton} onClick={this.print} disabled={this.state.creatingPrintView}>Print</button>
-                        <button className={Styles.printButton} onClick={this.showPrintView} disabled={this.state.creatingPrintView}>Show Print View</button>
-                        <div className={Styles.printViewLoader}>
-                            {this.state.creatingPrintView && <Loader message="Creating print view..." />}
-                        </div>
+                <div className={DropdownStyles.section}></div>
+                <div>Stampa Mappa</div>
+                <div className={Styles.explanation}>Apri una versione stampabile della mappa.</div>
+                <div>
+                    <button className={Styles.printButton} onClick={this.print} disabled={this.state.creatingPrintView}>Stampa</button>
+                    <button className={Styles.printButton} onClick={this.showPrintView} disabled={this.state.creatingPrintView}>Salva come pagina HTML</button>
+                    <div className={Styles.printViewLoader}>
+                        {this.state.creatingPrintView && <Loader message="Creazione in corso..." />}
                     </div>
                 </div>
-                <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
-                    <div className={Styles.btnWrapper}>
-                        <button type='button' onClick={this.toggleAdvancedOptions} className={Styles.btnAdvanced}>
-                            <span>Advanced options</span>
-                            {this.advancedIsOpen() ? <Icon glyph={Icon.GLYPHS.opened} /> : <Icon glyph={Icon.GLYPHS.closed} />}
-                        </button>
+                <div className={DropdownStyles.section}></div>
+                <div>Salva/Carica Mappa</div>
+                <div className={Styles.explanation}>Salva o carica una mappa su file.</div>
+                <div>
+                    {/* Added feature to save map screenshot on disk */}
+                    {/*<div className={DropdownStyles.section}>
+                        <a className={Styles.button} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
+                    </div>*/}
+                    {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
+                    <div>
+                        <a className={Styles.printButton} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.geo3d">Salva mappa corrente</a>
+                        <button className={Styles.printButton} onClick={this.loadMapFromFile}>Carica mappa da file</button>
                     </div>
-                    <If condition={this.advancedIsOpen()}>
-                        <div className={DropdownStyles.section}>
-                            <p className={Styles.paragraph}>To embed, copy this code to embed this map into an HTML page:</p>
-                            <input className={Styles.field} type="text" readOnly placeholder={this.state.placeholder}
-                                value={iframeCode}
-                                onClick={e => e.target.select()} />
+                </div>
+                <div>
+                    <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
+                        <div className={Styles.btnWrapper}>
+                            <button type='button' onClick={this.toggleAdvancedOptions} className={Styles.btnAdvanced}>
+                                <span>Opzioni avanzate</span>
+                                {this.advancedIsOpen() ? <Icon glyph={Icon.GLYPHS.opened} /> : <Icon glyph={Icon.GLYPHS.closed} />}
+                            </button>
                         </div>
-                        <If condition={this.isUrlShortenable()}>
-                            <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
-                                <button onClick={this.onShortenClicked}>
-                                    {this.shouldShorten() ? <Icon glyph={Icon.GLYPHS.checkboxOn} /> : <Icon glyph={Icon.GLYPHS.checkboxOff} />}
-                                    Shorten the share URL using a web service
-                        </button>
+                        <If condition={this.advancedIsOpen()}>
+                            <div className={DropdownStyles.section}>
+                                <p className={Styles.paragraph}>Codice per includere la mappa in una pagina HTML:</p>
+                                <input className={Styles.field} type="text" readOnly placeholder={this.state.placeholder}
+                                    value={iframeCode}
+                                    onClick={e => e.target.select()} />
                             </div>
+                            <If condition={this.isUrlShortenable()}>
+                                <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
+                                    <button onClick={this.onShortenClicked}>
+                                        {this.shouldShorten() ? <Icon glyph={Icon.GLYPHS.checkboxOn} /> : <Icon glyph={Icon.GLYPHS.checkboxOff} />}
+                                        Abbrevia l'URL da condividere
+                        </button>
+                                </div>
+                            </If>
                         </If>
-                    </If>
+                    </div>
                 </div>
             </div>);
     },

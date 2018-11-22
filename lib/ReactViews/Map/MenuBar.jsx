@@ -9,6 +9,8 @@ import SharePanel from './Panels/SharePanel/SharePanel.jsx';
 import CoordsConverterPanel from './Panels/CoordsConverterPanel.jsx';
 import ToolsPanel from './Panels/ToolsPanel/ToolsPanel.jsx';
 
+import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
+
 import ObserveModelMixin from '../ObserveModelMixin';
 
 import Styles from './menu-bar.scss';
