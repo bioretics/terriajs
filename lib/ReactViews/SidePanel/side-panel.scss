@@ -27,6 +27,7 @@
 
 .body {
   overflow: hidden;
+  //width: 100%;
 }
 
 .addData {
@@ -65,3 +66,24 @@
     fill: #ffffff;
   }
 }
+
+/*.Resizer {
+  box-sizing: border-box;
+  background: #444;
+  opacity: 0.5;
+  z-index: 1;
+  background-clip: padding-box;
+  height: 13px;
+  margin: -5px 0;
+  border-top: 5px solid rgba(255, 255, 255, 0);
+  border-bottom: 5px solid rgba(255, 255, 255, 0);
+  cursor: row-resize;
+  width: 100%;
+}
+
+.Resizer:hover {
+  -webkit-transition: all 2s ease;
+  transition: all 2s ease;
+  border-top: 5px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+}*/

@@ -18,6 +18,8 @@ import Styles from './side-panel.scss';
 
 import SidebarElevation from '../Map/Elevation/SidebarElevation.jsx';
 
+//import SplitPane from 'react-split-pane';
+
 const SidePanel = createReactClass({
     displayName: 'SidePanel',
     mixins: [ObserveModelMixin],
@@ -100,57 +102,63 @@ const SidePanel = createReactClass({
                         onDoSearch={this.search}
                         onFocus={this.startLocationSearch}
                         searchText={searchState.locationSearchText}
-                        placeholder='Search for locations'
+                        placeholder='Cerca'
 
                     />
                     <div className={Styles.addData}>
-                        <button type='button' onClick={this.onAddDataClicked} className={Styles.button} title='aggiungi data'>
-                            <Icon glyph={Icon.GLYPHS.add}/>Aggiungi layer
+                        <button type='button' onClick={this.onAddDataClicked} className={Styles.button} title='aggiungi layer da catalogo'>
+                            <Icon glyph={Icon.GLYPHS.add} />Apri catalogo
                         </button>
                         <button
                             type='button'
                             onClick={this.onAddLocalDataClicked}
                             className={Styles.uploadData}
-                            title='upload data'
+                            title='aggiungi nuovo layer'
                         >
                             <Icon glyph={Icon.GLYPHS.upload} />
                         </button>
                     </div>
                 </div>
+                {/*<SplitPane defaultSize={500} minSize={300} style={{position:"relative"}} split="horizontal" resizerClassName={Styles.Resizer}>*/}
                 <div className={Styles.body}>
                     <Choose>
-                        <When condition={searchState.locationSearchText.length > 0 && searchState.showLocationSearchResults}>
-                            <SidebarSearch
+                        <When condition={this.props.terria.elevationPoints}>
+                            <SidebarElevation
                                 terria={this.props.terria}
                                 viewState={this.props.viewState}
                                 isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
                         </When>
-                        <When condition={this.props.terria.nowViewing.items && this.props.terria.nowViewing.items.length > 0}>
-                            <Workbench viewState={this.props.viewState} terria={this.props.terria} />
-                        </When>
                         <Otherwise>
-                            <div className={Styles.workbenchEmpty}>
-                                <div>Il pannello dei layer è vuoto</div>
-                                <p>
-                                    <strong>
-                                        Click su &apos;Aggiungi layer&apos; per:
+                            <Choose>
+                                <When condition={searchState.locationSearchText.length > 0 && searchState.showLocationSearchResults}>
+                                    <SidebarSearch
+                                        terria={this.props.terria}
+                                        viewState={this.props.viewState}
+                                        isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
+                                </When>
+                                <When condition={this.props.terria.nowViewing.items && this.props.terria.nowViewing.items.length > 0}>
+                                    <Workbench viewState={this.props.viewState} terria={this.props.terria} />
+                                </When>
+                                <Otherwise>
+                                    <div className={Styles.workbenchEmpty}>
+                                        <div>Il pannello dei layer è vuoto</div>
+                                        <p>
+                                            <strong>
+                                                Click su &apos;Aggiungi layer&apos; per:
                                     </strong>
-                                </p>
-                                <ul>
-                                    <li>visionare il catalogo corrente</li>
-                                    <li>caricare nuovi dati</li>
-                                </ul>
-                                <p><Icon glyph={Icon.GLYPHS.bulb}/><strong>INFO:</strong> <em>Tutti i layer attivi saranno elencati qui</em></p>
-                            </div>
+                                        </p>
+                                        <ul>
+                                            <li>visionare il catalogo corrente</li>
+                                            <li>caricare nuovi dati</li>
+                                        </ul>
+                                        <p><Icon glyph={Icon.GLYPHS.bulb} /><strong>INFO:</strong> <em>Tutti i layer attivi saranno elencati qui</em></p>
+                                    </div>
+                                </Otherwise>
+                            </Choose>
                         </Otherwise>
                     </Choose>
                 </div>
-                <If condition={this.props.terria.elevationPoints}>
-                    <SidebarElevation
-                        terria={this.props.terria}
-                        viewState={this.props.viewState}
-                        isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
-                </If>
+                {/*</SplitPane>*/}
             </div>
         );
     }
