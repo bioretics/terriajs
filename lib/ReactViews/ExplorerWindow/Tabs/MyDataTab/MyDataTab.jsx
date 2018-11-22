@@ -47,11 +47,11 @@ const MyDataTab = createReactClass({
       const tabs = [
           {
               id: 'local',
-              caption: 'Add Local Data'
+              caption: 'Aggiungi dati locali'
           },
           {
               id: 'web',
-              caption: 'Add Web Data'
+              caption: 'Aggiungi dati dal web'
           }
       ];
       return (
@@ -90,9 +90,9 @@ const MyDataTab = createReactClass({
             <div className={Styles.dataTypeTab}>
                 <div>
                     <div>
-                        Drag and drop a file here to view it locally on the map
+                        Trascina un file qui per caricarlo nella mappa
                     </div>
-                    <div>(it won’t be saved or uploaded to the internet)</div>
+                    <div>(non sarà salvato o caricato via internet)</div>
                     <div className={Styles.tabCenter}>{this.renderTabs()}</div>
                 </div>
                 <div className={Styles.dndBox}>

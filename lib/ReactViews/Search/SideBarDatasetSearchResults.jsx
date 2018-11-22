@@ -49,7 +49,7 @@ const SideBarDatasetSearchResults = createReactClass({
                     <ul className={Styles.items}>
                       <SearchResult clickAction={this.searchInDataCatalog}
                                     icon='data'
-                                    name={`Search for "${this.props.viewState.searchState.locationSearchText}" in the Data Catalogue`}
+                                    name={`Cerca "${this.props.viewState.searchState.locationSearchText}" nel catalogo`}
                       />
                     </ul>
                 </div>);

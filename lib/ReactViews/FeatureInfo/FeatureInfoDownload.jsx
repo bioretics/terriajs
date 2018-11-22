@@ -49,7 +49,7 @@ const FeatureInfoDownload = createReactClass({
                           textProperty="label"
                           theme={{dropdown: Styles.download, list: Styles.dropdownList, button: Styles.dropdownButton}}
                           buttonClassName={Styles.btn}>
-                    <span className={Styles.iconDownload}><Icon glyph={Icon.GLYPHS.download}/></span> Download this Table&nbsp;▾
+                    <span className={Styles.iconDownload}><Icon glyph={Icon.GLYPHS.download}/></span> Scarica la tabella&nbsp;▾
                 </Dropdown>
             );
         } else {
