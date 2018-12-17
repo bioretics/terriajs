@@ -175,6 +175,8 @@ const MeasureTool = createReactClass({
         this.setState({ totalAreaMetresSquared: 0 });
         this.state.drawnPointsPositions.length = 0;
         this.state.stepDistanceMetres.length = 0;
+        if(!this.props.terria.cesium)
+            this.props.terria.elevationPoints = undefined;
     },
 
     onPointClicked(pointEntities) {

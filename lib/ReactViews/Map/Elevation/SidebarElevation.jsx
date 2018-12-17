@@ -14,7 +14,6 @@ const Cartesian3 = require('terriajs-cesium/Source/Core/Cartesian3.js');
 const PolylinePipeline = require('terriajs-cesium/Source/Core/PolylinePipeline.js');
 const sampleTerrainMostDetailed = require('terriajs-cesium/Source/Core/sampleTerrainMostDetailed.js');
 const EllipsoidGeodesic = require('terriajs-cesium/Source/Core/EllipsoidGeodesic.js');
-const CesiumMaterial = require('terriajs-cesium/Source/Scene/Material');
 
 // Handle any of the three kinds of search based on the props
 const SidebarElevation = createReactClass({
@@ -38,13 +37,13 @@ const SidebarElevation = createReactClass({
     },
 
     componentDidUpdate(prevProps, prevState) {
-        if(prevState.updateFor3D === this.state.updateFor3D){
+        if (prevState.updateFor3D === this.state.updateFor3D) {
             if (this.state.updateFor3D === false) {
                 /*const positions = this.props.terria.elevationPoints;
                 const maxH = Math.max.apply(Math, positions.map(function(o) { return o.height; }));
                 const minH = Math.min.apply(Math, positions.map(function(o) { return o.height; }));
                 this.setState({ max: maxH, min: minH });*/
-                
+
                 this.setState({ totalDistance3DMetres: undefined, max: undefined, min: undefined });
             }
             else {
@@ -54,7 +53,7 @@ const SidebarElevation = createReactClass({
     },
 
     prettifyNumber(number, squared) {
-        if(typeof number == 'undefined') {
+        if (typeof number == 'undefined') {
             return 0;
         }
 
@@ -83,51 +82,6 @@ const SidebarElevation = createReactClass({
             numberStr += "\u00B2";
         }
         return numberStr;
-    },
-
-    getColorRamp() {
-        var elevationRamp = [0.0, 0.5, 1.0];
-        //var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
-        //var slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2)/2, 0.87, 0.91, 1.0];
-        var ramp = document.createElement('canvas');
-        ramp.width = 4000;
-        ramp.height = 1;
-        var ctx = ramp.getContext('2d');
-
-        var grd = ctx.createLinearGradient(0, 0, 100, 0);
-        /*grd.addColorStop(elevationRamp[0], '#ffffff00'); //white
-        grd.addColorStop(elevationRamp[1], '#2747E090'); //blue
-        grd.addColorStop(elevationRamp[2], '#D33B7D90'); //pink
-        grd.addColorStop(elevationRamp[3], '#D3303890'); //red
-        grd.addColorStop(elevationRamp[4], '#FF974290'); //orange
-        grd.addColorStop(elevationRamp[5], '#ffd70090'); //yellow
-        grd.addColorStop(elevationRamp[6], '#ffffff00'); //white*/
-
-        grd.addColorStop(elevationRamp[0], '#ffffff00'); //white*/
-        grd.addColorStop(elevationRamp[1], '#D3303890'); //red
-        grd.addColorStop(elevationRamp[2], '#ffffff00'); //white*/
-
-        ctx.fillStyle = grd;
-        //ctx.fillRect(0, 0, 100, 1);
-
-        //ctx.fillStyle = '#FF0000B0';
-        ctx.fillRect(0, 0, 4000, 1);
-
-        return ramp;
-    },
-
-    colorByElevationThreshold() {
-        const min = 300;
-        const max = 500;
-        console.log(min);
-        console.log(max);
-        const scene = this.props.terria.cesium.scene;
-        var material = CesiumMaterial.fromType('ElevationRamp');
-        var shadingUniforms = material.uniforms;
-        shadingUniforms.minimumHeight = min;
-        shadingUniforms.maximumHeight = max;
-        shadingUniforms.image = this.getColorRamp();
-        scene.globe.material = material;
     },
 
     /**
@@ -163,8 +117,8 @@ const SidebarElevation = createReactClass({
             .then(function (raisedPositionsCartographic) {
                 let dist = 0;
 
-                const maxH = Math.max.apply(Math, raisedPositionsCartographic.map(function(o) { return o.height; }));
-                const minH = Math.min.apply(Math, raisedPositionsCartographic.map(function(o) { return o.height; }));
+                const maxH = Math.max.apply(Math, raisedPositionsCartographic.map(function (o) { return o.height; }));
+                const minH = Math.min.apply(Math, raisedPositionsCartographic.map(function (o) { return o.height; }));
 
                 // Conversion from Cartographic to Cartesian3.
                 let raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartographic);
@@ -216,9 +170,15 @@ const SidebarElevation = createReactClass({
     render() {
         const chartPoints = [];
         const distData = [];
-        const positions = this.props.terria.elevationPoints;
+        let positions = this.props.terria.elevationPoints;
+        let hasError = false;
         if (positions.length > 1) {
             for (let i = 0; i < positions.length; ++i) {
+                if (isNaN(positions[i].height)) {
+                    positions = [];
+                    hasError = true;
+                    break;
+                }
                 chartPoints.push({ x: i + 1, y: Math.round(positions[i].height) });
                 if (i === 0) {
                     distData.push(0);
@@ -230,108 +190,119 @@ const SidebarElevation = createReactClass({
         }
         const chartData = new ChartData(chartPoints, { categoryName: 'altitudine', name: 'elevation', units: 'm', color: 'white' });
 
-        //if (this.props.isWaitingForSearchToStart) {
-        //    return <div key="loader" className={Styles.loader}><Loader /></div>;
-        //}
-
         return (
             <div>
-                <If condition={this.props.terria.elevationPoints}>
-                    <div className={Styles.elevation}>
-                        <font color="white">
-                            <center><b>Distanza 3D</b></center>
-                            <ul className={Styles.viewerSelector}>
-                                <li className={Styles.listItem}>
-                                    <button type='button' className={Styles.btnDone}
-                                        title='misura la distanza fra una serie di punti 3D (tenendo conto della altitudine)'
-                                        onClick={this.handleUpdateDistance3DClick}>
-                                        Calcola
-                                    </button>
-                                </li>
-                                <li className={Styles.listItem}>
-                                    <input className={Styles.distanceField} type="text" readOnly
-                                        value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
-                                </li>
-                            </ul>
-                            <br />
-                            <ul className={Styles.viewerSelector}>
-                                <li className={Styles.listItem}>
-                                    <center><b>Alt. Min</b></center>
-                                    <center><input className={Styles.bearingField} type="text" readOnly
-                                        value={this.prettifyNumber(this.state.min)} /></center>
-                                </li>
-                                <li className={Styles.listItem}>
-                                    <center><b>Alt. Max</b></center>
-                                    <center><input className={Styles.bearingField} type="text" readOnly
-                                        value={this.prettifyNumber(this.state.max)} /></center>
-                                </li>
-                            </ul>
-                            <br />
-                            <hr />
-                            <br />
-                            <ul className={Styles.viewerSelector}>
-                                <li className={Styles.listItem}>
-                                    <center><b>Rotta</b></center>
-                                    <center><input className={Styles.bearingField} type="text" readOnly
-                                        value={this.getBearing()} /></center>
-                                </li>
-                                <li className={Styles.listItem}>
-                                    <center><b>Dislivello</b></center>
-                                    <center><input className={Styles.bearingField} type="text" readOnly
-                                        value={this.getHeightDifference()} /></center>
-                                </li>
-                            </ul>
-                            <br />
-                            <hr />
-                            <br />
-                            <center><b>Profilo altimetrico</b></center>
-                            <div >
-                                <Chart data={[chartData]} height={200} />
-                            </div>
-                            <br />
-                            <hr />
-                            <br />
-                            <center><b>Dettaglio tappe</b></center>
+                <Choose>
+                    <When condition={hasError}>
+                        <div className={Styles.elevation}>
                             <div>
-                                <ul className={Styles.table}>
-                                    <li className={Styles.colsmall}>#</li>
-                                    <li className={Styles.colnormal}>Altitudine</li>
-                                    <li className={Styles.colnormal}>Dislivello</li>
-                                    <li className={Styles.colnormal}>Distanza</li>
+                                <strong>
+                                    Alcuni punti della misura sono stati impostati in modalità 2D e sono quindi sprovvisti del dato di altitutine!
+                                    <br />
+                                    Chiudere il misuratore e procedere nuovamente ma in modalità 3D.
+                                    </strong>
+                            </div>
+                            <div>
+                                <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
+                            </div>
+                        </div>
+                    </When>
+                    <When condition={this.props.terria.elevationPoints}>
+                        <div className={Styles.elevation}>
+                            <font color="white">
+                                <center><b>Distanza 3D</b></center>
+                                <ul className={Styles.viewerSelector}>
+                                    <li className={Styles.listItem}>
+                                        <button type='button' className={Styles.btnDone}
+                                            title='misura la distanza fra una serie di punti 3D (tenendo conto della altitudine)'
+                                            onClick={this.handleUpdateDistance3DClick}>
+                                            Calcola
+                                    </button>
+                                    </li>
+                                    <li className={Styles.listItem}>
+                                        <input className={Styles.distanceField} type="text" readOnly
+                                            value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
+                                    </li>
                                 </ul>
-                                <For each="item" index="idx" of={positions}>
-                                    <ul className={Styles.table} key={idx}>
-                                        <li className={Styles.colsmall}>{idx + 1}</li>
-                                        <li className={Styles.colnormal}>{item.height}</li>
-                                        <Choose>
-                                            {/*<When condition={this.props.terria.elevationPoints && }>
+                                <br />
+                                <ul className={Styles.viewerSelector}>
+                                    <li className={Styles.listItem}>
+                                        <center><b>Alt. Min</b></center>
+                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                            value={this.prettifyNumber(this.state.min)} /></center>
+                                    </li>
+                                    <li className={Styles.listItem}>
+                                        <center><b>Alt. Max</b></center>
+                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                            value={this.prettifyNumber(this.state.max)} /></center>
+                                    </li>
+                                </ul>
+                                <br />
+                                <hr />
+                                <br />
+                                <ul className={Styles.viewerSelector}>
+                                    <li className={Styles.listItem}>
+                                        <center><b>Rotta</b></center>
+                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                            value={this.getBearing()} /></center>
+                                    </li>
+                                    <li className={Styles.listItem}>
+                                        <center><b>Dislivello</b></center>
+                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                            value={this.getHeightDifference()} /></center>
+                                    </li>
+                                </ul>
+                                <br />
+                                <hr />
+                                <br />
+                                <center><b>Profilo altimetrico</b></center>
+                                <div >
+                                    <Chart data={[chartData]} height={200} />
+                                </div>
+                                <br />
+                                <hr />
+                                <br />
+                                <center><b>Dettaglio tappe</b></center>
+                                <div>
+                                    <ul className={Styles.table}>
+                                        <li className={Styles.colsmall}>#</li>
+                                        <li className={Styles.colnormal}>Altitudine</li>
+                                        <li className={Styles.colnormal}>Dislivello</li>
+                                        <li className={Styles.colnormal}>Distanza</li>
+                                    </ul>
+                                    <For each="item" index="idx" of={positions}>
+                                        <ul className={Styles.table} key={idx}>
+                                            <li className={Styles.colsmall}>{idx + 1}</li>
+                                            <li className={Styles.colnormal}>{item.height}</li>
+                                            <Choose>
+                                                {/*<When condition={this.props.terria.elevationPoints && }>
                                                 <li className={Styles.colnormal}>{this.prettifyNumber(this.state.stepDistance3DMetres[idx])}</li>
                                             </When>*/}
-                                            <When condition={idx > 0}>
-                                                <li className={Styles.colnormal}>{item.height - positions[idx - 1].height}</li>
-                                            </When>
-                                            <Otherwise>
-                                                <li className={Styles.colnormal}></li>
-                                            </Otherwise>
-                                        </Choose>
-                                        <Choose>
-                                            <When condition={this.props.terria.stepDistanceMetres && idx > 0 && this.props.terria.stepDistanceMetres.length > 0}>
-                                                <li className={Styles.colnormal}>{this.props.terria.stepDistanceMetres[idx]}</li>
-                                            </When>
-                                            <Otherwise>
-                                                <li className={Styles.colnormal}></li>
-                                            </Otherwise>
-                                        </Choose>
-                                    </ul>
-                                </For>
-                            </div>
-                            <hr />
-                            <br />
-                            {/*<button type='button' onClick={this.colorByElevationThreshold} className={Styles.btnDone}>COLORA</button>*/}
-                            <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
-                        </font>
-                    </div>
-                </If>
+                                                <When condition={idx > 0}>
+                                                    <li className={Styles.colnormal}>{item.height - positions[idx - 1].height}</li>
+                                                </When>
+                                                <Otherwise>
+                                                    <li className={Styles.colnormal}></li>
+                                                </Otherwise>
+                                            </Choose>
+                                            <Choose>
+                                                <When condition={this.props.terria.stepDistanceMetres && idx > 0 && this.props.terria.stepDistanceMetres.length > 0}>
+                                                    <li className={Styles.colnormal}>{this.props.terria.stepDistanceMetres[idx]}</li>
+                                                </When>
+                                                <Otherwise>
+                                                    <li className={Styles.colnormal}></li>
+                                                </Otherwise>
+                                            </Choose>
+                                        </ul>
+                                    </For>
+                                </div>
+                                <hr />
+                                <br />
+                                <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
+                            </font>
+                        </div>
+                    </When>
+                </Choose>
             </div>
         );
     },
