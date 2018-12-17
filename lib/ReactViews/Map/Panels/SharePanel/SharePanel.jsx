@@ -18,6 +18,8 @@ import Styles from './share-panel.scss';
 
 import fileDialog from './file-dialog.min.js'
 
+var TerriaError = require('../../../../Core/TerriaError');
+
 const SharePanel = createReactClass({
     displayName: 'SharePanel',
     mixins: [ObserverModelMixin],
@@ -27,13 +29,15 @@ const SharePanel = createReactClass({
         userPropWhiteList: PropTypes.array,
         advancedIsOpen: PropTypes.bool,
         shortenUrls: PropTypes.bool,
-        viewState: PropTypes.object.isRequired
+        viewState: PropTypes.object.isRequired,
+        rejected: PropTypes.string
     },
 
     getDefaultProps() {
         return {
             advancedIsOpen: false,
-            shortenUrls: false
+            shortenUrls: false,
+            rejected: ""
         };
     },
 
@@ -235,10 +239,22 @@ const SharePanel = createReactClass({
             .then(file => {
                 if (file.length == 1) {
                     var reader = new FileReader();
-                    reader.onload = (function (e) { window.location = e.target.result; });
+                    reader.onload = (function (e) { window.open(e.target.result, "_self"); });
                     reader.readAsText(file[0]);
                 }
             })
+    },
+
+    saveMapUrlOnFile() {
+        const obj = buildShareLink(this.props.terria, true);
+
+        if(obj['rejected'] != ""){
+            // Local layer path are unknown.
+            this.props.terria.error.raiseEvent(new TerriaError({
+                title: 'Layer locali non salvati',
+                message: 'I seguenti layer locali non possono essere salvati per motivi di sicurezza: ' + obj['rejected']
+            }));
+        }
     },
 
     renderContent() {
@@ -273,7 +289,7 @@ const SharePanel = createReactClass({
                     </div>*/}
                     {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
                     <div>
-                        <a className={Styles.printButton} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.geo3d">Salva mappa corrente</a>
+                        <a className={Styles.printButton} onClick={this.saveMapUrlOnFile} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.geo3d">Salva mappa corrente</a>
                         <button className={Styles.printButton} onClick={this.loadMapFromFile}>Carica mappa da file</button>
                     </div>
                 </div>
