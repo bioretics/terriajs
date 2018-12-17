@@ -52,8 +52,8 @@
 
     .linechart-title .name {
       margin-right: 7px;
-      font-family: monospace;
-      font-size: 110%;
+      font-family: $font-mono;
+      font-size: 100%;
     }
   }
 }
@@ -63,7 +63,7 @@
   z-index: 10;
   background-color: $chart-darker;
   padding: 5px 5px 10px 10px;
-  font-family: monospace;
+  font-family: $font-mono;
 
   :global {
     table {

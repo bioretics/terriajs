@@ -49,8 +49,8 @@
 
     .line-chart text {
       fill: $chart-text-color;
-      font-family: monospace;
-      font-size: 110%;
+      font-family: $font-mono;
+      font-size: 100%;
     }
 
     .line-chart .line {

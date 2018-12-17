@@ -1,9 +1,13 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,500,400italic,600);
 @import url(https://fonts.googleapis.com/css?family=Lato:400,700);
+@import url(https://fonts.googleapis.com/css?family=Titillium+Web:300,400,500,400italic,600,700);
 
-$font-pop:'Open Sans', sans-serif;
-$font-base: 'Open Sans', sans-serif;
-$font-mono: monospace, sans-serif;
+//$font-base: 'Open Sans', sans-serif;
+$font-base: 'Titillium Web', sans-serif;
+//$font-pop:'Open Sans', sans-serif;
+$font-pop: $font-base;
+//$font-mono: monospace, sans-serif;
+$font-mono: $font-base;
 $font-feature-info: $font-mono;
 $font : $font-base;
 
@@ -97,16 +101,18 @@ $mobile-text: #000;
 
 $mobile-modal-top-height: 40px;
 
-$font-size-large: 1.3rem;
-$font-size-mid-large: 1.1rem;
-$font-size-base: 1rem;
-$font-size-mid-small: 0.9rem;
-$font-size-feature-info: 0.9rem;
-$font-size-button: 0.85rem;
-$font-size-small: 0.8125rem;
-$font-size-mid-mini: 0.7rem;
-$font-size-mini: 0.625rem;
-$font-size-credits: 0.7rem;
+$font-size-mod: 0.1rem;
+
+$font-size-large: 1.3rem + $font-size-mod;
+$font-size-mid-large: 1.1rem + $font-size-mod;
+$font-size-base: 1rem + $font-size-mod;
+$font-size-mid-small: 0.9rem + $font-size-mod;
+$font-size-feature-info: 0.9rem + $font-size-mod;
+$font-size-button: 0.85rem + $font-size-mod;
+$font-size-small: 0.8125rem + $font-size-mod;
+$font-size-mid-mini: 0.7rem + $font-size-mod;
+$font-size-mini: 0.625rem + $font-size-mod;
+$font-size-credits: 0.7rem + $font-size-mod;
 
 $font-weight-bold: 600;
 $font-weight-medium: 500;
