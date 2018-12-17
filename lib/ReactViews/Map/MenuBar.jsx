@@ -7,6 +7,7 @@ import PropTypes from 'prop-types';
 import SettingPanel from './Panels/SettingPanel.jsx';
 import SharePanel from './Panels/SharePanel/SharePanel.jsx';
 import CoordsConverterPanel from './Panels/CoordsConverterPanel.jsx';
+import ColorMapPanel from './Panels/ColorMapPanel.jsx';
 import ToolsPanel from './Panels/ToolsPanel/ToolsPanel.jsx';
 
 import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
@@ -52,6 +53,10 @@ const MenuBar = createReactClass({
                     </li>
                     <li className={Styles.menuItem}>
                         <CoordsConverterPanel terria={this.props.terria}
+                                    viewState={this.props.viewState}/>
+                    </li>
+                    <li className={Styles.menuItem}>
+                        <ColorMapPanel terria={this.props.terria}
                                     viewState={this.props.viewState}/>
                     </li>
                     {enableTools && <li className={Styles.menuItem}>
