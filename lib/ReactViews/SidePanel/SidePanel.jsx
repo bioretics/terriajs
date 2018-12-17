@@ -122,16 +122,16 @@ const SidePanel = createReactClass({
                 {/*<SplitPane defaultSize={500} minSize={300} style={{position:"relative"}} split="horizontal" resizerClassName={Styles.Resizer}>*/}
                 <div className={Styles.body}>
                     <Choose>
-                        <When condition={this.props.terria.elevationPoints}>
-                            <SidebarElevation
+                        <When condition={searchState.locationSearchText.length > 0 && searchState.showLocationSearchResults}>
+                            <SidebarSearch
                                 terria={this.props.terria}
                                 viewState={this.props.viewState}
                                 isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
                         </When>
                         <Otherwise>
                             <Choose>
-                                <When condition={searchState.locationSearchText.length > 0 && searchState.showLocationSearchResults}>
-                                    <SidebarSearch
+                                <When condition={this.props.terria.cesium && this.props.terria.elevationPoints}>
+                                    <SidebarElevation
                                         terria={this.props.terria}
                                         viewState={this.props.viewState}
                                         isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch} />
