@@ -1,6 +1,18 @@
 Change Log
 ==========
 
+### rer3d_1.8.0 - 17/12/2018
+* Fixed Nominatim search sorting.
+* Resolved ground clamping for vectorial data with CesiumJS.
+* New SidebarElevation in SidePanel to show 3D measures.
+* Added ColorMapPanel to appy a gradient color material to terrain by elevation.
+* Fixed some bugs on switching from 3D to 2D and viceversa.
+* Added warning on map saving for local layers.
+* Changed logo, font and colors.
+* Improved components styles.
+* Text translated into Italian.
+
+
 ### rer3d_1.7.0 - 11/07/2018
 * Message translated into Italian.
 * Fixed double results and added location data for SearchResultViewModel in NominatimSearchProviderViewModel.
