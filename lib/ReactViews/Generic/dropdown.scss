@@ -29,12 +29,12 @@
   composes: btn-primary from "../../Sass/common/_buttons.scss";
   composes: btn-transparent from "../../Sass/common/_buttons.scss";
   text-align: left;
-  background: $text-light;
+  background: $text-light-dimmed;
   color: $dark-lighter;
   border: 1px solid $field-border;
   &:hover,
   &:focus {
-    background: $text-light;
+    background: $text-light-dimmed;
     color: $dark-lighter;
     border: 1px solid $color-primary;
   }
