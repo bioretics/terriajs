@@ -70,7 +70,7 @@ const DragDropFile = createReactClass({
                 <If condition={this.props.viewState.isDraggingDroppingFile}>
                     <div className={Styles.inner}>
                         <h3 className={Styles.heading}>Drag & Drop</h3>
-                        <div className={Styles.caption}>Your data anywhere to view on the map</div>
+                        <div className={Styles.caption}>Carica dati da qualsiasi luogo</div>
                     </div>
                 </If>
             </div>
