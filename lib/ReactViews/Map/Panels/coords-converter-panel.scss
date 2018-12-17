@@ -14,7 +14,7 @@
 .coordsField{
   composes: field from '../../../Sass/common/_form.scss';
   background: $overlay;
-  color: #ddd!important;
+  color: #fff!important;
   &::selection {
     background: $color-primary; /* WebKit/Blink Browsers */
     color: #fff;
@@ -26,16 +26,22 @@
 }
 .crsSelect{
   composes: field from '../../../Sass/common/_form.scss';
-  background: #633636;
-  color: #ddd!important;
+  background: $overlay;
+  color: #fff!important;
   &::selection {
-    background: $overlay; /* WebKit/Blink Browsers */
+    background: $color-primary; /* WebKit/Blink Browsers */
     color: #fff;
   }
   &::-moz-selection {
-    background: $overlay; /* Gecko Browsers */
+    background: $color-primary; /* Gecko Browsers */
     color: #fff;
   }
+}
+
+.crs--item {
+  composes: field from '../../../Sass/common/_form.scss';
+  background-color: $overlay;
+  color: $color-primary;
 }
 
 .viewer-selector,
@@ -81,8 +87,8 @@
   composes: btn-grey from '../../../Sass/common/_buttons.scss';
 
   color: $text-light;
-  width: 60px;
-  height: 30px;
+  width: 70px;
+  margin-left: 3%;
 
   &.is-active{
     border: 1px solid rgba(255, 255, 255, 0.5);

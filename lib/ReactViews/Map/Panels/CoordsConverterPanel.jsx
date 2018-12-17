@@ -24,7 +24,6 @@ const CoordsConverterPanel = createReactClass({
     propTypes: {
         terria: PropTypes.object,
         userPropWhiteList: PropTypes.array,
-        //isOpen: PropTypes.bool,
         viewState: PropTypes.object.isRequired,
         epsgList: PropTypes.array,
         x: PropTypes.string,
@@ -35,7 +34,6 @@ const CoordsConverterPanel = createReactClass({
 
     getDefaultProps() {
         return {
-            //isOpen: false,
             epsgList: [
                 { code: 4326, text: 'WGS 84' },
                 { code: 32632, text: 'UTM zone 32N' }, { code: 32633, text: 'UTM zone 33N' },
@@ -54,12 +52,6 @@ const CoordsConverterPanel = createReactClass({
             y: ''
         };
     },
-
-    /*onOpenChanged(open) {
-        this.setState({
-            isOpen: open
-        });
-    },*/
 
     changeOpenState(open) {
         this.setState({
@@ -178,9 +170,9 @@ const CoordsConverterPanel = createReactClass({
     renderContent() {
 
         return (<div>
-            <div className={classNames(DropdownStyles.header)}>
+            {/*<div className={classNames(DropdownStyles.header)}>
                 <label className={DropdownStyles.heading}>CONVERTITORE DI COORDINATE</label>
-            </div>
+            </div>*/}
             <div>
                 <p>
                     <label>Coordinate ultimo click:     </label>
@@ -194,7 +186,7 @@ const CoordsConverterPanel = createReactClass({
                 </p>
                 <p>
                     <select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
-                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; })}
+                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} className={Styles.crsItem} value={epsg.code}>{epsg.text}</option>; })}
                     </select>
                 </p>
                 <p>
@@ -202,7 +194,7 @@ const CoordsConverterPanel = createReactClass({
                         </p>
                 <p>
                     <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
-                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} value={epsg.code}>{epsg.text}</option>; })}
+                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} className={Styles.crsItem} value={epsg.code}>{epsg.text}</option>; })}
                     </select>
                 </p>
             </div>
