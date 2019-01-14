@@ -124,7 +124,7 @@ const ZoomControl = createReactClass({
             <div className={Styles.zoomControl}>
                 <ul className={Styles.list}>
                     <li>
-                        <button type='button' onClick={this.zoomIn} className={Styles.increase} title='zoom in'>
+                        <button type='button' onClick={this.zoomIn} className={Styles.increase} title='Zoom in'>
                             <Icon glyph={Icon.GLYPHS.increase}/>
                         </button>
                     </li>
@@ -134,7 +134,7 @@ const ZoomControl = createReactClass({
                         </button>
                     </li>
                     <li>
-                        <button type='button' onClick={this.zoomOut} className={Styles.decrease} title='zoom out'>
+                        <button type='button' onClick={this.zoomOut} className={Styles.decrease} title='Zoom out'>
                             <Icon glyph={Icon.GLYPHS.decrease}/>
                         </button>
                     </li>

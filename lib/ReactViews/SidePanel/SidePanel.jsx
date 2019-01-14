@@ -106,14 +106,14 @@ const SidePanel = createReactClass({
 
                     />
                     <div className={Styles.addData}>
-                        <button type='button' onClick={this.onAddDataClicked} className={Styles.button} title='aggiungi layer da catalogo'>
+                        <button type='button' onClick={this.onAddDataClicked} className={Styles.button} title='Aggiungi layer da catalogo'>
                             <Icon glyph={Icon.GLYPHS.add} />Apri catalogo
                         </button>
                         <button
                             type='button'
                             onClick={this.onAddLocalDataClicked}
                             className={Styles.uploadData}
-                            title='aggiungi nuovo layer'
+                            title='Aggiungi nuovo layer'
                         >
                             <Icon glyph={Icon.GLYPHS.upload} />
                         </button>

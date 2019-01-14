@@ -52,6 +52,29 @@ Change Log
 * Merge pull request 'pr/4' from TerriaJS/terriajs.
 * Added check of ImageryLayerFeatureInfo to avoid the execution of unsafe.
 ## v6.2.3
+### v6.3.7
+
+* Upgraded to Cesium v1.53.
+
+### v6.3.6
+
+* Dragging/dropping files now displays a more subtle notification rather than opening the large Add Data / My Data panel.
+* The `sendFeedback` function can now be used to send additional information if the server is configured to receive it (i.e. `devserverconfig.json`).
+* Made custom feedback controls stay in the lower-right corner of the map.
+* Improved the look of the toolbar icons in the top right, and added an icon for the About page.
+
+### v6.3.5
+
+* Changed the title text for the new button next to "Add Data" on the workbench to "Load local/web data".
+* Fixed a bug that caused the area to the right of the Terria log on the 2D map to be registered as a click on the logo instead of a click on the map.
+* Fixed a bug that caused the standard "Give Feedback" button to fail to open the feedback panel.
+* Swapped the positions of the group expand/collapse icon and the "Remove from catalogue" icon on the My Data panel, for more consistent alignment.
+* Made notifications honor the `width` and `height` properties. Previously, these values were ignored.
+
+### v6.3.4
+
+* Added the ability to add custom components to the feedback area (lower right) of the user interface.
+
 ### v6.3.3
 
 * Upgraded to Cesium v1.51.

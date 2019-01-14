@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import arrayContains from '../../Core/arrayContains';
 import Branding from './../SidePanel/Branding.jsx';
 import DragDropFile from './../DragDropFile.jsx';
+import DragDropNotification from './../DragDropNotification.jsx';
 import ExplorerWindow from './../ExplorerWindow/ExplorerWindow.jsx';
 import FeatureInfoPanel from './../FeatureInfo/FeatureInfoPanel.jsx';
 import FeedbackForm from '../Feedback/FeedbackForm.jsx';
@@ -86,8 +87,11 @@ const StandardUserInterface = createReactClass({
     },
 
     acceptDragDropFile() {
-        this.props.viewState.openUserData();
         this.props.viewState.isDraggingDroppingFile = true;
+        // if explorer window is already open, we open my data tab
+        if(this.props.viewState.explorerPanelIsVisible) {
+          this.props.viewState.openUserData();
+        }
     },
 
     shouldUseMobileInterface() {
@@ -161,6 +165,7 @@ const StandardUserInterface = createReactClass({
                             <MapColumn
                                 terria={terria}
                                 viewState={this.props.viewState}
+                                customFeedbacks = {customElements.feedback}
                             />
                             <main>
                                 <ExplorerWindow
@@ -210,9 +215,9 @@ const StandardUserInterface = createReactClass({
                 <Notification viewState={this.props.viewState}/>
                 <MapInteractionWindow terria={terria} viewState={this.props.viewState}/>
 
-                <If condition={this.props.terria.configParameters.feedbackUrl && !this.props.viewState.hideMapUi()}>
+                <If condition={!customElements.feedback.length && this.props.terria.configParameters.feedbackUrl && !this.props.viewState.hideMapUi()}>
                     <aside className={Styles.feedback}>
-                        <FeedbackForm viewState={this.props.viewState} />
+                        <FeedbackForm viewState={this.props.viewState}/>
                     </aside>
                 </If>
 
@@ -224,6 +229,7 @@ const StandardUserInterface = createReactClass({
                 <DragDropFile terria={this.props.terria}
                               viewState={this.props.viewState}
                 />
+                <DragDropNotification lastUploadedFiles={this.props.viewState.lastUploadedFiles} viewState={this.props.viewState}/>
             </div>
         );
     }
