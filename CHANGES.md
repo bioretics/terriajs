@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### rer3d_1.9.0 - 17/01/2019
+* Built from v6.3.7
+* Now using a custom terriajs-server version (tagged as rer3d_1.0.0).
+* Restored old sphere icon.
+* Fixed panels size.
+* Text translated into Italian.
+
 ### rer3d_1.8.0 - 17/12/2018
 * Fixed Nominatim search sorting.
 * Resolved ground clamping for vectorial data with CesiumJS.
@@ -11,7 +18,6 @@ Change Log
 * Changed logo, font and colors.
 * Improved components styles.
 * Text translated into Italian.
-
 
 ### rer3d_1.7.0 - 11/07/2018
 * Message translated into Italian.
@@ -28,30 +34,27 @@ Change Log
 * Added SidebarElevation into SidePanel.
 * BingMapsSearchProviderViewModel title changed from 'Locations' to 'Bing Locations'.
 
-
 ### rer3d_1.6.4 - 03/05/2018
 * Fixed mistyped in global style.
 * Exception risen if added a WMS layer with incompatible CRS.
 
-
 ### rer3d_1.6.3 - 24/04/2018
 * Removed old pics.
 
-
 ### rer3d_1.6.2 - 24/04/2018
 * Fixed "All White" basemap.
-
 
 ### rer3d_1.6.1 - 22/03/2018
 * Updated package.json.
 * Changed link color to be more readable.
 
-
 ### rer3d_1.6.0 - 13/03/2018
 * Fix pull merge error in FeatureInfoPanel.jsx.
 * Merge pull request 'pr/4' from TerriaJS/terriajs.
 * Added check of ImageryLayerFeatureInfo to avoid the execution of unsafe.
-## v6.2.3
+
+
+
 ### v6.3.7
 
 * Upgraded to Cesium v1.53.
