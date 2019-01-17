@@ -84,13 +84,13 @@ const SettingPanel = createReactClass({
             outer: Styles.settingPanel,
             inner: Styles.dropdownInner,
             btn: Styles.btnDropdown,
-            icon: 'map'
+            icon: 'sphere'
         };
 
         const viewerModes = [];
 
         if (this.props.terria.configParameters.useCesiumIonTerrain || this.props.terria.configParameters.cesiumTerrainUrl) {
-            viewerModes.push('3D Terrain');
+            viewerModes.push('3D');
         }
 
         viewerModes.push('3D Smooth', '2D');
