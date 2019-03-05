@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### rer3d_1.9.1 - 05/03/2019
+* Built from v6.3.7
+* flightDurationSeconds default values is now 3 seconds instead of 1.5.
+* Avoid bbox too small and camera too close to the ground in Nominatimearch.
+* Changed culture in BingMapsSearch from en-au to it.
+
 ### rer3d_1.9.0 - 17/01/2019
 * Built from v6.3.7
 * Now using a custom terriajs-server version (tagged as rer3d_1.0.0).
