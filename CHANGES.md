@@ -1,11 +1,16 @@
 Change Log
 ==========
 
+### rer3d_1.9.2 - 26/03/2019
+* Built from v6.3.7
+* Changed zoom to boox delta threshold in NominatimSearch.
+* Reduced zoom factor for map control buttons.
+
 ### rer3d_1.9.1 - 05/03/2019
 * Built from v6.3.7
 * flightDurationSeconds default values is now 3 seconds instead of 1.5.
-* Avoid bbox too small and camera too close to the ground in Nominatimearch.
-* Changed culture in BingMapsSearch from en-au to it.
+* Avoid bbox too small and camera too close to the ground in NominatimSearch.
+* Changed culture in BingMapsSearch from "en-au" to "it".
 
 ### rer3d_1.9.0 - 17/01/2019
 * Built from v6.3.7
