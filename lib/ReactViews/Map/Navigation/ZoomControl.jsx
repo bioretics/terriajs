@@ -86,7 +86,7 @@ const ZoomControl = createReactClass({
             const camera = scene.camera;
             const focus = this.getCameraFocus(scene);
             const direction = Cartesian3.subtract(focus, camera.position, cartesian3Scratch);
-            const movementVector = Cartesian3.multiplyByScalar(direction, 2.0 / 3.0, cartesian3Scratch);
+            const movementVector = Cartesian3.multiplyByScalar(direction, 1.0 / 3.0, cartesian3Scratch);
             const endPosition = Cartesian3.add(camera.position, movementVector, cartesian3Scratch);
             this.flyToPosition(scene, endPosition);
         }
@@ -107,7 +107,7 @@ const ZoomControl = createReactClass({
             const camera = scene.camera;
             const focus = this.getCameraFocus(scene);
             const direction = Cartesian3.subtract(focus, camera.position, cartesian3Scratch);
-            const movementVector = Cartesian3.multiplyByScalar(direction, -2.0, cartesian3Scratch);
+            const movementVector = Cartesian3.multiplyByScalar(direction, -1.0 / 3.0, cartesian3Scratch);
             const endPosition = Cartesian3.add(camera.position, movementVector, cartesian3Scratch);
             this.flyToPosition(scene, endPosition);
         }
