@@ -1,10 +1,13 @@
 Change Log
 ==========
 
-### rer3d_1.9.2 - 26/03/2019
+### rer3d_1.9.3 - 26/03/2019
 * Built from v6.3.7
 * Changed zoom to boox delta threshold in NominatimSearch.
 * Reduced zoom factor for map control buttons.
+
+### rer3d_1.9.2 - 05/03/2019
+* *Fake release.*
 
 ### rer3d_1.9.1 - 05/03/2019
 * Built from v6.3.7
