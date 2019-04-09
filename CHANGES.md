@@ -3,7 +3,7 @@ Change Log
 
 ### rer3d_1.9.4 - 09/04/2019
 * Built from v6.3.7
-* Changed Regione Emilia-Romagna URL to HTTPS.
+* Changed Regione Emilia-Romagna layers URL to HTTPS.
 * Removed Agea2011 and added Tea2017 to basemap.
 * Some text translated into Italian.
 
