@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### rer3d_1.9.4 - 09/04/2019
+* Built from v6.3.7
+* Changed Regione Emilia-Romagna URL to HTTPS.
+* Removed Agea2011 and added Tea2017 to basemap.
+* Some text translated into Italian.
+
 ### rer3d_1.9.3 - 26/03/2019
 * Built from v6.3.7
 * Changed zoom to boox delta threshold in NominatimSearch.
