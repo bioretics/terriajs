@@ -18,6 +18,7 @@ import Styles2 from "../Feedback/feedback-button.scss";
 import Icon from "../Icon.jsx";
 
 const isIE = FeatureDetection.isInternetExplorer();
+const chromeVersion = FeatureDetection.chromeVersion();
 
 var flags = {
     moveForward : false,
@@ -112,11 +113,23 @@ const MapColumn = createReactClass({
 
   render() {
     const keyboardControlDescription = 'Navigazione della mappa da tastiera\n  w = zoom in\n  s = zoom out\n  q = muovi in su\n  e = muovi in giù\n  d = muovi a sinistra\n  a = muovi a destra\n  r = ruota in su\n  f = ruota in giù\n  z = ruota a sinistra\n  x = ruota a destra';
+      <div className={Styles.mapInner} ></div>
+    // TODO: remove? see: https://bugs.chromium.org/p/chromium/issues/detail?id=1001663
+    const isAboveChrome75 =
+      chromeVersion && chromeVersion[0] && Number(chromeVersion[0]) > 75;
+    const mapCellClass = classNames(Styles.mapCell, {
+      [Styles.mapCellChrome]: isAboveChrome75
+    });
     return (
-      <div className={Styles.mapInner} onKeyDown={this.onKeyDown} onKeyUp={this.onKeyUp}>
+      <div
+        className={classNames(Styles.mapInner, {
+          [Styles.mapInnerChrome]: isAboveChrome75
+        })}
+        onKeyDown={this.onKeyDown} onKeyUp={this.onKeyUp}
+      >
         <div className={Styles.mapRow}>
           <div
-            className={classNames(Styles.mapCell, Styles.mapCellMap)}
+            className={classNames(mapCellClass, Styles.mapCellMap)}
             ref={this.newMapCell}
           >
             <div
@@ -181,7 +194,7 @@ const MapColumn = createReactClass({
             </If>
           </div>
           <If condition={this.props.terria.configParameters.printDisclaimer}>
-            <div className={classNames(Styles.mapCell, "print")}>
+            <div className={classNames(mapCellClass, "print")}>
               <a
                 className={Styles.printDisclaimer}
                 href={this.props.terria.configParameters.printDisclaimer.url}
@@ -193,7 +206,7 @@ const MapColumn = createReactClass({
         </div>
         <If condition={!this.props.viewState.hideMapUi()}>
           <div className={Styles.mapRow}>
-            <div className={Styles.mapCell}>
+            <div className={mapCellClass}>
               <BottomDock
                 terria={this.props.terria}
                 viewState={this.props.viewState}
