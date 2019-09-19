@@ -12,11 +12,7 @@ Then, you can host your TerriaMap using either the included Node.js-based web se
 
 ### Using the included Node.js-based web server
 
-The easiest way to deploy your TerriaMap is to use the included Node.js-based web server, called [terriajs-server](https://github.com/TerriaJS/terriajs-server).  You'll need Node.js 4.0+ installed on the server in order to run terriajs-server.  
-
-!!! note
-
-    Node.js 5.0+ is required to _build_ TerriaMap, but only 4.0+ is required to _run_ it.
+The easiest way to deploy your TerriaMap is to use the included Node.js-based web server, called [terriajs-server](https://github.com/TerriaJS/terriajs-server).  You'll need Node.js 8.0+ installed on the server in order to run terriajs-server.  
 
 Then, copy the following files and directories from your local system where you built TerriaMap onto the server:
 
@@ -27,7 +23,7 @@ Then, copy the following files and directories from your local system where you 
 And on the server, change to the directory where you copied those files and directories and run:
 
 ```
-./node_modules/terriajs-server/run_server.sh --config-file devserverconfig.json
+./node_modules/.bin/pm2 start ecosystem-production.config.js --update-env --env production
 ```
 
 The server will start on port 3001.  You can specify a different port by adding `--port 1234` to the command-line above.
