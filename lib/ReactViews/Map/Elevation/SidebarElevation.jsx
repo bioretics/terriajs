@@ -85,9 +85,13 @@ const SidebarElevation = createReactClass({
     },
 
     /**
-* Update distance using 3D points instead of 2D points (so elevation also is considered).
-*/
+    * Update distance using 3D points instead of 2D points (so elevation also is considered).
+    */
     updateDistance3D() {
+
+        console.log("AAAA");
+        console.log(this.state.totalDistance3DMetres);
+
         this.setState({ totalDistance3DMetres: 0 });
         //this.setState({ totalDistance3DMetres: 0, stepDistance3DMetres: undefined });
         const positions = this.props.terria.elevationPoints;
@@ -111,6 +115,9 @@ const SidebarElevation = createReactClass({
             cartographicArray.push(ellipsoid.cartesianToCartographic(cartesian));
         }
 
+        console.log("UUUUUU");
+        console.log(cartographicArray);
+
         // Function to sample and interpole a path over a terrain.
         // sampleTerrain can be used instead of sampleTerrainMostDetailed
         sampleTerrainMostDetailed(terrainProvider, cartographicArray)
@@ -129,8 +136,15 @@ const SidebarElevation = createReactClass({
                     dist += tmpDist;
                 }
 
+                console.log("GGGG");
+                console.log(dist);
+
                 // Set new value in state.
                 that.setState({ totalDistance3DMetres: dist, max: maxH, min: minH, updateFor3D: true });
+
+                console.log(this.state.totalDistance3DMetres);
+
+
                 //that.setState({ totalDistance3DMetres: dist, stepDistance3DMetres: dist3d, updateFor3D: false });
                 // Update React UI.
                 that.state.userDrawing.causeUpdate();
@@ -168,6 +182,10 @@ const SidebarElevation = createReactClass({
     },
 
     render() {
+        if(typeof this.props.terria.elevationPoints == 'undefined') {
+            return (<div></div>);
+        }
+        
         const chartPoints = [];
         const distData = [];
         let positions = this.props.terria.elevationPoints;
@@ -224,7 +242,7 @@ const SidebarElevation = createReactClass({
                                             value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
                                     </li>
                                 </ul>
-                                <br />
+                                <hr />
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <center><b>Alt. Min</b></center>
@@ -237,9 +255,7 @@ const SidebarElevation = createReactClass({
                                             value={this.prettifyNumber(this.state.max)} /></center>
                                     </li>
                                 </ul>
-                                <br />
                                 <hr />
-                                <br />
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <center><b>Rotta</b></center>
@@ -252,16 +268,12 @@ const SidebarElevation = createReactClass({
                                             value={this.getHeightDifference()} /></center>
                                     </li>
                                 </ul>
-                                <br />
                                 <hr />
-                                <br />
                                 <center><b>Profilo altimetrico</b></center>
                                 <div >
                                     <Chart data={[chartData]} height={200} />
                                 </div>
-                                <br />
                                 <hr />
-                                <br />
                                 <center><b>Dettaglio tappe</b></center>
                                 <div>
                                     <ul className={Styles.table}>
