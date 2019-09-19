@@ -1,8 +1,17 @@
 Change Log
 ==========
 
+### rer3d_2.1.0 - 19/09/2019
+* Merged with **terriajs 7.6.11**
+
+From terriajs v7.6.11:
+
+* Added a workaround for a bug in Google Chrome v76 and v77 that caused problems with sizing of the bottom dock, such as cutting off the timeline and flickering on and off over the map.
+* Set cesium rendering resolution to CSS pixel resolution. This is required because Cesium renders in native device resolution since 1.61.0.
+
 ### rer3d_2.0.0 - 19/09/2019
 * Merged with **terriajs 7.6.10**
+* Updated rer3d-terriajs-server to 1.1.0
 
 From terriajs v7.6.10:
 
