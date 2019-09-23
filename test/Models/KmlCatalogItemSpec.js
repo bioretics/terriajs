@@ -9,7 +9,7 @@ var loadBlob = require("../../lib/Core/loadBlob");
 var loadText = require("../../lib/Core/loadText");
 var loadXML = require("../../lib/Core/loadXML");
 
-// KML requires support for Blob.  See https://github.com/TerriaJS/terriajs/issues/508
+// KML requires support for Blob.  See https://github.com/TerriaJS/rer3d-terriajs/issues/508
 var describeIfSupported = typeof Blob !== "undefined" ? describe : xdescribe;
 
 describeIfSupported("KmlCatalogItem", function() {

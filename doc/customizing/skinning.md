@@ -29,11 +29,11 @@ import React from 'react';
 
 import version from '../../version';
 
-import StandardUserInterface from 'terriajs/lib/ReactViews/StandardUserInterface/StandardUserInterface.jsx';
-import MenuItem from 'terriajs/lib/ReactViews/StandardUserInterface/customizable/MenuItem';
+import StandardUserInterface from 'rer3d-terriajs/lib/ReactViews/StandardUserInterface/StandardUserInterface.jsx';
+import MenuItem from 'rer3d-terriajs/lib/ReactViews/StandardUserInterface/customizable/MenuItem';
 import RelatedMaps from './RelatedMaps';
-import { Menu, Nav } from 'terriajs/lib/ReactViews/StandardUserInterface/customizable/Groups';
-import MeasureTool from 'terriajs/lib/ReactViews/Map/Navigation/MeasureTool';
+import { Menu, Nav } from 'rer3d-terriajs/lib/ReactViews/StandardUserInterface/customizable/Groups';
+import MeasureTool from 'rer3d-terriajs/lib/ReactViews/Map/Navigation/MeasureTool';
 
 import './global.scss';
 

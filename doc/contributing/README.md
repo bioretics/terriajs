@@ -4,7 +4,7 @@ For all contributors:
 
 * [Setting up a development environment](development-environment.md)
 * [Architectural Overview](architecture.md): The big picture of TerriaJS's architecture.
-* [CONTRIBUTING.md](https://github.com/TerriaJS/terriajs/blob/master/CONTRIBUTING.md): how to submit a pull request. Please read! :)
+* [CONTRIBUTING.md](https://github.com/TerriaJS/rer3d-terriajs/blob/master/CONTRIBUTING.md): how to submit a pull request. Please read! :)
 
 Special cases:
 

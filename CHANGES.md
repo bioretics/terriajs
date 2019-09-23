@@ -905,8 +905,8 @@ From terriajs v6.4.0:
 * Rewrote the TerriaJS user interface using React.  We believe the new interface is a drastic improvement, incorporating user feedback and the results of usability testing.  Currently, it is a bit harder to customize than our old user interface, so if your application has extensive customizations, we suggest delaying upgrading to this version for a little while logner.
 * Added support for non-geospatial CSV files, which display in a new chart panel.
 * Added support for customisable tags in Feature Info templates.
-* Implemented [`<chart>` and `<collapsible>`](https://github.com/TerriaJS/terriajs/blob/4.0.0/lib/ReactViews/Custom/registerCustomComponentTypes.js#L52-L106) tags in Feature Info templates.
-* Added support for [polling](https://github.com/TerriaJS/terriajs/blob/4.0.0/lib/Models/Polling.js) for updates to CSV files.
+* Implemented [`<chart>` and `<collapsible>`](https://github.com/TerriaJS/rer3d-terriajs/blob/4.0.0/lib/ReactViews/Custom/registerCustomComponentTypes.js#L52-L106) tags in Feature Info templates.
+* Added support for [polling](https://github.com/TerriaJS/rer3d-terriajs/blob/4.0.0/lib/Models/Polling.js) for updates to CSV files.
 * `CswCatalogGroup` will now include Web Processing Services from the catalog if configured with `includeWps` set to true.
 * `WebMapServiceCatalogItem` will now detect ncWMS servers and set isNcWMS to true.
 * New `ShareDataService` which can store and resolve data. Currently it is used as a replacement for Google URL Shortener, which can't handle long URLs.
@@ -1059,7 +1059,7 @@ From terriajs v6.4.0:
 ### 2.1.0
 
 * Moved `TableColumn`, `TableStructure`, and the classes based on `Concept` to `lib/Map`. Moved `LegendHelper` to `lib/Models`.
-* Added column-specific styling to CSV files, using a new `tableStyle.columns` json parameter. This is an object whose keys are column names or indices, and whose values are objects of column-specific tableStyle parameters. See the CSV column-specific group in `wwwroot/test/init/test-tablestyle.json` for an example. [#1097](https://github.com/TerriaJS/terriajs/issues/1097)
+* Added column-specific styling to CSV files, using a new `tableStyle.columns` json parameter. This is an object whose keys are column names or indices, and whose values are objects of column-specific tableStyle parameters. See the CSV column-specific group in `wwwroot/test/init/test-tablestyle.json` for an example. [#1097](https://github.com/TerriaJS/rer3d-terriajs/issues/1097)
 * Added the following column-specific `tableStyle` parameters:
   - `name`: renames the column.
   - `type`: sets the column type; can be one of LON, LAT, ALT, TIME, SCALAR, or ENUM.

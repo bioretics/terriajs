@@ -77,7 +77,7 @@ See [Getting Started](http://terria.io/Documentation/guide/getting-started/) in 
 
 * **[Catalog Editor](https://github.com/TerriaJS/catalog-editor)**, an automatically generated web interface for creating and editing catalog (init) files.
 * **[Generate-TerriaJS-Schema](https://github.com/TerriaJS/generate-terriajs-schema)**, a tool which automatically generates a schema for validating catalog files, and also the editor, by processing TerriaJS source code.
-* **[TerriaMapStatic](https://github.com/terriajs/terriamapstatic)**, a pre-built version of TerriaMap, which can be deployed as a static HTML website, such as on Github Pages.
+* **[TerriaMapStatic](https://github.com/rer3d-terriajs/terriamapstatic)**, a pre-built version of TerriaMap, which can be deployed as a static HTML website, such as on Github Pages.
 
 ### Big Thanks
 
@@ -89,4 +89,4 @@ Get in touch!
 
 * Chat in our [Gitter chat room](https://gitter.im/TerriaJS/terriajs)
 * Join the [TerriaJS Google Group](https://groups.google.com/forum/#!forum/terriajs)
-* Raise issues in the [Github issue tracker](https://github.com/TerriaJS/terriajs/issues/new)
+* Raise issues in the [Github issue tracker](https://github.com/TerriaJS/rer3d-terriajs/issues/new)

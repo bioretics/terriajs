@@ -17,7 +17,7 @@ Let's start with an example. Save this snippet as `example.json` and drag it ont
         {
             "name": "Victorian postcodes",
             "type": "csv",
-            "url": "https://raw.githubusercontent.com/TerriaJS/terriajs/5.2.4/wwwroot/test/csv/3000s.csv",
+            "url": "https://raw.githubusercontent.com/TerriaJS/rer3d-terriajs/5.2.4/wwwroot/test/csv/3000s.csv",
             "tableStyle": {
                 "colorMap": "green-orange"
             }
@@ -45,8 +45,8 @@ Please note this documentation is still being developed, and does not cover ever
 that is possible.
 The definitive source of what you can do with `tableStyle` is this pair:
 
-* [TableStyle](https://github.com/TerriaJS/terriajs/blob/master/lib/Models/TableStyle.js)
-* [TableColumnStyle](https://github.com/TerriaJS/terriajs/blob/master/lib/Models/TableColumnStyle.js)
+* [TableStyle](https://github.com/TerriaJS/rer3d-terriajs/blob/master/lib/Models/TableStyle.js)
+* [TableColumnStyle](https://github.com/TerriaJS/rer3d-terriajs/blob/master/lib/Models/TableColumnStyle.js)
 
 
 ## Referencing your data
@@ -132,7 +132,7 @@ This example shows a few possibilities:
 - The legend for that column is shown without any decimal places (`maximumFractionDigits` 0).
 - A column in the original data called "bad" is hidden from the workbench.
 
-The full list of options is in [TableColumnStyle](https://github.com/TerriaJS/terriajs/blob/master/lib/Models/TableColumnStyle.js).
+The full list of options is in [TableColumnStyle](https://github.com/TerriaJS/rer3d-terriajs/blob/master/lib/Models/TableColumnStyle.js).
 
 ## Coloring
 
@@ -252,7 +252,7 @@ For a full list of the available settings, see the `TableStyle` and `TableColumn
 ## More examples
 
 Some examples are here:
-[https://github.com/TerriaJS/terriajs/blob/master/wwwroot/test/init/test-tablestyle.json](https://github.com/TerriaJS/terriajs/blob/master/wwwroot/test/init/test-tablestyle.json)
+[https://github.com/TerriaJS/rer3d-terriajs/blob/master/wwwroot/test/init/test-tablestyle.json](https://github.com/TerriaJS/rer3d-terriajs/blob/master/wwwroot/test/init/test-tablestyle.json)
 
 You can add this directly to your catalog by appending `#build/TerriaJS/test/init/test-tablestyle.json` to the URL to your map, eg. `http://localhost:3001/#build/TerriaJS/test/init/test-tablestyle.json`.
 

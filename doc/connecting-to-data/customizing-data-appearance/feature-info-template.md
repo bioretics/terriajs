@@ -162,6 +162,6 @@ The current time for the layer is avaliable as `{{terria.currentTime}}`.
 ## More examples
 
 
-Some examples are here: [https://github.com/TerriaJS/terriajs/blob/master/wwwroot/test/init/csv.json](https://github.com/TerriaJS/terriajs/blob/master/wwwroot/test/init/csv.json), and [charts.json](https://github.com/TerriaJS/terriajs/blob/master/wwwroot/test/init/charts.json).
+Some examples are here: [https://github.com/TerriaJS/rer3d-terriajs/blob/master/wwwroot/test/init/csv.json](https://github.com/TerriaJS/rer3d-terriajs/blob/master/wwwroot/test/init/csv.json), and [charts.json](https://github.com/TerriaJS/rer3d-terriajs/blob/master/wwwroot/test/init/charts.json).
 
 You can add this directly to your catalog by appending `#build/TerriaJS/test/init/csv.json` to the URL to your map, eg. `http://localhost:3001/#build/TerriaJS/test/init/csv.json`.
