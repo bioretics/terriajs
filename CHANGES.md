@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.2.1 - 25/09/2019
+* Changed repository owner.
+* Updated to rer3d-terriajs-server to 1.2.2
+
 ### rer3d-terriajs 2.2.0 - 25/09/2019
 * Package renamed.
 * Updated to rer3d-terriajs-server to 1.2.1
