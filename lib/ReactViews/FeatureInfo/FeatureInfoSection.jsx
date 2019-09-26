@@ -793,12 +793,23 @@ function getInfoAsReactComponent(that) {
     if (defined(rawDataHtml)) {
       rawData = parseCustomMarkdownToReact(rawDataHtml, context);
     }
+  }
+  return {
+    info: that.hasTemplate()
+      ? parseCustomMarkdownToReact(that.descriptionFromTemplate(), context)
+      : rawData,
+    rawData: rawData,
+    showRawData: showRawData,
+    hasRawData: !!rawDataHtml,
+    timeSeriesChartTitle: timeSeriesChartTitle,
+    timeSeriesChart: timeSeriesChart,
+    downloadableData: downloadableData
   };
 }
 
 function setTimeoutsForUpdatingCustomComponents(that) {
   // eslint-disable-line require-jsdoc
-  const { info } = getInfoAsReactComponent(that);
+  const {info} = getInfoAsReactComponent(that);
   const foundCustomComponents = CustomComponents.find(info);
   foundCustomComponents.forEach((match, componentNumber) => {
     const updateSeconds = match.type.selfUpdateSeconds(match.reactComponent);
