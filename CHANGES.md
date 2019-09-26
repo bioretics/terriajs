@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.2.0 - 25/09/2019
+* Package renamed.
+* Updated to rer3d-terriajs-server to 1.2.1
+* Fixed merge error in FeatureInfoSection
+
 ### rer3d_2.1.0 - 19/09/2019
 * Merged with **terriajs 7.6.11**
 
