@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.2.2 - 25/09/2019
+* Fix mistype in package.json
+
 ### rer3d-terriajs 2.2.1 - 25/09/2019
 * Changed repository owner.
 * Updated to rer3d-terriajs-server to 1.2.2
