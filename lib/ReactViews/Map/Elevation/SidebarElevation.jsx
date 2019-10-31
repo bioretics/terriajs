@@ -88,10 +88,6 @@ const SidebarElevation = createReactClass({
     * Update distance using 3D points instead of 2D points (so elevation also is considered).
     */
     updateDistance3D() {
-
-        console.log("AAAA");
-        console.log(this.state.totalDistance3DMetres);
-
         this.setState({ totalDistance3DMetres: 0 });
         //this.setState({ totalDistance3DMetres: 0, stepDistance3DMetres: undefined });
         const positions = this.props.terria.elevationPoints;
@@ -102,6 +98,7 @@ const SidebarElevation = createReactClass({
         // Granularity: the distance, in radians, between each latitude and longitude; determines the number of positions in the buffer.
         const granularity = 0.000001;
         const cartesianPositions = ellipsoid.cartographicArrayToCartesianArray(positions);
+
         const flatPositions = PolylinePipeline.generateArc({
             positions: cartesianPositions,
             granularity: granularity
@@ -114,9 +111,6 @@ const SidebarElevation = createReactClass({
             let cartesian = Cartesian3.unpack(flatPositions, i);
             cartographicArray.push(ellipsoid.cartesianToCartographic(cartesian));
         }
-
-        console.log("UUUUUU");
-        console.log(cartographicArray);
 
         // Function to sample and interpole a path over a terrain.
         // sampleTerrain can be used instead of sampleTerrainMostDetailed
@@ -135,19 +129,13 @@ const SidebarElevation = createReactClass({
                     let tmpDist = Cartesian3.distance(raisedPositions[i], raisedPositions[i - 1]);
                     dist += tmpDist;
                 }
-
-                console.log("GGGG");
-                console.log(dist);
-
                 // Set new value in state.
                 that.setState({ totalDistance3DMetres: dist, max: maxH, min: minH, updateFor3D: true });
 
-                console.log(this.state.totalDistance3DMetres);
-
-
-                //that.setState({ totalDistance3DMetres: dist, stepDistance3DMetres: dist3d, updateFor3D: false });
                 // Update React UI.
                 that.state.userDrawing.causeUpdate();
+            }, function(reason) {
+                console.log(reason)
             });
     },
 
