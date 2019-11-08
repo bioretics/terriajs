@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.3.0 - 08/10/2019
+* Added search in catalog by "info" metadata.
+* Purged code of SidebarElevation.
+* Updated to rer3d-terriajs-server to 1.2.3
+
 ### rer3d-terriajs 2.2.2 - 25/09/2019
 * Fix mistype in package.json
 
