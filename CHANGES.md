@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.0 - 14/10/2019
+* Refactored CoordConverterPanel and added copy to clipboard buttons.
+
 ### rer3d-terriajs 2.3.0 - 08/10/2019
 * Added search in catalog by "info" metadata.
 * Purged code of SidebarElevation.
