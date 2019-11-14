@@ -82,20 +82,35 @@
   }
 }
 
-.btn--coord--load {
+.btn--icon {
   composes: btn from '../../../Sass/common/_buttons.scss';
   composes: btn-grey from '../../../Sass/common/_buttons.scss';
 
   color: $text-light;
-  width: 70px;
+  width: 35px;
   margin-left: 3%;
+  padding: 5px;;
 
   &.is-active{
     border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  &:hover {
+    svg {
+      fill: $color-primary;
+    }
+  }
+  svg {
+    fill: $feature-info-btn-color;
   }
 }
 
 
 .btn--dropdown {
   composes: btn--sphere from '../../../Sass/common/_buttons.scss';
+}
+
+.offscreen {
+  position: absolute;
+  left: -999em;
 }

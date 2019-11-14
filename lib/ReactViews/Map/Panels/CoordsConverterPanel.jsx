@@ -29,7 +29,8 @@ const CoordsConverterPanel = createReactClass({
         x: PropTypes.string,
         y: PropTypes.string,
         sCrs: PropTypes.string,
-        tCrs: PropTypes.string
+        tCrs: PropTypes.string,
+        hiddenTxt: PropTypes.string
     },
 
     getDefaultProps() {
@@ -49,7 +50,8 @@ const CoordsConverterPanel = createReactClass({
             sCrs: this.props.epsgList[0].code,
             tCrs: this.props.epsgList[0].code,
             x: '',
-            y: ''
+            y: '',
+            hiddenTxt: ''
         };
     },
 
@@ -74,6 +76,8 @@ const CoordsConverterPanel = createReactClass({
     changedT(event) {
         this.state.tCrs = event.target.value;
     },
+
+    changedHidden(event) {},
 
     loadRes(x, y, sourceCrs, targetCrs) {
         var xmlRequest = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -132,7 +136,10 @@ const CoordsConverterPanel = createReactClass({
 
         function processRequest(e) {
             if (xhr.readyState == 4 && xhr.status == 200) {
-                document.getElementById("conversionOutput").innerHTML = xhr.responseText;
+                //document.getElementById("conversionOutput").innerHTML = xhr.responseText;
+                var oParser = new DOMParser();
+                var xmlDoc = oParser.parseFromString(xhr.responseText, "text\/xml");
+                document.getElementById("conversionOutput").value = xmlDoc.childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].nodeValue;
             }
             /*else {
                 console.log('XMLHttpRequest: readyState = ' + xhr.readyState + '  ;  status = ' + xhr.status);
@@ -167,17 +174,29 @@ const CoordsConverterPanel = createReactClass({
         });
     },
 
+    copyInCoordsToClipboard(event) {
+        var txt = this.state.x + ' ' + this.state.y;
+        this.setState({hiddenTxt: txt});
+        this.copyToClipboard("hidden");
+    },
+
+    copyOutCoordsToClipboard(event) {
+        this.copyToClipboard("conversionOutput");
+    },
+
+    copyToClipboard(id) {
+        var copyText = document.getElementById(id);
+        copyText.select();
+        copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+        document.execCommand("copy");
+    },
+
     renderContent() {
 
         return (<div>
-            {/*<div className={classNames(DropdownStyles.header)}>
-                <label className={DropdownStyles.heading}>CONVERTITORE DI COORDINATE</label>
-            </div>*/}
             <div>
-                <p>
-                    <label>Coordinate ultimo click:     </label>
-                    <button className={Styles.btnCoordLoad} onClick={this.onLoadPickedCoords}>Carica</button>
-                </p>
+                <p><label>Cattura coordinate ultimo click</label></p>
+                <p><button className={Styles.btnIcon} onClick={this.onLoadPickedCoords}><Icon glyph={Icon.GLYPHS.location} /></button></p>
             </div>
 
             <div className={classNames(DropdownStyles.section, Styles.section)}>
@@ -203,13 +222,16 @@ const CoordsConverterPanel = createReactClass({
                     <label>X / Longitude</label>
                 </p>
                 <p>
-                    <input className={Styles.coordsField} type="text" name="coordX" onChange={this.changedX} value={this.state.x} />
+                    <input className={Styles.coordsField} type="text" id="coordX" onChange={this.changedX} value={this.state.x} />
                 </p>
                 <p>
                     <label>Y / Latitude</label>
                 </p>
                 <p>
-                    <input className={Styles.coordsField} type="text" name="coordY" onChange={this.changedY} value={this.state.y} />
+                    <input className={Styles.coordsField} type="text" id="coordY" onChange={this.changedY} value={this.state.y} />
+                </p>
+                <p>
+                    <button className={Styles.btnIcon} onClick={this.copyInCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
                 </p>
             </div>
             <div className={classNames(Styles.viewer, DropdownStyles.section)}>
@@ -228,8 +250,10 @@ const CoordsConverterPanel = createReactClass({
                 <p />
             </div>
             <div className={classNames(Styles.viewer, DropdownStyles.section)}>
-                <label>Coordinate convertite:</label>
-                <p className={Styles.shareUrlfield} id="conversionOutput"></p>
+                <label>Coordinate convertite</label>
+                <p><input className={Styles.coordsField} id="conversionOutput" readOnly></input></p>
+                <button className={Styles.btnIcon} onClick={this.copyOutCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
+                <input className={Styles.offscreen} aria-hidden="true" id="hidden" value={this.state.hiddenTxt} onChange={this.changedHidden} ></input>
             </div>
         </div>
         )

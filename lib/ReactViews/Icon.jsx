@@ -83,7 +83,8 @@ const GLYPHS = {
   globe_rot: require('../../wwwroot/images/icons/globe_rotate.svg'),
   globe_rot2: require('../../wwwroot/images/icons/globe_rotate_2.svg'),
   rotate_left: require('../../wwwroot/images/icons/rotate-left.svg'),
-  rotate_right: require('../../wwwroot/images/icons/rotate-right.svg')
+  rotate_right: require('../../wwwroot/images/icons/rotate-right.svg'),
+  copy: require('../../wwwroot/images/icons/copy.svg')
 };
 
 const Icon = createReactClass({
