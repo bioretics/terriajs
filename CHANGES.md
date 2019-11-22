@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.1 - 22/11/2019
+* Adjusted some package version
+
 ### rer3d-terriajs 2.4.0 - 14/10/2019
 * Refactored CoordConverterPanel and added copy to clipboard buttons.
 
