@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.2 - 10/12/2019
+* Fixed some https lost in merge.
+
 ### rer3d-terriajs 2.4.1 - 22/11/2019
 * Adjusted some package version
 
