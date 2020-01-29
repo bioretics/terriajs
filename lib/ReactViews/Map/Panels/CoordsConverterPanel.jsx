@@ -141,7 +141,6 @@ const CoordsConverterPanel = createReactClass({
 
         function processRequest(e) {
             if (xhr.readyState == 4 && xhr.status == 200) {
-                //document.getElementById("conversionOutput").innerHTML = xhr.responseText;
                 var oParser = new DOMParser();
                 var xmlDoc = oParser.parseFromString(xhr.responseText, "text\/xml");
 
@@ -221,13 +220,14 @@ const CoordsConverterPanel = createReactClass({
                     <label>CRS sorgente</label>
                 </p>
                 <p>
-                    <select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
+                    {/*<select className={Styles.crsSelect} onChange={this.changedS} defaultValue={this.state.sCrs} >
                         {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} className={Styles.crsItem} value={epsg.code}>{epsg.text}</option>; })}
-                    </select>
+                    </select>*/}
+                    <input className={Styles.crsSelect} readOnly value={this.props.epsgList[0].text}></input>
                 </p>
                 <p>
-                    CRS destinazione
-                        </p>
+                    <label>CRS destinazione</label>
+                </p>
                 <p>
                     <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
                         {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} className={Styles.crsItem} value={epsg.code}>{epsg.text}</option>; })}
