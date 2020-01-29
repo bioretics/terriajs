@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.4 - 29/01/2020
+* Merged x and y coords input.
+* Changed CoordConverterPanel width.
+* Improved "Vai a" function.
+* Show a message in case of coordinate conversion error.
+* Due to problems in RER conversion webservice the only usable CRS source is temporarily WGS84.
+
 ### rer3d-terriajs 2.4.3 - 19/12/2019
 * Fixed Agea2017 basemap url.
 * Fixed globe base color white.
