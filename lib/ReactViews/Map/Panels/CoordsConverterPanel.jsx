@@ -168,9 +168,11 @@ const CoordsConverterPanel = createReactClass({
     },
 
     onGoTo(event) {
-        var bboxSize = 0.2;
+        var bboxSize = 0.005;
         var rectangle = zoomRectangleFromPoint(this.state.y, this.state.x, bboxSize);
         this.props.terria.currentViewer.zoomTo(rectangle, 2.0);
+
+        this.props.terria.cesium._selectionIndicator.animateAppear();
     },
 
     clearCoord(event) {
