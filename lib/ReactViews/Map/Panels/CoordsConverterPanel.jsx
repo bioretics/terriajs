@@ -144,7 +144,16 @@ const CoordsConverterPanel = createReactClass({
                 //document.getElementById("conversionOutput").innerHTML = xhr.responseText;
                 var oParser = new DOMParser();
                 var xmlDoc = oParser.parseFromString(xhr.responseText, "text\/xml");
-                document.getElementById("conversionOutput").value = xmlDoc.childNodes[0].childNodes[0].childNodes[0].childNodes[0].childNodes[0].nodeValue;
+
+                if(xmlDoc === undefined || xmlDoc.childNodes[0] === undefined) {
+                    document.getElementById("conversionOutput").value = "CONVERSION ERROR!";
+                }
+                else if(xmlDoc.childNodes[0].childNodes[0].childNodes[0] === undefined) {
+                    document.getElementById("conversionOutput").value = "ERROR: " + xmlDoc.firstElementChild.firstElementChild.firstElementChild.innerHTML;
+                }
+                else {
+                    document.getElementById("conversionOutput").value = xmlDoc.firstElementChild.firstElementChild.firstElementChild.firstElementChild.innerHTML;
+                }
             }
             /*else {
                 console.log('XMLHttpRequest: readyState = ' + xhr.readyState + '  ;  status = ' + xhr.status);
