@@ -28,6 +28,7 @@ const CoordsConverterPanel = createReactClass({
         epsgList: PropTypes.array,
         x: PropTypes.string,
         y: PropTypes.string,
+        coordsTxt: PropTypes.string,
         sCrs: PropTypes.string,
         tCrs: PropTypes.string,
         hiddenTxt: PropTypes.string
@@ -51,6 +52,7 @@ const CoordsConverterPanel = createReactClass({
             tCrs: this.props.epsgList[0].code,
             x: '',
             y: '',
+            coordsTxt: '',
             hiddenTxt: ''
         };
     },
@@ -61,8 +63,11 @@ const CoordsConverterPanel = createReactClass({
         });
     },
 
-    changedX(event) {
-        this.setState({ x: event.target.value });
+    changedCoords(event) {
+        var splitted = event.target.value.split(" ");
+        this.setState({ coordsTxt: event.target.value });
+        this.setState({ x:  splitted[0]});
+        this.setState({ y:  splitted[1]});
     },
 
     changedY(event) {
@@ -156,7 +161,8 @@ const CoordsConverterPanel = createReactClass({
 
             this.setState({
                 x: longitude,
-                y: latitude
+                y: latitude,
+                coordsTxt: latitude + " " + longitude
             });
         }
     },
@@ -170,13 +176,13 @@ const CoordsConverterPanel = createReactClass({
     clearCoord(event) {
         this.setState({
             x: '',
-            y: ''
+            y: '',
+            coordsTxt: ''
         });
     },
 
     copyInCoordsToClipboard(event) {
-        var txt = this.state.x + ' ' + this.state.y;
-        this.setState({hiddenTxt: txt});
+        this.setState({hiddenTxt: this.state.coordsTxt});
         this.copyToClipboard("hidden");
     },
 
@@ -219,16 +225,10 @@ const CoordsConverterPanel = createReactClass({
             </div>
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
-                    <label>X / Longitude</label>
+                    <label>Coordinate da convertire ("lat lon" o "y x")</label>
                 </p>
                 <p>
-                    <input className={Styles.coordsField} type="text" id="coordX" onChange={this.changedX} value={this.state.x} />
-                </p>
-                <p>
-                    <label>Y / Latitude</label>
-                </p>
-                <p>
-                    <input className={Styles.coordsField} type="text" id="coordY" onChange={this.changedY} value={this.state.y} />
+                    <input className={Styles.coordsField} type="text" id="coordX" onChange={this.changedCoords} value={this.state.coordsTxt} />
                 </p>
                 <p>
                     <button className={Styles.btnIcon} onClick={this.copyInCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
