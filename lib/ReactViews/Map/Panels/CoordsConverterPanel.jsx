@@ -64,14 +64,11 @@ const CoordsConverterPanel = createReactClass({
     },
 
     changedCoords(event) {
-        var splitted = event.target.value.split(" ");
-        this.setState({ coordsTxt: event.target.value });
-        this.setState({ x:  splitted[0]});
-        this.setState({ y:  splitted[1]});
-    },
-
-    changedY(event) {
-        this.setState({ y: event.target.value });
+        var text = event.target.value;
+        var splitted = text.split(/[ |,|;]+/g);
+        this.setState({ coordsTxt: text });
+        this.setState({ y:  splitted[0]});
+        this.setState({ x:  splitted[1]});
     },
 
     changedS(event) {
@@ -151,7 +148,9 @@ const CoordsConverterPanel = createReactClass({
                     document.getElementById("conversionOutput").value = "ERROR: " + xmlDoc.firstElementChild.firstElementChild.firstElementChild.innerHTML;
                 }
                 else {
-                    document.getElementById("conversionOutput").value = xmlDoc.firstElementChild.firstElementChild.firstElementChild.firstElementChild.innerHTML;
+                    //document.getElementById("conversionOutput").value = xmlDoc.firstElementChild.firstElementChild.firstElementChild.firstElementChild.innerHTML;
+                    var splitted = xmlDoc.firstElementChild.firstElementChild.firstElementChild.firstElementChild.innerHTML.split(/[ |,|;]+/g);
+                    document.getElementById("conversionOutput").value = splitted[1] + ", " + splitted[0];
                 }
             }
             /*else {
@@ -170,7 +169,7 @@ const CoordsConverterPanel = createReactClass({
             this.setState({
                 x: longitude,
                 y: latitude,
-                coordsTxt: latitude + " " + longitude
+                coordsTxt: latitude + ", " + longitude
             });
         }
     },
@@ -189,11 +188,11 @@ const CoordsConverterPanel = createReactClass({
             y: '',
             coordsTxt: ''
         });
+        document.getElementById("conversionOutput").value = "";
     },
 
     copyInCoordsToClipboard(event) {
-        this.setState({hiddenTxt: this.state.coordsTxt});
-        this.copyToClipboard("hidden");
+        this.copyToClipboard("coords");
     },
 
     copyOutCoordsToClipboard(event) {
@@ -236,10 +235,10 @@ const CoordsConverterPanel = createReactClass({
             </div>
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
-                    <label>Coordinate da convertire ("lat lon" o "y x")</label>
+                    <label>Coordinate da convertire ("lat lon")</label>
                 </p>
                 <p>
-                    <input className={Styles.coordsField} type="text" id="coordX" onChange={this.changedCoords} value={this.state.coordsTxt} />
+                    <input className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
                 </p>
                 <p>
                     <button className={Styles.btnIcon} onClick={this.copyInCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
@@ -264,7 +263,6 @@ const CoordsConverterPanel = createReactClass({
                 <label>Coordinate convertite</label>
                 <p><input className={Styles.coordsField} id="conversionOutput" readOnly></input></p>
                 <button className={Styles.btnIcon} onClick={this.copyOutCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
-                <input className={Styles.offscreen} aria-hidden="true" id="hidden" value={this.state.hiddenTxt} onChange={this.changedHidden} ></input>
             </div>
         </div>
         )
