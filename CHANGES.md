@@ -1,9 +1,15 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.6 - 30/01/2020
+* Some improvements in CoordsConverterPanel.
+
+### rer3d-terriajs 2.4.5 - 29/01/2020
+* Empty fake release.
+
 ### rer3d-terriajs 2.4.4 - 29/01/2020
 * Merged x and y coords input.
-* Changed CoordConverterPanel width.
+* Changed CoordsConverterPanel width.
 * Improved "Vai a" function.
 * Show a message in case of coordinate conversion error.
 * Due to problems in RER conversion webservice the only usable CRS source is temporarily WGS84.
