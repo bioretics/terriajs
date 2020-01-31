@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.7 - 31/01/2020
+* Readded NavigatopnHelpButton, unintentional removed in a past merge.
+* Moved Stories prompt under Stories button.
+* Changed button title from "Storia" to "Storie".
+
 ### rer3d-terriajs 2.4.6 - 30/01/2020
 * Some improvements in CoordsConverterPanel.
 
