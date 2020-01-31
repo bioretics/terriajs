@@ -104,7 +104,7 @@ const MenuBar = createReactClass({
                 onClick={this.onStoryButtonClick}
               >
                 <Icon glyph={Icon.GLYPHS.story} />
-                <span>Storia</span>
+                <span>Storie</span>
               </button>
               {storyEnabled &&
                 this.props.viewState.featurePrompts.indexOf("story") >= 0 && (
