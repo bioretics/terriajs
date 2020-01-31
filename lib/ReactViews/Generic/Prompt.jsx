@@ -29,7 +29,7 @@ export default class Prompt extends React.PureComponent {
       <div
         className={classNames(Styles.prompt, {
           [Styles.isVisible]: this.state.isShown
-        })}
+        })} style={{left: this.props.left}}
       >
         {this.props.content}
         <button
@@ -48,5 +48,6 @@ Prompt.propTypes = {
   content: PropTypes.object,
   dismissText: PropTypes.string,
   dismissAction: PropTypes.func,
-  displayDelay: PropTypes.number
+  displayDelay: PropTypes.number,
+  left: PropTypes.number
 };

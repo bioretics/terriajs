@@ -113,6 +113,7 @@ const MenuBar = createReactClass({
                     displayDelay={delayTime}
                     dismissText={"Ok!"}
                     dismissAction={this.dismissAction}
+                    left={340}
                   />
                 )}
             </li>
