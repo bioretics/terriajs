@@ -106,7 +106,7 @@ const MenuBar = createReactClass({
                 <Icon glyph={Icon.GLYPHS.story} />
                 <span>Storie</span>
               </button>
-              {storyEnabled &&
+              {/*storyEnabled &&
                 this.props.viewState.featurePrompts.indexOf("story") >= 0 && (
                   <Prompt
                     content={promptHtml}
@@ -115,7 +115,7 @@ const MenuBar = createReactClass({
                     dismissAction={this.dismissAction}
                     left={340}
                   />
-                )}
+                )*/}
             </li>
           </If>
           {enableTools && (
