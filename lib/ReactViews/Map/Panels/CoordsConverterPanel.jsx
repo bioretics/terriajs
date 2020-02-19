@@ -270,7 +270,6 @@ const CoordsConverterPanel = createReactClass({
 
     render() {
         const dropdownTheme = {
-            btn: Styles.btnCoords,
             outer: Styles.coordsPanel,
             inner: Styles.dropdownInner,
         };

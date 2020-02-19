@@ -94,9 +94,9 @@ const SettingPanel = createReactClass({
       : "(None)";
 
     const dropdownTheme = {
-      outer: Styles.settingPanel,
+      //outer: Styles.settingPanel,
       inner: Styles.dropdownInner,
-      btn: Styles.btnDropdown,
+      //btn: Styles.btnDropdown,
       icon: "sphere"
     };
 

@@ -1,6 +1,10 @@
-@import '~terriajs-variables';
+//@import '~terriajs-variables';
 @import '../../../Sass/common/mixins';
 
+
+.color-panel {
+  font-size: $font-size-mid-small;
+}
 
 .dropdown-inner {
   width: $setting-panel;

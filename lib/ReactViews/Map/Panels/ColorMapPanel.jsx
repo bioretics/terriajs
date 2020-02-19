@@ -160,8 +160,7 @@ const ColorMapPanel = createReactClass({
 
     render() {
         const dropdownTheme = {
-            btn: Styles.btnCoords,
-            outer: Styles.coordsPanel,
+            outer: Styles.colorPanel,
             inner: Styles.dropdownInner,
         };
 
