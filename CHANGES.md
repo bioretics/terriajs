@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.4.8 - 19/02/2020
+* Avoided elevation correction with EarthGravityModel1996.
+* Workaround for Bing geocoding too near the ground.
+* Fixed DropdownPanel positions.
+* Disabled first use prompt for Story.
+* Purged unused code.
+
 ### rer3d-terriajs 2.4.7 - 31/01/2020
 * Readded NavigatopnHelpButton, unintentional removed in a past merge.
 * Moved Stories prompt under Stories button.
