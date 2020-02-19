@@ -29,9 +29,9 @@ const DropdownPanel = createReactClass({
   onInnerMounted(innerElement) {
     if (innerElement) {
       // how much further right the panel is from the button
-      const offset = this.buttonElement.offsetLeft - innerElement.offsetLeft;
+      const offset = this.buttonElement.offsetLeft - innerElement.offsetLeft + innerElement.clientWidth * 0.5;
       // if the panel is left of the button leave its offset as is, otherwise move it right so it's level with the button.
-      const dropdownOffset =
+      const dropdownOffset = 
         offset < innerElement.offsetLeft ? offset : innerElement.offsetLeft;
       // offset the caret to line up with the middle of the button - note that the caret offset is relative to the panel, whereas
       // the offsets for the button/panel are relative to their container.
@@ -41,7 +41,7 @@ const DropdownPanel = createReactClass({
           (dropdownOffset - this.buttonElement.offsetLeft),
         0
       );
-
+      
       this.setState({
         caretOffset: caretOffset >= 0 && caretOffset + "px",
         dropdownOffset: dropdownOffset + "px"
