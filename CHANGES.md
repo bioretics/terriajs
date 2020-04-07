@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.5.0 - 07/04/2020
+* Read maximumLeafletZoomLevel param from config.
+* Added RerFeatureServerCatalogItem to use query operation of RER ArcGisFeaturesServer, with custom icons.
+* Fixed KML feature clamped bug.
+* Fixed layer transparency label.
+
 ### rer3d-terriajs 2.4.8 - 19/02/2020
 * Avoided elevation correction with EarthGravityModel1996.
 * Workaround for Bing geocoding too near the ground.
