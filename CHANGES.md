@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.6.0 - 08/05/2020
+* Added RerGeoJsonCatalogItem to modify GeoJsonCatalogItem behaviour.
+* Improved RerFeatureServerCatalogItem query to use only a portion of view bbox when camera pitch is low.
+* Some minor changes.
+
+### rer3d-terriajs 2.5.1 - 16/04/2020
+* RerFeatureServerCatalogItem now use also view bbox to reload data.
+* Fixed some icons in RerFeatureServerCatalogItem.
+* Replaced Tea2017 basemap with CGR2018.
+
 ### rer3d-terriajs 2.5.0 - 07/04/2020
 * Read maximumLeafletZoomLevel param from config.
 * Added RerFeatureServerCatalogItem to use query operation of RER ArcGisFeaturesServer, with custom icons.
