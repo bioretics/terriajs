@@ -9,7 +9,11 @@ import createReactClass from "create-react-class";
 import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import defined from "terriajs-cesium/Source/Core/defined";
 import clone from "terriajs-cesium/Source/Core/clone";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
+import GeoJsonCatalogItem from "../../../Models/GeoJsonCatalogItem";
+import CompositeCatalogItem from "../../../Models/CompositeCatalogItem";
 import CsvCatalogItem from "../../../Models/CsvCatalogItem";
 import SensorObservationServiceCatalogItem from "../../../Models/SensorObservationServiceCatalogItem";
 import Dropdown from "../../Generic/Dropdown";
@@ -17,6 +21,7 @@ import Polling from "../../../Models/Polling";
 import raiseErrorToUser from "../../../Models/raiseErrorToUser";
 import TableStyle from "../../../Models/TableStyle";
 import Icon from "../../Icon.jsx";
+import { withTranslation } from "react-i18next";
 
 import Styles from "./chart-expand-and-download-buttons.scss";
 
@@ -49,7 +54,8 @@ const ChartExpandAndDownloadButtons = createReactClass({
     xColumn: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
     yColumns: PropTypes.array,
     canDownload: PropTypes.bool,
-    raiseToTitle: PropTypes.bool
+    raiseToTitle: PropTypes.bool,
+    t: PropTypes.func.isRequired
   },
 
   expandButton() {
@@ -68,10 +74,12 @@ const ChartExpandAndDownloadButtons = createReactClass({
     if (!defined(this.props.sources) && !defined(this.props.tableStructure)) {
       return null;
     }
+
     // The downloads and download names default to the sources and source names if not defined.
     const downloads = this.props.downloads || this.props.sources;
     const downloadNames = this.props.downloadNames || this.props.sourceNames;
     let downloadButton;
+    const { t } = this.props;
     if (defined(this.props.sourceNames)) {
       const dropdownTheme = {
         dropdown: Styles.dropdown,
@@ -98,7 +106,7 @@ const ChartExpandAndDownloadButtons = createReactClass({
             options={nameAndHrefObjects}
             theme={downloadDropdownTheme}
           >
-            Download&nbsp;▾
+            {t("chart.download") + " ▾"}
           </Dropdown>
         );
       }
@@ -115,7 +123,7 @@ const ChartExpandAndDownloadButtons = createReactClass({
               options={sourceNameObjects}
               theme={dropdownTheme}
             >
-              Expand&nbsp;▾
+              {t("chart.expand") + " ▾"}
             </Dropdown>
             {downloadButton}
           </div>
@@ -140,7 +148,7 @@ const ChartExpandAndDownloadButtons = createReactClass({
           className={Styles.btnChartExpand}
           onClick={this.expandButton}
         >
-          Expand
+          {t("chart.expand")}
         </button>
         {downloadButton}
       </div>
@@ -153,6 +161,7 @@ const ChartExpandAndDownloadButtons = createReactClass({
  * @private
  */
 function expand(props, sourceIndex) {
+  const feature = props.feature;
   function makeTableStyle() {
     // Set the table style so that the names and units of the columns appear immediately, not with a delay.
     const tableStyleOptions = {
@@ -200,10 +209,47 @@ function expand(props, sourceIndex) {
   // Side-effect: sets activeConcepts and existingColors
   function makeNewCatalogItem() {
     const url = defined(sourceIndex) ? props.sources[sourceIndex] : undefined;
+
     const newCatalogItem = new CsvCatalogItem(terria, url, {
       tableStyle: makeTableStyle(),
-      isCsvForCharting: true
+      isCsvForCharting: true,
+      chartDisclaimer: props.catalogItem.chartDisclaimer
+        ? props.catalogItem.chartDisclaimer
+        : null
     });
+    const items = [newCatalogItem];
+    let newGeoJsonAvailable = false;
+    if (defined(feature.position._value)) {
+      newGeoJsonAvailable = true;
+      const newGeoJsonItem = new GeoJsonCatalogItem(terria, null);
+      newGeoJsonItem.isUserSupplied = true;
+      newGeoJsonItem.style = {
+        "stroke-width": 3,
+        "marker-size": 30,
+        stroke: "#ffffff",
+        "marker-color": newCatalogItem.colors[0],
+        "marker-opacity": 1
+      };
+      const carts = Ellipsoid.WGS84.cartesianToCartographic(
+        feature.position._value
+      );
+      newGeoJsonItem.data = {
+        type: "Feature",
+        properties: {},
+        geometry: {
+          type: "Point",
+          coordinates: [
+            CesiumMath.toDegrees(carts.longitude),
+            CesiumMath.toDegrees(carts.latitude)
+          ]
+        }
+      };
+      newGeoJsonItem.isMappable = true;
+      items.push(newGeoJsonItem);
+    }
+
+    const compositeItem = new CompositeCatalogItem(terria, items);
+
     let tableStructure = props.tableStructure;
     if (
       defined(props.colors) &&
@@ -290,12 +336,20 @@ function expand(props, sourceIndex) {
       group.remove(oldCatalogItem);
     }
     group.add(newCatalogItem);
+
     newCatalogItem.isLoading = true;
     newCatalogItem.isMappable = false;
-    terria.catalog.addChartableItem(newCatalogItem); // Notify the chart panel so it shows "loading".
-    newCatalogItem.isEnabled = true; // This loads it as well.
+    newCatalogItem.isEnabled = true;
+    newCatalogItem.creatorCatalogItem = compositeItem;
+    if (newGeoJsonAvailable)
+      items[1].style["marker-color"] = newCatalogItem.getNextColor();
 
-    return newCatalogItem;
+    terria.catalog.addChartableItem(newCatalogItem); // Notify the chart panel so it shows "loading".
+
+    compositeItem.isEnabled = true;
+    compositeItem.nowViewingCatalogItem = newCatalogItem;
+
+    return compositeItem;
   }
 
   let existingColors;
@@ -307,7 +361,12 @@ function expand(props, sourceIndex) {
     // Enclose in try-catch rather than otherwise so that if load itself fails, we don't do this at all.
     try {
       newCatalogItem.sourceCatalogItem = props.catalogItem;
-      const tableStructure = newCatalogItem.tableStructure;
+      let csvItem = null;
+      for (let i = 0; i < newCatalogItem.items.length; i++) {
+        if (newCatalogItem.items[i].type === "csv")
+          csvItem = newCatalogItem.items[i];
+      }
+      const tableStructure = csvItem.tableStructure;
       tableStructure.sourceFeature = props.feature;
       if (defined(existingColors)) {
         tableStructure.columns.forEach((column, columnNumber) => {
@@ -319,7 +378,7 @@ function expand(props, sourceIndex) {
           column.isActive = activeConcepts[columnNumber];
         });
       }
-      newCatalogItem.setChartable();
+      csvItem.setChartable();
     } catch (e) {
       // This does not actually make it to the user.
       return raiseErrorToUser(terria, e);
@@ -327,4 +386,4 @@ function expand(props, sourceIndex) {
   });
 }
 
-module.exports = ChartExpandAndDownloadButtons;
+module.exports = withTranslation()(ChartExpandAndDownloadButtons);

@@ -12,6 +12,7 @@ import BottomDock from "../BottomDock/BottomDock.jsx";
 import defined from "terriajs-cesium/Source/Core/defined";
 import FeatureDetection from "terriajs-cesium/Source/Core/FeatureDetection";
 import classNames from "classnames";
+import { withTranslation } from "react-i18next";
 
 import Styles from "./map-column.scss";
 import Styles2 from "../Feedback/feedback-button.scss";
@@ -47,7 +48,8 @@ const MapColumn = createReactClass({
   propTypes: {
     terria: PropTypes.object.isRequired,
     viewState: PropTypes.object.isRequired,
-    customFeedbacks: PropTypes.array.isRequired
+    customFeedbacks: PropTypes.array.isRequired,
+    t: PropTypes.func.isRequired
   },
 
   getInitialState() {
@@ -113,7 +115,7 @@ const MapColumn = createReactClass({
 
   render() {
     const keyboardControlDescription = 'Navigazione della mappa da tastiera\n  w = zoom in\n  s = zoom out\n  q = muovi in su\n  e = muovi in giù\n  d = muovi a sinistra\n  a = muovi a destra\n  r = ruota in su\n  f = ruota in giù\n  z = ruota a sinistra\n  x = ruota a destra';
-      <div className={Styles.mapInner} ></div>
+    const { t } = this.props;
     // TODO: remove? see: https://bugs.chromium.org/p/chromium/issues/detail?id=1001663
     const isAboveChrome75 =
       chromeVersion && chromeVersion[0] && Number(chromeVersion[0]) > 75;
@@ -164,7 +166,10 @@ const MapColumn = createReactClass({
                   )
                 })}
               >
-                <FeedbackButton viewState={this.props.viewState} />
+                <FeedbackButton
+                  viewState={this.props.viewState}
+                  btnText={t("feedback.feedbackBtnText")}
+                />
               </div>
             </If>
 
@@ -288,4 +293,4 @@ function keyboardTickFunc(props) {
     props.terria.currentViewer.notifyRepaintRequired();
 }
 
-export default MapColumn;
+export default withTranslation()(MapColumn);
