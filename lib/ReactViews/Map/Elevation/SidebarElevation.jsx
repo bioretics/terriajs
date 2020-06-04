@@ -9,11 +9,11 @@ import ChartData from '../../../Charts/ChartData';
 import Loader from '../../Loader.jsx';
 
 // Required for updateDistance3D
-const CesiumMath = require('terriajs-cesium/Source/Core/Math.js');
-const Cartesian3 = require('terriajs-cesium/Source/Core/Cartesian3.js');
-const PolylinePipeline = require('terriajs-cesium/Source/Core/PolylinePipeline.js');
-const sampleTerrainMostDetailed = require('terriajs-cesium/Source/Core/sampleTerrainMostDetailed.js');
-const EllipsoidGeodesic = require('terriajs-cesium/Source/Core/EllipsoidGeodesic.js');
+const CesiumMath = require('terriajs-cesium/Source/Core/Math.js').default;
+const Cartesian3 = require('terriajs-cesium/Source/Core/Cartesian3.js').default;
+const PolylinePipeline = require('terriajs-cesium/Source/Core/PolylinePipeline.js').default;
+const sampleTerrainMostDetailed = require('terriajs-cesium/Source/Core/sampleTerrainMostDetailed.js').default;
+const EllipsoidGeodesic = require('terriajs-cesium/Source/Core/EllipsoidGeodesic.js').default;
 
 // Handle any of the three kinds of search based on the props
 const SidebarElevation = createReactClass({
@@ -259,7 +259,7 @@ const SidebarElevation = createReactClass({
                                 <hr />
                                 <center><b>Profilo altimetrico</b></center>
                                 <div >
-                                    <Chart data={[chartData]} height={200} />
+                                    <Chart data={[chartData]} height={200} axisLabel={{ x: undefined, y: undefined }}/>
                                 </div>
                                 <hr />
                                 <center><b>Dettaglio tappe</b></center>
