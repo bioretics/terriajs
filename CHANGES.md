@@ -1,8 +1,14 @@
 Change Log
 ==========
-### next release
-
+### rer3d-terriajs 2.7.0 - 04/06/2020
+* Merged with **terriajs 7.11.4+**
 * Added `GeoRssCatalogItem` for displaying GeoRSS files comming from rss2 and atom feeds.
+* Added italian translation with i18next.
+* Added RerSearchProviderViewModel to search in Regione Emilia-Romagna locations DB via webservice.
+* Improved Help menu and added navigation help.
+* Changed buttons order in menu and disabled NavigationHelpButton.
+* Fixed layer opacity.
+* Fixed merge errors.
 
 ### v7.11.4
 
