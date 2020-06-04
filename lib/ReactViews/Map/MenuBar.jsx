@@ -16,7 +16,7 @@ import { withTranslation, Trans } from "react-i18next";
 import Styles from "./menu-bar.scss";
 import CoordsConverterPanel from './Panels/CoordsConverterPanel.jsx';
 import ColorMapPanel from './Panels/ColorMapPanel.jsx';
-import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
+//import NavigationHelpButton from './Navigation/NavigationHelpButton.jsx';
 
 // The map navigation region
 const MenuBar = createReactClass({
@@ -141,19 +141,6 @@ const MenuBar = createReactClass({
             </li>
           </If>
           <li className={Styles.menuItem}>
-            <SettingPanel
-              terria={this.props.terria}
-              allBaseMaps={this.props.allBaseMaps}
-              viewState={this.props.viewState}
-            />
-          </li>
-          <li className={Styles.menuItem}>
-            <SharePanel
-              terria={this.props.terria}
-              viewState={this.props.viewState}
-            />
-          </li>
-          <li className={Styles.menuItem}>
             <HelpMenuPanelBasic
               terria={this.props.terria}
               viewState={this.props.viewState}
@@ -185,9 +172,9 @@ const MenuBar = createReactClass({
               />
             </li>
           )}
-          <li className={Styles.menuItem}>
+          {/*<li className={Styles.menuItem}>
             <NavigationHelpButton terria={this.props.terria} viewState={this.props.viewState}/>
-          </li>
+          </li>*/}
           <If condition={!this.props.viewState.useSmallScreenInterface}>
             <For each="element" of={this.props.menuItems} index="i">
               <li className={Styles.menuItem} key={i}>
