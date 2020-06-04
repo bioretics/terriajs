@@ -31,7 +31,7 @@ const OpacitySection = createReactClass({
       <div className={Styles.opacity}>
         <label htmlFor="opacity">
           {t("workbench.opacity", {
-            opacity: parseInt((1.0 - item.opacity) * 100, 10)
+            opacity: parseInt(item.opacity * 100, 10)
           })}
         </label>
         <Slider
