@@ -337,9 +337,9 @@ const SharePanel = createReactClass({
   },
 
   saveMapUrlOnFile() {
-    const obj = buildShareLink(this.props.terria, true);
+    const obj = buildShareLink(this.props.terria, this.props.viewState, { includeStories: true }, true);
     
-    if(obj['rejected'] != ""){
+    if('rejected' in obj && obj['rejected'] != ""){
       // Local layer path are unknown.
       this.props.terria.error.raiseEvent(new TerriaError({
         title: 'Layer locali non salvati',

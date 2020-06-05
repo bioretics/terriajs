@@ -11,10 +11,7 @@ import MenuPanel from '../../StandardUserInterface/customizable/MenuPanel.jsx';
 import Styles from './color-map-panel.scss';
 import DropdownStyles from './panel.scss';
 
-import Ellipsoid from 'terriajs-cesium/Source/Core/Ellipsoid';
-import CesiumMath from 'terriajs-cesium/Source/Core/Math';
-const CesiumMaterial = require('terriajs-cesium/Source/Scene/Material');
-import { reduce } from 'when';
+const CesiumMaterial = require('terriajs-cesium/Source/Scene/Material').default;
 
 const ColorMapPanel = createReactClass({
     displayName: 'ColorMapPanel',
@@ -123,9 +120,6 @@ const ColorMapPanel = createReactClass({
 
     renderContent() {
         return (<div>
-            {/*<div className={classNames(DropdownStyles.header)}>
-                <label className={DropdownStyles.heading}>COLORA MAPPA</label>
-            </div>*/}
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <div>Range di altitudine da colorare</div>
                 <div className={Styles.explanation}>range min - max (in metri)</div>

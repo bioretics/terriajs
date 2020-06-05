@@ -6,7 +6,7 @@ import Styles from './sidebar-elevation.scss';
 
 import Chart from '../../Custom/Chart/Chart';
 import ChartData from '../../../Charts/ChartData';
-import Loader from '../../Loader.jsx';
+import Input from "../../Styled/Input/Input.jsx";
 
 // Required for updateDistance3D
 const CesiumMath = require('terriajs-cesium/Source/Core/Math.js').default;
@@ -217,6 +217,7 @@ const SidebarElevation = createReactClass({
                         <div className={Styles.elevation}>
                             <font color="white">
                                 <center><b>Distanza 3D</b></center>
+                                <center>Considera anche i segmenti del percorso oltre agli estremi.</center>
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <button type='button' className={Styles.btnDone}
@@ -226,20 +227,20 @@ const SidebarElevation = createReactClass({
                                     </button>
                                     </li>
                                     <li className={Styles.listItem}>
-                                        <input className={Styles.distanceField} type="text" readOnly
+                                        <Input dark className={Styles.distanceField} type="text" readOnly
                                             value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
                                     </li>
                                 </ul>
-                                <hr />
+                                {/*<hr />*/}
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <center><b>Alt. Min</b></center>
-                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                        <center><Input dark className={Styles.bearingField} type="text" readOnly
                                             value={this.prettifyNumber(this.state.min)} /></center>
                                     </li>
                                     <li className={Styles.listItem}>
                                         <center><b>Alt. Max</b></center>
-                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                        <center><Input dark className={Styles.bearingField} type="text" readOnly
                                             value={this.prettifyNumber(this.state.max)} /></center>
                                     </li>
                                 </ul>
@@ -247,12 +248,12 @@ const SidebarElevation = createReactClass({
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <center><b>Rotta</b></center>
-                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                        <center><Input dark className={Styles.bearingField} type="text" readOnly
                                             value={this.getBearing()} /></center>
                                     </li>
                                     <li className={Styles.listItem}>
                                         <center><b>Dislivello</b></center>
-                                        <center><input className={Styles.bearingField} type="text" readOnly
+                                        <center><Input dark className={Styles.bearingField} type="text" readOnly
                                             value={this.getHeightDifference()} /></center>
                                     </li>
                                 </ul>
