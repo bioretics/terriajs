@@ -1,5 +1,9 @@
 Change Log
 ==========
+
+### rer3d-terriajs 2.7.1 - 05/06/2020
+* Fixed merge errors.
+
 ### rer3d-terriajs 2.7.0 - 04/06/2020
 * Merged with **terriajs 7.11.4+**
 * Added `GeoRssCatalogItem` for displaying GeoRSS files comming from rss2 and atom feeds.
