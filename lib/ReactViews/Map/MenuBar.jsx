@@ -111,9 +111,9 @@ const MenuBar = createReactClass({
               viewState={this.props.viewState}
             />
           </li>
-          <li className={Styles.menuItem}>
+          {/*<li className={Styles.menuItem}>
             <CoordsConverterPanel terria={this.props.terria} viewState={this.props.viewState}/>
-          </li>
+          </li>*/}
           <li className={Styles.menuItem}>
             <ColorMapPanel terria={this.props.terria} viewState={this.props.viewState}/>
           </li>

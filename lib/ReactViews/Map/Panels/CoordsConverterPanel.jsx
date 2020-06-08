@@ -12,8 +12,8 @@ import Styles from './coords-converter-panel.scss';
 import DropdownStyles from './panel.scss';
 import Icon from "../../Icon.jsx";
 
-import Ellipsoid from 'terriajs-cesium/Source/Core/Ellipsoid';
-import CesiumMath from 'terriajs-cesium/Source/Core/Math';
+const Ellipsoid = require("terriajs-cesium/Source/Core/Ellipsoid").default;
+const CesiumMath = require("terriajs-cesium/Source/Core/Math").default;
 
 var zoomRectangleFromPoint = require('../../../Map/zoomRectangleFromPoint');
 
