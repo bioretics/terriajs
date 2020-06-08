@@ -85,7 +85,7 @@ const HelpMenuPanelBasic = createReactClass({
                     var message = `
                       <div>
                           <p>La navigazione della mappa 3D è possibile in uno dei seguenti modi:</p>
-                          <p>* usando il mouse ed il tasto CTRL;</p>
+                          <p>* usando il mouse ed i tasti CTRL e SHIFT;</p>
                           <p>* tramite i controlli sulla destra dell'interfaccia;</p>
                           <p>* attivando il bottone "Naviga da tastiera" ed usando poi questi tasti della tastiera:<br>
                               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; w = zoom in<br>
@@ -112,8 +112,6 @@ const HelpMenuPanelBasic = createReactClass({
                   }}
                   className={Styles.btnViewer}
                 >
-              
-                  {/*<NavigationHelpButton terria={this.props.terria} viewState={this.props.viewState}/>*/}
                   Come navigare
                   </button>
               </li>
@@ -129,7 +127,7 @@ const HelpMenuPanelBasic = createReactClass({
                   {t("helpMenu.helpMenuOpenWelcome")}
                 </button>
               </li>
-              <li className={Styles.listItem}>
+              {/*<li className={Styles.listItem}>
                 <button
                   onClick={() => {
                     this.toggleShowHelpMenu(false);
@@ -140,7 +138,7 @@ const HelpMenuPanelBasic = createReactClass({
                 >
                   {t("helpMenu.helpMenuSatelliteGuideTitle")}
                 </button>
-              </li>
+                </li>*/}
               <li className={Styles.listItem}>
                 <a
                   target="_blank"
