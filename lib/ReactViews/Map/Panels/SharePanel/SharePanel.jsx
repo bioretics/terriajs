@@ -336,18 +336,6 @@ const SharePanel = createReactClass({
     })
   },
 
-  saveMapUrlOnFile() {
-    const obj = buildShareLink(this.props.terria, this.props.viewState, { includeStories: true }, true);
-    
-    if('rejected' in obj && obj['rejected'] != ""){
-      // Local layer path are unknown.
-      this.props.terria.error.raiseEvent(new TerriaError({
-        title: 'Layer locali non salvati',
-        message: 'I seguenti layer locali non possono essere salvati per motivi di sicurezza: ' + obj['rejected']
-      }));
-    }
-  },
-
   renderContent() {
     if (this.props.catalogShare) {
       return this.renderContentForCatalogShare();
@@ -419,21 +407,21 @@ const SharePanel = createReactClass({
             </div>
           </div>
         </div>
-        <div className={DropdownStyles.section}></div>
-        <div>Salva/Carica Mappa</div>
-        <div className={Styles.explanation}>Salva o carica una mappa su file.</div>
-        <div>
-            {/* Added feature to save map screenshot on disk */}
-            {/*<div className={DropdownStyles.section}>
-                <a className={Styles.button} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
-            </div>*/}
-            {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
-            <div>
-                <a className={Styles.printButton} onClick={this.saveMapUrlOnFile} href={"data:text/plain;charset=utf-8," + this.state.shareUrl} download="mappa.geo3d">Salva mappa corrente</a>
-                <button className={Styles.printButton} onClick={this.loadMapFromFile}>Carica mappa da file</button>
-            </div>
+        <div className={DropdownStyles.section}>
+          <div>Salva/Carica Mappa</div>
+          <div className={Styles.explanation}>Salva o carica una mappa su file.</div>
+          <div>
+              {/* Added feature to save map screenshot on disk */}
+              {/*<div className={DropdownStyles.section}>
+                  <a className={Styles.button} href={this.state.imageUrl} download="screenshot_mappa.jpg">Salva screenshot mappa</a>
+              </div>*/}
+              {/* Added feature to save shareUrl to file on disk so it can be loaded later */}
+              <div>
+                  <a id="save_button" className={Styles.printButton} href={"data:text/plain;charset=utf-8," + encodeURIComponent(this.state.shareUrl)} download="mappa.geo3d">Salva mappa corrente</a>
+                  <button className={Styles.printButton} onClick={this.loadMapFromFile}>Carica mappa da file</button>
+              </div>
+          </div>
         </div>
-        <div></div>
         <div className={classNames(DropdownStyles.section, Styles.shortenUrl)}>
           <div className={Styles.btnWrapper}>
             <button
