@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.7.2 - 08/06/2020
+* Changed some translations.
+* Temporary turn off CoordsConverterPanel.
+* Imporved debug log in RerFeatureServerCatalogItem.
+* Turn off SatelliteGuide.
+* Fixed bug in SharePanel.
+
 ### rer3d-terriajs 2.7.1 - 05/06/2020
 * Fixed merge errors.
 
