@@ -39,11 +39,6 @@ const SidebarElevation = createReactClass({
     componentDidUpdate(prevProps, prevState) {
         if (prevState.updateFor3D === this.state.updateFor3D) {
             if (this.state.updateFor3D === false) {
-                /*const positions = this.props.terria.elevationPoints;
-                const maxH = Math.max.apply(Math, positions.map(function(o) { return o.height; }));
-                const minH = Math.min.apply(Math, positions.map(function(o) { return o.height; }));
-                this.setState({ max: maxH, min: minH });*/
-
                 this.setState({ totalDistance3DMetres: undefined, max: undefined, min: undefined });
             }
             else {
@@ -194,7 +189,7 @@ const SidebarElevation = createReactClass({
                 }
             }
         }
-        const chartData = new ChartData(chartPoints, { categoryName: 'altitudine', name: 'elevation', units: 'm', color: 'white' });
+        const chartData = new ChartData(chartPoints, {name: 'altitudine', units: 'm', color: 'white' });
 
         return (
             <div>
@@ -217,7 +212,7 @@ const SidebarElevation = createReactClass({
                         <div className={Styles.elevation}>
                             <font color="white">
                                 <center><b>Distanza 3D</b></center>
-                                <center>Considera anche i segmenti del percorso oltre agli estremi.</center>
+                                <center>Calcolata su tutto il percorso e non solo sulle tappe.</center>
                                 <ul className={Styles.viewerSelector}>
                                     <li className={Styles.listItem}>
                                         <button type='button' className={Styles.btnDone}

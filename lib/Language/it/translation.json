@@ -139,7 +139,7 @@
     "helpMenuHeader": "Cosa vorresti visualizzare?",
     "helpMenuOpenWelcome": "Messaggio di benvenuto",
     "helpMenuSatelliteGuideTitle": "Guida all'uso di immagini satellitari",
-    "helpMenuMoreHelpTitle": "altro",
+    "helpMenuMoreHelpTitle": "Guida",
     "done": "FATTO",
     "next": "AVANTI"
   },
@@ -174,9 +174,9 @@
     "latLon": "Lat / Lon "
   },
   "welcomeMessage": {
-    "title": "La cartografia 3D si è fatta <2>facile.</2>",
-    "WelcomeMessage": "Accedi a diversi tipi dati cartografici e ricche funzionalità con un unico strumento.",
-    "WelcomeMessagePrimaryBtn": "Esplora",
+    "title": "Geoportale 3D della <2>Regione Emilia-Romagna.</2>",
+    "WelcomeMessage": "Benvenuto! Accedi al catalogo dei dati regionali, carica dati nuovi da file o da URL, visualizza e analizza i dati 3D.",
+    "WelcomeMessagePrimaryBtn": "Apri il catalogo",
     "WelcomeMessageSecondaryBtn": "Fai un giro",
     "WelcomeMessageDissmissText": "Non mostrare più"
   },
