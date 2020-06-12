@@ -76,7 +76,7 @@ const HelpMenuPanelBasic = createReactClass({
                   href="https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d"
                   className={Styles.btnViewer}
                 >
-                  About
+                  Geoportale Emilia-Romagna
                 </a>
               </li>
               <li className={Styles.listItem}>
@@ -146,6 +146,15 @@ const HelpMenuPanelBasic = createReactClass({
                   className={Styles.btnViewer}
                 >
                   {t("helpMenu.helpMenuMoreHelpTitle")}
+                </a>
+              </li>
+              <li className={Styles.listItem}>
+                <a
+                  target="_blank"
+                  href="./about.html"
+                  className={Styles.btnViewer}
+                >
+                  About
                 </a>
               </li>
             </ul>
