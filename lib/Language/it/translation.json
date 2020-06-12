@@ -37,7 +37,7 @@
     "zoomOut": "Zoom out"
   },
   "compass": {
-    "description": "Anello esterno: ruota la vista.\nGiroscopio interno: movimento libero.\nDoppio click: reset della vista.\nIl movimento libero si può avere anche tenendo premuto il tanto CTRL della tastiera mentre con il mouse si trascina la mappa.",
+    "description": "Bussola: ruota la vista.\nGiroscopio interno: movimento libero.\nDoppio click: reset della vista.\nIl movimento libero si può avere anche tenendo premuto il tanto CTRL della tastiera mentre con il mouse si trascina la mappa.",
     "title": "Clicca e trascina per ruotare la camera"
   },
   "AR": {
@@ -97,8 +97,8 @@
   "settingPanel": {
     "none": "(None)",
     "viewerModeLabels": {
-      "CesiumTerrain": "3D",
-      "CesiumEllipsoid": "3D Smooth",
+      "CesiumTerrain": "3D con terreno",
+      "CesiumEllipsoid": "3D piatto",
       "Leaflet": "2D"
     },
     "qualityLabels": {
@@ -137,7 +137,7 @@
     "btnText": "Aiuto",
     "btnTitle": "apri aiuto",
     "helpMenuHeader": "Cosa vorresti visualizzare?",
-    "helpMenuOpenWelcome": "Messaggio di benvenuto",
+    "helpMenuOpenWelcome": "Benvenuto!",
     "helpMenuSatelliteGuideTitle": "Guida all'uso di immagini satellitari",
     "helpMenuMoreHelpTitle": "Guida",
     "done": "FATTO",
