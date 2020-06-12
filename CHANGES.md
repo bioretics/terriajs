@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### rer3d-terriajs 2.7.3 - 12/06/2020
+* In RerSearchprovider use center coords instead of bbox returned by RerSearch webservice.
+* Improved help menu.
+* Better translation for few entries.
+
 ### rer3d-terriajs 2.7.2 - 08/06/2020
 * Changed some translations.
 * Temporary turn off CoordsConverterPanel.
