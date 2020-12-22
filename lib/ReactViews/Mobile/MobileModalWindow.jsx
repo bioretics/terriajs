@@ -12,6 +12,10 @@ import Icon from "../Icon";
 
 import Styles from "./mobile-modal-window.scss";
 
+
+import MyDataTab from "../ExplorerWindow/Tabs/MyDataTab/MyDataTab.jsx";
+import SidebarElevation from '../Map/Elevation/SidebarElevation.jsx';
+
 const MobileModalWindow = createReactClass({
   displayName: "MobileModalWindow",
   mixins: [ObserveModelMixin],
@@ -41,12 +45,30 @@ const MobileModalWindow = createReactClass({
 
     switch (viewState.mobileView) {
       case viewState.mobileViewOptions.data:
-        // No multiple catalogue tabs in mobile
         return (
-          <DataCatalog
+          <div>
+            <div>
+              <DataCatalog
+                items={this.props.terria.catalog.userAddedDataGroup.items}
+                removable={true}
+                viewState={this.props.viewState}
+                terria={this.props.terria}
+              />
+            </div>
+            <div>
+              <DataCatalog
+                terria={this.props.terria}
+                viewState={this.props.viewState}
+                items={this.props.terria.catalog.group.items}
+              />
+            </div>
+          </div>
+        );
+      case viewState.mobileViewOptions.addData:
+        return (
+          <MyDataTab
             terria={this.props.terria}
             viewState={this.props.viewState}
-            items={this.props.terria.catalog.group.items}
           />
         );
       case viewState.mobileViewOptions.preview:
@@ -57,12 +79,33 @@ const MobileModalWindow = createReactClass({
             previewed={this.props.viewState.previewedItem}
           />
         );
+      case viewState.mobileViewOptions.userPreview:
+        return (
+          <DataPreview
+            terria={this.props.terria}
+            viewState={this.props.viewState}
+            previewed={this.props.viewState.userDataPreviewedItem}
+          />
+        );
       case viewState.mobileViewOptions.nowViewing:
         return (
           <WorkbenchList
             viewState={this.props.viewState}
             terria={this.props.terria}
           />
+        );
+      case viewState.mobileViewOptions.elevationChart:
+        return (
+          <If condition={
+            typeof this.props.terria.leaflet == "undefined" &&
+            typeof this.props.terria.elevationPoints !== "undefined" //&&
+            //this.props.terria.elevationPoints.length > 0
+          }>
+            <SidebarElevation
+              terria={this.props.terria}
+              viewState={this.props.viewState}
+            />
+          </If>
         );
       default:
         return null;

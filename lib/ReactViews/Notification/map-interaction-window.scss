@@ -13,6 +13,18 @@
   padding: $padding;
 }
 
+.windowMobile {
+  display: none;
+  position: fixed;
+  right: 20px;
+  background: #fff;
+  width: 200px;
+  top: 65px;
+  z-index: 999;
+  color: #000;
+  padding: $padding;
+}
+
 .isActive {
   display: block;
 }

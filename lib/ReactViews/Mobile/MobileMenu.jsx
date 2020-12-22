@@ -13,6 +13,8 @@ import HelpMenuPanelBasic from "../HelpScreens/HelpMenuPanelBasic.jsx";
 import Terria from "../../Models/Terria";
 import { withTranslation } from "react-i18next";
 
+import ColorMapPanel from '../Map/Panels/ColorMapPanel.jsx';
+
 import ViewState from "../../ReactViewModels/ViewState";
 
 import Styles from "./mobile-menu.scss";
@@ -94,6 +96,9 @@ const MobileMenu = createReactClass({
               viewState={this.props.viewState}
             />
           </div>
+          <li className={Styles.menuItem}>
+            <ColorMapPanel terria={this.props.terria} viewState={this.props.viewState} />
+          </li>
           <div onClick={this.hideMenu}>
             <HelpMenuPanelBasic
               terria={this.props.terria}

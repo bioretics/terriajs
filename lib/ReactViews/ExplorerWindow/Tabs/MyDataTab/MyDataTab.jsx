@@ -81,6 +81,9 @@ const MyDataTab = createReactClass({
   renderPromptBox() {
     if (this.hasUserAddedData()) {
       const { t } = this.props;
+      if (this.props.viewState.useSmallScreenInterface) {
+        return;
+      }
       return (
         <div className={Styles.dataTypeTab}>
           <div className={Styles.dndBox}>
@@ -144,14 +147,16 @@ const MyDataTab = createReactClass({
               </p>
               <div className={Styles.tabLeft}>{this.renderTabs()}</div>
 
-              <ul className={Styles.dataCatalog}>
-                <DataCatalog
-                  items={this.props.terria.catalog.userAddedDataGroup.items}
-                  removable={true}
-                  viewState={this.props.viewState}
-                  terria={this.props.terria}
-                />
-              </ul>
+              <If condition={!this.props.viewState.useSmallScreenInterface}>
+                <ul className={Styles.dataCatalog}>
+                  <DataCatalog
+                    items={this.props.terria.catalog.userAddedDataGroup.items}
+                    removable={true}
+                    viewState={this.props.viewState}
+                    terria={this.props.terria}
+                  />
+                </ul>
+              </If>
             </div>
           </If>
           <If condition={!this.state.activeTab}>{this.renderPromptBox()}</If>

@@ -66,7 +66,9 @@ export const DataCatalogItem = createReactClass({
     this.props.viewState.viewCatalogMember(this.props.item);
     // mobile switch to nowvewing
     this.props.viewState.switchMobileView(
-      this.props.viewState.mobileViewOptions.preview
+      addedByUser(this.props.item) ?
+        this.props.viewState.mobileViewOptions.userPreview :
+        this.props.viewState.mobileViewOptions.preview
     );
   },
 
