@@ -41,7 +41,7 @@ export const MeasureTool = createReactClass({
       totalDistanceMetres: 0,
       totalAreaMetresSquared: 0,
       drawnPointsPositions: [],
-      stepDistanceMetres: [],
+      stepDistanceMeters: [],
       userDrawing: new UserDrawing({
         terria: this.props.terria,
         messageHeader: t("measure.measureTool"),
@@ -100,7 +100,11 @@ export const MeasureTool = createReactClass({
 
       const tmpDist = this.getGeodesicDistance(prevPointPos, currentPointPos);
       this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + tmpDist });
-      dist2d.push(this.prettifyNumber(tmpDist));
+      
+      
+      
+      //dist2d.push(this.prettifyNumber(tmpDist));
+      dist2d.push(this.state.totalDistanceMetres);
 
       prevPointPos = currentPointPos;
     }
@@ -111,10 +115,14 @@ export const MeasureTool = createReactClass({
       );
       const tmpDist = this.getGeodesicDistance(prevPointPos, firstPointPos);
       this.setState({ totalDistanceMetres: this.state.totalDistanceMetres + tmpDist });
-      dist2d.push(this.prettifyNumber(tmpDist));
+      
+      
+      
+      //dist2d.push(this.prettifyNumber(tmpDist));
+      dist2d.push(this.state.totalDistanceMetres);
     }
 
-    this.setState({ stepDistanceMetres: dist2d });
+    this.setState({ stepDistanceMeters: dist2d });
   },
 
   updateArea(pointEntities) {
@@ -213,9 +221,10 @@ export const MeasureTool = createReactClass({
     this.setState({ totalDistanceMetres: 0 });
     this.setState({ totalAreaMetresSquared: 0 });
     this.state.drawnPointsPositions.length = 0;
-    this.state.stepDistanceMetres.length = 0;
-    if(!this.props.terria.cesium)
-      this.props.terria.elevationPoints = undefined;
+    this.state.stepDistanceMeters.length = 0;
+    if(!this.props.terria.cesium) {
+      this.props.terria.elevationPoints = [];
+    }
   },
 
   onPointClicked(pointEntities) {
@@ -230,8 +239,7 @@ export const MeasureTool = createReactClass({
     this.updateDistance(pointEntities);
     this.updateArea(pointEntities);
 
-    this.props.terria.elevationPoints = this.state.drawnPointsPositions;
-    this.props.terria.stepDistanceMetres = this.state.stepDistanceMetres;
+    this.props.terria.elevationPoints = [[...this.state.drawnPointsPositions], [...this.state.stepDistanceMeters]];
   },
 
   onPointMoved(pointEntities) {

@@ -4,6 +4,7 @@ import React from "react";
 import createReactClass from "create-react-class";
 import PropTypes from "prop-types";
 import ChartPanel from "../Custom/Chart/ChartPanel.jsx";
+import ElevationChartPanel from "../Custom/Chart/ElevationChartPanel.jsx";
 import ChartDisclaimer from "./ChartDisclaimer.jsx";
 import Timeline from "./Timeline/Timeline.jsx";
 import ObserveModelMixin from "../ObserveModelMixin";
@@ -42,6 +43,13 @@ const BottomDock = createReactClass({
           onHeightChange={this.onHeightChange}
           viewState={this.props.viewState}
         />
+        <If condition={terria.elevationPoints && terria.elevationPoints[0]}>
+          <ElevationChartPanel
+            terria={terria}
+            onHeightChange={this.onHeightChange}
+            viewState={this.props.viewState}
+          />
+        </If>
         <If condition={terria.timeSeriesStack.topLayer}>
           <Timeline terria={terria} />
         </If>

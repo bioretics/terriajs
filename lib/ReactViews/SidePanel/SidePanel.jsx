@@ -156,9 +156,6 @@ const SidePanel = createReactClass({
                   <SidebarElevation
                     terria={this.props.terria}
                     viewState={this.props.viewState}
-                    isWaitingForSearchToStart={
-                      searchState.isWaitingToStartLocationSearch
-                    }
                   />
                 </When>
                 <When
