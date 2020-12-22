@@ -88,7 +88,7 @@
 
   color: $text-light;
   width: 35px;
-  margin-left: 3%;
+  margin-left: 90%;
   padding: 5px;;
 
   &.is-active{
@@ -113,4 +113,35 @@
 .offscreen {
   position: absolute;
   left: -999em;
+}
+
+
+
+.storyBtn {
+  composes: btn from "../../../Sass/common/_buttons.scss";
+  composes: btn--map from "../../../Sass/common/_buttons.scss";
+  svg {
+    fill: #9ca1aa;
+    margin: 0 3px 0 4px;
+    vertical-align: bottom;
+  }
+  span {
+    vertical-align: top;
+    margin: 0 5px;
+    line-height: 1.3;
+  }
+
+  &[aria-expanded="true"] {
+    background: $color-primary;
+    svg {
+      fill: #ffffff;
+    }
+  }
+
+  &:hover,
+  &:focus {
+    svg {
+      fill: #ffffff;
+    }
+  }
 }

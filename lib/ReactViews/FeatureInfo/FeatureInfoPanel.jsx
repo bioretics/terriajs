@@ -186,6 +186,10 @@ export const FeatureInfoPanel = createReactClass({
     }
   },
 
+  coordinateClicked() {
+    this.props.viewState.openCoordinateConverterPanel = true;
+  },
+
   locationUpdated(longitude, latitude) {
     if (
       defined(latitude) &&
@@ -232,6 +236,7 @@ export const FeatureInfoPanel = createReactClass({
         <span>
           {pretty.latitude + ", " + pretty.longitude}
           {!this.props.printView && (
+            <span>
             <button
               type="button"
               onClick={pinClicked}
@@ -239,6 +244,13 @@ export const FeatureInfoPanel = createReactClass({
             >
               <Icon glyph={Icon.GLYPHS.location} />
             </button>
+            <button
+              type="button"
+              onClick={this.coordinateClicked}
+              className={locationButtonStyle}>
+              <Icon glyph={Icon.GLYPHS.externalLink} />
+            </button>
+            </span>
           )}
         </span>
       </div>
