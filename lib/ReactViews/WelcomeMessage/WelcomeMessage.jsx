@@ -79,6 +79,9 @@ export const WelcomeMessagePure = props => {
     }
   });
 
+  const welcomeTitle = viewState.terria.configParameters.welcomeTitle;
+  const welcomeMessage = viewState.terria.configParameters.welcomeMessage;
+
   return (
     <FadeIn
       isVisible={showWelcomeMessage}
@@ -120,13 +123,15 @@ export const WelcomeMessagePure = props => {
               <Icon glyph={Icon.GLYPHS.close} />
             </button>
             <h1>
-              <Trans i18nKey="welcomeMessage.title">
+              {/*<Trans i18nKey="welcomeMessage.title">
                 Spatial data made{" "}
                 <span className={Styles.highlight}>easy.</span>
-              </Trans>
+              </Trans>*/}
+              {welcomeTitle}
             </h1>
             <span className={Styles.welcomeModalBody}>
-              <div>{t("welcomeMessage.WelcomeMessage")}</div>
+              {/*<div>{t("welcomeMessage.WelcomeMessage")}</div>*/}
+              <div>{welcomeMessage}</div>
               <If condition={!viewState.useSmallScreenInterface}>
                 <Spacing bottom={10} />
               </If>
