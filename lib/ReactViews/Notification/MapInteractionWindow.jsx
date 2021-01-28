@@ -62,7 +62,9 @@ const MapInteractionWindow = createReactClass({
       this.props.terria.mapInteractionModeStack[
         this.props.terria.mapInteractionModeStack.length - 1
       ];
-    const windowClass = classNames(Styles.window, {
+    const windowClass = classNames({
+      [Styles.window]: !this.props.viewState.useSmallScreenInterface,
+      [Styles.windowMobile]: this.props.viewState.useSmallScreenInterface,
       [Styles.isActive]: interactionMode
     });
 

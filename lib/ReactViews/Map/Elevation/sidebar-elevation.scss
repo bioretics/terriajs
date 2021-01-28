@@ -67,6 +67,27 @@
   }
 }
 
+.elevationMobile {
+  composes: list-reset from '../../../Sass/common/_base.scss';
+  composes: scrollbars from '../../../Sass/common/_base.scss';
+
+  color: $text-light;
+  font-size: $font-size-mid-small;
+  padding: $padding;
+  background: gray;
+  border: dashed 1px rgba(255, 255, 255, 0.5);
+  margin: $padding-small;
+
+  position: relative;
+  height: calc(100vh - #{$workbench-header + $logo-height});
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  @media (max-width : $sm) {
+    height: calc(100% - #{$mobile-modal-top-height});
+  }
+}
+
 .btn--done {
   composes: btn from '../../../Sass/common/_buttons.scss';
   composes: btn from '../../badge-bar.scss';

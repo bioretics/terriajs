@@ -112,6 +112,9 @@ const AddData = createReactClass({
   onFileAddFinished(fileToSelect) {
     this.props.viewState.myDataIsUploadView = false;
     this.props.viewState.viewCatalogMember(fileToSelect);
+
+
+    this.props.viewState.switchMobileView(this.props.viewState.mobileViewOptions.data);
   },
 
   onRemoteUrlChange(event) {

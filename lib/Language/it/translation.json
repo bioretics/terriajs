@@ -134,9 +134,9 @@
     "feedbackBtnText": "Give Feedback"
   },
   "helpMenu": {
-    "btnText": "Aiuto",
+    "btnText": "Info",
     "btnTitle": "apri aiuto",
-    "helpMenuHeader": "Cosa vorresti visualizzare?",
+    "helpMenuHeader": "",
     "helpMenuOpenWelcome": "Benvenuto!",
     "helpMenuSatelliteGuideTitle": "Guida all'uso di immagini satellitari",
     "helpMenuMoreHelpTitle": "Guida",
@@ -422,7 +422,7 @@
     "searchAddresses": "Indirizzi",
     "searchPlaceNames": "Official Place Names",
     "searchNoPlaceNames": "Sorry, no official place names match your search query",
-    "searchLocations": "Posizioni",
+    "searchLocations": "Bing Locations",
     "searchCatalogueItem": "Elementi del catalogo",
     "searchNoCatalogueItem": "Nessun elemento del catalogo corrisponde alla ricerca.",
     "inMultipleLocations": "In multiple locations including: ",

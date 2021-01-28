@@ -40,9 +40,11 @@ const ColorMapPanel = createReactClass({
     },
 
     changeOpenState(open) {
+        if(this.props.terria.cesium) {
         this.setState({
             isOpen: open
         });
+    }
     },
 
     changedFromHeight(event) {
@@ -153,6 +155,8 @@ const ColorMapPanel = createReactClass({
     },
 
     render() {
+
+        //TODO: if cesium missing change button style to disable
         const dropdownTheme = {
             outer: Styles.colorPanel,
             inner: Styles.dropdownInner,

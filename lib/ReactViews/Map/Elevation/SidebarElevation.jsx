@@ -1,6 +1,7 @@
 import ObserveModelMixin from '../../ObserveModelMixin';
 import React from 'react';
 import createReactClass from 'create-react-class';
+import classNames from "classnames";
 import PropTypes from 'prop-types';
 import Styles from './sidebar-elevation.scss';
 
@@ -22,16 +23,16 @@ const SidebarElevation = createReactClass({
 
     propTypes: {
         viewState: PropTypes.object.isRequired,
-        isWaitingForSearchToStart: PropTypes.bool,
         terria: PropTypes.object.isRequired
     },
 
     getInitialState() {
         return {
             totalDistance3DMetres: 0,
+            //pos3d: [],
             max: undefined,
             min: undefined,
-            updateFor3D: false
+            updateFor3D: false,
             //stepDistance3DMetres: [],
         };
     },
@@ -83,9 +84,9 @@ const SidebarElevation = createReactClass({
     * Update distance using 3D points instead of 2D points (so elevation also is considered).
     */
     updateDistance3D() {
-        this.setState({ totalDistance3DMetres: 0 });
-        //this.setState({ totalDistance3DMetres: 0, stepDistance3DMetres: undefined });
-        const positions = this.props.terria.elevationPoints;
+        //this.setState({ totalDistance3DMetres: 0 });
+        this.setState({ totalDistance3DMetres: 0/*, stepDistance3DMetres: undefined*/ });
+        const positions = this.props.terria.elevationPoints[0];
         const scene = this.props.terria.cesium.scene;
 
         const terrainProvider = scene.terrainProvider;
@@ -93,39 +94,53 @@ const SidebarElevation = createReactClass({
         // Granularity: the distance, in radians, between each latitude and longitude; determines the number of positions in the buffer.
         const granularity = 0.000001;
         const cartesianPositions = ellipsoid.cartographicArrayToCartesianArray(positions);
-
-        const flatPositions = PolylinePipeline.generateArc({
+        /*const flatPositions = PolylinePipeline.generateArc({
             positions: cartesianPositions,
             granularity: granularity
         });
-        const that = this;
-
         // Conversion from Cartesian3 to Cartographic (the sampleTerrain function get a Cartographic array)
         const cartographicArray = [];
         for (let i = 0; i < flatPositions.length; i += 3) {
             let cartesian = Cartesian3.unpack(flatPositions, i);
             cartographicArray.push(ellipsoid.cartesianToCartographic(cartesian));
-        }
+        }*/
+        const cartographicArray = ellipsoid.cartesianArrayToCartographicArray(
+            PolylinePipeline.generateCartesianArc({
+                positions: cartesianPositions,
+                granularity: granularity
+            })
+        );
 
+        const that = this;
         // Function to sample and interpole a path over a terrain.
         // sampleTerrain can be used instead of sampleTerrainMostDetailed
         sampleTerrainMostDetailed(terrainProvider, cartographicArray)
             .then(function (raisedPositionsCartographic) {
-                let dist = 0;
-
                 const maxH = Math.max.apply(Math, raisedPositionsCartographic.map(function (o) { return o.height; }));
                 const minH = Math.min.apply(Math, raisedPositionsCartographic.map(function (o) { return o.height; }));
-
                 // Conversion from Cartographic to Cartesian3.
                 let raisedPositions = ellipsoid.cartographicArrayToCartesianArray(raisedPositionsCartographic);
-
+                let dist = 0;
+                let tmp3dPos = [0.0];
                 // Sum the 3D length of each segment.
                 for (let i = 1; i < raisedPositions.length; ++i) {
                     let tmpDist = Cartesian3.distance(raisedPositions[i], raisedPositions[i - 1]);
                     dist += tmpDist;
+                    tmp3dPos.push(dist);
                 }
                 // Set new value in state.
-                that.setState({ totalDistance3DMetres: dist, max: maxH, min: minH, updateFor3D: true });
+                that.setState({ 
+                    totalDistance3DMetres: dist, 
+                    max: maxH, 
+                    min: minH, 
+                    updateFor3D: true
+                    //pos3d: raisedPositionsCartographic, 
+                    //stepDistance3DMetres: tmp3dPos
+                });
+
+                that.props.terria.sampledElevationPoints = [[...raisedPositionsCartographic], [...tmp3dPos]];
+                //this.props.terria.sampledElevationPoints = [];
+
 
                 // Update React UI.
                 that.state.userDrawing.causeUpdate();
@@ -139,7 +154,7 @@ const SidebarElevation = createReactClass({
     },
 
     getBearing() {
-        const positions = this.props.terria.elevationPoints;
+        const positions = this.props.terria.elevationPoints[0];
         const ellipsoid = this.props.terria.cesium.scene.globe.ellipsoid;
 
         var start = positions[0];
@@ -151,7 +166,7 @@ const SidebarElevation = createReactClass({
     },
 
     getHeightDifference() {
-        const positions = this.props.terria.elevationPoints;
+        const positions = this.props.terria.elevationPoints[0];
 
         var start = positions[0];
         var end = positions[positions.length - 1];
@@ -168,34 +183,44 @@ const SidebarElevation = createReactClass({
         if(typeof this.props.terria.elevationPoints == 'undefined') {
             return (<div></div>);
         }
-        
-        const chartPoints = [];
-        const distData = [];
-        let positions = this.props.terria.elevationPoints;
+
+        let positions = this.props.terria.elevationPoints[0];
+        let stepDistanceMeters = this.props.terria.elevationPoints[1];
         let hasError = false;
+        /*let useKm = false;
+        const chartPoints = [];
         if (positions.length > 1) {
+            if(stepDistanceMeters[stepDistanceMeters.length - 1] > 2000) {
+                useKm = true;
+            }
             for (let i = 0; i < positions.length; ++i) {
                 if (isNaN(positions[i].height)) {
                     positions = [];
                     hasError = true;
                     break;
                 }
-                chartPoints.push({ x: i + 1, y: Math.round(positions[i].height) });
-                if (i === 0) {
-                    distData.push(0);
-                }
-                else {
-                    distData.push(positions[i]);
-                }
+                chartPoints.push({ x: !useKm ? stepDistanceMeters[i] : stepDistanceMeters[i] / 1000, y: Math.round(positions[i].height) });
             }
         }
-        const chartData = new ChartData(chartPoints, {name: 'altitudine', units: 'm', color: 'white' });
+        const chartData = new ChartData(chartPoints, {name: 'tappe', units: 'm', categoryName:'altitudine', color: 'white' });
+        const chartDataArray = [chartData];
+        if(this.state.pos3d && this.state.pos3d.length > 1) {
+            let newPoints = [];
+            for (let i = 0; i < this.state.pos3d.length; ++i) {
+                newPoints.push({ x: !useKm ? this.state.stepDistance3DMetres[i] : this.state.stepDistance3DMetres[i] / 1000, y: Math.round(this.state.pos3d[i].height) });
+            }
+            const otherChartData = new ChartData(newPoints, {name: 'dettaglio', units: 'm', categoryName:'altitudine', color: 'blue' });
+            chartDataArray.push(otherChartData);
+        }*/
 
         return (
             <div>
                 <Choose>
                     <When condition={hasError}>
-                        <div className={Styles.elevation}>
+                        <div className={classNames({
+                            [Styles.elevation]: !this.props.viewState.useSmallScreenInterface,
+                            [Styles.elevationMobile]: this.props.viewState.useSmallScreenInterface
+                            })}>
                             <div>
                                 <strong>
                                     Alcuni punti della misura sono stati impostati in modalità 2D e sono quindi sprovvisti del dato di altitutine!
@@ -209,7 +234,10 @@ const SidebarElevation = createReactClass({
                         </div>
                     </When>
                     <When condition={this.props.terria.elevationPoints}>
-                        <div className={Styles.elevation}>
+                        <div className={classNames({
+                            [Styles.elevation]: !this.props.viewState.useSmallScreenInterface,
+                            [Styles.elevationMobile]: this.props.viewState.useSmallScreenInterface
+                            })}>
                             <font color="white">
                                 <center><b>Distanza 3D</b></center>
                                 <center>Calcolata su tutto il percorso e non solo sulle tappe.</center>
@@ -252,11 +280,11 @@ const SidebarElevation = createReactClass({
                                             value={this.getHeightDifference()} /></center>
                                     </li>
                                 </ul>
-                                <hr />
+                                {/*<hr />
                                 <center><b>Profilo altimetrico</b></center>
                                 <div >
-                                    <Chart data={[chartData]} height={200} axisLabel={{ x: undefined, y: undefined }}/>
-                                </div>
+                                    <Chart data={chartDataArray} height={200} axisLabel={{ x: !useKm ? 'm' : 'Km', y: 'm' }}/>
+                                </div>*/}
                                 <hr />
                                 <center><b>Dettaglio tappe</b></center>
                                 <div>
@@ -282,8 +310,8 @@ const SidebarElevation = createReactClass({
                                                 </Otherwise>
                                             </Choose>
                                             <Choose>
-                                                <When condition={this.props.terria.stepDistanceMetres && idx > 0 && this.props.terria.stepDistanceMetres.length > 0}>
-                                                    <li className={Styles.colnormal}>{this.props.terria.stepDistanceMetres[idx]}</li>
+                                                <When condition={stepDistanceMeters && idx > 0 && stepDistanceMeters.length > 0}>
+                                                    <li className={Styles.colnormal}>{this.prettifyNumber(stepDistanceMeters[idx])}</li>
                                                 </When>
                                                 <Otherwise>
                                                     <li className={Styles.colnormal}></li>
@@ -292,9 +320,11 @@ const SidebarElevation = createReactClass({
                                         </ul>
                                     </For>
                                 </div>
-                                <hr />
-                                <br />
-                                <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
+                                <If condition={!this.props.viewState.useSmallScreenInterface}>
+                                    <hr />
+                                    <br />
+                                    <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
+                                </If>
                             </font>
                         </div>
                     </When>

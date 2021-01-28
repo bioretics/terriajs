@@ -71,6 +71,18 @@ const HelpMenuPanelBasic = createReactClass({
             </label>
             <ul className={Styles.viewerSelector}>
             <li className={Styles.listItem}>
+              <button
+                onClick={() => {
+                  this.toggleShowHelpMenu(false);
+                  this.props.viewState.showWelcomeMessage = true;
+                  this.props.viewState.topElement = "WelcomeMessage";
+                }}
+                className={Styles.btnViewer}
+              >
+                {t("helpMenu.helpMenuOpenWelcome")}
+              </button>
+            </li>
+            <li className={Styles.listItem}>
                 <a
                   target="_blank"
                   href="https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d"
@@ -101,7 +113,7 @@ const HelpMenuPanelBasic = createReactClass({
                       </div>
                     `;
                     var options = {
-                      title: 'Come navigare',
+                      title: 'Navigare la mappa',
                       confirmText: ("Ok"),
                       width: 600,
                       height: 450,
@@ -112,20 +124,8 @@ const HelpMenuPanelBasic = createReactClass({
                   }}
                   className={Styles.btnViewer}
                 >
-                  Come navigare
+                  Navigare la mappa
                   </button>
-              </li>
-              <li className={Styles.listItem}>
-                <button
-                  onClick={() => {
-                    this.toggleShowHelpMenu(false);
-                    this.props.viewState.showWelcomeMessage = true;
-                    this.props.viewState.topElement = "WelcomeMessage";
-                  }}
-                  className={Styles.btnViewer}
-                >
-                  {t("helpMenu.helpMenuOpenWelcome")}
-                </button>
               </li>
               {/*<li className={Styles.listItem}>
                 <button

@@ -60,8 +60,16 @@ const MobileHeader = createReactClass({
     this.toggleView(this.props.viewState.mobileViewOptions.data);
   },
 
+  onMobileAddDataCatalogClicked() {
+    this.toggleView(this.props.viewState.mobileViewOptions.addData);
+  },
+
   onMobileNowViewingClicked() {
     this.toggleView(this.props.viewState.mobileViewOptions.nowViewing);
+  },
+
+  onMobileElevationChartClicked() {
+    this.toggleView(this.props.viewState.mobileViewOptions.elevationChart);
   },
 
   changeLocationSearchText(newText) {
@@ -148,13 +156,29 @@ const MobileHeader = createReactClass({
                 />
               </div>
               <div className={Styles.groupRight}>
+                <If condition={this.props.terria.elevationPoints}>
+                  <button
+                    type="button"
+                    className={Styles.btnAdd}
+                    onClick={this.onMobileElevationChartClicked}  
+                  >
+                    <Icon glyph={Icon.GLYPHS.lineChart} />
+                  </button>
+                </If>
                 <button
                   type="button"
                   className={Styles.btnAdd}
                   onClick={this.onMobileDataCatalogClicked}
                 >
-                  Data
+                  {t("addData.addDataBtnText")}
                   <Icon glyph={Icon.GLYPHS.increase} />
+                </button>
+                <button
+                  type="button"
+                  className={Styles.btnAdd}
+                  onClick={this.onMobileAddDataCatalogClicked}
+                >
+                  <Icon glyph={Icon.GLYPHS.upload} />
                 </button>
                 <If condition={nowViewingLength > 0}>
                   <button
