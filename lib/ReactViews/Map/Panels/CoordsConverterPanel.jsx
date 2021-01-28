@@ -141,7 +141,7 @@ const CoordsConverterPanel = createReactClass({
         }).then(function (results) {
             if(results.geometries) {
                 const geom = results.geometries[0];
-                document.getElementById("conversionOutput").value = geom.x + ", " + geom.y;
+                document.getElementById("conversionOutput").value = geom.x.toFixed(4) + ", " + geom.y.toFixed(4);
             }
             else {
                 document.getElementById("conversionOutput").value = results.error.message;
@@ -160,7 +160,7 @@ const CoordsConverterPanel = createReactClass({
             this.setState({
                 x: longitude,
                 y: latitude,
-                coordsTxt: latitude + ", " + longitude
+                coordsTxt: latitude.toFixed(4) + ", " + longitude.toFixed(4),
             });
         }
     },
