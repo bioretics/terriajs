@@ -41,43 +41,37 @@ const CoordsConverterPanel = createReactClass({
 
     getDefaultProps() {
         return {
-            /*epsgList: [
-                { code: 4326, text: 'WGS 84' },
-                { code: 32632, text: 'UTM zone 32N' }, { code: 32633, text: 'UTM zone 33N' },
-                { code: 4265, text: 'Monte Mario' }, { code: 3003, text: 'Monte Mario / Italy zone 1' }, { code: 3004, text: 'Monte Mario / Italy zone 2' }, { code: 4806, text: 'Monte Mario (Rome)' },
-                { code: 4230, text: 'ED50' }, { code: 23032, text: 'ED50 / UTM zone 32N' }, { code: 23033, text: 'ED50 / UTM zone 33N' },
-                { code: 4258, text: 'ETRS89' }, { code: 25832, text: 'ETRS89 / UTM zone 32N' }, { code: 25833, text: 'ETRS89 / UTM zone 33N' }]*/
             conversionList: [
-                { desc: 'Monte Mario / Italy zone 1 → WGS84', from: 3003, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'Monte Mario / Italy zone 2 → WGS84', from: 3004, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'Monte Mario → WGS84', from: 4265, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'UTMRER → WGS84', from: 5659, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'ETRS89 → WGS84', from: 4258, to: 4326 },
-                { desc: 'ETRS89 / UTM zone 32N → WGS84', from: 25832, to: 4326 },
-                { desc: 'ETRS89 / UTM zone 33N → WGS84', from: 25833, to: 4326 },
-                { desc: 'RDN2008 → WGS84', from: 6706, to: 4326 },
-                { desc: 'RDN2008 / UTM zone 32N → WGS84', from: 7791, to: 4326 },
-                { desc: 'RDN2008 / UTM zone 33N → WGS84', from: 7792, to: 4326 },
-                { desc: 'ED50 → WGS84', from: 4230, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'ED50 / UTM zone 32N → WGS84', from: 23032, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'ED50 / UTM zone 33N → WGS84', from: 23033, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'WGS 84 / UTM zone 32N → WGS84', from: 32632, to: 4326 },
-                { desc: 'WGS 84 / UTM zone 33N → WGS84', from: 32633, to: 4326 },
-                { desc: 'WGS84 → Monte Mario / Italy zone 1', from: 4326, to: 3003, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'WGS84 → Monte Mario / Italy zone 2', from: 4326, to: 3004, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'WGS84 → Monte Mario', from: 4326, to: 4265, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'WGS84 → UTMRER', from: 4326, to: 5659, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
-                { desc: 'WGS84 → ETRS89', from: 4326, to: 4258 },
-                { desc: 'WGS84 → ETRS89 / UTM zone 32N', from: 4326, to: 25832 },
-                { desc: 'WGS84 → ETRS89 / UTM zone 33N', from: 4326, to: 25833 },
-                { desc: 'WGS84 → RDN2008', from: 4326, to: 6706 },
-                { desc: 'WGS84 → RDN2008 / UTM zone 32N', from: 4326, to: 7791 },
-                { desc: 'WGS84 → RDN2008 / UTM zone 33N', from: 4326, to: 7792 },
-                { desc: 'WGS84 → ED50', from: 4326, to: 4230, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'WGS84 → ED50 / UTM zone 32N', from: 4326, to: 23032, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'WGS84 → ED50 / UTM zone 33N', from: 4326, to: 23033, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
-                { desc: 'WGS84 → WGS 84 / UTM zone 32N', from: 4326, to: 32632 },
-                { desc: 'WGS84 → WGS 84 / UTM zone 33N', from: 4326, to: 32633 }
+                { desc: 'EPSG:4326 WGS84 → EPSG:3003 Monte Mario / Italy zone 1', from: 4326, to: 3003, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:3004 Monte Mario / Italy zone 2', from: 4326, to: 3004, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:4265 Monte Mario', from: 4326, to: 4265, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:5659 UTMRER', from: 4326, to: 5659, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:4258 ETRS89', from: 4326, to: 4258 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:25832 ETRS89 / UTM zone 32N', from: 4326, to: 25832 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:25833 ETRS89 / UTM zone 33N', from: 4326, to: 25833 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:6706 RDN2008', from: 4326, to: 6706 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:7791 RDN2008 / UTM zone 32N', from: 4326, to: 7791 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:7792 RDN2008 / UTM zone 33N', from: 4326, to: 7792 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:4230 ED50', from: 4326, to: 4230, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:23032 ED50 / UTM zone 32N', from: 4326, to: 23032, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:23033 ED50 / UTM zone 33N', from: 4326, to: 23033, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:4326 WGS84 → EPSG:32632 WGS 84 / UTM zone 32N', from: 4326, to: 32632 },
+                { desc: 'EPSG:4326 WGS84 → EPSG:32633 WGS 84 / UTM zone 33N', from: 4326, to: 32633 },
+                { desc: 'EPSG:3003 Monte Mario / Italy zone 1 → EPSG:4326 WGS84', from: 3003, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:3004 Monte Mario / Italy zone 2 → EPSG:4326 WGS84', from: 3004, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4265 Monte Mario → EPSG:4326 WGS84', from: 4265, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:5659 UTMRER → EPSG:4326 WGS84', from: 5659, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_AD400_MM_ETRS89_V1A\",GEOGCS[\"GCS_Monte_Mario\",DATUM[\"D_Monte_Mario\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A\",0.0]]"} },
+                { desc: 'EPSG:4258 ETRS89 → EPSG:4326 WGS84', from: 4258, to: 4326 },
+                { desc: 'EPSG:25832 ETRS89 / UTM zone 32N → EPSG:4326 WGS84', from: 25832, to: 4326 },
+                { desc: 'EPSG:25833 ETRS89 / UTM zone 33N → EPSG:4326 WGS84', from: 25833, to: 4326 },
+                { desc: 'EPSG:6706 RDN2008 → EPSG:4326 WGS84', from: 6706, to: 4326 },
+                { desc: 'EPSG:7791 RDN2008 / UTM zone 32N → EPSG:4326 WGS84', from: 7791, to: 4326 },
+                { desc: 'EPSG:7792 RDN2008 / UTM zone 33N → EPSG:4326 WGS84', from: 7792, to: 4326 },
+                { desc: 'EPSG:4230 ED50 → EPSG:4326 WGS84', from: 4230, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:23032 ED50 / UTM zone 32N → EPSG:4326 WGS84', from: 23032, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:23033 ED50 / UTM zone 33N → EPSG:4326 WGS84', from: 23033, to: 4326, wkt: {"wkt":"GEOGTRAN[\"CGT_ED50_ETRS89_GPS7_K2\",GEOGCS[\"GCS_European_1950\",DATUM[\"D_European_1950\",SPHEROID[\"International_1924\",6378388.0,297.0]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],GEOGCS[\"GCS_ETRS_1989\",DATUM[\"D_ETRS_1989\",SPHEROID[\"GRS_1980\",6378137.0,298.257222101]],PRIMEM[\"Greenwich\",0.0],UNIT[\"Degree\",0.0174532925199433]],METHOD[\"NTv2\"],PARAMETER[\"Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2\",0.0]]"} },
+                { desc: 'EPSG:32632 WGS 84 / UTM zone 32N → EPSG:4326 WGS84', from: 32632, to: 4326 },
+                { desc: 'EPSG:32633 WGS 84 / UTM zone 33N → EPSG:4326 WGS84', from: 32633, to: 4326 }
             ]
         };
     },
@@ -92,15 +86,16 @@ const CoordsConverterPanel = createReactClass({
             y: '',
             coordsTxt: '',
             //hiddenTxt: ''
+            coordsAreLatLon: false
         };
     },
 
-    changeOpen(open) {
-        /*this.setState({
-            isOpen: open
-        });*/
+    /*changeOpen(open) {
+        //this.setState({
+        //    isOpen: open
+        //});
         this.props.viewState.openCoordinateConverterPanel = open;
-    },
+    },*/
 
     openClose() {
         this.props.viewState.openCoordinateConverterPanel = !this.props.viewState.openCoordinateConverterPanel;
@@ -109,24 +104,20 @@ const CoordsConverterPanel = createReactClass({
     changedCoords(event) {
         var text = event.target.value;
         var splitted = text.split(/[ |,|;]+/g);
-        this.setState({ coordsTxt: text });
-        this.setState({ y: splitted[0] });
-        this.setState({ x: splitted[1] });
+        const y = parseFloat(splitted[0]);
+        const x = parseFloat(splitted[1]);
+        const areLatLon = x >= 0 && x <= 360 && y >= 0 && y <= 360;
+        this.setState({
+            coordsTxt: text,
+            y: y,
+            x: x,
+            coordsAreLatLon: areLatLon
+        });
     },
-
-    /*changedS(event) {
-        this.state.sCrs = event.target.value;
-    },
-
-    changedT(event) {
-        this.state.tCrs = event.target.value;
-    },*/
 
     changeCSR(event) {
         this.setState({selectConversion: event.target.value});
     },
-
-    //changedHidden(event) { },
 
     loadRes() {
         CesiumResource.fetchJson({
@@ -161,6 +152,7 @@ const CoordsConverterPanel = createReactClass({
                 x: longitude,
                 y: latitude,
                 coordsTxt: latitude.toFixed(4) + ", " + longitude.toFixed(4),
+                coordsAreLatLon: true
             });
         }
     },
@@ -205,7 +197,7 @@ const CoordsConverterPanel = createReactClass({
             </div>*/}
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
-                    <label>Coordinate ("lat, lon")</label>
+                    <label>Coordinate{this.state.coordsAreLatLon ? " lat, lon (in gradi decimali)" : ""}</label>
                 </p>
                 <p>
                     <input className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
@@ -232,7 +224,10 @@ const CoordsConverterPanel = createReactClass({
                 </p>
                 <p>
                     <select className={Styles.crsSelect} onChange={this.changeCSR} defaultValue={0} >
-                        {this.props.conversionList.map(function (conv, index) { return <option key={index} className={Styles.crsItem} value={index}>{conv.desc}</option>; })}
+                        {this.props.conversionList.map((conv, index) => {
+                            if(!this.state.coordsAreLatLon || (this.state.coordsAreLatLon && conv.from === 4326))
+                                return <option key={index} className={Styles.crsItem} value={index}>{conv.desc}</option>;
+                        })}
                     </select>
                 </p>
             </div>
@@ -244,9 +239,9 @@ const CoordsConverterPanel = createReactClass({
                     <li className={Styles.listItem}>
                         <button className={Styles.btnCoord} onClick={this.onGoTo}>Vai a</button>
                     </li>
-                    <li className={Styles.listItem}>
+                    {/*<li className={Styles.listItem}>
                         <button className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
-                    </li>
+                    </li>*/}
                 </ul>
                 <p />
             </div>
