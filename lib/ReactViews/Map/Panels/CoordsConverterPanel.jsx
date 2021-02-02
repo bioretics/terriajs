@@ -86,7 +86,8 @@ const CoordsConverterPanel = createReactClass({
             y: '',
             coordsTxt: '',
             //hiddenTxt: ''
-            coordsAreLatLon: false
+            coordsAreLatLon: false,
+            fromFeatureInfo: false
         };
     },
 
@@ -99,6 +100,10 @@ const CoordsConverterPanel = createReactClass({
 
     openClose() {
         this.props.viewState.openCoordinateConverterPanel = !this.props.viewState.openCoordinateConverterPanel;
+
+        this.setState({
+            fromFeatureInfo: false
+        });
     },
 
     changedCoords(event) {
@@ -111,7 +116,8 @@ const CoordsConverterPanel = createReactClass({
             coordsTxt: text,
             y: y,
             x: x,
-            coordsAreLatLon: areLatLon
+            coordsAreLatLon: areLatLon,
+            //fromFeatureInfo: false
         });
     },
 
@@ -152,7 +158,8 @@ const CoordsConverterPanel = createReactClass({
                 x: longitude,
                 y: latitude,
                 coordsTxt: latitude.toFixed(4) + ", " + longitude.toFixed(4),
-                coordsAreLatLon: true
+                coordsAreLatLon: true,
+                fromFeatureInfo: true
             });
         }
     },
@@ -225,7 +232,7 @@ const CoordsConverterPanel = createReactClass({
                 <p>
                     <select className={Styles.crsSelect} onChange={this.changeCSR} defaultValue={0} >
                         {this.props.conversionList.map((conv, index) => {
-                            if(!this.state.coordsAreLatLon || (this.state.coordsAreLatLon && conv.from === 4326))
+                            if(!this.state.fromFeatureInfo || (this.state.fromFeatureInfo && conv.from === 4326))
                                 return <option key={index} className={Styles.crsItem} value={index}>{conv.desc}</option>;
                         })}
                     </select>
