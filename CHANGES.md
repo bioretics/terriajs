@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+
+### rer3d-terriajs 2.8.1 - 28/01/2021
+* 
+
 ### rer3d-terriajs 2.8.0 - 28/12/2020
 * 
 
