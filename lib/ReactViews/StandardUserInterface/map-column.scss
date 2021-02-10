@@ -51,9 +51,12 @@
 
 .location-distance {
   composes: clearfix from "../../Sass/common/_base.scss";
-  display: none;
-  @media (min-width: $sm) {
-    display: block;
+  display: block;
+  @media (max-width: $sm) {
+    bottom: 30px;
+    z-index: inherit;
+
+    left: 10px;
   }
   position: absolute;
   bottom: 2px;

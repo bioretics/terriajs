@@ -72,3 +72,9 @@ $distance-bg: rgba($dark, 0.9);
   text-align: center;
   width: 110px;
 }
+
+.locationBar {
+  @media (max-width: $sm) {
+    display: none;
+  }
+}

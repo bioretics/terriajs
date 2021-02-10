@@ -143,15 +143,15 @@ const MapColumn = createReactClass({
                 viewState={this.props.viewState}
               />
             </div>
-            <If condition={!this.props.viewState.hideMapUi()}>
               <div className={Styles.locationDistance}>
-                <LocationBar
-                  terria={this.props.terria}
-                  mouseCoords={this.props.viewState.mouseCoords}
-                />
+                <If condition={!this.props.viewState.hideMapUi()}>
+                  <LocationBar
+                    terria={this.props.terria}
+                    mouseCoords={this.props.viewState.mouseCoords}
+                  />
+                </If>
                 <DistanceLegend terria={this.props.terria} />
               </div>
-            </If>
             <If
               condition={
                 !this.props.customFeedbacks.length &&
