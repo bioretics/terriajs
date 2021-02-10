@@ -12,6 +12,9 @@ import classNames from "classnames";
 import { removeMarker } from "../../Models/LocationMarkerUtils";
 import { withTranslation } from "react-i18next";
 
+import ViewerMode from "../../Models/ViewerMode";
+
+
 const MobileHeader = createReactClass({
   displayName: "MobileHeader",
   mixins: [ObserveModelMixin],
@@ -58,6 +61,21 @@ const MobileHeader = createReactClass({
 
   onMobileDataCatalogClicked() {
     this.toggleView(this.props.viewState.mobileViewOptions.data);
+  },
+
+  onMobileSwitchViewClicked() {
+    let newViewerMode;
+
+    if(this.props.terria.viewerMode === ViewerMode.Leaflet)
+      newViewerMode = ViewerMode.CesiumTerrain;
+    else
+      newViewerMode = ViewerMode.Leaflet;
+
+    this.props.terria.viewerMode = newViewerMode;
+
+    // We store the user's chosen viewer mode for future use.
+    this.props.terria.setLocalProperty("viewermode", newViewerMode);
+    this.props.terria.currentViewer.notifyRepaintRequired();
   },
 
   onMobileAddDataCatalogClicked() {
@@ -129,6 +147,8 @@ const MobileHeader = createReactClass({
     const nowViewingLength = this.props.terria.nowViewing.items.length;
     const { t } = this.props;
 
+    const txtView = this.props.terria.viewerMode === ViewerMode.Leaflet ? " 3D" : " 2D";
+
     return (
       <div className={Styles.ui}>
         <div className={Styles.mobileHeader}>
@@ -165,6 +185,13 @@ const MobileHeader = createReactClass({
                     <Icon glyph={Icon.GLYPHS.lineChart} />
                   </button>
                 </If>
+                <button
+                  type="button"
+                  className={Styles.btnAdd}
+                  onClick={this.onMobileSwitchViewClicked}>
+                  {txtView}
+                  <Icon glyph={Icon.GLYPHS.sphere} />
+                </button>
                 <button
                   type="button"
                   className={Styles.btnAdd}
