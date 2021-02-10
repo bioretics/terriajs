@@ -2,11 +2,28 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.8.2 - 10/02/2021
+* Show DistanceLegend also with small screen.
+* Show reset view button also with small screen.
+* Add 2D/3D switch button in small screen mode.
+* Improved elevation chart visibility with small screen.
+* Improved elevation and path data download in CSV, added in JSON.
+
 ### rer3d-terriajs 2.8.1 - 28/01/2021
-* 
+* Coords transformations filtered only if panel was open by FeatureInfo.
+* Fixed chart header size.
+* Download CSV data from ElevationChartPanel.
 
 ### rer3d-terriajs 2.8.0 - 28/12/2020
-* 
+* Updated RER geocoder URL.
+* Better check of house number.
+* Minor improvements in RerSearchProviderViewModel.
+* Changed elements order and some text.
+* Minor translation improvements.
+* Take title and message for WelcomeMessage from config.
+* Round coordinate to 4 decimal.
+* Show only "From WGS84" transformation if coordinates are lat/lon.
+* POI improvements.
 
 ### rer3d-terriajs 2.7.3 - 12/06/2020
 * In RerSearchprovider use center coords instead of bbox returned by RerSearch webservice.

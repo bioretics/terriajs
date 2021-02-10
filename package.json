@@ -1,6 +1,6 @@
 {
   "name": "rer3d-terriajs",
-  "version": "2.8.1",
+  "version": "2.8.2",
   "description": "Geospatial data visualization platform.",
   "license": "Apache-2.0",
   "engines": {
