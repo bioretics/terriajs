@@ -9,6 +9,8 @@ import Chart from '../../Custom/Chart/Chart';
 import ChartData from '../../../Charts/ChartData';
 import Input from "../../Styled/Input/Input.jsx";
 
+import ElevationChartPanel from "../../Custom/Chart/ElevationChartPanel.jsx";
+
 // Required for updateDistance3D
 const CesiumMath = require('terriajs-cesium/Source/Core/Math.js').default;
 const Cartesian3 = require('terriajs-cesium/Source/Core/Cartesian3.js').default;
@@ -150,7 +152,8 @@ const SidebarElevation = createReactClass({
     },
 
     removeAll() {
-        this.props.terria.elevationPoints = undefined;
+        if(!this.props.viewState.useSmallScreenInterface)
+            this.props.terria.elevationPoints = undefined;
     },
 
     getBearing() {
@@ -180,7 +183,7 @@ const SidebarElevation = createReactClass({
     },
 
     render() {
-        if(typeof this.props.terria.elevationPoints == 'undefined') {
+        if((!this.props.viewState.useSmallScreenInterface && typeof this.props.terria.elevationPoints == 'undefined')) {
             return (<div></div>);
         }
 
@@ -327,6 +330,15 @@ const SidebarElevation = createReactClass({
                                 </If>
                             </font>
                         </div>
+                        <If condition={this.props.viewState.useSmallScreenInterface}>
+                            <div className={Styles.elevationMobile}>
+                                <ElevationChartPanel
+                                    terria={this.props.terria}
+                                    onHeightChange={this.onHeightChange}
+                                    viewState={this.props.viewState}
+                                />
+                            </div>
+                        </If>
                     </When>
                 </Choose>
             </div>

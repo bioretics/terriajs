@@ -43,7 +43,7 @@ const BottomDock = createReactClass({
           onHeightChange={this.onHeightChange}
           viewState={this.props.viewState}
         />
-        <If condition={terria.elevationPoints && terria.elevationPoints[0]}>
+        <If condition={terria.elevationPoints && terria.elevationPoints[0] && !this.props.viewState.useSmallScreenInterface}>
           <ElevationChartPanel
             terria={terria}
             onHeightChange={this.onHeightChange}
