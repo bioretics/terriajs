@@ -30,23 +30,13 @@ const SidebarElevation = createReactClass({
 
     getInitialState() {
         return {
-            totalDistance3DMetres: 0,
-            //pos3d: [],
-            max: undefined,
-            min: undefined,
-            updateFor3D: false,
-            //stepDistance3DMetres: [],
+            updateFor3D: false
         };
     },
 
     componentDidUpdate(prevProps, prevState) {
-        if (prevState.updateFor3D === this.state.updateFor3D) {
-            if (this.state.updateFor3D === false) {
-                this.setState({ totalDistance3DMetres: undefined, max: undefined, min: undefined });
-            }
-            else {
-                this.setState({ updateFor3D: false });
-            }
+        if (prevState.updateFor3D === this.state.updateFor3D && this.state.updateFor3D === true) {
+            this.setState({ updateFor3D: false });
         }
     },
 
@@ -87,25 +77,15 @@ const SidebarElevation = createReactClass({
     */
     updateDistance3D() {
         //this.setState({ totalDistance3DMetres: 0 });
-        this.setState({ totalDistance3DMetres: 0/*, stepDistance3DMetres: undefined*/ });
+        //this.setState({ totalDistance3DMetres: 0/*, stepDistance3DMetres: undefined*/ });
         const positions = this.props.terria.elevationPoints[0];
         const scene = this.props.terria.cesium.scene;
 
         const terrainProvider = scene.terrainProvider;
         const ellipsoid = scene.globe.ellipsoid;
         // Granularity: the distance, in radians, between each latitude and longitude; determines the number of positions in the buffer.
-        const granularity = 0.000001;
+        const granularity = 0.000005;
         const cartesianPositions = ellipsoid.cartographicArrayToCartesianArray(positions);
-        /*const flatPositions = PolylinePipeline.generateArc({
-            positions: cartesianPositions,
-            granularity: granularity
-        });
-        // Conversion from Cartesian3 to Cartographic (the sampleTerrain function get a Cartographic array)
-        const cartographicArray = [];
-        for (let i = 0; i < flatPositions.length; i += 3) {
-            let cartesian = Cartesian3.unpack(flatPositions, i);
-            cartographicArray.push(ellipsoid.cartesianToCartographic(cartesian));
-        }*/
         const cartographicArray = ellipsoid.cartesianArrayToCartographicArray(
             PolylinePipeline.generateCartesianArc({
                 positions: cartesianPositions,
@@ -130,22 +110,15 @@ const SidebarElevation = createReactClass({
                     dist += tmpDist;
                     tmp3dPos.push(dist);
                 }
+
                 // Set new value in state.
-                that.setState({ 
-                    totalDistance3DMetres: dist, 
-                    max: maxH, 
-                    min: minH, 
-                    updateFor3D: true
-                    //pos3d: raisedPositionsCartographic, 
-                    //stepDistance3DMetres: tmp3dPos
-                });
-
+                that.props.terria.detailedElevationPath.totalDistance3DMetres = dist;
+                that.props.terria.detailedElevationPath.maxH = maxH;
+                that.props.terria.detailedElevationPath.minH = minH;
                 that.props.terria.sampledElevationPoints = [[...raisedPositionsCartographic], [...tmp3dPos]];
-                //this.props.terria.sampledElevationPoints = [];
-
-
-                // Update React UI.
-                that.state.userDrawing.causeUpdate();
+                that.setState({ 
+                    updateFor3D: true
+                });
             }, function(reason) {
                 console.log(reason)
             });
@@ -165,6 +138,9 @@ const SidebarElevation = createReactClass({
 
         var geo = new EllipsoidGeodesic(start, end, ellipsoid);
         var bearing = (CesiumMath.toDegrees(geo.startHeading) + 360) % 360;
+
+        this.props.terria.detailedElevationPath.bearing = bearing;
+
         return bearing.toFixed(0) + "°";
     },
 
@@ -189,37 +165,11 @@ const SidebarElevation = createReactClass({
 
         let positions = this.props.terria.elevationPoints[0];
         let stepDistanceMeters = this.props.terria.elevationPoints[1];
-        let hasError = false;
-        /*let useKm = false;
-        const chartPoints = [];
-        if (positions.length > 1) {
-            if(stepDistanceMeters[stepDistanceMeters.length - 1] > 2000) {
-                useKm = true;
-            }
-            for (let i = 0; i < positions.length; ++i) {
-                if (isNaN(positions[i].height)) {
-                    positions = [];
-                    hasError = true;
-                    break;
-                }
-                chartPoints.push({ x: !useKm ? stepDistanceMeters[i] : stepDistanceMeters[i] / 1000, y: Math.round(positions[i].height) });
-            }
-        }
-        const chartData = new ChartData(chartPoints, {name: 'tappe', units: 'm', categoryName:'altitudine', color: 'white' });
-        const chartDataArray = [chartData];
-        if(this.state.pos3d && this.state.pos3d.length > 1) {
-            let newPoints = [];
-            for (let i = 0; i < this.state.pos3d.length; ++i) {
-                newPoints.push({ x: !useKm ? this.state.stepDistance3DMetres[i] : this.state.stepDistance3DMetres[i] / 1000, y: Math.round(this.state.pos3d[i].height) });
-            }
-            const otherChartData = new ChartData(newPoints, {name: 'dettaglio', units: 'm', categoryName:'altitudine', color: 'blue' });
-            chartDataArray.push(otherChartData);
-        }*/
 
         return (
             <div>
                 <Choose>
-                    <When condition={hasError}>
+                    {/*<When condition={hasError}>
                         <div className={classNames({
                             [Styles.elevation]: !this.props.viewState.useSmallScreenInterface,
                             [Styles.elevationMobile]: this.props.viewState.useSmallScreenInterface
@@ -235,7 +185,7 @@ const SidebarElevation = createReactClass({
                                 <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
                             </div>
                         </div>
-                    </When>
+                    </When>*/}
                     <When condition={this.props.terria.elevationPoints}>
                         <div className={classNames({
                             [Styles.elevation]: !this.props.viewState.useSmallScreenInterface,
@@ -254,7 +204,7 @@ const SidebarElevation = createReactClass({
                                     </li>
                                     <li className={Styles.listItem}>
                                         <Input dark className={Styles.distanceField} type="text" readOnly
-                                            value={this.prettifyNumber(this.state.totalDistance3DMetres)} />
+                                            value={this.prettifyNumber(this.props.terria.detailedElevationPath.totalDistance3DMetres)} />
                                     </li>
                                 </ul>
                                 {/*<hr />*/}
@@ -262,12 +212,12 @@ const SidebarElevation = createReactClass({
                                     <li className={Styles.listItem}>
                                         <center><b>Alt. Min</b></center>
                                         <center><Input dark className={Styles.bearingField} type="text" readOnly
-                                            value={this.prettifyNumber(this.state.min)} /></center>
+                                            value={this.prettifyNumber(this.props.terria.detailedElevationPath.minH)} /></center>
                                     </li>
                                     <li className={Styles.listItem}>
                                         <center><b>Alt. Max</b></center>
                                         <center><Input dark className={Styles.bearingField} type="text" readOnly
-                                            value={this.prettifyNumber(this.state.max)} /></center>
+                                            value={this.prettifyNumber(this.props.terria.detailedElevationPath.maxH)} /></center>
                                     </li>
                                 </ul>
                                 <hr />
