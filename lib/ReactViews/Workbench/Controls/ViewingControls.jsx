@@ -18,6 +18,9 @@ import duplicateItem from "../../../Models/duplicateItem";
 import addUserCatalogMember from "../../../Models/addUserCatalogMember";
 import ImagerySplitDirection from "terriajs-cesium/Source/Scene/ImagerySplitDirection";
 
+//import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
+import GeoJsonCatalogItem from "../../../Models/GeoJsonCatalogItem.js";
+
 const ViewingControls = createReactClass({
   displayName: "ViewingControls",
   mixins: [ObserveModelMixin],
@@ -30,6 +33,10 @@ const ViewingControls = createReactClass({
 
   removeFromMap() {
     this.props.item.isEnabled = false;
+  },
+
+  useAsPath() {
+    this.props.item.useAsPath();
   },
 
   zoomTo() {
@@ -139,6 +146,19 @@ const ViewingControls = createReactClass({
             </button>
           </li>
           <span className={Styles.separator} />
+          <If condition={item instanceof GeoJsonCatalogItem && item.canUseAsPath()}>
+            <li className={classNames(Styles.zoom, classList)}>
+              <button
+                type="button"
+                onClick={this.useAsPath}
+                title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+                className={Styles.btn}
+              >
+                Misura percorso
+              </button>
+            </li>
+            <span className={Styles.separator} />
+          </If>
         </If>
         <If
           condition={item.tableStructure && item.tableStructure.sourceFeature}
