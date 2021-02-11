@@ -127,7 +127,7 @@ const CoordsConverterPanel = createReactClass({
 
     loadRes() {
         CesiumResource.fetchJson({
-            url: "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project",
+            url: this.props.terria.corsProxy.getURL("http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project"),
             queryParameters: {
                 inSR: this.props.conversionList[this.state.selectConversion].from,
                 outSR: this.props.conversionList[this.state.selectConversion].to,
