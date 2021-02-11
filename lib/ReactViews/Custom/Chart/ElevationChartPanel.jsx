@@ -149,14 +149,14 @@ const ElevationChartPanel = createReactClass({
       const blob = new Blob([JSON.stringify(data)], {
         type: "file/json;charset=utf-8"
       });
-      FileSaver.saveAs(blob, "elevation_step.json");
+      FileSaver.saveAs(blob, "elevation_step.geojson");
 
       if(this.props.terria.sampledElevationPoints) {
         const detailedData = this.makeJson(this.props.terria.sampledElevationPoints[0], this.props.terria.detailedElevationPath);
         const blob = new Blob([JSON.stringify(detailedData)], {
           type: "file/json;charset=utf-8"
         });
-        FileSaver.saveAs(blob, "elevation_detail.json");
+        FileSaver.saveAs(blob, "elevation_detail.geojson");
       }
     }
   },
