@@ -50,6 +50,9 @@ const HelpMenuPanelBasic = createReactClass({
 
     const { t } = this.props;
 
+    const linkText = viewState.terria.configParameters.helpLinkText ?? "Geoportale Emilia-Romagna";
+    const linkUrl = viewState.terria.configParameters.helpLinkUrl ?? "https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d";
+
     return (
       <MenuPanel
         theme={dropdownTheme}
@@ -85,10 +88,10 @@ const HelpMenuPanelBasic = createReactClass({
             <li className={Styles.listItem}>
                 <a
                   target="_blank"
-                  href="https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d"
+                  href={linkUrl}
                   className={Styles.btnViewer}
                 >
-                  Geoportale Emilia-Romagna
+                  {linkText}
                 </a>
               </li>
               <li className={Styles.listItem}>
