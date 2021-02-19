@@ -134,8 +134,8 @@
     "feedbackBtnText": "Give Feedback"
   },
   "helpMenu": {
-    "btnText": "Info",
-    "btnTitle": "apri aiuto",
+    "btnText": "",
+    "btnTitle": "Guide e informazioni",
     "helpMenuHeader": "",
     "helpMenuOpenWelcome": "Benvenuto!",
     "helpMenuSatelliteGuideTitle": "Guida all'uso di immagini satellitari",
@@ -178,7 +178,7 @@
     "WelcomeMessage": "Benvenuto! Accedi al catalogo dei dati regionali, carica dati nuovi da file o da URL, visualizza e analizza i dati 3D.",
     "WelcomeMessagePrimaryBtn": "Apri il catalogo",
     "WelcomeMessageSecondaryBtn": "Fai un giro",
-    "WelcomeMessageDissmissText": "Non mostrare più"
+    "WelcomeMessageDissmissText": "Non mostrare questo messaggio all'avvio"
   },
   "story": {
     "viewStory": "vedi",

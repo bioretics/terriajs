@@ -81,6 +81,7 @@ export const WelcomeMessagePure = props => {
 
   const welcomeTitle = viewState.terria.configParameters.welcomeTitle;
   const welcomeMessage = viewState.terria.configParameters.welcomeMessage;
+  const showButtonPrimary = viewState.terria.configParameters.showButtonPrimary;
 
   return (
     <FadeIn
@@ -139,22 +140,24 @@ export const WelcomeMessagePure = props => {
                 <Spacing bottom={4} />
               </If>
               <div>
-                <button
-                  className={classNames(
-                    Styles.welcomeModalButton,
-                    Styles.welcomeModalButtonPrimary
-                  )}
-                  onClick={() => {
-                    handleClose(true);
-                    if (WelcomeMessagePrimaryBtnClick) {
-                      WelcomeMessagePrimaryBtnClick(props);
-                    } else {
-                      setShouldExploreData(true);
-                    }
-                  }}
-                >
-                  {t("welcomeMessage.WelcomeMessagePrimaryBtn")}
-                </button>
+                <If condition={showButtonPrimary}>
+                  <button
+                    className={classNames(
+                      Styles.welcomeModalButton,
+                      Styles.welcomeModalButtonPrimary
+                    )}
+                    onClick={() => {
+                      handleClose(true);
+                      if (WelcomeMessagePrimaryBtnClick) {
+                        WelcomeMessagePrimaryBtnClick(props);
+                      } else {
+                        setShouldExploreData(true);
+                      }
+                    }}
+                  >
+                    {t("welcomeMessage.WelcomeMessagePrimaryBtn")}
+                  </button>
+                </If>
                 {WelcomeMessageSecondaryBtnClick && (
                   <button
                     className={classNames(
