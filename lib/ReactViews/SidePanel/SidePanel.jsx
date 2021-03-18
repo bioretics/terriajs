@@ -151,7 +151,7 @@ const SidePanel = createReactClass({
                 <When condition={
                   typeof this.props.terria.leaflet == "undefined" &&
                   typeof this.props.terria.elevationPoints !== "undefined" &&
-                  this.props.terria.elevationPoints.length > 0
+                  this.props.terria.elevationPoints[0].length > 1
                 }>
                   <SidebarElevation
                     terria={this.props.terria}
