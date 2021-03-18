@@ -90,6 +90,19 @@ const ElevationChartPanel = createReactClass({
     return {values: values, names: names};
   },
 
+  makeCsvResume(data) {
+    const arrayLen = 1;
+    const names = [['totalDistance3DMetres', 'maxH', 'minH', 'bearing']];
+    const values = [[
+      new Float32Array(arrayLen), new Int32Array(arrayLen), new Int32Array(arrayLen), new Int32Array(arrayLen)
+    ]];
+    values[0][0][0] = data.totalDistance3DMetres;
+    values[0][1][0] = data.maxH;
+    values[0][2][0] = data.minH;
+    values[0][3][0] = data.bearing;
+    return {values: values, names: names};
+  },
+
   makeJson(positions, properties) {
     const data = {
       type: "LineString",
@@ -115,8 +128,6 @@ const ElevationChartPanel = createReactClass({
       const stepDistanceMeters = this.props.terria.elevationPoints[1];
       const HrefWorker = require("worker-loader!./downloadHrefWorker");
 
-      console.log(stepDistanceMeters);
-
       const data = this.makeCsv(positions, stepDistanceMeters);
       if (data.values && data.values.length > 0) {
         const worker = new HrefWorker();
@@ -131,14 +142,24 @@ const ElevationChartPanel = createReactClass({
 
       if(this.props.terria.sampledElevationPoints) {
         const detailedData = this.makeCsv(this.props.terria.sampledElevationPoints[0]);
+        const resumeData = this.makeCsvResume(this.props.terria.detailedElevationPath);
         if (detailedData.values && detailedData.values.length > 0) {
-          const worker = new HrefWorker();
-          worker.postMessage(detailedData);
-          worker.onmessage = event => {
+          const worker1 = new HrefWorker();
+          worker1.postMessage(detailedData);
+          worker1.onmessage = event => {
             const blob = new Blob([event.data], {
               type: "text/csv;charset=utf-8"
             });
             FileSaver.saveAs(blob, "elevation_detail.csv");
+          };
+
+          const worker2 = new HrefWorker();
+          worker2.postMessage(resumeData);
+          worker2.onmessage = event => {
+            const blob = new Blob([event.data], {
+              type: "text/csv;charset=utf-8"
+            });
+            FileSaver.saveAs(blob, "elevation_resume.csv");
           };
         }
       }
