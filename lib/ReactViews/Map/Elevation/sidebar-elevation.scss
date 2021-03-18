@@ -93,6 +93,7 @@
   composes: btn from '../../badge-bar.scss';
   composes: btn--tertiary-dark from '../../../Sass/common/_buttons.scss';
   padding: 5px;
+  margin: 10px;
   font-size: $font-size-mid-mini;
   border-radius: 2px;
   float: right;

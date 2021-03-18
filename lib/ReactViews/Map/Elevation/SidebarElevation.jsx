@@ -5,8 +5,6 @@ import classNames from "classnames";
 import PropTypes from 'prop-types';
 import Styles from './sidebar-elevation.scss';
 
-import Chart from '../../Custom/Chart/Chart';
-import ChartData from '../../../Charts/ChartData';
 import Input from "../../Styled/Input/Input.jsx";
 
 import ElevationChartPanel from "../../Custom/Chart/ElevationChartPanel.jsx";
@@ -129,6 +127,10 @@ const SidebarElevation = createReactClass({
             this.props.terria.elevationPoints = undefined;
     },
 
+    showChart() {
+        this.props.viewState.showElevationChart = !this.props.viewState.showElevationChart;
+    },
+
     getBearing() {
         const positions = this.props.terria.elevationPoints[0];
         const ellipsoid = this.props.terria.cesium.scene.globe.ellipsoid;
@@ -186,12 +188,19 @@ const SidebarElevation = createReactClass({
                             </div>
                         </div>
                     </When>*/}
-                    <When condition={this.props.terria.elevationPoints}>
+                    <When condition={this.props.terria.elevationPoints && this.props.terria.elevationPoints[0] && this.props.terria.elevationPoints[0].length > 1}>
                         <div className={classNames({
                             [Styles.elevation]: !this.props.viewState.useSmallScreenInterface,
                             [Styles.elevationMobile]: this.props.viewState.useSmallScreenInterface
                             })}>
                             <font color="white">
+                                {/*<center><h3>Percorsi</h3></center>*/}
+                                <If condition={!this.props.viewState.useSmallScreenInterface}>
+                                        <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
+                                        <button type='button' onClick={this.showChart} className={Styles.btnDone}>Grafico</button>
+                                        <br/>
+                                        <br/>
+                                </If>
                                 <center><b>Distanza 3D</b></center>
                                 <center>Calcolata su tutto il percorso e non solo sulle tappe.</center>
                                 <ul className={Styles.viewerSelector}>
@@ -233,11 +242,6 @@ const SidebarElevation = createReactClass({
                                             value={this.getHeightDifference()} /></center>
                                     </li>
                                 </ul>
-                                {/*<hr />
-                                <center><b>Profilo altimetrico</b></center>
-                                <div >
-                                    <Chart data={chartDataArray} height={200} axisLabel={{ x: !useKm ? 'm' : 'Km', y: 'm' }}/>
-                                </div>*/}
                                 <hr />
                                 <center><b>Dettaglio tappe</b></center>
                                 <div>
@@ -273,11 +277,6 @@ const SidebarElevation = createReactClass({
                                         </ul>
                                     </For>
                                 </div>
-                                <If condition={!this.props.viewState.useSmallScreenInterface}>
-                                    <hr />
-                                    <br />
-                                    <button type='button' onClick={this.removeAll} className={Styles.btnDone}>Chiudi</button>
-                                </If>
                             </font>
                         </div>
                         <If condition={this.props.viewState.useSmallScreenInterface}>
