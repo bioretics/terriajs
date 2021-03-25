@@ -59,6 +59,16 @@ const MobileHeader = createReactClass({
     this.props.viewState.searchState.catalogSearchText = "";
   },
 
+  onFullscreenClicked() {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+    } else {
+      //if (document.exitFullscreen) {
+        document.exitFullscreen();
+      //}
+    }
+  },
+
   onMobileDataCatalogClicked() {
     this.toggleView(this.props.viewState.mobileViewOptions.data);
   },
@@ -188,6 +198,13 @@ const MobileHeader = createReactClass({
                 <button
                   type="button"
                   className={Styles.btnAdd}
+                  onClick={this.onFullscreenClicked}
+                >
+                  <Icon glyph={Icon.GLYPHS.expand} />
+                </button>
+                <button
+                  type="button"
+                  className={Styles.btnAdd}
                   onClick={this.onMobileSwitchViewClicked}>
                   {txtView}
                   <Icon glyph={Icon.GLYPHS.sphere} />
@@ -197,7 +214,7 @@ const MobileHeader = createReactClass({
                   className={Styles.btnAdd}
                   onClick={this.onMobileDataCatalogClicked}
                 >
-                  {t("addData.addDataBtnText")}
+                  {/*t("addData.addDataBtnText")*/}
                   <Icon glyph={Icon.GLYPHS.increase} />
                 </button>
                 <button

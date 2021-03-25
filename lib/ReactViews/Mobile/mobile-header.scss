@@ -37,7 +37,7 @@
   composes: btn;
 
   position: relative;
-  margin: 0 $padding-small;
+  margin: 0 2px;
   padding: $padding $padding $padding $padding * 3;
   width: auto;
   text-align: right;
@@ -55,7 +55,7 @@
 
 .btn-search {
   composes: btn;
-  margin: 0 $padding-small;
+  margin: 0 2px;
   padding: $padding-small;
   padding-right: $padding;
   position: relative;
