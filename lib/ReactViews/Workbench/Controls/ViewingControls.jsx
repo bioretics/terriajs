@@ -20,6 +20,9 @@ import ImagerySplitDirection from "terriajs-cesium/Source/Scene/ImagerySplitDire
 
 //import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import GeoJsonCatalogItem from "../../../Models/GeoJsonCatalogItem.js";
+import KmlCatalogItem from "../../../Models/KmlCatalogItem.js";
+import OgrCatalogItem from "../../../Models/OgrCatalogItem.js";
+import GpxCatalogItem from "../../../Models/GpxCatalogItem.js";
 
 const ViewingControls = createReactClass({
   displayName: "ViewingControls",
@@ -146,7 +149,7 @@ const ViewingControls = createReactClass({
             </button>
           </li>
           <span className={Styles.separator} />
-          <If condition={item instanceof GeoJsonCatalogItem && item.canUseAsPath()}>
+          <If condition={(item instanceof GeoJsonCatalogItem || item instanceof KmlCatalogItem || item instanceof OgrCatalogItem || item instanceof GpxCatalogItem) && item.canUseAsPath()}>
             <li className={classNames(Styles.zoom, classList)}>
               <button
                 type="button"
