@@ -21,6 +21,14 @@ import FileSaver from "file-saver";
 
 import Dropdown from "../../Generic/Dropdown";
 import StylesFeatureDownload from "../../FeatureInfo/feature-info-download.scss";
+import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
+
+import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
+import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
+import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
+
 
 var CesiumMath = require("terriajs-cesium/Source/Core/Math").default;
 
@@ -103,6 +111,21 @@ const ElevationChartPanel = createReactClass({
     return {values: values, names: names};
   },
 
+  makeKml(positions) {
+    const data =new EntityCollection();
+    const convertedPos = [];
+    for(let i = 0; i < positions.length; ++i) {
+      convertedPos.push(Cartographic.toCartesian(positions[i], this.props.terria.cesium.scene.globe.ellipsoid));
+    }
+    data.add(new Entity({
+      id: 0,
+      polyline: new PolylineGraphics({
+        positions: convertedPos
+      })
+    }));
+    return data;
+  },
+
   makeJson(positions, properties) {
     const data = {
       type: "LineString",
@@ -162,6 +185,34 @@ const ElevationChartPanel = createReactClass({
             FileSaver.saveAs(blob, "elevation_resume.csv");
           };
         }
+      }
+    }
+    else if(option.label === 'KML') {
+      const data = this.makeKml(positions);
+      exportKml({
+        entities: data,
+        kmz: false,
+        ellipsoid: this.props.terria.cesium.scene.globe.ellipsoid
+      })
+      .then(function(result) {
+        const blob = new Blob([result.kml], {
+          type: "application/vnd.google-earth.kml+xml;charset=utf-8"
+        });
+        FileSaver.saveAs(blob, "elevation_step.kml");
+      });
+
+      if(this.props.terria.sampledElevationPoints) {
+        const detailedData = this.makeKml(this.props.terria.sampledElevationPoints[0]);
+        exportKml({
+          entities: detailedData,
+          kmz: false
+        })
+        .then(function(result) {
+          const blob = new Blob([result.kml], {
+            type: "application/vnd.google-earth.kml+xml;charset=utf-8"
+          });
+          FileSaver.saveAs(blob, "elevation_detail.kml");
+        });
       }
     }
     else {
@@ -248,6 +299,9 @@ const ElevationChartPanel = createReactClass({
                 },
                 {
                   label: "JSON"
+                },
+                {
+                  label: "KML"
                 }]
               }
               selectOption={this.download}
