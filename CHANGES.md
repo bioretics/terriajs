@@ -2,6 +2,25 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.0 - 31/03/2021
+* Download path as Kml.
+* Added fullscreen button in MobileHeader.
+* Added zoomTo to GpxCatalogItem.
+* Added or fixed Gpx, Kml and Ogr measure path function.
+* Fixed zoomToDataSource with single point go under the ground.
+* GeoJson and Csv points clamped to the ground.
+* Resample elevation when import a path without z.
+* Open ElevationChart on button click in ElevationSidePanel.
+* Show elevation panels only if second point was drawn.
+* Download path as Csv save also resume data on a third file.
+* Custom configurable icons for RerFeatureServerCatalogItem.
+* Fixed proxy problems with domain servizigis.regione.emilia-romagna.it
+* Fixed extension mistype.
+* Can use GeoJson item as elevation path.
+* WelcomeMessage button can be disabled in confing.
+* Help link can be configured in config.
+* POI improvements and parameters refactoring.
+
 ### rer3d-terriajs 2.8.2 - 10/02/2021
 * Show DistanceLegend also with small screen.
 * Show reset view button also with small screen.
