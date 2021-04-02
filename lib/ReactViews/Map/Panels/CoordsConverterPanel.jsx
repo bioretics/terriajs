@@ -204,7 +204,7 @@ const CoordsConverterPanel = createReactClass({
             </div>*/}
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
-                    <label>Coordinate{this.state.coordsAreLatLon ? " lat, lon (in gradi decimali)" : ""}</label>
+                    <label>Coordinate{this.state.coordsAreLatLon ? " (lon lat in gradi decimali)" : " (X/Est Y/Nord)"}</label>
                 </p>
                 <p>
                     <input className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
