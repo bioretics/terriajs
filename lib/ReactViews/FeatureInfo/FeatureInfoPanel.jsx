@@ -24,6 +24,8 @@ import {
 import prettifyCoordinates from "../../Map/prettifyCoordinates";
 import raiseErrorToUser from "../../Models/raiseErrorToUser";
 
+import sampleTerrainMostDetailed from 'terriajs-cesium/Source/Core/sampleTerrainMostDetailed.js';
+
 import Styles from "./feature-info-panel.scss";
 import classNames from "classnames";
 
@@ -47,7 +49,8 @@ export const FeatureInfoPanel = createReactClass({
       top: null,
       bottom: null,
       lat: '-',
-      lon: '-'
+      lon: '-',
+      elev: undefined,
     };
   },
 
@@ -213,15 +216,26 @@ export const FeatureInfoPanel = createReactClass({
   },
 
   renderLocationItem(cartesianPosition) {
-    const catographic = Ellipsoid.WGS84.cartesianToCartographic(
+    const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
       cartesianPosition
     );
-    const latitude = CesiumMath.toDegrees(catographic.latitude);
-    const longitude = CesiumMath.toDegrees(catographic.longitude);
+    const latitude = CesiumMath.toDegrees(cartographic.latitude);
+    const longitude = CesiumMath.toDegrees(cartographic.longitude);
     const pretty = prettifyCoordinates(longitude, latitude);
     this.locationUpdated(longitude, latitude);
 
     const that = this;
+
+    if(this.props.terria.cesium && this.props.terria.cesium.scene.terrainProvider) {
+      sampleTerrainMostDetailed(this.props.terria.cesium.scene.terrainProvider, [cartographic])
+        .then(function(newPositions) {
+          that.setState({elev: Math.round(newPositions[0].height)});
+        });
+    }
+    else {
+      this.setState({elev: undefined});
+    }
+    
     const pinClicked = function() {
       that.pinClicked(longitude, latitude);
     };
@@ -231,28 +245,36 @@ export const FeatureInfoPanel = createReactClass({
       : Styles.btnLocation;
 
     return (
-      <div className={Styles.location}>
-        <span>Lat / Lon&nbsp;</span>
-        <span>
-          {pretty.latitude + ", " + pretty.longitude}
-          {!this.props.printView && (
-            <span>
-            <button
-              type="button"
-              onClick={pinClicked}
-              className={locationButtonStyle}
-            >
-              <Icon glyph={Icon.GLYPHS.location} />
-            </button>
-            <button
-              type="button"
-              onClick={this.coordinateClicked}
-              className={locationButtonStyle}>
-              <Icon glyph={Icon.GLYPHS.externalLink} />
-            </button>
-            </span>
-          )}
-        </span>
+      <div>
+        <If condition={this.state.elev}>
+          <div className={Styles.location}>
+            <span>Altitudine</span>
+            <span>{this.state.elev}</span>
+          </div>
+        </If>
+        <div className={Styles.location}>
+          <span>Lat / Lon&nbsp;</span>
+          <span>
+            {pretty.latitude + ", " + pretty.longitude}
+            {!this.props.printView && (
+              <span>
+              <button
+                type="button"
+                onClick={pinClicked}
+                className={locationButtonStyle}
+              >
+                <Icon glyph={Icon.GLYPHS.location} />
+              </button>
+              <button
+                type="button"
+                onClick={this.coordinateClicked}
+                className={locationButtonStyle}>
+                <Icon glyph={Icon.GLYPHS.externalLink} />
+              </button>
+              </span>
+            )}
+          </span>
+        </div>
       </div>
     );
   },
