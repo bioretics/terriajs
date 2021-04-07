@@ -229,7 +229,7 @@ export const FeatureInfoPanel = createReactClass({
     if(this.props.terria.cesium && this.props.terria.cesium.scene.terrainProvider) {
       sampleTerrainMostDetailed(this.props.terria.cesium.scene.terrainProvider, [cartographic])
         .then(function(newPositions) {
-          that.setState({elev: Math.round(newPositions[0].height)});
+          that.setState({elev: newPositions[0].height.toFixed(1)});
         });
     }
     else {
@@ -249,7 +249,7 @@ export const FeatureInfoPanel = createReactClass({
         <If condition={this.state.elev}>
           <div className={Styles.location}>
             <span>Altitudine</span>
-            <span>{this.state.elev}</span>
+            <span>{this.state.elev} m s.l.m.</span>
           </div>
         </If>
         <div className={Styles.location}>
