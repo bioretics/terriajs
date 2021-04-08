@@ -109,8 +109,8 @@ const CoordsConverterPanel = createReactClass({
     changedCoords(event) {
         var text = event.target.value;
         var splitted = text.split(/[ |,|;]+/g);
-        const y = parseFloat(splitted[0]);
-        const x = parseFloat(splitted[1]);
+        const x = parseFloat(splitted[0]);
+        const y = parseFloat(splitted[1]);
         const areLatLon = x >= 0 && x <= 360 && y >= 0 && y <= 360;
         this.setState({
             coordsTxt: text,
@@ -131,14 +131,15 @@ const CoordsConverterPanel = createReactClass({
             queryParameters: {
                 inSR: this.props.conversionList[this.state.selectConversion].from,
                 outSR: this.props.conversionList[this.state.selectConversion].to,
-                geometries: this.state.y.toString() + "," + this.state.x.toString(),//this.state.coordsTxt,
+                geometries: this.state.coordsAreLatLon ? this.state.y.toString() + "," + this.state.x.toString() : this.state.x.toString() + "," + this.state.y.toString(),
                 transformation: JSON.stringify(this.props.conversionList[this.state.selectConversion].wkt),
                 f: 'json'
             }
         }).then(function (results) {
             if(results.geometries) {
                 const geom = results.geometries[0];
-                document.getElementById("conversionOutput").value = geom.x.toFixed(4) + ", " + geom.y.toFixed(4);
+                const areLatLon = geom.x >= 0 && geom.x <= 360 && geom.y >= 0 && geom.y <= 360;
+                document.getElementById("conversionOutput").value = areLatLon ? geom.y.toFixed(4) + ", " + geom.x.toFixed(4) : geom.x.toFixed(4) + ", " + geom.y.toFixed(4);
             }
             else {
                 document.getElementById("conversionOutput").value = results.error.message;
@@ -155,8 +156,8 @@ const CoordsConverterPanel = createReactClass({
             const longitude = CesiumMath.toDegrees(cartographicCoords.longitude);
 
             this.setState({
-                x: longitude,
-                y: latitude,
+                x: latitude,
+                y: longitude,
                 coordsTxt: latitude.toFixed(4) + ", " + longitude.toFixed(4),
                 coordsAreLatLon: true,
                 fromFeatureInfo: true
@@ -204,7 +205,9 @@ const CoordsConverterPanel = createReactClass({
             </div>*/}
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
-                    <label>Coordinate{this.state.coordsAreLatLon ? "   (Lon, Lat in gradi decimali)" : "   (X, Y oppure Est, Nord)"}</label>
+                    <label>Coordinate</label>
+                    <br/>
+                    <label><i>Lat, Long (in gradi decimali) oppure X, Y oppure Est, Nord</i></label>
                 </p>
                 <p>
                     <input className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
