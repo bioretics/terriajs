@@ -2,6 +2,14 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.1 - 09/04/2021
+* 'X/Est Y/Nord' specification in CoordsConverterPanel.
+* Comma between coords is optional.
+* Added point elevation data to FeatureInfoPanel.
+* Elevation with 1 digit after decimal point and with measure unit.
+* Text minor change in CoordsConverterPanel.
+* Lat/Lon order improvement in CoordsConverterPanel.
+
 ### rer3d-terriajs 2.9.0 - 31/03/2021
 * Download path as Kml.
 * Added fullscreen button in MobileHeader.
