@@ -191,6 +191,7 @@ export const FeatureInfoPanel = createReactClass({
 
   coordinateClicked() {
     this.props.viewState.openCoordinateConverterPanel = true;
+    this.close();
   },
 
   locationUpdated(longitude, latitude) {

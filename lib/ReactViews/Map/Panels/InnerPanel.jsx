@@ -108,7 +108,7 @@ const InnerPanel = createReactClass({
             this.props.caretOffset && `${this.props.caretOffset} top`
         }}
       >
-        <button
+        {/*<button
           type="button"
           className={classNames(Styles.innerCloseBtn, {
             [Styles.innerCloseBtnForModal]: this.props.showDropdownAsModal
@@ -118,7 +118,7 @@ const InnerPanel = createReactClass({
           aria-label={t("general.close")}
         >
           <Icon glyph={Icon.GLYPHS.close} />
-        </button>
+        </button>*/}
         <If
           condition={
             defined(this.props.caretOffset) && !this.props.showDropdownAsModal

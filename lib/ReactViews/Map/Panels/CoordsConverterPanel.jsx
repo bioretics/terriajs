@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import ObserverModelMixin from '../../ObserveModelMixin';
 import defined from 'terriajs-cesium/Source/Core/defined';
 import classNames from 'classnames';
-import MenuPanel from '../../StandardUserInterface/customizable/MenuPanel.jsx';
+//import MenuPanel from '../../StandardUserInterface/customizable/MenuPanel.jsx';
 import InnerPanel from "./InnerPanel";
 
 import Styles from './coords-converter-panel.scss';
@@ -28,14 +28,10 @@ const CoordsConverterPanel = createReactClass({
         terria: PropTypes.object,
         userPropWhiteList: PropTypes.array,
         viewState: PropTypes.object.isRequired,
-        //epsgList: PropTypes.array,
         conversionList: PropTypes.array,
         x: PropTypes.string,
         y: PropTypes.string,
         coordsTxt: PropTypes.string,
-        //sCrs: PropTypes.string,
-        //tCrs: PropTypes.string,
-        //hiddenTxt: PropTypes.string
         selectConversion: PropTypes.number
     },
 
@@ -78,32 +74,19 @@ const CoordsConverterPanel = createReactClass({
 
     getInitialState() {
         return {
-            //isOpen: false,
-            //sCrs: this.props.epsgList[0].code,
-            //tCrs: this.props.epsgList[0].code,
             selectConversion: 0,
             x: '',
             y: '',
             coordsTxt: '',
-            //hiddenTxt: ''
-            coordsAreLatLon: false,
-            fromFeatureInfo: false
+            isCartographic: false,
+            xOut: '',
+            yOut: '',
+            outIsCartographic: false,
         };
     },
 
-    /*changeOpen(open) {
-        //this.setState({
-        //    isOpen: open
-        //});
-        this.props.viewState.openCoordinateConverterPanel = open;
-    },*/
-
     openClose() {
         this.props.viewState.openCoordinateConverterPanel = !this.props.viewState.openCoordinateConverterPanel;
-
-        this.setState({
-            fromFeatureInfo: false
-        });
     },
 
     changedCoords(event) {
@@ -114,10 +97,9 @@ const CoordsConverterPanel = createReactClass({
         const areLatLon = x >= 0 && x <= 360 && y >= 0 && y <= 360;
         this.setState({
             coordsTxt: text,
-            y: y,
             x: x,
-            coordsAreLatLon: areLatLon,
-            //fromFeatureInfo: false
+            y: y,
+            isCartographic: areLatLon
         });
     },
 
@@ -126,12 +108,13 @@ const CoordsConverterPanel = createReactClass({
     },
 
     loadRes() {
+        var that = this;
         CesiumResource.fetchJson({
             url: this.props.terria.corsProxy.getURL("http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project"),
             queryParameters: {
                 inSR: this.props.conversionList[this.state.selectConversion].from,
                 outSR: this.props.conversionList[this.state.selectConversion].to,
-                geometries: this.state.coordsAreLatLon ? this.state.y.toString() + "," + this.state.x.toString() : this.state.x.toString() + "," + this.state.y.toString(),
+                geometries: this.state.isCartographic ? this.state.y.toString() + "," + this.state.x.toString() : this.state.x.toString() + "," + this.state.y.toString(),
                 transformation: JSON.stringify(this.props.conversionList[this.state.selectConversion].wkt),
                 transformForward: this.props.conversionList[this.state.selectConversion].transformForward,
                 f: 'json'
@@ -140,7 +123,15 @@ const CoordsConverterPanel = createReactClass({
             if(results.geometries) {
                 const geom = results.geometries[0];
                 const areLatLon = geom.x >= 0 && geom.x <= 360 && geom.y >= 0 && geom.y <= 360;
-                document.getElementById("conversionOutput").value = areLatLon ? geom.y.toFixed(6) + ", " + geom.x.toFixed(6) : geom.x.toFixed(4) + ", " + geom.y.toFixed(4);
+                const x = geom.x.toFixed(areLatLon ? 6 : 4);
+                const y = geom.y.toFixed(areLatLon ? 6 : 4);
+                that.setState({
+                    xOut: x,
+                    yOut: y,
+                    outIsCartographic: areLatLon
+                });
+                //document.getElementById("conversionOutput").value = areLatLon ? geom.y.toFixed(6) + ", " + geom.x.toFixed(6) : geom.x.toFixed(4) + ", " + geom.y.toFixed(4);
+                document.getElementById("conversionOutput").value = areLatLon ? y + ", " + x : x + ", " + y;
             }
             else {
                 document.getElementById("conversionOutput").value = results.error.message;
@@ -160,15 +151,23 @@ const CoordsConverterPanel = createReactClass({
                 x: latitude,
                 y: longitude,
                 coordsTxt: latitude.toFixed(6) + ", " + longitude.toFixed(6),
-                coordsAreLatLon: true,
-                fromFeatureInfo: true
+                isCartographic: true
             });
         }
     },
 
-    onGoTo(event) {
+    onGoToInCoords(event) {
         var bboxSize = 0.005;
         var rectangle = zoomRectangleFromPoint(this.state.x, this.state.y, bboxSize);
+
+        this.props.terria.currentViewer.zoomTo(rectangle, 2.0);
+
+        this.props.terria.cesium._selectionIndicator.animateAppear();
+    },
+
+    onGoToOutCoords(event) {
+        var bboxSize = 0.005;
+        var rectangle = zoomRectangleFromPoint(this.state.yOut, this.state.xOut, bboxSize);
 
         this.props.terria.currentViewer.zoomTo(rectangle, 2.0);
 
@@ -179,7 +178,8 @@ const CoordsConverterPanel = createReactClass({
         this.setState({
             x: '',
             y: '',
-            coordsTxt: ''
+            coordsTxt: '',
+            isCartographic: false
         });
         document.getElementById("conversionOutput").value = "";
     },
@@ -201,10 +201,15 @@ const CoordsConverterPanel = createReactClass({
 
     renderContent() {
         return (<div>
-            {/*<div>
-                <p><label>Cattura coordinate ultimo click</label></p>
-                <p><button className={Styles.btnIcon} onClick={this.onLoadPickedCoords}><Icon glyph={Icon.GLYPHS.location} /></button></p>
-            </div>*/}
+            <button
+                type="button"
+                className={classNames(Styles.innerCloseBtn, {
+                    [Styles.innerCloseBtnForModal]: this.props.showDropdownAsModal
+                })}
+                onClick={this.openClose}
+                >
+                <Icon glyph={Icon.GLYPHS.close} />
+            </button>
             <div className={classNames(DropdownStyles.section, Styles.section)}>
                 <p>
                     <label>Coordinate</label>
@@ -212,32 +217,21 @@ const CoordsConverterPanel = createReactClass({
                     <label><i>Lat, Long (in gradi decimali) oppure X, Y oppure Est, Nord</i></label>
                 </p>
                 <p>
-                    <input className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
+                    <input title="Se la finestra 'Informazioni' è aperta le coordinate sono lette da lì e non sono modificabili" className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
                 </p>
-                <p>
-                    <button className={Styles.btnIcon} onClick={this.copyInCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
+                <p style={{"margin-left": "auto"}}>
+                    <button title="Copia negli Appunti le coordinate" className={Styles.btnIcon} onClick={this.copyInCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
+                    <If condition={this.state.isCartographic}>
+                        <button title="Centra la mappa alle coordinate inserite, attivo solo se le coordinate sono cartografiche" className={Styles.btnIcon} onClick={this.onGoToInCoords}><Icon glyph={Icon.GLYPHS.location} /></button>
+                    </If>
                 </p>
-                {/*<p>
-                    <label>CRS sorgente</label>
-                </p>
-                <p>
-                    <input className={Styles.crsSelect} readOnly value={this.props.epsgList[0].text}></input>
-                </p>
-                <p>
-                    <label>CRS destinazione</label>
-                </p>
-                <p>
-                    <select className={Styles.crsSelect} onChange={this.changedT} defaultValue={this.state.tCrs} >
-                        {this.props.epsgList.map(function (epsg) { return <option key={epsg.code} className={Styles.crsItem} value={epsg.code}>{epsg.text}</option>; })}
-                    </select>
-                </p>*/}
                 <p>
                     <label>Conversione</label>
                 </p>
                 <p>
-                    <select className={Styles.crsSelect} onChange={this.changeCSR} defaultValue={0} >
+                    <select title="Clicca per scegliere la conversione da utilizzare (se le coordinate sono geografiche l'elenco delle conversioni è filtrato con solo quelle ammissibili)" className={Styles.crsSelect} onChange={this.changeCSR} defaultValue={0} >
                         {this.props.conversionList.map((conv, index) => {
-                            if(!this.state.fromFeatureInfo || (this.state.fromFeatureInfo && conv.from === 4326))
+                            if(!this.state.isCartographic || (this.state.isCartographic && conv.from === 4326))
                                 return <option key={index} className={Styles.crsItem} value={index}>{conv.desc}</option>;
                         })}
                     </select>
@@ -246,21 +240,23 @@ const CoordsConverterPanel = createReactClass({
             <div className={classNames(Styles.viewer, DropdownStyles.section)}>
                 <ul className={classNames(Styles.viewerSelector)}>
                     <li className={Styles.listItem}>
-                        <input className={Styles.btnCoord} type="button" value="Converti" onClick={(event) => this.loadRes(event)} />
+                        <input title="Esegue la conversione delle coordinate" className={Styles.btnCoord} type="button" value="Converti" onClick={(event) => this.loadRes(event)} />
                     </li>
                     <li className={Styles.listItem}>
-                        <button className={Styles.btnCoord} onClick={this.onGoTo}>Vai a</button>
+                        <button title="Svuota tutti i campi del pannello" className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
                     </li>
-                    {/*<li className={Styles.listItem}>
-                        <button className={Styles.btnCoord} onClick={this.clearCoord}>Reset</button>
-                    </li>*/}
                 </ul>
                 <p />
             </div>
             <div className={classNames(Styles.viewer, DropdownStyles.section)}>
                 <label>Risultato</label>
                 <p><input className={Styles.coordsField} id="conversionOutput" readOnly></input></p>
-                <button className={Styles.btnIcon} onClick={this.copyOutCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
+                <p>
+                    <button title="Copia negli appunti il risultato della conversione" className={Styles.btnIcon} onClick={this.copyOutCoordsToClipboard}><Icon glyph={Icon.GLYPHS.copy} /></button>
+                    <If condition={this.state.outIsCartographic}>
+                        <button title="Centra la mappa alle coordinate ottenute dalla conversio,e attivo solo se le coordinate sono cartografiche" className={Styles.btnIcon} onClick={this.onGoToOutCoords}><Icon glyph={Icon.GLYPHS.location} /></button>
+                    </If>
+                    </p>
             </div>
         </div>
         )
