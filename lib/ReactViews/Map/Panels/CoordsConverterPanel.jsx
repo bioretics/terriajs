@@ -101,6 +101,10 @@ const CoordsConverterPanel = createReactClass({
             y: y,
             isCartographic: areLatLon
         });
+
+        if(areLatLon) {
+            this.setState({selectConversion: 0});
+        }
     },
 
     changeCSR(event) {
@@ -153,6 +157,8 @@ const CoordsConverterPanel = createReactClass({
                 coordsTxt: latitude.toFixed(6) + ", " + longitude.toFixed(6),
                 isCartographic: true
             });
+
+            this.setState({selectConversion: 0});
         }
     },
 
@@ -214,7 +220,7 @@ const CoordsConverterPanel = createReactClass({
                 <p>
                     <label>Coordinate</label>
                     <br/>
-                    <label><i>Lat, Long (in gradi decimali) oppure X, Y oppure Est, Nord</i></label>
+                    <label><i>Lat, Lon (in gradi decimali) oppure X, Y oppure Est, Nord</i></label>
                 </p>
                 <p>
                     <input title="Se la finestra 'Informazioni' è aperta le coordinate sono lette da lì e non sono modificabili" className={Styles.coordsField} type="text" id="coords" onChange={this.changedCoords} value={this.state.coordsTxt} />
@@ -286,8 +292,9 @@ const CoordsConverterPanel = createReactClass({
         );*/
 
         const isOpen = this.props.viewState.openCoordinateConverterPanel;
-        if (isOpen) {
+        if (isOpen && this.props.terria.isFeaturePicked) {
             this.onLoadPickedCoords();
+            this.props.terria.isFeaturePicked = false;
         }
 
         return (

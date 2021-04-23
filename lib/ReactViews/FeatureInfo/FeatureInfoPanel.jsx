@@ -260,6 +260,7 @@ export const FeatureInfoPanel = createReactClass({
             {!this.props.printView && (
               <span>
               <button
+                title="Vai al punto indicato"
                 type="button"
                 onClick={pinClicked}
                 className={locationButtonStyle}
@@ -267,6 +268,7 @@ export const FeatureInfoPanel = createReactClass({
                 <Icon glyph={Icon.GLYPHS.location} />
               </button>
               <button
+                title="Converti le coordinate del punto indicato"
                 type="button"
                 onClick={this.coordinateClicked}
                 className={locationButtonStyle}>
