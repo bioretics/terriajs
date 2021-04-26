@@ -2,6 +2,14 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.2 - 26/04/2021
+* Round lat/lon coordinate to 6 decimal.
+* Fixed zoom to lat/lon coords.
+* Readded reset button and fixed minor bugs in CoordsConverterPanel.
+* Added a default icon class for RerFeatureServerCatalogItem features.
+* Fixed readonly CoordsConverterPanel input when FeatureInfoPanel is open.
+* Log into console package version.
+
 ### rer3d-terriajs 2.9.1 - 09/04/2021
 * 'X/Est Y/Nord' specification in CoordsConverterPanel.
 * Comma between coords is optional.
