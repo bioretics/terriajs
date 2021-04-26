@@ -53,6 +53,8 @@ const HelpMenuPanelBasic = createReactClass({
     const linkText = viewState.terria.configParameters.helpLinkText ?? "Geoportale Emilia-Romagna";
     const linkUrl = viewState.terria.configParameters.helpLinkUrl ?? "https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d";
 
+    console.log("rer3d-terriajs v." + require('../../../package.json').version);
+
     return (
       <MenuPanel
         theme={dropdownTheme}
