@@ -50,8 +50,8 @@ const HelpMenuPanelBasic = createReactClass({
 
     const { t } = this.props;
 
-    const linkText = viewState.terria.configParameters.helpLinkText ?? "Geoportale Emilia-Romagna";
-    const linkUrl = viewState.terria.configParameters.helpLinkUrl ?? "https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d";
+    const linkText = typeof(viewState.terria.configParameters.helpLinkText) !== "undefined" ? viewState.terria.configParameters.helpLinkText : "Geoportale Emilia-Romagna";
+    const linkUrl = typeof(viewState.terria.configParameters.helpLinkUrl) !== "undefined" ? viewState.terria.configParameters.helpLinkUrl : "https://geoportale.regione.emilia-romagna.it/it/contenuti/geoportale-3d";
 
     console.log("rer3d-terriajs v." + require('../../../package.json').version);
 
