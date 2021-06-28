@@ -2,6 +2,10 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.3 - 28/06/2021
+* Fixed use of ?? operator.
+* Fix Kml clamp to ground.
+
 ### rer3d-terriajs 2.9.2 - 26/04/2021
 * Round lat/lon coordinate to 6 decimal.
 * Fixed zoom to lat/lon coords.
