@@ -2,6 +2,9 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.4 - 30/06/2021
+* Fix buildings visible trough terrain.
+
 ### rer3d-terriajs 2.9.3 - 28/06/2021
 * Fixed use of ?? operator.
 * Fix Kml clamp to ground.
