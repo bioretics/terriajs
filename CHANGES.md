@@ -2,6 +2,9 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.5 - 20/07/2021
+* Undo last buildings fix.
+
 ### rer3d-terriajs 2.9.4 - 30/06/2021
 * Fix buildings visible trough terrain.
 
