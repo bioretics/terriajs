@@ -2,6 +2,9 @@ Change Log
 ==========
 
 
+### rer3d-terriajs 2.9.6 - 23/09/2021
+* Line width setted to 5px for GeoJSON and Kml.
+
 ### rer3d-terriajs 2.9.5 - 20/07/2021
 * Undo last buildings fix.
 
