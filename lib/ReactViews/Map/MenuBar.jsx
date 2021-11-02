@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 import classNames from "classnames";
 import SettingPanel from "./Panels/SettingPanel";
 import SharePanel from "./Panels/SharePanel/SharePanel";
+import CoordsPanel from "./Panels/CoordsPanel/CoordsPanel";
 import ToolsPanel from "./Panels/ToolsPanel/ToolsPanel";
 import Icon from "../../Styled/Icon";
 import Prompt from "../Generic/Prompt";
@@ -116,6 +117,9 @@ const MenuBar = observer(props => {
           </li>
           <li className={Styles.menuItem}>
             <SharePanel terria={props.terria} viewState={props.viewState} />
+          </li>
+          <li className={Styles.menuItem}>
+            <CoordsPanel terria={props.terria} viewState={props.viewState} />
           </li>
           <If condition={storyEnabled}>
             <li className={Styles.menuItem}>
