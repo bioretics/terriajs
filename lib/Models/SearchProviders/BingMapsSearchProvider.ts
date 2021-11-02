@@ -47,8 +47,8 @@ export default class BingMapsSearchProvider extends SearchProvider {
       options.flightDurationSeconds,
       1.5
     );
-    this.primaryCountry = defaultValue(options.primaryCountry, "Australia");
-    this.culture = defaultValue(options.culture, "en-au");
+    this.primaryCountry = defaultValue(options.primaryCountry, "Italy");
+    this.culture = defaultValue(options.culture, "it");
 
     if (!this.key) {
       console.warn(
