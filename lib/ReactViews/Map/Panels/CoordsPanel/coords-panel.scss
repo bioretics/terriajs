@@ -1,0 +1,38 @@
+@import "~terriajs-variables";
+@import "../../../../Sass/common/mixins";
+
+.share-panel {
+  font-size: $font-size-mid-small;
+}
+
+.dropdown-inner {
+  width: $share-panel-width;
+  @include transform-origin(50%, top);
+}
+
+.crs--item {
+  composes: field from "../../../../Sass/common/_form.scss";
+  background-color: $overlay;
+  color: $color-primary;
+}
+
+.shareUrlfield {
+  width: calc(100% - 80px);
+  padding-left: 1rem;
+  padding-right: 0;
+}
+
+.explanation {
+  font-size: smaller;
+  font-weight: lighter;
+  color: $text-light-dimmed;
+}
+
+.format-button,
+.print-button {
+  composes: btn from "../../../../Sass/common/_buttons.scss";
+  composes: btn-primary from "../../../../Sass/common/_buttons.scss";
+  width: auto;
+  display: inline;
+  margin: 2px;
+}
