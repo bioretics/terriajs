@@ -124,7 +124,9 @@ export const GLYPHS = {
   pedestrian: require("../../wwwroot/images/icons/pedestrian.svg"),
   minimize: require("../../wwwroot/images/icons/minimize.svg"),
   maximize: require("../../wwwroot/images/icons/maximize.svg"),
-  closeTool: require("../../wwwroot/images/icons/close-tool.svg")
+  closeTool: require("../../wwwroot/images/icons/close-tool.svg"),
+
+  copy: require("../../wwwroot/images/icons/copy.svg")
 };
 
 interface IconProps {
