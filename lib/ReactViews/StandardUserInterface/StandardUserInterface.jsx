@@ -251,6 +251,12 @@ const StandardUserInterface = observer(
         this.props.viewState.storyShown &&
         !this.props.viewState.explorerPanelIsVisible &&
         !this.props.viewState.storyBuilderShown;
+
+      // Print version to console
+      console.log(
+        "rer3d-terriajs v." + require("../../../package.json").version
+      );
+
       return (
         <ThemeProvider theme={mergedTheme}>
           <GlobalTerriaStyles
