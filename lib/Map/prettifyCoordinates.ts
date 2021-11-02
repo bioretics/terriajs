@@ -42,7 +42,7 @@ export default function prettifyCoordinates(
   if (height !== undefined) {
     prettyElevation =
       Math.round(height) +
-      (errorBar !== undefined ? "±" + Math.round(errorBar) : "") +
+      //(errorBar !== undefined ? "±" + Math.round(errorBar) : "") +
       "m";
   }
 
