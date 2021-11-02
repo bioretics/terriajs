@@ -25,6 +25,8 @@ import classNames from "classnames";
 import { observer, disposeOnUnmount } from "mobx-react";
 import { action, reaction, runInAction } from "mobx";
 
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed.js";
+
 @observer
 class FeatureInfoPanel extends React.Component {
   static propTypes = {
@@ -40,7 +42,8 @@ class FeatureInfoPanel extends React.Component {
       left: null,
       right: null,
       top: null,
-      bottom: null
+      bottom: null,
+      elev: undefined
     };
   }
 
@@ -221,8 +224,28 @@ class FeatureInfoPanel extends React.Component {
     // this.locationUpdated(longitude, latitude);
 
     const that = this;
+
+    if (
+      this.props.terria.cesium &&
+      this.props.terria.cesium.scene.terrainProvider
+    ) {
+      sampleTerrainMostDetailed(
+        this.props.terria.cesium.scene.terrainProvider,
+        [cartographic]
+      ).then(function(newPositions) {
+        that.setState({ elev: Math.round(newPositions[0].height) });
+      });
+    } else {
+      this.setState({ elev: undefined });
+    }
+
     const pinClicked = function() {
       that.pinClicked(longitude, latitude);
+    };
+
+    const coordinateClicked = () => {
+      this.props.viewState.openCoordinateConverterPanel = true;
+      this.close();
     };
 
     const locationButtonStyle = isMarkerVisible(this.props.terria)
@@ -230,20 +253,37 @@ class FeatureInfoPanel extends React.Component {
       : Styles.btnLocation;
 
     return (
-      <div className={Styles.location}>
-        <span>Lat / Lon&nbsp;</span>
-        <span>
-          {pretty.latitude + ", " + pretty.longitude}
-          {!this.props.printView && (
-            <button
-              type="button"
-              onClick={pinClicked}
-              className={locationButtonStyle}
-            >
-              <Icon glyph={Icon.GLYPHS.location} />
-            </button>
-          )}
-        </span>
+      <div>
+        <If condition={this.state.elev}>
+          <div className={Styles.location}>
+            <span>Altitudine</span>
+            <span>{this.state.elev} m s.l.m.</span>
+          </div>
+        </If>
+        <div className={Styles.location}>
+          <span>Lat / Lon&nbsp;</span>
+          <span>
+            {pretty.latitude + ", " + pretty.longitude}
+            {!this.props.printView && (
+              <span>
+                <button
+                  type="button"
+                  onClick={pinClicked}
+                  className={locationButtonStyle}
+                >
+                  <Icon glyph={Icon.GLYPHS.location} />
+                </button>
+                <button
+                  type="button"
+                  onClick={coordinateClicked}
+                  className={locationButtonStyle}
+                >
+                  <Icon glyph={Icon.GLYPHS.externalLink} />
+                </button>
+              </span>
+            )}
+          </span>
+        </div>
       </div>
     );
   }
