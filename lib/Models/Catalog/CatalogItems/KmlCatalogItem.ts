@@ -20,6 +20,9 @@ import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTr
 import CreateModel from "../../Definition/CreateModel";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
+
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem extends MappableMixin(
@@ -138,6 +141,16 @@ class KmlCatalogItem extends MappableMixin(
               correspondingCartesians
             );
           }
+        }
+
+        // Clamp to ground
+        if (isDefined(entity.polyline)) {
+          entity.polyline.clampToGround = new ConstantProperty(true);
+          entity.polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
+        } else if (isDefined(entity.billboard)) {
+          entity.billboard.heightReference = new ConstantProperty(
+            HeightReference.CLAMP_TO_GROUND
+          );
         }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
