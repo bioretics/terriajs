@@ -220,7 +220,8 @@ export default class MouseCoords {
         const geoidHeight = result[0] || 0.0;
         this.tileRequestInFlight = undefined;
         if (Cartographic.equals(position, this.cartographic)) {
-          position.height = positionWithHeight.height - geoidHeight;
+          // Comments to use SLM instead of ellipsoid height
+          //position.height = positionWithHeight.height - geoidHeight;
           this.cartographicToFields(position);
         } else {
           // Mouse moved since we started this request, so the result isn't useful.  Try again next time.
