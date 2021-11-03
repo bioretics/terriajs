@@ -125,8 +125,8 @@ export const GLYPHS = {
   minimize: require("../../wwwroot/images/icons/minimize.svg"),
   maximize: require("../../wwwroot/images/icons/maximize.svg"),
   closeTool: require("../../wwwroot/images/icons/close-tool.svg"),
-
-  copy: require("../../wwwroot/images/icons/copy.svg")
+  copy: require("../../wwwroot/images/icons/copy.svg"),
+  moreItems: require("../../wwwroot/images/icons/more-items.svg")
 };
 
 interface IconProps {
@@ -155,7 +155,7 @@ interface IStyledIconProps {
   light?: boolean;
   dark?: boolean;
   realDark?: boolean;
-  fillColor?: boolean;
+  fillColor?: string;
   opacity?: number;
 }
 

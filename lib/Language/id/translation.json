@@ -167,7 +167,7 @@
     "preface": {
       "start": "Mulai tur",
       "close": "Mungkin nanti",
-      "content": "Tidak yakin di mana untuk mulai? Ikuti tur singkat dari fitur-fitur utama dari perangkat lunak kami, dan belajar tentang beberapa fungsi utama untuk membantumu pergi.",
+      "content": "Tidak yakin di mana untuk mulai? Ikuti tur singkat dari fitur-fitur utama dari perangkat lunak kami, dan belajar tentang beberapa fungsi utama untuk membantumu.",
       "title": "Ikuti turnya"
     }
   },
@@ -185,7 +185,8 @@
     "skip": "Lewati",
     "open": "Buka",
     "close": "Tutup",
-    "prev": ""
+    "prev": "Sebelumnya",
+    "next": "Selanjutnya"
   },
   "languagePanel": {
     "changeLanguage": "Ubah Bahasa"
@@ -280,14 +281,21 @@
     "searchBtnText": "Cari",
     "searchError": "Pencarian gagal. Lihat konsol untuk keterangan kesalahan.",
     "searching": "Mencari",
-    "title": "Cari {{itemName}}"
+    "title": "Cari {{itemName}}",
+    "numericParameter": {
+      "maximum": "Maksimum",
+      "minimum": "Minimum"
+    }
   },
   "deltaTool": {
     "cancelBtn": "Batal",
     "pickerMessage": {
       "pickAnother": "Klik titik lain untuk mengubah pilihan",
       "pickFirst": "Pilih titik dengan mengklik peta"
-    }
+    },
+    "secondaryImage": "Gambar Kedua",
+    "primaryImage": "Gambar Utama",
+    "selectedLocation": "Pilih lokasi"
   },
   "toast": {
     "mapIsZooming": "Memuat pembesaran yang ideal..."
@@ -309,34 +317,61 @@
     },
     "gpx": {
       "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
-      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun."
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "name": "GPX",
+      "errorLoadingTitle": "Galat saat memuat GPX"
     },
     "gltf": {
-      "error": "Galat"
+      "error": "Galat",
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "name": "GL Transmission Format (glTF)",
+      "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
+      "notSupportedErrorTitle": "Tidak mendukung 2D",
+      "notSupportedErrorMessage": "\"{{name}}\" tidak dapat ditampilkan dalam tampilan 2D.  harap ganti ke 3D dan coba lagi."
     },
     "geoJson": {
-      "firefox": "Mozilla Firefox"
+      "firefox": "Mozilla Firefox",
+      "internetExplorer": "Internet Explorer 11",
+      "unsupportedBrowserTitle": "Peramban web tidak didukung",
+      "couldNotLoadTitle": "Tidak dapat memuat JSON",
+      "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
+      "unableToLoadItemTitle": "Tidak ada GeoJSON",
+      "name": "GeoJSON",
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "errorLoadingTitle": "Galat saat memuat GeoJSON",
+      "chrome": "Google Chrome"
     },
     "czml": {
       "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
-      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun."
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "errorLoadingTitle": "Tidak dapat memuat CZML",
+      "unableToLoadItemTitle": "Tidak ada CZML",
+      "errorLoadingMessage": "Terjadi kesalahan saat memuat file CZML."
     },
     "csw": {
-      "links": "Tautan"
+      "links": "Tautan",
+      "name": "Catalogue Service (CSW)",
+      "cors": "CORS",
+      "errorLoadingTitle": "Tidak dapat memuat CSW",
+      "errorLoadingRecordsTitle": "Gagal memuat data CSW.",
+      "notUseableTitle": "Catalogue service tidak dapar digunakan. \n\n {{message}}"
     },
     "catalog": {
       "cancel": "Batal",
       "upload": "Unggah",
       "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
       "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
-      "group": "Grup"
+      "group": "Grup",
+      "convertErrorTitle": "Tidak dapat mengupgrade katalog ke V8",
+      "unsupportedFileTypeTitle": "Format file tidak didukung",
+      "unsupportedTypeTitle": "tipe tidak diketahui"
     },
     "ckan": {
-      "update_freq": "Frekuensi pembaruan",
+      "update_freq": "Frekuensi Pembaruan",
       "contact_point": "Kontak",
-      "metadata_modified": "Dimodifikasi",
+      "metadata_modified": "Diubah",
       "metadata_created": "Dibuat",
-      "author": "Penulis",
+      "author": "Pembuat",
       "licence": "Lisensi",
       "dataDescription": "Keterangan Data",
       "datasetDescription": "Keterangan Dataset",
@@ -383,6 +418,119 @@
     },
     "cartoMap": {
       "noUrlTitle": "Tidak ada URL"
+    },
+    "webMapServiceCatalogGroup": {
+      "missingUrlTitle": "Tidak dapat memuat GetCapabilities",
+      "groupNotAvailableTitle": "Grup tidak tersedia"
+    },
+    "webMapServiceCatalogItem": {
+      "noLayerFoundTitle": "Tidak ada layer yang ditemukan",
+      "defaultStyleLabel": "Gaya Bawaan",
+      "missingUrlTitle": "Tidak dapat memuat GetCapabilities",
+      "dataDescription": "Keterangan Data",
+      "serviceDescription": "Keterangan Layanan"
+    },
+    "webMapTileServiceCatalogGroup": {
+      "groupNotAvailableTitle": "Grup tidak tersedia"
+    },
+    "webMapTileServiceCatalogItem": {
+      "serviceDescription": "Keterangan Layanan",
+      "dataDescription": "Keterangan Data",
+      "noUsableTileMatrixTitle": "Peringatan",
+      "missingUrlTitle": "Tidak dapat memuat GetCapabilities"
+    },
+    "shadow": {
+      "name": "Bayangan",
+      "options": {
+        "none": "Kosong"
+      }
+    },
+    "function": {
+      "unknownFormaterTitle": "Formatter tidak dikenal"
+    },
+    "magda": {
+      "distributionDesc": "Deskripsi Distribusi",
+      "retrieveErrorTitle": "Galat saat mengambil data MAGDA"
+    },
+    "arcGisFeatureServerCatalogGroup": {
+      "groupNotAvailableTitle": "Grup tidak tersedia",
+      "dataDescription": "Keterangan Data",
+      "serviceDescription": "Keterangan Layanan"
+    },
+    "arcGisMapServerCatalogGroup": {
+      "groupNotAvailableTitle": "Grup tidak tersedia",
+      "dataDescription": "Keterangan Data",
+      "serviceDescription": "Keterangan Layanan"
+    },
+    "csv": {
+      "name": "Comma-Separated Values (CSV)",
+      "unableToLoadTitle": "Tidak dapat memuat file CSV",
+      "unableToLoadItemTitle": "Tidak ada CSV"
+    },
+    "webFeatureServiceCatalogItem": {
+      "missingUrlTitle": "Tidak dapat memuat GetCapabilities",
+      "dataDescription": "Keterangan Data",
+      "noLayerFoundTitle": "Tidak ada layer yang ditemukan",
+      "serviceDescription": "Keterangan Layanan"
+    },
+    "webProcessingServiceCatalogGroup": {
+      "missingUrlTitle": "Tidak dapat memuat GetCapabilities",
+      "typeName": "Web Processing Service (WPS) Server"
+    },
+    "georss": {
+      "copyrightText": "Teks Hak Cipta",
+      "link": "Tautan",
+      "author": "Pembuat",
+      "unableToLoadItemTitle": "Tidak ada GeoRSS",
+      "name": "GeoRSS",
+      "subtitle": "Subjudul",
+      "updated": "Diperbarui",
+      "category": "Kategori",
+      "description": "Deskripsi",
+      "errorLoadingTitle": "Tidak dapat memuat GeoRSS"
+    },
+    "senaps": {
+      "locationHeadingFeatureInfo": "Lokasi",
+      "name": "Lokasi Senaps"
+    },
+    "userDrawing": {
+      "btnCancel": "Batalkan",
+      "btnDone": "Selesai"
+    },
+    "arcGisFeatureServerCatalogItem": {
+      "serviceDescription": "Keterangan Layanan",
+      "dataDescription": "Keterangan Data"
+    },
+    "imageryLayer": {
+      "intervalSupportErrorTitle": "Interval tidak didukung"
+    },
+    "arcGisMapServerCatalogItem": {
+      "serviceDescription": "Keterangan Layanan",
+      "dataDescription": "Keterangan Data"
+    },
+    "mapboxStyle": {
+      "name": "Gaya Mapbox"
+    },
+    "bing": {
+      "name": "Peta Bing"
+    },
+    "arcgisPortal": {
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun.",
+      "licence": "Lisensi",
+      "datasetDescription": "Keterangan Dataset"
+    },
+    "webFeatureServiceCatalogGroup": {
+      "groupNotAvailableTitle": "Grup tidak tersedia"
+    },
+    "wfsFeatures": {
+      "groupNotAvailableTitle": "Grup tidak tersedia"
+    },
+    "kml": {
+      "unableToLoadItemTitle": "Tidak ada KML",
+      "name": "KML atau KMZ",
+      "dataSourceErrorMessage": "Sumber data ini tidak memiliki keterangan apapun.",
+      "serviceErrorMessage": "Layanan ini tidak memiliki keterangan apapun."
     }
   },
   "viewModels": {
@@ -500,5 +648,18 @@
     "data": "Data",
     "done": "Selesai",
     "resultsLabel": "Hasil Pencarian"
+  },
+  "mapNavigation": {
+    "additionalToolsTitle": "Buka alat tambahan",
+    "additionalTools": "Alat tambahan"
+  },
+  "term": {
+    "missingContent": "konten hilang"
+  },
+  "pedestrianMode": {
+    "controls": {
+      "title": "Kontrol"
+    },
+    "toolButtonTitle": "Mode pejalan kaki"
   }
 }

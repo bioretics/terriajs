@@ -1,3 +1,4 @@
+import i18next from "i18next";
 import { computed } from "mobx";
 import { createTransformer } from "mobx-utils";
 import isDefined from "../Core/isDefined";
@@ -205,20 +206,29 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
       return [];
     }
 
+    let items: StratumFromTraits<LegendItemTraits>[] = [];
+
     const colorMap = activeStyle.colorMap;
     if (colorMap instanceof DiscreteColorMap) {
-      return this._createLegendItemsFromDiscreteColorMap(activeStyle, colorMap);
+      items = this._createLegendItemsFromDiscreteColorMap(
+        activeStyle,
+        colorMap
+      );
     } else if (colorMap instanceof ContinuousColorMap) {
-      return this._createLegendItemsFromContinuousColorMap(
+      items = this._createLegendItemsFromContinuousColorMap(
         activeStyle,
         colorMap
       );
     } else if (colorMap instanceof EnumColorMap) {
-      return this._createLegendItemsFromEnumColorMap(activeStyle, colorMap);
+      items = this._createLegendItemsFromEnumColorMap(activeStyle, colorMap);
     } else if (colorMap instanceof ConstantColorMap) {
-      return this._createLegendItemsFromConstantColorMap(activeStyle, colorMap);
+      items = this._createLegendItemsFromConstantColorMap(
+        activeStyle,
+        colorMap
+      );
     }
-    return [];
+
+    return items;
   }
 
   @computed get numberFormatOptions():
@@ -292,7 +302,23 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
             createStratumInstance(LegendItemTraits, {
               color: activeStyle.colorTraits.nullColor || "rgba(0, 0, 0, 0)",
               addSpacingAbove: true,
-              title: activeStyle.colorTraits.nullLabel || "(No value)"
+              title:
+                activeStyle.colorTraits.nullLabel ||
+                i18next.t("models.tableData.legendNullLabel")
+            })
+          ]
+        : [];
+
+    const outlierBin =
+      activeStyle.tableColorMap.zScoreFilterValues &&
+      activeStyle.colorTraits.zScoreFilterEnabled
+        ? [
+            createStratumInstance(LegendItemTraits, {
+              color: activeStyle.tableColorMap.outlierColor.toCssColorString(),
+              addSpacingAbove: true,
+              title:
+                activeStyle.colorTraits.outlierLabel ||
+                i18next.t("models.tableData.legendZFilterLabel")
             })
           ]
         : [];
@@ -300,15 +326,19 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
     return new Array(7)
       .fill(0)
       .map((_, i) => {
+        // Use maxValue if i === 6 so we don't get funky JS precision
         const value =
-          colorMap.minValue + (colorMap.maxValue - colorMap.minValue) * (i / 6);
+          i === 6
+            ? colorMap.maxValue
+            : colorMap.minValue +
+              (colorMap.maxValue - colorMap.minValue) * (i / 6);
         return createStratumInstance(LegendItemTraits, {
           color: colorMap.mapValueToColor(value).toCssColorString(),
           title: this._formatValue(value, this.numberFormatOptions)
         });
       })
       .reverse()
-      .concat(nullBin);
+      .concat(nullBin, outlierBin);
   }
 
   private _createLegendItemsFromDiscreteColorMap(

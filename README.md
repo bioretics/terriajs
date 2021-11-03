@@ -64,7 +64,7 @@ Sites we're aware of that are using TerriaJS. These are not endorsements or test
 
 ### Technical
 
-* **Note: Please use NodeJS v10 until [#4617](https://github.com/TerriaJS/terriajs/issues/4617) is resolved**
+* Please use NodeJS v10, 12 or 14 (some scripts may not work in v10 - for example `generateCatalogIndex`)
 * Built in ECMAScript 2015, compiled with Babel to ES5.
 * Supports IE9 and later. A few features require IE11+.
 * [TerriaJS Server component](https://github.com/TerriajS/TerriaJS-Server) runs in NodeJS and provides proxying for web services that don't support CORS or require authentication. Instead of using TerriaJS-Sever proxy service, an alternative proxying service URL can be specified. See [Specify an alternative proxy server URL](/doc/connecting-to-data/cross-origin-resource-sharing.md)
@@ -93,7 +93,11 @@ See [Getting Started](http://terria.io/Documentation/guide/getting-started/) in 
 
 ### Big Thanks
 
-Cross-browser Testing Platform and Open Source <3 Provided by [Sauce Labs](https://saucelabs.com)
+Hosting and contribution framework for community translations of TerriaJS provided by [Weblate](https://weblate.org/en/) under the Libre plan for open source software. See our translation progress for different languages:
+
+<a href="https://hosted.weblate.org/engage/terriajs/">
+<img src="https://hosted.weblate.org/widgets/terriajs/-/terriajsnext/multi-auto.svg" alt="Translation status" />
+</a>
 
 ### Join the community
 
