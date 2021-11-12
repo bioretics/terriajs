@@ -71,6 +71,8 @@ import GlobeOrMap from "./GlobeOrMap";
 import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 
+import Color from "terriajs-cesium/Source/Core/Color";
+
 //import Cesium3DTilesInspector from "terriajs-cesium/Source/Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector";
 
 // Intermediary
@@ -257,6 +259,8 @@ export default class Cesium extends GlobeOrMap {
         expandLink.innerText = i18next.t("map.extraCreditLinks.basemap");
       }
     }
+
+    this.scene.globe.baseColor = Color.WHITE;
 
     this.scene.globe.depthTestAgainstTerrain = false;
 
