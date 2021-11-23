@@ -255,6 +255,9 @@ export default class UserDrawing extends MappableMixin(
             return pos;
           }, false),
 
+          // Clamp to ground lines of Measure Tool
+          clampToGround: true,
+
           material: new PolylineGlowMaterialProperty(<any>{
             color: new Color(0.0, 0.0, 0.0, 0.1),
             glowPower: 0.25
