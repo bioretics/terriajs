@@ -31,7 +31,7 @@ export interface PrettyCoordinates {
 export default function prettifyCoordinates(
   longitude: number,
   latitude: number,
-  { height, errorBar, digits = 5 }: PrettifyOptions = {}
+  { height, errorBar, digits = 6 }: PrettifyOptions = {}
 ) {
   const prettyLatitude =
     Math.abs(latitude).toFixed(digits) + "°" + (latitude < 0.0 ? "S" : "N");
