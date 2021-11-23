@@ -99,6 +99,8 @@ import TimelineStack from "./TimelineStack";
 import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+
 // import overrides from "../Overrides/defaults.jsx";
 
 interface ConfigParameters {
@@ -465,6 +467,9 @@ export default class Terria {
   @observable
   allowFeatureInfoRequests: boolean = true;
 
+  @observable
+  pickedPosition: Cartesian3 | undefined;
+
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
    * (highest index) handles click interactions with the map
@@ -493,7 +498,7 @@ export default class Terria {
   @observable terrainSplitDirection: ImagerySplitDirection =
     ImagerySplitDirection.NONE;
 
-  @observable depthTestAgainstTerrainEnabled = false;
+  @observable depthTestAgainstTerrainEnabled = true;
 
   @observable stories: any[] = [];
 

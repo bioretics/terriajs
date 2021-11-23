@@ -15,6 +15,8 @@ import Button from "../../../../Styled/Button";
 import Select from "../../../../Styled/Select";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import createZoomToFunction from "../../../../Map/zoomRectangleFromPoint";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
 const CoordsText = props => {
   const {
@@ -104,6 +106,10 @@ const SrsSelection = props => {
     convert,
     conversionList
   } = props;
+
+  useEffect(() => {
+    setSrs(conversionList[0]);
+  }, [isCartographic]);
 
   return (
     <div className={DropdownStyles.section}>
@@ -521,22 +527,6 @@ const CoordsPanel = props => {
     });
   };
 
-  const onLoadPickedCoords = () => {
-    if (terria.pickedFeatures) {
-      const cartographicCoords = Ellipsoid.WGS84.cartesianToCartographic(
-        terria.pickedFeatures.pickPosition
-      );
-
-      const latitude = CesiumMath.toDegrees(cartographicCoords.latitude);
-      const longitude = CesiumMath.toDegrees(cartographicCoords.longitude);
-
-      setInputX(latitude);
-      setInputY(longitude);
-      setCoordsInputTxt(latitude.toFixed(6) + ", " + longitude.toFixed(6));
-      setIsInputCartographic(true);
-    }
-  };
-
   useEffect(() => {
     if (coordsInputTxt && coordsInputTxt !== "") {
       const splitted = coordsInputTxt.toString().split(/[ |,|;]+/g);
@@ -549,11 +539,18 @@ const CoordsPanel = props => {
     }
   }, [coordsInputTxt]);
 
-  /*const isOpen = this.props.viewState.openCoordinateConverterPanel;
-  if (isOpen && this.props.terria.isFeaturePicked) {
-      this.onLoadPickedCoords();
-      this.props.terria.isFeaturePicked = false;
-  }*/
+  useEffect(() => {
+    if (!!terria && !!terria.pickedPosition) {
+      const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
+        terria.pickedPosition
+      );
+      const latitude = CesiumMath.toDegrees(cartographic.latitude).toFixed(6);
+      const longitude = CesiumMath.toDegrees(cartographic.longitude).toFixed(6);
+      if (coordsInputTxt !== `${latitude}, ${longitude}`) {
+        setCoordsInputTxt(`${latitude}, ${longitude}`);
+      }
+    }
+  }, [terria.pickedPosition]);
 
   return (
     <div>

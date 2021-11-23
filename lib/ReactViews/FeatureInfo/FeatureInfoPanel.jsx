@@ -243,11 +243,6 @@ class FeatureInfoPanel extends React.Component {
       that.pinClicked(longitude, latitude);
     };
 
-    const coordinateClicked = () => {
-      this.props.viewState.openCoordinateConverterPanel = true;
-      this.close();
-    };
-
     const locationButtonStyle = isMarkerVisible(this.props.terria)
       ? Styles.btnLocationSelected
       : Styles.btnLocation;
@@ -272,13 +267,6 @@ class FeatureInfoPanel extends React.Component {
                   className={locationButtonStyle}
                 >
                   <Icon glyph={Icon.GLYPHS.location} />
-                </button>
-                <button
-                  type="button"
-                  onClick={coordinateClicked}
-                  className={locationButtonStyle}
-                >
-                  <Icon glyph={Icon.GLYPHS.externalLink} />
                 </button>
               </span>
             )}
@@ -357,6 +345,11 @@ class FeatureInfoPanel extends React.Component {
       ) {
         position = terria.pickedFeatures.pickPosition;
       }
+    }
+
+    // Store position in Terria state
+    if (!!position) {
+      terria.pickedPosition = position;
     }
 
     const locationElements = (
