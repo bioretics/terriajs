@@ -29,6 +29,8 @@ import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import CreateModel from "./Definition/CreateModel";
 import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
+import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 
 interface Options {
   terria: Terria;
@@ -438,7 +440,12 @@ export default class UserDrawing extends MappableMixin(
             }, false),
             material: new Color(0.0, 0.666, 0.843, 0.25),
             outlineColor: new Color(1.0, 1.0, 1.0, 1.0),
-            perPositionHeight: <any>true
+
+            // Clamp to ground polygons of Measure Tool
+            heightReference: new ConstantProperty(
+              HeightReference.CLAMP_TO_GROUND
+            ),
+            perPositionHeight: <any>false
           }
         });
         this.closeLoop = true;
