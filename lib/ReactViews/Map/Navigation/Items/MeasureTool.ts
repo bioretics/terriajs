@@ -15,8 +15,9 @@ import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 
-const EllipsoidTangentPlane = require("terriajs-cesium/Source/Core/EllipsoidTangentPlane");
-const PolygonGeometryLibrary = require("terriajs-cesium/Source/Core/PolygonGeometryLibrary");
+// From require to import
+import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
+import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
 
 interface PropTypes {
   terria: Terria;
@@ -217,7 +218,7 @@ export default class MeasureTool extends MapNavigationItemController {
   onCleanUp() {
     this.totalDistanceMetres = 0;
     this.totalAreaMetresSquared = 0;
-    super.deactivate();
+    //super.deactivate();
   }
 
   @action.bound
@@ -247,7 +248,7 @@ export default class MeasureTool extends MapNavigationItemController {
    */
   deactivate() {
     this.userDrawing.endDrawing();
-    super.deactivate();
+    //super.deactivate();
   }
 
   /**
@@ -255,6 +256,6 @@ export default class MeasureTool extends MapNavigationItemController {
    */
   activate() {
     this.userDrawing.enterDrawMode();
-    super.activate();
+    //super.activate();
   }
 }
