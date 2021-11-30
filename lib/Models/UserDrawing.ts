@@ -53,6 +53,7 @@ export default class UserDrawing extends MappableMixin(
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
   private readonly onPointClicked?: (dataSource: CustomDataSource) => void;
+  private readonly onPointMoved?: (dataSource: CustomDataSource) => void;
   private readonly onCleanUp?: () => void;
   private readonly invisible?: boolean;
   private readonly dragHelper: DragPoints;
@@ -99,6 +100,8 @@ export default class UserDrawing extends MappableMixin(
      */
     this.onPointClicked = options.onPointClicked;
 
+    this.onPointMoved = options.onPointMoved;
+
     /**
      * Callback that occurs on clean up, i.e. when drawing is done or cancelled.
      */
@@ -130,6 +133,9 @@ export default class UserDrawing extends MappableMixin(
 
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, customDataSource => {
+      if (typeof this.onPointMoved === "function") {
+        this.onPointMoved(customDataSource);
+      }
       this.prepareToAddNewPoint();
     });
   }
@@ -300,6 +306,7 @@ export default class UserDrawing extends MappableMixin(
       position: new ConstantPositionProperty(position),
       billboard: <any>{
         image: this.svgPoint,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
         eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
       }
     });

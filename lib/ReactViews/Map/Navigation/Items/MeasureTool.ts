@@ -17,7 +17,8 @@ import MapNavigationItemController from "../../../../ViewModels/MapNavigation/Ma
 
 // From require to import
 import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
-import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
+const PolygonGeometryLibrary = require("terriajs-cesium/Source/Core/PolygonGeometryLibrary")
+  .default;
 
 interface PropTypes {
   terria: Terria;
