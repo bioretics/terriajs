@@ -98,8 +98,8 @@ import ShareDataService from "./ShareDataService";
 import TimelineStack from "./TimelineStack";
 import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
-
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 
 // import overrides from "../Overrides/defaults.jsx";
 
@@ -334,6 +334,15 @@ interface HomeCameraInit {
   west: number;
 }
 
+interface PathSampled {
+  [key: string]: {
+    index: number;
+    totalDistance: number;
+    stepDistances: number[];
+    stepHeights: number[];
+  };
+}
+
 export default class Terria {
   private readonly models = observable.map<string, BaseModel>();
 
@@ -467,8 +476,29 @@ export default class Terria {
   @observable
   allowFeatureInfoRequests: boolean = true;
 
-  @observable
-  pickedPosition: Cartesian3 | undefined;
+  /**
+   * Gets or sets the last position picked by FeatureInfo.
+   * @type {Cartesian3}
+   */
+  @observable pickedPosition: Cartesian3 | undefined;
+
+  /**
+   * Gets or sets the points of a path drawn with the MeasureTool.
+   * @type {Cartographic[]}
+   */
+  @observable pathPoints: Cartographic[] | undefined;
+
+  /**
+   * Gets or sets the distances between stages of a path drawn with the MeasureTool.
+   * @type {number[]}
+   */
+  @observable pathDistances: number[] | undefined;
+
+  /**
+   * Gets or sets the data computed sampling a path drawn with the MeasureTool.
+   * @type {PathSampled}
+   */
+  @observable pathSampled: PathSampled = {};
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
