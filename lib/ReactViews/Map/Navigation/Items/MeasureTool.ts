@@ -10,6 +10,7 @@ import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
+import ViewState from "../../../../ReactViewModels/ViewState";
 import UserDrawing from "../../../../Models/UserDrawing";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -22,6 +23,7 @@ const PolygonGeometryLibrary = require("terriajs-cesium/Source/Core/PolygonGeome
 
 interface PropTypes {
   terria: Terria;
+  viewState: ViewState;
 
   onClose(): void;
 }
@@ -30,6 +32,7 @@ export default class MeasureTool extends MapNavigationItemController {
   static id = "measure-tool";
   static displayName = "MeasureTool";
   readonly terria: Terria;
+  readonly viewState: ViewState;
   @observable
   totalDistanceMetres: number = 0;
   @observable
@@ -43,6 +46,7 @@ export default class MeasureTool extends MapNavigationItemController {
     super();
     const t = i18next.t.bind(i18next);
     this.terria = props.terria;
+    this.viewState = props.viewState;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
       messageHeader: i18next.t("measure.measureTool"),
@@ -50,7 +54,8 @@ export default class MeasureTool extends MapNavigationItemController {
       onPointClicked: this.onPointClicked,
       onPointMoved: this.onPointMoved,
       onCleanUp: this.onCleanUp,
-      onMakeDialogMessage: this.onMakeDialogMessage
+      onMakeDialogMessage: this.onMakeDialogMessage,
+      viewState: props.viewState
     });
     this.onClose = props.onClose;
   }

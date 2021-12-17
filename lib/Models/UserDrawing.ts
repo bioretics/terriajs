@@ -43,6 +43,7 @@ interface Options {
   onPointMoved?: (dataSource: DataSource) => void;
   onCleanUp?: () => void;
   invisible?: boolean;
+  viewState?: ViewState;
 }
 
 export default class UserDrawing extends MappableMixin(
@@ -57,6 +58,7 @@ export default class UserDrawing extends MappableMixin(
   private readonly onCleanUp?: () => void;
   private readonly invisible?: boolean;
   private readonly dragHelper: DragPoints;
+  private readonly viewState?: ViewState;
 
   pointEntities: CustomDataSource;
   otherEntities: CustomDataSource;
@@ -70,6 +72,8 @@ export default class UserDrawing extends MappableMixin(
 
   private mousePointEntity?: Entity;
   private mouseMoveDispose?: IReactionDisposer;
+
+  private disposeClampMeasureLineToGround?: IReactionDisposer;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -131,6 +135,8 @@ export default class UserDrawing extends MappableMixin(
 
     this.invisible = options.invisible;
 
+    this.viewState = options.viewState;
+
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, customDataSource => {
       if (typeof this.onPointMoved === "function") {
@@ -138,6 +144,18 @@ export default class UserDrawing extends MappableMixin(
       }
       this.prepareToAddNewPoint();
     });
+
+    this.disposeClampMeasureLineToGround = reaction(
+      () => this.viewState?.clampMeasureLineToGround,
+      clampMeasureLineToGround => {
+        if (!!this.otherEntities.entities.values[0].polyline) {
+          this.otherEntities.entities.values[0].polyline.clampToGround = new ConstantProperty(
+            clampMeasureLineToGround
+          );
+        }
+      },
+      { equals: (a, b) => a === b }
+    );
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -264,7 +282,7 @@ export default class UserDrawing extends MappableMixin(
           }, false),
 
           // Clamp to ground lines of Measure Tool
-          clampToGround: true,
+          clampToGround: !!this.viewState?.clampMeasureLineToGround,
 
           material: new PolylineGlowMaterialProperty(<any>{
             color: new Color(0.0, 0.0, 0.0, 0.1),
@@ -511,6 +529,10 @@ export default class UserDrawing extends MappableMixin(
 
     if (isDefined(this.mouseMoveDispose)) {
       this.mouseMoveDispose();
+    }
+
+    if (isDefined(this.disposeClampMeasureLineToGround)) {
+      this.disposeClampMeasureLineToGround();
     }
 
     // Allow client to clean up too
