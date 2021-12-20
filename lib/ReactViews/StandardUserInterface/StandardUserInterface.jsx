@@ -44,6 +44,7 @@ import HelpPanel from "../Map/Panels/HelpPanel/HelpPanel";
 import Tool from "../Tools/Tool";
 import Disclaimer from "../Disclaimer";
 import CollapsedNavigation from "../Map/Navigation/Items/OverflowNavigationItem";
+import ElevationPanel from "../Elevation/ElevationPanel";
 
 export const showStoryPrompt = (viewState, terria) => {
   terria.configParameters.showFeaturePrompts &&
@@ -454,6 +455,10 @@ const StandardUserInterface = observer(
                 })}
               >
                 <FeatureInfoPanel
+                  terria={terria}
+                  viewState={this.props.viewState}
+                />
+                <ElevationPanel
                   terria={terria}
                   viewState={this.props.viewState}
                 />

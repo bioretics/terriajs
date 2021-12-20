@@ -44,7 +44,8 @@ export default class PointOnMap extends React.Component<PropsType> {
       }
     });
     props.terria.addModel(pointItem);
-    props.terria.overlays.add(pointItem);
+    //It cause error when using ElevationChart. Why?
+    //props.terria.overlays.add(pointItem);
     this.pointItem = pointItem;
   }
 

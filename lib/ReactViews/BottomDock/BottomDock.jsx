@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import measureElement from "../../ReactViews/HOCs/measureElement";
 import ChartPanel from "../Custom/Chart/ChartPanel";
+import ElevationChartPanel from "../Custom/Chart/ElevationChartPanel";
 import Styles from "./bottom-dock.scss";
 import ChartDisclaimer from "./ChartDisclaimer";
 import Timeline from "./Timeline/Timeline";
@@ -66,6 +67,19 @@ const BottomDock = observer(
             onHeightChange={this.onHeightChange}
             viewState={this.props.viewState}
           />
+          <If
+            condition={
+              this.props.viewState.elevationChartIsVisible &&
+              !!terria.pathPoints &&
+              terria.pathPoints.length > 0
+            }
+          >
+            <ElevationChartPanel
+              terria={terria}
+              onHeightChange={this.onHeightChange}
+              viewState={this.props.viewState}
+            />
+          </If>
           <If condition={top}>
             <Timeline terria={terria} />
           </If>

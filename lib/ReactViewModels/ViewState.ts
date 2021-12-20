@@ -268,11 +268,26 @@ export default class ViewState {
    */
   @observable featureInfoPanelIsCollapsed: boolean = false;
 
-   /**
+  /**
+   * Gets or sets a value indicating whether the ElevationPanel is visible.
+   * @type {Boolean}
+   */
+  @observable elevationPanelIsVisible: boolean = false;
+  /**
+   * Gets or sets a value indicating whether the ElevationPanel is collapsed.
+   * @type {Boolean}
+   */
+  @observable elevationPanelIsCollapsed: boolean = false;
+  /**
+   * Gets or sets a value indicating whether the ElevationChart is visible.
+   * @type {Boolean}
+   */
+  @observable elevationChartIsVisible: boolean = false;
+  /**
    * Gets or sets a value indicating whether the path line drawn by MeasureTool is clamped to ground.
    * @type {Boolean}
    */
-    @observable clampMeasureLineToGround: boolean = true;
+  @observable clampMeasureLineToGround: boolean = true;
 
   /**
    * True if this is (or will be) the first time the user has added data to the map.
