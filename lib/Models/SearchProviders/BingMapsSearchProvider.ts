@@ -38,7 +38,8 @@ export default class BingMapsSearchProvider extends SearchProvider {
     super();
 
     this.terria = options.terria;
-    this.name = i18next.t("viewModels.searchLocations");
+    // this.name = i18next.t("viewModels.searchLocations");
+    this.name = "Bing";
     this.url = defaultValue(options.url, "https://dev.virtualearth.net/");
     if (this.url.length > 0 && this.url[this.url.length - 1] !== "/") {
       this.url += "/";
@@ -200,12 +201,15 @@ function createZoomToFunction(model: BingMapsSearchProvider, resource: any) {
   const [south, west, north, east] = resource.bbox;
   //const rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-  const epsilon = 10e-5;
+  // const epsilon = 10e-5;
 
   let westSouth = Cartographic.fromDegrees(parseFloat(west), parseFloat(south));
   let eastNorth = Cartographic.fromDegrees(parseFloat(east), parseFloat(north));
 
-  const distance = new EllipsoidGeodesic(westSouth, eastNorth).surfaceDistance;
+  /* const distance = new EllipsoidGeodesic(westSouth, eastNorth).surfaceDistance;
+
+  console.log(distance);
+
   if (distance < 50) {
     westSouth = new Cartographic(
       westSouth.longitude - epsilon,
@@ -215,7 +219,7 @@ function createZoomToFunction(model: BingMapsSearchProvider, resource: any) {
       eastNorth.longitude + epsilon,
       eastNorth.latitude + epsilon
     );
-  }
+  } */
 
   const rectangle = Rectangle.fromCartographicArray([westSouth, eastNorth]);
 

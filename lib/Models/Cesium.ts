@@ -646,7 +646,7 @@ export default class Cesium extends GlobeOrMap {
         );
         const terrainProvider = this.scene.globe.terrainProvider;
         // A sufficiently coarse tile level that still has approximately accurate height
-        const level = 6;
+        const level = 9;
         const center = Rectangle.center(target);
 
         // Perform an elevation query at the centre of the rectangle
@@ -656,6 +656,8 @@ export default class Cesium extends GlobeOrMap {
             sampleTerrain(terrainProvider, level, [center])
           );
         } catch {
+          console.log("FALLITOOOO");
+
           // if the request fails just use center with height=0
           terrainSample = center;
         }
