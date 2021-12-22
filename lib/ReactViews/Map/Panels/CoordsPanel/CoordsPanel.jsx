@@ -3,13 +3,13 @@
 import classNames from "classnames";
 import React, { useState, useEffect } from "react";
 import Icon, { StyledIcon } from "../../../../Styled/Icon";
-//import Loader from "../../../Loader";
+// import Loader from "../../../Loader";
 import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
 import Input from "../../../Styled/Input/Input.jsx";
 import DropdownStyles from "../panel.scss";
 import Styles from "./coords-panel.scss";
 
-import clipboard from "clipboard";
+// import clipboard from "clipboard";
 import Box from "../../../../Styled/Box";
 import Button from "../../../../Styled/Button";
 import Select from "../../../../Styled/Select";
@@ -17,6 +17,7 @@ import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import createZoomToFunction from "../../../../Map/zoomRectangleFromPoint";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import PropTypes from "prop-types";
 
 const CoordsText = props => {
   const {
@@ -31,7 +32,7 @@ const CoordsText = props => {
     readonly
   } = props;
 
-  const clipboardBtn = new clipboard(`.btn-copy-${name}`);
+  // const clipboardBtn = new clipboard(`.btn-copy-${name}`);
 
   return (
     <div className={DropdownStyles.section}>
@@ -49,8 +50,8 @@ const CoordsText = props => {
           type="text"
           value={value}
           readOnly={readonly ?? false}
-          //placeholder={this.state.placeholder}
-          //onClick={e => setValue(e)}
+          // placeholder={this.state.placeholder}
+          // onClick={e => setValue(e)}
           onChange={e => setValue(e.target.value)}
           id={name}
         />
@@ -97,7 +98,6 @@ const CoordsText = props => {
 
 const SrsSelection = props => {
   const {
-    name,
     title,
     tooltip,
     isCartographic,
@@ -448,7 +448,6 @@ const CoordsPanel = props => {
           tooltip="Se la finestra 'Informazioni' è aperta le coordinate sono lette da lì e non sono modificabili"
         />
         <SrsSelection
-          name="srs"
           title="Conversione"
           isCartographic={isInputCartographic}
           setSrs={setSrs}
@@ -556,7 +555,7 @@ const CoordsPanel = props => {
     <div>
       <MenuPanel
         theme={dropdownTheme}
-        btnText={false ? null : btnText}
+        btnText={btnText}
         viewState={viewState}
         btnTitle={btnTitle}
         isOpen={isOpen}
@@ -565,7 +564,7 @@ const CoordsPanel = props => {
         modalWidth={modalWidth}
         smallScreen={viewState.useSmallScreenInterface}
         onDismissed={() => {
-          if (true) viewState.shareModalIsVisible = false;
+          viewState.shareModalIsVisible = false;
         }}
         onUserClick={onUserClick}
       >
@@ -575,5 +574,34 @@ const CoordsPanel = props => {
   );
 };
 
-//export default withTranslation()(CoordsPanel);
+CoordsText.propTypes = {
+  name: PropTypes.string,
+  title: PropTypes.string,
+  message: PropTypes.string,
+  tooltip: PropTypes.string,
+  value: PropTypes.string,
+  setValue: PropTypes.func,
+  isCartographic: PropTypes.bool,
+  moveTo: PropTypes.func,
+  readonly: PropTypes.bool
+};
+
+SrsSelection.propTypes = {
+  title: PropTypes.string,
+  tooltip: PropTypes.string,
+  isCartographic: PropTypes.bool,
+  setSrs: PropTypes.func,
+  reset: PropTypes.func,
+  convert: PropTypes.func,
+  conversionList: PropTypes.array
+};
+
+CoordsPanel.propTypes = {
+  terria: PropTypes.object.isRequired,
+  viewState: PropTypes.object.isRequired,
+  modalWidth: PropTypes.number,
+  onUserClick: PropTypes.func
+};
+
+// export default withTranslation()(CoordsPanel);
 export default CoordsPanel;

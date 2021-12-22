@@ -24,15 +24,6 @@ const ElevationPanel = observer(props => {
 
   const close = action(() => {
     viewState.elevationPanelIsVisible = false;
-
-    // give the close animation time to finish before unselecting, to avoid jumpiness
-    /*setTimeout(
-            action(() => {
-                terria.pickedFeatures = undefined;
-                terria.selectedFeature = undefined;
-            }),
-            200
-        );*/
   });
 
   const toggleCollapsed = action(() => {
@@ -48,7 +39,7 @@ const ElevationPanel = observer(props => {
   });
 
   const prettifyNumber = (number, squared) => {
-    if (typeof number == "undefined") {
+    if (typeof number === "undefined") {
       return 0;
     }
 
@@ -81,8 +72,8 @@ const ElevationPanel = observer(props => {
 
   const getBearing = () => {
     if (
-      !!!terria?.cesium?.scene?.globe?.ellipsoid ||
-      !!!terria.pathPoints ||
+      !terria?.cesium?.scene?.globe?.ellipsoid ||
+      !terria.pathPoints ||
       terria.pathPoints.length === 0
     ) {
       return "";
@@ -98,7 +89,7 @@ const ElevationPanel = observer(props => {
   };
 
   const getHeightDifference = () => {
-    if (!!!terria.pathPoints || terria.pathPoints.length === 0) {
+    if (!terria.pathPoints || terria.pathPoints.length === 0) {
       return "";
     }
 

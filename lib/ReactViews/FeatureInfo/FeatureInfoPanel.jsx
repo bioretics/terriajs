@@ -348,7 +348,7 @@ class FeatureInfoPanel extends React.Component {
     }
 
     // Store position in Terria state
-    if (!!position) {
+    if (position) {
       terria.pickedPosition = position;
     }
 

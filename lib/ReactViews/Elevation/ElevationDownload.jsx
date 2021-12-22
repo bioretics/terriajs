@@ -9,6 +9,7 @@ import DataUri from "../../Core/DataUri";
 import Dropdown from "../Generic/Dropdown";
 import Icon from "../../Styled/Icon";
 import Styles from "./elevation-download.scss";
+import PropTypes from "prop-types";
 
 const ElevationDownload = props => {
   const { data, name, ellipsoid } = props;
@@ -23,7 +24,7 @@ const ElevationDownload = props => {
         label: "CSV"
       },
       {
-        href: !!kml
+        href: kml
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
               kml
@@ -41,7 +42,7 @@ const ElevationDownload = props => {
   };
 
   const generateKml = async data => {
-    if (!!!data || !!!data.pathPoints) {
+    if (!data || !data.pathPoints) {
       return;
     }
     const output = {
@@ -59,12 +60,12 @@ const ElevationDownload = props => {
         })
       })
     );
-    let res = await exportKml(output);
+    const res = await exportKml(output);
     return res.kml;
   };
 
   const generateJson = data => {
-    if (!!!data || !!!data.pathPoints) {
+    if (!data || !data.pathPoints) {
       return;
     }
 
@@ -80,7 +81,7 @@ const ElevationDownload = props => {
   };
 
   const generateCsvData = data => {
-    if (!!!data || !!!data.pathPoints) {
+    if (!data || !data.pathPoints) {
       return;
     }
     const rows = [Object.keys(data.pathPoints[0]).join(",")];
@@ -102,7 +103,7 @@ const ElevationDownload = props => {
     </span>
   );
 
-  if (!!ellipsoid) {
+  if (ellipsoid) {
     generateKml(data).then(res => {
       setKml(res);
     });
@@ -123,6 +124,12 @@ const ElevationDownload = props => {
       Download
     </Dropdown>
   );
+};
+
+ElevationDownload.propTypes = {
+  data: PropTypes.object,
+  name: PropTypes.string,
+  ellipsoid: PropTypes.object
 };
 
 export default ElevationDownload;

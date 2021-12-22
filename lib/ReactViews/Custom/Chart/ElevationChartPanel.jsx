@@ -4,7 +4,6 @@ import { values } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
 import React from "react";
-//import { withTranslation } from "react-i18next";
 import defined from "terriajs-cesium/Source/Core/defined";
 import Icon from "../../../Styled/Icon";
 import Chart from "./BottomDockChart";
@@ -42,7 +41,7 @@ class ElevationChartPanel extends React.Component {
       !!this.props.terria?.pathPoints &&
       this.props.terria.pathPoints.slice().length > 0
     ) {
-      /*const pointItem = new GeoJsonCatalogItem(createGuid(), this.props.terria);
+      /* const pointItem = new GeoJsonCatalogItem(createGuid(), this.props.terria);
       pointItem.setTrait(
         CommonStrata.user,
         "style",
@@ -68,7 +67,7 @@ class ElevationChartPanel extends React.Component {
       pointItem.setTrait(CommonStrata.user, "isOpen", true);
       pointItem.setTrait(CommonStrata.underride, "name", "marco");
       this.props.terria.addModel(pointItem);
-      this.props.terria.overlays.add(pointItem);*/
+      this.props.terria.overlays.add(pointItem); */
 
       const pathDistances = this.props.terria.pathDistances.slice();
       const y = this.props.terria.pathPoints
@@ -86,7 +85,7 @@ class ElevationChartPanel extends React.Component {
             .toFixed(2),
           y: h
         })),
-        //"pointOnMap": points.map(p => ({ "latitude": p.latitude, "longitude": p.longitude })),
+        // "pointOnMap": points.map(p => ({ "latitude": p.latitude, "longitude": p.longitude })),
         key: "path",
         type: "lineAndPoint",
         glyphStyle: "circle",
