@@ -22,11 +22,12 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
+import MeasurableMixin from "../../../ModelMixins/MeasurableMixin";
 
 const kmzRegex = /\.kmz$/i;
 
-class KmlCatalogItem extends MappableMixin(
-  UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+class KmlCatalogItem extends MeasurableMixin(
+  MappableMixin(UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits))))
 ) {
   static readonly type = "kml";
   get type() {
@@ -177,6 +178,14 @@ class KmlCatalogItem extends MappableMixin(
         }
       });
     }
+  }
+
+  @computed get canUseAsPath() {
+    return false;
+  }
+
+  @computed get asPath() {
+    return [{}];
   }
 }
 

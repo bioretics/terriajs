@@ -378,6 +378,27 @@ const ViewingControls = observer(
               </ViewingControlMenuButton>
             </li>
           </If>
+          <If
+            condition={
+              (item instanceof GeoJsonCatalogItem ||
+                item instanceof KmlCatalogItem ||
+                item instanceof OgrCatalogItem ||
+                item instanceof GpxCatalogItem) &&
+              item.canUseAsPath()
+            }
+          >
+            <li>
+              <ViewingControlMenuButton
+                onClick={() => runInAction(() => this.searchItem())}
+                title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+              >
+                <BoxViewingControl>
+                  <StyledIcon glyph={Icon.GLYPHS.search} />
+                  <span>Percorso</span>
+                </BoxViewingControl>
+              </ViewingControlMenuButton>
+            </li>
+          </If>
           <li>
             <ViewingControlMenuButton
               onClick={this.removeFromMap}
