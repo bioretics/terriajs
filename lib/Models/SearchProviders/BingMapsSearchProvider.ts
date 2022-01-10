@@ -15,7 +15,7 @@ import {
   Category,
   SearchAction
 } from "../../Core/AnalyticEvents/analyticEvents";
-import { Cartographic, EllipsoidGeodesic } from "terriajs-cesium";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 
 interface BingMapsSearchProviderOptions {
   terria: Terria;
@@ -45,7 +45,10 @@ export default class BingMapsSearchProvider extends SearchProvider {
       this.url += "/";
     }
     this.key = options.key;
-    this.flightDurationSeconds = defaultValue(options.flightDurationSeconds, 3);
+    this.flightDurationSeconds = defaultValue(
+      options.flightDurationSeconds,
+      3.0
+    );
     this.primaryCountry = defaultValue(options.primaryCountry, "Italy");
     this.culture = defaultValue(options.culture, "it");
 
@@ -201,26 +204,8 @@ function createZoomToFunction(model: BingMapsSearchProvider, resource: any) {
   const [south, west, north, east] = resource.bbox;
   //const rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-  // const epsilon = 10e-5;
-
   let westSouth = Cartographic.fromDegrees(parseFloat(west), parseFloat(south));
   let eastNorth = Cartographic.fromDegrees(parseFloat(east), parseFloat(north));
-
-  /* const distance = new EllipsoidGeodesic(westSouth, eastNorth).surfaceDistance;
-
-  console.log(distance);
-
-  if (distance < 50) {
-    westSouth = new Cartographic(
-      westSouth.longitude - epsilon,
-      westSouth.latitude - epsilon
-    );
-    eastNorth = new Cartographic(
-      eastNorth.longitude + epsilon,
-      eastNorth.latitude + epsilon
-    );
-  } */
-
   const rectangle = Rectangle.fromCartographicArray([westSouth, eastNorth]);
 
   return function() {
