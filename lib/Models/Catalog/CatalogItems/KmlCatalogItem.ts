@@ -19,10 +19,10 @@ import UrlMixin from "../../../ModelMixins/UrlMixin";
 import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import MeasurableMixin from "../../../ModelMixins/MeasurableMixin";
+import Entity from "terriajs-cesium/Source/DataSources/Entity";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -181,11 +181,39 @@ class KmlCatalogItem extends MeasurableMixin(
   }
 
   @computed get canUseAsPath() {
+    if (
+      this._dataSource &&
+      this._dataSource.entities &&
+      this._dataSource.entities.values &&
+      this._dataSource.entities.values.length > 0
+    ) {
+      const items = this._dataSource.entities.values.filter(
+        elem => elem && typeof elem.polyline !== "undefined"
+      );
+      if (
+        items.length == 1 &&
+        items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1
+      ) {
+        return true;
+      }
+    }
     return false;
   }
 
-  @computed get asPath() {
-    return [{}];
+  computePath() {
+    const items: Entity[] =
+      this?._dataSource?.entities?.values.filter(
+        elem => elem && typeof elem.polyline !== "undefined"
+      ) ?? [];
+    const coordinates: Cartesian3[] = items[0]?.polyline?.positions?.getValue(
+      JulianDate.now()
+    );
+    if (coordinates && coordinates.length > 0) {
+      const positions: Cartographic[] = coordinates.map(elem =>
+        Cartographic.fromCartesian(elem)
+      );
+      this.asPath(positions);
+    }
   }
 }
 

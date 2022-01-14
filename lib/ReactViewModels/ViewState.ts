@@ -9,6 +9,7 @@ import {
 import { Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import CesiumEvent from "terriajs-cesium/Source/Core/Event";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import addedByUser from "../Core/addedByUser";
 import { Category, HelpAction } from "../Core/AnalyticEvents/analyticEvents";
 import Result from "../Core/Result";
@@ -323,6 +324,7 @@ export default class ViewState {
   private _previewedItemIdSubscription: IReactionDisposer;
   private _workbenchHasTimeWMSSubscription: IReactionDisposer;
   private _storyBeforeUnloadSubscription: IReactionDisposer;
+  private _elevationPanelIsVisibleSubscription: IReactionDisposer;
   private _disclaimerHandler: DisclaimerHandler;
 
   constructor(options: ViewStateOptions) {
@@ -443,6 +445,17 @@ export default class ViewState {
       }
     );
 
+    this._elevationPanelIsVisibleSubscription = reaction(
+      () => this.terria.pathPoints,
+      (pathPoints: Cartographic[] | undefined) => {
+        if (defined(pathPoints) && pathPoints && pathPoints.length > 0) {
+          this.elevationPanelIsVisible = true;
+        } else {
+          this.elevationPanelIsVisible = false;
+        }
+      }
+    );
+
     const handleWindowClose = (e: BeforeUnloadEvent) => {
       // Cancel the event
       e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
@@ -471,6 +484,7 @@ export default class ViewState {
     this._storyPromptSubscription();
     this._previewedItemIdSubscription();
     this._workbenchHasTimeWMSSubscription();
+    this._elevationPanelIsVisibleSubscription();
     this._disclaimerHandler.dispose();
     this.searchState.dispose();
   }

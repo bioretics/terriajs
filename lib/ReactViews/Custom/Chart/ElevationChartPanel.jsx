@@ -129,9 +129,6 @@ class ElevationChartPanel extends React.Component {
       };
       chartItems.push(itemSampled);
 
-      console.log(item.domain.y);
-      console.log(itemSampled.domain.y);
-
       this.props.terria.currentViewer.notifyRepaintRequired();
     }
 

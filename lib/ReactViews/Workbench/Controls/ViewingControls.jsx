@@ -37,6 +37,10 @@ import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
 
+import KmlCatalogItem from "../../../Models/Catalog/CatalogItems/KmlCatalogItem";
+import GeoJsonCatalogItem from "../../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import GpxCatalogItem from "../../../Models/Catalog/CatalogItems/GpxCatalogItem";
+
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
   left: true,
@@ -258,6 +262,11 @@ const ViewingControls = observer(
       });
     },
 
+    computePath() {
+      const { item, viewState } = this.props;
+      item.computePath();
+    },
+
     async previewItem() {
       let item = this.props.item;
       // If this is a chartable item opened from another catalog item, get the info of the original item.
@@ -382,14 +391,14 @@ const ViewingControls = observer(
             condition={
               (item instanceof GeoJsonCatalogItem ||
                 item instanceof KmlCatalogItem ||
-                item instanceof OgrCatalogItem ||
+                //item instanceof OgrCatalogItem ||
                 item instanceof GpxCatalogItem) &&
-              item.canUseAsPath()
+              item.canUseAsPath
             }
           >
             <li>
               <ViewingControlMenuButton
-                onClick={() => runInAction(() => this.searchItem())}
+                onClick={() => runInAction(() => this.computePath())}
                 title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
               >
                 <BoxViewingControl>
