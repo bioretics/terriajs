@@ -133,6 +133,10 @@ class KmlCatalogItem extends MeasurableMixin(
           }
         }
 
+        if (isDefined(entity.polyline)) {
+          entity.polyline.width = new ConstantProperty(4);
+        }
+
         // Clamp to ground
         if (isDefined(entity.polyline)) {
           entity.polyline.clampToGround = new ConstantProperty(true);

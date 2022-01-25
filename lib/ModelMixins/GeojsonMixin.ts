@@ -719,7 +719,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
         polygonStroke: getColor(this.terria.baseMapContrastColor),
         polylineStroke: getRandomCssColor(this.name ?? ""),
         markerStrokeWidth: 1,
-        polylineStrokeWidth: 2,
+        polylineStrokeWidth: 4,
         polygonStrokeWidth: 1,
         fill: getRandomCssColor((this.name ?? "") + " fill"),
         fillAlpha: 0.75
