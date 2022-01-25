@@ -1,6 +1,8 @@
 @import "~terriajs-variables";
 @import "../../../../Sass/common/mixins";
 
+@include empty-module("file-input");
+
 .share-panel {
   font-size: $font-size-mid-small;
 }
@@ -165,4 +167,12 @@
     text-decoration: underline;
     cursor: pointer;
   }
+}
+
+.input {
+  width: 100%;
+  opacity: 0;
+  position: absolute;
+  padding: $padding;
+  cursor: pointer;
 }

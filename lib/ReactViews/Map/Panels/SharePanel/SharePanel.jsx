@@ -27,6 +27,7 @@ import {
   Category,
   ShareAction
 } from "../../../../Core/AnalyticEvents/analyticEvents";
+import FileInput from "./FileInput";
 
 const SharePanel = observer(
   createReactClass({
@@ -315,6 +316,19 @@ const SharePanel = observer(
       return this.props.terria.catalog.userAddedDataGroup.members.length > 0;
     },
 
+    /* Load map config from a file */
+    loadMapFromFile() {
+      fileDialog({ multiple: false, accept: ".geo3d" }).then(file => {
+        if (file.length == 1) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            window.open(e.target.result, "_self");
+          };
+          reader.readAsText(file[0]);
+        }
+      });
+    },
+
     renderWarning() {
       const unshareableItems = this.props.terria.catalog.userAddedDataGroup.memberModels.filter(
         model => !isShareable(this.props.terria)(model.uniqueId)
@@ -470,6 +484,39 @@ const SharePanel = observer(
                   <Loader message={t("share.creatingPrintView")} />
                 )}
               </div>
+            </div>
+          </div>
+          <div className={DropdownStyles.section}>
+            <div>Salva Mappa</div>
+            <div className={Styles.explanation}>
+              Salva o carica una mappa da file
+            </div>
+            {/*<div style={{"margin-top": "12px"}}>  
+                <a id="save_button" className={Styles.printButton} href={"data:text/plain;charset=utf-8," + encodeURIComponent(this.state.shareUrl)} download="mappa.geo3d">Salva</a>
+                <input
+                  type="file"
+                  onChange={this.handleChange}
+                  accept=".geo3d"
+                  className={Styles.input}
+                />
+                <label className={classNames(Styles.printButton)}>
+                  Carica
+                </label>*/}
+            <div style={{ "margin-top": "12px" }}>
+              <form>
+                <a
+                  id="save_button"
+                  className={Styles.printButton}
+                  href={
+                    "data:text/plain;charset=utf-8," +
+                    encodeURIComponent(this.state.shareUrl)
+                  }
+                  download="mappa.geo3d"
+                >
+                  Salva
+                </a>
+              </form>
+              <FileInput label="Carica" accept=".geo3d" onChange={e => {}} />
             </div>
           </div>
           <div

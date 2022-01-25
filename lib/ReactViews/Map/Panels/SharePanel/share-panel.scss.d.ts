@@ -20,10 +20,13 @@ interface CssExports {
   'dropdown-inner': string;
   'dropdownInner': string;
   'explanation': string;
+  'file-input': string;
+  'fileInput': string;
   'format-button': string;
   'formatButton': string;
   'img--share': string;
   'imgShare': string;
+  'input': string;
   'link': string;
   'link-wrapper': string;
   'linkWrapper': string;
