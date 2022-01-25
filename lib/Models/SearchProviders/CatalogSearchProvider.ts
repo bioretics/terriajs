@@ -42,7 +42,11 @@ export function loadAndSearchCatalogRecursively(
       //   includeStrata: [CommonStrata.definition]
       // });
       autorun(reaction => {
-        const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${modelToSave.description}`;
+        // Search also in catalog item info.
+        const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${
+          modelToSave.description
+        } ${JSON.stringify(modelToSave.infoAsObject)}`;
+
         const matchesString =
           searchString.toLowerCase().indexOf(searchTextLowercase) !== -1;
         resultMap.set(model.uniqueId, matchesString);
@@ -135,6 +139,9 @@ export default class CatalogSearchProvider extends SearchProvider {
       return Promise.resolve();
     }
 
+    console.log("eeee");
+    console.log(searchText);
+
     // Load catalogIndex if needed
     if (this.terria.catalogIndex && !this.terria.catalogIndex.loadPromise) {
       try {
@@ -159,6 +166,8 @@ export default class CatalogSearchProvider extends SearchProvider {
         const results = await this.terria.catalogIndex.search(searchText);
         runInAction(() => (searchResults.results = results));
       } else {
+        console.log("nnnn");
+
         await loadAndSearchCatalogRecursively(
           this.terria.modelValues,
           searchText.toLowerCase(),
