@@ -1308,7 +1308,7 @@
     "closeDataPanel": "Chiudi pannello dati",
     "load": "Carica dati locali/web",
     "browse": "Sfoglia...",
-    "addDataBtnText": "Esplora i dati della mappa",
+    "addDataBtnText": "Esplora il catalogo",
     "localFile": "<0>Passo 2:</0> Selezionare il file",
     "note": "<0>Nota: </0>I dati aggiunti in questo modo non vengono salvati o resi visibili agli altri.",
     "infoText": "<0>Trascina un file qui per visualizzarlo localmente sulla mappa</0><1>(non sarà salvato o caricato su internet)</1>",
