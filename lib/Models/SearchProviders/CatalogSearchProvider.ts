@@ -139,9 +139,6 @@ export default class CatalogSearchProvider extends SearchProvider {
       return Promise.resolve();
     }
 
-    console.log("eeee");
-    console.log(searchText);
-
     // Load catalogIndex if needed
     if (this.terria.catalogIndex && !this.terria.catalogIndex.loadPromise) {
       try {
@@ -166,8 +163,6 @@ export default class CatalogSearchProvider extends SearchProvider {
         const results = await this.terria.catalogIndex.search(searchText);
         runInAction(() => (searchResults.results = results));
       } else {
-        console.log("nnnn");
-
         await loadAndSearchCatalogRecursively(
           this.terria.modelValues,
           searchText.toLowerCase(),

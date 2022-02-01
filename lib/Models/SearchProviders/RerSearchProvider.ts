@@ -34,7 +34,7 @@ export default class RerSearchProvider extends SearchProvider {
     super();
 
     this.terria = options.terria;
-    this.name = "RER";
+    this.name = "Servizi RER";
 
     /*if (this.url.length > 0 && this.url[this.url.length - 1] !== "/") {
       this.url += "/";
