@@ -462,11 +462,30 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
             this._dataSource = undefined;
           });
         } else {
-          const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
-          runInAction(() => {
-            this._dataSource = dataSource;
-            this._imageryProvider = undefined;
-          });
+          if (!this.appendData || !this._dataSource) {
+            const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
+            runInAction(() => {
+              this._dataSource = dataSource;
+              this._imageryProvider = undefined;
+            });
+          } else {
+            const collection = this._dataSource.entities;
+
+            for (let i = 0; i < geoJsonWgs84.features.length; ++i) {
+              const elem = geoJsonWgs84.features[i];
+
+              if (collection.getById(elem.id?.toString() ?? "")) continue;
+
+              this.addPerPropertyStyleToGeoJsonSingle(elem);
+
+              GeoJsonDataSource.load(elem, { clampToGround: true }).then(
+                loaded => {
+                  const entity = loaded.entities.values[0];
+                  collection.add(entity);
+                }
+              );
+            }
+          }
         }
       } catch (e) {
         throw networkRequestError(
@@ -513,6 +532,45 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                 // @ts-ignore - TS can't tell that `trait` is of the correct index type for style
                 matched.style[trait] ?? featureProperties[trait];
             }
+          }
+        }
+      }
+    }
+
+    @action
+    private addPerPropertyStyleToGeoJsonSingle(feature: Feature) {
+      const featureProperties = feature.properties;
+      if (featureProperties === null) {
+        return;
+      }
+
+      const featurePropertiesEntires = Object.entries(featureProperties);
+
+      const matchedStyles = this.perPropertyStyles.filter(style => {
+        const stylePropertiesEntries = Object.entries(style.properties ?? {});
+
+        // For every key-value pair in the style, is there an identical one in the feature's properties?
+        return stylePropertiesEntries.every(
+          ([styleKey, styleValue]) =>
+            featurePropertiesEntires.find(([featKey, featValue]) => {
+              if (typeof styleValue === "string" && !style.caseSensitive) {
+                featKey === styleKey &&
+                  (typeof featValue === "string"
+                    ? featValue
+                    : featValue.toString()
+                  ).toLowerCase() === styleValue.toLowerCase();
+              }
+              return featKey === styleKey && featValue === styleValue;
+            }) !== undefined
+        );
+      });
+
+      if (matchedStyles !== undefined) {
+        for (let matched of matchedStyles) {
+          for (let trait of Object.keys(matched.style.traits)) {
+            featureProperties[trait] =
+              // @ts-ignore - TS can't tell that `trait` is of the correct index type for style
+              matched.style[trait] ?? featureProperties[trait];
           }
         }
       }

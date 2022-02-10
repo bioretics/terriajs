@@ -139,4 +139,12 @@ export class GeoJsonTraits extends mixTraits(
       \`\`\``
   })
   czmlTemplate?: JsonObject;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "Append data",
+    description:
+      "If 'true' append new data to old, if 'false' instead of replace them"
+  })
+  appendData: boolean = false;
 }
