@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { computed, runInAction } from "mobx";
+import { computed, runInAction, toJS } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
@@ -36,6 +36,18 @@ import GeoJsonCatalogItem from "../CatalogItems/GeoJsonCatalogItem";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import { getLineStyleCesium } from "./esriLineStyle";
 import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
+import { RerLabelTraits } from "../../../Traits/TraitsClasses/RerFeatureServerTraits";
+import {
+  LabelGraphics,
+  VerticalOrigin,
+  Cartesian2,
+  Scene,
+  Rectangle,
+  DistanceDisplayCondition
+} from "terriajs-cesium";
+import CesiumEvent from "terriajs-cesium/Source/Core/Event";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import { FeatureCollectionWithCrs } from "../../../ModelMixins/GeojsonMixin";
 
 const proj4 = require("proj4").default;
 
@@ -165,6 +177,12 @@ interface Extent {
   spatialReference?: SpatialReference;
 }
 
+enum CameraPitchState {
+  normal = 0,
+  tilted = 1,
+  landed = 2
+}
+
 class FeatureServerStratum extends LoadableStratum(
   ArcGisFeatureServerCatalogItemTraits
 ) {
@@ -194,6 +212,16 @@ class FeatureServerStratum extends LoadableStratum(
 
   get geoJsonItem(): GeoJsonCatalogItem {
     return this._geoJsonItem;
+  }
+
+  mergeData(newData: FeatureCollectionWithCrs) {
+    //console.log("mergeData");
+
+    this._geoJsonItem.setTrait(
+      CommonStrata.user,
+      "geoJsonData",
+      newData as any
+    );
   }
 
   static async load(item: ArcGisFeatureServerCatalogItem) {
@@ -226,7 +254,15 @@ class FeatureServerStratum extends LoadableStratum(
     );
     let tempEsriJson: any = null;
     const esriJson = await loadGeoJson(item);
-    const geoJsonData = featureDataToGeoJson(esriJson.layers[0]);
+
+    let isMapServerQuery = false;
+    runInAction(() => {
+      isMapServerQuery = item.isMapServerQuery;
+    });
+
+    const geoJsonData = featureDataToGeoJson(
+      isMapServerQuery ? esriJson : esriJson.layers[0]
+    );
     if (!geoJsonData) {
       throw TerriaError.from("Failed to convert ESRI json data into GeoJSON");
     }
@@ -236,8 +272,49 @@ class FeatureServerStratum extends LoadableStratum(
       geoJsonData as any
     );
 
+    runInAction(() => {
+      // Add appendData
+      geoJsonItem.setTrait(
+        CommonStrata.definition,
+        "appendData",
+        item.rerFeatureService.appendData as any
+      );
+
+      // Add style
+      geoJsonItem.setTrait(
+        CommonStrata.definition,
+        "style",
+        item.rerFeatureService.style as any
+      );
+
+      // Add perPropertyStyles
+      geoJsonItem.setTrait(
+        CommonStrata.definition,
+        "perPropertyStyles",
+        item.rerFeatureService.perPropertyStyles as any
+      );
+    });
+
     (await geoJsonItem.loadMetadata()).throwIfError();
     const featureServer = await loadMetadata(item);
+
+    // Add drawingInfo Renderer
+    runInAction(() => {
+      if (
+        !item.useStyleInformationFromService &&
+        item.rerFeatureService.drawingInfo
+      ) {
+        featureServer.drawingInfo.renderer = toJS(
+          item.rerFeatureService.drawingInfo
+        );
+
+        item.setTrait(
+          CommonStrata.definition,
+          "useStyleInformationFromService",
+          true
+        );
+      }
+    });
 
     const stratum = new FeatureServerStratum(
       item,
@@ -395,17 +472,159 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
     return i18next.t("models.arcGisFeatureServerCatalogItem.name");
   }
 
-  protected forceLoadMetadata(): Promise<void> {
-    return FeatureServerStratum.load(this).then(stratum => {
-      runInAction(() => {
-        this.strata.set(FeatureServerStratum.stratumName, stratum);
+  protected removeCesiumMoveEndEventListener:
+    | CesiumEvent.RemoveCallback
+    | undefined;
+  protected removeLeafletMoveEndEventListener: boolean = false;
+  public level = 0;
+  public bbox = new Rectangle();
+  protected _oldLevel = 0;
+  protected _cameraPitch: number = CameraPitchState.normal;
+  protected _cameraPitchIsChanged = true;
+  protected _displayConditions: { [key: number]: ConstantProperty } = {};
+
+  protected checkReload() {
+    let changed = false;
+
+    if (this.terria.cesium?.scene) {
+      let level = this.terria.cesium.getZoomLevel();
+      if (!level) return;
+      if (level > this.rerFeatureService.levelMax)
+        level = this.rerFeatureService.levelMax;
+      if (this.level !== level) {
+        this.level = level;
+        changed = true;
+      }
+
+      const pitch = this.terria.cesium.scene.camera.pitch;
+      if (
+        pitch >=
+        -CesiumMath.toRadians(
+          this.rerFeatureService.displayFilter.cameraLandedAngle
+        )
+      ) {
+        if (this._cameraPitch !== CameraPitchState.landed) {
+          this._cameraPitch = CameraPitchState.landed;
+          this._cameraPitchIsChanged = true;
+        }
+      } else if (
+        pitch >=
+        -CesiumMath.toRadians(
+          this.rerFeatureService.displayFilter.cameraTiltedAngle
+        )
+      ) {
+        if (this._cameraPitch !== CameraPitchState.tilted) {
+          this._cameraPitch = CameraPitchState.tilted;
+          this._cameraPitchIsChanged = true;
+        }
+      } else if (this._cameraPitch !== CameraPitchState.normal) {
+        this._cameraPitch = CameraPitchState.normal;
+        this._cameraPitchIsChanged = true;
+      }
+
+      const newRect = this.terria.cesium.getCurrentCameraView().rectangle;
+      if (newRect && !this.bbox.equalsEpsilon(newRect, newRect.width * 0.03)) {
+        this.bbox = newRect;
+        changed = true;
+      }
+    } else if (this.terria.leaflet) {
+      let level = this.terria.leaflet.getZoomLevel();
+      if (!level) return;
+      if (level > this.rerFeatureService.levelMax)
+        level = this.rerFeatureService.levelMax;
+      if (this.level !== level) {
+        this.level = level;
+        changed = true;
+      }
+
+      const newRect = this.terria.leaflet.getCurrentCameraView().rectangle;
+      if (newRect && !this.bbox.equalsEpsilon(newRect, newRect.width * 0.03)) {
+        this.bbox = newRect;
+        changed = true;
+      }
+    }
+
+    if (changed && this.strata.has(FeatureServerStratum.stratumName)) {
+      console.log(
+        `rerFeatureService = zoom level: ${this.level} - cameraPitchState: ${this._cameraPitch}`
+      );
+
+      this.forceLoadMetadata().then(() => {
+        this.forceLoadMapItems();
       });
+    }
+  }
+
+  protected forceLoadMetadata(): Promise<void> {
+    console.log("forceLoadMetadata");
+
+    if (!this.removeCesiumMoveEndEventListener && this.terria.cesium) {
+      //console.log("cesium");
+
+      const that = this;
+      this.removeCesiumMoveEndEventListener = this.terria.cesium.scene.camera.moveEnd.addEventListener(
+        function() {
+          runInAction(() => {
+            that.checkReload();
+          });
+        }
+      );
+      //runInAction(() => { that.checkReload() });
+    }
+    if (!this.removeLeafletMoveEndEventListener && this.terria.leaflet) {
+      //console.log("leaf");
+
+      const that = this;
+      this.terria.leaflet.map.on("zoomlevelschange", function() {
+        runInAction(() => {
+          that.checkReload();
+        });
+      });
+      this.terria.leaflet.map.on("moveend", function() {
+        runInAction(() => {
+          that.checkReload();
+        });
+      });
+      this.removeLeafletMoveEndEventListener = true;
+    }
+    runInAction(() => {
+      this.checkReload();
     });
+    if (this.strata.has(FeatureServerStratum.stratumName)) {
+      //console.log("strato vecchio");
+
+      return loadGeoJson(this).then(esriJson => {
+        const geoJsonData = featureDataToGeoJson(esriJson);
+        const oldStratum = <FeatureServerStratum>(
+          this.strata.get(FeatureServerStratum.stratumName)
+        );
+        if (oldStratum && geoJsonData) {
+          oldStratum.mergeData(geoJsonData);
+        }
+      });
+    } else {
+      //console.log("strato nuovo");
+
+      return FeatureServerStratum.load(this).then(stratum => {
+        runInAction(() => {
+          this.strata.set(FeatureServerStratum.stratumName, stratum);
+        });
+      });
+    }
   }
 
   protected async forceLoadMapItems() {
     const that = this;
     if (isDefined(that.geoJsonItem)) {
+      console.log("item.forceLoadMapItems");
+
+      const itemsToSuspend = that.mapItems.filter(
+        item => item instanceof GeoJsonDataSource
+      );
+      if (itemsToSuspend && itemsToSuspend.length > 0) {
+        (<GeoJsonDataSource>itemsToSuspend[0]).entities.suspendEvents();
+      }
+
       (await that.geoJsonItem.loadMapItems()).throwIfError();
       const featureServerData = that.featureServerData;
       if (
@@ -418,7 +637,7 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
         that.mapItems.forEach(mapItem => {
           if (!(mapItem instanceof GeoJsonDataSource)) return;
           const entities = mapItem.entities;
-          entities.suspendEvents();
+          //entities.suspendEvents();
 
           // A 'simple' renderer only applies a single style to all features
           if (rendererType === "simple") {
@@ -456,8 +675,156 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
             });
           }
 
-          entities.resumeEvents();
+          //entities.resumeEvents();
         });
+      }
+
+      console.log("pronto");
+
+      if (that.rerFeatureService) {
+        runInAction(() => {
+          if (that._displayConditions) {
+            that.rerFeatureService.displayFilter.tiltedDisplayDistanceCondition.forEach(
+              element => {
+                that._displayConditions[element.level] = new ConstantProperty(
+                  new DistanceDisplayCondition(0, element.distance)
+                );
+              }
+            );
+          }
+
+          const isCameraLanded = that._cameraPitch === CameraPitchState.landed;
+          const showLabels =
+            that.rerFeatureService.labels &&
+            that.rerFeatureService.labels.length > 0;
+          const levelField = that.rerFeatureService.levelField;
+          that.mapItems.forEach(mapItem => {
+            if (!(mapItem instanceof GeoJsonDataSource)) return;
+            const entities = mapItem.entities;
+
+            console.log(entities.values.length);
+
+            entities.values.forEach(function(entity) {
+              if (entity.billboard) {
+                if (
+                  !isCameraLanded &&
+                  entity.properties &&
+                  entity.properties[levelField].getValue() <= that.level
+                ) {
+                  if (showLabels) {
+                    // Labels
+                    const labelClass:
+                      | RerLabelTraits
+                      | undefined = that.rerFeatureService.labels.find(
+                      (elem: RerLabelTraits) =>
+                        entity?.properties &&
+                        entity.properties[levelField] &&
+                        entity.properties[levelField] >= elem.levelMin &&
+                        entity.properties[levelField] < elem.levelMax
+                    );
+
+                    if (labelClass?.show && !entity.label) {
+                      entity.label = new LabelGraphics({
+                        text: entity.properties[labelClass.labelField],
+                        font: labelClass.font,
+                        fillColor: Color.fromCssColorString(
+                          labelClass.fillColor
+                        ),
+                        backgroundColor: Color.fromCssColorString(
+                          labelClass.backgroundColor
+                        ),
+                        showBackground:
+                          typeof labelClass.backgroundColor !== "undefined" &&
+                          labelClass.backgroundColor !== "transparent"
+                            ? true
+                            : false,
+                        verticalOrigin: VerticalOrigin.TOP,
+                        show: true,
+                        heightReference: HeightReference.CLAMP_TO_GROUND,
+                        disableDepthTestDistance: Number.POSITIVE_INFINITY
+                      });
+                    }
+                  }
+
+                  entity.show = true;
+                  entity.billboard.verticalOrigin = new ConstantProperty(
+                    VerticalOrigin.BOTTOM
+                  );
+                  entity.billboard.disableDepthTestDistance = new ConstantProperty(
+                    Number.POSITIVE_INFINITY
+                  );
+
+                  if (that.terria.cesium && that._cameraPitchIsChanged) {
+                    const lvl = entity.properties[levelField].getValue();
+                    entity.billboard.distanceDisplayCondition =
+                      that._cameraPitch === CameraPitchState.normal
+                        ? undefined
+                        : that._displayConditions[lvl];
+                    if (entity.label) {
+                      entity.label.distanceDisplayCondition =
+                        entity.billboard.distanceDisplayCondition;
+                    }
+                  }
+                } else {
+                  entity.show = false;
+                }
+              }
+            });
+
+            if (that._cameraPitchIsChanged) {
+              that._cameraPitchIsChanged = false;
+            }
+          });
+        });
+      }
+
+      // Label
+      /*runInAction(() => {
+        if (that.rerFeatureService && that.rerFeatureService.labels && that.rerFeatureService.labels.length > 0) {
+          const levelField = that.rerFeatureService.levelField;
+          that.mapItems.forEach(mapItem => {
+            if (!(mapItem instanceof GeoJsonDataSource)) return;
+            const entities = mapItem.entities;
+            //entities.suspendEvents();
+
+            entities.values.forEach(function (entity) {
+              const labelClass: RerLabelTraits | undefined = that.rerFeatureService.labels.find((elem: RerLabelTraits) =>
+                entity?.properties && entity.properties[levelField]
+                && entity.properties[levelField] >= elem.levelMin && entity.properties[levelField] < elem.levelMax);
+
+              if (labelClass?.show && entity.properties) {
+                entity.label = new LabelGraphics({
+                  text: entity.properties[labelClass.labelField],
+                  font: labelClass.font,
+                  fillColor: Color.fromCssColorString(labelClass.fillColor),
+                  backgroundColor: Color.fromCssColorString(
+                    labelClass.backgroundColor
+                  ),
+                  showBackground:
+                    typeof labelClass.backgroundColor !== "undefined" &&
+                      labelClass.backgroundColor !== "transparent"
+                      ? true
+                      : false,
+                  verticalOrigin: VerticalOrigin.TOP,
+                  show: true,
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  disableDepthTestDistance: Number.POSITIVE_INFINITY
+                });
+              }
+              else if (entity.label) {
+                entity.label.show = new ConstantProperty(false);
+              }
+            });
+            //entities.resumeEvents();
+          });
+        }
+      });*/
+
+      const itemsToResume = that.mapItems.filter(
+        item => item instanceof GeoJsonDataSource
+      );
+      if (itemsToResume && itemsToResume.length > 0) {
+        (<GeoJsonDataSource>itemsToResume[0]).entities.resumeEvents();
       }
     }
   }
@@ -491,6 +858,13 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
       });
     }
     return [];
+  }
+
+  @computed get isMapServerQuery(): boolean {
+    const url = cleanUrl(this.url || "0d");
+    const regex = /^(.*MapServer)\/(\d+)/;
+    const matches = url.match(regex);
+    return !!matches;
   }
 }
 
@@ -760,30 +1134,79 @@ function buildMetadataUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
 }
 
 function buildGeoJsonUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
-  const url = cleanUrl(catalogItem.url || "0d");
-  const urlComponents = splitLayerIdFromPath(url);
-  const layerId = urlComponents.layerId;
+  if (catalogItem.isMapServerQuery) {
+    return buildMapServerQueryUrl(catalogItem);
+  } else {
+    const url = cleanUrl(catalogItem.url || "0d");
+    const urlComponents = splitLayerIdFromPath(url);
+    const layerId = urlComponents.layerId;
 
-  if (!isDefined(layerId)) {
-    throw networkRequestError({
-      title: i18next.t(
-        "models.arcGisFeatureServerCatalogItem.invalidServiceTitle"
-      ),
-      message: i18next.t(
-        "models.arcGisFeatureServerCatalogItem.invalidServiceMessage"
-      )
-    });
+    if (!isDefined(layerId)) {
+      throw networkRequestError({
+        title: i18next.t(
+          "models.arcGisFeatureServerCatalogItem.invalidServiceTitle"
+        ),
+        message: i18next.t(
+          "models.arcGisFeatureServerCatalogItem.invalidServiceMessage"
+        )
+      });
+    }
+
+    return proxyCatalogItemUrl(
+      catalogItem,
+      new URI(urlComponents.urlWithoutLayerId)
+        .segment("query")
+        .addQuery("f", "json")
+        .addQuery(
+          "layerDefs",
+          "{" + layerId + ':"' + catalogItem.layerDef + '"}'
+        )
+        .addQuery("outSR", "4326")
+        .toString()
+    );
   }
+}
 
-  return proxyCatalogItemUrl(
-    catalogItem,
-    new URI(urlComponents.urlWithoutLayerId)
-      .segment("query")
-      .addQuery("f", "json")
-      .addQuery("layerDefs", "{" + layerId + ':"' + catalogItem.layerDef + '"}')
-      .addQuery("outSR", "4326")
-      .toString()
-  );
+function buildMapServerQueryUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
+  var url = new URI(cleanUrl(catalogItem.url || "0d"))
+    .segment("query")
+    .addQuery(
+      "where",
+      `${
+        catalogItem.rerFeatureService.levelField
+      }<=${catalogItem.level.toString()}`
+    )
+    .addQuery(
+      "geometry" /*catalogItem.cameraPitch > 0 && typeof catalogItem.polygon !== 'undefined' && catalogItem.polygon.length > 0 ?
+        JSON.stringify({rings: [[
+          [CesiumMath.toDegrees(catalogItem.polygon[0].longitude), CesiumMath.toDegrees(item.polygon[0].latitude)],
+          [CesiumMath.toDegrees(catalogItem.polygon[1].longitude), CesiumMath.toDegrees(item.polygon[1].latitude)],
+          [CesiumMath.toDegrees(item.polygon[2].longitude), CesiumMath.toDegrees(item.polygon[2].latitude)],
+          [CesiumMath.toDegrees(item.polygon[3].longitude), CesiumMath.toDegrees(item.polygon[3].latitude)]
+        ]]}) :*/,
+      CesiumMath.toDegrees(catalogItem.bbox.west) +
+        "," +
+        CesiumMath.toDegrees(catalogItem.bbox.south) +
+        "," +
+        CesiumMath.toDegrees(catalogItem.bbox.east) +
+        "," +
+        CesiumMath.toDegrees(catalogItem.bbox.north)
+    )
+    .addQuery(
+      "geometryType",
+      /*item.cameraPitch > 0 ? "esriGeometryPolygon" :*/ "esriGeometryEnvelope"
+    )
+    .addQuery("spatialRel", "esriSpatialRelIndexIntersects")
+    .addQuery("outFields", "*")
+    .addQuery("returnGeometry", "true")
+    .addQuery("outSR", "4326")
+    .addQuery("f", "geojson")
+    .toString();
+
+  //console.log("url:");
+  //console.log(url);
+
+  return url;
 }
 
 function splitLayerIdFromPath(url: string) {
@@ -805,4 +1228,9 @@ function cleanUrl(url: string): string {
   const uri = new URI(url);
   uri.search("");
   return uri.toString();
+}
+
+function getRayPosition(coord: Cartesian2, scene: Scene) {
+  const ray = scene.camera.getPickRay(coord);
+  return scene.globe.pick(ray, scene);
 }
