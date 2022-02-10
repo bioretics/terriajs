@@ -71,6 +71,10 @@ class NoViewer extends GlobeOrMap {
   ) {
     return () => {};
   }
+
+  getZoomLevel(): number | undefined {
+    return undefined;
+  }
 }
 
 export default NoViewer;

@@ -1064,6 +1064,10 @@ export default class Leaflet extends GlobeOrMap {
       map.removeLayer(layer);
     };
   }
+
+  getZoomLevel(): number | undefined {
+    return this.map.getZoom();
+  }
 }
 
 function isImageryLayer(

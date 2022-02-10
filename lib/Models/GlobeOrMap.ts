@@ -413,4 +413,9 @@ export default abstract class GlobeOrMap {
       "captureScreenshot must be implemented in the derived class."
     );
   }
+
+  /**
+   *
+   */
+  abstract getZoomLevel(): number | undefined;
 }

@@ -1503,6 +1503,43 @@ export default class Cesium extends GlobeOrMap {
       scene.imageryLayers.remove(result);
     };
   }
+
+  getZoomLevel(): number | undefined {
+    const camera = this.scene.camera;
+    const width = this.scene.canvas.clientWidth;
+    const height = this.scene.canvas.clientHeight;
+
+    const pixelDimension = camera.frustum.getPixelDimensions(
+      this.scene.drawingBufferWidth,
+      this.scene.drawingBufferHeight,
+      1.0,
+      window.devicePixelRatio,
+      new Cartesian2()
+    );
+    const pxHalfCm = 0.05 / pixelDimension.x;
+    const aPos = getRayPosition(
+      new Cartesian2(width * 0.5 - pxHalfCm, height - 20),
+      this.scene
+    );
+
+    if (typeof aPos === "undefined") return;
+    const bPos = getRayPosition(
+      new Cartesian2(width * 0.5 + pxHalfCm, height - 20),
+      this.scene
+    );
+    if (typeof bPos === "undefined") return;
+
+    let scaleDivider = Cartesian2.distance(
+      Cartesian2.fromCartesian3(aPos),
+      Cartesian2.fromCartesian3(bPos)
+    );
+    let scale = 22.56994;
+    let level;
+    for (level = 19; level > 1 && scaleDivider > scale; --level) {
+      scale *= 2;
+    }
+    return level;
+  }
 }
 
 var boundingSphereScratch = new BoundingSphere();
@@ -1604,4 +1641,9 @@ function flyToBoundingSpherePromise(
       cancel
     });
   });
+}
+
+function getRayPosition(coord: Cartesian2, scene: Scene) {
+  const ray = scene.camera.getPickRay(coord);
+  return scene.globe.pick(ray, scene);
 }
