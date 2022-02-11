@@ -146,34 +146,43 @@ const MapColumn = observer(
                   viewState={this.props.viewState}
                 />
               </div>
-              <If condition={!this.props.viewState.hideMapUi}>
-                <MapDataCount
-                  terria={this.props.terria}
-                  viewState={this.props.viewState}
-                  elementConfig={this.props.terria.elements.get(
-                    "map-data-count"
-                  )}
-                />
-                <SlideUpFadeIn isVisible={this.props.viewState.isMapZooming}>
-                  <Toast>
-                    <Loader
-                      message={this.props.t("toast.mapIsZooming")}
-                      textProps={{
-                        style: {
-                          padding: "0 5px"
-                        }
-                      }}
-                    />
-                  </Toast>
-                </SlideUpFadeIn>
-                <div className={Styles.locationDistance}>
-                  <LocationBar
+              {/*<If condition={!this.props.viewState.hideMapUi}>*/}
+              <Choose>
+                <When condition={this.props.viewState.useSmallScreenInterface}>
+                  <div className={Styles.distanceLegendMobile}>
+                    <DistanceLegend terria={this.props.terria} />
+                  </div>
+                </When>
+                <Otherwise>
+                  <MapDataCount
                     terria={this.props.terria}
-                    mouseCoords={this.props.terria.currentViewer.mouseCoords}
+                    viewState={this.props.viewState}
+                    elementConfig={this.props.terria.elements.get(
+                      "map-data-count"
+                    )}
                   />
-                  <DistanceLegend terria={this.props.terria} />
-                </div>
-              </If>
+                  <SlideUpFadeIn isVisible={this.props.viewState.isMapZooming}>
+                    <Toast>
+                      <Loader
+                        message={this.props.t("toast.mapIsZooming")}
+                        textProps={{
+                          style: {
+                            padding: "0 5px"
+                          }
+                        }}
+                      />
+                    </Toast>
+                  </SlideUpFadeIn>
+                  <div className={Styles.locationDistance}>
+                    <LocationBar
+                      terria={this.props.terria}
+                      mouseCoords={this.props.terria.currentViewer.mouseCoords}
+                    />
+                    <DistanceLegend terria={this.props.terria} />
+                  </div>
+                </Otherwise>
+              </Choose>
+              {/*</If>*/}
               {/* TODO: re-implement/support custom feedbacks */}
               {/* <If
                 condition={

@@ -61,6 +61,18 @@
   z-index: 1;
 }
 
+.distance-legend-mobile {
+  composes: clearfix from "../../Sass/common/_base.scss";
+  display: block;
+  @media (min-width: $mobile) {
+    display: block;
+  }
+  position: absolute;
+  bottom: 30px;
+  left: 5px;
+  z-index: 0;
+}
+
 .feedback-button-wrapper {
   @media (min-width: $sm) {
     bottom: 100px;

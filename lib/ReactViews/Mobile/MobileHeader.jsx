@@ -15,6 +15,7 @@ import Branding from "../SidePanel/Branding";
 import Styles from "./mobile-header.scss";
 import MobileMenu from "./MobileMenu";
 import MobileModalWindow from "./MobileModalWindow";
+import ViewerMode, { setViewerMode } from "../../Models/ViewerMode";
 
 const MobileHeader = observer(
   createReactClass({
@@ -76,6 +77,23 @@ const MobileHeader = observer(
     onMobileNowViewingClicked() {
       this.props.viewState.setTopElement("NowViewing");
       this.toggleView(this.props.viewState.mobileViewOptions.nowViewing);
+    },
+
+    onMobileAddDataCatalogClicked() {
+      this.toggleView(this.props.viewState.mobileViewOptions.addData);
+    },
+
+    onMobileSwitchViewClicked() {
+      runInAction(() => {
+        const mainViewer = this.props.terria.mainViewer;
+        if (mainViewer.viewerMode === ViewerMode.Leaflet) {
+          setViewerMode("3d", mainViewer);
+          this.props.terria.setLocalProperty("viewermode", ViewerMode.Cesium);
+        } else {
+          setViewerMode("2d", mainViewer);
+          this.props.terria.setLocalProperty("viewermode", ViewerMode.Leaflet);
+        }
+      });
     },
 
     changeLocationSearchText(newText) {
@@ -196,12 +214,38 @@ const MobileHeader = observer(
                 >
                   <button
                     type="button"
+                    className={Styles.btnViewMode}
+                    onClick={this.onMobileSwitchViewClicked}
+                  >
+                    {this.props.terria.mainViewer.viewerMode ===
+                    ViewerMode.Leaflet
+                      ? "3D"
+                      : "2D"}
+                    {/*<StyledIcon
+                      glyph={Icon.GLYPHS.globe}
+                      styledWidth="20px"
+                      styledHeight="20px"
+                    />*/}
+                  </button>
+                  <button
+                    type="button"
                     className={Styles.btnAdd}
                     onClick={this.onMobileDataCatalogClicked}
                   >
-                    {t("mobile.addDataBtnText")}
+                    {/*t("mobile.addDataBtnText")*/}
                     <StyledIcon
                       glyph={Icon.GLYPHS.increase}
+                      styledWidth="20px"
+                      styledHeight="20px"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    className={Styles.btnAdd}
+                    onClick={this.onMobileAddDataCatalogClicked}
+                  >
+                    <StyledIcon
+                      glyph={Icon.GLYPHS.upload}
                       styledWidth="20px"
                       styledHeight="20px"
                     />

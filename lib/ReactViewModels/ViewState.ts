@@ -53,6 +53,7 @@ interface ViewStateOptions {
 
 export default class ViewState {
   readonly mobileViewOptions = Object.freeze({
+    addData: "addData",
     data: "data",
     preview: "preview",
     nowViewing: "nowViewing",
