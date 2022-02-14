@@ -37,14 +37,12 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import { getLineStyleCesium } from "./esriLineStyle";
 import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
 import { RerLabelTraits } from "../../../Traits/TraitsClasses/RerFeatureServerTraits";
-import {
-  LabelGraphics,
-  VerticalOrigin,
-  Cartesian2,
-  Scene,
-  Rectangle,
-  DistanceDisplayCondition
-} from "terriajs-cesium";
+import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import Scene from "terriajs-cesium/Source/Scene/Scene";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import LabelGraphics from "terriajs-cesium/Source/DataSources/LabelGraphics";
 import CesiumEvent from "terriajs-cesium/Source/Core/Event";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import { FeatureCollectionWithCrs } from "../../../ModelMixins/GeojsonMixin";
@@ -215,8 +213,6 @@ class FeatureServerStratum extends LoadableStratum(
   }
 
   mergeData(newData: FeatureCollectionWithCrs) {
-    //console.log("mergeData");
-
     this._geoJsonItem.setTrait(
       CommonStrata.user,
       "geoJsonData",
@@ -556,11 +552,7 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
   }
 
   protected forceLoadMetadata(): Promise<void> {
-    console.log("forceLoadMetadata");
-
     if (!this.removeCesiumMoveEndEventListener && this.terria.cesium) {
-      //console.log("cesium");
-
       const that = this;
       this.removeCesiumMoveEndEventListener = this.terria.cesium.scene.camera.moveEnd.addEventListener(
         function() {
@@ -569,11 +561,8 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
           });
         }
       );
-      //runInAction(() => { that.checkReload() });
     }
     if (!this.removeLeafletMoveEndEventListener && this.terria.leaflet) {
-      //console.log("leaf");
-
       const that = this;
       this.terria.leaflet.map.on("zoomlevelschange", function() {
         runInAction(() => {
@@ -591,8 +580,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
       this.checkReload();
     });
     if (this.strata.has(FeatureServerStratum.stratumName)) {
-      //console.log("strato vecchio");
-
       return loadGeoJson(this).then(esriJson => {
         const geoJsonData = featureDataToGeoJson(esriJson);
         const oldStratum = <FeatureServerStratum>(
@@ -603,8 +590,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
         }
       });
     } else {
-      //console.log("strato nuovo");
-
       return FeatureServerStratum.load(this).then(stratum => {
         runInAction(() => {
           this.strata.set(FeatureServerStratum.stratumName, stratum);
@@ -616,8 +601,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
   protected async forceLoadMapItems() {
     const that = this;
     if (isDefined(that.geoJsonItem)) {
-      console.log("item.forceLoadMapItems");
-
       const itemsToSuspend = that.mapItems.filter(
         item => item instanceof GeoJsonDataSource
       );
@@ -679,8 +662,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
         });
       }
 
-      console.log("pronto");
-
       if (that.rerFeatureService) {
         runInAction(() => {
           if (that._displayConditions) {
@@ -701,9 +682,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
           that.mapItems.forEach(mapItem => {
             if (!(mapItem instanceof GeoJsonDataSource)) return;
             const entities = mapItem.entities;
-
-            console.log(entities.values.length);
-
             entities.values.forEach(function(entity) {
               if (entity.billboard) {
                 if (
@@ -777,48 +755,6 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
           });
         });
       }
-
-      // Label
-      /*runInAction(() => {
-        if (that.rerFeatureService && that.rerFeatureService.labels && that.rerFeatureService.labels.length > 0) {
-          const levelField = that.rerFeatureService.levelField;
-          that.mapItems.forEach(mapItem => {
-            if (!(mapItem instanceof GeoJsonDataSource)) return;
-            const entities = mapItem.entities;
-            //entities.suspendEvents();
-
-            entities.values.forEach(function (entity) {
-              const labelClass: RerLabelTraits | undefined = that.rerFeatureService.labels.find((elem: RerLabelTraits) =>
-                entity?.properties && entity.properties[levelField]
-                && entity.properties[levelField] >= elem.levelMin && entity.properties[levelField] < elem.levelMax);
-
-              if (labelClass?.show && entity.properties) {
-                entity.label = new LabelGraphics({
-                  text: entity.properties[labelClass.labelField],
-                  font: labelClass.font,
-                  fillColor: Color.fromCssColorString(labelClass.fillColor),
-                  backgroundColor: Color.fromCssColorString(
-                    labelClass.backgroundColor
-                  ),
-                  showBackground:
-                    typeof labelClass.backgroundColor !== "undefined" &&
-                      labelClass.backgroundColor !== "transparent"
-                      ? true
-                      : false,
-                  verticalOrigin: VerticalOrigin.TOP,
-                  show: true,
-                  heightReference: HeightReference.CLAMP_TO_GROUND,
-                  disableDepthTestDistance: Number.POSITIVE_INFINITY
-                });
-              }
-              else if (entity.label) {
-                entity.label.show = new ConstantProperty(false);
-              }
-            });
-            //entities.resumeEvents();
-          });
-        }
-      });*/
 
       const itemsToResume = that.mapItems.filter(
         item => item instanceof GeoJsonDataSource
@@ -1177,13 +1113,7 @@ function buildMapServerQueryUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
       }<=${catalogItem.level.toString()}`
     )
     .addQuery(
-      "geometry" /*catalogItem.cameraPitch > 0 && typeof catalogItem.polygon !== 'undefined' && catalogItem.polygon.length > 0 ?
-        JSON.stringify({rings: [[
-          [CesiumMath.toDegrees(catalogItem.polygon[0].longitude), CesiumMath.toDegrees(item.polygon[0].latitude)],
-          [CesiumMath.toDegrees(catalogItem.polygon[1].longitude), CesiumMath.toDegrees(item.polygon[1].latitude)],
-          [CesiumMath.toDegrees(item.polygon[2].longitude), CesiumMath.toDegrees(item.polygon[2].latitude)],
-          [CesiumMath.toDegrees(item.polygon[3].longitude), CesiumMath.toDegrees(item.polygon[3].latitude)]
-        ]]}) :*/,
+      "geometry",
       CesiumMath.toDegrees(catalogItem.bbox.west) +
         "," +
         CesiumMath.toDegrees(catalogItem.bbox.south) +
@@ -1192,20 +1122,13 @@ function buildMapServerQueryUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
         "," +
         CesiumMath.toDegrees(catalogItem.bbox.north)
     )
-    .addQuery(
-      "geometryType",
-      /*item.cameraPitch > 0 ? "esriGeometryPolygon" :*/ "esriGeometryEnvelope"
-    )
+    .addQuery("geometryType", "esriGeometryEnvelope")
     .addQuery("spatialRel", "esriSpatialRelIndexIntersects")
     .addQuery("outFields", "*")
     .addQuery("returnGeometry", "true")
     .addQuery("outSR", "4326")
     .addQuery("f", "geojson")
     .toString();
-
-  //console.log("url:");
-  //console.log(url);
-
   return url;
 }
 
