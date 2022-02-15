@@ -221,18 +221,12 @@ const MobileHeader = observer(
                     ViewerMode.Leaflet
                       ? "3D"
                       : "2D"}
-                    {/*<StyledIcon
-                      glyph={Icon.GLYPHS.globe}
-                      styledWidth="20px"
-                      styledHeight="20px"
-                    />*/}
                   </button>
                   <button
                     type="button"
                     className={Styles.btnAdd}
                     onClick={this.onMobileDataCatalogClicked}
                   >
-                    {/*t("mobile.addDataBtnText")*/}
                     <StyledIcon
                       glyph={Icon.GLYPHS.increase}
                       styledWidth="20px"

@@ -146,7 +146,6 @@ const MapColumn = observer(
                   viewState={this.props.viewState}
                 />
               </div>
-              {/*<If condition={!this.props.viewState.hideMapUi}>*/}
               <Choose>
                 <When condition={this.props.viewState.useSmallScreenInterface}>
                   <div className={Styles.distanceLegendMobile}>
@@ -182,29 +181,6 @@ const MapColumn = observer(
                   </div>
                 </Otherwise>
               </Choose>
-              {/*</If>*/}
-              {/* TODO: re-implement/support custom feedbacks */}
-              {/* <If
-                condition={
-                  !this.props.customFeedbacks.length &&
-                  this.props.terria.configParameters.feedbackUrl &&
-                  !this.props.viewState.hideMapUi
-                }
-              >
-                <div
-                  className={classNames(Styles.feedbackButtonWrapper, {
-                    [Styles.withTimeSeriesControls]: defined(
-                      this.props.terria.timelineStack.top
-                    )
-                  })}
-                >
-                  <FeedbackButton
-                    viewState={this.props.viewState}
-                    btnText={t("feedback.feedbackBtnText")}
-                  />
-                </div>
-              </If> */}
-
               <If
                 condition={
                   this.props.customFeedbacks.length &&

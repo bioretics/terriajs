@@ -263,7 +263,7 @@ const ViewingControls = observer(
     },
 
     computePath() {
-      const { item, viewState } = this.props;
+      const { item } = this.props;
       item.computePath();
     },
 
@@ -391,7 +391,7 @@ const ViewingControls = observer(
             condition={
               (item instanceof GeoJsonCatalogItem ||
                 item instanceof KmlCatalogItem ||
-                //item instanceof OgrCatalogItem ||
+                // item instanceof OgrCatalogItem ||
                 item instanceof GpxCatalogItem) &&
               item.canUseAsPath
             }
