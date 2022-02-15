@@ -316,19 +316,6 @@ const SharePanel = observer(
       return this.props.terria.catalog.userAddedDataGroup.members.length > 0;
     },
 
-    /* Load map config from a file */
-    loadMapFromFile() {
-      fileDialog({ multiple: false, accept: ".geo3d" }).then(file => {
-        if (file.length == 1) {
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            window.open(e.target.result, "_self");
-          };
-          reader.readAsText(file[0]);
-        }
-      });
-    },
-
     renderWarning() {
       const unshareableItems = this.props.terria.catalog.userAddedDataGroup.memberModels.filter(
         model => !isShareable(this.props.terria)(model.uniqueId)
@@ -491,18 +478,15 @@ const SharePanel = observer(
             <div className={Styles.explanation}>
               Salva o carica una mappa da file
             </div>
-            {/*<div style={{"margin-top": "12px"}}>  
-                <a id="save_button" className={Styles.printButton} href={"data:text/plain;charset=utf-8," + encodeURIComponent(this.state.shareUrl)} download="mappa.geo3d">Salva</a>
-                <input
-                  type="file"
-                  onChange={this.handleChange}
-                  accept=".geo3d"
-                  className={Styles.input}
-                />
-                <label className={classNames(Styles.printButton)}>
-                  Carica
-                </label>*/}
-            <div style={{ "margin-top": "12px" }}>
+            <div
+              style={{
+                marginTop: "12px",
+                display: "flex",
+                flexDirection: "row-reverse",
+                justifyContent: "flex-end",
+                alignItems: "baseline"
+              }}
+            >
               <form>
                 <a
                   id="save_button"
@@ -516,7 +500,20 @@ const SharePanel = observer(
                   Salva
                 </a>
               </form>
-              <FileInput label="Carica" accept=".geo3d" onChange={e => {}} />
+              <FileInput
+                label="Carica"
+                accept=".geo3d"
+                onChange={e => {
+                  if (e.target.files.length === 1) {
+                    const file = e.target.files[0];
+                    const reader = new FileReader();
+                    reader.onload = function(f) {
+                      window.open(f.target.result, "_self");
+                    };
+                    reader.readAsText(file);
+                  }
+                }}
+              />
             </div>
           </div>
           <div

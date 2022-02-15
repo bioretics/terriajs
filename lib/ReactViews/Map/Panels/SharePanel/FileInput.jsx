@@ -34,7 +34,6 @@ const FileInput = createReactClass({
   },
 
   render() {
-    const { t } = this.props;
     return (
       <form
         style={{ width: 57, height: 41 }}
@@ -42,6 +41,7 @@ const FileInput = createReactClass({
         onMouseLeave={() => this.setState({ hovered: false })}
       >
         <input
+          style={{ width: 57, height: 41 }}
           type="file"
           onChange={this.handleChange}
           accept={this.props.accept}
