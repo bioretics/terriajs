@@ -1,6 +1,26 @@
 Change Log
 ==========
 
+#### rer3d+8.1.16
+* Review and merge customizations from rer3d v7
+  * Set default line stroke width to 4 px
+  * Add save and load functions to SharePanel
+  * Add MeasurableTraits
+  * Clamp to ground GeoJson, Kml, Gpx
+  * Add elevation to FeatureInfo
+  * Add CoordsPanel
+  * Remove elevation error in coordinates
+  * smallUserInterface improvements
+  * Increase Leaflet max zoom level from 18 to 21
+  * Add NominatimSearchProvider
+  * Add RerSearchProvider
+  * Fix BingMapSearchProvider zoom to location
+* Add appendData trait to GeoJson
+* Add RerFeatureServerTraits traits
+* Clamp to ground lines of Measure Tool
+* Disable extra credit links
+* Set site title from config.json
+
 #### next release (8.1.17)
 
 - **Breaking changes**:

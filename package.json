@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/TerriaJS/terriajs"
+    "url": "http://github.com/bioretics/rer3d-terriajs"
   },
   "config": {
     "docRepo": "git@github.com:TerriaJS/Documentation.git"
@@ -213,7 +213,7 @@
     "react-shallow-testutils": "^3.0.0",
     "react-test-renderer": "^16.3.2",
     "regenerator-runtime": "^0.13.2",
-    "terriajs-server": "^3.3.3",
+    "terriajs-server": "bioretics/terriajs-server",
     "webpack-cli": "^3.3.11",
     "webpack-dev-server": "^3.1.14",
     "yaml": "^1.10.0"
