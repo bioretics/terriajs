@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+#### next release rer3d
+* Add control of the map from the keyboard
+
 #### rer3d+8.1.16
 * Review and merge customizations from rer3d v7
   * Set default line stroke width to 4 px
