@@ -9,7 +9,7 @@ import Input from "../../../Styled/Input/Input.jsx";
 import DropdownStyles from "../panel.scss";
 import Styles from "./coords-panel.scss";
 
-// import clipboard from "clipboard";
+import clipboard from "clipboard";
 import Box from "../../../../Styled/Box";
 import Button from "../../../../Styled/Button";
 import Select from "../../../../Styled/Select";
@@ -32,7 +32,20 @@ const CoordsText = props => {
     readonly
   } = props;
 
-  // const clipboardBtn = new clipboard(`.btn-copy-${name}`);
+  useEffect(() => {
+    const clipboardBtn = new clipboard(`.btn-copy-${name}`);
+
+    clipboardBtn.on("success", evt => {
+      console.log("ok");
+    });
+    clipboardBtn.on("error", () => {
+      console.log("error");
+    });
+
+    return function cleanup() {
+      clipboardBtn.destroy();
+    };
+  }, []);
 
   return (
     <div className={DropdownStyles.section}>
