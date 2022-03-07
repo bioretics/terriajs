@@ -6,7 +6,7 @@ import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Resource from "terriajs-cesium/Source/Core/Resource";
-import sampleTerrain from "terriajs-cesium/Source/Core/sampleTerrain";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import KmlDataSource from "terriajs-cesium/Source/DataSources/KmlDataSource";
 import Property from "terriajs-cesium/Source/DataSources/Property";
@@ -148,7 +148,7 @@ class KmlCatalogItem extends MeasurableMixin(
         }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrain(terrainProvider, 11, positionsToSample).then(function() {
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
         for (let i = 0; i < positionsToSample.length; ++i) {
           const position = positionsToSample[i];
           if (!isDefined(position.height)) {
