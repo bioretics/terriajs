@@ -43,9 +43,10 @@ export function loadAndSearchCatalogRecursively(
       // });
       autorun(reaction => {
         // Search also in catalog item info.
-        const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${
+        /* const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${
           modelToSave.description
-        } ${JSON.stringify(modelToSave.infoAsObject)}`;
+        } ${JSON.stringify(modelToSave.infoAsObject)}`; */
+        const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${modelToSave.description}`;
 
         const matchesString =
           searchString.toLowerCase().indexOf(searchTextLowercase) !== -1;
