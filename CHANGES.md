@@ -1,8 +1,11 @@
 Change Log
 ==========
 
-#### next release rer3d
+#### rer3d+8.1.16-2
 * Add control of the map from the keyboard
+* Fix clipboard
+* Improve Kml polygon visualization
+* Temporary turn off search in catalog info
 
 #### rer3d+8.1.16
 * Review and merge customizations from rer3d v7
