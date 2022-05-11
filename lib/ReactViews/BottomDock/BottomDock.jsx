@@ -1,5 +1,3 @@
-"use strict";
-
 import createReactClass from "create-react-class";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -11,6 +9,7 @@ import ElevationChartPanel from "../Custom/Chart/ElevationChartPanel";
 import Styles from "./bottom-dock.scss";
 import ChartDisclaimer from "./ChartDisclaimer";
 import Timeline from "./Timeline/Timeline";
+import withControlledVisibility from "../HOCs/withControlledVisibility";
 
 const BottomDock = observer(
   createReactClass({
@@ -61,34 +60,25 @@ const BottomDock = observer(
             background: ${p => p.theme.dark};
           `}
         >
+          <div id="TJS-BottomDockFirstPortal" />
           <ChartDisclaimer terria={terria} viewState={this.props.viewState} />
           <ChartPanel
             terria={terria}
             onHeightChange={this.onHeightChange}
             viewState={this.props.viewState}
           />
-          <If
-            condition={
-              this.props.viewState.elevationChartIsVisible &&
-              !!terria.pathPoints &&
-              terria.pathPoints.length > 0
-            }
-          >
-            <ElevationChartPanel
+          {top && (
+            <Timeline
               terria={terria}
-              onHeightChange={this.onHeightChange}
-              viewState={this.props.viewState}
+              elementConfig={this.props.terria.elements.get("timeline")}
             />
-          </If>
-          <If condition={top}>
-            <Timeline terria={terria} />
-          </If>
+          )}
           {/* Used for react portals - do not remove without updating portals using this */}
-          <div id="TJS-BottomDockPortalForTool" />
+          <div id="TJS-BottomDockLastPortal" />
         </div>
       );
     }
   })
 );
 
-module.exports = measureElement(BottomDock, false);
+export default withControlledVisibility(measureElement(BottomDock, false));

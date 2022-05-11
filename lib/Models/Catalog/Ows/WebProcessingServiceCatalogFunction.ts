@@ -1,17 +1,22 @@
 import i18next from "i18next";
+import flatten from "lodash-es/flatten";
 import { action, computed, isObservableArray, runInAction } from "mobx";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import URI from "urijs";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
 import isDefined from "../../../Core/isDefined";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
-import Reproject from "../../../Map/Reproject";
+import Reproject from "../../../Map/Vector/Reproject";
 import CatalogFunctionMixin from "../../../ModelMixins/CatalogFunctionMixin";
 import XmlRequestMixin from "../../../ModelMixins/XmlRequestMixin";
 import xml2json from "../../../ThirdParty/xml2json";
 import WebProcessingServiceCatalogFunctionTraits from "../../../Traits/TraitsClasses/WebProcessingServiceCatalogFunctionTraits";
 import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
+import LoadableStratum from "../../Definition/LoadableStratum";
+import { BaseModel } from "../../Definition/Model";
+import StratumOrder from "../../Definition/StratumOrder";
+import updateModelFromJson from "../../Definition/updateModelFromJson";
 import BooleanParameter from "../../FunctionParameters/BooleanParameter";
 import DateTimeParameter from "../../FunctionParameters/DateTimeParameter";
 import EnumerationParameter from "../../FunctionParameters/EnumerationParameter";
@@ -28,13 +33,8 @@ import RectangleParameter from "../../FunctionParameters/RectangleParameter";
 import RegionParameter from "../../FunctionParameters/RegionParameter";
 import RegionTypeParameter from "../../FunctionParameters/RegionTypeParameter";
 import StringParameter from "../../FunctionParameters/StringParameter";
-import LoadableStratum from "../../Definition/LoadableStratum";
-import { BaseModel } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import StratumOrder from "../../Definition/StratumOrder";
-import updateModelFromJson from "../../Definition/updateModelFromJson";
 import WebProcessingServiceCatalogFunctionJob from "./WebProcessingServiceCatalogFunctionJob";
-import flatten from "lodash-es/flatten";
 
 type AllowedValues = {
   Value?: string | string[];
@@ -57,7 +57,7 @@ type BoundingBoxData = {
 
 type Input = {
   Identifier?: string;
-  Name?: string;
+  Title?: string;
   Abstract?: string;
   LiteralData?: LiteralData;
   ComplexData?: ComplexData;
@@ -270,7 +270,7 @@ export default class WebProcessingServiceCatalogFunction extends XmlRequestMixin
                 : undefined
             )
             .filter(isDefined)
-        ),
+        ) as any,
         url: this.url,
         identifier: this.identifier,
         executeWithHttpGet: this.executeWithHttpGet,
@@ -295,7 +295,7 @@ export default class WebProcessingServiceCatalogFunction extends XmlRequestMixin
       const converter = parameterConverters[i];
       const parameter = converter.inputToParameter(catalogFunction, input, {
         id: input.Identifier,
-        name: input.Name,
+        name: input.Title,
         description: input.Abstract,
         isRequired
       });

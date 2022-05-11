@@ -1,50 +1,47 @@
-import React from "react";
+import classNames from "classnames";
 import createReactClass from "create-react-class";
-import { ThemeProvider, createGlobalStyle } from "styled-components";
+import "inobounce";
+import { action, runInAction } from "mobx";
+import { observer } from "mobx-react";
 import PropTypes from "prop-types";
+import React from "react";
+import { withTranslation } from "react-i18next";
+import { createGlobalStyle, ThemeProvider } from "styled-components";
 import combine from "terriajs-cesium/Source/Core/combine";
-
-import { terriaTheme } from "./StandardTheme";
 import arrayContains from "../../Core/arrayContains";
-import Branding from "../SidePanel/Branding";
+import Disclaimer from "../Disclaimer";
 import DragDropFile from "../DragDropFile";
-import DragDropNotification from "./../DragDropNotification";
 import ExplorerWindow from "../ExplorerWindow/ExplorerWindow";
 import FeatureInfoPanel from "../FeatureInfo/FeatureInfoPanel";
 import FeedbackForm from "../Feedback/FeedbackForm";
-import MapColumn from "./MapColumn";
-import MapInteractionWindow from "../Notification/MapInteractionWindow";
-import TrainerBar from "../Map/TrainerBar/TrainerBar";
-import ExperimentalFeatures from "../Map/ExperimentalFeatures";
-import MobileHeader from "../Mobile/MobileHeader";
-import Notification from "../Notification/Notification";
-import ProgressBar from "../Map/ProgressBar";
-import SidePanel from "../SidePanel/SidePanel";
-import processCustomElements from "./processCustomElements";
-import FullScreenButton from "./../SidePanel/FullScreenButton.jsx";
-import StoryPanel from "./../Story/StoryPanel.jsx";
-import StoryBuilder from "./../Story/StoryBuilder.jsx";
-
-import withFallback from "../HOCs/withFallback";
-import TourPortal from "../Tour/TourPortal";
+import { Medium, Small } from "../Generic/Responsive";
 import SatelliteHelpPrompt from "../HelpScreens/SatelliteHelpPrompt";
-import WelcomeMessage from "../WelcomeMessage/WelcomeMessage";
-
-import { Small, Medium } from "../Generic/Responsive";
-import classNames from "classnames";
-import "inobounce";
-
-import { withTranslation } from "react-i18next";
-
-import Styles from "./standard-user-interface.scss";
-// import Variables from "../../Sass/common/variables";
-import { observer } from "mobx-react";
-import { action, runInAction } from "mobx";
-import HelpPanel from "../Map/Panels/HelpPanel/HelpPanel";
-import Tool from "../Tools/Tool";
-import Disclaimer from "../Disclaimer";
+import withFallback from "../HOCs/withFallback";
+import ExperimentalFeatures from "../Map/ExperimentalFeatures";
 import CollapsedNavigation from "../Map/Navigation/Items/OverflowNavigationItem";
-import ElevationPanel from "../Elevation/ElevationPanel";
+import HelpPanel from "../Map/Panels/HelpPanel/HelpPanel";
+import PrintView from "../Map/Panels/SharePanel/Print/PrintView";
+import ProgressBar from "../Map/ProgressBar";
+import TrainerBar from "../Map/TrainerBar/TrainerBar";
+import MobileHeader from "../Mobile/MobileHeader";
+import MapInteractionWindow from "../Notification/MapInteractionWindow";
+import Notification from "../Notification/Notification";
+import Branding from "../SidePanel/Branding";
+import SidePanel from "../SidePanel/SidePanel";
+import Tool from "../Tools/Tool";
+import TourPortal from "../Tour/TourPortal";
+import WelcomeMessage from "../WelcomeMessage/WelcomeMessage";
+import SelectableDimensionWorkflow from "../Workflow/SelectableDimensionWorkflow";
+import DragDropNotification from "./../DragDropNotification";
+import FullScreenButton from "./../SidePanel/FullScreenButton.jsx";
+import StoryBuilder from "./../Story/StoryBuilder.jsx";
+import StoryPanel from "./../Story/StoryPanel/StoryPanel";
+import MapColumn from "./MapColumn";
+import processCustomElements from "./processCustomElements";
+import SidePanelContainer from "./SidePanelContainer";
+import Styles from "./standard-user-interface.scss";
+import { terriaTheme } from "./StandardTheme";
+import WorkflowPanelContainer from "./WorkflowPanelContainer";
 
 export const showStoryPrompt = (viewState, terria) => {
   terria.configParameters.showFeaturePrompts &&
@@ -53,7 +50,9 @@ export const showStoryPrompt = (viewState, terria) => {
     viewState.toggleFeaturePrompt("story", true);
 };
 const GlobalTerriaStyles = createGlobalStyle`
-  ${p => p.theme.fontImports ?? ""}
+  body {
+    font-family: ${p => p.theme.fontBase}
+  }
 
   // Theme-ify sass classes until they are removed
 
@@ -110,6 +109,9 @@ const GlobalTerriaStyles = createGlobalStyle`
     color: ${p => p.theme.colorPrimary};
   }
 
+  button {
+    cursor: pointer;
+  }
 
   ${props =>
     props.experimentalFeatures &&
@@ -121,7 +123,7 @@ const GlobalTerriaStyles = createGlobalStyle`
     }
   `}
 `;
-const animationDuration = 250;
+export const animationDuration = 250;
 /** blah */
 const StandardUserInterface = observer(
   createReactClass({
@@ -266,23 +268,18 @@ const StandardUserInterface = observer(
               this.props.terria.configParameters.experimentalFeatures
             }
           />
-          <TourPortal terria={terria} viewState={this.props.viewState} />
-          <CollapsedNavigation
-            terria={terria}
-            viewState={this.props.viewState}
-          />
-          <SatelliteHelpPrompt
-            terria={terria}
-            viewState={this.props.viewState}
-          />
+          <TourPortal viewState={this.props.viewState} />
+          <CollapsedNavigation viewState={this.props.viewState} />
+          <SatelliteHelpPrompt viewState={this.props.viewState} />
+          <Medium>
+            <SelectableDimensionWorkflow viewState={this.props.viewState} />
+          </Medium>
           <div className={Styles.storyWrapper}>
             <If condition={!this.props.viewState.disclaimerVisible}>
               <WelcomeMessage viewState={this.props.viewState} />
             </If>
             <div
-              className={classNames(Styles.uiRoot, {
-                [Styles.withStoryBuilder]: showStoryBuilder
-              })}
+              className={Styles.uiRoot}
               css={`
                 ${this.props.viewState.disclaimerVisible &&
                   `filter: blur(10px);`}
@@ -308,36 +305,30 @@ const StandardUserInterface = observer(
                       />
                     </Small>
                     <Medium>
-                      <div
-                        className={classNames(
-                          Styles.sidePanel,
-                          this.props.viewState.topElement === "SidePanel"
-                            ? "top-element"
-                            : "",
-                          {
-                            [Styles.sidePanelHide]: this.props.viewState
-                              .isMapFullScreen
+                      <>
+                        <WorkflowPanelContainer
+                          viewState={this.props.viewState}
+                          show={this.props.terria.isWorkflowPanelActive}
+                        />
+                        <SidePanelContainer
+                          viewState={this.props.viewState}
+                          tabIndex={0}
+                          show={
+                            this.props.viewState.isMapFullScreen === false &&
+                            this.props.terria.isWorkflowPanelActive === false
                           }
-                        )}
-                        tabIndex={0}
-                        onClick={action(() => {
-                          this.props.viewState.topElement = "SidePanel";
-                        })}
-                        // TODO: debounce/batch
-                        onTransitionEnd={() =>
-                          this.props.viewState.triggerResizeEvent()
-                        }
-                      >
-                        <Branding
-                          terria={terria}
-                          viewState={this.props.viewState}
-                          version={this.props.version}
-                        />
-                        <SidePanel
-                          terria={terria}
-                          viewState={this.props.viewState}
-                        />
-                      </div>
+                        >
+                          <Branding
+                            terria={terria}
+                            viewState={this.props.viewState}
+                            version={this.props.version}
+                          />
+                          <SidePanel
+                            terria={terria}
+                            viewState={this.props.viewState}
+                          />
+                        </SidePanelContainer>
+                      </>
                     </Medium>
                   </If>
                   <Medium>
@@ -396,7 +387,6 @@ const StandardUserInterface = observer(
                   </section>
                 </div>
               </div>
-
               <If condition={!this.props.viewState.hideMapUi}>
                 <Medium>
                   <TrainerBar
@@ -405,7 +395,6 @@ const StandardUserInterface = observer(
                   />
                 </Medium>
               </If>
-
               <Medium>
                 {/* I think this does what the previous boolean condition does, but without the console error */}
                 <If condition={this.props.viewState.isToolOpen}>
@@ -426,7 +415,6 @@ const StandardUserInterface = observer(
                 terria={terria}
                 viewState={this.props.viewState}
               />
-
               <If
                 condition={
                   !customElements.feedback.length &&
@@ -437,7 +425,6 @@ const StandardUserInterface = observer(
               >
                 <FeedbackForm viewState={this.props.viewState} />
               </If>
-
               <div
                 className={classNames(
                   Styles.featureInfo,
@@ -487,6 +474,14 @@ const StandardUserInterface = observer(
               )}
             <Disclaimer viewState={this.props.viewState} />
           </div>
+          {this.props.viewState.printWindow && (
+            <PrintView
+              window={this.props.viewState.printWindow}
+              terria={terria}
+              viewState={this.props.viewState}
+              closeCallback={() => this.props.viewState.setPrintWindow(null)}
+            />
+          )}
         </ThemeProvider>
       );
     }

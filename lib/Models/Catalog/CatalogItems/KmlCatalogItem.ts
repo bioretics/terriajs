@@ -13,11 +13,12 @@ import Property from "terriajs-cesium/Source/DataSources/Property";
 import isDefined from "../../../Core/isDefined";
 import readXml from "../../../Core/readXml";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
-import MappableMixin from "../../../ModelMixins/MappableMixin";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
+import MappableMixin from "../../../ModelMixins/MappableMixin";
 import UrlMixin from "../../../ModelMixins/UrlMixin";
 import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
+import HasLocalData from "../../HasLocalData";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
@@ -26,9 +27,11 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 
 const kmzRegex = /\.kmz$/i;
 
-class KmlCatalogItem extends MeasurableMixin(
-  MappableMixin(UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits))))
-) {
+class KmlCatalogItem
+  extends MappableMixin(
+    UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  )
+  implements HasLocalData {
   static readonly type = "kml";
   get type() {
     return KmlCatalogItem.type;
@@ -148,39 +151,41 @@ class KmlCatalogItem extends MeasurableMixin(
         }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
-        for (let i = 0; i < positionsToSample.length; ++i) {
-          const position = positionsToSample[i];
-          if (!isDefined(position.height)) {
-            continue;
-          }
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(
+        function() {
+          for (let i = 0; i < positionsToSample.length; ++i) {
+            const position = positionsToSample[i];
+            if (!isDefined(position.height)) {
+              continue;
+            }
 
-          Ellipsoid.WGS84.cartographicToCartesian(
-            position,
-            correspondingCartesians[i]
-          );
-        }
-
-        // Force the polygons to be rebuilt.
-        for (let i = 0; i < entities.length; ++i) {
-          const polygon = entities[i].polygon;
-          if (!isDefined(polygon)) {
-            continue;
-          }
-
-          const existingHierarchy = getPropertyValue<PolygonHierarchy>(
-            polygon.hierarchy
-          );
-          if (existingHierarchy) {
-            polygon.hierarchy = new ConstantProperty(
-              new PolygonHierarchy(
-                existingHierarchy.positions,
-                existingHierarchy.holes
-              )
+            Ellipsoid.WGS84.cartographicToCartesian(
+              position,
+              correspondingCartesians[i]
             );
           }
+
+          // Force the polygons to be rebuilt.
+          for (let i = 0; i < entities.length; ++i) {
+            const polygon = entities[i].polygon;
+            if (!isDefined(polygon)) {
+              continue;
+            }
+
+            const existingHierarchy = getPropertyValue<PolygonHierarchy>(
+              polygon.hierarchy
+            );
+            if (existingHierarchy) {
+              polygon.hierarchy = new ConstantProperty(
+                new PolygonHierarchy(
+                  existingHierarchy.positions,
+                  existingHierarchy.holes
+                )
+              );
+            }
+          }
         }
-      });
+      );
     }
   }
 

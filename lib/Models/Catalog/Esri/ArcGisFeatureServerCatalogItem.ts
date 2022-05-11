@@ -1,23 +1,29 @@
+import { Geometry, GeometryCollection, Properties } from "@turf/helpers";
 import i18next from "i18next";
 import { computed, runInAction, toJS } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
-import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import BillboardGraphics from "terriajs-cesium/Source/DataSources/BillboardGraphics";
 import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
+import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import PolygonGraphics from "terriajs-cesium/Source/DataSources/PolygonGraphics";
 import PolylineDashMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineDashMaterialProperty";
+import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import URI from "urijs";
 import isDefined from "../../../Core/isDefined";
 import loadJson from "../../../Core/loadJson";
 import replaceUnderscores from "../../../Core/replaceUnderscores";
-import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
-import featureDataToGeoJson from "../../../Map/featureDataToGeoJson";
-import proj4definitions from "../../../Map/Proj4Definitions";
+import { networkRequestError } from "../../../Core/TerriaError";
+import featureDataToGeoJson from "../../../Map/PickedFeatures/featureDataToGeoJson";
+import proj4definitions from "../../../Map/Vector/Proj4Definitions";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
-import MappableMixin from "../../../ModelMixins/MappableMixin";
+import GeoJsonMixin, {
+  FeatureCollectionWithCrs
+} from "../../../ModelMixins/GeojsonMixin";
 import UrlMixin from "../../../ModelMixins/UrlMixin";
 import ArcGisFeatureServerCatalogItemTraits from "../../../Traits/TraitsClasses/ArcGisFeatureServerCatalogItemTraits";
 import { InfoSectionTraits } from "../../../Traits/TraitsClasses/CatalogMemberTraits";
@@ -25,27 +31,14 @@ import LegendTraits, {
   LegendItemTraits
 } from "../../../Traits/TraitsClasses/LegendTraits";
 import { RectangleTraits } from "../../../Traits/TraitsClasses/MappableTraits";
-import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
 import createStratumInstance from "../../Definition/createStratumInstance";
 import LoadableStratum from "../../Definition/LoadableStratum";
 import { BaseModel } from "../../Definition/Model";
 import StratumFromTraits from "../../Definition/StratumFromTraits";
 import StratumOrder from "../../Definition/StratumOrder";
-import GeoJsonCatalogItem from "../CatalogItems/GeoJsonCatalogItem";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import { getLineStyleCesium } from "./esriLineStyle";
-import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
-import { RerLabelTraits } from "../../../Traits/TraitsClasses/RerFeatureServerTraits";
-import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
-import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
-import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
-import Scene from "terriajs-cesium/Source/Scene/Scene";
-import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
-import LabelGraphics from "terriajs-cesium/Source/DataSources/LabelGraphics";
-import CesiumEvent from "terriajs-cesium/Source/Core/Event";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import { FeatureCollectionWithCrs } from "../../../ModelMixins/GeojsonMixin";
 
 const proj4 = require("proj4").default;
 
@@ -160,6 +153,9 @@ interface FeatureServer {
   drawingInfo?: DrawingInfo;
   extent?: Extent;
   maxScale?: number;
+  advancedQueryCapabilities?: {
+    supportsPagination: boolean;
+  };
 }
 
 interface SpatialReference {
@@ -188,9 +184,8 @@ class FeatureServerStratum extends LoadableStratum(
 
   constructor(
     private readonly _item: ArcGisFeatureServerCatalogItem,
-    private readonly _geoJsonItem: GeoJsonCatalogItem,
-    private readonly _featureServer: FeatureServer,
-    private _esriJson: any
+    private readonly _featureServer?: FeatureServer,
+    private _esriJson?: any
   ) {
     super();
   }
@@ -198,163 +193,73 @@ class FeatureServerStratum extends LoadableStratum(
   duplicateLoadableStratum(newModel: BaseModel): this {
     return new FeatureServerStratum(
       newModel as ArcGisFeatureServerCatalogItem,
-      this._geoJsonItem,
-      this._featureServer,
       this._esriJson
     ) as this;
   }
 
-  get featureServerData(): FeatureServer {
+  @computed
+  get featureServerData(): FeatureServer | undefined {
     return this._featureServer;
   }
 
-  get geoJsonItem(): GeoJsonCatalogItem {
-    return this._geoJsonItem;
-  }
-
-  mergeData(newData: FeatureCollectionWithCrs) {
-    this._geoJsonItem.setTrait(
-      CommonStrata.user,
-      "geoJsonData",
-      newData as any
-    );
-  }
-
-  static async load(item: ArcGisFeatureServerCatalogItem) {
-    if (!isDefined(item.url) || !isDefined(item.uri)) {
-      throw new TerriaError({
-        title: i18next.t(
-          "models.arcGisFeatureServerCatalogItem.missingUrlTitle"
-        ),
-        message: i18next.t(
-          "models.arcGisFeatureServerCatalogItem.missingUrlMessage"
-        )
-      });
+  static async load(
+    item: ArcGisFeatureServerCatalogItem
+  ): Promise<FeatureServerStratum> {
+    if (item.url === undefined) {
+      new FeatureServerStratum(item, undefined, undefined);
     }
+    const metaUrl = buildMetadataUrl(item);
+    const featureServer = await loadJson(metaUrl);
 
-    const geoJsonItem = new GeoJsonCatalogItem(createGuid(), item.terria);
-    geoJsonItem.setTrait(
-      CommonStrata.definition,
-      "clampToGround",
-      item.clampToGround
-    );
-    geoJsonItem.setTrait(
-      CommonStrata.definition,
-      "attribution",
-      item.attribution
-    );
-    geoJsonItem.setTrait(
-      CommonStrata.definition,
-      "forceCesiumPrimitives",
-      true
-    );
-    let tempEsriJson: any = null;
-    const esriJson = await loadGeoJson(item);
+    const stratum = new FeatureServerStratum(item, featureServer, undefined);
 
-    let isMapServerQuery = false;
-    runInAction(() => {
-      isMapServerQuery = item.isMapServerQuery;
-    });
-
-    const geoJsonData = featureDataToGeoJson(
-      isMapServerQuery ? esriJson : esriJson.layers[0]
-    );
-    if (!geoJsonData) {
-      throw TerriaError.from("Failed to convert ESRI json data into GeoJSON");
-    }
-    geoJsonItem.setTrait(
-      CommonStrata.definition,
-      "geoJsonData",
-      geoJsonData as any
-    );
-
-    runInAction(() => {
-      // Add appendData
-      geoJsonItem.setTrait(
-        CommonStrata.definition,
-        "appendData",
-        item.rerFeatureService.appendData as any
-      );
-
-      // Add style
-      geoJsonItem.setTrait(
-        CommonStrata.definition,
-        "style",
-        item.rerFeatureService.style as any
-      );
-
-      // Add perPropertyStyles
-      geoJsonItem.setTrait(
-        CommonStrata.definition,
-        "perPropertyStyles",
-        item.rerFeatureService.perPropertyStyles as any
-      );
-    });
-
-    (await geoJsonItem.loadMetadata()).throwIfError();
-    const featureServer = await loadMetadata(item);
-
-    // Add drawingInfo Renderer
-    runInAction(() => {
-      if (
-        !item.useStyleInformationFromService &&
-        item.rerFeatureService.drawingInfo
-      ) {
-        featureServer.drawingInfo.renderer = toJS(
-          item.rerFeatureService.drawingInfo
-        );
-
-        item.setTrait(
-          CommonStrata.definition,
-          "useStyleInformationFromService",
-          true
-        );
-      }
-    });
-
-    const stratum = new FeatureServerStratum(
-      item,
-      geoJsonItem,
-      featureServer,
-      tempEsriJson
-    );
     return stratum;
+  }
+
+  @computed get forceCesiumPrimitives(): boolean {
+    return this._item.useStyleInformationFromService;
   }
 
   @computed
   get shortReport(): string | undefined {
     // Show notice if reached
-    if (this._esriJson?.exceededTransferLimit) {
+    if (
+      this._item.readyData?.features !== undefined &&
+      this._item.readyData!.features.length >= this._item.maxFeatures
+    ) {
       return i18next.t(
         "models.arcGisFeatureServerCatalogItem.reachedMaxFeatureLimit",
-        this
+        this._item
       );
     }
     return undefined;
   }
 
   @computed get maximumScale(): number | undefined {
-    return this._featureServer.maxScale;
+    return this._featureServer?.maxScale;
   }
 
   @computed get name(): string | undefined {
-    if (this._featureServer.name && this._featureServer.name.length > 0) {
+    if (
+      this._featureServer?.name !== undefined &&
+      this._featureServer.name.length > 0
+    ) {
       return replaceUnderscores(this._featureServer.name);
     }
   }
 
   @computed get dataCustodian(): string | undefined {
     if (
-      this._featureServer.documentInfo &&
-      this._featureServer.documentInfo.Author &&
-      this._featureServer.documentInfo.Author.length > 0
+      this._featureServer?.documentInfo &&
+      this._featureServer?.documentInfo.Author &&
+      this._featureServer?.documentInfo.Author.length > 0
     ) {
       return this._featureServer.documentInfo.Author;
     }
   }
 
   @computed get rectangle(): StratumFromTraits<RectangleTraits> | undefined {
-    const extent = this._featureServer.extent;
+    const extent = this._featureServer?.extent;
     const wkidCode =
       extent?.spatialReference?.latestWkid ?? extent?.spatialReference?.wkid;
 
@@ -388,19 +293,30 @@ class FeatureServerStratum extends LoadableStratum(
     return [
       createStratumInstance(InfoSectionTraits, {
         name: i18next.t("models.arcGisMapServerCatalogItem.dataDescription"),
-        content: this._featureServer.description
+        content: this._featureServer?.description
       }),
       createStratumInstance(InfoSectionTraits, {
         name: i18next.t("models.arcGisMapServerCatalogItem.copyrightText"),
-        content: this._featureServer.copyrightText
+        content: this._featureServer?.copyrightText
       })
     ];
+  }
+
+  @computed get supportsPagination(): boolean {
+    if (
+      this._featureServer === undefined ||
+      this._featureServer.advancedQueryCapabilities === undefined
+    ) {
+      return false;
+    }
+
+    return !!this._featureServer.advancedQueryCapabilities.supportsPagination;
   }
 
   @computed get legends(): StratumFromTraits<LegendTraits>[] | undefined {
     if (
       !this._item.useStyleInformationFromService ||
-      !this._featureServer.drawingInfo
+      !this._featureServer?.drawingInfo
     ) {
       return undefined;
     }
@@ -453,7 +369,7 @@ class FeatureServerStratum extends LoadableStratum(
 
 StratumOrder.addLoadStratum(FeatureServerStratum.stratumName);
 
-export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
+export default class ArcGisFeatureServerCatalogItem extends GeoJsonMixin(
   UrlMixin(
     CatalogMemberMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
   )
@@ -468,315 +384,143 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
     return i18next.t("models.arcGisFeatureServerCatalogItem.name");
   }
 
-  protected removeCesiumMoveEndEventListener:
-    | CesiumEvent.RemoveCallback
-    | undefined;
-  protected removeLeafletMoveEndEventListener: boolean = false;
-  public level = 0;
-  public bbox = new Rectangle();
-  protected _oldLevel = 0;
-  protected _cameraPitch: number = CameraPitchState.normal;
-  protected _cameraPitchIsChanged = true;
-  protected _displayConditions: { [key: number]: ConstantProperty } = {};
-
-  protected checkReload() {
-    let changed = false;
-
-    if (this.terria.cesium?.scene) {
-      let level = this.terria.cesium.getZoomLevel();
-      if (!level) return;
-      if (level > this.rerFeatureService.levelMax)
-        level = this.rerFeatureService.levelMax;
-      if (this.level !== level) {
-        this.level = level;
-        changed = true;
-      }
-
-      const pitch = this.terria.cesium.scene.camera.pitch;
-      if (
-        pitch >=
-        -CesiumMath.toRadians(
-          this.rerFeatureService.displayFilter.cameraLandedAngle
-        )
-      ) {
-        if (this._cameraPitch !== CameraPitchState.landed) {
-          this._cameraPitch = CameraPitchState.landed;
-          this._cameraPitchIsChanged = true;
-        }
-      } else if (
-        pitch >=
-        -CesiumMath.toRadians(
-          this.rerFeatureService.displayFilter.cameraTiltedAngle
-        )
-      ) {
-        if (this._cameraPitch !== CameraPitchState.tilted) {
-          this._cameraPitch = CameraPitchState.tilted;
-          this._cameraPitchIsChanged = true;
-        }
-      } else if (this._cameraPitch !== CameraPitchState.normal) {
-        this._cameraPitch = CameraPitchState.normal;
-        this._cameraPitchIsChanged = true;
-      }
-
-      const newRect = this.terria.cesium.getCurrentCameraView().rectangle;
-      if (newRect && !this.bbox.equalsEpsilon(newRect, newRect.width * 0.03)) {
-        this.bbox = newRect;
-        changed = true;
-      }
-    } else if (this.terria.leaflet) {
-      let level = this.terria.leaflet.getZoomLevel();
-      if (!level) return;
-      if (level > this.rerFeatureService.levelMax)
-        level = this.rerFeatureService.levelMax;
-      if (this.level !== level) {
-        this.level = level;
-        changed = true;
-      }
-
-      const newRect = this.terria.leaflet.getCurrentCameraView().rectangle;
-      if (newRect && !this.bbox.equalsEpsilon(newRect, newRect.width * 0.03)) {
-        this.bbox = newRect;
-        changed = true;
-      }
-    }
-
-    if (changed && this.strata.has(FeatureServerStratum.stratumName)) {
-      console.log(
-        `rerFeatureService = zoom level: ${this.level} - cameraPitchState: ${this._cameraPitch}`
-      );
-
-      this.forceLoadMetadata().then(() => {
-        this.forceLoadMapItems();
+  protected async forceLoadMetadata(): Promise<void> {
+    if (this.strata.get(FeatureServerStratum.stratumName) === undefined) {
+      const stratum = await FeatureServerStratum.load(this);
+      runInAction(() => {
+        this.strata.set(FeatureServerStratum.stratumName, stratum);
       });
     }
   }
 
-  protected forceLoadMetadata(): Promise<void> {
-    if (!this.removeCesiumMoveEndEventListener && this.terria.cesium) {
-      const that = this;
-      this.removeCesiumMoveEndEventListener = this.terria.cesium.scene.camera.moveEnd.addEventListener(
-        function() {
-          runInAction(() => {
-            that.checkReload();
-          });
+  protected async forceLoadGeojsonData(): Promise<
+    FeatureCollectionWithCrs<Geometry | GeometryCollection, Properties>
+  > {
+    const getEsriLayerJson = async (resultOffset?: number) =>
+      await loadJson(this.buildEsriJsonUrl(resultOffset));
+
+    if (!this.supportsPagination) {
+      // Make a single request without pagination
+      return (
+        featureDataToGeoJson(await getEsriLayerJson()) ?? {
+          type: "FeatureCollection",
+          features: []
         }
       );
     }
-    if (!this.removeLeafletMoveEndEventListener && this.terria.leaflet) {
-      const that = this;
-      this.terria.leaflet.map.on("zoomlevelschange", function() {
-        runInAction(() => {
-          that.checkReload();
-        });
-      });
-      this.terria.leaflet.map.on("moveend", function() {
-        runInAction(() => {
-          that.checkReload();
-        });
-      });
-      this.removeLeafletMoveEndEventListener = true;
-    }
-    runInAction(() => {
-      this.checkReload();
-    });
-    if (this.strata.has(FeatureServerStratum.stratumName)) {
-      return loadGeoJson(this).then(esriJson => {
-        const geoJsonData = featureDataToGeoJson(esriJson);
-        const oldStratum = <FeatureServerStratum>(
-          this.strata.get(FeatureServerStratum.stratumName)
-        );
-        if (oldStratum && geoJsonData) {
-          oldStratum.mergeData(geoJsonData);
-        }
-      });
-    } else {
-      return FeatureServerStratum.load(this).then(stratum => {
-        runInAction(() => {
-          this.strata.set(FeatureServerStratum.stratumName, stratum);
-        });
-      });
-    }
-  }
 
-  protected async forceLoadMapItems() {
-    const that = this;
-    if (isDefined(that.geoJsonItem)) {
-      const itemsToSuspend = that.mapItems.filter(
-        item => item instanceof GeoJsonDataSource
+    // Esri Feature Servers have a maximum limit to how many features they'll return at once, so for a service with many
+    // features, we have to make multiple requests. We can't figure out how many features we need to request ahead of
+    // time (there's an API for it but it times out for services with thousands of features), so we just keep trying
+    // until we run out of features or hit the limit
+    const featuresPerRequest = this.featuresPerRequest;
+    const maxFeatures = this.maxFeatures;
+    let combinedEsriLayerJson = await getEsriLayerJson(0);
+
+    const mapObjectIds = (features: any) =>
+      features.map(
+        (feature: any) =>
+          feature.attributes.OBJECTID ?? feature.attributes.objectid
       );
-      if (itemsToSuspend && itemsToSuspend.length > 0) {
-        (<GeoJsonDataSource>itemsToSuspend[0]).entities.suspendEvents();
-      }
-
-      (await that.geoJsonItem.loadMapItems()).throwIfError();
-      const featureServerData = that.featureServerData;
-      if (
-        that.useStyleInformationFromService &&
-        featureServerData &&
-        featureServerData.drawingInfo
-      ) {
-        const renderer = featureServerData.drawingInfo.renderer;
-        const rendererType = renderer.type;
-        that.mapItems.forEach(mapItem => {
-          if (!(mapItem instanceof GeoJsonDataSource)) return;
-          const entities = mapItem.entities;
-          //entities.suspendEvents();
-
-          // A 'simple' renderer only applies a single style to all features
-          if (rendererType === "simple") {
-            const simpleRenderer = <SimpleRenderer>renderer;
-            const symbol = simpleRenderer.symbol;
-            if (symbol) {
-              entities.values.forEach(function(entity) {
-                updateEntityWithEsriStyle(entity, symbol, that);
-              });
-            }
-
-            // For a 'uniqueValue' renderer symbology gets applied via feature properties.
-          } else if (renderer.type === "uniqueValue") {
-            const uniqueValueRenderer = <UniqueValueRenderer>renderer;
-            const rendererObj = setupUniqueValueRenderer(uniqueValueRenderer);
-            entities.values.forEach(function(entity) {
-              const symbol = getUniqueValueSymbol(
-                entity,
-                uniqueValueRenderer,
-                rendererObj
-              );
-              if (symbol) {
-                updateEntityWithEsriStyle(entity, symbol, that);
-              }
-            });
-
-            // For a 'classBreaks' renderer symbology gets applied via classes or ranges of data.
-          } else if (renderer.type === "classBreaks") {
-            const classBreaksRenderer = <ClassBreaksRenderer>renderer;
-            entities.values.forEach(function(entity) {
-              const symbol = getClassBreaksSymbol(entity, classBreaksRenderer);
-              if (symbol) {
-                updateEntityWithEsriStyle(entity, symbol, that);
-              }
-            });
-          }
-
-          //entities.resumeEvents();
-        });
-      }
-
-      if (that.rerFeatureService) {
-        runInAction(() => {
-          if (that._displayConditions) {
-            that.rerFeatureService.displayFilter.tiltedDisplayDistanceCondition.forEach(
-              element => {
-                that._displayConditions[element.level] = new ConstantProperty(
-                  new DistanceDisplayCondition(0, element.distance)
-                );
-              }
-            );
-          }
-
-          const isCameraLanded = that._cameraPitch === CameraPitchState.landed;
-          const showLabels =
-            that.rerFeatureService.labels &&
-            that.rerFeatureService.labels.length > 0;
-          const levelField = that.rerFeatureService.levelField;
-          that.mapItems.forEach(mapItem => {
-            if (!(mapItem instanceof GeoJsonDataSource)) return;
-            const entities = mapItem.entities;
-            entities.values.forEach(function(entity) {
-              if (entity.billboard) {
-                if (
-                  !isCameraLanded &&
-                  entity.properties &&
-                  entity.properties[levelField].getValue() <= that.level
-                ) {
-                  if (showLabels) {
-                    // Labels
-                    const labelClass:
-                      | RerLabelTraits
-                      | undefined = that.rerFeatureService.labels.find(
-                      (elem: RerLabelTraits) =>
-                        entity?.properties &&
-                        entity.properties[levelField] &&
-                        entity.properties[levelField] >= elem.levelMin &&
-                        entity.properties[levelField] < elem.levelMax
-                    );
-
-                    if (labelClass?.show && !entity.label) {
-                      entity.label = new LabelGraphics({
-                        text: entity.properties[labelClass.labelField],
-                        font: labelClass.font,
-                        fillColor: Color.fromCssColorString(
-                          labelClass.fillColor
-                        ),
-                        backgroundColor: Color.fromCssColorString(
-                          labelClass.backgroundColor
-                        ),
-                        showBackground:
-                          typeof labelClass.backgroundColor !== "undefined" &&
-                          labelClass.backgroundColor !== "transparent"
-                            ? true
-                            : false,
-                        verticalOrigin: VerticalOrigin.TOP,
-                        show: true,
-                        heightReference: HeightReference.CLAMP_TO_GROUND,
-                        disableDepthTestDistance: Number.POSITIVE_INFINITY
-                      });
-                    }
-                  }
-
-                  entity.show = true;
-                  entity.billboard.verticalOrigin = new ConstantProperty(
-                    VerticalOrigin.BOTTOM
-                  );
-                  entity.billboard.disableDepthTestDistance = new ConstantProperty(
-                    Number.POSITIVE_INFINITY
-                  );
-
-                  if (that.terria.cesium && that._cameraPitchIsChanged) {
-                    const lvl = entity.properties[levelField].getValue();
-                    entity.billboard.distanceDisplayCondition =
-                      that._cameraPitch === CameraPitchState.normal
-                        ? undefined
-                        : that._displayConditions[lvl];
-                    if (entity.label) {
-                      entity.label.distanceDisplayCondition =
-                        entity.billboard.distanceDisplayCondition;
-                    }
-                  }
-                } else {
-                  entity.show = false;
-                }
-              }
-            });
-
-            if (that._cameraPitchIsChanged) {
-              that._cameraPitchIsChanged = false;
-            }
-          });
-        });
-      }
-
-      const itemsToResume = that.mapItems.filter(
-        item => item instanceof GeoJsonDataSource
-      );
-      if (itemsToResume && itemsToResume.length > 0) {
-        (<GeoJsonDataSource>itemsToResume[0]).entities.resumeEvents();
-      }
-    }
-  }
-
-  @computed get cacheDuration(): string {
-    if (isDefined(super.cacheDuration)) {
-      return super.cacheDuration;
-    }
-    return "1d";
-  }
-
-  @computed get geoJsonItem(): GeoJsonCatalogItem | undefined {
-    const stratum = <FeatureServerStratum>(
-      this.strata.get(FeatureServerStratum.stratumName)
+    const seenIDs: Set<string> = new Set(
+      mapObjectIds(combinedEsriLayerJson.features)
     );
-    return isDefined(stratum) ? stratum.geoJsonItem : undefined;
+
+    let currentOffset = 0;
+    let exceededTransferLimit = combinedEsriLayerJson.exceededTransferLimit;
+    while (
+      combinedEsriLayerJson.features.length <= maxFeatures &&
+      exceededTransferLimit === true
+    ) {
+      currentOffset += featuresPerRequest;
+      const newEsriLayerJson = await getEsriLayerJson(currentOffset);
+      if (
+        newEsriLayerJson.features === undefined ||
+        newEsriLayerJson.features.length === 0
+      ) {
+        break;
+      }
+
+      const newIds: string[] = mapObjectIds(newEsriLayerJson.features);
+
+      if (newIds.every((id: string) => seenIDs.has(id))) {
+        // We're getting data that we've received already, assume have everything we need and stop fetching
+        break;
+      }
+
+      newIds.forEach(id => seenIDs.add(id));
+      combinedEsriLayerJson.features = combinedEsriLayerJson.features.concat(
+        newEsriLayerJson.features
+      );
+      exceededTransferLimit = newEsriLayerJson.exceededTransferLimit;
+    }
+
+    return (
+      featureDataToGeoJson(combinedEsriLayerJson) ?? {
+        type: "FeatureCollection",
+        features: []
+      }
+    );
+  }
+
+  protected async loadGeoJsonDataSource(
+    geoJson: FeatureCollectionWithCrs
+  ): Promise<GeoJsonDataSource> {
+    const dataSource = await super.loadGeoJsonDataSource(geoJson);
+
+    const featureServerData = this.featureServerData;
+    if (
+      !this.useStyleInformationFromService ||
+      featureServerData === undefined ||
+      featureServerData.drawingInfo === undefined
+    ) {
+      // Use GeoJSONMixin styles
+      return dataSource;
+    }
+    const renderer = featureServerData!.drawingInfo!.renderer;
+    const rendererType = renderer.type;
+
+    const entities = dataSource.entities;
+    entities.suspendEvents();
+
+    // A 'simple' renderer only applies a single style to all features
+    if (rendererType === "simple") {
+      const simpleRenderer = <SimpleRenderer>renderer;
+      const symbol = simpleRenderer.symbol;
+      if (symbol) {
+        entities.values.forEach(entity => {
+          updateEntityWithEsriStyle(entity, symbol, this);
+        });
+      }
+
+      // For a 'uniqueValue' renderer symbology gets applied via feature properties.
+    } else if (renderer.type === "uniqueValue") {
+      const uniqueValueRenderer = <UniqueValueRenderer>renderer;
+      const rendererObj = setupUniqueValueRenderer(uniqueValueRenderer);
+      entities.values.forEach(entity => {
+        const symbol = getUniqueValueSymbol(
+          entity,
+          uniqueValueRenderer,
+          rendererObj
+        );
+        if (symbol) {
+          updateEntityWithEsriStyle(entity, symbol, this);
+        }
+      });
+
+      // For a 'classBreaks' renderer symbology gets applied via classes or ranges of data.
+    } else if (renderer.type === "classBreaks") {
+      const classBreaksRenderer = <ClassBreaksRenderer>renderer;
+      entities.values.forEach(entity => {
+        const symbol = getClassBreaksSymbol(entity, classBreaksRenderer);
+        if (symbol) {
+          updateEntityWithEsriStyle(entity, symbol, this);
+        }
+      });
+    }
+
+    entities.resumeEvents();
+    return dataSource;
   }
 
   @computed get featureServerData(): FeatureServer | undefined {
@@ -786,14 +530,48 @@ export default class ArcGisFeatureServerCatalogItem extends MappableMixin(
     return isDefined(stratum) ? stratum.featureServerData : undefined;
   }
 
-  @computed get mapItems() {
-    if (isDefined(this.geoJsonItem)) {
-      return this.geoJsonItem.mapItems.map(mapItem => {
-        mapItem.show = this.show;
-        return mapItem;
+  /**
+   * Constructs the url for a request to a feature server
+   * @param resultOffset Allows for pagination of results.
+   *  See https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-layer-.htm
+   */
+  buildEsriJsonUrl(resultOffset?: number) {
+    const url = cleanUrl(this.url || "0d");
+    const urlComponents = splitLayerIdFromPath(url);
+    const layerId = urlComponents.layerId;
+
+    if (!isDefined(layerId)) {
+      throw networkRequestError({
+        title: i18next.t(
+          "models.arcGisFeatureServerCatalogItem.invalidServiceTitle"
+        ),
+        message: i18next.t(
+          "models.arcGisFeatureServerCatalogItem.invalidServiceMessage"
+        )
       });
     }
-    return [];
+
+    // We used to make a call to a different ArcGIS API endpoint
+    // (https://developers.arcgis.com/rest/services-reference/enterprise/query-feature-service-.htm) which took a
+    // `layerdef` parameter, which is more or less equivalent to `where`. To avoid breaking old catalog items, we need
+    // to use `layerDef` if `where` hasn't been set
+    const where = this.where === "1=1" ? this.layerDef : this.where;
+
+    const uri = new URI(url)
+      .segment("query")
+      .addQuery("f", "json")
+      .addQuery("where", where)
+      .addQuery("outFields", "*")
+      .addQuery("outSR", "4326");
+
+    if (resultOffset !== undefined) {
+      // Pagination specific parameters
+      uri
+        .addQuery("resultRecordCount", this.featuresPerRequest)
+        .addQuery("resultOffset", resultOffset);
+    }
+
+    return proxyCatalogItemUrl(this, uri.toString());
   }
 
   @computed get isMapServerQuery(): boolean {
@@ -888,7 +666,8 @@ function updateEntityWithEsriStyle(
   // TODO: tweek the svg support
   if (symbol.type === "esriPMS") {
     // Replace a general Cesium Point with a billboard
-    if (entity.point && symbol.imageData) {
+    entity.point = entity.point ?? new PointGraphics();
+    if (symbol.imageData) {
       entity.billboard = new BillboardGraphics({
         image: new ConstantProperty(
           proxyCatalogItemUrl(
@@ -923,7 +702,8 @@ function updateEntityWithEsriStyle(
   } else if (symbol.type === "esriSMS") {
     // Update the styling of the Cesium Point
     // TODO extend support for cross, diamond, square, x, triangle
-    if (entity.point && symbol.color) {
+    entity.point = entity.point ?? new PointGraphics();
+    if (symbol.color) {
       entity.point.color = new ConstantProperty(
         convertEsriColorToCesiumColor(symbol.color)
       );
@@ -942,65 +722,62 @@ function updateEntityWithEsriStyle(
     }
   } else if (symbol.type === "esriSLS") {
     /* Update the styling of the Cesium Polyline */
-    if (entity.polyline) {
-      if (isDefined(symbol.width)) {
-        entity.polyline.width = new ConstantProperty(
-          convertEsriPointSizeToPixels(symbol.width)
-        );
-      }
-      const color = symbol.color ? symbol.color : defaultColor;
-      /*
+    entity.polyline = entity.polyline ?? new PolylineGraphics();
+    if (isDefined(symbol.width)) {
+      entity.polyline.width = new ConstantProperty(
+        convertEsriPointSizeToPixels(symbol.width)
+      );
+    }
+    const color = symbol.color ? symbol.color : defaultColor;
+    /*
         For line containing dashes PolylineDashMaterialProperty is used.
         Definition is done using the line patterns converted from hex to decimal dashPattern.
         Source for some of the line patterns is https://www.opengl.org.ru/docs/pg/0204.html, others are created manually
       */
-      esriPolylineStyle(entity, color, <supportedLineStyle>symbol.style);
-    }
+    esriPolylineStyle(entity, color, <supportedLineStyle>symbol.style);
   } else if (symbol.type === "esriSFS") {
     // Update the styling of the Cesium Polygon
-    if (entity.polygon) {
-      const color = symbol.color ? symbol.color : defaultFillColor;
+    entity.polygon = entity.polygon ?? new PolygonGraphics();
+    const color = symbol.color ? symbol.color : defaultFillColor;
 
-      // feature picking doesn't work when the polygon interior is transparent, so
-      // use an almost-transparent color instead
-      if (color[3] === 0) {
-        color[3] = 1;
-      }
+    // feature picking doesn't work when the polygon interior is transparent, so
+    // use an almost-transparent color instead
+    if (color[3] === 0) {
+      color[3] = 1;
+    }
+    entity.polygon.material = new ColorMaterialProperty(
+      new ConstantProperty(convertEsriColorToCesiumColor(color))
+    );
+
+    if (
+      symbol.style === "esriSFSNull" &&
+      symbol.outline &&
+      symbol.outline.style === "esriSLSNull"
+    ) {
+      entity.polygon.show = new ConstantProperty(false);
+    } else {
       entity.polygon.material = new ColorMaterialProperty(
         new ConstantProperty(convertEsriColorToCesiumColor(color))
       );
-
-      if (
-        symbol.style === "esriSFSNull" &&
-        symbol.outline &&
-        symbol.outline.style === "esriSLSNull"
-      ) {
-        entity.polygon.show = new ConstantProperty(false);
-      } else {
-        entity.polygon.material = new ColorMaterialProperty(
-          new ConstantProperty(convertEsriColorToCesiumColor(color))
-        );
-      }
-      if (symbol.outline) {
-        const outlineColor = symbol.outline.color
-          ? symbol.outline.color
-          : defaultOutlineColor;
-        /* It can actually happen that entity has both polygon and polyline defined at same time,
+    }
+    if (symbol.outline) {
+      const outlineColor = symbol.outline.color
+        ? symbol.outline.color
+        : defaultOutlineColor;
+      /* It can actually happen that entity has both polygon and polyline defined at same time,
             check the implementation of GeoJsonCatalogItem for details. */
-        entity.polygon.outlineColor = new ColorMaterialProperty(
-          new ConstantProperty(convertEsriColorToCesiumColor(outlineColor))
-        );
-        entity.polygon.outlineWidth = new ConstantProperty(
-          convertEsriPointSizeToPixels(symbol.outline.width)
-        );
-        if (entity.polyline) {
-          esriPolylineStyle(entity, outlineColor, symbol.outline.style);
-          entity.polyline.width = new ConstantProperty(
-            convertEsriPointSizeToPixels(symbol.outline.width)
-          );
-          entity.polygon.outline = entity.polyline.material;
-        }
-      }
+      entity.polygon.outlineColor = new ColorMaterialProperty(
+        new ConstantProperty(convertEsriColorToCesiumColor(outlineColor))
+      );
+      entity.polygon.outlineWidth = new ConstantProperty(
+        convertEsriPointSizeToPixels(symbol.outline.width)
+      );
+      entity.polyline = entity.polyline ?? new PolylineGraphics();
+      esriPolylineStyle(entity, outlineColor, symbol.outline.style);
+      entity.polyline.width = new ConstantProperty(
+        convertEsriPointSizeToPixels(symbol.outline.width)
+      );
+      entity.polygon.outline = entity.polyline.material;
     }
   }
 }
@@ -1049,87 +826,11 @@ export function convertEsriPointSizeToPixels(pointSize: number) {
   return (pointSize * 4) / 3;
 }
 
-function loadGeoJson(catalogItem: ArcGisFeatureServerCatalogItem) {
-  return loadJson(buildGeoJsonUrl(catalogItem)).then(function(json) {
-    return json;
-  });
-}
-
-function loadMetadata(catalogItem: ArcGisFeatureServerCatalogItem) {
-  const metaUrl = buildMetadataUrl(catalogItem);
-  return loadJson(metaUrl).then(function(json) {
-    return json;
-  });
-}
-
 function buildMetadataUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
   return proxyCatalogItemUrl(
     catalogItem,
     new URI(catalogItem.url).addQuery("f", "json").toString()
   );
-}
-
-function buildGeoJsonUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
-  if (catalogItem.isMapServerQuery) {
-    return buildMapServerQueryUrl(catalogItem);
-  } else {
-    const url = cleanUrl(catalogItem.url || "0d");
-    const urlComponents = splitLayerIdFromPath(url);
-    const layerId = urlComponents.layerId;
-
-    if (!isDefined(layerId)) {
-      throw networkRequestError({
-        title: i18next.t(
-          "models.arcGisFeatureServerCatalogItem.invalidServiceTitle"
-        ),
-        message: i18next.t(
-          "models.arcGisFeatureServerCatalogItem.invalidServiceMessage"
-        )
-      });
-    }
-
-    return proxyCatalogItemUrl(
-      catalogItem,
-      new URI(urlComponents.urlWithoutLayerId)
-        .segment("query")
-        .addQuery("f", "json")
-        .addQuery(
-          "layerDefs",
-          "{" + layerId + ':"' + catalogItem.layerDef + '"}'
-        )
-        .addQuery("outSR", "4326")
-        .toString()
-    );
-  }
-}
-
-function buildMapServerQueryUrl(catalogItem: ArcGisFeatureServerCatalogItem) {
-  var url = new URI(cleanUrl(catalogItem.url || "0d"))
-    .segment("query")
-    .addQuery(
-      "where",
-      `${
-        catalogItem.rerFeatureService.levelField
-      }<=${catalogItem.level.toString()}`
-    )
-    .addQuery(
-      "geometry",
-      CesiumMath.toDegrees(catalogItem.bbox.west) +
-        "," +
-        CesiumMath.toDegrees(catalogItem.bbox.south) +
-        "," +
-        CesiumMath.toDegrees(catalogItem.bbox.east) +
-        "," +
-        CesiumMath.toDegrees(catalogItem.bbox.north)
-    )
-    .addQuery("geometryType", "esriGeometryEnvelope")
-    .addQuery("spatialRel", "esriSpatialRelIndexIntersects")
-    .addQuery("outFields", "*")
-    .addQuery("returnGeometry", "true")
-    .addQuery("outSR", "4326")
-    .addQuery("f", "geojson")
-    .toString();
-  return url;
 }
 
 function splitLayerIdFromPath(url: string) {

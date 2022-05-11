@@ -33,9 +33,7 @@ interface CssExports {
   'mobileHeader': string;
   'paragraph': string;
   'print-button': string;
-  'print-view-loader': string;
   'printButton': string;
-  'printViewLoader': string;
   'share-panel': string;
   'sharePanel': string;
   'shareUrlfield': string;
