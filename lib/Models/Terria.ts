@@ -474,11 +474,11 @@ export default class Terria {
     feedbackMinLength: 0,
     extraCreditLinks: [
       // Default credit links (shown at the bottom of the Cesium map)
-      {
+      /*{
         text: "map.extraCreditLinks.dataAttribution",
         url: "about.html#data-attribution"
       },
-      { text: "map.extraCreditLinks.disclaimer", url: "about.html#disclaimer" }
+      { text: "map.extraCreditLinks.disclaimer", url: "about.html#disclaimer" }*/
     ],
     printDisclaimer: undefined,
     storyRouteUrlPrefix: undefined

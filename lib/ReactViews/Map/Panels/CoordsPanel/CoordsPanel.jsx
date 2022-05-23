@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import Icon, { StyledIcon } from "../../../../Styled/Icon";
 // import Loader from "../../../Loader";
 import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
-import Input from "../../../Styled/Input/Input.jsx";
+import Input from "../../../../Styled/Input";
 import DropdownStyles from "../panel.scss";
 import Styles from "./coords-panel.scss";
 
@@ -14,7 +14,7 @@ import Box from "../../../../Styled/Box";
 import Button from "../../../../Styled/Button";
 import Select from "../../../../Styled/Select";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
-import createZoomToFunction from "../../../../Map/zoomRectangleFromPoint";
+import createZoomToFunction from "../../../../Map/Vector/zoomRectangleFromPoint";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PropTypes from "prop-types";

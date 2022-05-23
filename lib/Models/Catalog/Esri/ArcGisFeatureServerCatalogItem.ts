@@ -2,6 +2,8 @@ import { Geometry, GeometryCollection, Properties } from "@turf/helpers";
 import i18next from "i18next";
 import { computed, runInAction, toJS } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import Scene from "terriajs-cesium/Source/Scene/Scene";
 import Color from "terriajs-cesium/Source/Core/Color";
 import BillboardGraphics from "terriajs-cesium/Source/DataSources/BillboardGraphics";
 import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";

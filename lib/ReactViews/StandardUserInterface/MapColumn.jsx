@@ -17,6 +17,7 @@ import TerriaViewerWrapper from "../Map/TerriaViewerWrapper";
 import SlideUpFadeIn from "../Transitions/SlideUpFadeIn/SlideUpFadeIn";
 import Styles from "./map-column.scss";
 import Toast from "./Toast";
+import Button from "../../Styled/Button";
 
 const isIE = FeatureDetection.isInternetExplorer();
 const chromeVersion = FeatureDetection.chromeVersion();
@@ -195,32 +196,33 @@ const MapColumn = observer(
                 <div className={Styles.locationDistance}>
                   <LocationBar
                     terria={this.props.terria}
-                    viewState={this.props.viewState}
-                    elementConfig={this.props.terria.elements.get(
-                      "map-data-count"
-                    )}
+                    mouseCoords={this.props.terria.currentViewer.mouseCoords}
                   />
-                  <SlideUpFadeIn isVisible={this.props.viewState.isMapZooming}>
-                    <Toast>
-                      <Loader
-                        message={this.props.t("toast.mapIsZooming")}
-                        textProps={{
-                          style: {
-                            padding: "0 5px"
-                          }
-                        }}
-                      />
-                    </Toast>
-                  </SlideUpFadeIn>
-                  <div className={Styles.locationDistance}>
-                    <LocationBar
-                      terria={this.props.terria}
-                      mouseCoords={this.props.terria.currentViewer.mouseCoords}
-                    />
-                    <DistanceLegend terria={this.props.terria} />
-                  </div>
-                </Otherwise>
-              </Choose>
+                  <DistanceLegend terria={this.props.terria} />
+                </div>
+              </If>
+              {/* TODO: re-implement/support custom feedbacks */}
+              {/* <If
+                condition={
+                  !this.props.customFeedbacks.length &&
+                  this.props.terria.configParameters.feedbackUrl &&
+                  !this.props.viewState.hideMapUi
+                }
+              >
+                <div
+                  className={classNames(Styles.feedbackButtonWrapper, {
+                    [Styles.withTimeSeriesControls]: defined(
+                      this.props.terria.timelineStack.top
+                    )
+                  })}
+                >
+                  <FeedbackButton
+                    viewState={this.props.viewState}
+                    btnText={t("feedback.feedbackBtnText")}
+                  />
+                </div>
+              </If> */}
+
               <If
                 condition={
                   this.props.customFeedbacks.length &&

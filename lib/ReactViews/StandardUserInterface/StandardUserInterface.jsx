@@ -42,6 +42,7 @@ import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import WorkflowPanelContainer from "./WorkflowPanelContainer";
+import ElevationPanel from "../Elevation/ElevationPanel";
 
 export const showStoryPrompt = (viewState, terria) => {
   terria.configParameters.showFeaturePrompts &&

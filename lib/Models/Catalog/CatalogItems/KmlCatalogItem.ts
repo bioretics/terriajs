@@ -28,8 +28,10 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
-  extends MappableMixin(
-    UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  extends MeasurableMixin(
+    MappableMixin(
+      UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+    )
   )
   implements HasLocalData {
   static readonly type = "kml";

@@ -8,6 +8,7 @@ import {
 } from "mobx";
 import { Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import addedByUser from "../Core/addedByUser";
 import {
   Category,
