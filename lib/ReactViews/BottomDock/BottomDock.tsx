@@ -4,6 +4,7 @@ import React from "react";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import ChartPanel from "../Custom/Chart/ChartPanel";
+import ElevationChartPanel from "../Custom/Chart/ElevationChartPanel";
 import measureElement from "../HOCs/measureElement";
 import withControlledVisibility from "../HOCs/withControlledVisibility";
 import Styles from "./bottom-dock.scss";
@@ -62,6 +63,14 @@ class BottomDock extends React.Component<PropsType> {
         <div id="TJS-BottomDockFirstPortal" />
         <ChartDisclaimer terria={terria} viewState={this.props.viewState} />
         <ChartPanel terria={terria} viewState={this.props.viewState} />
+        {this.props.viewState.elevationChartIsVisible &&
+          !!terria.pathPoints &&
+          terria.pathPoints.length > 0 && (
+            <ElevationChartPanel
+              terria={terria}
+              viewState={this.props.viewState}
+            />
+          )}
         {top && (
           <Timeline
             terria={terria}

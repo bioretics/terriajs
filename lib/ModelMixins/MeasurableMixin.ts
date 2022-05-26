@@ -72,7 +72,7 @@ namespace MeasurableMixin {
     extends InstanceType<ReturnType<typeof MeasurableMixin>> {}
 
   export function isMixedInto(model: any): model is Instance {
-    return model?.hasDiffableMixin;
+    return model?.hasMeasurableMixin;
   }
 
   export const stratumName = "measureableStratum";

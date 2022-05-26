@@ -23,6 +23,7 @@ import CatalogMemberMixin, {
 import DiffableMixin from "../../../ModelMixins/DiffableMixin";
 import ExportableMixin from "../../../ModelMixins/ExportableMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
+import MeasurableMixin from "../../../ModelMixins/MeasurableMixin";
 import SearchableItemMixin from "../../../ModelMixins/SearchableItemMixin";
 import TimeVarying from "../../../ModelMixins/TimeVarying";
 import CameraView from "../../../Models/CameraView";
@@ -455,6 +456,19 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         ) : null}
+        {MeasurableMixin.isMixedInto(item) && item.canUseAsPath && (
+          <li>
+            <ViewingControlMenuButton
+              onClick={() => runInAction(() => item.computePath())}
+              title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.search} />
+                <span>Percorso</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        )}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
