@@ -429,7 +429,16 @@ export default class Cesium extends GlobeOrMap {
 
     this._disposeWorkbenchMapItemsSubscription = this.observeModelLayer();
     this._disposeTerrainReaction = autorun(() => {
-      this.scene.globe.terrainProvider = this._terrainProvider;
+      // Refresh terrain when TerrainProvider item loaded or when its visibility is changed
+      const newTerrain =
+        this._allMappables.find(({ item, mapItem }) => {
+          return isTerrainProvider(mapItem) && item.show;
+        })?.mapItem ?? this._terrainProvider;
+      //const newTerrain = this._firstMapItemTerrainProviders ?? this._terrainProvider;
+      if (this.scene.globe.terrainProvider !== newTerrain) {
+        this.scene.globe.terrainProvider = newTerrain as TerrainProvider;
+      }
+
       this.scene.globe.splitDirection = this.terria.showSplitter
         ? this.terria.terrainSplitDirection
         : ImagerySplitDirection.NONE;
@@ -659,8 +668,6 @@ export default class Cesium extends GlobeOrMap {
             sampleTerrain(terrainProvider, level, [center])
           );
         } catch {
-          console.log("FALLITOOOO");
-
           // if the request fails just use center with height=0
           terrainSample = center;
         }
