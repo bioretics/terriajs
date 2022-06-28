@@ -113,8 +113,6 @@ export default class UserDrawing extends MappableMixin(
      */
     this.onPointClicked = options.onPointClicked;
 
-    this.onPointMoved = options.onPointMoved;
-
     /**
      * Callback that occurs when point is moved. Function takes a CustomDataSource which is a list of PointEntities.
      */
