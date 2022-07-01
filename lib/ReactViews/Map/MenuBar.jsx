@@ -6,6 +6,7 @@ import classNames from "classnames";
 import SettingPanel from "./Panels/SettingPanel";
 import SharePanel from "./Panels/SharePanel/SharePanel";
 import CoordsPanel from "./Panels/CoordsPanel/CoordsPanel";
+import ColorPanel from "./Panels/ColorPanel/ColorPanel";
 import ToolsPanel from "./Panels/ToolsPanel/ToolsPanel";
 import StoryButton from "./StoryButton/StoryButton";
 import LangPanel from "./Panels/LangPanel/LangPanel";
@@ -75,6 +76,9 @@ const MenuBar = observer(props => {
           </li>
           <li className={Styles.menuItem}>
             <CoordsPanel terria={props.terria} viewState={props.viewState} />
+          </li>
+          <li className={Styles.menuItem}>
+            <ColorPanel terria={props.terria} viewState={props.viewState} />
           </li>
           {props.terria.configParameters?.languageConfiguration?.enabled ? (
             <li className={Styles.menuItem}>
