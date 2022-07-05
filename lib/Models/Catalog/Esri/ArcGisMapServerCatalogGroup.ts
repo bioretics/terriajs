@@ -190,11 +190,24 @@ export class MapServerStratum extends LoadableStratum(
     }
     const id = this._catalogGroup.uniqueId;
     //if parent layer is not -1 then this is sublayer so we define its ID like that
-    const layerId =
+    /*const layerId =
       id +
       "/" +
       (layer.parentLayerId !== -1 ? layer.parentLayerId + "/" : "") +
-      layer.id;
+      layer.id;*/
+    //Use all parents layerId, as in terria.models
+    const parentsArray: number[] = [];
+    let parentLayerId: number = layer.parentLayerId;
+    while (parentLayerId !== -1) {
+      if (this._mapServer?.layers && parentLayerId in this._mapServer.layers) {
+        parentsArray.push(parentLayerId);
+        parentLayerId = this._mapServer.layers[parentLayerId].parentLayerId;
+      }
+    }
+    const layerId = `${id}${
+      parentsArray.length > 0 ? "/" : ""
+    }${parentsArray.reverse().join("/")}/${layer.id}`;
+
     let model: ArcGisMapServerCatalogItem | ArcGisMapServerCatalogGroup;
 
     // Treat layer as a group if it has type "Group Layer" - or has subLayers
