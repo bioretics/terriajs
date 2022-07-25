@@ -37,6 +37,7 @@ import StratumFromTraits from "../../Definition/StratumFromTraits";
 import StratumOrder from "../../Definition/StratumOrder";
 import MinMaxLevelMixin from "./../../../ModelMixins/MinMaxLevelMixin";
 import { scaleDenominatorToLevel } from "../../../Core/scaleToDenominator";
+import CommonStrata from "../../../Models/Definition/CommonStrata";
 
 const proj4 = require("proj4").default;
 
@@ -383,6 +384,17 @@ export default class ArcGisMapServerCatalogItem extends MappableMixin(
     const stratum = await MapServerStratum.load(this);
     runInAction(() => {
       this.strata.set(MapServerStratum.stratumName, stratum);
+
+      if (
+        isDefined(this.maximumScale) &&
+        !isDefined(this.minScaleDenominator)
+      ) {
+        this.setTrait(
+          CommonStrata.user,
+          "minScaleDenominator",
+          this.maximumScale
+        );
+      }
     });
   }
 
@@ -476,7 +488,11 @@ export default class ArcGisMapServerCatalogItem extends MappableMixin(
         url: cleanAndProxyUrl(this, getBaseURI(this).toString()),
         layers: layers,
         tilingScheme: new WebMercatorTilingScheme(),
-        maximumLevel: maximumLevel,
+        maximumLevel:
+          !!maximumLevel && this.hideLayerAfterMinScaleDenominator
+            ? maximumLevel + 1
+            : maximumLevel,
+        //minimumLevel: minimumLevel,
         tileHeight: this.tileHeight,
         tileWidth: this.tileWidth,
         parameters: params,
