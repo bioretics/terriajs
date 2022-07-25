@@ -75,6 +75,7 @@ import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 
 import Color from "terriajs-cesium/Source/Core/Color";
+import CommonStrata from "./Definition/CommonStrata";
 
 //import Cesium3DTilesInspector from "terriajs-cesium/Source/Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector";
 
@@ -431,12 +432,27 @@ export default class Cesium extends GlobeOrMap {
     this._disposeTerrainReaction = autorun(() => {
       // Refresh terrain when TerrainProvider item loaded or when its visibility is changed
       const newTerrain =
-        this._allMappables.find(({ item, mapItem }) => {
-          return isTerrainProvider(mapItem) && item.show;
-        })?.mapItem ?? this._terrainProvider;
+        this._allShowedTerrainMapItems.find(mapItem => {
+          return mapItem !== this.scene.globe.terrainProvider;
+        }) ??
+        this._allShowedTerrainMapItems.find(mapItem => {
+          return mapItem === this.scene.globe.terrainProvider;
+        }) ??
+        this._terrainProvider;
       //const newTerrain = this._firstMapItemTerrainProviders ?? this._terrainProvider;
       if (this.scene.globe.terrainProvider !== newTerrain) {
+        this._allMappables
+          .filter(({ item, mapItem }) => {
+            return (
+              item.show && isTerrainProvider(mapItem) && mapItem !== newTerrain
+            );
+          })
+          .forEach(element => {
+            if (element && element.item)
+              element.item.setTrait(CommonStrata.user, "show", false);
+          });
         this.scene.globe.terrainProvider = newTerrain as TerrainProvider;
+        this.notifyRepaintRequired();
       }
 
       this.scene.globe.splitDirection = this.terria.showSplitter
@@ -542,6 +558,13 @@ export default class Cesium extends GlobeOrMap {
   @computed
   private get _allMapItems(): MapItem[] {
     return this._allMappables.map(({ mapItem }) => mapItem);
+  }
+
+  @computed
+  private get _allShowedTerrainMapItems(): MapItem[] {
+    return this._allMappables
+      .filter(({ mapItem, item }) => isTerrainProvider(mapItem) && item.show)
+      .map(({ mapItem }) => mapItem);
   }
 
   private observeModelLayer() {
