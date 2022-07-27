@@ -27,15 +27,16 @@ function MeasurableMixin<T extends Constructor<MixinModel>>(Base: T) {
 
     @action
     update(newPositions: Cartographic[]) {
-      let dist = 0.0;
+      //let dist = 0.0;
       const stepDistanceMeters: number[] = [0.0];
 
       newPositions.forEach((elem, index) => {
         elem.height = Math.round(elem.height);
         if (index > 0) {
           const geodesic = new EllipsoidGeodesic(elem, newPositions[index - 1]);
-          dist += geodesic.surfaceDistance;
-          stepDistanceMeters.push(dist);
+          /*dist += geodesic.surfaceDistance;
+          stepDistanceMeters.push(dist);*/
+          stepDistanceMeters.push(geodesic.surfaceDistance);
         }
       });
       if (newPositions.length > 1) {
