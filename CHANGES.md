@@ -35,14 +35,24 @@
 #### next release (8.2.5)
 
 #### next release (8.2.13)
+#### next release (8.2.14)
+
+- Moved map credits to map column so it don't get hidden by chart panel.
+- Fix support for `initUrls` in `startData.initSources`
+- Propagate `knownContainerUniqueIds` across references and their target.
+- [The next improvement]
+
+#### 8.2.13 - 2022-09-01
 
 - Fix pedestrian drop behaviour so that the camera heading stays unchanged even after the drop
+- Fixed a bug causing incorrect loading of EPSG:4326 layers in WMS v1.3.0 by sending wrong `bbox` in GetMap requests.
 - Improve the CKAN model robustness by removing leading and trailing spaces in wms layer names.
 - Load all `InitSources` sequentially instead of asyncronosly
 - Fix `DOMPurify.sanitize` call in `PrintView`
-- [The next improvement]
+- Fix warning for WFS item exceeding max displayable features
+- Upgrade prettier to version 2.7.1
 
-#### release 8.2.12 - 2022-08-10
+#### 8.2.12 - 2022-08-10
 
 - Dropped "optional" from the prompt text in file upload modal for both local and web data.
 - Changed the text for the first file upload option from "Auto-detect (recommended)" to simply "File type" for local files and "File or web service type" for web urls.
@@ -50,7 +60,7 @@
 - Removed IFC from upload file type (until further testing).
 - Move `CkanCatalogGroup` "ungrouped" group to end of members
 
-#### release 8.2.11 - 2022-08-08
+#### 8.2.11 - 2022-08-08
 
 - Add ability to customise the getting started video in the StoryBuilder panel
 - Set cesium base URL by default so that cesium assets are resolved correctly
@@ -71,7 +81,7 @@
 - Fix `generateCatalogIndex` for nested references
 - Fix `SearchBox` handling of `searchWithDebounce` when `debounceDuration` prop changes. It now fushes instead of cancels.
 
-#### release 8.2.10 - 2022-08-02
+#### 8.2.10 - 2022-08-02
 
 - **Breaking changes:**
   - **Minimum NodeJS version is now 14**
@@ -120,8 +130,6 @@
 - Rename `FeatureInfoMixin` to `FeatureInfoUrlTemplateMixin`
 - Move `featureInfoTemplate` and `showStringIfPropertyValueIsNull` from `FeatureInfoTraits` to `MappableTraits` (all mappable catalog items)
 - Remove `FeatureInfoUrlTemplateTraits` from all models that don't use `FeatureInfoUrlTemplateMixin`
-- Upgrade prettier to version 2.7.1
-- [The next improvement]
 - Fix "Regions: xxx" short report showing for non region mapped items
 - Fix `showInChartPanel` default for mappable items
 
