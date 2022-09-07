@@ -1,4 +1,4 @@
-import { action, observable, runInAction } from "mobx";
+import { action, observable, runInAction, computed } from "mobx";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
@@ -11,7 +11,7 @@ import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/Constan
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
-import ImagerySplitDirection from "terriajs-cesium/Source/Scene/ImagerySplitDirection";
+import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
 import isDefined from "../Core/isDefined";
 import LatLonHeight from "../Core/LatLonHeight";
 import MapboxVectorTileImageryProvider from "../Map/ImageryProvider/MapboxVectorTileImageryProvider";
@@ -111,6 +111,13 @@ export default abstract class GlobeOrMap {
   abstract notifyRepaintRequired(): void;
 
   /**
+   * List of the attributions (credits) for data currently displayed on map.
+   */
+  @computed
+  get attributions(): string[] {
+    return [];
+  }
+  /**
    * Picks features based off a latitude, longitude and (optionally) height.
    * @param latLngHeight The position on the earth to pick.
    * @param providerCoords A map of imagery provider urls to the coords used to get features for those imagery
@@ -181,6 +188,13 @@ export default abstract class GlobeOrMap {
   }
 
   /**
+   * Adds loading progress (boolean) for 3DTileset layers where total tiles is not known
+   */
+  protected _updateTilesLoadingIndeterminate(loading: boolean): void {
+    this.terria.indeterminateTileLoadProgressEvent.raiseEvent(loading);
+  }
+
+  /**
    * Returns the side of the splitter the `position` lies on.
    *
    * @param The screen position.
@@ -188,7 +202,7 @@ export default abstract class GlobeOrMap {
    */
   protected _getSplitterSideForScreenPosition(
     position: Cartesian2 | Cartesian3
-  ): ImagerySplitDirection | undefined {
+  ): SplitDirection | undefined {
     const container = this.terria.currentViewer.getContainer();
     if (!isDefined(container)) {
       return;
@@ -196,9 +210,9 @@ export default abstract class GlobeOrMap {
 
     const splitterX = container.clientWidth * this.terria.splitPosition;
     if (position.x <= splitterX) {
-      return ImagerySplitDirection.LEFT;
+      return SplitDirection.LEFT;
     } else {
-      return ImagerySplitDirection.RIGHT;
+      return SplitDirection.RIGHT;
     }
   }
 
@@ -378,6 +392,12 @@ export default abstract class GlobeOrMap {
               CommonStrata.user,
               "geoJsonData",
               <any>geoJson
+            );
+
+            catalogItem.setTrait(
+              CommonStrata.user,
+              "useOutlineColorForLineFeatures",
+              true
             );
 
             catalogItem.setTrait(

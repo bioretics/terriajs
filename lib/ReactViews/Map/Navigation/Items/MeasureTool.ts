@@ -1,11 +1,12 @@
 "use strict";
 import i18next from "i18next";
-import { action, observable } from "mobx";
 import React from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
+import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
@@ -24,41 +25,35 @@ const PolylinePipeline = require("terriajs-cesium/Source/Core/PolylinePipeline")
 const PolygonGeometryLibrary = require("terriajs-cesium/Source/Core/PolygonGeometryLibrary")
   .default;
 
-interface PropTypes {
+interface MeasureToolOptions {
   terria: Terria;
-  viewState: ViewState;
-
   onClose(): void;
 }
 
 export default class MeasureTool extends MapNavigationItemController {
   static id = "measure-tool";
   static displayName = "MeasureTool";
-  readonly terria: Terria;
-  readonly viewState: ViewState;
-  @observable
-  totalDistanceMetres: number = 0;
-  @observable
-  totalAreaMetresSquared: number = 0;
-  @observable
-  userDrawing: UserDrawing;
+
+  private readonly terria: Terria;
+  private totalDistanceMetres: number = 0;
+  private totalAreaMetresSquared: number = 0;
+  private userDrawing: UserDrawing;
+
   onClose: () => void;
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-  constructor(props: PropTypes) {
+  constructor(props: MeasureToolOptions) {
     super();
-    const t = i18next.t.bind(i18next);
     this.terria = props.terria;
     this.viewState = props.viewState;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: i18next.t("measure.measureTool"),
+      messageHeader: () => i18next.t("measure.measureTool"),
       allowPolygon: true,
-      onPointClicked: this.onPointClicked,
-      onPointMoved: this.onPointMoved,
-      onCleanUp: this.onCleanUp,
-      onMakeDialogMessage: this.onMakeDialogMessage,
-      viewState: props.viewState
+      onPointClicked: this.onPointClicked.bind(this),
+      onPointMoved: this.onPointMoved.bind(this),
+      onCleanUp: this.onCleanUp.bind(this),
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
     });
     this.onClose = props.onClose;
   }
@@ -233,7 +228,6 @@ export default class MeasureTool extends MapNavigationItemController {
     }
   }
 
-  @action
   updateArea(pointEntities: CustomDataSource) {
     this.totalAreaMetresSquared = 0;
     if (!this.userDrawing.closeLoop) {
@@ -324,7 +318,6 @@ export default class MeasureTool extends MapNavigationItemController {
     return geodesic.surfaceDistance;
   }
 
-  @action.bound
   onCleanUp() {
     this.terria.pathSampled = {};
     this.totalDistanceMetres = 0;
@@ -332,13 +325,11 @@ export default class MeasureTool extends MapNavigationItemController {
     //super.deactivate();
   }
 
-  @action.bound
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
     this.updateArea(pointEntities);
   }
 
-  @action.bound
   onPointMoved(pointEntities: CustomDataSource) {
     // This is no different to clicking a point.
     this.onPointClicked(pointEntities);

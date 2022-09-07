@@ -2,9 +2,9 @@ import i18next from "i18next";
 import {
   computed,
   IReactionDisposer,
+  observable,
   reaction,
-  runInAction,
-  observable
+  runInAction
 } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -39,7 +39,7 @@ interface OnDrawingCompleteParams {
 
 interface Options {
   terria: Terria;
-  messageHeader?: string;
+  messageHeader?: string | (() => string);
   allowPolygon?: boolean;
   drawRectangle?: boolean;
   onMakeDialogMessage?: () => string;
@@ -55,7 +55,7 @@ interface Options {
 export default class UserDrawing extends MappableMixin(
   CreateModel(MappableTraits)
 ) {
-  private readonly messageHeader: string;
+  private readonly messageHeader: string | (() => string);
   private readonly allowPolygon: boolean;
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
@@ -189,7 +189,7 @@ export default class UserDrawing extends MappableMixin(
       : [this.pointEntities, this.otherEntities];
   }
 
-  @computed get svgPoint() {
+  get svgPoint() {
     /**
      * SVG element for point drawn when user clicks.
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
@@ -588,7 +588,12 @@ export default class UserDrawing extends MappableMixin(
    *     Click to add another point
    */
   getDialogMessage() {
-    let message = "<strong>" + this.messageHeader + "</strong></br>";
+    let message =
+      "<strong>" +
+      (typeof this.messageHeader === "function"
+        ? this.messageHeader()
+        : this.messageHeader) +
+      "</strong></br>";
     let innerMessage = isDefined(this.onMakeDialogMessage)
       ? this.onMakeDialogMessage()
       : "";

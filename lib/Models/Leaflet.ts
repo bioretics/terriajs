@@ -1,6 +1,6 @@
 import i18next from "i18next";
-import L, { GridLayer } from "leaflet";
-import { action, autorun, observable, runInAction } from "mobx";
+import { GridLayer } from "leaflet";
+import { action, autorun, computed, observable, runInAction } from "mobx";
 import { computedFn } from "mobx-utils";
 import cesiumCancelAnimationFrame from "terriajs-cesium/Source/Core/cancelAnimationFrame";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
@@ -18,8 +18,7 @@ import DataSourceCollection from "terriajs-cesium/Source/DataSources/DataSourceC
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
 import ImageryProvider from "terriajs-cesium/Source/Scene/ImageryProvider";
-import ImagerySplitDirection from "terriajs-cesium/Source/Scene/ImagerySplitDirection";
-import when from "terriajs-cesium/Source/ThirdParty/when";
+import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
 import html2canvas from "terriajs-html2canvas";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import isDefined from "../Core/isDefined";
@@ -35,11 +34,13 @@ import LeafletDataSourceDisplay from "../Map/Leaflet/LeafletDataSourceDisplay";
 import LeafletScene from "../Map/Leaflet/LeafletScene";
 import LeafletSelectionIndicator from "../Map/Leaflet/LeafletSelectionIndicator";
 import LeafletVisualizer from "../Map/Leaflet/LeafletVisualizer";
+import L from "../Map/LeafletPatched";
 import PickedFeatures, {
   ProviderCoords,
   ProviderCoordsMap
 } from "../Map/PickedFeatures/PickedFeatures";
 import rectangleToLatLngBounds from "../Map/Vector/rectangleToLatLngBounds";
+import FeatureInfoUrlTemplateMixin from "../ModelMixins/FeatureInfoUrlTemplateMixin";
 import MappableMixin, {
   ImageryParts,
   MapItem
@@ -52,6 +53,7 @@ import CameraView from "./CameraView";
 import hasTraits from "./Definition/hasTraits";
 import Feature from "./Feature";
 import GlobeOrMap from "./GlobeOrMap";
+import { LeafletAttribution } from "./LeafletAttribution";
 import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 
@@ -72,7 +74,7 @@ export default class Leaflet extends GlobeOrMap {
   readonly dataSources: DataSourceCollection = new DataSourceCollection();
   readonly dataSourceDisplay: LeafletDataSourceDisplay;
   readonly canShowSplitter = true;
-  private readonly _attributionControl: L.Control.Attribution;
+  private readonly _attributionControl: LeafletAttribution;
   private readonly _leafletVisualizer: LeafletVisualizer;
   private readonly _eventHelper: EventHelper;
   private readonly _selectionIndicator: LeafletSelectionIndicator;
@@ -157,38 +159,11 @@ export default class Leaflet extends GlobeOrMap {
 
     this.scene = new LeafletScene(this.map);
 
-    const attributionProps: L.Control.AttributionOptions = {
-      position: "bottomleft"
-    };
-
-    if (isDefined(this.terria.configParameters.leafletAttributionPrefix)) {
-      attributionProps.prefix = this.terria.configParameters.leafletAttributionPrefix;
-    }
-
-    this._attributionControl = L.control.attribution(attributionProps);
+    this._attributionControl = new LeafletAttribution(this.terria);
     this.map.addControl(this._attributionControl);
-
-    // this.map.screenSpaceEventHandler = {
-    //     setInputAction : function() {},
-    //     remoteInputAction : function() {}
-    // };
 
     this._leafletVisualizer = new LeafletVisualizer();
     this._selectionIndicator = new LeafletSelectionIndicator(this);
-
-    // const terriaLogo = this.terriaViewer.defaultTerriaCredit ? this.terriaViewer.defaultTerriaCredit.html : '';
-
-    // const creditParts = [
-    //     this._getDisclaimer(),
-    //     this._developerAttribution && createCredit(this._developerAttribution.text, this._developerAttribution.link),
-    //     new Credit('<a target="_blank" href="http://leafletjs.com/">Leaflet</a>')
-    // ];
-
-    // this.attributionControl.setPrefix(terriaLogo + creditParts.filter(part => defined(part)).map(credit => credit.html).join(' | '));
-
-    // map.on("boxzoomend", function(e) {
-    //     console.log(e.boxZoomBounds);
-    // });
 
     this.dataSourceDisplay = new LeafletDataSourceDisplay({
       scene: this.scene,
@@ -260,6 +235,15 @@ export default class Leaflet extends GlobeOrMap {
     });
 
     this._initProgressEvent();
+  }
+
+  get attributionPrefix() {
+    return this._attributionControl.prefix;
+  }
+
+  @computed
+  get attributions() {
+    return this._attributionControl.dataAttributions;
   }
 
   /**
@@ -608,13 +592,35 @@ export default class Leaflet extends GlobeOrMap {
       }
     }
 
-    const feature = Feature.fromEntityCollectionOrEntity(entity);
-    if (isDefined(this._pickedFeatures)) {
-      this._pickedFeatures.features.push(feature);
+    const catalogItem = (entity as any)._catalogItem;
 
-      if (isDefined(entity) && entity.position) {
-        this._pickedFeatures.pickPosition = (<any>entity.position)._value;
+    if (
+      FeatureInfoUrlTemplateMixin.isMixedInto(catalogItem) &&
+      typeof catalogItem.getFeaturesFromPickResult === "function" &&
+      this.terria.allowFeatureInfoRequests
+    ) {
+      const result = catalogItem.getFeaturesFromPickResult.bind(catalogItem)(
+        undefined,
+        entity,
+        (this._pickedFeatures?.features.length || 0) < catalogItem.maxRequests
+      );
+      if (result && isDefined(this._pickedFeatures)) {
+        if (Array.isArray(result)) {
+          this._pickedFeatures.features.push(...result);
+        } else {
+          this._pickedFeatures.features.push(result);
+        }
       }
+    } else if (isDefined(this._pickedFeatures)) {
+      const feature = Feature.fromEntityCollectionOrEntity(entity);
+      this._pickedFeatures.features.push(feature);
+    }
+    if (
+      isDefined(this._pickedFeatures) &&
+      isDefined(entity) &&
+      entity.position
+    ) {
+      this._pickedFeatures.pickPosition = (<any>entity.position)._value;
     }
   }
 
@@ -780,7 +786,7 @@ export default class Leaflet extends GlobeOrMap {
             if (
               !(
                 layerDirection === pickedSide ||
-                layerDirection === ImagerySplitDirection.NONE
+                layerDirection === SplitDirection.NONE
               )
             ) {
               return allFeatures;
@@ -847,7 +853,7 @@ export default class Leaflet extends GlobeOrMap {
                 layer.splitDirection = splitDirection;
                 layer.splitPosition = splitPosition;
               } else {
-                layer.splitDirection = ImagerySplitDirection.NONE;
+                layer.splitDirection = SplitDirection.NONE;
                 layer.splitPosition = splitPosition;
               }
             })
@@ -1029,16 +1035,13 @@ export default class Leaflet extends GlobeOrMap {
         });
       }
 
-      return new Promise<string>((resolve, reject) => {
-        // wrap old-style when promise with new standard library promise
-        when(promise)
-          .then((canvas: HTMLCanvasElement) => {
-            resolve(canvas.toDataURL("image/png"));
-          })
-          .always(() => {
-            this._attributionControl.addTo(this.map);
-          });
-      });
+      return promise
+        .then((canvas: HTMLCanvasElement) => {
+          return canvas.toDataURL("image/png");
+        })
+        .finally(() => {
+          this._attributionControl.addTo(this.map);
+        });
     } catch (e) {
       this._attributionControl.addTo(this.map);
       return Promise.reject(e);

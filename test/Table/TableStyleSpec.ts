@@ -6,6 +6,9 @@ import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import createStratumInstance from "../../lib/Models/Definition/createStratumInstance";
 import updateModelFromJson from "../../lib/Models/Definition/updateModelFromJson";
 import Terria from "../../lib/Models/Terria";
+import LegendTraits, {
+  LegendItemTraits
+} from "../../lib/Traits/TraitsClasses/LegendTraits";
 import TableColorStyleTraits from "../../lib/Traits/TraitsClasses/TableColorStyleTraits";
 import TableColumnTraits, {
   ColumnTransformationTraits
@@ -144,6 +147,108 @@ describe("TableStyle", function() {
         "#a1d76a",
         "#4d9221"
       ]);
+
+      const colMap = activeStyle.colorMap as DiscreteColorMap;
+
+      expect(colMap.mapValueToColor(0).toCssHexString()).toBe(
+        "#c51b7d",
+        "0 - which should be first bin (-Infinity, 8]"
+      );
+
+      expect(colMap.mapValueToColor(7.9999).toCssHexString()).toBe(
+        "#c51b7d",
+        "7.9999 - which should be first bin (-Infinity, 8]"
+      );
+
+      expect(colMap.mapValueToColor(8).toCssHexString()).toBe(
+        "#c51b7d",
+        "8 - which should be first bin (-Infinity, 8]"
+      );
+
+      expect(colMap.mapValueToColor(8.0001).toCssHexString()).toBe(
+        "#e9a3c9",
+        "8.0001 - which should be second bin (8,10]"
+      );
+
+      expect(colMap.mapValueToColor(9.9999).toCssHexString()).toBe(
+        "#e9a3c9",
+        "9.9999 - which should be second bin (8,10]"
+      );
+
+      expect(colMap.mapValueToColor(10).toCssHexString()).toBe(
+        "#e9a3c9",
+        "10 - which should be second bin (8,10]"
+      );
+
+      expect(colMap.mapValueToColor(10.0001).toCssHexString()).toBe(
+        "#fde0ef",
+        "10.0001 - which should be third bin (10,15]"
+      );
+
+      expect(colMap.mapValueToColor(14.9999).toCssHexString()).toBe(
+        "#fde0ef",
+        "14.9999 - which should be third bin (10,15]"
+      );
+
+      expect(colMap.mapValueToColor(15).toCssHexString()).toBe(
+        "#fde0ef",
+        "15 - which should be third bin (10,15]"
+      );
+
+      expect(colMap.mapValueToColor(15.0001).toCssHexString()).toBe(
+        "#e6f5d0",
+        "15.0001 - which should be fourth bin (15,20]"
+      );
+
+      expect(colMap.mapValueToColor(19.9999).toCssHexString()).toBe(
+        "#e6f5d0",
+        "19.9999 - which should be fourth bin (15,20]"
+      );
+
+      expect(colMap.mapValueToColor(20).toCssHexString()).toBe(
+        "#e6f5d0",
+        "20 - which should be fourth bin (15,20]"
+      );
+
+      expect(colMap.mapValueToColor(20.0001).toCssHexString()).toBe(
+        "#a1d76a",
+        "20.0001 - which should be fifth bin (20,30]"
+      );
+
+      expect(colMap.mapValueToColor(29.9999).toCssHexString()).toBe(
+        "#a1d76a",
+        "29.9999 - which should be fifth bin (20,30]"
+      );
+
+      expect(colMap.mapValueToColor(30).toCssHexString()).toBe(
+        "#a1d76a",
+        "30 - which should be fifth bin (20,30]"
+      );
+
+      expect(colMap.mapValueToColor(30.0001).toCssHexString()).toBe(
+        "#4d9221",
+        "30.0001 - which should be sixth bin (30,Infinity)"
+      );
+
+      expect(colMap.mapValueToColor(60).toCssHexString()).toBe(
+        "#4d9221",
+        "60 - which should be last bin (30,Infinity)"
+      );
+
+      // Uncomment when outlierColor support is added to DiscreteColorMap
+
+      // runInAction(() =>
+      //   activeStyle.colorTraits.setTrait(
+      //     CommonStrata.user,
+      //     "outlierColor",
+      //     "#ff0000"
+      //   )
+      // );
+      //
+      // expect(colMap.mapValueToColor(60).toCssHexString()).toBe(
+      //   "#ff0000",
+      //   "60 - which should be last bin (as outlierColor is undefined)"
+      // );
     });
 
     it(" - uses ContinuousColorMap by default", async function() {
@@ -477,6 +582,30 @@ describe("TableStyle", function() {
         expect(colorMap.maxValue).toBe(101);
         expect(colorMap.outlierColor).toBeUndefined();
       });
+    });
+
+    it(" - applied colorTraits on top of TableLegendStratum", async function() {
+      csvItem.setTrait("definition", "csvString", SedCsv);
+
+      csvItem.setTrait("definition", "styles", [
+        createStratumInstance(TableStyleTraits, {
+          id: "Value",
+          color: createStratumInstance(TableColorStyleTraits, {
+            numberOfBins: 7,
+            legend: createStratumInstance(LegendTraits, {
+              title: "Some other title",
+              items: [
+                createStratumInstance(LegendItemTraits, { color: "what" })
+              ]
+            })
+          })
+        })
+      ]);
+      await csvItem.loadMapItems();
+
+      expect(csvItem.legends[0].title).toBe("Some other title");
+      expect(csvItem.legends[0].items.length).toBe(1);
+      expect(csvItem.legends[0].items[0].color).toBe("what");
     });
   });
 

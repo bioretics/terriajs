@@ -5,22 +5,20 @@ import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import ChartPanel from "../Custom/Chart/ChartPanel";
 import ElevationChartPanel from "../Custom/Chart/ElevationChartPanel";
-import measureElement from "../HOCs/measureElement";
+import measureElement, { MeasureElementProps } from "../HOCs/measureElement";
 import withControlledVisibility from "../HOCs/withControlledVisibility";
 import Styles from "./bottom-dock.scss";
 import ChartDisclaimer from "./ChartDisclaimer";
 import Timeline from "./Timeline/Timeline";
 
-interface PropsType {
+interface PropsType extends MeasureElementProps {
   terria: Terria;
   viewState: ViewState;
-  heightFromMeasureElementHOC: number;
-  domElementRef: (element: HTMLDivElement) => void;
 }
 
 @observer
 class BottomDock extends React.Component<PropsType> {
-  refToMeasure?: HTMLDivElement;
+  refToMeasure: HTMLDivElement | null = null;
 
   handleClick() {
     runInAction(() => {
@@ -34,7 +32,7 @@ class BottomDock extends React.Component<PropsType> {
       this.props.heightFromMeasureElementHOC
     ) {
       this.props.viewState.setBottomDockHeight(
-        this.props.heightFromMeasureElementHOC
+        this.props.heightFromMeasureElementHOC ?? 0
       );
     }
   }
@@ -50,12 +48,11 @@ class BottomDock extends React.Component<PropsType> {
         }`}
         ref={element => {
           if (element !== null) {
-            this.props.domElementRef(element);
             this.refToMeasure = element;
           }
         }}
         tabIndex={0}
-        onClick={this.handleClick}
+        onClick={this.handleClick.bind(this)}
         css={`
           background: ${(p: any) => p.theme.dark};
         `}

@@ -7,7 +7,7 @@ import styled from "styled-components";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import defined from "terriajs-cesium/Source/Core/defined";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
-import ImagerySplitDirection from "terriajs-cesium/Source/Scene/ImagerySplitDirection";
+import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
 import {
   Category,
   DataSourceAction
@@ -42,6 +42,7 @@ import AnimatedSpinnerIcon from "../../../Styled/AnimatedSpinnerIcon";
 import Box from "../../../Styled/Box";
 import { RawButton } from "../../../Styled/Button";
 import Icon, { StyledIcon } from "../../../Styled/Icon";
+import Ul from "../../../Styled/List";
 import { VectorTraits } from "../../../Traits/TraitsClasses/MappableTraits";
 import SplitterTraits from "../../../Traits/TraitsClasses/SplitterTraits";
 import { exportData } from "../../Preview/ExportData";
@@ -227,11 +228,11 @@ class ViewingControls extends React.Component<
     runInAction(async () => {
       if (!hasTraits(item, SplitterTraits, "splitDirection")) return;
 
-      if (item.splitDirection === ImagerySplitDirection.NONE) {
+      if (item.splitDirection === SplitDirection.NONE) {
         item.setTrait(
           CommonStrata.user,
           "splitDirection",
-          ImagerySplitDirection.RIGHT
+          SplitDirection.RIGHT
         );
       }
 
@@ -255,9 +256,9 @@ class ViewingControls extends React.Component<
           target.setTrait(
             CommonStrata.user,
             "splitDirection",
-            item.splitDirection === ImagerySplitDirection.LEFT
-              ? ImagerySplitDirection.RIGHT
-              : ImagerySplitDirection.LEFT
+            item.splitDirection === SplitDirection.LEFT
+              ? SplitDirection.RIGHT
+              : SplitDirection.LEFT
           );
         }
       });
@@ -491,7 +492,7 @@ class ViewingControls extends React.Component<
     const showMenu = item.uniqueId === viewState.workbenchItemWithOpenControls;
     return (
       <Box>
-        <ul
+        <Ul
           css={`
             list-style: none;
             padding-left: 0;
@@ -510,6 +511,7 @@ class ViewingControls extends React.Component<
               margin-right: 0;
             }
           `}
+          gap={2}
         >
           <WorkbenchButton
             onClick={this.zoomTo.bind(this)}
@@ -555,7 +557,7 @@ class ViewingControls extends React.Component<
             iconOnly
             iconElement={() => <Icon glyph={Icon.GLYPHS.menuDotted} />}
           />
-        </ul>
+        </Ul>
         {showMenu && (
           <Box
             css={`
