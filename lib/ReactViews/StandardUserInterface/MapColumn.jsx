@@ -219,7 +219,7 @@ const MapColumn = observer(
                   title={keyboardControlDescription}
                   style={{
                     right: "20px",
-                    bottom: this.props.terria.configParameters.feedbackUrl
+                    bottom: this.props.viewState.terria.configParameters.feedbackUrl
                       ? "110px"
                       : "75px",
                     position: "absolute"
@@ -301,7 +301,7 @@ function getFlagForKeyCode(keyCode) {
 }
 
 function keyboardTickFunc(props) {
-  const scene = props.terria.cesium.scene;
+  const scene = props.viewState.terria.cesium.scene;
   const ellipsoid = scene.globe.ellipsoid;
   const camera = scene.camera;
   const cameraHeight = ellipsoid.cartesianToCartographic(camera.position)
@@ -339,7 +339,7 @@ function keyboardTickFunc(props) {
     camera.lookRight();
   }
 
-  props.terria.currentViewer.notifyRepaintRequired();
+  props.viewState.terria.currentViewer.notifyRepaintRequired();
 }
 
 export default withTranslation()(withViewState(MapColumn));

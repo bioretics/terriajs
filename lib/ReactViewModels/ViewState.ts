@@ -311,11 +311,6 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable elevationChartIsVisible: boolean = false;
-  /**
-   * Gets or sets a value indicating whether the path line drawn by MeasureTool is clamped to ground.
-   * @type {Boolean}
-   */
-  @observable clampMeasureLineToGround: boolean = true;
 
   /**
    * True if this is (or will be) the first time the user has added data to the map.

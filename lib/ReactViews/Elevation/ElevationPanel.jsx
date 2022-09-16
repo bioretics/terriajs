@@ -35,7 +35,7 @@ const ElevationPanel = observer(props => {
   });
 
   const toggleLineClampToGround = action(() => {
-    viewState.clampMeasureLineToGround = !viewState.clampMeasureLineToGround;
+    terria.clampMeasureLineToGround = !terria.clampMeasureLineToGround;
   });
 
   const prettifyNumber = (number, squared) => {
@@ -148,7 +148,7 @@ const ElevationPanel = observer(props => {
               `}
               onClick={toggleLineClampToGround}
             >
-              {viewState.clampMeasureLineToGround ? "in aria" : "a terra"}
+              {terria.clampMeasureLineToGround ? "in aria" : "a terra"}
             </Button>
             <Button
               css={`

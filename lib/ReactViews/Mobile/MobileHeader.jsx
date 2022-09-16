@@ -187,7 +187,7 @@ class MobileHeader extends React.Component {
                   className={Styles.btnViewMode}
                   onClick={this.onMobileSwitchViewClicked.bind(this)}
                 >
-                  {this.props.terria.mainViewer.viewerMode ===
+                  {this.props.viewState.terria.mainViewer.viewerMode ===
                   ViewerMode.Leaflet
                     ? "3D"
                     : "2D"}

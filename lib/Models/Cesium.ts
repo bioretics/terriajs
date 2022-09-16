@@ -1802,5 +1802,5 @@ function flyToBoundingSpherePromise(
 
 function getRayPosition(coord: Cartesian2, scene: Scene) {
   const ray = scene.camera.getPickRay(coord);
-  return scene.globe.pick(ray, scene);
+  return ray ? scene.globe.pick(ray, scene) : undefined;
 }

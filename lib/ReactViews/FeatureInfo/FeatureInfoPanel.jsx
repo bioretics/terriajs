@@ -226,11 +226,11 @@ class FeatureInfoPanel extends React.Component {
     const that = this;
 
     if (
-      !!this.props.terria.cesium &&
-      this.props.terria.cesium.scene.terrainProvider
+      !!this.props.viewState.terria.cesium &&
+      this.props.viewState.terria.cesium.scene.terrainProvider
     ) {
       sampleTerrainMostDetailed(
-        this.props.terria.cesium.scene.terrainProvider,
+        this.props.viewState.terria.cesium.scene.terrainProvider,
         [cartographic]
       ).then(function(newPositions) {
         that.setState({ elev: Math.round(newPositions[0].height) });
@@ -249,7 +249,7 @@ class FeatureInfoPanel extends React.Component {
 
     return (
       <div>
-        <If condition={!!this.props.terria.cesium && this.state.elev}>
+        <If condition={!!this.props.viewState.terria.cesium && this.state.elev}>
           <div className={Styles.location}>
             <span>Altitudine</span>
             <span>{this.state.elev} m s.l.m.</span>

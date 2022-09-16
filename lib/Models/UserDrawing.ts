@@ -49,7 +49,6 @@ interface Options {
   onDrawingComplete?: (params: OnDrawingCompleteParams) => void;
   onCleanUp?: () => void;
   invisible?: boolean;
-  viewState?: ViewState;
 }
 
 export default class UserDrawing extends MappableMixin(
@@ -67,7 +66,6 @@ export default class UserDrawing extends MappableMixin(
   private readonly onCleanUp?: () => void;
   private readonly invisible?: boolean;
   private readonly dragHelper: DragPoints;
-  private readonly viewState?: ViewState;
 
   pointEntities: CustomDataSource;
   otherEntities: CustomDataSource;
@@ -155,8 +153,6 @@ export default class UserDrawing extends MappableMixin(
 
     this.invisible = options.invisible;
 
-    this.viewState = options.viewState;
-
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, customDataSource => {
       if (typeof this.onPointMoved === "function") {
@@ -166,7 +162,7 @@ export default class UserDrawing extends MappableMixin(
     });
 
     this.disposeClampMeasureLineToGround = reaction(
-      () => this.viewState?.clampMeasureLineToGround,
+      () => this.terria?.clampMeasureLineToGround,
       clampMeasureLineToGround => {
         if (!!this.otherEntities.entities.values[0].polyline) {
           this.otherEntities.entities.values[0].polyline.clampToGround = new ConstantProperty(
@@ -306,7 +302,7 @@ export default class UserDrawing extends MappableMixin(
           }, false),
 
           // Clamp to ground lines of Measure Tool
-          clampToGround: !!this.viewState?.clampMeasureLineToGround,
+          clampToGround: !!this.terria?.clampMeasureLineToGround,
 
           material: new PolylineGlowMaterialProperty(<any>{
             color: new Color(0.0, 0.0, 0.0, 0.1),

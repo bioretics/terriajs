@@ -43,6 +43,7 @@ import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import WorkflowPanelContainer from "./WorkflowPanelContainer";
+import ElevationPanel from "../Elevation/ElevationPanel";
 
 export const animationDuration = 250;
 
@@ -284,6 +285,10 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
               })}
             >
               <FeatureInfoPanel />
+              <ElevationPanel
+                  terria={props.terria}
+                  viewState={props.viewState}
+                />
             </div>
             <DragDropFile />
             <DragDropNotification />
