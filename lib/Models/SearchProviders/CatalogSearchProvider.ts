@@ -41,7 +41,7 @@ export function loadAndSearchCatalogRecursively(
       // saveModelToJson(modelToSave, {
       //   includeStrata: [CommonStrata.definition]
       // });
-      autorun(reaction => {
+      autorun((reaction) => {
         // Search also in catalog item info.
         /* const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${
           modelToSave.description
@@ -78,10 +78,10 @@ export function loadAndSearchCatalogRecursively(
   if (referencesAndGroupsToLoad.length === 0) {
     return Promise.resolve();
   }
-  return new Promise(resolve => {
-    autorun(reaction => {
+  return new Promise((resolve) => {
+    autorun((reaction) => {
       Promise.all(
-        referencesAndGroupsToLoad.map(async model => {
+        referencesAndGroupsToLoad.map(async (model) => {
           if (ReferenceMixin.isMixedInto(model)) {
             // TODO: could handle errors better here
             (await model.loadReference()).throwIfError();

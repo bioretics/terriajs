@@ -19,7 +19,7 @@ import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PropTypes from "prop-types";
 
-const CoordsText = props => {
+const CoordsText = (props) => {
   const {
     name,
     title,
@@ -35,7 +35,7 @@ const CoordsText = props => {
   useEffect(() => {
     const clipboardBtn = new clipboard(`.btn-copy-${name}`);
 
-    clipboardBtn.on("success", evt => {
+    clipboardBtn.on("success", (evt) => {
       console.log("ok");
     });
     clipboardBtn.on("error", () => {
@@ -65,7 +65,7 @@ const CoordsText = props => {
           readOnly={readonly ?? false}
           // placeholder={this.state.placeholder}
           // onClick={e => setValue(e)}
-          onChange={e => setValue(e.target.value)}
+          onChange={(e) => setValue(e.target.value)}
           id={name}
         />
         <Button
@@ -109,7 +109,7 @@ const CoordsText = props => {
   );
 };
 
-const SrsSelection = props => {
+const SrsSelection = (props) => {
   const {
     title,
     tooltip,
@@ -129,7 +129,7 @@ const SrsSelection = props => {
       <div>{title}</div>
 
       <Select
-        onChange={e => {
+        onChange={(e) => {
           setSrs(conversionList[e.target.value]);
         }}
         title={tooltip}
@@ -168,7 +168,7 @@ const SrsSelection = props => {
   );
 };
 
-const CoordsPanel = props => {
+const CoordsPanel = (props) => {
   const { terria, viewState, modalWidth, onUserClick } = props;
 
   const conversionList = [
@@ -178,8 +178,7 @@ const CoordsPanel = props => {
       to: 3003,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -188,8 +187,7 @@ const CoordsPanel = props => {
       to: 3004,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -198,8 +196,7 @@ const CoordsPanel = props => {
       to: 4265,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -208,8 +205,7 @@ const CoordsPanel = props => {
       to: 5659,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -260,8 +256,7 @@ const CoordsPanel = props => {
       to: 4230,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -270,8 +265,7 @@ const CoordsPanel = props => {
       to: 23032,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -280,8 +274,7 @@ const CoordsPanel = props => {
       to: 23033,
       transformForward: false,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -304,8 +297,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -314,8 +306,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -324,8 +315,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -334,8 +324,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
+        wkt: 'GEOGTRAN["CGT_AD400_MM_ETRS89_V1A",GEOGCS["GCS_Monte_Mario",DATUM["D_Monte_Mario",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_ad400_v1/RER_AD400_MM_ETRS89_V1A",0.0]]'
       }
     },
     {
@@ -386,8 +375,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -396,8 +384,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -406,8 +393,7 @@ const CoordsPanel = props => {
       to: 4326,
       transformForward: true,
       wkt: {
-        wkt:
-          'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
+        wkt: 'GEOGTRAN["CGT_ED50_ETRS89_GPS7_K2",GEOGCS["GCS_European_1950",DATUM["D_European_1950",SPHEROID["International_1924",6378388.0,297.0]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],METHOD["NTv2"],PARAMETER["Dataset_it_emirom_gps7_k2/RER_ED50_ETRS89_GPS7_K2",0.0]]'
       }
     },
     {
@@ -521,7 +507,7 @@ const CoordsPanel = props => {
         transformForward: srs.transformForward,
         f: "json"
       }
-    }).then(function(results) {
+    }).then(function (results) {
       if (results.geometries) {
         const geom = results.geometries[0];
         const areLatLon =

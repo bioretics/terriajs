@@ -72,7 +72,7 @@ class ElevationChartPanel extends React.Component {
       const pathDistances = this.props.terria.pathDistances.slice();
       const y = this.props.terria.pathPoints
         .slice()
-        .map(p => Math.round(p.height));
+        .map((p) => Math.round(p.height));
       const item = {
         categoryName: "Percorso",
         name: "in aria",
@@ -103,7 +103,7 @@ class ElevationChartPanel extends React.Component {
       const sampledX = [];
       const sampledY = [];
       let distance = 0;
-      pathSampled.forEach(elem => {
+      pathSampled.forEach((elem) => {
         elem.stepDistances.forEach((dist, i) => {
           distance += dist;
           sampledX.push(distance.toFixed(2));

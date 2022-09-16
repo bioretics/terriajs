@@ -149,7 +149,7 @@ export default class NominatimSearchProvider extends SearchProvider {
     );
 
     return Promise.all([promiseBounded, promiseOthers])
-      .then(result => {
+      .then((result) => {
         if (searchResults.isCanceled) {
           // A new search has superseded this one, so ignore the result.
           return;
@@ -197,7 +197,7 @@ export default class NominatimSearchProvider extends SearchProvider {
           searchResults.message = i18next.t("viewModels.searchNoLocations");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         if (searchResults.isCanceled) {
           // A new search has superseded this one, so ignore the result.
           return;
@@ -232,7 +232,7 @@ function createZoomToFunction(model: NominatimSearchProvider, resource: any) {
 
   const rectangle = Rectangle.fromCartographicArray([westSouth, eastNorth]);
 
-  return function() {
+  return function () {
     const terria = model.terria;
     terria.currentViewer.zoomTo(rectangle, model.flightDurationSeconds);
   };

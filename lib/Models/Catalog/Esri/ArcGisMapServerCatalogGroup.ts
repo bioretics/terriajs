@@ -151,14 +151,14 @@ export class MapServerStratum extends LoadableStratum(
   get members(): ModelReference[] {
     return filterOutUndefined(
       this.layers
-        .map(layer => {
+        .map((layer) => {
           if (!isDefined(layer.id) || layer.parentLayerId !== -1) {
             return undefined;
           }
           return this._catalogGroup.uniqueId + "/" + layer.id;
         })
         .concat(
-          this.subLayers.map(subLayer => {
+          this.subLayers.map((subLayer) => {
             if (!isDefined(subLayer.id)) {
               return undefined;
             }
@@ -180,7 +180,7 @@ export class MapServerStratum extends LoadableStratum(
 
   @action
   createMembersFromLayers() {
-    this.layers.forEach(layer => this.createMemberFromLayer(layer));
+    this.layers.forEach((layer) => this.createMemberFromLayer(layer));
   }
 
   @action
@@ -204,9 +204,9 @@ export class MapServerStratum extends LoadableStratum(
         parentLayerId = this._mapServer.layers[parentLayerId].parentLayerId;
       }
     }
-    const layerId = `${id}${
-      parentsArray.length > 0 ? "/" : ""
-    }${parentsArray.reverse().join("/")}/${layer.id}`;
+    const layerId = `${id}${parentsArray.length > 0 ? "/" : ""}${parentsArray
+      .reverse()
+      .join("/")}/${layer.id}`;
 
     let model: ArcGisMapServerCatalogItem | ArcGisMapServerCatalogGroup;
 
@@ -281,7 +281,7 @@ export default class ArcGisMapServerCatalogGroup extends UrlMixin(
   }
 
   protected forceLoadMetadata(): Promise<void> {
-    return MapServerStratum.load(this).then(stratum => {
+    return MapServerStratum.load(this).then((stratum) => {
       runInAction(() => {
         this.strata.set(MapServerStratum.stratumName, stratum);
       });

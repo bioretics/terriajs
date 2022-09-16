@@ -11,6 +11,9 @@ interface CssExports {
   'catalogShareInner': string;
   'dropdown-inner': string;
   'dropdownInner': string;
+  'file-input': string;
+  'fileInput': string;
+  'input': string;
   'share-panel': string;
   'sharePanel': string;
   'story-share': string;

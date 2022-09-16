@@ -13,7 +13,7 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createElevationBandMaterial from "terriajs-cesium/Source/Scene/createElevationBandMaterial";
 import PropTypes from "prop-types";
 
-const ColorPanel = props => {
+const ColorPanel = (props) => {
   const { terria, viewState, modalWidth, onUserClick } = props;
 
   const [isOpen, setIsOpen] = useState(false);
@@ -31,7 +31,7 @@ const ColorPanel = props => {
   const apply = () => {
     var material = createElevationBandMaterial({
       scene: terria.cesium.scene,
-      layers: layers.map(layer => {
+      layers: layers.map((layer) => {
         return {
           entries: [
             {
@@ -74,7 +74,7 @@ const ColorPanel = props => {
             dark={true}
             type="number"
             value={bandTransparency}
-            onChange={e => setBandTransparency(Number(e.target.value))}
+            onChange={(e) => setBandTransparency(Number(e.target.value))}
           />
         </Box>
         <Button
@@ -87,7 +87,7 @@ const ColorPanel = props => {
             margin-bottom: 8px;
           `}
           onClick={() => {
-            setLayers(old => [
+            setLayers((old) => [
               ...old,
               {
                 fromHeight: 0,
@@ -116,7 +116,7 @@ const ColorPanel = props => {
                 type="number"
                 placeholder="From"
                 value={layer.fromHeight}
-                onChange={e => {
+                onChange={(e) => {
                   setLayers(
                     layers.map((item, ind) =>
                       ind === index
@@ -133,7 +133,7 @@ const ColorPanel = props => {
                 large
                 type="color"
                 value={layer.fromColor}
-                onChange={e => {
+                onChange={(e) => {
                   setLayers(
                     layers.map((item, ind) =>
                       ind === index
@@ -155,7 +155,7 @@ const ColorPanel = props => {
                 type="number"
                 placeholder="To"
                 value={layer.toHeight}
-                onChange={e => {
+                onChange={(e) => {
                   setLayers(
                     layers.map((item, ind) =>
                       ind === index
@@ -172,7 +172,7 @@ const ColorPanel = props => {
                 large
                 type="color"
                 value={layer.toColor}
-                onChange={e => {
+                onChange={(e) => {
                   setLayers(
                     layers.map((item, ind) =>
                       ind === index

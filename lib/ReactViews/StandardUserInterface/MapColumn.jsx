@@ -99,7 +99,7 @@ const MapColumn = observer(
                 <div
                   css={`
                     ${this.props.viewState.explorerPanelIsVisible &&
-                      "opacity: 0.3;"}
+                    "opacity: 0.3;"}
                   `}
                 >
                   <MenuBar
@@ -304,8 +304,9 @@ function keyboardTickFunc(props) {
   const scene = props.viewState.terria.cesium.scene;
   const ellipsoid = scene.globe.ellipsoid;
   const camera = scene.camera;
-  const cameraHeight = ellipsoid.cartesianToCartographic(camera.position)
-    .height;
+  const cameraHeight = ellipsoid.cartesianToCartographic(
+    camera.position
+  ).height;
   const moveRate = cameraHeight / 100.0;
 
   if (flags.moveForward) {

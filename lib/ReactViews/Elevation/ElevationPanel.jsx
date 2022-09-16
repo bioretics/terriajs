@@ -13,7 +13,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Button from "../../Styled/Button";
 import Box from "../../Styled/Box";
 
-const ElevationPanel = observer(props => {
+const ElevationPanel = observer((props) => {
   const { terria, viewState } = props;
 
   const panelClassName = classNames(Styles.panel, {
@@ -101,7 +101,7 @@ const ElevationPanel = observer(props => {
   };
 
   const heights = computed(() => {
-    return terria.pathPoints?.map(elem => elem.height) || [];
+    return terria.pathPoints?.map((elem) => elem.height) || [];
   });
 
   return (

@@ -8,7 +8,6 @@ import MeasurableTraits from "./MeasurableTraits";
 
 export default class KmlCatalogItemTraits extends mixTraits(
   MeasurableTraits,
-  FeatureInfoTraits,
   UrlTraits,
   MappableTraits,
   CatalogMemberTraits,

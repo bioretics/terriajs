@@ -1,12 +1,12 @@
 "use strict";
 import i18next from "i18next";
+import { action } from "mobx";
 import React from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
-import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
+//import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
@@ -20,10 +20,10 @@ import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentP
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-const PolylinePipeline = require("terriajs-cesium/Source/Core/PolylinePipeline")
-  .default;
-const PolygonGeometryLibrary = require("terriajs-cesium/Source/Core/PolygonGeometryLibrary")
-  .default;
+const PolylinePipeline =
+  require("terriajs-cesium/Source/Core/PolylinePipeline").default;
+const PolygonGeometryLibrary =
+  require("terriajs-cesium/Source/Core/PolygonGeometryLibrary").default;
 
 interface MeasureToolOptions {
   terria: Terria;
@@ -45,7 +45,7 @@ export default class MeasureTool extends MapNavigationItemController {
   constructor(props: MeasureToolOptions) {
     super();
     this.terria = props.terria;
-    this.viewState = props.viewState;
+    //this.viewState = props.viewState;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
       messageHeader: () => i18next.t("measure.measureTool"),
@@ -105,20 +105,20 @@ export default class MeasureTool extends MapNavigationItemController {
       pointA,
       pointB
     ]);
-    const interpolatedCartographics = ellipsoid.cartesianArrayToCartographicArray(
-      PolylinePipeline.generateCartesianArc({
-        positions: cartesians,
-        granularity: granularity
-      })
-    );
+    const interpolatedCartographics =
+      ellipsoid.cartesianArrayToCartographicArray(
+        PolylinePipeline.generateCartesianArc({
+          positions: cartesians,
+          granularity: granularity
+        })
+      );
 
     const sampledCartographics = await sampleTerrainMostDetailed(
       terrainProvider,
       interpolatedCartographics
     );
-    const sampledCartesians = ellipsoid.cartographicArrayToCartesianArray(
-      sampledCartographics
-    );
+    const sampledCartesians =
+      ellipsoid.cartographicArrayToCartesianArray(sampledCartographics);
 
     let totalDistance: number = 0;
     const stepDistances: number[] = [];
@@ -136,7 +136,7 @@ export default class MeasureTool extends MapNavigationItemController {
       index: index,
       totalDistance: totalDistance,
       stepDistances: stepDistances,
-      stepHeights: sampledCartographics.map(elem => elem.height)
+      stepHeights: sampledCartographics.map((elem) => elem.height)
     };
 
     return res;
@@ -189,7 +189,7 @@ export default class MeasureTool extends MapNavigationItemController {
             terrainProvider,
             ellipsoid
           ).then(
-            action(res => {
+            action((res) => {
               this.terria.pathSampled = {
                 ...this.terria.pathSampled,
                 [res.key]: res
@@ -223,9 +223,9 @@ export default class MeasureTool extends MapNavigationItemController {
     this.terria.pathPoints = pathPoints;
     this.terria.pathDistances = pathDistances;
 
-    if (pathDistances.length > 0) {
+    /*if (pathDistances.length > 0) {
       this.viewState.elevationPanelIsVisible = true;
-    }
+    }*/
   }
 
   updateArea(pointEntities: CustomDataSource) {
@@ -305,12 +305,10 @@ export default class MeasureTool extends MapNavigationItemController {
   getGeodesicDistance(pointOne: Cartesian3, pointTwo: Cartesian3) {
     // Note that Cartesian.distance gives the straight line distance between the two points, ignoring
     // curvature. This is not what we want.
-    const pickedPointCartographic = Ellipsoid.WGS84.cartesianToCartographic(
-      pointOne
-    );
-    const lastPointCartographic = Ellipsoid.WGS84.cartesianToCartographic(
-      pointTwo
-    );
+    const pickedPointCartographic =
+      Ellipsoid.WGS84.cartesianToCartographic(pointOne);
+    const lastPointCartographic =
+      Ellipsoid.WGS84.cartesianToCartographic(pointTwo);
     const geodesic = new EllipsoidGeodesic(
       pickedPointCartographic,
       lastPointCartographic

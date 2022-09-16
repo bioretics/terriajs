@@ -49,12 +49,12 @@ function MeasurableMixin<T extends Constructor<MixinModel>>(Base: T) {
       if (!this?.terria?.cesium?.scene) {
         return;
       }
-      const terrainProvider: TerrainProvider = this.terria?.cesium?.scene
-        .terrainProvider;
+      const terrainProvider: TerrainProvider =
+        this.terria?.cesium?.scene.terrainProvider;
 
       let prom = Promise.resolve(positions);
-      if (positions.every(element => element.height < 1)) {
-        prom = prom.then(pos =>
+      if (positions.every((element) => element.height < 1)) {
+        prom = prom.then((pos) =>
           sampleTerrainMostDetailed(terrainProvider, pos)
         );
       }

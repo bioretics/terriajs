@@ -35,6 +35,7 @@
 #### next release (8.2.5)
 
 #### next release (8.2.13)
+
 #### next release (8.2.14)
 
 - Moved map credits to map column so it don't get hidden by chart panel.

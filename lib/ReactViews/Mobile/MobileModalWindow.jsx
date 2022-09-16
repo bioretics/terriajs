@@ -27,7 +27,7 @@ const MobileModalWindow = observer(
     },
 
     async onFileAddFinished(files) {
-      const file = files.find(f => MappableMixin.isMixedInto(f));
+      const file = files.find((f) => MappableMixin.isMixedInto(f));
       if (file) {
         const result = await this.props.viewState.viewCatalogMember(file);
         if (result.error) {
@@ -84,7 +84,7 @@ const MobileModalWindow = observer(
             <MyDataTab
               terria={this.props.terria}
               viewState={this.props.viewState}
-              onFileAddFinished={files => this.onFileAddFinished(files)}
+              onFileAddFinished={(files) => this.onFileAddFinished(files)}
             />
           );
         case viewState.mobileViewOptions.preview:

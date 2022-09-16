@@ -33,7 +33,8 @@ class KmlCatalogItem
       UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
     )
   )
-  implements HasLocalData {
+  implements HasLocalData
+{
   static readonly type = "kml";
   get type() {
     return KmlCatalogItem.type;
@@ -60,7 +61,7 @@ class KmlCatalogItem
   }
 
   protected forceLoadMapItems(): Promise<void> {
-    return new Promise<string | Resource | Document | Blob>(resolve => {
+    return new Promise<string | Resource | Document | Blob>((resolve) => {
       if (isDefined(this.kmlString)) {
         const parser = new DOMParser();
         resolve(parser.parseFromString(this.kmlString, "text/xml"));
@@ -80,14 +81,14 @@ class KmlCatalogItem
         });
       }
     })
-      .then(kmlLoadInput => {
+      .then((kmlLoadInput) => {
         return KmlDataSource.load(kmlLoadInput);
       })
-      .then(dataSource => {
+      .then((dataSource) => {
         this._dataSource = dataSource;
         this.doneLoading(dataSource); // Unsure if this is necessary
       })
-      .catch(e => {
+      .catch((e) => {
         throw networkRequestError(
           TerriaError.from(e, {
             sender: this,
@@ -125,7 +126,7 @@ class KmlCatalogItem
 
         const polygon = entity.polygon;
         if (isDefined(polygon)) {
-          polygon.perPositionHeight = (true as unknown) as Property;
+          polygon.perPositionHeight = true as unknown as Property;
           const polygonHierarchy = getPropertyValue<PolygonHierarchy>(
             polygon.hierarchy
           );
@@ -154,7 +155,7 @@ class KmlCatalogItem
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
       sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(
-        function() {
+        function () {
           for (let i = 0; i < positionsToSample.length; ++i) {
             const position = positionsToSample[i];
             if (!isDefined(position.height)) {
@@ -199,7 +200,7 @@ class KmlCatalogItem
       this._dataSource.entities.values.length > 0
     ) {
       const items = this._dataSource.entities.values.filter(
-        elem => elem && typeof elem.polyline !== "undefined"
+        (elem) => elem && typeof elem.polyline !== "undefined"
       );
       if (
         items.length == 1 &&
@@ -214,13 +215,13 @@ class KmlCatalogItem
   computePath() {
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
-        elem => elem && typeof elem.polyline !== "undefined"
+        (elem) => elem && typeof elem.polyline !== "undefined"
       ) ?? [];
     const coordinates: Cartesian3[] = items[0]?.polyline?.positions?.getValue(
       JulianDate.now()
     );
     if (coordinates && coordinates.length > 0) {
-      const positions: Cartographic[] = coordinates.map(elem =>
+      const positions: Cartographic[] = coordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
       this.asPath(positions);

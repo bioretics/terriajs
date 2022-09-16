@@ -91,7 +91,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
 
   const measureTool = new MeasureTool({
     terria,
-    viewState,
+    //viewState,
     onClose: () => {
       runInAction(() => {
         viewState.panel = undefined;

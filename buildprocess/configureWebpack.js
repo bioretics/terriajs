@@ -47,7 +47,7 @@ function configureWebpack(
     test: /\.js?$/,
     include: path.dirname(require.resolve("terriajs-cesium")),
     exclude: [
-      require.resolve("terriajs-cesium/Source/ThirdParty/zip"),
+      //require.resolve("terriajs-cesium/Source/ThirdParty/zip"),
       require.resolve("terriajs-cesium/Source/Core/buildModuleUrl"),
       require.resolve("terriajs-cesium/Source/Core/TaskProcessor")
     ],
@@ -55,7 +55,7 @@ function configureWebpack(
       replacements: [
         {
           pattern: /buildModuleUrl\([\'|\"|\`](.*)[\'|\"|\`]\)/gi,
-          replacement: function(match, p1, offset, string) {
+          replacement: function (match, p1, offset, string) {
             let p1_modified = p1.replace(/\\/g, "\\\\");
             return (
               "require(`" +
@@ -68,13 +68,13 @@ function configureWebpack(
         },
         {
           pattern: /Please assign <i>Cesium.Ion.defaultAccessToken<\/i>/g,
-          replacement: function() {
+          replacement: function () {
             return 'Please set "cesiumIonAccessToken" in config.json';
           }
         },
         {
           pattern: / before making any Cesium API calls/g,
-          replacement: function() {
+          replacement: function () {
             return "";
           }
         }
@@ -94,7 +94,7 @@ function configureWebpack(
       replacements: [
         {
           pattern: /\/\*[\S\s]*?\*\//g, // find multi-line comments
-          replacement: function(match) {
+          replacement: function (match) {
             // replace http:// and https:// with a spelling-out of it.
             return match.replace(/(https?):\/\//g, "$1-colon-slashslash ");
           }
@@ -282,7 +282,7 @@ function configureWebpack(
     proxy: {
       "*": {
         target: "http://localhost:3001",
-        bypass: function(req, res, proxyOptions) {
+        bypass: function (req, res, proxyOptions) {
           if (
             req.url.indexOf("/proxy") < 0 &&
             req.url.indexOf("/proj4lookup") < 0 &&

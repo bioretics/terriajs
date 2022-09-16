@@ -55,7 +55,7 @@ class FeatureInfoPanel extends React.Component {
       this,
       reaction(
         () => terria.pickedFeatures,
-        pickedFeatures => {
+        (pickedFeatures) => {
           if (!defined(pickedFeatures)) {
             terria.selectedFeature = undefined;
           } else {
@@ -77,12 +77,11 @@ class FeatureInfoPanel extends React.Component {
 
                 // We only show features that are associated with a catalog item, so make sure the one we select to be
                 // open initially is one we're actually going to show.
-                const featuresShownAtAll = pickedFeatures.features.filter(x =>
+                const featuresShownAtAll = pickedFeatures.features.filter((x) =>
                   defined(determineCatalogItem(terria.workbench, x))
                 );
-                let selectedFeature = featuresShownAtAll.filter(
-                  featureHasInfo
-                )[0];
+                let selectedFeature =
+                  featuresShownAtAll.filter(featureHasInfo)[0];
                 if (
                   !defined(selectedFeature) &&
                   featuresShownAtAll.length > 0
@@ -103,12 +102,12 @@ class FeatureInfoPanel extends React.Component {
 
   renderFeatureInfoCatalogItems(catalogItems, featureCatalogItemPairs) {
     return catalogItems
-      .filter(catalogItem => defined(catalogItem))
+      .filter((catalogItem) => defined(catalogItem))
       .map((catalogItem, i) => {
         // From the pairs, select only those with this catalog item, and pull the features out of the pair objects.
         const features = featureCatalogItemPairs
-          .filter(pair => pair.catalogItem === catalogItem)
-          .map(pair => pair.feature);
+          .filter((pair) => pair.catalogItem === catalogItem)
+          .map((pair) => pair.feature);
         return (
           <FeatureInfoCatalogItem
             key={i}
@@ -139,8 +138,8 @@ class FeatureInfoPanel extends React.Component {
 
   @action.bound
   toggleCollapsed(event) {
-    this.props.viewState.featureInfoPanelIsCollapsed = !this.props.viewState
-      .featureInfoPanelIsCollapsed;
+    this.props.viewState.featureInfoPanelIsCollapsed =
+      !this.props.viewState.featureInfoPanelIsCollapsed;
   }
 
   @action.bound
@@ -212,9 +211,8 @@ class FeatureInfoPanel extends React.Component {
   }
 
   renderLocationItem(cartesianPosition) {
-    const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
-      cartesianPosition
-    );
+    const cartographic =
+      Ellipsoid.WGS84.cartesianToCartographic(cartesianPosition);
     if (cartographic === undefined) {
       return <></>;
     }
@@ -232,14 +230,14 @@ class FeatureInfoPanel extends React.Component {
       sampleTerrainMostDetailed(
         this.props.viewState.terria.cesium.scene.terrainProvider,
         [cartographic]
-      ).then(function(newPositions) {
+      ).then(function (newPositions) {
         that.setState({ elev: Math.round(newPositions[0].height) });
       });
     } else if (typeof this.state.elev !== "undefined") {
       this.setState({ elev: undefined });
     }
 
-    const pinClicked = function() {
+    const pinClicked = function () {
       that.pinClicked(longitude, latitude);
     };
 
@@ -281,10 +279,8 @@ class FeatureInfoPanel extends React.Component {
     const terria = this.props.viewState.terria;
     const viewState = this.props.viewState;
 
-    const {
-      catalogItems,
-      featureCatalogItemPairs
-    } = getFeaturesGroupedByCatalogItems(this.props.viewState.terria);
+    const { catalogItems, featureCatalogItemPairs } =
+      getFeaturesGroupedByCatalogItems(this.props.viewState.terria);
     const featureInfoCatalogItems = this.renderFeatureInfoCatalogItems(
       catalogItems,
       featureCatalogItemPairs
@@ -297,19 +293,19 @@ class FeatureInfoPanel extends React.Component {
 
     const filterableCatalogItems = catalogItems
       .filter(
-        catalogItem =>
+        (catalogItem) =>
           defined(catalogItem) && catalogItem.canFilterTimeByFeature
       )
-      .map(catalogItem => {
+      .map((catalogItem) => {
         const features = featureCatalogItemPairs.filter(
-          pair => pair.catalogItem === catalogItem
+          (pair) => pair.catalogItem === catalogItem
         );
         return {
           catalogItem: catalogItem,
           feature: defined(features[0]) ? features[0].feature : undefined
         };
       })
-      .filter(pair => defined(pair.feature));
+      .filter((pair) => defined(pair.feature));
 
     let position;
     if (
@@ -423,7 +419,7 @@ class FeatureInfoPanel extends React.Component {
               <Otherwise>{featureInfoCatalogItems}</Otherwise>
             </Choose>
             {!this.props.printView && locationElements}
-            {filterableCatalogItems.map(pair => (
+            {filterableCatalogItems.map((pair) => (
               <button
                 key={pair.catalogItem.id}
                 type="button"
@@ -457,7 +453,7 @@ function getFeaturesGroupedByCatalogItems(terria) {
   const featureCatalogItemPairs = []; // Will contain objects of {feature, catalogItem}.
   const catalogItems = []; // Will contain a list of all unique catalog items.
 
-  features.forEach(feature => {
+  features.forEach((feature) => {
     // Why was this here? Surely changing the feature objects is not a good side-effect?
     // if (!defined(feature.position)) {
     //     feature.position = terria.pickedFeatures.pickPosition;
@@ -495,7 +491,7 @@ export function determineCatalogItem(workbench, feature) {
   // This ensures features from each child model are treated as belonging to
   // that child model, not the parent composite model.
   const items = workbench.items.map(recurseIntoMembers).reduce(flatten, []);
-  return items.find(item => featureBelongsToCatalogItem(feature, item));
+  return items.find((item) => featureBelongsToCatalogItem(feature, item));
 }
 
 function recurseIntoMembers(catalogItem) {

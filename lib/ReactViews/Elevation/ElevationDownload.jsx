@@ -11,7 +11,7 @@ import Icon from "../../Styled/Icon";
 import Styles from "./elevation-download.scss";
 import PropTypes from "prop-types";
 
-const ElevationDownload = props => {
+const ElevationDownload = (props) => {
   const { data, name, ellipsoid } = props;
 
   const [kml, setKml] = useState(null);
@@ -38,10 +38,10 @@ const ElevationDownload = props => {
         download: `${name}.json`,
         label: "JSON"
       }
-    ].filter(download => !!download.href);
+    ].filter((download) => !!download.href);
   };
 
-  const generateKml = async data => {
+  const generateKml = async (data) => {
     if (!data || !data.pathPoints) {
       return;
     }
@@ -54,7 +54,7 @@ const ElevationDownload = props => {
       new Entity({
         id: 0,
         polyline: new PolylineGraphics({
-          positions: data.pathPoints.map(elem =>
+          positions: data.pathPoints.map((elem) =>
             Cartographic.toCartesian(elem, ellipsoid)
           )
         })
@@ -64,14 +64,14 @@ const ElevationDownload = props => {
     return res.kml;
   };
 
-  const generateJson = data => {
+  const generateJson = (data) => {
     if (!data || !data.pathPoints) {
       return;
     }
 
     return JSON.stringify({
       type: "LineString",
-      coordinates: data.pathPoints.map(elem => [
+      coordinates: data.pathPoints.map((elem) => [
         CesiumMath.toDegrees(elem.longitude),
         CesiumMath.toDegrees(elem.latitude),
         Math.round(elem.height)
@@ -80,13 +80,13 @@ const ElevationDownload = props => {
     });
   };
 
-  const generateCsvData = data => {
+  const generateCsvData = (data) => {
     if (!data || !data.pathPoints) {
       return;
     }
     const rows = [Object.keys(data.pathPoints[0]).join(",")];
     rows.push(
-      ...data.pathPoints.map(elem =>
+      ...data.pathPoints.map((elem) =>
         [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
@@ -104,7 +104,7 @@ const ElevationDownload = props => {
   );
 
   if (ellipsoid) {
-    generateKml(data).then(res => {
+    generateKml(data).then((res) => {
       setKml(res);
     });
   }

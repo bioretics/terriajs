@@ -23,7 +23,7 @@ terriamap:
         "gov.uk",
         "gov.nz",
         "sample.aero3dpro.com.au",
-        "ydyr.info",
+        "ydyr.info"
       ]
     initPaths:
       - "/etc/config/client"
@@ -61,7 +61,7 @@ terriamap:
         [
           "",
           '<a target="_blank" href="http://terria.io"><img src="images/terria_logo.png" height="52" title="Version: {{version}}" /></a>',
-          "",
+          ""
         ]
       supportEmail: "info@terria.io"
       mobileDefaultViewerMode: "2d"

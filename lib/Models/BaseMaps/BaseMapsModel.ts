@@ -46,8 +46,8 @@ export class BaseMapsModel extends CreateModel(BaseMapsTraits) {
   get baseMapItems(): BaseMapItem[] {
     const enabledBaseMaps: BaseMapItem[] = [];
 
-    this.enabledBaseMaps.forEach(baseMapItem => {
-      const item = this.items.find(item => item.item === baseMapItem);
+    this.enabledBaseMaps.forEach((baseMapItem) => {
+      const item = this.items.find((item) => item.item === baseMapItem);
       if (item && !ModelReference.isRemoved(baseMapItem)) {
         const itemModel = this.terria.getModelById(BaseModel, baseMapItem);
         if (MappableMixin.isMixedInto(itemModel)) {
@@ -101,7 +101,7 @@ export class BaseMapsModel extends CreateModel(BaseMapsTraits) {
       const newItemsIds = itemsTrait.fromJson(this, stratumId, items);
       newItemsIds.pushErrorTo(errors)?.forEach((member: BaseMapModel) => {
         const existingItem = this.items.find(
-          baseMap => baseMap.item === member.item
+          (baseMap) => baseMap.item === member.item
         );
         if (existingItem) {
           // object array trait doesn't automatically update model item

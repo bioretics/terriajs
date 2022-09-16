@@ -75,10 +75,9 @@ export default class RerSearchProvider extends SearchProvider {
         "Content-Type": "application/json"
       }
     })
-      ?.then(results => {
-        that.handle = JSON.parse(
-          results
-        ).getHandleOutput.getHandleOutputParams.p_Handle;
+      ?.then((results) => {
+        that.handle =
+          JSON.parse(results).getHandleOutput.getHandleOutputParams.p_Handle;
       })
       .catch(() => {
         searchResults.message = i18next.t("viewModels.searchErrorOccurred");
@@ -120,7 +119,7 @@ export default class RerSearchProvider extends SearchProvider {
         "Content-Type": "application/json"
       }
     })
-      ?.then(result => {
+      ?.then((result) => {
         const resObj = JSON.parse(result);
 
         if (searchResults.isCanceled) {
@@ -198,7 +197,7 @@ export default class RerSearchProvider extends SearchProvider {
           searchResults.message = i18next.t("viewModels.searchNoLocations");
         }
       })
-      .catch(err => {
+      .catch((err) => {
         console.log("ERRORERRR");
         console.log(typeof err);
         console.log(err);
@@ -227,7 +226,7 @@ function createZoomToFunction(
     centerY + delta
   );
 
-  return function() {
+  return function () {
     const terria = model.terria;
     terria.currentViewer.zoomTo(rectangle, model.flightDurationSeconds);
   };
