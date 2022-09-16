@@ -114,7 +114,7 @@ class ZoomControl extends React.Component<PropTypes> {
     this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomIn);
 
     if (isDefined(this.props.terria.leaflet)) {
-      this.props.terria.leaflet.map.zoomIn(1);
+      this.props.terria.leaflet.map.zoomIn(0.5);
     }
 
     if (isDefined(this.props.terria.cesium)) {
@@ -128,7 +128,7 @@ class ZoomControl extends React.Component<PropTypes> {
       );
       const movementVector = Cartesian3.multiplyByScalar(
         direction,
-        2.0 / 3.0,
+        0.4,
         cartesian3Scratch
       );
       const endPosition = Cartesian3.add(
@@ -139,7 +139,7 @@ class ZoomControl extends React.Component<PropTypes> {
       this.flyToPosition(scene, endPosition);
     }
 
-    // this.props.terria.currentViewer.notifyRepaintRequired();
+    this.props.terria.currentViewer.notifyRepaintRequired();
   }
 
   zoomOut() {
@@ -147,7 +147,7 @@ class ZoomControl extends React.Component<PropTypes> {
     this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomOut);
 
     if (isDefined(this.props.terria.leaflet)) {
-      this.props.terria.leaflet.map.zoomOut(1);
+      this.props.terria.leaflet.map.zoomOut(0.5);
     }
 
     if (isDefined(this.props.terria.cesium)) {
@@ -161,7 +161,7 @@ class ZoomControl extends React.Component<PropTypes> {
       );
       const movementVector = Cartesian3.multiplyByScalar(
         direction,
-        -2.0,
+        -0.6,
         cartesian3Scratch
       );
       const endPosition = Cartesian3.add(
@@ -171,7 +171,7 @@ class ZoomControl extends React.Component<PropTypes> {
       );
       this.flyToPosition(scene, endPosition);
     }
-    // this.props.terria.currentViewer.notifyRepaintRequired();
+    this.props.terria.currentViewer.notifyRepaintRequired();
   }
 
   zoomReset() {
