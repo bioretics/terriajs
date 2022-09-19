@@ -66,8 +66,7 @@ import {
   isJsonNumber,
   isJsonObject,
   JsonObject,
-  isJsonArray,
-  JsonArray
+  isJsonString
 } from "../Core/Json";
 import { isJson } from "../Core/loadBlob";
 import StandardCssColors from "../Core/StandardCssColors";
@@ -94,7 +93,7 @@ import { isConstantStyleMap } from "../Table/TableStyleMap";
 import { GeoJsonTraits } from "../Traits/TraitsClasses/GeoJsonTraits";
 import { RectangleTraits } from "../Traits/TraitsClasses/MappableTraits";
 import StyleTraits from "../Traits/TraitsClasses/StyleTraits";
-import TerriaFeature from "./../Models/Feature";
+import TerriaFeature from "../Models/Feature/Feature";
 import { DiscreteTimeAsJS } from "./DiscretelyTimeVaryingMixin";
 import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
@@ -1477,29 +1476,41 @@ export default GeoJsonMixin;
 export function isFeatureCollection(
   json: any
 ): json is FeatureCollectionWithCrs {
-  return json.type === "FeatureCollection" && Array.isArray(json.features);
+  return (
+    isJsonObject(json, false) &&
+    json.type === "FeatureCollection" &&
+    Array.isArray(json.features)
+  );
 }
 
 export function isFeature(json: any): json is Feature {
-  return json.type === "Feature" && json.geometry;
+  return (
+    isJsonObject(json, false) && json.type === "Feature" && !!json.geometry
+  );
 }
 
 export function isPoint(json: any): json is Feature<Point> {
   return (
-    json.type === "Feature" && json.geometry && json.geometry.type === "Point"
+    isJsonObject(json, false) &&
+    json.type === "Feature" &&
+    isJsonObject(json.geometry, false) &&
+    json.geometry.type === "Point"
   );
 }
 
 export function isMultiPoint(json: any): json is Feature<MultiPoint> {
   return (
+    isJsonObject(json, false) &&
     json.type === "Feature" &&
-    json.geometry &&
+    isJsonObject(json.geometry, false) &&
     json.geometry.type === "MultiPoint"
   );
 }
 
 export function isGeometries(json: any): json is Geometries {
   return (
+    isJsonObject(json, false) &&
+    isJsonString(json.type) &&
     [
       "Point",
       "MultiPoint",
@@ -1507,7 +1518,8 @@ export function isGeometries(json: any): json is Geometries {
       "MultiLineString",
       "Polygon",
       "MultiPolygon"
-    ].includes(json.type) && Array.isArray(json.coordinates)
+    ].includes(json.type) &&
+    Array.isArray(json.coordinates)
   );
 }
 
