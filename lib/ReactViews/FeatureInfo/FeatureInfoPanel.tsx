@@ -32,6 +32,7 @@ import Loader from "../Loader";
 import { withViewState } from "../StandardUserInterface/ViewStateContext";
 import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -43,6 +44,11 @@ interface Props {
 
 @observer
 class FeatureInfoPanel extends React.Component<Props> {
+
+  state = {
+    elev: 0,
+  };
+
   componentDidMount() {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
@@ -257,12 +263,11 @@ class FeatureInfoPanel extends React.Component<Props> {
 
     return (
       <div>
-        <If condition={!!this.props.viewState.terria.cesium && this.state.elev}>
+        {!!this.props.viewState.terria.cesium && this.state.elev &&
           <div className={Styles.location}>
             <span>Altitudine</span>
             <span>{this.state.elev} m s.l.m.</span>
-          </div>
-        </If>
+          </div>}
         <div className={Styles.location}>
           <span>Lat / Lon&nbsp;</span>
           <span>
@@ -341,6 +346,11 @@ class FeatureInfoPanel extends React.Component<Props> {
     if (!isDefined(position)) {
       // Otherwise use the location picked.
       position = terria.pickedFeatures?.pickPosition;
+    }
+
+    // Store position in Terria state
+    if (position) {
+      terria.pickedPosition = position;
     }
 
     const locationElements = position ? (

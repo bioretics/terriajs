@@ -91,6 +91,23 @@ class MobileHeader extends React.Component {
     });
   }
 
+  onMobileSwitchViewClicked() {
+    runInAction(() => {
+      const mainViewer = this.props.terria.mainViewer;
+      if (mainViewer.viewerMode === ViewerMode.Leaflet) {
+        setViewerMode("3d", mainViewer);
+        this.props.terria.setLocalProperty("viewermode", ViewerMode.Cesium);
+      } else {
+        setViewerMode("2d", mainViewer);
+        this.props.terria.setLocalProperty("viewermode", ViewerMode.Leaflet);
+      }
+    });
+  }
+
+  onMobileAddDataCatalogClicked() {
+    this.toggleView(this.props.viewState.mobileViewOptions.addData);
+  }
+
   changeCatalogSearchText(newText) {
     runInAction(() => {
       this.props.viewState.searchState.catalogSearchText = newText;

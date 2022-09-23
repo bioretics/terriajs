@@ -63,8 +63,10 @@ import formatPropertyValue from "../Core/formatPropertyValue";
 import hashFromString from "../Core/hashFromString";
 import isDefined from "../Core/isDefined";
 import {
+  isJsonArray,
   isJsonNumber,
   isJsonObject,
+  JsonArray,
   JsonObject,
   isJsonString
 } from "../Core/Json";
