@@ -29,7 +29,7 @@ const ColorPanel = (props) => {
   const btnTitle = "Colora il terreno in base all'altitudine";
 
   const apply = () => {
-    var material = createElevationBandMaterial({
+    const material = createElevationBandMaterial({
       scene: terria.cesium.scene,
       layers: layers.map((layer) => {
         return {
@@ -218,7 +218,7 @@ const ColorPanel = (props) => {
         </Box>
         <small>
           <i>
-            Dopo aver premuto il bottone "Applica", clicca sulla mappa per
+            Dopo aver premuto il bottone &quot;Applica&quot;, clicca sulla mappa per
             aggiornarla.
           </i>
         </small>
@@ -230,7 +230,7 @@ const ColorPanel = (props) => {
     <div>
       <MenuPanel
         theme={dropdownTheme}
-        btnText={false ? null : btnText}
+        btnText={btnText}
         viewState={viewState}
         btnTitle={btnTitle}
         isOpen={isOpen}
@@ -239,7 +239,7 @@ const ColorPanel = (props) => {
         modalWidth={modalWidth}
         smallScreen={viewState.useSmallScreenInterface}
         onDismissed={() => {
-          if (true) viewState.shareModalIsVisible = false;
+          viewState.shareModalIsVisible = false;
         }}
         onUserClick={onUserClick}
       >
