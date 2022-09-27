@@ -286,9 +286,9 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
             >
               <FeatureInfoPanel />
               <ElevationPanel
-                  terria={props.terria}
-                  viewState={props.viewState}
-                />
+                terria={props.terria}
+                viewState={props.viewState}
+              />
             </div>
             <DragDropFile />
             <DragDropNotification />

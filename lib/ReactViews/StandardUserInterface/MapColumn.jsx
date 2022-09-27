@@ -219,7 +219,8 @@ const MapColumn = observer(
                   title={keyboardControlDescription}
                   style={{
                     right: "20px",
-                    bottom: this.props.viewState.terria.configParameters.feedbackUrl
+                    bottom: this.props.viewState.terria.configParameters
+                      .feedbackUrl
                       ? "110px"
                       : "75px",
                     position: "absolute"

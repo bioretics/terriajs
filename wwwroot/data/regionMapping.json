@@ -11,16 +11,9 @@
       "regionIdsFile": "data/regionids/region_map-localita_localita.json",
       "regionProp": "LOC2011",
       "nameProp": "DENOMINAZI",
-      "aliases": [
-        "LOC2011"
-      ],
+      "aliases": ["LOC2011"],
       "description": "Località della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "censimento": {
       "layerName": "censimento",
@@ -32,16 +25,9 @@
       "regionIdsFile": "data/regionids/region_map-censimento_censimento.json",
       "regionProp": "SEZ2011",
       "nameProp": "SezioneCensimento",
-      "aliases": [
-        "SEZ2011"
-      ],
+      "aliases": ["SEZ2011"],
       "description": "Sezioni censimento 2011 della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "COMUNI": {
       "layerName": "COMUNI",
@@ -53,17 +39,9 @@
       "regionIdsFile": "data/regionids/region_map-COMUNI_COMUNI.json",
       "regionProp": "PRO_COM",
       "nameProp": "COMUNE",
-      "aliases": [
-        "PRO_COM",
-        "PROCOM"
-      ],
+      "aliases": ["PRO_COM", "PROCOM"],
       "description": "Comuni della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "COMUNI_T": {
       "layerName": "COMUNI",
@@ -75,18 +53,9 @@
       "regionIdsFile": "data/regionids/region_map-COMUNI_T_COMUNI.json",
       "regionProp": "PRO_COM_T",
       "nameProp": "COMUNE",
-      "aliases": [
-        "PRO_COM_T",
-        "PROCOMT",
-        "ISTAT"
-      ],
+      "aliases": ["PRO_COM_T", "PROCOMT", "ISTAT"],
       "description": "Comuni della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "PROVINCE": {
       "layerName": "PROVINCE",
@@ -98,17 +67,9 @@
       "regionIdsFile": "data/regionids/region_map-PROVINCE_PROVINCE.json",
       "regionProp": "COD_PROV",
       "nameProp": "DEN_PROV",
-      "aliases": [
-        "COD_PROV",
-        "CODPROV"
-      ],
+      "aliases": ["COD_PROV", "CODPROV"],
       "description": "Province della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "PROVINCE_T": {
       "layerName": "PROVINCE",
@@ -120,18 +81,9 @@
       "regionIdsFile": "data/regionids/region_map-PROVINCE_T_PROVINCE.json",
       "regionProp": "COD_PROV_T",
       "nameProp": "DEN_PROV",
-      "aliases": [
-        "COD_PROV_T",
-        "CODPROV_T",
-        "ISTAT_PROV"
-      ],
+      "aliases": ["COD_PROV_T", "CODPROV_T", "ISTAT_PROV"],
       "description": "Province della regione Emilia-Romagna",
-      "bbox": [
-        9.15,
-        43.55,
-        12.85,
-        45.15
-      ]
+      "bbox": [9.15, 43.55, 12.85, 45.15]
     },
     "SA1_2011": {
       "layerName": "FID_SA1_2011_AUST",

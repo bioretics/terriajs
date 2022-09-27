@@ -44,9 +44,8 @@ interface Props {
 
 @observer
 class FeatureInfoPanel extends React.Component<Props> {
-
   state = {
-    elev: 0,
+    elev: 0
   };
 
   componentDidMount() {
@@ -263,11 +262,12 @@ class FeatureInfoPanel extends React.Component<Props> {
 
     return (
       <div>
-        {!!this.props.viewState.terria.cesium && this.state.elev &&
+        {!!this.props.viewState.terria.cesium && this.state.elev && (
           <div className={Styles.location}>
             <span>Altitudine</span>
             <span>{this.state.elev} m s.l.m.</span>
-          </div>}
+          </div>
+        )}
         <div className={Styles.location}>
           <span>Lat / Lon&nbsp;</span>
           <span>

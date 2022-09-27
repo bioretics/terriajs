@@ -161,15 +161,14 @@ export const ShareUrl = forwardRef<
           callback={callback || (() => {})}
         />
         <Spacing bottom={2} />
-        <div >
+        <div>
           <Text medium>Salva Mappa</Text>
           <Explanation textDark={theme === "light"}>
             Salva o carica una mappa da file
           </Explanation>
           <Box gap>
-            <PrintButton
-              primary
-              onClick={save}>Salva
+            <PrintButton primary onClick={save}>
+              Salva
             </PrintButton>
             <form>
               <input
@@ -178,7 +177,7 @@ export const ShareUrl = forwardRef<
                 className={Styles.input}
                 onChange={load}
               />
-              < label className={Styles.btn} style={{ borderRadius: 4 }}>
+              <label className={Styles.btn} style={{ borderRadius: 4 }}>
                 Carica
               </label>
             </form>

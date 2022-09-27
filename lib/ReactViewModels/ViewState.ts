@@ -311,7 +311,7 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable elevationChartIsVisible: boolean = false;
-  
+
   /**
    * True if this is (or will be) the first time the user has added data to the map.
    * @type {Boolean}
