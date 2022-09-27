@@ -14,6 +14,7 @@ import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
 import StyleTraits from "../../../../Traits/TraitsClasses/StyleTraits";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
+import URI from "urijs";
 
 interface PropTypes {
   terria: Terria;
@@ -102,10 +103,10 @@ class MyLocation extends MapNavigationItemController {
     } else {
       // west, south, east, north, result
       const rectangle = Rectangle.fromDegrees(
-        longitude - 0.1,
-        latitude - 0.1,
-        longitude + 0.1,
-        latitude + 0.1
+        longitude - 0.005,
+        latitude - 0.005,
+        longitude + 0.005,
+        latitude + 0.005
       );
       this.terria.currentViewer.zoomTo(rectangle);
     }
