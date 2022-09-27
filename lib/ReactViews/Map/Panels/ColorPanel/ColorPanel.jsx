@@ -218,8 +218,8 @@ const ColorPanel = (props) => {
         </Box>
         <small>
           <i>
-            Dopo aver premuto il bottone &quot;Applica&quot;, clicca sulla mappa per
-            aggiornarla.
+            Dopo aver premuto il bottone &quot;Applica&quot;, clicca sulla mappa
+            per aggiornarla.
           </i>
         </small>
       </div>
