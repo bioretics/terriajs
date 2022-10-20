@@ -75,7 +75,12 @@ const MenuBar = observer((props) => {
           <li className={Styles.menuItem}>
             <HelpButton viewState={viewState} />
           </li>
-
+          <li className={Styles.menuItem}>
+            <CoordsPanel terria={terria} viewState={viewState} />
+          </li>
+          <li className={Styles.menuItem}>
+            <ColorPanel terria={terria} viewState={viewState} />
+          </li>
           {terria.configParameters?.languageConfiguration?.enabled ? (
             <li className={Styles.menuItem}>
               <LangPanel

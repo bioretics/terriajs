@@ -41,12 +41,10 @@ export default class RerSearchProvider extends SearchProvider {
     }*/
     this.flightDurationSeconds = defaultValue(options.flightDurationSeconds, 3);
 
-    this.urlHandle = this.terria.corsProxy.getURL(
-      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=GetHandle"
-    );
-    this.urlAddress = this.terria.corsProxy.getURL(
-      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=Norm_Indirizzo_Unico"
-    );
+    this.urlHandle =
+      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=GetHandle";
+    this.urlAddress =
+      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=Norm_Indirizzo_Unico";
     this.bodyHandle = JSON.stringify({
       GetHandleInputParams: {
         p_Username: "commercio",
