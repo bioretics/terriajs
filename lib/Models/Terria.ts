@@ -1764,7 +1764,12 @@ export default class Terria {
       }
     }
 
-    runInAction(() => (this.workbench.items = newItems));
+    runInAction(
+      () =>
+        (this.workbench.items = [
+          ...new Set([...this.workbench.items, ...newItems])
+        ])
+    );
 
     // For ids that don't correspond to models resolve an id by share keys
     const timelineWithShareKeysResolved = new Set(
