@@ -114,7 +114,7 @@ class ZoomControl extends React.Component<PropTypes> {
     this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomIn);
 
     if (isDefined(this.props.terria.leaflet)) {
-      this.props.terria.leaflet.map.zoomIn(0.5);
+      this.props.terria.leaflet.map.zoomIn();
     }
 
     if (isDefined(this.props.terria.cesium)) {
@@ -147,7 +147,7 @@ class ZoomControl extends React.Component<PropTypes> {
     this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomOut);
 
     if (isDefined(this.props.terria.leaflet)) {
-      this.props.terria.leaflet.map.zoomOut(0.5);
+      this.props.terria.leaflet.map.zoomOut();
     }
 
     if (isDefined(this.props.terria.cesium)) {
