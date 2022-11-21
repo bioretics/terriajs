@@ -38,9 +38,10 @@ function buildBaseShareUrl(
   terria: Terria,
   hashParams: { [key: string]: string }
 ) {
-  const uri = new URI(document.baseURI).fragment("").search("");
+  //const uri = new URI(document.baseURI).fragment("").search("");
+  const uri = new URL(document.URL);
 
-  if (terria.developmentEnv) {
+  /*if (terria.developmentEnv) {
     uri.addSearch(toJS(terria.userProperties));
   } else {
     userPropsToShare.forEach((key) =>
@@ -50,7 +51,9 @@ function buildBaseShareUrl(
 
   uri.addSearch(hashParams);
 
-  return uri.fragment(uri.query()).query("").toString();
+  return uri.fragment(uri.query()).query("").toString();*/
+  const params = new URLSearchParams(hashParams);
+  return new URL(`${uri.href}${uri.href.includes("#") ? "&" : "#"}${params.toString()}`).toString();
 }
 
 /**
