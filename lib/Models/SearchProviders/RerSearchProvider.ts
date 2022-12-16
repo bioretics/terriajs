@@ -1,11 +1,9 @@
 import { observable, runInAction } from "mobx";
 import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
-import defined from "terriajs-cesium/Source/Core/defined";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import Resource from "terriajs-cesium/Source/Core/Resource";
-import loadJsonp from "../../Core/loadJsonp";
 import SearchProvider from "./SearchProvider";
 import SearchResult from "./SearchResult";
 import Terria from "../Terria";
@@ -15,19 +13,23 @@ import {
   Category,
   SearchAction
 } from "../../Core/AnalyticEvents/analyticEvents";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 
 interface RerSearchProviderOptions {
   terria: Terria;
   flightDurationSeconds?: number;
 }
 
+const GET_HANDLE_URL =
+  "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=GetHandle";
+const NORM_ADDRESS_URL =
+  "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=Norm_Indirizzo_Unico";
+const NORM_ADDRESS_AREA_URL =
+  "https://servizigistest.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=Norm_Indirizzo_Unico_Area";
+
 export default class RerSearchProvider extends SearchProvider {
   readonly terria: Terria;
   @observable flightDurationSeconds: number;
-  @observable urlHandle: string;
-  @observable urlAddress: string;
-  @observable bodyHandle: string;
-  @observable bodyAddressTemplate: string;
   @observable handle: string;
 
   constructor(options: RerSearchProviderOptions) {
@@ -36,29 +38,7 @@ export default class RerSearchProvider extends SearchProvider {
     this.terria = options.terria;
     this.name = "Servizi RER";
 
-    /*if (this.url.length > 0 && this.url[this.url.length - 1] !== "/") {
-      this.url += "/";
-    }*/
     this.flightDurationSeconds = defaultValue(options.flightDurationSeconds, 3);
-
-    this.urlHandle =
-      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=GetHandle";
-    this.urlAddress =
-      "https://servizigis.regione.emilia-romagna.it/normalizzatore/eGeoCoding?serviceType=DBServices&serviceName=Normalizzatore&message=Norm_Indirizzo_Unico";
-    this.bodyHandle = JSON.stringify({
-      GetHandleInputParams: {
-        p_Username: "commercio",
-        p_Userpassword: "MAy64T7cc76ASn3CaJX8"
-      }
-    });
-    this.bodyAddressTemplate = JSON.stringify({
-      Norm_Indirizzo_UnicoInputParams: {
-        p_Indirizzo: "$1",
-        p_Tipo_Coord: "WGS84",
-        p_Rif_Geo_Civ: "ECIV",
-        p_Handle: "$2"
-      }
-    });
     this.handle = "";
   }
 
@@ -66,10 +46,15 @@ export default class RerSearchProvider extends SearchProvider {
     var that = this;
 
     return Resource.post({
-      url: this.urlHandle,
-      data: this.bodyHandle,
+      url: GET_HANDLE_URL,
+      data: JSON.stringify({
+        GetHandleInputParams: {
+          p_Username: "commercio",
+          p_Userpassword: "MAy64T7cc76ASn3CaJX8"
+        }
+      }),
       headers: {
-        soapAction: this.urlHandle,
+        soapAction: GET_HANDLE_URL,
         "Content-Type": "application/json"
       }
     })
@@ -80,6 +65,110 @@ export default class RerSearchProvider extends SearchProvider {
       .catch(() => {
         searchResults.message = i18next.t("viewModels.searchErrorOccurred");
       });
+  }
+
+  parseResults(results: any): any[] {
+    const idSet = new Set();
+    const locations: any[] = [];
+
+    results.forEach(
+      (element: {
+        sTRADARIO_ID: string;
+        cIVICO_X: string;
+        cENTR_X: string;
+        cIVICO_Y: string;
+        cENTR_Y: string;
+        dUG: string;
+        dENOMINAZIONE: string;
+        dESCRIZIONE_CIVICO: string;
+        cOMUNE: string;
+        pROVINCIA: string;
+        gR_AFFIDABILITA: string;
+      }) => {
+        if (!idSet.has(element.sTRADARIO_ID)) {
+          const isHouseNumber = element.cIVICO_X !== "";
+          const centerX = parseFloat(
+            isHouseNumber ? element.cIVICO_X : element.cENTR_X
+          );
+          const centerY = parseFloat(
+            isHouseNumber ? element.cIVICO_Y : element.cENTR_Y
+          );
+          locations.push(
+            new SearchResult({
+              name:
+                element.dUG +
+                " " +
+                element.dENOMINAZIONE +
+                (isHouseNumber ? " " + element.dESCRIZIONE_CIVICO : "") +
+                ", " +
+                element.cOMUNE +
+                ", " +
+                element.pROVINCIA,
+              isImportant: parseFloat(element.gR_AFFIDABILITA) < 1,
+              location: {
+                latitude: centerY,
+                longitude: centerX
+              },
+              clickAction: createZoomToFunction(
+                this,
+                centerX,
+                centerY,
+                isHouseNumber
+              )
+            })
+          );
+          idSet.add(element.sTRADARIO_ID);
+        }
+      }
+    );
+
+    return locations;
+  }
+
+  computeSearchAreaRectangle(): Rectangle | undefined {
+    let minX: number = 0,
+      minY: number = 0,
+      maxX: number = 0,
+      maxY: number = 0;
+
+    if (!!this.terria.cesium) {
+      const scene = this.terria?.cesium?.scene;
+      const camera = scene?.camera;
+      const canvas = scene?.canvas;
+      if (!!!camera || !!!canvas) {
+        return;
+      }
+
+      const posUL2d = camera.pickEllipsoid(
+        new Cartesian2(0, 0),
+        Ellipsoid.WGS84
+      );
+      const posLR2d = camera.pickEllipsoid(
+        new Cartesian2(canvas.width, canvas.height),
+        Ellipsoid.WGS84
+      );
+      if (!!posUL2d && !!posLR2d) {
+        const posUL = Ellipsoid.WGS84.cartesianToCartographic(posUL2d);
+        const posLR = Ellipsoid.WGS84.cartesianToCartographic(posLR2d);
+
+        return Rectangle.fromRadians(
+          posUL.longitude,
+          posLR.latitude,
+          posLR.longitude,
+          posUL.latitude
+        );
+      } else {
+        return;
+      }
+    } else if (!!this.terria.leaflet) {
+      const bbox = this.terria.leaflet.map.getBounds();
+      minX = bbox.getWest();
+      minY = bbox.getSouth();
+      maxX = bbox.getEast();
+      maxY = bbox.getNorth();
+
+      return Rectangle.fromDegrees(minX, minY, maxX, maxY);
+    } else return;
   }
 
   protected async doSearch(
@@ -99,113 +188,104 @@ export default class RerSearchProvider extends SearchProvider {
       searchText
     );
 
-    //let promise: Promise<any> | undefined = Promise.resolve();
-    let promise: Promise<any>;
-
     if (!!!this.handle) {
-      //promise = promise.then(() => this.getHandle(searchResults));
       await this.getHandle(searchResults);
     }
 
-    await Resource.post({
-      url: this.urlAddress,
-      data: this.bodyAddressTemplate
-        .replace("$1", searchText)
-        .replace("$2", this.handle),
+    const searchPromises = [
+      /*Resource.post({
+      url: NORM_ADDRESS_URL,
+      data: JSON.stringify({
+        Norm_Indirizzo_UnicoInputParams: {
+          p_Indirizzo: searchText,
+          p_Tipo_Coord: "WGS84",
+          p_Rif_Geo_Civ: "ECIV",
+          p_Handle: this.handle
+        }
+      }),
       headers: {
-        soapAction: this.urlAddress,
+        soapAction: NORM_ADDRESS_URL,
         "Content-Type": "application/json"
       }
-    })
-      ?.then((result) => {
-        const resObj = JSON.parse(result);
+    })*/
+    ];
 
-        if (searchResults.isCanceled) {
-          // A new search has superseded this one, so ignore the result.
-          return;
-        }
+    const rect = this.computeSearchAreaRectangle();
 
-        if (
-          resObj.norm_Indirizzo_UnicoOutput
-            .norm_Indirizzo_UnicoOutputRecordsetArray.length === 0
-        ) {
-          searchResults.message = i18next.t("viewModels.searchNoLocations");
-          return;
-        }
-
-        const idSet = new Set();
-        const locations: any[] = [];
-
-        resObj.norm_Indirizzo_UnicoOutput.norm_Indirizzo_UnicoOutputRecordsetArray.forEach(
-          (element: {
-            sTRADARIO_ID: string;
-            cIVICO_X: string;
-            cENTR_X: string;
-            cIVICO_Y: string;
-            cENTR_Y: string;
-            dUG: string;
-            dENOMINAZIONE: string;
-            dESCRIZIONE_CIVICO: string;
-            cOMUNE: string;
-            pROVINCIA: string;
-            gR_AFFIDABILITA: string;
-          }) => {
-            if (!idSet.has(element.sTRADARIO_ID)) {
-              const isHouseNumber = element.cIVICO_X !== "";
-              const centerX = parseFloat(
-                isHouseNumber ? element.cIVICO_X : element.cENTR_X
-              );
-              const centerY = parseFloat(
-                isHouseNumber ? element.cIVICO_Y : element.cENTR_Y
-              );
-              locations.push(
-                new SearchResult({
-                  name:
-                    element.dUG +
-                    " " +
-                    element.dENOMINAZIONE +
-                    (isHouseNumber ? " " + element.dESCRIZIONE_CIVICO : "") +
-                    ", " +
-                    element.cOMUNE +
-                    ", " +
-                    element.pROVINCIA,
-                  isImportant: parseFloat(element.gR_AFFIDABILITA) < 1,
-                  location: {
-                    latitude: centerY,
-                    longitude: centerX
-                  },
-                  clickAction: createZoomToFunction(
-                    this,
-                    centerX,
-                    centerY,
-                    isHouseNumber
-                  )
-                })
-              );
-              idSet.add(element.sTRADARIO_ID);
+    if (
+      rect &&
+      rect.width < 2 * CesiumMath.RADIANS_PER_DEGREE &&
+      rect.height < 2 * CesiumMath.RADIANS_PER_DEGREE
+    ) {
+      searchPromises.unshift(
+        Resource.post({
+          url: NORM_ADDRESS_AREA_URL,
+          data: JSON.stringify({
+            Norm_Indirizzo_Unico_AreaInputParams: {
+              p_Indirizzo: searchText,
+              p_Tipo_Coord: "WGS84",
+              p_Rif_Geo_Civ: "ECIV",
+              p_Handle: this.handle,
+              p_minx: `${CesiumMath.toDegrees(rect.west)}`,
+              p_miny: `${CesiumMath.toDegrees(rect.south)}`,
+              p_maxx: `${CesiumMath.toDegrees(rect.east)}`,
+              p_maxy: `${CesiumMath.toDegrees(rect.north)}`
             }
+          }),
+          headers: {
+            soapAction: NORM_ADDRESS_AREA_URL,
+            "Content-Type": "application/json"
           }
-        );
+        })
+      );
+    }
 
-        runInAction(() => {
-          searchResults.results.push(...locations);
-        });
+    try {
+      const results = await Promise.all(searchPromises);
 
-        if (searchResults.results.length === 0) {
-          searchResults.message = i18next.t("viewModels.searchNoLocations");
+      if (searchResults.isCanceled) {
+        // A new search has superseded this one, so ignore the result.
+        return;
+      }
+
+      let resultsArray: any[] = [];
+      for (let i in results) {
+        const obj = JSON.parse(results[i]);
+        if (
+          obj?.norm_Indirizzo_UnicoOutput
+            ?.norm_Indirizzo_UnicoOutputRecordsetArray
+        ) {
+          resultsArray = [
+            ...resultsArray,
+            ...obj.norm_Indirizzo_UnicoOutput
+              .norm_Indirizzo_UnicoOutputRecordsetArray
+          ];
         }
-      })
-      .catch((err) => {
-        console.log("ERRORERRR");
-        console.log(typeof err);
-        console.log(err);
+      }
 
-        if (searchResults.isCanceled) {
-          // A new search has superseded this one, so ignore the result.
-          return;
-        }
-        searchResults.message = i18next.t("viewModels.searchErrorOccurred");
+      if (resultsArray.length === 0) {
+        searchResults.message = i18next.t("viewModels.searchNoLocations");
+        return;
+      }
+
+      const locations = this.parseResults(resultsArray);
+
+      runInAction(() => {
+        searchResults.results.push(...locations);
       });
+
+      if (searchResults.results.length === 0) {
+        searchResults.message = i18next.t("viewModels.searchNoLocations");
+      }
+    } catch (err) {
+      console.log("ERROR");
+      console.log(err);
+      if (searchResults.isCanceled) {
+        // A new search has superseded this one, so ignore the result.
+        return;
+      }
+      searchResults.message = i18next.t("viewModels.searchErrorOccurred");
+    }
   }
 }
 
