@@ -53,7 +53,9 @@ function buildBaseShareUrl(
 
   return uri.fragment(uri.query()).query("").toString();*/
   const params = new URLSearchParams(hashParams);
-  return new URL(`${uri.href}${uri.href.includes("#") ? "&" : "#"}${params.toString()}`).toString();
+  return new URL(
+    `${uri.href}${uri.href.includes("#") ? "&" : "#"}${params.toString()}`
+  ).toString();
 }
 
 /**
