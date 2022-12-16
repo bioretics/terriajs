@@ -71,56 +71,60 @@ export default class RerSearchProvider extends SearchProvider {
     const idSet = new Set();
     const locations: any[] = [];
 
-    results.forEach(
-      (element: {
-        sTRADARIO_ID: string;
-        cIVICO_X: string;
-        cENTR_X: string;
-        cIVICO_Y: string;
-        cENTR_Y: string;
-        dUG: string;
-        dENOMINAZIONE: string;
-        dESCRIZIONE_CIVICO: string;
-        cOMUNE: string;
-        pROVINCIA: string;
-        gR_AFFIDABILITA: string;
-      }) => {
-        if (!idSet.has(element.sTRADARIO_ID)) {
-          const isHouseNumber = element.cIVICO_X !== "";
-          const centerX = parseFloat(
-            isHouseNumber ? element.cIVICO_X : element.cENTR_X
-          );
-          const centerY = parseFloat(
-            isHouseNumber ? element.cIVICO_Y : element.cENTR_Y
-          );
-          locations.push(
-            new SearchResult({
-              name:
-                element.dUG +
-                " " +
-                element.dENOMINAZIONE +
-                (isHouseNumber ? " " + element.dESCRIZIONE_CIVICO : "") +
-                ", " +
-                element.cOMUNE +
-                ", " +
-                element.pROVINCIA,
-              isImportant: parseFloat(element.gR_AFFIDABILITA) < 1,
-              location: {
-                latitude: centerY,
-                longitude: centerX
-              },
-              clickAction: createZoomToFunction(
-                this,
-                centerX,
-                centerY,
-                isHouseNumber
-              )
-            })
-          );
-          idSet.add(element.sTRADARIO_ID);
+    results
+      .sort((a: any, b: any) => {
+        return +a.gR_AFFIDABILITA - +b.gR_AFFIDABILITA;
+      })
+      .forEach(
+        (element: {
+          sTRADARIO_ID: string;
+          cIVICO_X: string;
+          cENTR_X: string;
+          cIVICO_Y: string;
+          cENTR_Y: string;
+          dUG: string;
+          dENOMINAZIONE: string;
+          dESCRIZIONE_CIVICO: string;
+          cOMUNE: string;
+          pROVINCIA: string;
+          gR_AFFIDABILITA: string;
+        }) => {
+          if (!idSet.has(element.sTRADARIO_ID)) {
+            const isHouseNumber = element.cIVICO_X !== "";
+            const centerX = parseFloat(
+              isHouseNumber ? element.cIVICO_X : element.cENTR_X
+            );
+            const centerY = parseFloat(
+              isHouseNumber ? element.cIVICO_Y : element.cENTR_Y
+            );
+            locations.push(
+              new SearchResult({
+                name:
+                  element.dUG +
+                  " " +
+                  element.dENOMINAZIONE +
+                  (isHouseNumber ? " " + element.dESCRIZIONE_CIVICO : "") +
+                  ", " +
+                  element.cOMUNE +
+                  ", " +
+                  element.pROVINCIA,
+                isImportant: parseFloat(element.gR_AFFIDABILITA) < 1,
+                location: {
+                  latitude: centerY,
+                  longitude: centerX
+                },
+                clickAction: createZoomToFunction(
+                  this,
+                  centerX,
+                  centerY,
+                  isHouseNumber
+                )
+              })
+            );
+            idSet.add(element.sTRADARIO_ID);
+          }
         }
-      }
-    );
+      );
 
     return locations;
   }
@@ -214,8 +218,8 @@ export default class RerSearchProvider extends SearchProvider {
 
     if (
       rect &&
-      rect.width < 2 * CesiumMath.RADIANS_PER_DEGREE &&
-      rect.height < 2 * CesiumMath.RADIANS_PER_DEGREE
+      (rect.width < 2 * CesiumMath.RADIANS_PER_DEGREE ||
+        rect.height < 2 * CesiumMath.RADIANS_PER_DEGREE)
     ) {
       searchPromises.unshift(
         Resource.post({
@@ -252,6 +256,15 @@ export default class RerSearchProvider extends SearchProvider {
       for (let i in results) {
         const obj = JSON.parse(results[i]);
         if (
+          obj?.norm_Indirizzo_Unico_AreaOutput
+            ?.norm_Indirizzo_Unico_AreaOutputRecordsetArray
+        ) {
+          resultsArray = [
+            ...resultsArray,
+            ...obj.norm_Indirizzo_Unico_AreaOutput
+              .norm_Indirizzo_Unico_AreaOutputRecordsetArray
+          ];
+        } else if (
           obj?.norm_Indirizzo_UnicoOutput
             ?.norm_Indirizzo_UnicoOutputRecordsetArray
         ) {
