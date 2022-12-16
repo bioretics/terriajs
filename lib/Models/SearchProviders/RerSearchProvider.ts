@@ -193,21 +193,21 @@ export default class RerSearchProvider extends SearchProvider {
     }
 
     const searchPromises = [
-      /*Resource.post({
-      url: NORM_ADDRESS_URL,
-      data: JSON.stringify({
-        Norm_Indirizzo_UnicoInputParams: {
-          p_Indirizzo: searchText,
-          p_Tipo_Coord: "WGS84",
-          p_Rif_Geo_Civ: "ECIV",
-          p_Handle: this.handle
+      Resource.post({
+        url: NORM_ADDRESS_URL,
+        data: JSON.stringify({
+          Norm_Indirizzo_UnicoInputParams: {
+            p_Indirizzo: searchText,
+            p_Tipo_Coord: "WGS84",
+            p_Rif_Geo_Civ: "ECIV",
+            p_Handle: this.handle
+          }
+        }),
+        headers: {
+          soapAction: NORM_ADDRESS_URL,
+          "Content-Type": "application/json"
         }
-      }),
-      headers: {
-        soapAction: NORM_ADDRESS_URL,
-        "Content-Type": "application/json"
-      }
-    })*/
+      })
     ];
 
     const rect = this.computeSearchAreaRectangle();
