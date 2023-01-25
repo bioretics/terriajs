@@ -627,6 +627,9 @@ export default class Terria {
 
   @observable depthTestAgainstTerrainEnabled = true;
 
+  /* Custom Info Tool */
+  @observable mouseAsInfo: boolean = false;
+
   @observable stories: StoryData[] = [];
   @observable storyPromptShown: number = 0; // Story Prompt modal will be rendered when this property changes. See StandardUserInterface, section regarding sui.notifications. Ideally move this to ViewState.
 
@@ -2002,16 +2005,18 @@ export default class Terria {
         featureIndex[hash] = (featureIndex[hash] || []).concat([feature]);
       });
 
-      // Find picked feature by matching feature hash
-      // Also try to match name if defined
-      const current = pickedFeatures.current;
-      if (isJsonObject(current) && typeof current.hash === "number") {
-        const selectedFeature =
-          (featureIndex[current.hash] || []).find(
-            (feature) => feature.name === current.name
-          ) ?? featureIndex[current.hash]?.[0];
-        if (selectedFeature) {
-          this.selectedFeature = selectedFeature;
+      if (this.mouseAsInfo) {
+        // Find picked feature by matching feature hash
+        // Also try to match name if defined
+        const current = pickedFeatures.current;
+        if (isJsonObject(current) && typeof current.hash === "number") {
+          const selectedFeature =
+            (featureIndex[current.hash] || []).find(
+              (feature) => feature.name === current.name
+            ) ?? featureIndex[current.hash]?.[0];
+          if (selectedFeature) {
+            this.selectedFeature = selectedFeature;
+          }
         }
       }
     });

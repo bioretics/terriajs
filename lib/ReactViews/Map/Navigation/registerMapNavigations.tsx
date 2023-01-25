@@ -108,6 +108,17 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 6
   });
 
+  const toggleInfoController = new ToggleInfoController(viewState);
+  mapNavigationModel.addItem({
+    id: ToggleInfoController.id,
+    name: "Info",
+    title: "Info on mouse click",
+    location: "TOP",
+    controller: toggleInfoController,
+    screenSize: undefined,
+    order: 7
+  });
+
   const pedestrianModeToolController = new ToolButtonController({
     toolName: PEDESTRIAN_MODE_ID,
     viewState: viewState,
