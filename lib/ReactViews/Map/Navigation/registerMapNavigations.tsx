@@ -23,6 +23,7 @@ import {
 import CloseToolButton from "./Items/CloseToolButton";
 import Compass, { COMPASS_TOOL_ID } from "./Items/Compass";
 import MeasureTool from "./Items/MeasureTool";
+import { ToggleInfoController } from "./Items/ToggleInfoTool";
 import MyLocation from "./Items/MyLocation";
 import { ToggleSplitterController } from "./Items/ToggleSplitterTool";
 import ZoomControl, { ZOOM_CONTROL_ID } from "./Items/ZoomControl";
