@@ -11,7 +11,7 @@ import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
-import ViewState from "../../../../ReactViewModels/ViewState";
+//import ViewState from "../../../../ReactViewModels/ViewState";
 import UserDrawing from "../../../../Models/UserDrawing";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -354,7 +354,7 @@ export default class MeasureTool extends MapNavigationItemController {
   deactivate() {
     this.onClose();
     //this.userDrawing.endDrawing();
-    super.deactivate();
+    //super.deactivate();
   }
 
   /**
@@ -363,6 +363,6 @@ export default class MeasureTool extends MapNavigationItemController {
   activate() {
     this.onOpen();
     this.userDrawing.enterDrawMode();
-    super.activate();
+    //super.activate();
   }
 }

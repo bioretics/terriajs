@@ -1,7 +1,7 @@
 "use strict";
 import i18next from "i18next";
 import { action } from "mobx";
-import React, { useEffect } from "react";
+import React from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
@@ -358,7 +358,7 @@ export default class MeasureAreaTool extends MapNavigationItemController {
   deactivate() {
     this.onClose();
     //this.userDrawing.endDrawing();
-    super.deactivate();
+    //super.deactivate();
   }
 
   /**
@@ -367,6 +367,6 @@ export default class MeasureAreaTool extends MapNavigationItemController {
   activate() {
     this.onOpen();
     this.userDrawing.enterDrawMode();
-    super.activate();
+    //super.activate();
   }
 }
