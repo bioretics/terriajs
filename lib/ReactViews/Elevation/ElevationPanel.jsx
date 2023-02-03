@@ -133,7 +133,7 @@ const ElevationPanel = observer((props) => {
             type="button"
             onClick={close}
             className={Styles.btnCloseFeature}
-            title={"featureInfo.btnCloseFeature"}
+            title="Chiudi pannello"
           >
             <Icon glyph={Icon.GLYPHS.close} />
           </button>
