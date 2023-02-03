@@ -31,6 +31,8 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import clone from "terriajs-cesium/Source/Core/clone";
+import * as turf from "@turf/turf";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -41,6 +43,7 @@ interface Options {
   terria: Terria;
   messageHeader?: string | (() => string);
   allowPolygon?: boolean;
+  autoClosePolygon?: boolean;
   drawRectangle?: boolean;
   onMakeDialogMessage?: () => string;
   buttonText?: string;
@@ -56,6 +59,7 @@ export default class UserDrawing extends MappableMixin(
 ) {
   private readonly messageHeader: string | (() => string);
   private readonly allowPolygon: boolean;
+  private readonly autoClosePolygon: boolean;
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
   private readonly onPointClicked?: (dataSource: CustomDataSource) => void;
@@ -97,6 +101,11 @@ export default class UserDrawing extends MappableMixin(
      * If true, user can click on first point to close the line, turning it into a polygon.
      */
     this.allowPolygon = defaultValue(options.allowPolygon, true);
+
+    /**
+     * If true, always close polygon adding the first point also as last point.
+     */
+    this.autoClosePolygon = defaultValue(options.autoClosePolygon, false);
 
     /**
      * Callback that occurs when the dialog is redrawn, to add additional information to dialog.
@@ -326,6 +335,11 @@ export default class UserDrawing extends MappableMixin(
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
             this.addPointToPointEntities("First Point", pickedPoint);
+
+            if (this.autoClosePolygon) {
+              this.clickedExistingPoint(this.pointEntities.entities.values);
+            }
+
             reaction.dispose();
             this.prepareToAddNewPoint();
           }
@@ -354,6 +368,39 @@ export default class UserDrawing extends MappableMixin(
       this.pointEntities.entities.removeAll();
     }
     this.pointEntities.entities.add(pointEntity);
+    this.dragHelper.updateDraggableObjects(this.pointEntities);
+    if (isDefined(this.onPointClicked)) {
+      this.onPointClicked(this.pointEntities);
+    }
+  }
+
+  private insertPointToPointEntities(
+    name: string,
+    position: Cartesian3,
+    index: number
+  ) {
+    var pointEntity = new Entity({
+      name: name,
+      position: new ConstantPositionProperty(position),
+      billboard: <any>{
+        image: this.svgPoint,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+      }
+    });
+    this.pointEntities.entities.suspendEvents();
+    const points: Entity[] = clone(this.pointEntities.entities.values, false);
+
+    this.pointEntities.entities.removeAll();
+    for (let i = 0; i < index && i < points.length; ++i) {
+      this.pointEntities.entities.add(points[i]);
+    }
+    this.pointEntities.entities.add(pointEntity);
+    for (let i = index; i < points.length; ++i) {
+      this.pointEntities.entities.add(points[i]);
+    }
+    this.pointEntities.entities.resumeEvents();
+
     this.dragHelper.updateDraggableObjects(this.pointEntities);
     if (isDefined(this.onPointClicked)) {
       this.onPointClicked(this.pointEntities);
@@ -440,6 +487,43 @@ export default class UserDrawing extends MappableMixin(
           }
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
+            const picketCarto = Cartographic.fromCartesian(pickedPoint);
+
+            let changeOrder: number = -1;
+            if (!this.autoClosePolygon) {
+              for (
+                let i: number = 1;
+                i < this.pointEntities.entities.values.length;
+                ++i
+              ) {
+                const pos0 = this.pointEntities.entities.values[
+                  i - 1
+                ].position?.getValue(this.terria.timelineClock.currentTime);
+                const pos1 = this.pointEntities.entities.values[
+                  i
+                ].position?.getValue(this.terria.timelineClock.currentTime);
+                if (pos0 && pos1) {
+                  const carto0 = Cartographic.fromCartesian(pos0);
+                  const carto1 = Cartographic.fromCartesian(pos1);
+                  const pt = turf.point([
+                    picketCarto.longitude,
+                    picketCarto.latitude
+                  ]);
+                  const line = turf.lineString([
+                    [carto1.longitude, carto1.latitude],
+                    [carto0.longitude, carto0.latitude]
+                  ]);
+                  const distance = turf.pointToLineDistance(pt, line, {
+                    units: "meters"
+                  });
+                  if (distance < Cartesian3.distance(pos1, pos0) * 0.001) {
+                    changeOrder = i;
+                    break;
+                  }
+                }
+              }
+            }
+
             // If existing point was picked, _clickedExistingPoint handles that, and returns true.
             // getDragCount helps us determine if the point was actually dragged rather than clicked. If it was
             // dragged, we shouldn't treat it as a clicked-existing-point scenario.
@@ -448,7 +532,17 @@ export default class UserDrawing extends MappableMixin(
               !this.clickedExistingPoint(pickedFeatures.features)
             ) {
               // No existing point was picked, so add a new point
-              this.addPointToPointEntities("Another Point", pickedPoint);
+
+              if (changeOrder >= 0) {
+                // Add the new point between 2 existing points
+                this.insertPointToPointEntities(
+                  "Another Point",
+                  pickedPoint,
+                  changeOrder
+                );
+              } else {
+                this.addPointToPointEntities("Another Point", pickedPoint);
+              }
             } else {
               this.dragHelper.resetDragCount();
             }
@@ -496,7 +590,9 @@ export default class UserDrawing extends MappableMixin(
             hierarchy: new CallbackProperty(function () {
               return new PolygonHierarchy(that.getPointsForShape());
             }, false),
-            material: new Color(0.0, 0.666, 0.843, 0.25),
+            material: this.autoClosePolygon
+              ? new Color(0.0, 0.666, 0.843, 0.25)
+              : new Color(0.0, 0.666, 0.843, 0),
             outlineColor: new Color(1.0, 1.0, 1.0, 1.0),
 
             // Clamp to ground polygons of Measure Tool
@@ -600,12 +696,13 @@ export default class UserDrawing extends MappableMixin(
     if (this.drawRectangle && this.pointEntities.entities.values.length >= 2) {
       message +=
         "<i>" + i18next.t("models.userDrawing.clickToRedrawRectangle") + "</i>";
-    } else if (this.pointEntities.entities.values.length > 0) {
+      /*} else if (this.pointEntities.entities.values.length > 0) {
       message +=
-        "<i>" + i18next.t("models.userDrawing.clickToAddAnotherPoint") + "</i>";
+        "<i>" + i18next.t("models.userDrawing.clickToAddAnotherPoint") + "</i>";*/
     } else {
       message +=
-        "<i>" + i18next.t("models.userDrawing.clickToAddFirstPoint") + "</i>";
+        "<i><br>" /*+ i18next.t("models.userDrawing.clickToAddFirstPoint")*/ +
+        "</i>";
     }
     // htmlToReactParser will fail if html doesn't have only one root element.
     return "<div>" + message + "</div>";

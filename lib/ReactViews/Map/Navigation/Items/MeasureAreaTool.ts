@@ -1,7 +1,7 @@
 "use strict";
 import i18next from "i18next";
 import { action } from "mobx";
-import React from "react";
+import React, { useEffect } from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
@@ -24,18 +24,21 @@ const PolylinePipeline =
   require("terriajs-cesium/Source/Core/PolylinePipeline").default;
 const PolygonGeometryLibrary =
   require("terriajs-cesium/Source/Core/PolygonGeometryLibrary").default;
+//import MeasureTool from "../../../Map/Navigation/Items/MeasureTool";
 
 interface MeasureToolOptions {
   terria: Terria;
+  viewState: ViewState;
   onClose(): void;
   onOpen(): void;
 }
 
-export default class MeasureTool extends MapNavigationItemController {
-  static id = "measure-tool";
-  static displayName = "MeasureTool";
+export default class MeasureAreaTool extends MapNavigationItemController {
+  static id = "measure-area-tool";
+  static displayName = "MeasureAreaTool";
 
   private readonly terria: Terria;
+  private readonly viewState: ViewState;
   private totalDistanceMetres: number = 0;
   private totalAreaMetresSquared: number = 0;
   private userDrawing: UserDrawing;
@@ -47,11 +50,12 @@ export default class MeasureTool extends MapNavigationItemController {
   constructor(props: MeasureToolOptions) {
     super();
     this.terria = props.terria;
+    this.viewState = props.viewState;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measureTool"),
+      messageHeader: "Misura di aree poligonali",
       allowPolygon: true,
-      autoClosePolygon: false,
+      autoClosePolygon: true,
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),
       onCleanUp: this.onCleanUp.bind(this),
@@ -62,7 +66,7 @@ export default class MeasureTool extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.measure;
+    return GLYPHS.measurePolygon;
   }
 
   get viewerMode(): ViewerMode | undefined {
@@ -329,7 +333,7 @@ export default class MeasureTool extends MapNavigationItemController {
 
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
-    //this.updateArea(pointEntities);
+    this.updateArea(pointEntities);
   }
 
   onPointMoved(pointEntities: CustomDataSource) {
@@ -339,7 +343,7 @@ export default class MeasureTool extends MapNavigationItemController {
 
   onMakeDialogMessage = () => {
     const distance = this.prettifyNumber(this.totalDistanceMetres, false);
-    let message = distance ? `Lunghezza: ${distance}` : "";
+    let message = distance ? `Perimetro: ${distance}` : "";
     if (this.totalAreaMetresSquared !== 0) {
       message +=
         "<br>" +

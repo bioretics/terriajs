@@ -23,6 +23,7 @@ import {
 import CloseToolButton from "./Items/CloseToolButton";
 import Compass, { COMPASS_TOOL_ID } from "./Items/Compass";
 import MeasureTool from "./Items/MeasureTool";
+import MeasureAreaTool from "./Items/MeasureAreaTool";
 import { ToggleInfoController } from "./Items/ToggleInfoTool";
 import MyLocation from "./Items/MyLocation";
 import { ToggleSplitterController } from "./Items/ToggleSplitterTool";
@@ -92,32 +93,81 @@ export const registerMapNavigations = (viewState: ViewState) => {
 
   const measureTool = new MeasureTool({
     terria,
-    //viewState,
     onClose: () => {
       runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasureAreaTool.id);
         viewState.panel = undefined;
+      });
+    },
+    onOpen: () => {
+      runInAction(() => {
+        const item = viewState.terria.mapNavigationModel.findItem(
+          MeasureAreaTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasureAreaTool.id);
       });
     }
   });
   mapNavigationModel.addItem({
     id: MeasureTool.id,
     name: "translate#measure.measureToolTitle",
-    title: "translate#measure.measureDistance",
+    title: `:Misura la lunghezza di una linea spezzata definita tramite punti
+    clicca sulla mappa per aggiungere un altro punto-
+    clicca su un punto esistente per rimuoverlo-
+    trascina un punto per spostarlo-`,
     location: "TOP",
     controller: measureTool,
     screenSize: undefined,
     order: 6
   });
 
+  const measureAreaTool = new MeasureAreaTool({
+    terria,
+    viewState,
+    onClose: () => {
+      runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasureTool.id);
+        viewState.panel = undefined;
+      });
+    },
+    onOpen: () => {
+      runInAction(() => {
+        const item = viewState.terria.mapNavigationModel.findItem(
+          MeasureTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasureTool.id);
+      });
+    }
+  });
+  mapNavigationModel.addItem({
+    id: MeasureAreaTool.id,
+    name: "Misuratore di aree",
+    title: `:Misura l'area di un poligono definito tramite punti
+    i poligoni sono chiusi automaticamente-
+    clicca sulla mappa per aggiungere un altro punto-
+    clicca su un punto esistente per rimuoverlo-
+    trascina un punto per spostarlo-`,
+    location: "TOP",
+    controller: measureAreaTool,
+    screenSize: undefined,
+    order: 9
+  });
+
   const toggleInfoController = new ToggleInfoController(viewState);
   mapNavigationModel.addItem({
     id: ToggleInfoController.id,
     name: "Info",
-    title: "Info on mouse click",
+    title: "Interroga la mappa cliccando in un punto",
     location: "TOP",
     controller: toggleInfoController,
     screenSize: undefined,
-    order: 7
+    order: 10
   });
 
   const pedestrianModeToolController = new ToolButtonController({

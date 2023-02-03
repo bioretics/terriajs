@@ -49,7 +49,7 @@
   },
   "measure": {
     "measureDistance": "Misura la distanza fra punti",
-    "measureTool": "Strumento di misura",
+    "measureTool": "Misura di linee e percorsi",
     "measureToolTitle": "Misuratore lineare"
   },
   "general": {
@@ -237,8 +237,8 @@
       "devError": "È necessaria un'istanza di Terria.",
       "otherEntities": "Linee e poligoni",
       "messageHeader": "Disegnare sulla mappa",
-      "clickToAddAnotherPoint": "Clicca per aggiungere un altro punto",
-      "clickToAddFirstPoint": "Clicca per aggiungere un punto"
+      "clickToAddAnotherPoint": "Clicca per aggiungere un altro punto, clicca su un punto esistente per rimuoverlo, trascina un punto per spostarlo.",
+      "clickToAddFirstPoint": "Clicca per aggiungere il primo punto."
     },
     "terriaJSONcatalog": {
       "disclaimer": "Scarico di responsabilità",
