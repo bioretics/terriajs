@@ -114,6 +114,11 @@ class MyLocation extends MapNavigationItemController {
     runInAction(() => {
       const name = t("location.myLocation");
       this._marker.setTrait(CommonStrata.user, "name", name);
+      this._marker.setTrait(
+        CommonStrata.user,
+        "description",
+        "Posizione dell'utente"
+      );
       this._marker.setTrait(CommonStrata.user, "geoJsonData", {
         type: "Feature",
         geometry: {
