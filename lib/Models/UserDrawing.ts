@@ -490,36 +490,34 @@ export default class UserDrawing extends MappableMixin(
             const picketCarto = Cartographic.fromCartesian(pickedPoint);
 
             let changeOrder: number = -1;
-            if (!this.autoClosePolygon) {
-              for (
-                let i: number = 1;
-                i < this.pointEntities.entities.values.length;
-                ++i
-              ) {
-                const pos0 = this.pointEntities.entities.values[
-                  i - 1
-                ].position?.getValue(this.terria.timelineClock.currentTime);
-                const pos1 = this.pointEntities.entities.values[
-                  i
-                ].position?.getValue(this.terria.timelineClock.currentTime);
-                if (pos0 && pos1) {
-                  const carto0 = Cartographic.fromCartesian(pos0);
-                  const carto1 = Cartographic.fromCartesian(pos1);
-                  const pt = turf.point([
-                    picketCarto.longitude,
-                    picketCarto.latitude
-                  ]);
-                  const line = turf.lineString([
-                    [carto1.longitude, carto1.latitude],
-                    [carto0.longitude, carto0.latitude]
-                  ]);
-                  const distance = turf.pointToLineDistance(pt, line, {
-                    units: "meters"
-                  });
-                  if (distance < Cartesian3.distance(pos1, pos0) * 0.001) {
-                    changeOrder = i;
-                    break;
-                  }
+            for (
+              let i: number = 1;
+              i < this.pointEntities.entities.values.length;
+              ++i
+            ) {
+              const pos0 = this.pointEntities.entities.values[
+                i - 1
+              ].position?.getValue(this.terria.timelineClock.currentTime);
+              const pos1 = this.pointEntities.entities.values[
+                i
+              ].position?.getValue(this.terria.timelineClock.currentTime);
+              if (pos0 && pos1) {
+                const carto0 = Cartographic.fromCartesian(pos0);
+                const carto1 = Cartographic.fromCartesian(pos1);
+                const pt = turf.point([
+                  picketCarto.longitude,
+                  picketCarto.latitude
+                ]);
+                const line = turf.lineString([
+                  [carto1.longitude, carto1.latitude],
+                  [carto0.longitude, carto0.latitude]
+                ]);
+                const distance = turf.pointToLineDistance(pt, line, {
+                  units: "meters"
+                });
+                if (distance < Cartesian3.distance(pos1, pos0) * 0.001) {
+                  changeOrder = i;
+                  break;
                 }
               }
             }
