@@ -173,7 +173,10 @@ export default class UserDrawing extends MappableMixin(
     this.disposeClampMeasureLineToGround = reaction(
       () => this.terria?.clampMeasureLineToGround,
       (clampMeasureLineToGround) => {
-        if (!!this.otherEntities.entities.values[0].polyline) {
+        if (
+          this.otherEntities.entities.values.length > 0 &&
+          this.otherEntities.entities.values[0]?.polyline
+        ) {
           this.otherEntities.entities.values[0].polyline.clampToGround =
             new ConstantProperty(clampMeasureLineToGround);
         }
