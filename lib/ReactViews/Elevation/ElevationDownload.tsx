@@ -1,25 +1,36 @@
 import React, { useState } from "react";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
 import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
 import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import DataUri from "../../Core/DataUri";
-import Dropdown from "../Generic/Dropdown";
+//import Dropdown from "../Generic/Dropdown";
 import Icon from "../../Styled/Icon";
 import Styles from "./elevation-download.scss";
-import PropTypes from "prop-types";
+//import PropTypes from "prop-types";
+import { PathCustom } from "../../Models/Terria";
+import { exportKmlResultKml } from "terriajs-cesium";
 
-const ElevationDownload = (props) => {
-  const { data, name, ellipsoid } = props;
+const Dropdown = require("../Generic/Dropdown");
 
-  const [kml, setKml] = useState(null);
+interface Props {
+  path: PathCustom;
+  name: string;
+  ellipsoid: Ellipsoid;
+}
+
+const ElevationDownload = (props: Props) => {
+  const { path, name, ellipsoid } = props;
+
+  const [kml, setKml] = useState<string>();
 
   const getLinks = () => {
     return [
       {
-        href: DataUri.make("csv", generateCsvData(data)),
+        href: DataUri.make("csv", generateCsvData(path)),
         download: `${name}.csv`,
         label: "CSV"
       },
@@ -34,15 +45,15 @@ const ElevationDownload = (props) => {
         label: "KML"
       },
       {
-        href: DataUri.make("json", generateJson(data)),
+        href: DataUri.make("json", generateJson(path)),
         download: `${name}.json`,
         label: "JSON"
       }
     ].filter((download) => !!download.href);
   };
 
-  const generateKml = async (data) => {
-    if (!data || !data.pathPoints) {
+  const generateKml = async (path: PathCustom) => {
+    if (!path?.stopPoints) {
       return;
     }
     const output = {
@@ -52,41 +63,40 @@ const ElevationDownload = (props) => {
     };
     output.entities.add(
       new Entity({
-        id: 0,
+        id: "0",
         polyline: new PolylineGraphics({
-          positions: data.pathPoints.map((elem) =>
+          positions: path.stopPoints.map((elem) =>
             Cartographic.toCartesian(elem, ellipsoid)
           )
         })
       })
     );
-    const res = await exportKml(output);
+    const res = (await exportKml(output)) as exportKmlResultKml;
     return res.kml;
   };
 
-  const generateJson = (data) => {
-    if (!data || !data.pathPoints) {
+  const generateJson = (path: PathCustom) => {
+    /*if (!path?.stopPoints) {
       return;
-    }
-
+    }*/
     return JSON.stringify({
       type: "LineString",
-      coordinates: data.pathPoints.map((elem) => [
+      coordinates: path.stopPoints.map((elem) => [
         CesiumMath.toDegrees(elem.longitude),
         CesiumMath.toDegrees(elem.latitude),
         Math.round(elem.height)
-      ]),
-      properties: data?.properties
+      ])
+      //properties: data?.properties
     });
   };
 
-  const generateCsvData = (data) => {
-    if (!data || !data.pathPoints) {
+  const generateCsvData = (path: PathCustom) => {
+    /*if (!path?.stopPoints) {
       return;
-    }
-    const rows = [Object.keys(data.pathPoints[0]).join(",")];
+    }*/
+    const rows = [Object.keys(path.stopPoints[0]).join(",")];
     rows.push(
-      ...data.pathPoints.map((elem) =>
+      ...path.stopPoints.map((elem) =>
         [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
@@ -104,7 +114,7 @@ const ElevationDownload = (props) => {
   );
 
   if (ellipsoid) {
-    generateKml(data).then((res) => {
+    generateKml(path).then((res) => {
       setKml(res);
     });
   }
@@ -126,10 +136,10 @@ const ElevationDownload = (props) => {
   );
 };
 
-ElevationDownload.propTypes = {
+/*ElevationDownload.propTypes = {
   data: PropTypes.object,
   name: PropTypes.string,
   ellipsoid: PropTypes.object
-};
+};*/
 
 export default ElevationDownload;
