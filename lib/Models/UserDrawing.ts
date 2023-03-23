@@ -610,6 +610,20 @@ export default class UserDrawing extends MappableMixin(
         }
         userClickedExistingPoint = true;
         return;
+      } else if (
+        index === 0 &&
+        this.closeLoop &&
+        this.allowPolygon &&
+        !this.autoClosePolygon
+      ) {
+        this.closeLoop = false;
+        this.polygon = undefined;
+
+        // Also let client of UserDrawing know if a point has been removed.
+        if (typeof that.onPointClicked === "function") {
+          that.onPointClicked(that.pointEntities);
+        }
+        userClickedExistingPoint = true;
       } else {
         // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
