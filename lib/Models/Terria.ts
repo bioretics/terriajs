@@ -575,10 +575,10 @@ export default class Terria {
     @observable path: PathCustom | undefined;
 
   /**
-   * Gets or sets the data computed sampling a path drawn with the MeasureTool.
-   * @type {PathSampled}
+   * Gets or sets the distance, in meters, at which sampling the terrain along the path.
+   * @type {number}
    */
-  @observable pathSampled: PathSampled = {};
+  @observable samplingPathStep: number = 500;
 
   /**
    * Gets or sets a value indicating whether the path line drawn by MeasureTool is clamped to ground.
