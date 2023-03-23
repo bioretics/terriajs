@@ -1,27 +1,23 @@
 "use strict";
 import i18next from "i18next";
-import { action } from "mobx";
+import { action, reaction, IReactionDisposer } from "mobx";
 import React from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-//import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
-//import ViewState from "../../../../ReactViewModels/ViewState";
 import UserDrawing from "../../../../Models/UserDrawing";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
+import isDefined from "../../../../Core/isDefined";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-const PolylinePipeline =
-  require("terriajs-cesium/Source/Core/PolylinePipeline").default;
 const PolygonGeometryLibrary =
   require("terriajs-cesium/Source/Core/PolygonGeometryLibrary").default;
 
@@ -39,6 +35,8 @@ export default class MeasureTool extends MapNavigationItemController {
   private totalDistanceMetres: number = 0;
   private totalAreaMetresSquared: number = 0;
   private userDrawing: UserDrawing;
+
+  private disposeSamplingPathStep?: IReactionDisposer;
 
   onClose: () => void;
   onOpen: () => void;
@@ -59,6 +57,14 @@ export default class MeasureTool extends MapNavigationItemController {
     });
     this.onClose = props.onClose;
     this.onOpen = props.onOpen;
+
+    // sampleEntirePath is the reaction to samplingPathStep changes
+    this.disposeSamplingPathStep = reaction(
+      () => this.terria.samplingPathStep,
+      () => {
+        this.sampleEntirePath(this.userDrawing.pointEntities);
+      }
+    );
   }
 
   get glyph(): any {
@@ -96,53 +102,139 @@ export default class MeasureTool extends MapNavigationItemController {
     return numberStr;
   }
 
-  async updateSampledPath(
-    index: number,
-    pointA: Cartographic,
-    pointB: Cartographic,
-    terrainProvider: TerrainProvider,
-    ellipsoid: Ellipsoid
-  ) {
-    const granularity = 0.00001;
-    const cartesians = ellipsoid.cartographicArrayToCartesianArray([
-      pointA,
-      pointB
-    ]);
-    const interpolatedCartographics =
-      ellipsoid.cartesianArrayToCartographicArray(
-        PolylinePipeline.generateCartesianArc({
-          positions: cartesians,
-          granularity: granularity
-        })
-      );
+  // sample the entire path (polyline) every "samplingPathStep" meters
+  sampleEntirePath(pointEntities: CustomDataSource) {
+    const terrainProvider = this.terria.cesium?.scene.terrainProvider;
+    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
 
-    const sampledCartographics = await sampleTerrainMostDetailed(
-      terrainProvider,
-      interpolatedCartographics
-    );
-    const sampledCartesians =
-      ellipsoid.cartographicArrayToCartesianArray(sampledCartographics);
-
-    let totalDistance: number = 0;
-    const stepDistances: number[] = [];
-    for (let i = 0; i < sampledCartesians.length; ++i) {
-      const dist: number =
-        i > 0
-          ? Cartesian3.distance(sampledCartesians[i - 1], sampledCartesians[i])
-          : 0;
-      totalDistance += dist;
-      stepDistances.push(dist);
+    if (!terrainProvider || !ellipsoid) {
+      return;
     }
 
-    const res = {
-      key: `${JSON.stringify(pointA)} ${JSON.stringify(pointB)}`,
-      index: index,
-      totalDistance: totalDistance,
-      stepDistances: stepDistances,
-      stepHeights: sampledCartographics.map((elem) => elem.height)
-    };
+    // extract valid points from CustomDataSource
+    const castesianEntities = pointEntities.entities.values.filter(
+      (elem) => elem?.position !== undefined && elem?.position !== null
+    );
+    // if the path is a closed loop add the first point also as last point
+    if (
+      this.userDrawing.closeLoop &&
+      pointEntities.entities.values.length > 0
+    ) {
+      castesianEntities.push(pointEntities.entities.values[0]);
+    }
+    // convert from cartesian to cartographic becouse "sampleTerrainMostDetailed" work with cartographic
+    const cartoPositions = castesianEntities.map((elem) => {
+      return Cartographic.fromCartesian(
+        elem.position!.getValue(this.terria.timelineClock.currentTime),
+        Ellipsoid.WGS84
+      );
+    });
 
-    return res;
+    // index of the original stops in the new array of sampling points
+    const originalStopsIndex: number[] = [0];
+    // geodetic distance between two stops
+    const stopGeodeticDistances: number[] = [0];
+
+    // compute sampling points every "samplingPathStep" meters
+    const interpolatedCartographics = [cartoPositions[0]];
+    for (let i = 0; i < cartoPositions.length - 1; ++i) {
+      const geodesic = new EllipsoidGeodesic(
+        cartoPositions[i],
+        cartoPositions[i + 1],
+        ellipsoid
+      );
+      const segmentDistance = geodesic.surfaceDistance;
+      stopGeodeticDistances.push(segmentDistance);
+      let y = 0;
+      while ((y += this.terria.samplingPathStep) < segmentDistance) {
+        interpolatedCartographics.push(
+          geodesic.interpolateUsingSurfaceDistance(y)
+        );
+      }
+      // original points have to be used
+      originalStopsIndex.push(interpolatedCartographics.length);
+      interpolatedCartographics.push(cartoPositions[i + 1]);
+    }
+
+    // sample points on terrain
+    sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics).then(
+      (sampledCartographics) => {
+        const sampledCartesians =
+          ellipsoid.cartographicArrayToCartesianArray(sampledCartographics);
+
+        // compute distances
+        const stepDistances: number[] = [];
+        for (let i = 0; i < sampledCartesians.length; ++i) {
+          const dist: number =
+            i > 0
+              ? Cartesian3.distance(
+                  sampledCartesians[i - 1],
+                  sampledCartesians[i]
+                )
+              : 0;
+          stepDistances.push(dist);
+        }
+
+        const stopAirDistances: number[] = [0];
+        const distances3d: number[] = [0];
+        for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
+          stopAirDistances.push(
+            Cartesian3.distance(
+              sampledCartesians[originalStopsIndex[i + 1]],
+              sampledCartesians[originalStopsIndex[i]]
+            )
+          );
+          distances3d.push(
+            stepDistances
+              .filter(
+                (_, index) =>
+                  index > originalStopsIndex[i] &&
+                  index <= originalStopsIndex[i + 1]
+              )
+              .reduce((sum: number, current: number) => sum + current, 0)
+          );
+        }
+
+        // update state of Terria
+        this.updatePath(
+          cartoPositions,
+          stopGeodeticDistances,
+          stopAirDistances,
+          distances3d,
+          sampledCartographics,
+          stepDistances
+        );
+      }
+    );
+  }
+
+  // action to update state of the path in Terria
+  @action
+  updatePath(
+    stopPoints: Cartographic[],
+    stopGeodeticDistances: number[],
+    stopAirDistances: number[],
+    stopGroundDistances: number[],
+    sampledPoints: Cartographic[],
+    sampledDistances: number[]
+  ) {
+    this.terria.path = {
+      stopPoints: stopPoints,
+      stopGeodeticDistances: stopGeodeticDistances,
+      stopAirDistances: stopAirDistances,
+      stopGroundDistances: stopGroundDistances,
+      geodeticDistance: stopGeodeticDistances.reduce(
+        (sum: number, current: number) => sum + current,
+        0
+      ),
+      airDistance: stopAirDistances.reduce((sum, current) => sum + current, 0),
+      groundDistance: stopGroundDistances.reduce(
+        (sum, current) => sum + current,
+        0
+      ),
+      sampledPoints: sampledPoints,
+      sampledDistances: sampledDistances
+    };
   }
 
   @action
@@ -152,58 +244,19 @@ export default class MeasureTool extends MapNavigationItemController {
       return;
     }
 
-    const pathPoints: Cartographic[] = [];
-    const pathDistances: number[] = [];
     const prevPoint = pointEntities.entities.values[0];
     let prevPointPos = prevPoint.position!.getValue(
       this.terria.timelineClock.currentTime
     );
-
-    pathPoints.push(Cartographic.fromCartesian(prevPointPos, Ellipsoid.WGS84));
-    pathDistances.push(0);
-
-    const terrainProvider = this.terria.cesium?.scene.terrainProvider;
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
-
     for (let i = 1; i < pointEntities.entities.values.length; i++) {
       const currentPoint = pointEntities.entities.values[i];
       const currentPointPos = currentPoint.position!.getValue(
         this.terria.timelineClock.currentTime
       );
 
-      const dist = this.getGeodesicDistance(prevPointPos, currentPointPos);
-
-      this.totalDistanceMetres = this.totalDistanceMetres + dist;
-
-      const currentCarto = Cartographic.fromCartesian(
-        currentPointPos,
-        Ellipsoid.WGS84
-      );
-
-      if (!!terrainProvider && !!ellipsoid) {
-        const key = `${JSON.stringify(
-          pathPoints[pathPoints.length - 1]
-        )} ${JSON.stringify(currentCarto)}`;
-        if (!(key in this.terria.pathSampled)) {
-          this.updateSampledPath(
-            i,
-            pathPoints[pathPoints.length - 1],
-            currentCarto,
-            terrainProvider,
-            ellipsoid
-          ).then(
-            action((res) => {
-              this.terria.pathSampled = {
-                ...this.terria.pathSampled,
-                [res.key]: res
-              };
-            })
-          );
-        }
-      }
-
-      pathPoints.push(currentCarto);
-      pathDistances.push(dist);
+      this.totalDistanceMetres =
+        this.totalDistanceMetres +
+        this.getGeodesicDistance(prevPointPos, currentPointPos);
 
       prevPointPos = currentPointPos;
     }
@@ -212,25 +265,13 @@ export default class MeasureTool extends MapNavigationItemController {
       const firstPointPos = firstPoint.position!.getValue(
         this.terria.timelineClock.currentTime
       );
-
-      const dist = this.getGeodesicDistance(prevPointPos, firstPointPos);
-
-      this.totalDistanceMetres = this.totalDistanceMetres + dist;
-
-      pathPoints.push(
-        Cartographic.fromCartesian(firstPointPos, Ellipsoid.WGS84)
-      );
-      pathDistances.push(dist);
+      this.totalDistanceMetres =
+        this.totalDistanceMetres +
+        this.getGeodesicDistance(prevPointPos, firstPointPos);
     }
-
-    this.terria.pathPoints = pathPoints;
-    this.terria.pathDistances = pathDistances;
-
-    /*if (pathDistances.length > 0) {
-      this.viewState.elevationPanelIsVisible = true;
-    }*/
   }
 
+  // unused since the split of MeasureAreaTool from MeasureTool
   updateArea(pointEntities: CustomDataSource) {
     this.totalAreaMetresSquared = 0;
     if (!this.userDrawing.closeLoop) {
@@ -320,7 +361,6 @@ export default class MeasureTool extends MapNavigationItemController {
   }
 
   onCleanUp() {
-    this.terria.pathSampled = {};
     this.totalDistanceMetres = 0;
     this.totalAreaMetresSquared = 0;
     //super.deactivate();
@@ -329,7 +369,11 @@ export default class MeasureTool extends MapNavigationItemController {
 
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
+    // avoid to compute area
     //this.updateArea(pointEntities);
+
+    // compute sampled path
+    this.sampleEntirePath(pointEntities);
   }
 
   onPointMoved(pointEntities: CustomDataSource) {
@@ -339,7 +383,7 @@ export default class MeasureTool extends MapNavigationItemController {
 
   onMakeDialogMessage = () => {
     const distance = this.prettifyNumber(this.totalDistanceMetres, false);
-    let message = distance ? `Lunghezza: ${distance}` : "";
+    let message = distance ? `<br/>Dist. geodetica: ${distance}` : "";
     if (this.totalAreaMetresSquared !== 0) {
       message +=
         "<br>" +
@@ -355,6 +399,10 @@ export default class MeasureTool extends MapNavigationItemController {
     this.onClose();
     //this.userDrawing.endDrawing();
     //super.deactivate();
+
+    if (isDefined(this.disposeSamplingPathStep)) {
+      this.disposeSamplingPathStep();
+    }
   }
 
   /**

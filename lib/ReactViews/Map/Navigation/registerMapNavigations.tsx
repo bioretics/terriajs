@@ -114,8 +114,9 @@ export const registerMapNavigations = (viewState: ViewState) => {
   mapNavigationModel.addItem({
     id: MeasureTool.id,
     name: "translate#measure.measureToolTitle",
-    title: `:Misura la lunghezza di una linea spezzata definita tramite punti
+    title: `:Misura la lunghezza di una linea spezzata (o percorso) definita tramite punti
     clicca sulla mappa per aggiungere un altro punto-
+    clicca su un segmento esistente per spezzarlo con un nuovo punto-
     clicca su un punto esistente per rimuoverlo-
     trascina un punto per spostarlo-`,
     location: "TOP",
@@ -126,7 +127,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
 
   const measureAreaTool = new MeasureAreaTool({
     terria,
-    viewState,
     onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasureTool.id);
@@ -151,6 +151,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     title: `:Misura l'area di un poligono definito tramite punti
     i poligoni sono chiusi automaticamente-
     clicca sulla mappa per aggiungere un altro punto-
+    clicca su un segmento esistente per spezzarlo con un nuovo punto-
     clicca su un punto esistente per rimuoverlo-
     trascina un punto per spostarlo-`,
     location: "TOP",
