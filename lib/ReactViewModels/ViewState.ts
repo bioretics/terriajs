@@ -25,7 +25,7 @@ import ReferenceMixin from "../ModelMixins/ReferenceMixin";
 import CommonStrata from "../Models/Definition/CommonStrata";
 import { BaseModel } from "../Models/Definition/Model";
 import getAncestors from "../Models/getAncestors";
-import Terria from "../Models/Terria";
+import Terria, { PathCustom } from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
@@ -483,9 +483,9 @@ export default class ViewState {
     );
 
     this._elevationPanelIsVisibleSubscription = reaction(
-      () => this.terria.pathPoints,
-      (pathPoints: Cartographic[] | undefined) => {
-        if (defined(pathPoints) && pathPoints && pathPoints.length > 0) {
+      () => this.terria.path,
+      (path: PathCustom | undefined) => {
+        if (defined(path) && path?.stopPoints && path.stopPoints.length > 0) {
           this.elevationPanelIsVisible = true;
         } else {
           this.elevationPanelIsVisible = false;

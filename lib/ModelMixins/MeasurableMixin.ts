@@ -7,6 +7,7 @@ import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrain
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
+import { PathCustom } from "../Models/Terria";
 
 type MixinModel = Model<MeasurableTraits>;
 
@@ -40,8 +41,12 @@ function MeasurableMixin<T extends Constructor<MixinModel>>(Base: T) {
         }
       });
       if (newPositions.length > 1) {
-        this.terria.pathPoints = newPositions;
-        this.terria.pathDistances = stepDistanceMeters;
+        //this.terria.pathPoints = newPositions;
+        //this.terria.pathDistances = stepDistanceMeters;
+        this.terria.path = <PathCustom>{
+          stopPoints: newPositions,
+          stopGeodeticDistances: stepDistanceMeters
+        };
       }
     }
 

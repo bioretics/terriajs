@@ -390,13 +390,16 @@ interface HomeCameraInit {
   west: number;
 }
 
-interface PathSampled {
-  [key: string]: {
-    index: number;
-    totalDistance: number;
-    stepDistances: number[];
-    stepHeights: number[];
-  };
+export interface PathCustom {
+  stopPoints: Cartographic[];
+  stopGeodeticDistances: number[];
+  stopAirDistances: number[] | undefined;
+  stopGroundDistances: number[] | undefined;
+  geodeticDistance: number | undefined;
+  airDistance: number | undefined;
+  groundDistance: number | undefined;
+  sampledPoints: Cartographic[] | undefined;
+  sampledDistances: number[] | undefined;
 }
 
 export default class Terria {
@@ -566,10 +569,10 @@ export default class Terria {
   @observable pathPoints: Cartographic[] | undefined;
 
   /**
-   * Gets or sets the distances between stages of a path drawn with the MeasureTool.
-   * @type {number[]}
+   * Gets or sets the data computed sampling a path drawn with the MeasureTool.
+   * @type {PathCustom}
    */
-  @observable pathDistances: number[] | undefined;
+    @observable path: PathCustom | undefined;
 
   /**
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.
