@@ -72,20 +72,6 @@ const ElevationChartPanel = observer((props: Props) => {
 
       const items = [];
 
-      if (airData?.chartPoints && airData.chartDomain) {
-        items.push({
-          categoryName: "Percorso",
-          name: "in aria",
-          units: "m",
-          isSelectedInWorkbench: false,
-          key: "path",
-          type: "lineAndPoint",
-          glyphStyle: "circle",
-          getColor: () => "#f00",
-          points: airData?.chartPoints,
-          domain: airData?.chartDomain
-        });
-      }
       if (groundData?.chartPoints && groundData.chartDomain) {
         ////////////////////
         /*const _marker = new GeoJsonCatalogItem(createGuid(), terria);
@@ -151,6 +137,20 @@ const ElevationChartPanel = observer((props: Props) => {
             isSelectedInWorkbench: true,
             showInChartPanel: true,
             updateIsSelectedInWorkbench: () => {},*/
+        });
+      }
+      if (airData?.chartPoints && airData.chartDomain) {
+        items.push({
+          categoryName: "Percorso",
+          name: "in aria",
+          units: "m",
+          isSelectedInWorkbench: false,
+          key: "path",
+          type: "lineAndPoint",
+          glyphStyle: "circle",
+          getColor: () => "#f00",
+          points: airData?.chartPoints,
+          domain: airData?.chartDomain
         });
       }
 
