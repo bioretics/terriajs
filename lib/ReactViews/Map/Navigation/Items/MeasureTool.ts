@@ -112,7 +112,7 @@ export default class MeasureTool extends MapNavigationItemController {
     }
 
     // extract valid points from CustomDataSource
-    const castesianEntities = pointEntities.entities.values.filter(
+    const cartesianEntities = pointEntities.entities.values.filter(
       (elem) => elem?.position !== undefined && elem?.position !== null
     );
     // if the path is a closed loop add the first point also as last point
@@ -120,13 +120,13 @@ export default class MeasureTool extends MapNavigationItemController {
       this.userDrawing.closeLoop &&
       pointEntities.entities.values.length > 0
     ) {
-      castesianEntities.push(pointEntities.entities.values[0]);
+      cartesianEntities.push(pointEntities.entities.values[0]);
     }
     // convert from cartesian to cartographic becouse "sampleTerrainMostDetailed" work with cartographic
-    const cartoPositions = castesianEntities.map((elem) => {
+    const cartoPositions = cartesianEntities.map((elem) => {
       return Cartographic.fromCartesian(
         elem.position!.getValue(this.terria.timelineClock.currentTime),
-        Ellipsoid.WGS84
+        ellipsoid
       );
     });
 
@@ -202,7 +202,8 @@ export default class MeasureTool extends MapNavigationItemController {
           stopAirDistances,
           distances3d,
           sampledCartographics,
-          stepDistances
+          stepDistances,
+          this.userDrawing.closeLoop
         );
       }
     );
@@ -216,9 +217,12 @@ export default class MeasureTool extends MapNavigationItemController {
     stopAirDistances: number[],
     stopGroundDistances: number[],
     sampledPoints: Cartographic[],
-    sampledDistances: number[]
+    sampledDistances: number[],
+    isClosed: boolean
   ) {
     this.terria.path = {
+      isClosed: isClosed,
+      hasArea: false,
       stopPoints: stopPoints,
       stopGeodeticDistances: stopGeodeticDistances,
       stopAirDistances: stopAirDistances,

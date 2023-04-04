@@ -391,15 +391,19 @@ interface HomeCameraInit {
 }
 
 export interface PathCustom {
+  isClosed: boolean;
+  hasArea: boolean;
   stopPoints: Cartographic[];
   stopGeodeticDistances: number[];
-  stopAirDistances: number[] | undefined;
-  stopGroundDistances: number[] | undefined;
-  geodeticDistance: number | undefined;
-  airDistance: number | undefined;
-  groundDistance: number | undefined;
-  sampledPoints: Cartographic[] | undefined;
-  sampledDistances: number[] | undefined;
+  stopAirDistances?: number[];
+  stopGroundDistances?: number[];
+  geodeticDistance?: number;
+  airDistance?: number;
+  groundDistance?: number;
+  sampledPoints?: Cartographic[];
+  sampledDistances?: number[];
+  geodeticArea?: number;
+  airArea?: number;
 }
 
 export default class Terria {
@@ -572,7 +576,7 @@ export default class Terria {
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.
    * @type {PathCustom}
    */
-    @observable path: PathCustom | undefined;
+  @observable path: PathCustom | undefined;
 
   /**
    * Gets or sets the distance, in meters, at which sampling the terrain along the path.
