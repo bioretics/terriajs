@@ -123,7 +123,7 @@ const ElevationChartPanel = observer((props: Props) => {
         _marker.setTrait(CommonStrata.user, "clampToGround", true);
         terria.workbench.add(_marker);*/
 
-        console.log("birra");
+        /*console.log("birra");
         addMarker(terria, {
           name: "ciao",
           location: {
@@ -134,7 +134,7 @@ const ElevationChartPanel = observer((props: Props) => {
               terria.path?.sampledPoints?.[2].latitude ?? 0
             )
           }
-        });
+        });*/
 
         items.push({
           categoryName: "Percorso",
