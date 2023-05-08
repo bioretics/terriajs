@@ -1,7 +1,7 @@
 //"use strict";
 
 import { observer } from "mobx-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Icon from "../../../Styled/Icon";
 import Chart from "./BottomDockChart";
 import Styles from "./chart-panel.scss";
@@ -9,15 +9,35 @@ import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
 import Terria from "../../../Models/Terria";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import GeoJsonCatalogItem from "../../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
-import CommonStrata from "../../../Models/Definition/CommonStrata";
-import createStratumInstance from "../../../Models/Definition/createStratumInstance";
-import StyleTraits from "../../../Traits/TraitsClasses/StyleTraits";
-import createGuid from "terriajs-cesium/Source/Core/createGuid";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import { addMarker } from "../../../Models/LocationMarkerUtils";
+import CesiumColor from "terriajs-cesium/Source/Core/Color";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
 
-const height = 300;
+//import markerIcon from "../../../Models/markerIcon";
+import markerIcon from "./markerIcon";
+
+enum ChartKeys {
+  AirChart = "path",
+  GroundChart = "path_sampled"
+}
+
+interface ChartPoint {
+  x: number;
+  y: number;
+}
+
+interface ChartItem {
+  categoryName: string;
+  name: string;
+  units: string;
+  key: string;
+  type: string;
+  glyphStyle: string;
+  getColor: () => string;
+  points: ChartPoint[];
+  domain: { x: number[]; y: number[] };
+}
 
 interface Props {
   terria: Terria;
@@ -27,7 +47,13 @@ interface Props {
 const ElevationChartPanel = observer((props: Props) => {
   const { terria, viewState } = props;
 
-  const [chartItems, setChartItems] = useState<any[]>();
+  const PANEL_HEIGHT = 300;
+  const CHART_HEIGHT = 266;
+
+  const [chartItems, setChartItems] = useState<ChartItem[]>();
+
+  const chartPoint = useRef<ChartPoint>();
+  const billboardCollection = useRef<BillboardCollection>();
 
   const closePanel = action(() => {
     viewState.elevationChartIsVisible = false;
@@ -57,6 +83,45 @@ const ElevationChartPanel = observer((props: Props) => {
     return { chartPoints, chartDomain };
   };
 
+  const updateChartPointNearMouse = (newPoint: ChartPoint) => {
+    if (
+      newPoint &&
+      terria?.cesium?.scene &&
+      (!chartPoint?.current || chartPoint.current !== newPoint)
+    ) {
+      chartPoint.current = newPoint;
+
+      const pointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.GroundChart)
+        ?.points.findIndex((elem) => elem === newPoint);
+      if (!pointIndex) return;
+      const coords = terria?.path?.sampledPoints?.[pointIndex];
+      if (!coords) return;
+
+      if (!billboardCollection.current) {
+        billboardCollection.current = new BillboardCollection({
+          scene: terria.cesium.scene
+        });
+        terria.cesium.scene.primitives.add(billboardCollection.current);
+      }
+      billboardCollection.current.removeAll();
+      billboardCollection.current.add({
+        position: Cartographic.toCartesian(coords),
+        scale: 0.4,
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        image: markerIcon,
+        //color: new CesiumColor(0.0, 1.0, 0.0, 0.5),
+        //disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        id: "chartPointPlaceholder"
+      });
+
+      terria.currentViewer.notifyRepaintRequired();
+    } else if (newPoint === undefined && billboardCollection.current) {
+      billboardCollection.current.removeAll();
+    }
+  };
+
   useEffect(() => {
     if (terria?.path) {
       const airData = fetchPathDataChart(
@@ -70,73 +135,19 @@ const ElevationChartPanel = observer((props: Props) => {
         terria.path.groundDistance
       );
 
-      const items = [];
+      const items: ChartItem[] = [];
 
       if (groundData?.chartPoints && groundData.chartDomain) {
-        ////////////////////
-        /*const _marker = new GeoJsonCatalogItem(createGuid(), terria);
-        _marker.setTrait(CommonStrata.user, "name", "ciccio");
-        _marker.setTrait(
-          CommonStrata.user,
-          "description",
-          "Posizione dell'utente"
-        );
-        _marker.setTrait(CommonStrata.user, "geoJsonData", {
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [
-              CesiumMath.toDegrees(terria.path?.sampledPoints?.[2].longitude ?? 0),
-              CesiumMath.toDegrees(terria.path?.sampledPoints?.[2].latitude ?? 0)
-            ]
-          },
-          properties: {
-            title: "urca urca",
-            longitude: terria.path?.sampledPoints?.[20].longitude,
-            latitude: terria.path?.sampledPoints?.[20].latitude
-          }
-        });
-        _marker.setTrait(
-          CommonStrata.user,
-          "style",
-          createStratumInstance(StyleTraits, {
-            "marker-size": "25",
-            "marker-color": "#FFABD5",
-            stroke: "#ffffff",
-            "stroke-width": 3
-          })
-        );
-        _marker.setTrait(CommonStrata.user, "clampToGround", true);
-        terria.workbench.add(_marker);*/
-
-        /*console.log("birra");
-        addMarker(terria, {
-          name: "ciao",
-          location: {
-            longitude: CesiumMath.toDegrees(
-              terria.path?.sampledPoints?.[2].longitude ?? 0
-            ),
-            latitude: CesiumMath.toDegrees(
-              terria.path?.sampledPoints?.[2].latitude ?? 0
-            )
-          }
-        });*/
-
         items.push({
           categoryName: "Percorso",
           name: "al suolo",
           units: "m",
-          //isSelectedInWorkbench: false,
-          key: "path_sampled",
-          type: "line",
+          key: ChartKeys.GroundChart,
+          type: "lineAndPoint",
           glyphStyle: "circle",
           getColor: () => "#0f0",
           points: groundData?.chartPoints,
-          domain: groundData?.chartDomain /*,
-            pointOnMap: { "latitude": terria.path?.sampledPoints?.[20].latitude, "longitude": terria.path?.sampledPoints?.[20].longitude },
-            isSelectedInWorkbench: true,
-            showInChartPanel: true,
-            updateIsSelectedInWorkbench: () => {},*/
+          domain: groundData?.chartDomain
         });
       }
       if (airData?.chartPoints && airData.chartDomain) {
@@ -144,8 +155,7 @@ const ElevationChartPanel = observer((props: Props) => {
           categoryName: "Percorso",
           name: "in aria",
           units: "m",
-          isSelectedInWorkbench: false,
-          key: "path",
+          key: ChartKeys.AirChart,
           type: "lineAndPoint",
           glyphStyle: "circle",
           getColor: () => "#f00",
@@ -161,7 +171,7 @@ const ElevationChartPanel = observer((props: Props) => {
   return (
     <div className={Styles.holder}>
       <div className={Styles.inner}>
-        <div className={Styles.chartPanel} style={{ height: height }}>
+        <div className={Styles.chartPanel} style={{ height: PANEL_HEIGHT }}>
           <div className={Styles.header}>
             <label className={Styles.sectionLabel}>Profilo altimetrico</label>
             <button
@@ -181,7 +191,9 @@ const ElevationChartPanel = observer((props: Props) => {
                   scale: "linear",
                   units: "m"
                 }}
-                height={height - 34}
+                height={CHART_HEIGHT}
+                chartItemKeyForPointMouseNear={ChartKeys.GroundChart}
+                onPointMouseNear={updateChartPointNearMouse}
               />
             )}
           </div>
