@@ -9,12 +9,12 @@ import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
 import Terria from "../../../Models/Terria";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import CesiumColor from "terriajs-cesium/Source/Core/Color";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
-import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
+//import CesiumColor from "terriajs-cesium/Source/Core/Color";
+//import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 
-//import markerIcon from "../../../Models/markerIcon";
 import markerIcon from "./markerIcon";
 
 enum ChartKeys {
@@ -107,12 +107,13 @@ const ElevationChartPanel = observer((props: Props) => {
       billboardCollection.current.removeAll();
       billboardCollection.current.add({
         position: Cartographic.toCartesian(coords),
-        scale: 0.4,
-        verticalOrigin: VerticalOrigin.BOTTOM,
         image: markerIcon,
+        eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        //scale: 0.5,
+        //verticalOrigin: VerticalOrigin.BOTTOM,
         //color: new CesiumColor(0.0, 1.0, 0.0, 0.5),
         //disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
         id: "chartPointPlaceholder"
       });
 
