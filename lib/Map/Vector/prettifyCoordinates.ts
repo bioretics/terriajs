@@ -41,7 +41,8 @@ export default function prettifyCoordinates(
   let prettyElevation = undefined;
   if (height !== undefined) {
     prettyElevation =
-      Math.round(height) +
+      //Math.round(height) +
+      height.toFixed(1) +
       //(errorBar !== undefined ? "±" + Math.round(errorBar) : "") +
       "m";
   }
