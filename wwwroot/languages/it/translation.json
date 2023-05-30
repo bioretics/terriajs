@@ -101,7 +101,7 @@
   "settingPanel": {
     "performanceLabel": "Prestazioni",
     "qualityLabel": "Qualità",
-    "baseMap": "Mappa base",
+    "baseMap": "Mappa di base",
     "btnTitle": "Cambia vista",
     "screen": "schermo",
     "native": "nativa",
@@ -927,7 +927,7 @@
     "extraCreditLinks": {
       "disclaimer": "Scarico di responsabilità",
       "dataAttribution": "Attribuzione dei dati",
-      "basemap": "Mappa di base"
+      "basemap": "Attribuzione dei dati"
     },
     "drawExtentHelper": {
       "drawExtent": "Disegnare l'estensione",
