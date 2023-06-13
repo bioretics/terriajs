@@ -897,7 +897,10 @@ export default class Cesium extends GlobeOrMap {
           duration: flightDurationSeconds,
           destination: target.rectangle
         });
-      } else if (defined(target.imageryProvider) && defined(target.imageryProvider.rectangle)) {
+      } else if (
+        defined(target.imageryProvider) &&
+        defined(target.imageryProvider.rectangle)
+      ) {
         return flyToPromise(camera, {
           duration: flightDurationSeconds,
           destination: target.imageryProvider.rectangle
@@ -1780,7 +1783,9 @@ function zoomToDataSource(
               // cesium calculate an appropriate zoom distance. For the rest
               // use the radius as the zoom distance because the offset
               // distance cesium calculates for large models is often too far away.
-              boundingSphere.radius < 100 ? undefined : boundingSphere.radius
+              boundingSphere.radius < 2000
+                ? undefined
+                : boundingSphere.radius * 1.2
             )
           }
         );
