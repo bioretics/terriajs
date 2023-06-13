@@ -14,6 +14,7 @@ export default class SearchProviderResults {
   constructor(readonly searchProvider: SearchProvider) {}
 
   get isSearching() {
-    return this.resultsCompletePromise.state === "pending";
+    //return this.resultsCompletePromise.state === "pending";
+    return false;
   }
 }

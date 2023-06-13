@@ -47,6 +47,7 @@ export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
 interface ViewStateOptions {
   terria: Terria;
   catalogSearchProvider: any;
+  catalogItemsSearchProvider: any;
   locationSearchProviders: any[];
   errorHandlingProvider?: any;
 }

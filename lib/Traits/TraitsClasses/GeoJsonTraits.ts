@@ -10,7 +10,7 @@ import LegendOwnerTraits from "./LegendOwnerTraits";
 import StyleTraits from "./StyleTraits";
 import TableTraits from "./TableTraits";
 import UrlTraits from "./UrlTraits";
-import MeasurableTraits from "./MeasurableTraits";
+import SearchableCatalogItemTraits from "./SearchableCatalogItemTraits";
 
 export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
   @anyTrait({
@@ -38,7 +38,7 @@ export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
 }
 
 export class GeoJsonTraits extends mixTraits(
-  MeasurableTraits,
+  SearchableCatalogItemTraits,
   FeatureInfoUrlTemplateTraits,
   LegendOwnerTraits,
   TableTraits,

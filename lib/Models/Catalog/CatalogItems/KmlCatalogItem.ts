@@ -24,13 +24,16 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import MeasurableMixin from "../../../ModelMixins/MeasurableMixin";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import SearchableCatalogItemMixin from "../../../ModelMixins/SearchableCatalogItemMixin";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
-  extends MeasurableMixin(
-    MappableMixin(
-      UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  extends SearchableCatalogItemMixin(
+    MeasurableMixin(
+      MappableMixin(
+        UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+      )
     )
   )
   implements HasLocalData
@@ -226,6 +229,10 @@ class KmlCatalogItem
       );
       this.asPath(positions);
     }
+  }
+
+  searchWithinItemData(text: string) {
+    return this.searchInEntityCollection(text, this._dataSource?.entities);
   }
 }
 
