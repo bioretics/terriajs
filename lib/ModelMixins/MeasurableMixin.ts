@@ -2,21 +2,17 @@ import { computed, action } from "mobx";
 import Constructor from "../Core/Constructor";
 import Model from "../Models/Definition/Model";
 import StratumOrder from "../Models/Definition/StratumOrder";
-import MeasurableTraits from "../Traits/TraitsClasses/MeasurableTraits";
+import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
 import { PathCustom } from "../Models/Terria";
 
-type MixinModel = Model<MeasurableTraits>;
+type MixinModel = Model<MappableTraits>;
 
 function MeasurableMixin<T extends Constructor<MixinModel>>(Base: T) {
   abstract class MeasurableMixin extends Base {
-    //abstract get styleSelectableDimensions():
-    //  | SelectableDimensionSelect[]
-    //  | undefined;
-
     @computed
     get hasMeasurableMixin() {
       return true;
