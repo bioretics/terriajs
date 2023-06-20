@@ -12,7 +12,7 @@ import Icon from "../../Styled/Icon";
 import Styles from "./elevation-download.scss";
 //import PropTypes from "prop-types";
 import { PathCustom } from "../../Models/Terria";
-import { exportKmlResultKml } from "terriajs-cesium";
+import { exportKmlResultKml, PointGraphics } from "terriajs-cesium";
 
 const Dropdown = require("../Generic/Dropdown");
 
@@ -25,7 +25,8 @@ interface Props {
 const ElevationDownload = (props: Props) => {
   const { path, name, ellipsoid } = props;
 
-  const [kml, setKml] = useState<string>();
+  const [kmlLines, setKmlLines] = useState<string>();
+  const [kmlPoints, setKmlPoints] = useState<string>();
 
   const getLinks = () => {
     return [
@@ -35,24 +36,49 @@ const ElevationDownload = (props: Props) => {
         label: "CSV"
       },
       {
-        href: kml
+        href: kmlLines
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
-              kml
+              kmlLines
             )
           : false,
-        download: `${name}.kml`,
-        label: "KML"
+        download: `${name}_lines.kml`,
+        label: "Linee KML"
       },
       {
-        href: DataUri.make("json", generateJson(path)),
-        download: `${name}.json`,
-        label: "JSON"
+        href: kmlPoints
+          ? DataUri.make(
+              "application/vnd.google-earth.kml+xml;charset=utf-8",
+              kmlPoints
+            )
+          : false,
+        download: `${name}_points.kml`,
+        label: "Punti KML"
+      },
+      {
+        href: DataUri.make("json", generateJsonLineStrings(path)),
+        download: `${name}_lines.json`,
+        label: "Linee JSON"
+      },
+      {
+        href: DataUri.make("json", generateJsonPoints(path)),
+        download: `${name}_points.json`,
+        label: "Punti JSON"
+      },
+      {
+        href: DataUri.make("xml", generateGpxTracks(path)),
+        download: `${name}_lines.gpx`,
+        label: "Linee GPX"
+      },
+      {
+        href: DataUri.make("xml", generateGpxWaypoints(path)),
+        download: `${name}_points.gpx`,
+        label: "Punti GPX"
       }
     ].filter((download) => !!download.href);
   };
 
-  const generateKml = async (path: PathCustom) => {
+  const generateKmlLines = async (path: PathCustom) => {
     if (!path?.stopPoints) {
       return;
     }
@@ -75,10 +101,29 @@ const ElevationDownload = (props: Props) => {
     return res.kml;
   };
 
-  const generateJson = (path: PathCustom) => {
-    /*if (!path?.stopPoints) {
+  const generateKmlPoints = async (path: PathCustom) => {
+    if (!path?.stopPoints) {
       return;
-    }*/
+    }
+    const output = {
+      entities: new EntityCollection(),
+      kmz: false,
+      ellipsoid: ellipsoid
+    };
+    path.stopPoints.forEach((elem, index) => {
+      output.entities.add(
+        new Entity({
+          id: index.toString(),
+          point: new PointGraphics({}),
+          position: Cartographic.toCartesian(elem, ellipsoid)
+        })
+      );
+    });
+    const res = (await exportKml(output)) as exportKmlResultKml;
+    return res.kml;
+  };
+
+  const generateJsonLineStrings = (path: PathCustom) => {
     return JSON.stringify({
       type: "LineString",
       coordinates: path.stopPoints.map((elem) => [
@@ -86,14 +131,66 @@ const ElevationDownload = (props: Props) => {
         CesiumMath.toDegrees(elem.latitude),
         Math.round(elem.height)
       ])
-      //properties: data?.properties
     });
   };
 
+  const generateJsonPoints = (path: PathCustom) => {
+    return JSON.stringify({
+      type: "FeatureCollection",
+      features: path.stopPoints.map((elem) => {
+        return {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            coordinates: [
+              CesiumMath.toDegrees(elem.longitude),
+              CesiumMath.toDegrees(elem.latitude),
+              elem.height
+            ],
+            type: "Point"
+          }
+        };
+      })
+    });
+  };
+
+  const generateGpxTracks = (path: PathCustom): string => {
+    return `<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="runtracker">
+      <metadata/>
+      <trk>
+        <name>Percorso</name>
+        <desc>Percorso salvato da rer3d-map</desc>
+        <trkseg>
+          ${path.stopPoints
+            .map(
+              (elem) =>
+                `<trkpt lat="${CesiumMath.toDegrees(
+                  elem.latitude
+                )}" lon="${CesiumMath.toDegrees(
+                  elem.longitude
+                )}" ele="${elem.height.toFixed(2)}"></trkpt>`
+            )
+            .join("")}
+        </trkseg>
+      </trk>
+    </gpx>`;
+  };
+
+  const generateGpxWaypoints = (path: PathCustom): string => {
+    return `<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="runtracker">
+      <metadata/>
+      ${path.stopPoints
+        .map(
+          (elem, index) =>
+            `<wpt name="Tappa ${index}" lat="${CesiumMath.toDegrees(
+              elem.latitude
+            )}" lon="${CesiumMath.toDegrees(elem.longitude)}"></wpt>`
+        )
+        .join("")}
+    </gpx>`;
+  };
+
   const generateCsvData = (path: PathCustom) => {
-    /*if (!path?.stopPoints) {
-      return;
-    }*/
     const rows = [Object.keys(path.stopPoints[0]).join(",")];
     rows.push(
       ...path.stopPoints.map((elem) =>
@@ -114,8 +211,11 @@ const ElevationDownload = (props: Props) => {
   );
 
   if (ellipsoid) {
-    generateKml(path).then((res) => {
-      setKml(res);
+    generateKmlLines(path).then((res) => {
+      setKmlLines(res);
+    });
+    generateKmlPoints(path).then((res) => {
+      setKmlPoints(res);
     });
   }
 
@@ -135,11 +235,5 @@ const ElevationDownload = (props: Props) => {
     </Dropdown>
   );
 };
-
-/*ElevationDownload.propTypes = {
-  data: PropTypes.object,
-  name: PropTypes.string,
-  ellipsoid: PropTypes.object
-};*/
 
 export default ElevationDownload;
