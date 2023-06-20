@@ -27,12 +27,13 @@ import {
 import Terria from "../../Models/Terria";
 import Workbench from "../../Models/Workbench";
 import ViewState from "../../ReactViewModels/ViewState";
-import Icon from "../../Styled/Icon";
+import Icon, { StyledIcon } from "../../Styled/Icon";
 import Loader from "../Loader";
 import { withViewState } from "../StandardUserInterface/ViewStateContext";
 import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
-import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import clipboard from "clipboard";
+import Button from "../../Styled/Button";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -51,6 +52,8 @@ class FeatureInfoPanel extends React.Component<Props> {
   componentDidMount() {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
+
+    const clipboardBtn = new clipboard(`.btn-copy-featureinfopanel`);
 
     disposeOnUnmount(
       this,
@@ -256,9 +259,9 @@ class FeatureInfoPanel extends React.Component<Props> {
       that.pinClicked(longitude, latitude);
     };
 
-    const locationButtonStyle = isMarkerVisible(this.props.viewState.terria)
+    /*const locationButtonStyle = isMarkerVisible(this.props.viewState.terria)
       ? Styles.btnLocationSelected
-      : Styles.btnLocation;
+      : Styles.btnLocation;*/
 
     return (
       <div>
@@ -271,16 +274,44 @@ class FeatureInfoPanel extends React.Component<Props> {
         <div className={Styles.location}>
           <span>Lat / Lon&nbsp;</span>
           <span>
-            {pretty.latitude + ", " + pretty.longitude}
+            <span id="featureinfopanel">{pretty.latitude + ", " + pretty.longitude}</span>
             {!this.props.printView && (
               <span>
-                <button
-                  type="button"
-                  onClick={pinClicked}
-                  className={locationButtonStyle}
+                <Button
+                  primary
+                  title="Copia le coordinate negli Appunti"
+                  css={`
+                    width: 18px;
+                    heigth: 16px;
+                    border-radius: 2px;
+                    margin: 2px;
+                  `}
+                  className={`btn-copy-featureinfopanel`}
+                  data-clipboard-target={`#featureinfopanel`}
                 >
-                  <Icon glyph={Icon.GLYPHS.location} />
-                </button>
+                  <StyledIcon
+                    light={true}
+                    realDark={false}
+                    glyph={Icon.GLYPHS.copy}
+                    styledWidth="16px"
+                  />
+                </Button>
+                <Button
+                  primary
+                  onClick={pinClicked}
+                  css={`
+                    width: 18px;
+                    border-radius: 2px;
+                    margin: 2px;
+                    border-width: ${isMarkerVisible(this.props.viewState.terria) ? "2px" : "0px"};
+                    border-color: red;
+                  `}
+                >
+                  <StyledIcon light={true}
+                    realDark={false}
+                    glyph={Icon.GLYPHS.location}
+                    styledWidth="16px" />
+                </Button>
               </span>
             )}
           </span>
