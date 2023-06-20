@@ -562,15 +562,15 @@ export default class Terria {
 
   /**
    * Gets or sets the last position picked by FeatureInfo.
-   * @type {Cartesian3}
+   * @type {Cartographic}
    */
-  @observable pickedPosition: Cartesian3 | undefined;
+  @observable pickedPosition: Cartographic | undefined;
 
   /**
-   * Gets or sets the points of a path drawn with the MeasureTool.
-   * @type {Cartographic[]}
+   * Gets or sets the elevation in the last position picked by FeatureInfo.
+   * @type {string}
    */
-  @observable pathPoints: Cartographic[] | undefined;
+  @observable pickedPositionElevation: string | undefined;
 
   /**
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.

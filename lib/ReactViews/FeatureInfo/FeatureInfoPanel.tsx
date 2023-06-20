@@ -7,7 +7,6 @@ import { withTranslation } from "react-i18next";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import flatten from "../../Core/flatten";
 import isDefined from "../../Core/isDefined";
@@ -32,6 +31,7 @@ import Loader from "../Loader";
 import { withViewState } from "../StandardUserInterface/ViewStateContext";
 import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import clipboard from "clipboard";
 import Button from "../../Styled/Button";
 
@@ -45,10 +45,6 @@ interface Props {
 
 @observer
 class FeatureInfoPanel extends React.Component<Props> {
-  state = {
-    elev: 0
-  };
-
   componentDidMount() {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
@@ -230,6 +226,7 @@ class FeatureInfoPanel extends React.Component<Props> {
 
   renderLocationItem(cartesianPosition: Cartesian3) {
     const cartographic =
+      this.props.viewState.terria.pickedPosition ??
       Ellipsoid.WGS84.cartesianToCartographic(cartesianPosition);
     if (cartographic === undefined) {
       return <></>;
@@ -240,21 +237,6 @@ class FeatureInfoPanel extends React.Component<Props> {
     // this.locationUpdated(longitude, latitude);
 
     const that = this;
-
-    if (
-      !!this.props.viewState.terria.cesium &&
-      this.props.viewState.terria.cesium.scene.terrainProvider
-    ) {
-      sampleTerrainMostDetailed(
-        this.props.viewState.terria.cesium.scene.terrainProvider,
-        [cartographic]
-      ).then(function (newPositions) {
-        that.setState({ elev: Math.round(newPositions[0].height) });
-      });
-    } else if (typeof this.state.elev !== "undefined") {
-      this.setState({ elev: undefined });
-    }
-
     const pinClicked = function () {
       that.pinClicked(longitude, latitude);
     };
@@ -265,16 +247,20 @@ class FeatureInfoPanel extends React.Component<Props> {
 
     return (
       <div>
-        {!!this.props.viewState.terria.cesium && this.state.elev && (
+        {!!cartographic && (
           <div className={Styles.location}>
             <span>Altitudine</span>
-            <span>{this.state.elev} m s.l.m.</span>
+            <span>
+              {this.props.viewState.terria.pickedPositionElevation} m s.l.m.
+            </span>
           </div>
         )}
         <div className={Styles.location}>
           <span>Lat / Lon&nbsp;</span>
           <span>
-            <span id="featureinfopanel">{pretty.latitude + ", " + pretty.longitude}</span>
+            <span id="featureinfopanel">
+              {pretty.latitude + ", " + pretty.longitude}
+            </span>
             {!this.props.printView && (
               <span>
                 <Button
@@ -303,14 +289,18 @@ class FeatureInfoPanel extends React.Component<Props> {
                     width: 18px;
                     border-radius: 2px;
                     margin: 2px;
-                    border-width: ${isMarkerVisible(this.props.viewState.terria) ? "2px" : "0px"};
+                    border-width: ${isMarkerVisible(this.props.viewState.terria)
+                      ? "2px"
+                      : "0px"};
                     border-color: red;
                   `}
                 >
-                  <StyledIcon light={true}
+                  <StyledIcon
+                    light={true}
                     realDark={false}
                     glyph={Icon.GLYPHS.location}
-                    styledWidth="16px" />
+                    styledWidth="16px"
+                  />
                 </Button>
               </span>
             )}
@@ -318,6 +308,23 @@ class FeatureInfoPanel extends React.Component<Props> {
         </div>
       </div>
     );
+  }
+
+  @action
+  setPicked(terria: Terria, position: Cartesian3) {
+    const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
+    if (
+      terria?.cesium?.scene?.terrainProvider &&
+      !Cartographic.equals(terria.pickedPosition, cartographic)
+    ) {
+      terria.currentViewer.mouseCoords.debounceSampleAccurateHeight(
+        terria.cesium.scene.terrainProvider,
+        cartographic
+      );
+      terria.pickedPosition = terria.currentViewer.mouseCoords.cartographic;
+      terria.pickedPositionElevation =
+        terria.currentViewer.mouseCoords.elevation;
+    }
   }
 
   render() {
@@ -381,7 +388,7 @@ class FeatureInfoPanel extends React.Component<Props> {
 
     // Store position in Terria state
     if (position) {
-      terria.pickedPosition = position;
+      this.setPicked(terria, position);
     }
 
     const locationElements = position ? (

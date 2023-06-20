@@ -11,14 +11,12 @@ import JSEarthGravityModel1996 from "../Map/Vector/EarthGravityModel1996";
 import prettifyCoordinates from "../Map/Vector/prettifyCoordinates";
 import prettifyProjection from "../Map/Vector/prettifyProjection";
 import Terria from "../Models/Terria";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 
 // TypeScript 3.6.3 can't tell JSEarthGravityModel1996 is a class and reports
 //   Cannot use namespace 'JSEarthGravityModel1996' as a type.ts(2709)
 // This is a dodgy workaround.
 class EarthGravityModel1996 extends JSEarthGravityModel1996 {}
-
-const sampleTerrainMostDetailed =
-  require("terriajs-cesium/Source/Core/sampleTerrainMostDetailed").default;
 
 interface Cancelable {
   cancel: () => void;

@@ -3,19 +3,16 @@
 import classNames from "classnames";
 import React, { useState, useEffect } from "react";
 import Icon, { StyledIcon } from "../../../../Styled/Icon";
-// import Loader from "../../../Loader";
 import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
 import Input from "../../../../Styled/Input";
 import DropdownStyles from "../panel.scss";
 import Styles from "./coords-panel.scss";
-
 import clipboard from "clipboard";
 import Box from "../../../../Styled/Box";
 import Button from "../../../../Styled/Button";
 import Select from "../../../../Styled/Select";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import createZoomToFunction from "../../../../Map/Vector/zoomRectangleFromPoint";
-import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PropTypes from "prop-types";
 
@@ -538,12 +535,17 @@ const CoordsPanel = (props) => {
   }, [coordsInputTxt]);
 
   useEffect(() => {
-    if (!!terria && !!terria.pickedPosition) {
-      const cartographic = Ellipsoid.WGS84.cartesianToCartographic(
-        terria.pickedPosition
-      );
-      const latitude = CesiumMath.toDegrees(cartographic.latitude).toFixed(6);
-      const longitude = CesiumMath.toDegrees(cartographic.longitude).toFixed(6);
+    if (
+      !!terria &&
+      !!terria.pickedPosition &&
+      typeof terria.pickedPosition !== "undefined"
+    ) {
+      const latitude = CesiumMath.toDegrees(
+        terria.pickedPosition.latitude
+      ).toFixed(6);
+      const longitude = CesiumMath.toDegrees(
+        terria.pickedPosition.longitude
+      ).toFixed(6);
       if (coordsInputTxt !== `${latitude}, ${longitude}`) {
         setCoordsInputTxt(`${latitude}, ${longitude}`);
       }
