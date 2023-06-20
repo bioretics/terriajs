@@ -361,6 +361,7 @@ export default class ViewState {
     this.searchState = new SearchState({
       terria: terria,
       catalogSearchProvider: options.catalogSearchProvider,
+      catalogItemsSearchProvider: options.catalogItemsSearchProvider,
       locationSearchProviders: options.locationSearchProviders
     });
 
