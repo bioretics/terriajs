@@ -6,6 +6,7 @@ import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
 import Styles from "./feature-info-catalog-item.scss";
 import FeatureInfoSection from "./FeatureInfoSection";
+import { autorun } from "mobx";
 
 interface Props {
   features: TerriaFeature[];
@@ -21,9 +22,23 @@ export default (props: Props) => {
   const catalogItem = props.catalogItem;
   const terria = props.viewState.terria;
 
-  const maximumShownFeatureInfos =
+  /*const maximumShownFeatureInfos =
     catalogItem.maximumShownFeatureInfos ??
-    terria.configParameters.defaultMaximumShownFeatureInfos;
+    terria.configParameters.defaultMaximumShownFeatureInfos;*/
+
+  const [maximumShownFeatureInfos, setMaximumShownFeatureInfos] =
+    React.useState(terria.configParameters.defaultMaximumShownFeatureInfos);
+
+  React.useEffect(
+    () =>
+      autorun(() => {
+        setMaximumShownFeatureInfos(
+          catalogItem.maximumShownFeatureInfos ??
+            terria.configParameters.defaultMaximumShownFeatureInfos
+        );
+      }),
+    []
+  );
 
   const hiddenNumber = features.length - maximumShownFeatureInfos; // A positive hiddenNumber => some are hidden; negative means none are.
 
