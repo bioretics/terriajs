@@ -836,6 +836,11 @@ export default class Cesium extends GlobeOrMap {
           duration: flightDurationSeconds,
           destination: finalDestination
         });
+      } else if (target instanceof BoundingSphere) {
+        return flyToBoundingSpherePromise(camera, target, {
+          offset: new HeadingPitchRange(0, -0.7, undefined),
+          duration: flightDurationSeconds
+        });
       } else if (defined(target.entities)) {
         // target is some DataSource
         return waitForDataSourceToLoad(target).then(() => {
@@ -881,10 +886,23 @@ export default class Cesium extends GlobeOrMap {
       } else if (MappableMixin.isMixedInto(target)) {
         // target is a Mappable
         if (isDefined(target.cesiumRectangle)) {
-          return flyToPromise(camera, {
-            duration: flightDurationSeconds,
-            destination: target.cesiumRectangle
-          });
+          if (
+            target.cesiumRectangle.width > 0 &&
+            target.cesiumRectangle.height > 0
+          ) {
+            return flyToPromise(camera, {
+              duration: flightDurationSeconds,
+              destination: target.cesiumRectangle
+            });
+          } else {
+            const sphere = new BoundingSphere(
+              Cartographic.toCartesian(
+                Rectangle.center(target.cesiumRectangle)
+              ),
+              500
+            );
+            return this.doZoomTo(sphere, flightDurationSeconds);
+          }
         } else if (target.mapItems.length > 0) {
           // Zoom to the first item!
           return this.doZoomTo(target.mapItems[0], flightDurationSeconds);
