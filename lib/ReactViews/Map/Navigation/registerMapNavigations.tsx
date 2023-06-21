@@ -72,7 +72,16 @@ export const registerMapNavigations = (viewState: ViewState) => {
     title: "translate#location.centreMap",
     location: "TOP",
     controller: myLocation,
-    screenSize: undefined,
+    screenSize: "medium",
+    order: 7
+  });
+  mapNavigationModel.addItem({
+    id: MyLocation.id + "_small",
+    name: "translate#location.location",
+    title: "translate#location.centreMap",
+    location: "TOP",
+    controller: myLocation,
+    screenSize: "small",
     order: 3
   });
 
@@ -88,7 +97,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: toggleSplitterController,
     screenSize: undefined,
-    order: 4
+    order: 6
   });
 
   const measureTool = new MeasureTool({
@@ -122,7 +131,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: measureTool,
     screenSize: undefined,
-    order: 6
+    order: 4
   });
 
   const measureAreaTool = new MeasureAreaTool({
@@ -157,7 +166,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: measureAreaTool,
     screenSize: undefined,
-    order: 9
+    order: 5
   });
 
   const toggleInfoController = new ToggleInfoController(viewState);
@@ -168,7 +177,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: toggleInfoController,
     screenSize: undefined,
-    order: 10
+    order: 3
   });
 
   const pedestrianModeToolController = new ToolButtonController({
@@ -184,7 +193,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: "medium",
     controller: pedestrianModeToolController,
-    order: 5
+    order: 9
   });
 
   const closeToolButtonController = new GenericMapNavigationItemController({
