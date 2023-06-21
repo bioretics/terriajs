@@ -34,6 +34,7 @@ import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import clipboard from "clipboard";
 import Button from "../../Styled/Button";
+import DataUri from "../../Core/DataUri";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -224,6 +225,24 @@ class FeatureInfoPanel extends React.Component<Props> {
     }
   }
 
+  generateGpxWaypoints(location: Cartographic): string {
+    return `<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="runtracker">
+      <metadata/>
+      <wpt name="Location"
+        lat="${CesiumMath.toDegrees(location.latitude)}"
+        lon="${CesiumMath.toDegrees(location.longitude)}"
+        ele="${location.height.toFixed(2)}">
+      </wpt>
+    </gpx>`;
+  }
+
+  downloadLocationAsGpx(locationGpx: string): void {
+    const a = document.createElement("a");
+    a.href = DataUri.make("xml", locationGpx);
+    a.download = "location.gpx";
+    a.click();
+  }
+
   renderLocationItem(cartesianPosition: Cartesian3) {
     const cartographic =
       this.props.viewState.terria.pickedPosition ??
@@ -241,6 +260,10 @@ class FeatureInfoPanel extends React.Component<Props> {
       that.pinClicked(longitude, latitude);
     };
 
+    const downloadLocationAsGpx = () => {
+      that.downloadLocationAsGpx(that.generateGpxWaypoints(cartographic));
+    };
+
     /*const locationButtonStyle = isMarkerVisible(this.props.viewState.terria)
       ? Styles.btnLocationSelected
       : Styles.btnLocation;*/
@@ -256,55 +279,71 @@ class FeatureInfoPanel extends React.Component<Props> {
           </div>
         )}
         <div className={Styles.location}>
-          <span>Lat / Lon&nbsp;</span>
-          <span>
-            <span id="featureinfopanel">
-              {pretty.latitude + ", " + pretty.longitude}
-            </span>
-            {!this.props.printView && (
-              <span>
-                <Button
-                  primary
-                  title="Copia le coordinate negli Appunti"
-                  css={`
-                    width: 18px;
-                    heigth: 16px;
-                    border-radius: 2px;
-                    margin: 2px;
-                  `}
-                  className={`btn-copy-featureinfopanel`}
-                  data-clipboard-target={`#featureinfopanel`}
-                >
-                  <StyledIcon
-                    light={true}
-                    realDark={false}
-                    glyph={Icon.GLYPHS.copy}
-                    styledWidth="16px"
-                  />
-                </Button>
-                <Button
-                  primary
-                  onClick={pinClicked}
-                  css={`
-                    width: 18px;
-                    border-radius: 2px;
-                    margin: 2px;
-                    border-width: ${isMarkerVisible(this.props.viewState.terria)
-                      ? "2px"
-                      : "0px"};
-                    border-color: red;
-                  `}
-                >
-                  <StyledIcon
-                    light={true}
-                    realDark={false}
-                    glyph={Icon.GLYPHS.location}
-                    styledWidth="16px"
-                  />
-                </Button>
-              </span>
-            )}
+          Lat / Lon
+          <span id="featureinfopanel">
+            {pretty.latitude + ", " + pretty.longitude}
           </span>
+        </div>
+        <div className={Styles.location}>
+          <span />
+          {!this.props.printView && (
+            <span>
+              <Button
+                primary
+                title="Copia le coordinate negli Appunti"
+                css={`
+                  width: 14px;
+                  border-radius: 2px;
+                  margin: 2px;
+                `}
+                className={`btn-copy-featureinfopanel`}
+                data-clipboard-target={`#featureinfopanel`}
+              >
+                <StyledIcon
+                  light={true}
+                  realDark={false}
+                  glyph={Icon.GLYPHS.copy}
+                  styledWidth="16px"
+                />
+              </Button>
+              <Button
+                primary
+                onClick={pinClicked}
+                css={`
+                  width: 14px;
+                  border-radius: 2px;
+                  margin: 2px;
+                  border-width: ${isMarkerVisible(this.props.viewState.terria)
+                    ? "2px"
+                    : "0px"};
+                  border-color: red;
+                `}
+              >
+                <StyledIcon
+                  light={true}
+                  realDark={false}
+                  glyph={Icon.GLYPHS.location}
+                  styledWidth="16px"
+                />
+              </Button>
+              <Button
+                primary
+                onClick={downloadLocationAsGpx}
+                css={`
+                  width: 14px;
+                  border-radius: 2px;
+                  margin: 2px;
+                `}
+              >
+                <StyledIcon
+                  light={true}
+                  realDark={false}
+                  glyph={Icon.GLYPHS.downloadNew}
+                  styledWidth="16px"
+                />
+              </Button>
+            </span>
+          )}
         </div>
       </div>
     );

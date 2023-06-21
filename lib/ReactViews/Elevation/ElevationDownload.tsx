@@ -165,11 +165,10 @@ const ElevationDownload = (props: Props) => {
           ${path.stopPoints
             .map(
               (elem) =>
-                `<trkpt lat="${CesiumMath.toDegrees(
-                  elem.latitude
-                )}" lon="${CesiumMath.toDegrees(
-                  elem.longitude
-                )}" ele="${elem.height.toFixed(2)}"></trkpt>`
+                `<trkpt lat="${CesiumMath.toDegrees(elem.latitude)}" 
+                  lon="${CesiumMath.toDegrees(elem.longitude)}" 
+                  ele="${elem.height.toFixed(2)}">
+                </trkpt>`
             )
             .join("")}
         </trkseg>
@@ -183,9 +182,11 @@ const ElevationDownload = (props: Props) => {
       ${path.stopPoints
         .map(
           (elem, index) =>
-            `<wpt name="Tappa ${index}" lat="${CesiumMath.toDegrees(
-              elem.latitude
-            )}" lon="${CesiumMath.toDegrees(elem.longitude)}"></wpt>`
+            `<wpt name="Tappa ${index}"
+              lat="${CesiumMath.toDegrees(elem.latitude)}"
+              lon="${CesiumMath.toDegrees(elem.longitude)}"
+              ele="${elem.height.toFixed(2)}">
+            </wpt>`
         )
         .join("")}
     </gpx>`;
