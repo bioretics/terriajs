@@ -1672,7 +1672,7 @@ export default class Terria {
 
     if (isJsonObject(initData.initialCamera)) {
       const initialCamera = CameraView.fromJson(initData.initialCamera);
-      this.currentViewer.zoomTo(initialCamera, 2.0);
+      this.currentViewer.zoomTo(initialCamera);
     }
 
     if (isJsonBoolean(initData.showSplitter)) {
