@@ -11,6 +11,7 @@ import StyleTraits from "./StyleTraits";
 import TableTraits from "./TableTraits";
 import UrlTraits from "./UrlTraits";
 import SearchableCatalogItemTraits from "./SearchableCatalogItemTraits";
+import QueryableCatalogItemTraits from "./QueryableCatalogItemTraits";
 
 export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
   @anyTrait({
@@ -38,6 +39,7 @@ export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
 }
 
 export class GeoJsonTraits extends mixTraits(
+  QueryableCatalogItemTraits,
   SearchableCatalogItemTraits,
   FeatureInfoUrlTemplateTraits,
   LegendOwnerTraits,

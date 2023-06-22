@@ -102,7 +102,10 @@ import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { isDataSource } from "./MappableMixin";
 import TableMixin from "./TableMixin";
 import MeasurableMixin from "./MeasurableMixin";
-import SearchableCatalogItemMixin, { SearchableData } from "./SearchableCatalogItemMixin";
+import SearchableCatalogItemMixin, {
+  SearchableData
+} from "./SearchableCatalogItemMixin";
+import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
 
 enum PathTypes {
   noPath = 0,
@@ -232,13 +235,14 @@ interface FeatureCounts {
 }
 
 function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
-  abstract class GeoJsonMixin extends SearchableCatalogItemMixin(
-    MeasurableMixin(
-      TableMixin(
-        FeatureInfoUrlTemplateMixin(
-          UrlMixin(
-            CatalogMemberMixin(Base)
-          ))))
+  abstract class GeoJsonMixin extends QueryableCatalogItemMixin(
+    SearchableCatalogItemMixin(
+      MeasurableMixin(
+        TableMixin(
+          FeatureInfoUrlTemplateMixin(UrlMixin(CatalogMemberMixin(Base)))
+        )
+      )
+    )
   ) {
     @observable
     private _dataSource:
@@ -1461,34 +1465,114 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
 
     searchWithinItemData(text: string) {
       // Search in TerriaJS Feature and Turf Geometry
-      const elements: SearchableData[] | undefined = this.readyData?.features.map(feature => {
-        const fieldContent: string = feature.properties?.[this.nameOfCatalogItemSearchField] ?? "";
+      const elements: SearchableData[] | undefined =
+        this.readyData?.features.map((feature) => {
+          const fieldContent: string =
+            feature.properties?.[this.nameOfCatalogItemSearchField] ?? "";
 
-        const type = feature.geometry.type;
-        let lat: number;
-        let lon: number;
-        if (type === "Point" && (feature.geometry as Geometry).coordinates.length === 2) {
-          lon = (feature.geometry as Geometry).coordinates[0] as number;
-          lat = (feature.geometry as Geometry).coordinates[1] as number;
-        }
-        else {
-          const geojsonBbox = bbox(feature);
-          const west = geojsonBbox[0];
-          const south = geojsonBbox[1];
-          const east = geojsonBbox[2];
-          const north = geojsonBbox[3];
-          lon = (east - west) * 0.5 + west;
-          lat = (north - south) * 0.5 + south;
-        }
+          const type = feature.geometry.type;
+          let lat: number;
+          let lon: number;
+          if (
+            type === "Point" &&
+            (feature.geometry as Geometry).coordinates.length === 2
+          ) {
+            lon = (feature.geometry as Geometry).coordinates[0] as number;
+            lat = (feature.geometry as Geometry).coordinates[1] as number;
+          } else {
+            const geojsonBbox = bbox(feature);
+            const west = geojsonBbox[0];
+            const south = geojsonBbox[1];
+            const east = geojsonBbox[2];
+            const north = geojsonBbox[3];
+            lon = (east - west) * 0.5 + west;
+            lat = (north - south) * 0.5 + south;
+          }
 
-        return {
-          searchField: fieldContent,
-          latitude: lat,
-          longitude: lon
-        };
-      });
+          return {
+            searchField: fieldContent,
+            latitude: lat,
+            longitude: lon
+          };
+        });
 
       return this.search(text, elements);
+    }
+
+    getEnumValues(propertyName: string): string[] | undefined {
+      if (
+        this.mapItems &&
+        this.mapItems.length > 0 &&
+        (this.mapItems[0] instanceof CustomDataSource ||
+          this.mapItems[0] instanceof GeoJsonDataSource ||
+          this.mapItems[0] instanceof CzmlDataSource)
+      ) {
+        const values: Set<string> = new Set<string>(["all"]);
+
+        for (let entity of this.mapItems[0].entities.values) {
+          if (entity?.properties) {
+            if (entity.properties.hasProperty(propertyName)) {
+              values.add(
+                entity.properties.getValue(JulianDate.now())[propertyName]
+              );
+            }
+          }
+        }
+
+        return Array.from(values);
+      }
+    }
+
+    filterData() {
+      if (!this.queryProperties || !this.queryValues) return;
+      const selectedValuesArray = Object.values(this.queryValues);
+
+      const showAll = !selectedValuesArray
+        .flat()
+        .some((value) => value !== "" && value !== "all");
+
+      if (
+        this.mapItems &&
+        this.mapItems.length > 0 &&
+        (this.mapItems[0] instanceof CustomDataSource ||
+          this.mapItems[0] instanceof GeoJsonDataSource ||
+          this.mapItems[0] instanceof CzmlDataSource)
+      ) {
+        for (let entity of this.mapItems[0].entities.values) {
+          const visibility: boolean[] = selectedValuesArray.map((_) => true);
+          if (!showAll) {
+            Object.entries(this.queryValues).forEach(([key, value], index) => {
+              if (entity?.properties?.hasProperty(key)) {
+                const qqq = entity.properties.getValue(JulianDate.now())[key];
+
+                if (
+                  this.queryProperties?.[key].type === "enum" ||
+                  this.queryProperties?.[key].type === "string" ||
+                  this.queryProperties?.[key].type === "number"
+                ) {
+                  visibility[index] =
+                    value[0].toLowerCase() === "all" ||
+                    value[0].toLowerCase() === "" ||
+                    qqq.toLowerCase() === value[0].toLowerCase();
+                } else if (this.queryProperties?.[key].type === "date") {
+                  if (value[0] === "" || value[1] === "") {
+                    visibility[index] = true;
+                  } else {
+                    const fromDate = new Date(value[0]);
+                    const toDate = new Date(value[1]);
+                    const entityDate = new Date(qqq);
+                    visibility[index] =
+                      fromDate.getTime() < entityDate.getTime() &&
+                      entityDate.getTime() < toDate.getTime();
+                  }
+                }
+              }
+            });
+          }
+
+          entity.show = visibility.every((vis) => vis);
+        }
+      }
     }
 
     @computed get viewingControls(): ViewingControl[] {

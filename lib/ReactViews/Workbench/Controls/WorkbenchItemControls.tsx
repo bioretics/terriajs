@@ -19,6 +19,7 @@ import { ScaleWorkbenchInfo } from "./ScaleWorkbenchInfo";
 import DimensionSelectorSection from "./SelectableDimensionSection";
 import ShortReport from "./ShortReport";
 import TimerSection from "./TimerSection";
+import FilterFeaturesSection from "./FilterFeaturesSection";
 import ViewingControls from "./ViewingControls";
 
 type WorkbenchControls = {
@@ -35,6 +36,7 @@ type WorkbenchControls = {
   colorScaleRange?: boolean;
   shortReport?: boolean;
   legend?: boolean;
+  filterFeatures?: boolean;
 };
 
 type WorkbenchItemControlsProps = {
@@ -57,7 +59,8 @@ export const defaultControls: Complete<WorkbenchControls> = {
   selectableDimensions: true,
   colorScaleRange: true,
   shortReport: true,
-  legend: true
+  legend: true,
+  filterFeatures: true
 };
 
 export const hideAllControls: Complete<WorkbenchControls> = {
@@ -73,7 +76,8 @@ export const hideAllControls: Complete<WorkbenchControls> = {
   selectableDimensions: false,
   colorScaleRange: false,
   shortReport: false,
-  legend: false
+  legend: false,
+  filterFeatures: false
 };
 
 const WorkbenchItemControls: React.FC<WorkbenchItemControlsProps> = observer(
@@ -92,6 +96,9 @@ const WorkbenchItemControls: React.FC<WorkbenchItemControlsProps> = observer(
         {controls?.splitter ? <LeftRightSection item={item as any} /> : null}
         {controls?.chartItems ? <ChartItemSelector item={item} /> : null}
         {controls?.filter ? <FilterSection item={item} /> : null}
+        {controls?.filterFeatures ? (
+          <FilterFeaturesSection item={item} />
+        ) : null}
         {controls?.dateTime && DiscretelyTimeVaryingMixin.isMixedInto(item) ? (
           <DateTimeSelectorSection item={item} />
         ) : null}
