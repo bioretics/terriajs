@@ -1572,6 +1572,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
 
           entity.show = visibility.every((vis) => vis);
         }
+        this.terria.currentViewer.notifyRepaintRequired();
       }
     }
 
