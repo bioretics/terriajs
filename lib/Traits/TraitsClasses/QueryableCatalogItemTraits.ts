@@ -6,17 +6,33 @@ export class QueryablePropertyTraits extends ModelTraits {
   @primitiveTrait({
     type: "string",
     name: "propertyName",
-    description: ""
+    description:
+      "The name of the property of the layer to use to query the data (case insensitive)"
   })
-  propertyName: string =
-    "The name of the property of the layer to use to query the data (case insensitive)";
+  propertyName: string = "";
 
   @primitiveTrait({
     type: "string",
     name: "propertyLabel",
-    description: ""
+    description: "The label to show in the interface"
   })
-  propertyLabel: string = "The label to show in the interface";
+  propertyLabel: string = "";
+
+  @primitiveTrait({
+    type: "string",
+    name: "propertyMeasureUnit",
+    description:
+      "The unit of measurement of the property (only if type is 'number')"
+  })
+  propertyMeasureUnit?: string;
+
+  @primitiveTrait({
+    type: "number",
+    name: "propertyDecimalPlaces",
+    description:
+      "The number of decimal places to show (only if type is 'number')"
+  })
+  propertyDecimalPlaces: number = 0;
 
   @primitiveTrait({
     type: "string",
@@ -32,6 +48,14 @@ export class QueryablePropertyTraits extends ModelTraits {
     description: "If true, user can aggregate the data by this property"
   })
   canAggregate: boolean = false;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "sumOnAggregation",
+    description:
+      "If true, on aggregation show also se sum of this value (only if type is 'number')"
+  })
+  sumOnAggregation: boolean = false;
 }
 
 export default class QueryableCatalogItemTraits extends ModelTraits {

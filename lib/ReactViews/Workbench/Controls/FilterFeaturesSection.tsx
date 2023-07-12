@@ -68,7 +68,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
               display: flex;
             `}
           >
-            Query
+            Filtro
           </TextSpan>
           {showQuerySection ? (
             <AdvanceOptionsIcon glyph={GLYPHS.opened} />
@@ -80,8 +80,11 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
           <>
             <Spacing bottom={3} />
             <Box displayInlineBlock fullWidth>
-              {Object.entries(item.queryProperties).map(
-                ([propertyName, property]) => {
+              {Object.entries(item.queryProperties)
+                .filter(([_, property]) => {
+                  return !property.sumOnAggregation;
+                })
+                .map(([propertyName, property]) => {
                   return (
                     <Box key={propertyName} styledMargin="0 0 10px 0">
                       <StyledLabel small htmlFor="opacity">
@@ -171,8 +174,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                       )}
                     </Box>
                   );
-                }
-              )}
+                })}
             </Box>
           </>
         )}

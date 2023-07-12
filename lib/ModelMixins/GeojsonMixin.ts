@@ -1507,10 +1507,10 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
           this.mapItems[0] instanceof GeoJsonDataSource ||
           this.mapItems[0] instanceof CzmlDataSource)
       ) {
-        const values: Set<string> = new Set<string>(["all"]);
+        const values: Set<string> = new Set<string>(["--all"]);
 
         for (let entity of this.mapItems[0].entities.values) {
-          if (entity?.properties) {
+          if (entity?.properties && entity.show) {
             if (entity.properties.hasProperty(propertyName)) {
               values.add(
                 entity.properties.getValue(JulianDate.now())[propertyName]
@@ -1523,13 +1523,34 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
       }
     }
 
+    getFeaturePropertiesByName(
+      propertyNames: string[]
+    ): { [key: string]: any }[] | undefined {
+      if (
+        this.mapItems &&
+        this.mapItems.length > 0 &&
+        (this.mapItems[0] instanceof CustomDataSource ||
+          this.mapItems[0] instanceof GeoJsonDataSource ||
+          this.mapItems[0] instanceof CzmlDataSource)
+      ) {
+        const results = this.mapItems[0].entities.values.map((entity) => {
+          const obj = Object.fromEntries(
+            propertyNames.map((name) => [name, entity.properties?.[name]])
+          );
+          obj["show"] = new ConstantProperty(entity.show);
+          return obj;
+        });
+        return results;
+      }
+    }
+
     filterData() {
       if (!this.queryProperties || !this.queryValues) return;
       const selectedValuesArray = Object.values(this.queryValues);
 
       const showAll = !selectedValuesArray
         .flat()
-        .some((value) => value !== "" && value !== "all");
+        .some((value) => value !== "" && value !== "--all");
 
       if (
         this.mapItems &&
@@ -1551,7 +1572,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                   this.queryProperties?.[key].type === "number"
                 ) {
                   visibility[index] =
-                    value[0].toLowerCase() === "all" ||
+                    value[0].toLowerCase() === "--all" ||
                     value[0].toLowerCase() === "" ||
                     qqq.toLowerCase() === value[0].toLowerCase();
                 } else if (this.queryProperties?.[key].type === "date") {

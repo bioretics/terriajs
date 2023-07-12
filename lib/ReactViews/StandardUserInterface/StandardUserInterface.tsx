@@ -12,6 +12,7 @@ import Disclaimer from "../Disclaimer";
 import DragDropFile from "../DragDropFile";
 import DragDropNotification from "../DragDropNotification";
 import ExplorerWindow from "../ExplorerWindow/ExplorerWindow";
+import QueryWindow from "../QueryWindow/QueryWindow";
 import FeatureInfoPanel from "../FeatureInfo/FeatureInfoPanel";
 import FeedbackForm from "../Feedback/FeedbackForm";
 import { Medium, Small } from "../Generic/Responsive";
@@ -238,6 +239,7 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
                   <div id="map-data-attribution"></div>
                   <main>
                     <ExplorerWindow />
+                    <QueryWindow />
                     {props.terria.configParameters.experimentalFeatures &&
                       !props.viewState.hideMapUi && (
                         <ExperimentalFeatures

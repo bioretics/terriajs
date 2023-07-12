@@ -110,7 +110,6 @@ import TimelineStack from "./TimelineStack";
 import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 
 // import overrides from "../Overrides/defaults.jsx";
@@ -589,6 +588,12 @@ export default class Terria {
    * @type {Boolean}
    */
   @observable clampMeasureLineToGround: boolean = true;
+
+  /**
+   * Gets or sets the item to query.
+   * @type {BaseModel}
+   */
+  @observable itemToQuery: BaseModel | undefined = undefined;
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack

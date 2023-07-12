@@ -48,6 +48,7 @@ import SplitterTraits from "../../../Traits/TraitsClasses/SplitterTraits";
 import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
+import QueryableCatalogItemMixin from "../../../ModelMixins/QueryableCatalogItemMixin";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -466,8 +467,21 @@ class ViewingControls extends React.Component<
               title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
             >
               <BoxViewingControl>
-                <StyledIcon glyph={Icon.GLYPHS.search} />
+                <StyledIcon glyph={Icon.GLYPHS.lineChart} />
                 <span>Percorso</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        )}
+        {QueryableCatalogItemMixin.isMixedInto(item) && (
+          <li>
+            <ViewingControlMenuButton
+              onClick={() => runInAction(() => viewState.openQueryData(item))}
+              title="Mostra la finestra di aggregazione dei dati"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.barChart} />
+                <span>Aggrega</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>

@@ -307,6 +307,17 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable elevationPanelIsCollapsed: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the QueryPanel is visible.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsVisible: boolean = false;
+  /**
+   * Gets or sets a value indicating whether the QueryPanel is collapsed.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsCollapsed: boolean = false;
   /**
    * Gets or sets a value indicating whether the ElevationChart is visible.
    * @type {Boolean}
@@ -560,6 +571,18 @@ export default class ViewState {
   @action
   setTopElement(key: string) {
     this.topElement = key;
+  }
+
+  @action
+  openQueryData(queryItem: BaseModel) {
+    this.terria.itemToQuery = queryItem;
+    this.queryPanelIsVisible = true;
+  }
+
+  @action
+  closeQuery() {
+    this.queryPanelIsVisible = false;
+    this.terria.itemToQuery = undefined;
   }
 
   @action

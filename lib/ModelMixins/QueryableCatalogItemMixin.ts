@@ -6,11 +6,14 @@ import QueryableCatalogItemTraits from "../Traits/TraitsClasses/QueryableCatalog
 
 type MixinModel = Model<QueryableCatalogItemTraits>;
 
-interface QueryableProperties {
+export interface QueryableProperties {
   [name: string]: {
     label: string;
     type: string;
+    measureUnit?: string;
+    decimalPlaces: number;
     canAggregate: boolean;
+    sumOnAggregation: boolean;
     enumValues: string[];
   };
 }
@@ -33,10 +36,13 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
             [property.propertyName]: {
               type: property.propertyType,
               label: property.propertyLabel,
+              measureUnit: property.propertyMeasureUnit,
+              decimalPlaces: property.propertyDecimalPlaces,
               canAggregate: property.canAggregate,
+              sumOnAggregation: property.sumOnAggregation,
               enumValues:
                 property.propertyType === "enum"
-                  ? this.getEnumValues(property.propertyName)
+                  ? this.getEnumValues(property.propertyName)?.sort()
                   : []
             }
           };
@@ -53,15 +59,17 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
 
     abstract getEnumValues(keys: string): string[] | undefined;
 
+    abstract getFeaturePropertiesByName(
+      propertyNames: string[]
+    ): { [key: string]: any }[] | undefined;
+
     @action
     initQueryValues() {
       if (!this.queryProperties) return;
 
       const initialValues = Object.entries(this.queryProperties).map(
         ([name, property]) => {
-          if (property.type === "enum" /*&& this.urca*/) {
-            return property.enumValues;
-          } else if (property.type === "date") {
+          if (property.type === "date") {
             return { [name]: ["", ""] };
           } else {
             return { [name]: [""] };
