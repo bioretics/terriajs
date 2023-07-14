@@ -1507,8 +1507,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
           this.mapItems[0] instanceof GeoJsonDataSource ||
           this.mapItems[0] instanceof CzmlDataSource)
       ) {
-        const values: Set<string> = new Set<string>(["--all"]);
-
+        const values: Set<string> = new Set<string>([this.ENUM_ALL_VALUE]);
         for (let entity of this.mapItems[0].entities.values) {
           if (entity?.properties && entity.show) {
             if (entity.properties.hasProperty(propertyName)) {
@@ -1550,7 +1549,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
 
       const showAll = !selectedValuesArray
         .flat()
-        .some((value) => value !== "" && value !== "--all");
+        .some((value) => value !== "" && value !== this.ENUM_ALL_VALUE);
 
       if (
         this.mapItems &&
@@ -1564,7 +1563,9 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
           if (!showAll) {
             Object.entries(this.queryValues).forEach(([key, value], index) => {
               if (entity?.properties?.hasProperty(key)) {
-                const qqq = entity.properties.getValue(JulianDate.now())[key];
+                const entityValue = entity.properties.getValue(
+                  JulianDate.now()
+                )[key];
 
                 if (
                   this.queryProperties?.[key].type === "enum" ||
@@ -1572,16 +1573,16 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                   this.queryProperties?.[key].type === "number"
                 ) {
                   visibility[index] =
-                    value[0].toLowerCase() === "--all" ||
+                    value[0].toLowerCase() === this.ENUM_ALL_VALUE ||
                     value[0].toLowerCase() === "" ||
-                    qqq.toLowerCase() === value[0].toLowerCase();
+                    entityValue.toLowerCase() === value[0].toLowerCase();
                 } else if (this.queryProperties?.[key].type === "date") {
                   if (value[0] === "" || value[1] === "") {
                     visibility[index] = true;
                   } else {
                     const fromDate = new Date(value[0]);
                     const toDate = new Date(value[1]);
-                    const entityDate = new Date(qqq);
+                    const entityDate = new Date(entityValue);
                     visibility[index] =
                       fromDate.getTime() < entityDate.getTime() &&
                       entityDate.getTime() < toDate.getTime();

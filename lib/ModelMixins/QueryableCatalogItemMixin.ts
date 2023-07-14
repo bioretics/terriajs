@@ -14,7 +14,6 @@ export interface QueryableProperties {
     decimalPlaces: number;
     canAggregate: boolean;
     sumOnAggregation: boolean;
-    enumValues: string[];
   };
 }
 
@@ -24,8 +23,15 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       super(...args);
     }
 
+    get ENUM_ALL_VALUE(): string {
+      return "--all";
+    }
+
     @observable
     queryValues?: { [name: string]: string[] };
+
+    @observable
+    enumValues?: { [name: string]: string[] };
 
     @computed
     get queryProperties(): QueryableProperties | undefined {
@@ -39,11 +45,7 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
               measureUnit: property.propertyMeasureUnit,
               decimalPlaces: property.propertyDecimalPlaces,
               canAggregate: property.canAggregate,
-              sumOnAggregation: property.sumOnAggregation,
-              enumValues:
-                property.propertyType === "enum"
-                  ? this.getEnumValues(property.propertyName)?.sort()
-                  : []
+              sumOnAggregation: property.sumOnAggregation
             }
           };
         })
@@ -57,15 +59,32 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
 
     abstract filterData(): void;
 
-    abstract getEnumValues(keys: string): string[] | undefined;
+    abstract getEnumValues(propertyName: string): string[] | undefined;
 
     abstract getFeaturePropertiesByName(
       propertyNames: string[]
     ): { [key: string]: any }[] | undefined;
 
     @action
+    updateEnumValues() {
+      if (!this.queryProperties) return;
+
+      const enums = Object.entries(this.queryProperties)
+        .filter(([name, property]) => property.type === "enum")
+        .map(([name, property]) => {
+          return { [name]: this.getEnumValues(name) };
+        });
+      this.enumValues = Object.assign(
+        {},
+        ...enums.filter((elem) => elem !== undefined)
+      );
+    }
+
+    @action
     initQueryValues() {
       if (!this.queryProperties) return;
+
+      this.updateEnumValues();
 
       const initialValues = Object.entries(this.queryProperties).map(
         ([name, property]) => {
@@ -90,6 +109,7 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       if (this.queryValues) {
         this.queryValues[propertyName] = value;
         this.filterData();
+        this.updateEnumValues();
       }
     }
   }
