@@ -70,10 +70,11 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       if (!this.queryProperties) return;
 
       const enums = Object.entries(this.queryProperties)
-        .filter(([name, property]) => property.type === "enum")
-        .map(([name, property]) => {
+        .filter(([_, property]) => property.type === "enum")
+        .map(([name, _]) => {
           return { [name]: this.getEnumValues(name) };
         });
+
       this.enumValues = Object.assign(
         {},
         ...enums.filter((elem) => elem !== undefined)

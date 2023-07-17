@@ -344,7 +344,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
               } ${measureUnit ?? ""})`;
             }}
           />
-          <Legend />
+          {data.length <= 20 && <Legend wrapperStyle={{ fontSize: "14px" }} />}
         </PieChart>
       );
     };

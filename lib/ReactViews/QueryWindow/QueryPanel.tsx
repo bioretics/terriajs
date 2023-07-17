@@ -26,7 +26,7 @@ export enum ChartType {
 const defaultAggregationFunction = { key: "count", label: "Conta" };
 
 const QueryPanel = observer(({ item }: PropsType) => {
-  const [firstProperty, setFirstProperty] = useState<string>();
+  const [aggregationProperty, setAggregationProperty] = useState<string>();
   const [aggregationFunction, setAggregationFunction] = useState<string>();
   const [chartType, setChartType] = useState<ChartType>(ChartType.Pie);
   const [data, setData] = useState<{ name: string; value: number }[]>();
@@ -56,13 +56,20 @@ const QueryPanel = observer(({ item }: PropsType) => {
       }
 
       const fields = Object.entries(item.queryProperties ?? {})
-        .filter(([_, elem]) => elem.canAggregate)
+        .filter(([key, elem]) => {
+          return (
+            elem.canAggregate &&
+            !item.queryValues?.[key].some(
+              (val) => val && val !== "" && val !== item.ENUM_ALL_VALUE
+            )
+          );
+        })
         .map(([key, elem]) => {
           return { key: key, label: elem.label };
         });
       aggregateFieldOptions.current = fields;
-      if (!firstProperty) {
-        setFirstProperty(fields[0].key);
+      if (!aggregationProperty) {
+        setAggregationProperty(fields[0].key);
       }
       const functions = [
         ...[defaultAggregationFunction],
@@ -88,7 +95,11 @@ const QueryPanel = observer(({ item }: PropsType) => {
   }, []);
 
   useEffect(() => {
-    if (featureProperties?.current && firstProperty && aggregationFunction) {
+    if (
+      featureProperties?.current &&
+      aggregationProperty &&
+      aggregationFunction
+    ) {
       const functionIsCount =
         aggregationFunction === defaultAggregationFunction.key;
       const features = useHidden
@@ -98,7 +109,7 @@ const QueryPanel = observer(({ item }: PropsType) => {
           );
       const featuresPerClass: { [key: string]: number } = features.reduce(
         (obj, val) => {
-          const name = val[firstProperty];
+          const name = val[aggregationProperty];
           obj[name] =
             (obj[name] ?? 0) + (functionIsCount ? 1 : val[aggregationFunction]);
           return obj;
@@ -107,7 +118,7 @@ const QueryPanel = observer(({ item }: PropsType) => {
       );
 
       const tot = functionIsCount
-        ? featureProperties.current.length
+        ? features.length
         : Object.values(featuresPerClass).reduce((result, val) => {
             return result + val;
           });
@@ -124,7 +135,7 @@ const QueryPanel = observer(({ item }: PropsType) => {
     }
   }, [
     featureProperties.current,
-    firstProperty,
+    aggregationProperty,
     aggregationFunction,
     useHidden
   ]);
@@ -150,7 +161,7 @@ const QueryPanel = observer(({ item }: PropsType) => {
     !item.queryProperties ||
     !aggregateFieldOptions.current ||
     !aggregateFunctionOptions.current ||
-    !firstProperty ||
+    !aggregationProperty ||
     !aggregationFunction
   ) {
     return null;
@@ -162,9 +173,9 @@ const QueryPanel = observer(({ item }: PropsType) => {
           <Box className={Styles.dataExplorer} styledWidth="30%">
             <QuerySelector
               label="Aggrega per"
-              value={firstProperty}
+              value={aggregationProperty}
               onSelect={(newValue) => {
-                setFirstProperty(newValue);
+                setAggregationProperty(newValue);
               }}
               options={aggregateFieldOptions.current}
             />
@@ -210,7 +221,7 @@ const QueryPanel = observer(({ item }: PropsType) => {
                 </>
               )}
             </Box>
-            <SpacingSpan bottom={60} />
+            <SpacingSpan bottom={filterText.length > 0 ? 40 : 60} />
             <Box styledMargin="12px 20px">
               <Button
                 primary
@@ -242,9 +253,11 @@ const QueryPanel = observer(({ item }: PropsType) => {
                 data={data}
                 valueKey="value"
                 valuePercKey="valuePerc"
-                measureUnit={item.queryProperties[firstProperty].measureUnit}
+                measureUnit={
+                  item.queryProperties[aggregationProperty].measureUnit
+                }
                 decimalPlaces={
-                  item.queryProperties[firstProperty].decimalPlaces
+                  item.queryProperties[aggregationProperty].decimalPlaces
                 }
                 chartType={chartType}
                 ref={canvasRef}

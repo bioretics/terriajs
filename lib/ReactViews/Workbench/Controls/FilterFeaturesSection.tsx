@@ -27,6 +27,8 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
 
     useEffect(() => {
       if (
+        showQuerySection &&
+        item &&
         QueryableCatalogItemMixin.isMixedInto(item) &&
         item.queryableProperties &&
         item.queryableProperties.length &&
@@ -103,13 +105,15 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                             });
                           }}
                         >
-                          {item.enumValues?.[propertyName].map((value) => {
-                            return (
-                              <option key={value} value={value}>
-                                {value}
-                              </option>
-                            );
-                          })}
+                          {(item.enumValues?.[propertyName] ?? []).map(
+                            (value) => {
+                              return (
+                                <option key={value} value={value}>
+                                  {value}
+                                </option>
+                              );
+                            }
+                          )}
                         </Select>
                       )}
                       {(property.type === "string" ||
