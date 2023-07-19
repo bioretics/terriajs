@@ -135,13 +135,12 @@ class MyLocation extends MapNavigationItemController {
         CommonStrata.user,
         "style",
         createStratumInstance(StyleTraits, {
-          "marker-size": "25",
+          "marker-size": "20",
           "marker-color": "#08ABD5",
           stroke: "#ffffff",
           "stroke-width": 3
         })
       );
-      this._marker.setTrait(CommonStrata.user, "clampToGround", true);
 
       this.terria.workbench.add(this._marker);
     });

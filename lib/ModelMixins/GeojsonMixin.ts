@@ -1179,9 +1179,14 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
             ),
             heightReference: new ConstantProperty(
               styles.clampToGround
-                ? HeightReference.RELATIVE_TO_GROUND
+                ? //? HeightReference.RELATIVE_TO_GROUND
+                  HeightReference.CLAMP_TO_GROUND
                 : undefined
-            )
+            ),
+            disableDepthTestDistance:
+              this.name === i18next.t("location.myLocation")
+                ? new ConstantProperty(Number.POSITIVE_INFINITY)
+                : undefined
           });
           if (
             properties &&
