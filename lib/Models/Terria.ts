@@ -321,6 +321,16 @@ interface ConfigParameters {
   googleAnalyticsOptions?: unknown;
 
   relatedMaps?: RelatedMap[];
+
+  /**
+   * Url to custom search provider.
+   */
+  customSearchProviderUrl?: string;
+  
+  /**
+   * Url to whereAmI service.
+   */
+  whereAmIUrl?: string;
 }
 
 interface StartOptions {
@@ -547,7 +557,9 @@ export default class Terria {
     storyRouteUrlPrefix: undefined,
     enableConsoleAnalytics: undefined,
     googleAnalyticsOptions: undefined,
-    relatedMaps: defaultRelatedMaps
+    relatedMaps: defaultRelatedMaps,
+    customSearchProviderUrl: undefined,
+    whereAmIUrl: undefined
   };
 
   @observable
@@ -570,6 +582,12 @@ export default class Terria {
    * @type {string}
    */
   @observable pickedPositionElevation: string | undefined;
+
+  /**
+   * Gets or sets the "Where Am I" of the last position picked by FeatureInfo.
+   * @type {string}
+   */
+  @observable pickedPositionWhereAmI: string | undefined;
 
   /**
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.

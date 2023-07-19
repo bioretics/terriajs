@@ -35,6 +35,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import clipboard from "clipboard";
 import Button from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -243,6 +244,40 @@ class FeatureInfoPanel extends React.Component<Props> {
     a.click();
   }
 
+  whereAmI(cartographic: Cartographic): void {
+    //const url = "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/where/MapServer/0/query";
+    const url = this.props.viewState.terria.configParameters.whereAmIUrl;
+    if (url) {
+      const whereAmIFieldName = "LOCALIZZAZ";
+
+      const latitude = CesiumMath.toDegrees(cartographic.latitude);
+      const longitude = CesiumMath.toDegrees(cartographic.longitude);
+
+      const that = this;
+
+      CesiumResource.fetchJson({
+        url: this.props.viewState.terria?.corsProxy.getURL(url),
+        queryParameters: {
+          geometry: `${longitude}, ${latitude}`,
+          geometryType: "esriGeometryPoint",
+          //spatialRel: "esriSpatialRelIntersects",
+          spatialRel: "esriSpatialRelIndexIntersects",
+          outFields: whereAmIFieldName,
+          returnGeometry: false,
+          f: "json"
+        }
+      })?.then(
+        action((results): void => {
+          if (results?.features?.length > 0) {
+            const res: string | undefined =
+              results?.features[0]?.attributes?.[whereAmIFieldName];
+            that.props.viewState.terria.pickedPositionWhereAmI = res;
+          }
+        })
+      );
+    }
+  }
+
   renderLocationItem(cartesianPosition: Cartesian3) {
     const cartographic =
       this.props.viewState.terria.pickedPosition ??
@@ -270,6 +305,12 @@ class FeatureInfoPanel extends React.Component<Props> {
 
     return (
       <div>
+        {!!cartographic && this.props.viewState.terria.pickedPositionWhereAmI && (
+          <div className={Styles.location}>
+            <span>Dove sono?</span>
+            <span>{this.props.viewState.terria.pickedPositionWhereAmI}</span>
+          </div>
+        )}
         {!!cartographic && (
           <div className={Styles.location}>
             <span>Altitudine</span>
@@ -363,6 +404,8 @@ class FeatureInfoPanel extends React.Component<Props> {
       terria.pickedPosition = terria.currentViewer.mouseCoords.cartographic;
       terria.pickedPositionElevation =
         terria.currentViewer.mouseCoords.elevation;
+
+      this.whereAmI(cartographic);
     }
   }
 
