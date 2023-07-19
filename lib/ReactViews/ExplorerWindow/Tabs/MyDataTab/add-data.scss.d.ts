@@ -7,9 +7,11 @@ interface CssExports {
   'label': string;
   'tab-panel': string;
   'tab-panels': string;
+  'tab-panels-small': string;
   'tabHeading': string;
   'tabPanel': string;
   'tabPanels': string;
+  'tabPanelsSmall': string;
   'url-input': string;
   'url-input__btn': string;
   'url-input__text-box': string;

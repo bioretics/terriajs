@@ -188,7 +188,13 @@ const AddData = createReactClass({
     []);
 
     return (
-      <div className={Styles.tabPanels}>
+      <div
+        className={
+          this.props.viewState.useSmallScreenInterface
+            ? Styles.tabPanelsSmall
+            : Styles.tabPanels
+        }
+      >
         <If condition={this.props.activeTab === "local"}>
           <div className={Styles.tabHeading}>{t("addData.localAdd")}</div>
           <section className={Styles.tabPanel}>

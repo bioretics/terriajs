@@ -63,7 +63,8 @@ export default class ViewState {
     data: "data",
     preview: "preview",
     nowViewing: "nowViewing",
-    locationSearchResults: "locationSearchResults"
+    locationSearchResults: "locationSearchResults",
+    query: "query"
   });
   readonly searchState: SearchState;
   readonly terria: Terria;
@@ -576,7 +577,11 @@ export default class ViewState {
   @action
   openQueryData(queryItem: BaseModel) {
     this.terria.itemToQuery = queryItem;
-    this.queryPanelIsVisible = true;
+    if (this.useSmallScreenInterface) {
+      this.switchMobileView(this.mobileViewOptions.query);
+    } else {
+      this.queryPanelIsVisible = true;
+    }
   }
 
   @action

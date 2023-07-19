@@ -15,6 +15,7 @@ import Styles from "./mobile-modal-window.scss";
 import MobileSearch from "./MobileSearch";
 
 import MappableMixin from "../../ModelMixins/MappableMixin";
+import QueryPanel from "../QueryWindow/QueryPanel";
 
 const MobileModalWindow = observer(
   createReactClass({
@@ -102,6 +103,8 @@ const MobileModalWindow = observer(
               terria={this.props.terria}
             />
           );
+        case viewState.mobileViewOptions.query:
+          return <QueryPanel item={viewState.terria.itemToQuery} />;
         default:
           return null;
       }
