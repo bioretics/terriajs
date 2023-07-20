@@ -491,9 +491,7 @@ const CoordsPanel = (props) => {
     }
 
     CesiumResource.fetchJson({
-      url: terria.corsProxy.getURL(
-        "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project"
-      ),
+      url: terria.corsProxy.getURL(terria.configParameters.coordsConverterUrl),
       queryParameters: {
         inSR: srs.from,
         outSR: srs.to,

@@ -326,11 +326,16 @@ interface ConfigParameters {
    * Url to custom search provider.
    */
   customSearchProviderUrl?: string;
-  
+
   /**
    * Url to whereAmI service.
    */
   whereAmIUrl?: string;
+
+  /**
+   * Url to coordinates converter service.
+   */
+  coordsConverterUrl?: string;
 }
 
 interface StartOptions {
@@ -559,7 +564,8 @@ export default class Terria {
     googleAnalyticsOptions: undefined,
     relatedMaps: defaultRelatedMaps,
     customSearchProviderUrl: undefined,
-    whereAmIUrl: undefined
+    whereAmIUrl: undefined,
+    coordsConverterUrl: undefined
   };
 
   @observable
