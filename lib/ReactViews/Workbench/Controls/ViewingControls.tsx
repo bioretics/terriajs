@@ -473,19 +473,20 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
-        {QueryableCatalogItemMixin.isMixedInto(item) && (
-          <li>
-            <ViewingControlMenuButton
-              onClick={() => runInAction(() => viewState.openQueryData(item))}
-              title="Mostra la finestra di aggregazione dei dati"
-            >
-              <BoxViewingControl>
-                <StyledIcon glyph={Icon.GLYPHS.barChart} />
-                <span>Aggrega</span>
-              </BoxViewingControl>
-            </ViewingControlMenuButton>
-          </li>
-        )}
+        {QueryableCatalogItemMixin.isMixedInto(item) &&
+          item.queryableProperties?.length > 0 && (
+            <li>
+              <ViewingControlMenuButton
+                onClick={() => runInAction(() => viewState.openQueryData(item))}
+                title="Mostra la finestra di aggregazione dei dati"
+              >
+                <BoxViewingControl>
+                  <StyledIcon glyph={Icon.GLYPHS.barChart} />
+                  <span>Aggrega</span>
+                </BoxViewingControl>
+              </ViewingControlMenuButton>
+            </li>
+          )}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
