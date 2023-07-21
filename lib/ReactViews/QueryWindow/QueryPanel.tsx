@@ -86,7 +86,9 @@ const QueryPanel = observer(({ item }: PropsType) => {
 
       setFilterText(
         Object.entries(item.queryValues ?? {})
-          .filter(([_, val]) => val.some((elem) => elem !== ""))
+          .filter(([_, val]) =>
+            val.some((elem) => elem !== "" && elem !== item.ENUM_ALL_VALUE)
+          )
           .map(([key, val]) => {
             return `${item.queryProperties?.[key].label}: ${val}`;
           })
