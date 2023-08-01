@@ -33,9 +33,11 @@ import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import clipboard from "clipboard";
-import Button from "../../Styled/Button";
+import Button, { RawButton } from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
-import CesiumResource from "terriajs-cesium/Source/Core/Resource";
+import { TextSpan } from "../../Styled/Text";
+import { StyledHr } from "../Map/Panels/SharePanel/StyledHr";
+import styled from "styled-components";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -244,40 +246,6 @@ class FeatureInfoPanel extends React.Component<Props> {
     a.click();
   }
 
-  whereAmI(cartographic: Cartographic): void {
-    //const url = "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/where/MapServer/0/query";
-    const url = this.props.viewState.terria.configParameters.whereAmIUrl;
-    if (url) {
-      const whereAmIFieldName = "LOCALIZZAZ";
-
-      const latitude = CesiumMath.toDegrees(cartographic.latitude);
-      const longitude = CesiumMath.toDegrees(cartographic.longitude);
-
-      const that = this;
-
-      CesiumResource.fetchJson({
-        url: this.props.viewState.terria?.corsProxy.getURL(url),
-        queryParameters: {
-          geometry: `${longitude}, ${latitude}`,
-          geometryType: "esriGeometryPoint",
-          //spatialRel: "esriSpatialRelIntersects",
-          spatialRel: "esriSpatialRelIndexIntersects",
-          outFields: whereAmIFieldName,
-          returnGeometry: false,
-          f: "json"
-        }
-      })?.then(
-        action((results): void => {
-          if (results?.features?.length > 0) {
-            const res: string | undefined =
-              results?.features[0]?.attributes?.[whereAmIFieldName];
-            that.props.viewState.terria.pickedPositionWhereAmI = res;
-          }
-        })
-      );
-    }
-  }
-
   renderLocationItem(cartesianPosition: Cartesian3) {
     const cartographic =
       this.props.viewState.terria.pickedPosition ??
@@ -299,18 +267,22 @@ class FeatureInfoPanel extends React.Component<Props> {
       that.downloadLocationAsGpx(that.generateGpxWaypoints(cartographic));
     };
 
-    /*const locationButtonStyle = isMarkerVisible(this.props.viewState.terria)
-      ? Styles.btnLocationSelected
-      : Styles.btnLocation;*/
-
     return (
       <div>
-        {!!cartographic && this.props.viewState.terria.pickedPositionWhereAmI && (
-          <div className={Styles.location}>
-            <span>Dove sono?</span>
-            <span>{this.props.viewState.terria.pickedPositionWhereAmI}</span>
-          </div>
-        )}
+        {!!cartographic &&
+          this.props.viewState.terria.pickedPosition &&
+          this.props.viewState.terria.configParameters.whereAmIUrl && (
+            <WhereAmI
+              whereAmI={
+                this.props.viewState.terria.currentViewer.mouseCoords.whereAmI
+              }
+              whereAmIDetailed={
+                this.props.viewState.terria.currentViewer.mouseCoords
+                  .whereAmIDetailed
+              }
+            />
+          )}
+        <StyledHr />
         {!!cartographic && (
           <div className={Styles.location}>
             <span>Altitudine</span>
@@ -401,11 +373,15 @@ class FeatureInfoPanel extends React.Component<Props> {
         terria.cesium.scene.terrainProvider,
         cartographic
       );
+      terria.currentViewer.mouseCoords.debounceAskWhereAmI(
+        terria,
+        cartographic
+      );
       terria.pickedPosition = terria.currentViewer.mouseCoords.cartographic;
       terria.pickedPositionElevation =
         terria.currentViewer.mouseCoords.elevation;
 
-      this.whereAmI(cartographic);
+      //this.whereAmI(cartographic);
     }
   }
 
@@ -566,6 +542,71 @@ class FeatureInfoPanel extends React.Component<Props> {
     );
   }
 }
+
+interface IWhereAmIProps {
+  whereAmI?: string;
+  whereAmIDetailed?: string;
+}
+
+const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
+  whereAmI,
+  whereAmIDetailed
+}) => {
+  const [advancedOptions, setAdvancedOptions] = React.useState(false);
+  //const [whereAmI, setWhereAmI] = React.useState<string>();
+  //const [detailedWhereAmI, setDetailedWhereAmI] = React.useState<string>();
+
+  const toogleAdvancedOptions = () => {
+    setAdvancedOptions((prevState) => !prevState);
+  };
+
+  return (
+    <>
+      <StyledHr />
+      <div className={Styles.location}>
+        <span>Dove sono?</span>
+        <TextSpan small>{whereAmI}</TextSpan>
+      </div>
+      <div className={Styles.location} style={{ flexDirection: "row-reverse" }}>
+        <RawButton
+          onClick={toogleAdvancedOptions}
+          css={`
+            display: flex;
+            align-items: center;
+          `}
+        >
+          <TextSpan
+            fullWidth
+            medium
+            css={`
+              display: flex;
+            `}
+          >
+            Dettagli
+          </TextSpan>
+          {advancedOptions ? (
+            <DetailsIcon glyph={Icon.GLYPHS.opened} />
+          ) : (
+            <DetailsIcon glyph={Icon.GLYPHS.closed} />
+          )}
+        </RawButton>
+      </div>
+      {advancedOptions && (
+        <div
+          className={Styles.location}
+          style={{ flexDirection: "row-reverse" }}
+        >
+          <TextSpan small>{whereAmIDetailed}</TextSpan>
+        </div>
+      )}
+    </>
+  );
+};
+
+const DetailsIcon = styled(StyledIcon).attrs({
+  styledWidth: "10px",
+  light: true
+})``;
 
 function getFeatureMapByCatalogItems(terria: Terria) {
   const featureMap = new Map<string, TerriaFeature[]>();

@@ -12,6 +12,7 @@ import prettifyCoordinates from "../Map/Vector/prettifyCoordinates";
 import prettifyProjection from "../Map/Vector/prettifyProjection";
 import Terria from "../Models/Terria";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 
 // TypeScript 3.6.3 can't tell JSEarthGravityModel1996 is a class and reports
 //   Cannot use namespace 'JSEarthGravityModel1996' as a type.ts(2709)
@@ -33,6 +34,11 @@ export default class MouseCoords {
     position: Cartographic
   ) => void) &
     Cancelable;
+  readonly debounceAskWhereAmI: ((
+    terria: Terria,
+    position: Cartographic
+  ) => void) &
+    Cancelable;
   tileRequestInFlight?: unknown;
 
   @observable elevation?: string;
@@ -43,6 +49,8 @@ export default class MouseCoords {
   @observable east?: unknown;
   @observable cartographic?: Cartographic;
   @observable useProjection = false;
+  @observable whereAmI?: string;
+  @observable whereAmIDetailed?: string;
 
   constructor() {
     this.geoidModel = new EarthGravityModel1996(
@@ -58,6 +66,10 @@ export default class MouseCoords {
 
     this.debounceSampleAccurateHeight = debounce(
       this.sampleAccurateHeight,
+      this.accurateSamplingDebounceTime
+    );
+    this.debounceAskWhereAmI = debounce(
+      this.askWhereAmI,
       this.accurateSamplingDebounceTime
     );
   }
@@ -143,6 +155,9 @@ export default class MouseCoords {
       if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
         this.debounceSampleAccurateHeight(terrainProvider, intersection);
       }
+      if (terria.configParameters.whereAmIUrl) {
+        this.debounceAskWhereAmI(terria, intersection);
+      }
     } else {
       runInAction(() => {
         this.elevation = undefined;
@@ -193,6 +208,49 @@ export default class MouseCoords {
     this.latitude = prettyCoordinate.latitude;
     this.longitude = prettyCoordinate.longitude;
     this.elevation = prettyCoordinate.elevation;
+  }
+
+  askWhereAmI(terria: Terria | undefined, cartographicPosition: Cartographic) {
+    if (!terria?.configParameters?.whereAmIUrl) {
+      return;
+    }
+    const url = terria?.corsProxy.getURL(terria.configParameters.whereAmIUrl);
+    if (!url) {
+      return;
+    }
+    //const whereAmIFieldName = "LOCALIZZAZ";
+    //const whereAmIDetailedFieldName = "DETTAGLIO";
+
+    const latitude = CesiumMath.toDegrees(cartographicPosition.latitude);
+    const longitude = CesiumMath.toDegrees(cartographicPosition.longitude);
+
+    CesiumResource.fetchJson({
+      url: url,
+      queryParameters: {
+        geometry: `${longitude}, ${latitude}` //,
+        /*geometryType: "esriGeometryPoint",
+        //spatialRel: "esriSpatialRelIntersects",
+        spatialRel: "esriSpatialRelIndexIntersects",
+        outFields: [whereAmIFieldName, whereAmIDetailedFieldName].join(","),
+        returnGeometry: false,
+        f: "json"*/
+      }
+    })?.then(
+      action((results): void => {
+        if (results?.features?.length > 0) {
+          const attributes = results?.features[0]?.attributes;
+          if (attributes) {
+            const keys = Object.keys(attributes);
+            if (keys && keys.length > 0) {
+              this.whereAmI = attributes[keys[0]];
+              if (keys.length > 1) {
+                this.whereAmIDetailed = attributes[keys[1]];
+              }
+            }
+          }
+        }
+      })
+    );
   }
 
   sampleAccurateHeight(

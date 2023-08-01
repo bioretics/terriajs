@@ -589,11 +589,6 @@ export default class Terria {
    */
   @observable pickedPositionElevation: string | undefined;
 
-  /**
-   * Gets or sets the "Where Am I" of the last position picked by FeatureInfo.
-   * @type {string}
-   */
-  @observable pickedPositionWhereAmI: string | undefined;
 
   /**
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.

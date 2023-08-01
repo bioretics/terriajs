@@ -43,6 +43,11 @@ const LocationBar = observer(
             }
           `}
         >
+          {this.props.mouseCoords.whereAmI && (
+            <div>
+              <span>{this.props.mouseCoords.whereAmI}</span>
+            </div>
+          )}
           <Choose>
             <When condition={!this.props.mouseCoords.useProjection}>
               <div className={Styles.section}>
