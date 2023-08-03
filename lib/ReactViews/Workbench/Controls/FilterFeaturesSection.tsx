@@ -180,6 +180,12 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                   );
                 })}
             </Box>
+            <Spacing bottom={3} />
+            <StyledLabel small htmlFor="opacity">
+              {item.numberOfVisibleElements === item.numberOfTotalElements || !item.numberOfVisibleElements ?
+                `Numero di elementi: ${item.numberOfTotalElements}` :
+                `Numero di elementi filtrati: ${item.numberOfVisibleElements} (su ${item.numberOfTotalElements})`}
+            </StyledLabel>
           </>
         )}
         <MydHr borderBottomColor="lightGray" />

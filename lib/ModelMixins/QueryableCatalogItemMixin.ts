@@ -33,6 +33,12 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
     @observable
     enumValues?: { [name: string]: string[] };
 
+    @observable
+    numberOfTotalElements?: number;
+
+    @observable
+    numberOfVisibleElements?: number;
+
     @computed
     get queryProperties(): QueryableProperties | undefined {
       return Object.assign(

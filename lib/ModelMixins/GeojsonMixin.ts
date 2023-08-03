@@ -1523,6 +1523,8 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
           }
         }
 
+        this.numberOfTotalElements = this.mapItems[0].entities.values.length;
+
         return Array.from(values);
       }
     }
@@ -1599,6 +1601,12 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
 
           entity.show = visibility.every((vis) => vis);
         }
+
+        this.numberOfTotalElements = this.mapItems[0].entities.values.length;
+        this.numberOfVisibleElements = this.mapItems[0].entities.values.filter(
+          (elem) => elem.show
+        ).length;
+
         this.terria.currentViewer.notifyRepaintRequired();
       }
     }
