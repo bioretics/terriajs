@@ -473,7 +473,7 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
-        {QueryableCatalogItemMixin.isMixedInto(item) &&
+        {/*QueryableCatalogItemMixin.isMixedInto(item) &&
           item.queryableProperties?.length > 0 && (
             <li>
               <ViewingControlMenuButton
@@ -486,7 +486,7 @@ class ViewingControls extends React.Component<
                 </BoxViewingControl>
               </ViewingControlMenuButton>
             </li>
-          )}
+          )*/}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}

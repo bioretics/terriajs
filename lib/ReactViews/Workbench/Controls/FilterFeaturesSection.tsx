@@ -10,15 +10,17 @@ import Spacing from "../../../Styled/Spacing";
 import QueryableCatalogItemMixin from "../../../ModelMixins/QueryableCatalogItemMixin";
 import Input from "../../../Styled/Input";
 import { GLYPHS, StyledIcon } from "../../../Styled/Icon";
-import { RawButton } from "../../../Styled/Button";
+import Button, { RawButton } from "../../../Styled/Button";
 import Hr from "../../../Styled/Hr";
+import ViewState from "../../../ReactViewModels/ViewState";
 
 interface PropsType {
   item: BaseModel;
+  viewState: ViewState;
 }
 
 const FilterFeaturesSection: React.FC<PropsType> = observer(
-  ({ item }: PropsType) => {
+  ({ item, viewState }: PropsType) => {
     const [showQuerySection, setShowQuerySection] = useState<boolean>(false);
 
     const toggleQuerySection = () => {
@@ -182,10 +184,26 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
             </Box>
             <Spacing bottom={3} />
             <StyledLabel small htmlFor="opacity">
-              {item.numberOfVisibleElements === item.numberOfTotalElements || !item.numberOfVisibleElements ?
-                `Numero di elementi: ${item.numberOfTotalElements}` :
-                `Numero di elementi filtrati: ${item.numberOfVisibleElements} (su ${item.numberOfTotalElements})`}
+              {item.numberOfVisibleElements === item.numberOfTotalElements ||
+              !item.numberOfVisibleElements
+                ? `Numero di elementi: ${item.numberOfTotalElements}`
+                : `Numero di elementi filtrati: ${item.numberOfVisibleElements} (su ${item.numberOfTotalElements})`}
             </StyledLabel>
+            <Spacing bottom={3} />
+            <Box style={{ display: "flex", flexDirection: "row-reverse" }}>
+              <Button
+                primary
+                title="Mostra i dati come grafici e tabelle"
+                css={`
+                  width: 14px;
+                  border-radius: 2px;
+                  margin: 2px;
+                `}
+                onClick={() => runInAction(() => viewState.openQueryData(item))}
+              >
+                <StyledIcon glyph={GLYPHS.barChart} styledWidth="20px" />
+              </Button>
+            </Box>
           </>
         )}
         <MydHr borderBottomColor="lightGray" />

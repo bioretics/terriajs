@@ -97,7 +97,7 @@ const WorkbenchItemControls: React.FC<WorkbenchItemControlsProps> = observer(
         {controls?.chartItems ? <ChartItemSelector item={item} /> : null}
         {controls?.filter ? <FilterSection item={item} /> : null}
         {controls?.filterFeatures ? (
-          <FilterFeaturesSection item={item} />
+          <FilterFeaturesSection item={item} viewState={viewState} />
         ) : null}
         {controls?.dateTime && DiscretelyTimeVaryingMixin.isMixedInto(item) ? (
           <DateTimeSelectorSection item={item} />
