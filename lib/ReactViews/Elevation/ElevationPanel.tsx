@@ -419,6 +419,10 @@ const ElevationPanel = observer((props: Props) => {
                   <br />
                   al suolo
                 </th>
+                <th>
+                  Pendenza
+                  <br />%
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -451,6 +455,14 @@ const ElevationPanel = observer((props: Props) => {
                       <td>
                         {idx > 0 && terria?.path?.stopGroundDistances
                           ? prettifyNumber(terria.path.stopGroundDistances[idx])
+                          : ""}
+                      </td>
+                      <td>
+                        {idx > 0 && terria?.path?.stopAirDistances
+                          ? Math.abs(
+                              (100 * (point.height - array[idx - 1].height)) /
+                                terria.path.stopAirDistances[idx]
+                            ).toFixed(1)
                           : ""}
                       </td>
                     </tr>
