@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { TFunction } from "i18next";
-import { action, reaction, runInAction } from "mobx";
+import { action, reaction, runInAction, observable } from "mobx";
 import { disposeOnUnmount, observer } from "mobx-react";
 import React from "react";
 import { withTranslation } from "react-i18next";
@@ -49,6 +49,9 @@ interface Props {
 
 @observer
 class FeatureInfoPanel extends React.Component<Props> {
+  @observable whereAmI?: string = "";
+  @observable whereAmIDetailed?: string = "";
+
   componentDidMount() {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
@@ -273,13 +276,8 @@ class FeatureInfoPanel extends React.Component<Props> {
           this.props.viewState.terria.pickedPosition &&
           this.props.viewState.terria.configParameters.whereAmIUrl && (
             <WhereAmI
-              whereAmI={
-                this.props.viewState.terria.currentViewer.mouseCoords.whereAmI
-              }
-              whereAmIDetailed={
-                this.props.viewState.terria.currentViewer.mouseCoords
-                  .whereAmIDetailed
-              }
+              whereAmI={this.whereAmI}
+              whereAmIDetailed={this.whereAmIDetailed}
             />
           )}
         <StyledHr />
@@ -363,6 +361,15 @@ class FeatureInfoPanel extends React.Component<Props> {
   }
 
   @action
+  setWhereAmI = (
+    whereAmI: string | undefined,
+    whereAmIDetailed: string | undefined
+  ) => {
+    this.whereAmI = whereAmI;
+    this.whereAmIDetailed = whereAmIDetailed;
+  };
+
+  @action
   setPicked(terria: Terria, position: Cartesian3) {
     const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
     if (
@@ -375,13 +382,12 @@ class FeatureInfoPanel extends React.Component<Props> {
       );
       terria.currentViewer.mouseCoords.debounceAskWhereAmI(
         terria,
-        cartographic
+        cartographic,
+        this.setWhereAmI
       );
       terria.pickedPosition = terria.currentViewer.mouseCoords.cartographic;
       terria.pickedPositionElevation =
         terria.currentViewer.mouseCoords.elevation;
-
-      //this.whereAmI(cartographic);
     }
   }
 

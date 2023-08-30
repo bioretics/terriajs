@@ -23,6 +23,11 @@ interface Cancelable {
   cancel: () => void;
 }
 
+export type AskWhereAmICallback = (
+  whereAmI: string | undefined,
+  whereAmIDetailed: string | undefined
+) => void;
+
 export default class MouseCoords {
   readonly geoidModel: EarthGravityModel1996;
   readonly proj4Projection: string;
@@ -36,7 +41,8 @@ export default class MouseCoords {
     Cancelable;
   readonly debounceAskWhereAmI: ((
     terria: Terria,
-    position: Cartographic
+    position: Cartographic,
+    setResult?: AskWhereAmICallback
   ) => void) &
     Cancelable;
   tileRequestInFlight?: unknown;
@@ -210,7 +216,11 @@ export default class MouseCoords {
     this.elevation = prettyCoordinate.elevation;
   }
 
-  askWhereAmI(terria: Terria | undefined, cartographicPosition: Cartographic) {
+  askWhereAmI(
+    terria: Terria | undefined,
+    cartographicPosition: Cartographic,
+    setResult?: AskWhereAmICallback
+  ) {
     if (!terria?.configParameters?.whereAmIUrl) {
       return;
     }
@@ -237,21 +247,35 @@ export default class MouseCoords {
       }
     })?.then(
       action((results): void => {
+        let newWhereAmI = "";
+        let newWhereAmIDetailed = "";
         if (results?.features?.length > 0) {
           const attributes = results?.features[0]?.attributes;
           if (attributes) {
             const keys = Object.keys(attributes);
             if (keys && keys.length > 0) {
-              this.whereAmI = attributes[keys[0]];
+              newWhereAmI = attributes[keys[0]];
               if (keys.length > 1) {
-                this.whereAmIDetailed = attributes[keys[1]];
+                newWhereAmIDetailed = attributes[keys[1]];
               }
             }
           }
         }
+        if (setResult) {
+          setResult(newWhereAmI, newWhereAmIDetailed);
+        }
+        this.setWhereAmI(newWhereAmI, newWhereAmIDetailed);
       })
     );
   }
+
+  setWhereAmI = (
+    whereAmI: string | undefined,
+    whereAmIDetailed: string | undefined
+  ) => {
+    this.whereAmI = whereAmI;
+    this.whereAmIDetailed = whereAmIDetailed;
+  };
 
   sampleAccurateHeight(
     terrainProvider: TerrainProvider,
