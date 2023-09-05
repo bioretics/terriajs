@@ -145,6 +145,7 @@
     "react": "^16.14.0",
     "react-anything-sortable": "^1.5.2",
     "react-color": "^2.19.3",
+    "react-data-table-component": "^7.5.4",
     "react-datepicker": "0.53.0",
     "react-dom": "^16.14.0",
     "react-i18next": "^11.18.0",

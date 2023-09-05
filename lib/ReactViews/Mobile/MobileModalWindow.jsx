@@ -15,7 +15,7 @@ import Styles from "./mobile-modal-window.scss";
 import MobileSearch from "./MobileSearch";
 
 import MappableMixin from "../../ModelMixins/MappableMixin";
-import QueryPanel from "../QueryWindow/QueryPanel";
+import QueryPanel from "../QueryWindow/QueryTabAggregation";
 
 const MobileModalWindow = observer(
   createReactClass({

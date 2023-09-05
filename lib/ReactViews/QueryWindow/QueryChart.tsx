@@ -12,7 +12,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
-import { ChartType } from "./QueryPanel";
+import { ChartType } from "./QueryTabAggregation";
 
 const COLORS = [
   "#63b598",
