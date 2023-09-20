@@ -13,12 +13,12 @@ export const MapViewers = Object.seal({
     label: "settingPanel.viewerModeLabels.CesiumTerrain",
     available: true
   },
-  "3dsmooth": {
+  /*"3dsmooth": {
     viewerMode: ViewerMode.Cesium,
     terrain: false,
     label: "settingPanel.viewerModeLabels.CesiumEllipsoid",
     available: true
-  },
+  },*/
   "2d": {
     viewerMode: ViewerMode.Leaflet,
     terrain: false,
@@ -35,7 +35,7 @@ export function setViewerMode(
   viewer: TerriaViewer
 ): void {
   runInAction(() => {
-    if (viewerMode === "3d" || viewerMode === "3dsmooth") {
+    if (viewerMode === "3d" /*|| viewerMode === "3dsmooth"*/) {
       viewer.viewerMode = ViewerMode.Cesium;
       viewer.viewerOptions.useTerrain = viewerMode === "3d";
     } else if (viewerMode === "2d") {
