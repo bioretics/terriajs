@@ -45,6 +45,7 @@ import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import WorkflowPanelContainer from "./WorkflowPanelContainer";
 import ElevationPanel from "../Elevation/ElevationPanel";
+import { MessageModal } from "../MessageModal/MessageModal";
 
 export const animationDuration = 250;
 
@@ -240,6 +241,13 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
                   <main>
                     <ExplorerWindow />
                     <QueryWindow />
+                    {props.terria.messageModal?.isVisible && (
+                      <MessageModal
+                        closeModal={() => props.viewState.closeMessageModal()}
+                        header={props.terria.messageModal.header}
+                        message={props.terria.messageModal.message}
+                      />
+                    )}
                     {props.terria.configParameters.experimentalFeatures &&
                       !props.viewState.hideMapUi && (
                         <ExperimentalFeatures

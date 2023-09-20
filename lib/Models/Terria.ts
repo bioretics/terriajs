@@ -420,6 +420,12 @@ export interface PathCustom {
   airArea?: number;
 }
 
+export interface MessageModal {
+  isVisible: boolean;
+  header?: string;
+  message?: string;
+}
+
 export default class Terria {
   private readonly models = observable.map<string, BaseModel>();
 
@@ -613,6 +619,12 @@ export default class Terria {
    * @type {BaseModel}
    */
   @observable itemToQuery: BaseModel | undefined = undefined;
+
+  /**
+   * Gets or sets the item to query.
+   * @type {Message}
+   */
+  @observable messageModal?: MessageModal;
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack

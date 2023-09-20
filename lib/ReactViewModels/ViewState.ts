@@ -623,6 +623,24 @@ export default class ViewState {
     this._previewedItem = undefined;
   }
 
+  @action
+  openMessageModal(header: string, message: string) {
+    this.terria.messageModal = {
+      isVisible: true,
+      header: header,
+      message: message
+    };
+  }
+
+  @action
+  closeMessageModal() {
+    this.terria.messageModal = {
+      isVisible: false,
+      header: undefined,
+      message: undefined
+    };
+  }
+
   /**
    * Views a model in the catalog. If model is a
    *
