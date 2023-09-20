@@ -76,7 +76,11 @@ const LocationBar = observer(
           </Choose>
           <div className={Styles.sectionLong}>
             <span>{t("legend.elev")}</span>
-            <span>{this.props.mouseCoords.elevation}</span>
+            <span>
+              {this.props.terria.cesium
+                ? this.props.mouseCoords.elevation
+                : "modalità 2D"}
+            </span>
           </div>
         </button>
       );

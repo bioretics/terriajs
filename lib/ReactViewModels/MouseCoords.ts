@@ -161,7 +161,7 @@ export default class MouseCoords {
       if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
         this.debounceSampleAccurateHeight(terrainProvider, intersection);
       }
-      if (terria.configParameters.whereAmIUrl) {
+      if (terria.configParameters.whereAmIParams) {
         this.debounceAskWhereAmI(terria, intersection);
       }
     } else {
@@ -216,59 +216,86 @@ export default class MouseCoords {
     this.elevation = prettyCoordinate.elevation;
   }
 
-  askWhereAmI(
+  @action
+  async askWhereAmI(
     terria: Terria | undefined,
     cartographicPosition: Cartographic,
     setResult?: AskWhereAmICallback
   ) {
-    if (!terria?.configParameters?.whereAmIUrl) {
+    if (
+      !terria?.configParameters?.whereAmIParams?.urlFast ||
+      !terria?.configParameters?.whereAmIParams?.fieldResult
+    ) {
       return;
     }
-    const url = terria?.corsProxy.getURL(terria.configParameters.whereAmIUrl);
-    if (!url) {
+    const urlFast = terria?.corsProxy.getURL(
+      terria.configParameters.whereAmIParams.urlFast
+    );
+    if (!urlFast) {
       return;
     }
-    //const whereAmIFieldName = "LOCALIZZAZ";
-    //const whereAmIDetailedFieldName = "DETTAGLIO";
+    const urlSlowButAccurate = terria.configParameters.whereAmIParams
+      .urlSlowButAccurate
+      ? terria?.corsProxy.getURL(
+          terria.configParameters.whereAmIParams.urlSlowButAccurate
+        )
+      : "";
 
     const latitude = CesiumMath.toDegrees(cartographicPosition.latitude);
     const longitude = CesiumMath.toDegrees(cartographicPosition.longitude);
 
-    CesiumResource.fetchJson({
-      url: url,
+    let newWhereAmI = "";
+    let newWhereAmIDetailed = "";
+    const tmpResults = await CesiumResource.fetchJson({
+      url: urlFast,
       queryParameters: {
-        geometry: `${longitude}, ${latitude}` //,
-        /*geometryType: "esriGeometryPoint",
-        //spatialRel: "esriSpatialRelIntersects",
-        spatialRel: "esriSpatialRelIndexIntersects",
-        outFields: [whereAmIFieldName, whereAmIDetailedFieldName].join(","),
-        returnGeometry: false,
-        f: "json"*/
+        geometry: `${longitude}, ${latitude}`
       }
-    })?.then(
-      action((results): void => {
-        let newWhereAmI = "";
-        let newWhereAmIDetailed = "";
-        if (results?.features?.length > 0) {
-          const attributes = results?.features[0]?.attributes;
-          if (attributes) {
-            const keys = Object.keys(attributes);
-            if (keys && keys.length > 0) {
-              newWhereAmI = attributes[keys[0]];
-              if (keys.length > 1) {
-                newWhereAmIDetailed = attributes[keys[1]];
-              }
-            }
-          }
+    });
+    if (
+      tmpResults?.features?.length > 1 &&
+      urlSlowButAccurate &&
+      terria.configParameters.whereAmIParams?.fieldId
+    ) {
+      const fieldId = terria.configParameters.whereAmIParams.fieldId;
+      const results = await CesiumResource.fetchJson({
+        url: urlSlowButAccurate,
+        queryParameters: {
+          geometry: `${longitude}, ${latitude}`,
+          objectIds: `${tmpResults?.features.map(
+            (feat: any) => feat.attributes[fieldId]
+          )}`
         }
-        if (setResult) {
-          setResult(newWhereAmI, newWhereAmIDetailed);
-        }
-        this.setWhereAmI(newWhereAmI, newWhereAmIDetailed);
-      })
-    );
+      });
+      newWhereAmI =
+        results?.features[0].attributes[
+          terria.configParameters.whereAmIParams.fieldResult
+        ];
+      const fieldResultDetailed =
+        terria.configParameters.whereAmIParams?.fieldResultDetailed;
+      if (fieldResultDetailed) {
+        newWhereAmIDetailed =
+          results?.features[0].attributes[fieldResultDetailed];
+      }
+    } else if (tmpResults?.features?.length > 0) {
+      newWhereAmI =
+        tmpResults?.features[0].attributes[
+          terria.configParameters.whereAmIParams.fieldResult
+        ];
+      const fieldResultDetailed =
+        terria.configParameters.whereAmIParams?.fieldResultDetailed;
+      if (fieldResultDetailed) {
+        newWhereAmIDetailed =
+          tmpResults?.features[0].attributes[fieldResultDetailed];
+      }
+    }
+    if (setResult) {
+      setResult(newWhereAmI, newWhereAmIDetailed);
+    }
+    this.setWhereAmI(newWhereAmI, newWhereAmIDetailed);
   }
 
+  @action
   setWhereAmI = (
     whereAmI: string | undefined,
     whereAmIDetailed: string | undefined

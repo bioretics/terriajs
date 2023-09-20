@@ -37,7 +37,6 @@ import Button, { RawButton } from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
 import { TextSpan } from "../../Styled/Text";
 import { StyledHr } from "../Map/Panels/SharePanel/StyledHr";
-import styled from "styled-components";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -72,6 +71,7 @@ class FeatureInfoPanel extends React.Component<Props> {
                 position: pickedFeatures.pickPosition
               })
             );
+            this.setPicked(terria, pickedFeatures.pickPosition);
             if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
               pickedFeatures.allFeaturesAvailablePromise.then(() => {
                 if (this.props.viewState.featureInfoPanelIsVisible === false) {
@@ -273,19 +273,23 @@ class FeatureInfoPanel extends React.Component<Props> {
     return (
       <div>
         {!!cartographic &&
-          this.props.viewState.terria.pickedPosition &&
-          this.props.viewState.terria.configParameters.whereAmIUrl && (
+          this.props.viewState.terria.configParameters.whereAmIParams &&
+          this.whereAmI && (
             <WhereAmI
               whereAmI={this.whereAmI}
               whereAmIDetailed={this.whereAmIDetailed}
+              viewState={this.props.viewState}
             />
           )}
-        <StyledHr />
         {!!cartographic && (
           <div className={Styles.location}>
             <span>Altitudine</span>
             <span>
-              {this.props.viewState.terria.pickedPositionElevation} m s.l.m.
+              {this.props.viewState.terria.cesium
+                ? `${
+                    this.props.viewState.terria.pickedPositionElevation ?? ""
+                  } m s.l.m.`
+                : `modalità 2D`}
             </span>
           </div>
         )}
@@ -356,6 +360,7 @@ class FeatureInfoPanel extends React.Component<Props> {
             </span>
           )}
         </div>
+        <StyledHr />
       </div>
     );
   }
@@ -370,16 +375,10 @@ class FeatureInfoPanel extends React.Component<Props> {
   };
 
   @action
-  setPicked(terria: Terria, position: Cartesian3) {
+  setPicked(terria: Terria, position: Cartesian3 | undefined) {
+    if (!position) return;
     const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
-    if (
-      terria?.cesium?.scene?.terrainProvider &&
-      !Cartographic.equals(terria.pickedPosition, cartographic)
-    ) {
-      terria.currentViewer.mouseCoords.debounceSampleAccurateHeight(
-        terria.cesium.scene.terrainProvider,
-        cartographic
-      );
+    if (!Cartographic.equals(terria.pickedPosition, cartographic)) {
       terria.currentViewer.mouseCoords.debounceAskWhereAmI(
         terria,
         cartographic,
@@ -450,11 +449,6 @@ class FeatureInfoPanel extends React.Component<Props> {
       position = terria.pickedFeatures?.pickPosition;
     }
 
-    // Store position in Terria state
-    if (position) {
-      this.setPicked(terria, position);
-    }
-
     const locationElements = position ? (
       <li>{this.renderLocationItem(position)}</li>
     ) : null;
@@ -494,7 +488,7 @@ class FeatureInfoPanel extends React.Component<Props> {
             </div>
           )}
           <ul className={Styles.body}>
-            {this.props.printView && locationElements}
+            {/*this.props.printView &&*/ locationElements}
 
             {
               // Is feature info visible
@@ -519,7 +513,7 @@ class FeatureInfoPanel extends React.Component<Props> {
               ) : null
             }
 
-            {!this.props.printView && locationElements}
+            {/*!this.props.printView && locationElements*/}
             {
               // Add "filter by location" buttons if supported
               filterableCatalogItems.map((pair) =>
@@ -552,67 +546,47 @@ class FeatureInfoPanel extends React.Component<Props> {
 interface IWhereAmIProps {
   whereAmI?: string;
   whereAmIDetailed?: string;
+  viewState: ViewState;
 }
 
 const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
   whereAmI,
-  whereAmIDetailed
+  whereAmIDetailed,
+  viewState
 }) => {
-  const [advancedOptions, setAdvancedOptions] = React.useState(false);
-  //const [whereAmI, setWhereAmI] = React.useState<string>();
-  //const [detailedWhereAmI, setDetailedWhereAmI] = React.useState<string>();
-
-  const toogleAdvancedOptions = () => {
-    setAdvancedOptions((prevState) => !prevState);
-  };
-
   return (
     <>
-      <StyledHr />
       <div className={Styles.location}>
         <span>Dove sono?</span>
         <TextSpan small>{whereAmI}</TextSpan>
       </div>
       <div className={Styles.location} style={{ flexDirection: "row-reverse" }}>
-        <RawButton
-          onClick={toogleAdvancedOptions}
+        <Button
+          primary
+          onClick={() => {
+            viewState.openMessageModal(
+              "Dettagli della posizione",
+              whereAmIDetailed ?? ""
+            );
+          }}
           css={`
             display: flex;
             align-items: center;
+            border-radius: 2px;
           `}
         >
-          <TextSpan
-            fullWidth
-            medium
-            css={`
-              display: flex;
-            `}
-          >
-            Dettagli
-          </TextSpan>
-          {advancedOptions ? (
-            <DetailsIcon glyph={Icon.GLYPHS.opened} />
-          ) : (
-            <DetailsIcon glyph={Icon.GLYPHS.closed} />
-          )}
-        </RawButton>
+          Dettagli
+        </Button>
       </div>
-      {advancedOptions && (
-        <div
-          className={Styles.location}
-          style={{ flexDirection: "row-reverse" }}
-        >
-          <TextSpan small>{whereAmIDetailed}</TextSpan>
-        </div>
-      )}
+      <StyledHr />
     </>
   );
 };
 
-const DetailsIcon = styled(StyledIcon).attrs({
+/*const DetailsIcon = styled(StyledIcon).attrs({
   styledWidth: "10px",
   light: true
-})``;
+})``;*/
 
 function getFeatureMapByCatalogItems(terria: Terria) {
   const featureMap = new Map<string, TerriaFeature[]>();

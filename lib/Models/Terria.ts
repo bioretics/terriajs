@@ -328,9 +328,15 @@ interface ConfigParameters {
   customSearchProviderUrl?: string;
 
   /**
-   * Url to whereAmI service.
+   * Parameters to whereAmI service.
    */
-  whereAmIUrl?: string;
+  whereAmIParams?: {
+    urlFast: string;
+    urlSlowButAccurate?: string;
+    fieldId?: string;
+    fieldResult: string;
+    fieldResultDetailed?: string;
+  };
 
   /**
    * Url to coordinates converter service.
@@ -570,7 +576,7 @@ export default class Terria {
     googleAnalyticsOptions: undefined,
     relatedMaps: defaultRelatedMaps,
     customSearchProviderUrl: undefined,
-    whereAmIUrl: undefined,
+    whereAmIParams: undefined,
     coordsConverterUrl: undefined
   };
 
@@ -594,7 +600,6 @@ export default class Terria {
    * @type {string}
    */
   @observable pickedPositionElevation: string | undefined;
-
 
   /**
    * Gets or sets the data computed sampling a path drawn with the MeasureTool.
