@@ -185,6 +185,10 @@ export default class MouseCoords {
     const coordinates = Cartographic.fromDegrees(latLng.lng, latLng.lat);
     coordinates.height = <any>undefined;
     this.cartographicToFields(coordinates);
+
+    if (terria.configParameters.whereAmIParams) {
+      this.debounceAskWhereAmI(terria, coordinates);
+    }
   }
 
   @action
