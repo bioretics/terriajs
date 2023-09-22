@@ -564,10 +564,14 @@ const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
         <Button
           primary
           onClick={() => {
-            viewState.openMessageModal(
+            /*viewState.openMessageModal(
               "Dettagli della posizione",
               whereAmIDetailed ?? ""
-            );
+            );*/
+            viewState.terria.notificationState.addNotificationToQueue({
+              title: "Dettagli della posizione",
+              message: whereAmIDetailed ?? ""
+            });
           }}
           css={`
             display: flex;
