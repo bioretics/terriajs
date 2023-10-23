@@ -54,22 +54,19 @@ function buildBaseShareUrl(
   return uri.fragment(uri.query()).query("").toString();*/
   const params = new URLSearchParams(hashParams);
 
-  let newHash;
-  if (
-    (uri.hash.includes("share") || uri.hash.includes("start")) &&
-    uri.hash.includes("&")
-  ) {
-    const index = uri.hash.indexOf("&");
-    newHash = uri.hash.substring(0, index);
-  } else {
-    newHash = uri.hash;
+  const subs = uri.hash
+    .split(/[#&]/)
+    .filter(
+      (elem) =>
+        elem !== "" && !elem.includes("share=") && !elem.includes("start=")
+    );
+  const paramsStr = params.toString();
+  if (paramsStr.length > 0) {
+    subs.push(paramsStr);
   }
+  const newHash = subs.length > 0 ? `#${subs.join("&")}` : "";
 
-  return new URL(
-    //`${uri.href}${uri.href.includes("#") ? "&" : "#"}${params.toString()}`
-    `${newHash}${newHash.includes("#") ? "&" : "#"}${params.toString()}`,
-    uri.origin
-  ).toString();
+  return new URL(newHash, uri.origin).toString();
 }
 
 /**
