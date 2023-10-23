@@ -379,10 +379,10 @@ const ElevationPanel = observer((props: Props) => {
             </thead>
             <tbody>
               <tr>
-                <td>{prettifyNumber(terria.path?.geodeticArea ?? 0)}</td>
-                <td>{prettifyNumber(terria.path?.airArea ?? 0)}</td>
                 <td>{prettifyNumber(terria.path?.geodeticDistance ?? 0)}</td>
                 <td>{prettifyNumber(terria.path?.airDistance ?? 0)}</td>
+                <td>{prettifyNumber(terria.path?.geodeticArea ?? 0, true)}</td>
+                <td>{prettifyNumber(terria.path?.airArea ?? 0, true)}</td>
               </tr>
             </tbody>
           </table>

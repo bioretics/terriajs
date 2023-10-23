@@ -159,8 +159,8 @@ export default class MeasureAreaTool extends MapNavigationItemController {
       cartoPositions,
       stopGeodeticDistances,
       stopAirDistances,
-      this.totalFlatAreaMetresSquared,
-      this.totalAreaMetresSquared
+      this.totalAreaMetresSquared,
+      this.totalFlatAreaMetresSquared
     );
   }
 
