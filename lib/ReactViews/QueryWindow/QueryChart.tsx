@@ -294,6 +294,7 @@ interface PropsType {
   measureUnit?: string;
   decimalPlaces: number;
   chartType: ChartType;
+  randomNumber: number;
 }
 
 const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
@@ -304,9 +305,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
     const currencyFormatter = new Intl.NumberFormat("it", {
       style: "currency",
       currency: "EUR",
-      maximumFractionDigits: 0
-    });
-    const randomIndex = Math.floor(Math.random() * COLORS.length);
+    const randomIndex = Math.floor((randomNumber ?? Math.random()) * COLORS.length);
 
     const renderPieChart = () => {
       return (
@@ -370,7 +369,14 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
                 : v.toFixed(decimalPlaces);
             }}
           />
-          <Bar dataKey={valueKey} barSize={20} fill={COLORS[randomIndex]} />
+          <Bar dataKey={valueKey} barSize={20} fill={COLORS[randomIndex]} >
+            {data?.map((_, index) =>
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[(index + randomIndex) % COLORS.length]}
+              />
+            )}
+          </Bar>
         </BarChart>
       );
     };
@@ -404,7 +410,14 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
                 : v.toFixed(decimalPlaces);
             }}
           />
-          <Bar dataKey={valueKey} barSize={5} fill={COLORS[randomIndex]} />
+          <Bar dataKey={valueKey} barSize={5} fill={COLORS[randomIndex]} >
+            {data?.map((_, index) =>
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[(index + randomIndex) % COLORS.length]}
+              />
+            )}
+          </Bar>
         </BarChart>
       );
     };

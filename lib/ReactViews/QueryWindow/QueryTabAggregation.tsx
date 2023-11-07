@@ -37,7 +37,8 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
     const [data, setData] =
       useState<{ name: string; value: number; valuePerc: number }[]>();
     const [useHidden, setUseHidden] = useState<boolean>(false);
-    const [componentUpdated, setComponentUpdated] = useState<number>(0);
+    //const [componentUpdated, setComponentUpdated] = useState<number>(0);
+    const [randomNumber, setRandomNumber] = useState<number>(0);
     const [filterText, setFilterText] = useState<string[]>([]);
     const [columns, setColumns] = useState<
       TableColumn<{ name: string; value: number; valuePerc: number }>[]
@@ -206,7 +207,8 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
     };
 
     const changeColors = () => {
-      setComponentUpdated(componentUpdated + 1);
+      //setComponentUpdated(componentUpdated + 1);
+      setRandomNumber(Math.random());
     };
 
     const renderControls = () => {
@@ -317,6 +319,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                 item.queryProperties[aggregationProperty].decimalPlaces
               }
               chartType={chartType}
+              randomNumber={randomNumber}
               ref={canvasRef}
             />
           );
