@@ -201,7 +201,27 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                 `}
                 onClick={() => runInAction(() => viewState.openQueryData(item))}
               >
-                <StyledIcon glyph={GLYPHS.barChart} styledWidth="20px" />
+                <StyledIcon
+                  light={true}
+                  glyph={GLYPHS.chartTable}
+                  styledWidth="30px"
+                />
+              </Button>
+              <Button
+                primary
+                title="Cancella i filtri"
+                css={`
+                  width: 14px;
+                  border-radius: 2px;
+                  margin: 2px;
+                `}
+                onClick={() => runInAction(() => item.cleanQueryValues())}
+              >
+                <StyledIcon
+                  light={true}
+                  glyph={GLYPHS.cancel}
+                  styledWidth="18px"
+                />
               </Button>
             </Box>
           </>

@@ -112,6 +112,14 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
     }
 
     @action
+    cleanQueryValues() {
+      this.queryValues = {};
+      this.initQueryValues();
+      this.filterData();
+      this.updateEnumValues();
+    }
+
+    @action
     setQuery(propertyName: string, value: string[]): void {
       if (this.queryValues) {
         this.queryValues[propertyName] = value;
