@@ -299,13 +299,33 @@ interface PropsType {
 
 const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
   (
-    { data, valueKey, valuePercKey, measureUnit, decimalPlaces, chartType },
+    {
+      data,
+      valueKey,
+      valuePercKey,
+      measureUnit,
+      decimalPlaces,
+      chartType,
+      randomNumber
+    },
     ref
   ) => {
-    const currencyFormatter = new Intl.NumberFormat("it", {
+    const currencyFormatter = new Intl.NumberFormat("it-IT", {
       style: "currency",
       currency: "EUR",
-    const randomIndex = Math.floor((randomNumber ?? Math.random()) * COLORS.length);
+      notation: "compact"
+    });
+
+    const formatCurrency = (value: number) => {
+      return currencyFormatter
+        .format(value)
+        .replace("Mio", "Mln")
+        .replace("Mrd", "Mld");
+    };
+
+    const randomIndex = Math.floor(
+      (randomNumber ?? Math.random()) * COLORS.length
+    );
 
     const renderPieChart = () => {
       return (
@@ -338,9 +358,9 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             formatter={(v, _, props) => {
               return `${v}% (${
                 measureUnit === "€"
-                  ? currencyFormatter.format(props.payload.payload[valueKey])
+                  ? formatCurrency(props.payload.payload[valueKey])
                   : props.payload.payload[valueKey].toFixed(decimalPlaces)
-              } ${measureUnit ?? ""})`;
+              })`;
             }}
           />
           {data.length <= 20 && <Legend wrapperStyle={{ fontSize: "14px" }} />}
@@ -355,27 +375,34 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
           margin={{
             top: 5,
             right: 10,
-            left: 30,
+            left: 40,
             bottom: 5
           }}
         >
           <XAxis dataKey="name" height={260} angle={90} textAnchor="start" />
-          <YAxis />
+          <YAxis
+            type="number"
+            tickFormatter={(v: number) => {
+              return measureUnit === "€"
+                ? `${formatCurrency(v)}`
+                : v.toFixed(decimalPlaces);
+            }}
+          />
           <CartesianGrid strokeDasharray="3 3" />
           <Tooltip
             formatter={(v: number) => {
               return measureUnit === "€"
-                ? `${currencyFormatter.format(v)}`
+                ? `${formatCurrency(v)}`
                 : v.toFixed(decimalPlaces);
             }}
           />
-          <Bar dataKey={valueKey} barSize={20} fill={COLORS[randomIndex]} >
-            {data?.map((_, index) =>
+          <Bar dataKey={valueKey} barSize={20} fill={COLORS[randomIndex]}>
+            {data?.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[(index + randomIndex) % COLORS.length]}
               />
-            )}
+            ))}
           </Bar>
         </BarChart>
       );
@@ -402,21 +429,28 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             width={5}
             tick={{ width: 260 }}
           />
-          <XAxis type="number" />
-          <Tooltip
-            formatter={(v: number) => {
+          <XAxis
+            type="number"
+            tickFormatter={(v: number) => {
               return measureUnit === "€"
-                ? `${currencyFormatter.format(v)}`
+                ? `${formatCurrency(v)}`
                 : v.toFixed(decimalPlaces);
             }}
           />
-          <Bar dataKey={valueKey} barSize={5} fill={COLORS[randomIndex]} >
-            {data?.map((_, index) =>
+          <Tooltip
+            formatter={(v: number) => {
+              return measureUnit === "€"
+                ? `${formatCurrency(v)}`
+                : v.toFixed(decimalPlaces);
+            }}
+          />
+          <Bar dataKey={valueKey} barSize={5} fill={COLORS[randomIndex]}>
+            {data?.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[(index + randomIndex) % COLORS.length]}
               />
-            )}
+            ))}
           </Bar>
         </BarChart>
       );

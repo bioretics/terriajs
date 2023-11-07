@@ -5,7 +5,6 @@ import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMix
 import { TabPropsType } from "./QueryWindow";
 import { ConstantProperty } from "terriajs-cesium";
 
-
 const QueryTabTable: React.FC<TabPropsType> = observer(
   ({ item }: TabPropsType) => {
     const [columns, setColumns] = useState<TableColumn<Map<string, any>>[]>([]);
@@ -23,22 +22,38 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
         const fields = Object.entries(item.queryProperties ?? {})
           .filter(([key, elem]) => {
             return (
-              (elem.canAggregate || elem.sumOnAggregation) /*&&
+              elem.canAggregate || elem.sumOnAggregation /*&&
               !item.queryValues?.[key].some(
                 (val) => val && val !== "" && val !== item.ENUM_ALL_VALUE
               )*/
             );
           })
           .map(([key, elem]) => {
-            return { key: key, label: elem.label, sumOnAggregation: elem.sumOnAggregation };
+            return {
+              key: key,
+              label: elem.label,
+              sumOnAggregation: elem.sumOnAggregation
+            };
           });
+
+        const currencyFormatter = new Intl.NumberFormat("it-IT", {
+          style: "currency",
+          currency: "EUR",
+          maximumFractionDigits: 0
+        });
 
         setColumns(
           fields?.map((field) => {
             return {
               name: field.label,
-              selector: (row) => row.get(field.key).toString(),
-              sortable: true
+              selector: (row) => row.get(field.key),
+              sortable: true,
+              format: (row) => {
+                return field.sumOnAggregation
+                  ? currencyFormatter.format(row.get(field.key))
+                  : row.get(field.key).toString();
+              },
+              right: field.sumOnAggregation
             };
           }) ?? []
         );
@@ -51,11 +66,13 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
         QueryableCatalogItemMixin.isMixedInto(item) &&
         item.queryProperties
       ) {
-        const featProps = item.getFeaturePropertiesByName(
-          Object.entries(item.queryProperties)
-            .filter(([_, elem]) => elem.canAggregate || elem.sumOnAggregation)
-            .map(([key, _]) => key)
-        )?.filter((elem) => !!(elem.show as ConstantProperty).valueOf());
+        const featProps = item
+          .getFeaturePropertiesByName(
+            Object.entries(item.queryProperties)
+              .filter(([_, elem]) => elem.canAggregate || elem.sumOnAggregation)
+              .map(([key, _]) => key)
+          )
+          ?.filter((elem) => !!(elem.show as ConstantProperty).valueOf());
 
         if (featProps) {
           featureProperties.current = featProps;

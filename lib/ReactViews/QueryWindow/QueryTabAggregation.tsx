@@ -3,8 +3,6 @@ import { observer } from "mobx-react";
 import html2canvas from "terriajs-html2canvas";
 import Styles from "./query-tab-panel.scss";
 import Box from "../../Styled/Box";
-import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
-//import { BaseModel } from "../../Models/Definition/Model";
 import QueryChart from "./QueryChart";
 import QuerySelector from "./QuerySelector";
 import Checkbox from "../../Styled/Checkbox";
@@ -46,15 +44,14 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
 
     const canvasRef = useRef<HTMLDivElement>(null);
     const aggregateFieldOptions = useRef<{ key: string; label: string }[]>();
-    const aggregateFunctionOptions =
-      useRef<
-        {
-          key: string;
-          label: string;
-          measureUnit?: string;
-          decimalPlaces: number;
-        }[]
-      >();
+    const aggregateFunctionOptions = useRef<
+      {
+        key: string;
+        label: string;
+        measureUnit?: string;
+        decimalPlaces: number;
+      }[]
+    >();
     const featureProperties = useRef<{ [key: string]: any }[]>();
 
     useEffect(() => {
@@ -171,6 +168,11 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         const measureUnit = functionProperty?.measureUnit ?? "";
         const decimalPlaces = functionProperty?.decimalPlaces ?? 0;
 
+        const currencyFormatter = new Intl.NumberFormat("it-IT", {
+          style: "currency",
+          currency: "EUR"
+        });
+
         setColumns([
           {
             name: "Categoria",
@@ -181,8 +183,11 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             name: "Valore",
             selector: (row) => row.value,
             sortable: true,
-            format: (row) =>
-              `${measureUnit} ${row.value.toFixed(decimalPlaces)}`
+            format: (row) => {
+              return measureUnit === "€"
+                ? currencyFormatter.format(row.value)
+                : `${measureUnit} ${row.value.toFixed(decimalPlaces)}`;
+            }
           },
           {
             name: "Percentuale",
@@ -313,10 +318,16 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               valueKey="value"
               valuePercKey="valuePerc"
               measureUnit={
-                item.queryProperties[aggregationProperty].measureUnit
+                aggregationFunction &&
+                aggregationFunction in item.queryProperties
+                  ? item.queryProperties[aggregationFunction].measureUnit
+                  : undefined
               }
               decimalPlaces={
-                item.queryProperties[aggregationProperty].decimalPlaces
+                aggregationFunction &&
+                aggregationFunction in item.queryProperties
+                  ? item.queryProperties[aggregationFunction].decimalPlaces
+                  : 0
               }
               chartType={chartType}
               randomNumber={randomNumber}
