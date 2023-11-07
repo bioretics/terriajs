@@ -1,13 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { observer } from "mobx-react";
-import { BaseModel } from "../../Models/Definition/Model";
 import DataTable, { TableColumn } from "react-data-table-component";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
 import { TabPropsType } from "./QueryWindow";
+import { ConstantProperty } from "terriajs-cesium";
 
-interface PropsType {
-  item: BaseModel;
-}
 
 const QueryTabTable: React.FC<TabPropsType> = observer(
   ({ item }: TabPropsType) => {
@@ -26,14 +23,14 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
         const fields = Object.entries(item.queryProperties ?? {})
           .filter(([key, elem]) => {
             return (
-              elem.canAggregate &&
+              (elem.canAggregate || elem.sumOnAggregation) /*&&
               !item.queryValues?.[key].some(
                 (val) => val && val !== "" && val !== item.ENUM_ALL_VALUE
-              )
+              )*/
             );
           })
           .map(([key, elem]) => {
-            return { key: key, label: elem.label };
+            return { key: key, label: elem.label, sumOnAggregation: elem.sumOnAggregation };
           });
 
         setColumns(
@@ -58,7 +55,7 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
           Object.entries(item.queryProperties)
             .filter(([_, elem]) => elem.canAggregate || elem.sumOnAggregation)
             .map(([key, _]) => key)
-        );
+        )?.filter((elem) => !!(elem.show as ConstantProperty).valueOf());
 
         if (featProps) {
           featureProperties.current = featProps;
