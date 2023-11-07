@@ -106,6 +106,8 @@ import SearchableCatalogItemMixin, {
   SearchableData
 } from "./SearchableCatalogItemMixin";
 import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
+import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 
 enum PathTypes {
   noPath = 0,
@@ -587,6 +589,29 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
         } else {
           if (!this.appendData || !this._dataSource) {
             const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
+
+            if (this.clusterize) {
+              const pinBuilder = new PinBuilder();
+              dataSource.clustering.enabled = true;
+              dataSource.clustering.pixelRange = 35;
+              dataSource.clustering.minimumClusterSize = 3;
+              dataSource.clustering.clusterEvent.addEventListener(function (
+                entities,
+                cluster
+              ) {
+                cluster.label.show = false;
+                cluster.billboard.verticalOrigin = VerticalOrigin.BOTTOM;
+                cluster.billboard.image = pinBuilder
+                  .fromText(
+                    entities.length.toLocaleString(),
+                    Color.LIGHTPINK,
+                    60
+                  )
+                  .toDataURL();
+                cluster.billboard.show = true;
+              });
+            }
+
             runInAction(() => {
               this._dataSource = dataSource;
               this._imageryProvider = undefined;
