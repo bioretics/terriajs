@@ -344,6 +344,11 @@ interface ConfigParameters {
   coordsConverterUrl?: string;
 
   /**
+   * If true start with info enabled
+   */
+  mouseAsInfoDefaultValue: boolean;
+
+  /**
    * If false hide MyLocation button in desktop mode
    */
   useMyLocationFromDesktop: boolean;
@@ -583,6 +588,7 @@ export default class Terria {
     customSearchProviderUrl: undefined,
     whereAmIParams: undefined,
     coordsConverterUrl: undefined,
+    mouseAsInfoDefaultValue: false,
     useMyLocationFromDesktop: true
   };
 
@@ -1120,6 +1126,8 @@ export default class Terria {
         console.log(error);
       }
     }
+
+    this.mouseAsInfo = this.configParameters.mouseAsInfoDefaultValue;
 
     await this.restoreAppState(options);
   }
