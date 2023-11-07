@@ -342,6 +342,11 @@ interface ConfigParameters {
    * Url to coordinates converter service.
    */
   coordsConverterUrl?: string;
+
+  /**
+   * If false hide MyLocation button in desktop mode
+   */
+  useMyLocationFromDesktop: boolean;
 }
 
 interface StartOptions {
@@ -577,7 +582,8 @@ export default class Terria {
     relatedMaps: defaultRelatedMaps,
     customSearchProviderUrl: undefined,
     whereAmIParams: undefined,
-    coordsConverterUrl: undefined
+    coordsConverterUrl: undefined,
+    useMyLocationFromDesktop: true
   };
 
   @observable

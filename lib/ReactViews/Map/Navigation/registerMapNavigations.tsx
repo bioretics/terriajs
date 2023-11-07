@@ -65,25 +65,27 @@ export const registerMapNavigations = (viewState: ViewState) => {
     render: <ZoomControl terria={terria} viewState={viewState} />
   });
 
-  const myLocation = new MyLocation({ terria });
-  mapNavigationModel.addItem({
-    id: MyLocation.id,
-    name: "translate#location.location",
-    title: "translate#location.centreMap",
-    location: "TOP",
-    controller: myLocation,
-    screenSize: "medium",
-    order: 7
-  });
-  mapNavigationModel.addItem({
-    id: MyLocation.id + "_small",
-    name: "translate#location.location",
-    title: "translate#location.centreMap",
-    location: "TOP",
-    controller: myLocation,
-    screenSize: "small",
-    order: 3
-  });
+  if (terria.configParameters.useMyLocationFromDesktop) {
+    const myLocation = new MyLocation({ terria });
+    mapNavigationModel.addItem({
+      id: MyLocation.id,
+      name: "translate#location.location",
+      title: "translate#location.centreMap",
+      location: "TOP",
+      controller: myLocation,
+      screenSize: "medium",
+      order: 7
+    });
+    mapNavigationModel.addItem({
+      id: MyLocation.id + "_small",
+      name: "translate#location.location",
+      title: "translate#location.centreMap",
+      location: "TOP",
+      controller: myLocation,
+      screenSize: "small",
+      order: 3
+    });
+  }
 
   const toggleSplitterController = new ToggleSplitterController(viewState);
   mapNavigationModel.addItem({
