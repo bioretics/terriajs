@@ -602,11 +602,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                 cluster.label.show = false;
                 cluster.billboard.verticalOrigin = VerticalOrigin.BOTTOM;
                 cluster.billboard.image = pinBuilder
-                  .fromText(
-                    entities.length.toLocaleString(),
-                    Color.LIGHTPINK,
-                    60
-                  )
+                  .fromText(entities.length.toLocaleString(), Color.BLUE, 60)
                   .toDataURL();
                 cluster.billboard.show = true;
               });
