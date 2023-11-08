@@ -313,6 +313,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
     const currencyFormatter = new Intl.NumberFormat("it-IT", {
       style: "currency",
       currency: "EUR",
+      //@ts-ignore
       notation: "compact"
     });
 
