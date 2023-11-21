@@ -5,7 +5,7 @@ export default class SearchableCatalogItemTraits extends ModelTraits {
   @primitiveTrait({
     type: "string",
     name: "nameOfCatalogItemSearchField",
-    description: "The field in which to search"
+    description: "The field in which to search for vector layers"
   })
-  nameOfCatalogItemSearchField: string = "";
+  nameOfCatalogItemSearchField?: string = "";
 }

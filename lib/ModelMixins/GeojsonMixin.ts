@@ -1489,40 +1489,48 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
       this.asPath(coordinates);
     }
 
-    searchWithinItemData(text: string) {
+    doSearch(text: string): Promise<SearchableData[]> {
       // Search in TerriaJS Feature and Turf Geometry
-      const elements: SearchableData[] | undefined =
-        this.readyData?.features.map((feature) => {
-          const fieldContent: string =
-            feature.properties?.[this.nameOfCatalogItemSearchField] ?? "";
 
-          const type = feature.geometry.type;
-          let lat: number;
-          let lon: number;
-          if (
-            type === "Point" &&
-            (feature.geometry as Geometry).coordinates.length === 2
-          ) {
-            lon = (feature.geometry as Geometry).coordinates[0] as number;
-            lat = (feature.geometry as Geometry).coordinates[1] as number;
-          } else {
-            const geojsonBbox = bbox(feature);
-            const west = geojsonBbox[0];
-            const south = geojsonBbox[1];
-            const east = geojsonBbox[2];
-            const north = geojsonBbox[3];
-            lon = (east - west) * 0.5 + west;
-            lat = (north - south) * 0.5 + south;
-          }
+      if (!this.nameOfCatalogItemSearchField || !this.readyData?.features)
+        return Promise.resolve([]);
+      const nameOfCatalogItemSearchField = this.nameOfCatalogItemSearchField;
 
-          return {
-            searchField: fieldContent,
-            latitude: lat,
-            longitude: lon
-          };
-        });
+      const filteredElements = this.readyData.features.filter((feature) => {
+        const fieldContent =
+          feature.properties?.[nameOfCatalogItemSearchField] ?? "";
+        return fieldContent.toLowerCase().includes(text);
+      });
+      const searchableData = filteredElements.map((feature) => {
+        const fieldContent =
+          feature.properties?.[nameOfCatalogItemSearchField] ?? "";
+        const type = feature.geometry.type;
+        let lat: number;
+        let lon: number;
+        if (
+          type === "Point" &&
+          (feature.geometry as Geometry).coordinates.length === 2
+        ) {
+          lon = (feature.geometry as Geometry).coordinates[0] as number;
+          lat = (feature.geometry as Geometry).coordinates[1] as number;
+        } else {
+          const geojsonBbox = bbox(feature);
+          const west = geojsonBbox[0];
+          const south = geojsonBbox[1];
+          const east = geojsonBbox[2];
+          const north = geojsonBbox[3];
+          lon = (east - west) * 0.5 + west;
+          lat = (north - south) * 0.5 + south;
+        }
 
-      return this.search(text, elements);
+        return {
+          searchField: fieldContent,
+          latitude: lat,
+          longitude: lon
+        };
+      });
+
+      return Promise.resolve(searchableData);
     }
 
     getEnumValues(propertyName: string): string[] | undefined {

@@ -1,4 +1,4 @@
-import { computed, observable, runInAction } from "mobx";
+import { computed, observable, runInAction, action } from "mobx";
 import { fromPromise } from "mobx-utils";
 import isDefined from "../../Core/isDefined";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
@@ -6,26 +6,19 @@ import Terria from "../Terria";
 import SearchProvider from "./SearchProvider";
 import SearchProviderResults from "./SearchProviderResults";
 import SearchableCatalogItemMixin from "../../ModelMixins/SearchableCatalogItemMixin";
+import SearchResult from "./SearchResult";
 interface CatalogItemsSearchProviderOptions {
   terria: Terria;
 }
 
-export function searchInOpenedCatalogItems(
+async function searchInOpenedCatalogItems(
   terria: Terria,
-  searchTextLowercase: string,
-  searchResults: SearchProviderResults
-): Promise<void> {
-  return new Promise((resolve) => {
-    for (let i = 0; i < terria.workbench.items.length; ++i) {
-      const item = terria.workbench.items[i];
-      if (SearchableCatalogItemMixin.isMixedInto(item)) {
-        const res = item.searchWithinItemData(searchTextLowercase);
-        if (res !== undefined) {
-          searchResults.results = res;
-        }
-      }
-    }
-  });
+  searchTextLowercase: string
+): Promise<SearchResult[][]> {
+  //TODO: the results will probably have to be kept separate in the future
+  const searchableCatalogItems = terria.workbench.items.filter(item => SearchableCatalogItemMixin.isMixedInto(item)) as SearchableCatalogItemMixin.Instance[];
+  const searchPromiseList = searchableCatalogItems.map(item => { return item.searchWithinItemData(searchTextLowercase); });
+  return Promise.all(searchPromiseList);
 }
 
 export default class CatalogItemsSearchProvider extends SearchProvider {
@@ -55,6 +48,7 @@ export default class CatalogItemsSearchProvider extends SearchProvider {
     );
   }
 
+  @action
   protected async doSearch(
     searchText: string,
     searchResults: SearchProviderResults
@@ -70,11 +64,12 @@ export default class CatalogItemsSearchProvider extends SearchProvider {
     }
 
     try {
-      await searchInOpenedCatalogItems(
+      const res = await searchInOpenedCatalogItems(
         this.terria,
-        searchText.toLowerCase(),
-        searchResults
+        searchText.toLowerCase()
       );
+      runInAction(() => (searchResults.results = res.flat()));
+
 
       runInAction(() => {
         this.isSearching = false;
