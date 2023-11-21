@@ -16,8 +16,12 @@ async function searchInOpenedCatalogItems(
   searchTextLowercase: string
 ): Promise<SearchResult[][]> {
   //TODO: the results will probably have to be kept separate in the future
-  const searchableCatalogItems = terria.workbench.items.filter(item => SearchableCatalogItemMixin.isMixedInto(item)) as SearchableCatalogItemMixin.Instance[];
-  const searchPromiseList = searchableCatalogItems.map(item => { return item.searchWithinItemData(searchTextLowercase); });
+  const searchableCatalogItems = terria.workbench.items.filter((item) =>
+    SearchableCatalogItemMixin.isMixedInto(item)
+  ) as SearchableCatalogItemMixin.Instance[];
+  const searchPromiseList = searchableCatalogItems.map((item) => {
+    return item.searchWithinItemData(searchTextLowercase);
+  });
   return Promise.all(searchPromiseList);
 }
 
@@ -37,7 +41,7 @@ export default class CatalogItemsSearchProvider extends SearchProvider {
     return this.terria.workbench.items.some(
       (item) =>
         SearchableCatalogItemMixin.isMixedInto(item) &&
-        item.nameOfCatalogItemSearchField
+        (item.nameOfCatalogItemSearchField || item.catalogItemWebSearch)
     );
   }
 
@@ -69,7 +73,6 @@ export default class CatalogItemsSearchProvider extends SearchProvider {
         searchText.toLowerCase()
       );
       runInAction(() => (searchResults.results = res.flat()));
-
 
       runInAction(() => {
         this.isSearching = false;
