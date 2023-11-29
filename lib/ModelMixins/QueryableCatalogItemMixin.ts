@@ -24,7 +24,7 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
     }
 
     get ENUM_ALL_VALUE(): string {
-      return "--all";
+      return "--tutto";
     }
 
     @observable
