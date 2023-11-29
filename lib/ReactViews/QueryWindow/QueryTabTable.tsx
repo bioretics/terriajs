@@ -4,6 +4,9 @@ import DataTable, { TableColumn } from "react-data-table-component";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
 import { TabPropsType } from "./QueryWindow";
 import { ConstantProperty } from "terriajs-cesium";
+import Box from "../../Styled/Box";
+import Button from "../../Styled/Button";
+import DataUri from "../../Core/DataUri";
 
 const QueryTabTable: React.FC<TabPropsType> = observer(
   ({ item }: TabPropsType) => {
@@ -11,6 +14,17 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
     const [data, setData] = useState<Map<string, any>[]>([]);
 
     const featureProperties = useRef<{ [key: string]: any }[]>();
+
+    const downloadTable = () => {
+      const rows = [Array.from(data[0].keys()).join(",")];
+      rows.push(...data.map((elem) => Array.from(elem.values()).join(",")));
+      const csvString = rows.join("\n");
+      const href = DataUri.make("csv", csvString);
+      var link = document.createElement("a");
+      link.href = href;
+      link.download = "download.csv";
+      link.click();
+    };
 
     useEffect(() => {
       if (
@@ -86,16 +100,31 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
     }, []);
 
     return (
-      <DataTable
-        columns={columns}
-        data={data}
-        pagination
-        paginationPerPage={15}
-        paginationComponentOptions={{ noRowsPerPage: true }}
-        dense
-        striped
-        highlightOnHover
-      />
+      <>
+        <DataTable
+          columns={columns}
+          data={data}
+          pagination
+          paginationPerPage={15}
+          paginationComponentOptions={{ noRowsPerPage: true }}
+          dense
+          striped
+          highlightOnHover
+        />
+        <Box>
+          <Button
+            primary
+            css={`
+              width: 100px;
+              border-radius: 2px;
+              margin: 10px;
+            `}
+            onClick={downloadTable}
+          >
+            Download
+          </Button>
+        </Box>
+      </>
     );
   }
 );
