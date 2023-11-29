@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import html2canvas from "terriajs-html2canvas";
 import Styles from "./query-tab-panel.scss";
 import Box from "../../Styled/Box";
-import QueryChart from "./QueryChart";
+import QueryChart, { DataType } from "./QueryChart";
 import QuerySelector from "./QuerySelector";
 import Checkbox from "../../Styled/Checkbox";
 import { ConstantProperty } from "terriajs-cesium";
@@ -32,15 +32,11 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
     const [aggregationProperty, setAggregationProperty] = useState<string>();
     const [aggregationFunction, setAggregationFunction] = useState<string>();
     const [chartType, setChartType] = useState<ChartType>(ChartType.Pie);
-    const [data, setData] =
-      useState<{ name: string; value: number; valuePerc: number }[]>();
+    const [data, setData] = useState<DataType[]>();
     const [useHidden, setUseHidden] = useState<boolean>(false);
-    //const [componentUpdated, setComponentUpdated] = useState<number>(0);
     const [randomNumber, setRandomNumber] = useState<number>(0);
     const [filterText, setFilterText] = useState<string[]>([]);
-    const [columns, setColumns] = useState<
-      TableColumn<{ name: string; value: number; valuePerc: number }>[]
-    >([]);
+    const [columns, setColumns] = useState<TableColumn<DataType>[]>([]);
 
     const canvasRef = useRef<HTMLDivElement>(null);
     const aggregateFieldOptions = useRef<{ key: string; label: string }[]>();
@@ -80,7 +76,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
           });
         aggregateFieldOptions.current = fields;
         if (!aggregationProperty) {
-          setAggregationProperty(fields[0].key);
+          setAggregationProperty(fields[0]?.key);
         }
         const functions = [
           ...[defaultAggregationFunction],
@@ -143,13 +139,15 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             });
 
         setData(
-          Object.entries(featuresPerClass).map(([key, value]) => {
-            return {
-              name: key,
-              value: value,
-              valuePerc: Math.round((value / tot + Number.EPSILON) * 100)
-            };
-          })
+          Object.entries(featuresPerClass)
+            .map(([key, value]) => {
+              return {
+                name: key,
+                value: value,
+                valuePerc: Math.round((value / tot + Number.EPSILON) * 100)
+              };
+            })
+            .filter((elem) => elem.valuePerc > 0)
         );
       }
     }, [
@@ -212,7 +210,6 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
     };
 
     const changeColors = () => {
-      //setComponentUpdated(componentUpdated + 1);
       setRandomNumber(Math.random());
     };
 
@@ -223,7 +220,14 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         !aggregationProperty ||
         !aggregationFunction
       ) {
-        return <><h3>La combinazione di filtri non permette di generare grafici di aggregazione</h3></>;
+        return (
+          <>
+            <h3>
+              La combinazione di filtri non permette di generare grafici di
+              aggregazione
+            </h3>
+          </>
+        );
       }
 
       return (
