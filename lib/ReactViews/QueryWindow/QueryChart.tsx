@@ -13,6 +13,7 @@ import {
   YAxis
 } from "recharts";
 import { ChartType } from "./QueryTabAggregation";
+import Box from "../../Styled/Box";
 
 const COLORS = [
   "#63b598",
@@ -287,14 +288,22 @@ const COLORS = [
   "#77ecca"
 ];
 
+export interface DataType {
+  name: string;
+  value: number;
+  valuePerc: number;
+}
+
 interface PropsType {
-  data: { name: string; value: number }[];
+  data: DataType[];
   valueKey: string;
   valuePercKey: string;
   measureUnit?: string;
   decimalPlaces: number;
   chartType: ChartType;
   randomNumber: number;
+  filterText: string[];
+  useHidden: boolean;
 }
 
 const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
@@ -306,7 +315,9 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
       measureUnit,
       decimalPlaces,
       chartType,
-      randomNumber
+      randomNumber,
+      filterText,
+      useHidden
     },
     ref
   ) => {
@@ -370,6 +381,10 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
     };
 
     const renderBarVChart = () => {
+      const xLabelsHeight = Math.min(
+        Math.max(...data.map((elem) => elem.name.length)) * 3 + 80,
+        220
+      );
       return (
         <BarChart
           data={data}
@@ -380,7 +395,13 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             bottom: 5
           }}
         >
-          <XAxis dataKey="name" height={260} angle={90} textAnchor="start" />
+          <XAxis
+            dataKey="name"
+            height={xLabelsHeight}
+            angle={90}
+            textAnchor="start"
+            style={{ fontSize: "0.8rem" }}
+          />
           <YAxis
             type="number"
             tickFormatter={(v: number) => {
@@ -468,9 +489,31 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
       }
     };
 
+    const showFilters = filterText.length > 0 && !useHidden;
+
     return (
       <div style={{ width: "100%", height: "100%" }} ref={ref}>
-        <ResponsiveContainer>{renderChart()}</ResponsiveContainer>
+        <Box fullHeight column>
+          <Box fullHeight overflow="hidden">
+            <Box styledWidth={showFilters ? "80%" : "100%"}>
+              <ResponsiveContainer>{renderChart()}</ResponsiveContainer>
+            </Box>
+            {showFilters && (
+              <Box
+                styledWidth="20%"
+                flexWrap
+                style={{ alignContent: "center" }}
+              >
+                <div>
+                  Filtri applicati:
+                  {filterText.map((txt, index) => (
+                    <div key={index}>&#x2022; {txt}</div>
+                  ))}
+                </div>
+              </Box>
+            )}
+          </Box>
+        </Box>
       </div>
     );
   }

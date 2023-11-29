@@ -223,7 +223,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         !aggregationProperty ||
         !aggregationFunction
       ) {
-        return null;
+        return <><h3>La combinazione di filtri non permette di generare grafici di aggregazione</h3></>;
       }
 
       return (
@@ -257,12 +257,12 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
           <Box styledMargin="12px 20px" style={{ display: "block" }}>
             {filterText.length > 0 && (
               <>
-                <br />
+                {/*<br />
                 <div>Filtri applicati:</div>
                 {filterText.map((txt, index) => (
                   <div key={index}>&#x2022; {txt}</div>
                 ))}
-                <br />
+                <br />*/}
                 <div
                   style={{ display: "flex", justifyContent: "space-between" }}
                 >
@@ -278,7 +278,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               </>
             )}
           </Box>
-          <SpacingSpan bottom={filterText.length > 0 ? 40 : 60} />
+          <SpacingSpan bottom={/*filterText.length > 0 ? 10 : 20*/ 5} />
           {chartType !== ChartType.Pivot && (
             <Box styledMargin="12px 20px">
               <Button
@@ -331,6 +331,8 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               }
               chartType={chartType}
               randomNumber={randomNumber}
+              filterText={filterText}
+              useHidden={useHidden}
               ref={canvasRef}
             />
           );
