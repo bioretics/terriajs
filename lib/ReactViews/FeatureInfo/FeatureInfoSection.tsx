@@ -447,11 +447,19 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 !this.props.printView &&
                 showFeatureInfoDownload &&
                 isDefined(this.downloadableData.data) ? (
-                  <FeatureInfoDownload
-                    key="download"
-                    data={this.downloadableData.data}
-                    name={this.downloadableData.fileName}
-                  />
+                    <>
+                      <FeatureInfoDownload
+                        key="download"
+                        data={this.downloadableData.data}
+                        name={this.downloadableData.fileName}
+                      />
+                      <br />
+                      <br />
+                      <br />
+                      <br />
+                      <br />
+                      <br />
+                    </>
                 ) : null
               }
             </div>
