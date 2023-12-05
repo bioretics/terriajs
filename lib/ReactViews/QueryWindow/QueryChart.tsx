@@ -340,6 +340,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
     );
 
     const renderPieChart = () => {
+      const dataPurged = data.filter((elem) => elem.valuePerc > 0);
       return (
         <PieChart
           margin={{
@@ -352,14 +353,14 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
           <Pie
             isAnimationActive={false}
             dataKey={valuePercKey}
-            data={data}
+            data={dataPurged}
             fill="#8884d8"
             labelLine={false}
             label={(elem) => {
               return `${elem[valuePercKey]}%`;
             }}
           >
-            {data?.map((_, index) => (
+            {dataPurged?.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[(index + randomIndex) % COLORS.length]}
@@ -375,7 +376,9 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
               })`;
             }}
           />
-          {data.length <= 20 && <Legend wrapperStyle={{ fontSize: "14px" }} />}
+          {dataPurged.length <= 20 && (
+            <Legend wrapperStyle={{ fontSize: "14px" }} />
+          )}
         </PieChart>
       );
     };

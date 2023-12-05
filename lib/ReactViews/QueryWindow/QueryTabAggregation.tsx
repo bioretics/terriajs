@@ -27,6 +27,11 @@ const defaultAggregationFunction = {
   decimalPlaces: 0
 };
 
+const currencyFormatter = new Intl.NumberFormat("it-IT", {
+  style: "currency",
+  currency: "EUR"
+});
+
 const QueryTabPanel: React.FC<TabPropsType> = observer(
   ({ item }: TabPropsType) => {
     const [aggregationProperty, setAggregationProperty] = useState<string>();
@@ -139,15 +144,14 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             });
 
         setData(
-          Object.entries(featuresPerClass)
-            .map(([key, value]) => {
-              return {
-                name: key,
-                value: value,
-                valuePerc: Math.round((value / tot + Number.EPSILON) * 100)
-              };
-            })
-            .filter((elem) => elem.valuePerc > 0)
+          Object.entries(featuresPerClass).map(([key, value]) => {
+            return {
+              name: key,
+              value: value,
+              valuePerc: Math.round((value / tot + Number.EPSILON) * 100)
+            };
+          })
+          //.filter((elem) => elem.valuePerc > 0)
         );
       }
     }, [
@@ -166,10 +170,10 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         const measureUnit = functionProperty?.measureUnit ?? "";
         const decimalPlaces = functionProperty?.decimalPlaces ?? 0;
 
-        const currencyFormatter = new Intl.NumberFormat("it-IT", {
+        /*const currencyFormatter = new Intl.NumberFormat("it-IT", {
           style: "currency",
           currency: "EUR"
-        });
+        });*/
 
         setColumns([
           {
@@ -342,16 +346,36 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
           );
         } else {
           return (
-            <DataTable
-              columns={columns}
-              data={data}
-              pagination
-              paginationPerPage={15}
-              paginationComponentOptions={{ noRowsPerPage: true }}
-              dense
-              striped
-              highlightOnHover
-            />
+            <Box fullWidth column>
+              <Box column fullWidth styledHeight="90%">
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  pagination
+                  paginationPerPage={15}
+                  paginationComponentOptions={{ noRowsPerPage: true }}
+                  dense
+                  striped
+                  highlightOnHover
+                />
+              </Box>
+              <Box styledHeight="10%">
+                <h4>
+                  Valore totale:{" "}
+                  {aggregationFunction === defaultAggregationFunction.key
+                    ? data.reduce(
+                        (accumulator, current) => accumulator + current.value,
+                        0
+                      )
+                    : currencyFormatter.format(
+                        data.reduce(
+                          (accumulator, current) => accumulator + current.value,
+                          0
+                        )
+                      )}
+                </h4>
+              </Box>
+            </Box>
           );
         }
       }
