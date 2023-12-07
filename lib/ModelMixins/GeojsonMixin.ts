@@ -594,7 +594,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
               const pinBuilder = new PinBuilder();
               dataSource.clustering.enabled = true;
               dataSource.clustering.pixelRange = 35;
-              dataSource.clustering.minimumClusterSize = 3;
+              dataSource.clustering.minimumClusterSize = 4;
               dataSource.clustering.clusterEvent.addEventListener(function (
                 entities,
                 cluster
@@ -602,7 +602,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                 cluster.label.show = false;
                 cluster.billboard.verticalOrigin = VerticalOrigin.BOTTOM;
                 cluster.billboard.image = pinBuilder
-                  .fromText(entities.length.toLocaleString(), Color.BLUE, 60)
+                  .fromText(entities.length.toLocaleString(), Color.GRAY, 60)
                   .toDataURL();
                 cluster.billboard.show = true;
               });
