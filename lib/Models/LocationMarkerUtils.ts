@@ -86,6 +86,7 @@ export function removeMarker(terria: Terria) {
   const catalogItem = terria.getModelById(CzmlCatalogItem, MARKER_UNIQUE_ID);
   if (catalogItem !== undefined) {
     terria.overlays.remove(catalogItem);
+    terria.removeModelReferences(catalogItem);
   }
 }
 
