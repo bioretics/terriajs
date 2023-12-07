@@ -107,15 +107,15 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                             });
                           }}
                         >
-                          {(item.enumValues?.[propertyName] ?? []).map(
-                            (value) => {
+                          {(item.enumValues?.[propertyName] ?? [])
+                            .sort()
+                            .map((value) => {
                               return (
                                 <option key={value} value={value}>
                                   {value}
                                 </option>
                               );
-                            }
-                          )}
+                            })}
                         </Select>
                       )}
                       {(property.type === "string" ||
