@@ -288,7 +288,7 @@ class FeatureInfoPanel extends React.Component<Props> {
               {this.props.viewState.terria.cesium
                 ? `${
                     this.props.viewState.terria.pickedPositionElevation ?? ""
-                  } m s.l.m.`
+                  } s.l.m.`
                 : `modalità 2D`}
             </span>
           </div>

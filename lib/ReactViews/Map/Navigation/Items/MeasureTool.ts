@@ -18,6 +18,7 @@ import MapNavigationItemController from "../../../../ViewModels/MapNavigation/Ma
 import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import EarthGravityModel1996 from "../../../../Map/Vector/EarthGravityModel1996";
 const PolygonGeometryLibrary =
   require("terriajs-cesium/Source/Core/PolygonGeometryLibrary").default;
 
@@ -42,6 +43,8 @@ export default class MeasureTool extends MapNavigationItemController {
   onOpen: () => void;
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
 
+  readonly geoidModel: EarthGravityModel1996;
+
   constructor(props: MeasureToolOptions) {
     super();
     this.terria = props.terria;
@@ -57,6 +60,10 @@ export default class MeasureTool extends MapNavigationItemController {
     });
     this.onClose = props.onClose;
     this.onOpen = props.onOpen;
+
+    this.geoidModel = new EarthGravityModel1996(
+      require("file-loader!../../../../../wwwroot/data/WW15MGH.DAC")
+    );
 
     // sampleEntirePath is the reaction to samplingPathStep changes
     this.disposeSamplingPathStep = reaction(
@@ -122,7 +129,7 @@ export default class MeasureTool extends MapNavigationItemController {
     ) {
       cartesianEntities.push(pointEntities.entities.values[0]);
     }
-    // convert from cartesian to cartographic becouse "sampleTerrainMostDetailed" work with cartographic
+    // convert from cartesian to cartographic because "sampleTerrainMostDetailed" work with cartographic
     const cartoPositions = cartesianEntities.map((elem) => {
       return Cartographic.fromCartesian(
         elem.position!.getValue(this.terria.timelineClock.currentTime),
@@ -157,56 +164,73 @@ export default class MeasureTool extends MapNavigationItemController {
     }
 
     // sample points on terrain
-    sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics).then(
-      (sampledCartographics) => {
-        const sampledCartesians =
-          ellipsoid.cartographicArrayToCartesianArray(sampledCartographics);
-
-        // compute distances
-        const stepDistances: number[] = [];
-        for (let i = 0; i < sampledCartesians.length; ++i) {
-          const dist: number =
-            i > 0
-              ? Cartesian3.distance(
-                  sampledCartesians[i - 1],
-                  sampledCartesians[i]
-                )
-              : 0;
-          stepDistances.push(dist);
-        }
-
-        const stopAirDistances: number[] = [0];
-        const distances3d: number[] = [0];
-        for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
-          stopAirDistances.push(
-            Cartesian3.distance(
-              sampledCartesians[originalStopsIndex[i + 1]],
-              sampledCartesians[originalStopsIndex[i]]
-            )
-          );
-          distances3d.push(
-            stepDistances
-              .filter(
-                (_, index) =>
-                  index > originalStopsIndex[i] &&
-                  index <= originalStopsIndex[i + 1]
-              )
-              .reduce((sum: number, current: number) => sum + current, 0)
-          );
-        }
-
-        // update state of Terria
-        this.updatePath(
-          cartoPositions,
-          stopGeodeticDistances,
-          stopAirDistances,
-          distances3d,
-          sampledCartographics,
-          stepDistances,
-          this.userDrawing.closeLoop
+    const terrainPromises = [
+      sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics)
+    ];
+    if (!this.terria.configParameters.useElevationMeanSeaLevel) {
+      terrainPromises.push(
+        this.geoidModel.getHeights(interpolatedCartographics)
+      );
+    }
+    Promise.all(terrainPromises).then((sampledCartographics) => {
+      if (sampledCartographics.length === 2) {
+        const geoidHeights = sampledCartographics[1];
+        sampledCartographics[0].forEach(
+          (elem, i) => (elem.height -= geoidHeights[i].height)
         );
       }
-    );
+
+      const sampledCartesians = ellipsoid.cartographicArrayToCartesianArray(
+        sampledCartographics[0]
+      );
+
+      // compute distances
+      const stepDistances: number[] = [];
+      for (let i = 0; i < sampledCartesians.length; ++i) {
+        const dist: number =
+          i > 0
+            ? Cartesian3.distance(
+                sampledCartesians[i - 1],
+                sampledCartesians[i]
+              )
+            : 0;
+        stepDistances.push(dist);
+      }
+
+      const stopAirDistances: number[] = [0];
+      const distances3d: number[] = [0];
+      for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
+        cartoPositions[i].height =
+          sampledCartographics[0][originalStopsIndex[i]].height;
+
+        stopAirDistances.push(
+          Cartesian3.distance(
+            sampledCartesians[originalStopsIndex[i + 1]],
+            sampledCartesians[originalStopsIndex[i]]
+          )
+        );
+        distances3d.push(
+          stepDistances
+            .filter(
+              (_, index) =>
+                index > originalStopsIndex[i] &&
+                index <= originalStopsIndex[i + 1]
+            )
+            .reduce((sum: number, current: number) => sum + current, 0)
+        );
+      }
+
+      // update state of Terria
+      this.updatePath(
+        cartoPositions,
+        stopGeodeticDistances,
+        stopAirDistances,
+        distances3d,
+        sampledCartographics[0],
+        stepDistances,
+        this.userDrawing.closeLoop
+      );
+    });
   }
 
   // action to update state of the path in Terria

@@ -352,6 +352,11 @@ interface ConfigParameters {
    * If false hide MyLocation button in desktop mode
    */
   useMyLocationFromDesktop: boolean;
+
+  /**
+   * If true elevation is intended MSL, otherwise WGS84
+   */
+  useElevationMeanSeaLevel: boolean;
 }
 
 interface StartOptions {
@@ -589,7 +594,8 @@ export default class Terria {
     whereAmIParams: undefined,
     coordsConverterUrl: undefined,
     mouseAsInfoDefaultValue: false,
-    useMyLocationFromDesktop: true
+    useMyLocationFromDesktop: true,
+    useElevationMeanSeaLevel: false
   };
 
   @observable

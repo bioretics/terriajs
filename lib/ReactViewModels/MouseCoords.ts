@@ -35,6 +35,7 @@ export default class MouseCoords {
   readonly proj4longlat: string;
   readonly accurateSamplingDebounceTime: number;
   readonly debounceSampleAccurateHeight: ((
+    terria: Terria,
     terrainProvider: TerrainProvider,
     position: Cartographic
   ) => void) &
@@ -105,7 +106,7 @@ export default class MouseCoords {
       const intersection = ellipsoid.cartesianToCartographic(
         pickedTriangle.intersection
       );
-      let errorBar;
+      //let errorBar;
 
       if (globe.terrainProvider instanceof EllipsoidTerrainProvider) {
         intersection.height = <any>undefined;
@@ -133,7 +134,7 @@ export default class MouseCoords {
           intersection.height = height;
         }
 
-        const geometricError =
+        /*const geometricError =
           globe.terrainProvider.getLevelMaximumGeometricError(
             pickedTriangle.tile.level
           );
@@ -153,13 +154,17 @@ export default class MouseCoords {
         errorBar = Math.max(
           Math.abs(approximateHeight - minHeightGeoid),
           Math.abs(maxHeightGeoid - approximateHeight)
-        );
+        );*/
       }
       const terrainProvider = globe.terrainProvider;
 
-      this.cartographicToFields(intersection, errorBar);
+      this.cartographicToFields(intersection, 1);
       if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
-        this.debounceSampleAccurateHeight(terrainProvider, intersection);
+        this.debounceSampleAccurateHeight(
+          terria,
+          terrainProvider,
+          intersection
+        );
       }
       if (terria.configParameters.whereAmIParams) {
         this.debounceAskWhereAmI(terria, intersection);
@@ -217,7 +222,9 @@ export default class MouseCoords {
     });
     this.latitude = prettyCoordinate.latitude;
     this.longitude = prettyCoordinate.longitude;
-    this.elevation = prettyCoordinate.elevation;
+    if (!errorBar) {
+      this.elevation = prettyCoordinate.elevation;
+    }
   }
 
   @action
@@ -309,13 +316,14 @@ export default class MouseCoords {
   };
 
   sampleAccurateHeight(
+    terria: Terria,
     terrainProvider: TerrainProvider,
     position: Cartographic
   ) {
     if (this.tileRequestInFlight) {
       // A tile request is already in flight, so reschedule for later.
       this.debounceSampleAccurateHeight.cancel();
-      this.debounceSampleAccurateHeight(terrainProvider, position);
+      this.debounceSampleAccurateHeight(terria, terrainProvider, position);
       return;
     }
 
@@ -332,8 +340,9 @@ export default class MouseCoords {
         const geoidHeight = result[0] || 0.0;
         this.tileRequestInFlight = undefined;
         if (Cartographic.equals(position, this.cartographic)) {
-          // Comments to use SLM instead of ellipsoid height
-          //position.height = positionWithHeight.height - geoidHeight;
+          if (!terria.configParameters.useElevationMeanSeaLevel) {
+            position.height = positionWithHeight.height - geoidHeight;
+          }
           this.cartographicToFields(position);
         } else {
           // Mouse moved since we started this request, so the result isn't useful.  Try again next time.
