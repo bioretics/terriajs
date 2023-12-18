@@ -10,7 +10,8 @@ import Styles from "./menu-button.scss";
  * @constructor
  */
 function MenuButton(props) {
-  const target = props.href !== "#" ? "_blank" : undefined;
+  // const target = props.href !== "#" ? "_blank" : undefined;
+  const target = props.target;
   const rel = target === "_blank" ? "noreferrer" : undefined;
   return (
     <a
@@ -29,10 +30,12 @@ function MenuButton(props) {
 }
 
 MenuButton.defaultProps = {
-  href: "#"
+  href: "#",
+  target: "_blank"
 };
 
 MenuButton.propTypes = {
+  target: PropTypes.string,
   href: PropTypes.string,
   caption: PropTypes.string.isRequired
 };
