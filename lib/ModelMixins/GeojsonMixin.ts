@@ -1533,7 +1533,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
       return Promise.resolve(searchableData);
     }
 
-    getEnumValues(propertyName: string): string[] | undefined {
+    getEnumValues(propertyName: string): string[] {
       if (
         this.mapItems &&
         this.mapItems.length > 0 &&
@@ -1555,12 +1555,12 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
         this.numberOfTotalElements = this.mapItems[0].entities.values.length;
 
         return Array.from(values);
-      }
+      } else return [];
     }
 
     getFeaturePropertiesByName(
       propertyNames: string[]
-    ): { [key: string]: any }[] | undefined {
+    ): { [key: string]: any }[] {
       if (
         this.mapItems &&
         this.mapItems.length > 0 &&
@@ -1570,13 +1570,24 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
       ) {
         const results = this.mapItems[0].entities.values.map((entity) => {
           const obj = Object.fromEntries(
-            propertyNames.map((name) => [name, entity.properties?.[name]])
+            propertyNames.map((name) => {
+              const value = entity.properties?.[name];
+              const property = this.queryProperties?.[name];
+              return [
+                name,
+                property?.type === "enum" && property?.enumMultiValue
+                  ? ((value as ConstantProperty).valueOf() as string)
+                      .split(",")
+                      .map((txt) => txt.trim())
+                  : value
+              ];
+            })
           );
           obj["show"] = new ConstantProperty(entity.show);
           return obj;
         });
         return results;
-      }
+      } else return [];
     }
 
     filterData() {
@@ -1604,7 +1615,8 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                 )[key];
 
                 if (
-                  this.queryProperties?.[key].type === "enum" ||
+                  (this.queryProperties?.[key].type === "enum" &&
+                    !this.queryProperties?.[key].enumMultiValue) ||
                   this.queryProperties?.[key].type === "string" ||
                   this.queryProperties?.[key].type === "number"
                 ) {
@@ -1612,6 +1624,14 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
                     value[0].toLowerCase() === this.ENUM_ALL_VALUE ||
                     value[0].toLowerCase() === "" ||
                     entityValue.toLowerCase() === value[0].toLowerCase();
+                } else if (
+                  this.queryProperties?.[key].type === "enum" &&
+                  this.queryProperties?.[key].enumMultiValue
+                ) {
+                  visibility[index] =
+                    value[0].toLowerCase() === this.ENUM_ALL_VALUE ||
+                    value[0].toLowerCase() === "" ||
+                    entityValue.toLowerCase().includes(value[0].toLowerCase());
                 } else if (this.queryProperties?.[key].type === "date") {
                   if (value[0] === "" || value[1] === "") {
                     visibility[index] = true;

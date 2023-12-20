@@ -14,6 +14,7 @@ export interface QueryableProperties {
     decimalPlaces: number;
     canAggregate: boolean;
     sumOnAggregation: boolean;
+    enumMultiValue: boolean;
   };
 }
 
@@ -51,7 +52,8 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
               measureUnit: property.propertyMeasureUnit,
               decimalPlaces: property.propertyDecimalPlaces,
               canAggregate: property.canAggregate,
-              sumOnAggregation: property.sumOnAggregation
+              sumOnAggregation: property.sumOnAggregation,
+              enumMultiValue: property.enumMultiValue
             }
           };
         })
@@ -65,11 +67,11 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
 
     abstract filterData(): void;
 
-    abstract getEnumValues(propertyName: string): string[] | undefined;
+    abstract getEnumValues(propertyName: string): string[];
 
     abstract getFeaturePropertiesByName(
       propertyNames: string[]
-    ): { [key: string]: any }[] | undefined;
+    ): { [key: string]: any }[];
 
     @action
     updateEnumValues() {
@@ -77,14 +79,21 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
 
       const enums = Object.entries(this.queryProperties)
         .filter(([_, property]) => property.type === "enum")
-        .map(([name, _]) => {
-          return { [name]: this.getEnumValues(name) };
+        .map(([name, property]) => {
+          const values = this.getEnumValues(name);
+          return {
+            [name]: property.enumMultiValue
+              ? Array.from(
+                  new Set(
+                    values
+                      ?.map((elem) => elem.split(",").map((txt) => txt.trim()))
+                      .flat()
+                  )
+                )
+              : values
+          };
         });
-
-      this.enumValues = Object.assign(
-        {},
-        ...enums.filter((elem) => elem !== undefined)
-      );
+      this.enumValues = Object.assign({}, ...enums);
     }
 
     @action

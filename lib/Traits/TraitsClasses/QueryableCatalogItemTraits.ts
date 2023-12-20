@@ -56,6 +56,13 @@ export class QueryablePropertyTraits extends ModelTraits {
       "If true, on aggregation show also se sum of this value (only if type is 'number')"
   })
   sumOnAggregation: boolean = false;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "enumMultiValue",
+    description: "If true, enum values can represents multiple values."
+  })
+  enumMultiValue: boolean = false;
 }
 
 export default class QueryableCatalogItemTraits extends ModelTraits {

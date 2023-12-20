@@ -129,9 +129,19 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         const featuresPerClass: { [key: string]: number } = features.reduce(
           (obj, val) => {
             const name = val[aggregationProperty];
-            obj[name] =
-              (obj[name] ?? 0) +
-              (functionIsCount ? 1 : val[aggregationFunction]);
+
+            if (Array.isArray(name)) {
+              name.forEach((kk) => {
+                obj[kk] =
+                  (obj[kk] ?? 0) +
+                  (functionIsCount ? 1 : val[aggregationFunction]) /
+                    name.length;
+              });
+            } else {
+              obj[name] =
+                (obj[name] ?? 0) +
+                (functionIsCount ? 1 : val[aggregationFunction]);
+            }
             return obj;
           },
           {}
@@ -169,11 +179,6 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             : undefined;
         const measureUnit = functionProperty?.measureUnit ?? "";
         const decimalPlaces = functionProperty?.decimalPlaces ?? 0;
-
-        /*const currencyFormatter = new Intl.NumberFormat("it-IT", {
-          style: "currency",
-          currency: "EUR"
-        });*/
 
         setColumns([
           {
@@ -360,20 +365,17 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                 />
               </Box>
               <Box styledHeight="10%">
-                <h4>
-                  Valore totale:{" "}
-                  {aggregationFunction === defaultAggregationFunction.key
-                    ? data.reduce(
+                {aggregationFunction !== defaultAggregationFunction.key && (
+                  <h4>
+                    Valore totale:{" "}
+                    {currencyFormatter.format(
+                      data.reduce(
                         (accumulator, current) => accumulator + current.value,
                         0
                       )
-                    : currencyFormatter.format(
-                        data.reduce(
-                          (accumulator, current) => accumulator + current.value,
-                          0
-                        )
-                      )}
-                </h4>
+                    )}
+                  </h4>
+                )}
               </Box>
             </Box>
           );
