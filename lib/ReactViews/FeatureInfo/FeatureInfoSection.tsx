@@ -36,6 +36,7 @@ import {
   mustacheURLEncodeText,
   mustacheURLEncodeTextComponent
 } from "./mustacheExpressions";
+import ExportableMixin from "../../ModelMixins/ExportableMixin";
 import Terria from "../../Models/Terria";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 
@@ -89,7 +90,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       ],
       () => {
         this.checkAuth();
-        
+
         if (
           this.props.catalogItem.featureInfoTemplate.template &&
           this.mustacheContextData
@@ -290,9 +291,11 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       feature.description?.getValue(currentTime);
 
     if (this.fields && this.fields.length > 0) {
-      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><th>${this.fields.map(fieldName => {
-        return `${fieldName}</th><td>${feature.properties?.[fieldName]}`;
-      }).join("</td></tr><tr><th>")}</td></tr></tbody></table>`;
+      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><th>${this.fields
+        .map((fieldName) => {
+          return `${fieldName}</th><td>${feature.properties?.[fieldName]}`;
+        })
+        .join("</td></tr><tr><th>")}</td></tr></tbody></table>`;
     }
 
     if (isDefined(description)) return description;
@@ -362,16 +365,28 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   checkAuth = async () => {
     const feature = this.props.feature;
 
-    if (this.props.terria?.configParameters.userProfilesDefinition &&
+    if (
+      this.props.terria?.configParameters.userProfilesDefinition &&
       MappableMixin.isMixedInto(this.props.catalogItem) &&
-      (!this.props.terria.profile || (this.props.terria.profile && !this.props.terria.profile?.isAdmin))) {
-      if (this.props.terria.userAuthToken && this.props.terria.userProfile && this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck) {
-        const proxiedUrl = this.props.terria?.corsProxy.getURL(this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck);
+      (!this.props.terria.profile ||
+        (this.props.terria.profile && !this.props.terria.profile?.isAdmin))
+    ) {
+      if (
+        this.props.terria.userAuthToken &&
+        this.props.terria.userProfile &&
+        this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+      ) {
+        const proxiedUrl = this.props.terria?.corsProxy.getURL(
+          this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+        );
         try {
           const result = await CesiumResource.fetchJson({
             url: proxiedUrl,
             queryParameters: {
-              idIntervento: /*feature.properties?.["id"]*/feature.properties?.[feature.properties.propertyNames[0]],
+              idIntervento:
+                /*feature.properties?.["id"]*/ feature.properties?.[
+                  feature.properties.propertyNames[0]
+                ],
               authToken: this.props.terria.userAuthToken
             }
           });
@@ -382,20 +397,28 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
             throw "Request failed";
           }
         } catch (error) {
-          this.setFields(this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[String(this.props.terria?.userProfile)] as string[]);
+          this.setFields(
+            this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
+              String(this.props.terria?.userProfile)
+            ] as string[]
+          );
         }
       } else {
-        this.setFields(this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[String(this.props.terria?.userProfile)] as string[]);
+        this.setFields(
+          this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
+            String(this.props.terria?.userProfile)
+          ] as string[]
+        );
       }
     } else {
       this.setFields(undefined);
     }
-  }
+  };
 
   @action
   setFields = (newFields: string[] | undefined) => {
     this.fields = newFields;
-  }
+  };
 
   render() {
     const { t } = this.props;
@@ -415,12 +438,16 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
 
     /** Show feature info download if showing raw data - or showing template and `showFeatureInfoDownloadWithTemplate` is true
      */
+    const canExport = ExportableMixin.isMixedInto(this.props.catalogItem)
+      ? !(this.props.catalogItem as ExportableMixin.Instance).disableExport
+      : true;
     const showFeatureInfoDownload =
-      this.showRawData ||
-      !this.templatedFeatureInfoReactNode ||
-      (this.templatedFeatureInfoReactNode &&
-        this.props.catalogItem.featureInfoTemplate
-          .showFeatureInfoDownloadWithTemplate);
+      (this.showRawData ||
+        !this.templatedFeatureInfoReactNode ||
+        (this.templatedFeatureInfoReactNode &&
+          this.props.catalogItem.featureInfoTemplate
+            .showFeatureInfoDownloadWithTemplate)) &&
+      canExport;
 
     const titleElement = this.props.printView ? (
       <h2>{title}</h2>
@@ -499,19 +526,19 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 !this.props.printView &&
                 showFeatureInfoDownload &&
                 isDefined(this.downloadableData.data) ? (
-                    <>
-                      <FeatureInfoDownload
-                        key="download"
-                        data={this.downloadableData.data}
-                        name={this.downloadableData.fileName}
-                      />
-                      <br />
-                      <br />
-                      <br />
-                      <br />
-                      <br />
-                      <br />
-                    </>
+                  <>
+                    <FeatureInfoDownload
+                      key="download"
+                      data={this.downloadableData.data}
+                      name={this.downloadableData.fileName}
+                    />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                  </>
                 ) : null
               }
             </div>
