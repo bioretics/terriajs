@@ -9,7 +9,7 @@ import Button from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
 
 const QueryTabTable: React.FC<TabPropsType> = observer(
-  ({ item }: TabPropsType) => {
+  ({ item, terria }: TabPropsType) => {
     const [columns, setColumns] = useState<TableColumn<Map<string, any>>[]>([]);
     const [data, setData] = useState<Map<string, any>[]>([]);
 
@@ -111,19 +111,21 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
           striped
           highlightOnHover
         />
-        <Box>
-          <Button
-            primary
-            css={`
-              width: 100px;
-              border-radius: 2px;
-              margin: 10px;
-            `}
-            onClick={downloadTable}
-          >
-            Download
-          </Button>
-        </Box>
+        {terria.isFeatureAllowedByProfile("DownloadQueryData") && (
+          <Box>
+            <Button
+              primary
+              css={`
+                width: 100px;
+                border-radius: 2px;
+                margin: 10px;
+              `}
+              onClick={downloadTable}
+            >
+              Download
+            </Button>
+          </Box>
+        )}
       </>
     );
   }

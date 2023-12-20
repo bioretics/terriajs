@@ -10,9 +10,11 @@ import QueryTabTable from "./QueryTabTable";
 import styled from "styled-components";
 import { Button } from "../../Styled/Button";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
+import Terria from "../../Models/Terria";
 
 export interface TabPropsType {
   item: QueryableCatalogItemMixin.Instance;
+  terria: Terria;
 }
 
 const Tabs: {
@@ -96,7 +98,12 @@ export default observer<React.FC>(function QueryWindow() {
             {viewState.terria.itemToQuery &&
               QueryableCatalogItemMixin.isMixedInto(
                 viewState.terria.itemToQuery
-              ) && <CurrentComponent item={viewState.terria.itemToQuery} />}
+              ) && (
+                <CurrentComponent
+                  item={viewState.terria.itemToQuery}
+                  terria={viewState.terria}
+                />
+              )}
           </div>
         </section>
       </div>

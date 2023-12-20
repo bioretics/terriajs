@@ -357,6 +357,18 @@ interface ConfigParameters {
    * If true elevation is intended MSL, otherwise WGS84
    */
   useElevationMeanSeaLevel: boolean;
+
+  /**
+   * Url to login service
+   */
+  userProfileLoginServiceUrl?: string;
+
+  /**
+   * Types of user profile
+   */
+  userProfilesDefinition?: {
+    [key: string]: { allowed: string[]; isAdmin: boolean };
+  };
 }
 
 interface StartOptions {
@@ -595,7 +607,9 @@ export default class Terria {
     coordsConverterUrl: undefined,
     mouseAsInfoDefaultValue: false,
     useMyLocationFromDesktop: true,
-    useElevationMeanSeaLevel: false
+    useElevationMeanSeaLevel: false,
+    userProfilesDefinition: undefined,
+    userProfileLoginServiceUrl: undefined
   };
 
   @observable
@@ -648,6 +662,18 @@ export default class Terria {
    * @type {Message}
    */
   @observable messageModal?: MessageModal;
+
+  /**
+   * Gets or sets user profile.
+   * @type {string}
+   */
+  @observable userProfile?: string;
+
+  /**
+   * Gets or sets user auth token.
+   * @type {string}
+   */
+  @observable userAuthToken?: string;
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
@@ -707,6 +733,13 @@ export default class Terria {
   @observable private _previewedItemId: string | undefined;
   get previewedItemId() {
     return this._previewedItemId;
+  }
+
+  @computed
+  get profile() {
+    return this.userProfile
+      ? this.configParameters.userProfilesDefinition?.[this.userProfile]
+      : undefined;
   }
 
   /**
@@ -2130,6 +2163,14 @@ export default class Terria {
     window.localStorage.setItem(this.appName + "." + key, value.toString());
     return true;
   }
+
+  isFeatureAllowedByProfile(featureName: string): boolean {
+    if (!this.configParameters.userProfilesDefinition) return true;
+    if (!this.userProfile) return false;
+    const profile =
+      this.configParameters.userProfilesDefinition[this.userProfile];
+    return profile.isAdmin || profile.allowed.includes(featureName);
+  }
 }
 
 function generateInitializationUrl(
@@ -2169,7 +2210,16 @@ async function interpretHash(
 
   runInAction(() => {
     Object.keys(hashProperties).forEach(function (property) {
-      if (["clean", "hideWelcomeMessage", "start", "share"].includes(property))
+      if (
+        [
+          "clean",
+          "hideWelcomeMessage",
+          "start",
+          "share",
+          "profile",
+          "authToken"
+        ].includes(property)
+      )
         return;
       const propertyValue = hashProperties[property];
       if (defined(propertyValue) && propertyValue.length > 0) {
@@ -2188,6 +2238,11 @@ async function interpretHash(
       }
     });
   });
+
+  if (isDefined(hashProperties.profile)) {
+    terria.userProfile = hashProperties.profile;
+    terria.userAuthToken = hashProperties.authToken;
+  }
 
   if (isDefined(hashProperties.hideWelcomeMessage)) {
     terria.configParameters.showWelcomeMessage = false;

@@ -36,6 +36,8 @@ import {
   mustacheURLEncodeText,
   mustacheURLEncodeTextComponent
 } from "./mustacheExpressions";
+import Terria from "../../Models/Terria";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 
 // We use Mustache templates inside React views, where React does the escaping; don't escape twice, or eg. " => &quot;
 Mustache.escape = function (string) {
@@ -50,12 +52,15 @@ interface FeatureInfoProps extends WithViewState {
   onClickHeader?: (feature: TerriaFeature) => void;
   printView?: boolean;
   t: TFunction;
+  terria?: Terria;
 }
 
 @observer
 export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   private templateReactionDisposer: IDisposer | undefined;
   private removeFeatureChangedSubscription: (() => void) | undefined;
+
+  @observable private fields?: string[];
 
   /** Rendered feature info template - this is set using reaction.
    * We can't use `@computed` values for custom templates - as CustomComponents may cause side-effects.
@@ -83,6 +88,8 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         this.mustacheContextData
       ],
       () => {
+        this.checkAuth();
+        
         if (
           this.props.catalogItem.featureInfoTemplate.template &&
           this.mustacheContextData
@@ -150,7 +157,8 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       MappableMixin.isMixedInto(this.props.catalogItem) &&
         this.props.catalogItem.featureInfoTemplate.formats
         ? this.props.catalogItem.featureInfoTemplate.formats
-        : undefined
+        : undefined,
+      this.fields
     );
   }
 
@@ -281,6 +289,12 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     let description: string | undefined =
       feature.description?.getValue(currentTime);
 
+    if (this.fields && this.fields.length > 0) {
+      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><th>${this.fields.map(fieldName => {
+        return `${fieldName}</th><td>${feature.properties?.[fieldName]}`;
+      }).join("</td></tr><tr><th>")}</td></tr></tbody></table>`;
+    }
+
     if (isDefined(description)) return description;
 
     if (isDefined(feature.properties)) {
@@ -343,6 +357,44 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
           : undefined,
       fileName
     };
+  }
+
+  checkAuth = async () => {
+    const feature = this.props.feature;
+
+    if (this.props.terria?.configParameters.userProfilesDefinition &&
+      MappableMixin.isMixedInto(this.props.catalogItem) &&
+      (!this.props.terria.profile || (this.props.terria.profile && !this.props.terria.profile?.isAdmin))) {
+      if (this.props.terria.userAuthToken && this.props.terria.userProfile && this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck) {
+        const proxiedUrl = this.props.terria?.corsProxy.getURL(this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck);
+        try {
+          const result = await CesiumResource.fetchJson({
+            url: proxiedUrl,
+            queryParameters: {
+              idIntervento: /*feature.properties?.["id"]*/feature.properties?.[feature.properties.propertyNames[0]],
+              authToken: this.props.terria.userAuthToken
+            }
+          });
+
+          if (result && result.status === 200) {
+            this.setFields(undefined);
+          } else {
+            throw "Request failed";
+          }
+        } catch (error) {
+          this.setFields(this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[String(this.props.terria?.userProfile)] as string[]);
+        }
+      } else {
+        this.setFields(this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[String(this.props.terria?.userProfile)] as string[]);
+      }
+    } else {
+      this.setFields(undefined);
+    }
+  }
+
+  @action
+  setFields = (newFields: string[] | undefined) => {
+    this.fields = newFields;
   }
 
   render() {

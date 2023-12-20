@@ -21,7 +21,8 @@ import { formatDateTime } from "./mustacheExpressions";
 export default function getFeatureProperties(
   feature: TerriaFeature,
   currentTime: JulianDate,
-  formats?: Record<string, FeatureInfoFormat>
+  formats?: Record<string, FeatureInfoFormat>,
+  featureFields?: string[]
 ) {
   const properties = propertyGetTimeValues(feature, currentTime);
 
@@ -30,6 +31,17 @@ export default function getFeatureProperties(
   // Try JSON.parse on values that look like JSON arrays or objects
   let result = parseValues(properties);
   result = replaceBadKeyCharacters(result);
+
+  if (featureFields) {
+    result = Object.assign(
+      {},
+      ...Object.entries(result)
+        .filter(([key, _]) => featureFields.includes(key))
+        .map(([key, value]) => {
+          return { [key]: value };
+        })
+    );
+  }
 
   if (formats) {
     applyFormatsInPlace(result, formats);

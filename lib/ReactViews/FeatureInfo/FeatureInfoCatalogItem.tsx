@@ -85,6 +85,7 @@ export default (props: Props) => {
               isOpen={!!(feature === terria.selectedFeature || props.printView)}
               onClickHeader={props.onToggleOpen}
               printView={props.printView}
+              terria={terria}
             />
           );
         })}
