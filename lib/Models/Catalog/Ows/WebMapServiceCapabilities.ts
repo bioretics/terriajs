@@ -132,7 +132,8 @@ type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 export function getRectangleFromLayer(
   layer: CapabilitiesLayer
 ): StratumFromTraits<RectangleTraits> | undefined {
-  var egbb = layer.EX_GeographicBoundingBox; // required in WMS 1.3.0
+  var egbb =
+    layer.EX_GeographicBoundingBox ?? layer._parent?.EX_GeographicBoundingBox; // required in WMS 1.3.0
   if (egbb) {
     return {
       west: egbb.westBoundLongitude,
