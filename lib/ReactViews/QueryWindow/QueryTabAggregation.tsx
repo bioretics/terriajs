@@ -33,7 +33,7 @@ const currencyFormatter = new Intl.NumberFormat("it-IT", {
 });
 
 const QueryTabPanel: React.FC<TabPropsType> = observer(
-  ({ item }: TabPropsType) => {
+  ({ item, terria }: TabPropsType) => {
     const [aggregationProperty, setAggregationProperty] = useState<string>();
     const [aggregationFunction, setAggregationFunction] = useState<string>();
     const [chartType, setChartType] = useState<ChartType>(ChartType.Pie);
@@ -305,17 +305,19 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               >
                 Cambia colori
               </Button>
-              <Button
-                primary
-                css={`
-                  width: 100px;
-                  border-radius: 2px;
-                  margin: 5px;
-                `}
-                onClick={downloadScreenshot}
-              >
-                Download screenshot
-              </Button>
+              {terria.isFeatureAllowedByProfile("DownloadQueryData") && (
+                <Button
+                  primary
+                  css={`
+                    width: 100px;
+                    border-radius: 2px;
+                    margin: 5px;
+                  `}
+                  onClick={downloadScreenshot}
+                >
+                  Download screenshot
+                </Button>
+              )}
             </Box>
           )}
         </>
