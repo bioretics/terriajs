@@ -594,7 +594,7 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
               const pinBuilder = new PinBuilder();
               dataSource.clustering.enabled = true;
               dataSource.clustering.pixelRange = 35;
-              dataSource.clustering.minimumClusterSize = 4;
+              dataSource.clustering.minimumClusterSize = 5;
               dataSource.clustering.clusterEvent.addEventListener(function (
                 entities,
                 cluster
