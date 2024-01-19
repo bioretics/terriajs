@@ -158,7 +158,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             return {
               name: key,
               value: value,
-              valuePerc: Math.round((value / tot + Number.EPSILON) * 100)
+              valuePerc: Math.round((value / tot + Number.EPSILON) * 1000) / 10
             };
           })
           //.filter((elem) => elem.valuePerc > 0)
