@@ -169,20 +169,6 @@ export default class UserDrawing extends MappableMixin(
       }
       this.prepareToAddNewPoint();
     });
-
-    this.disposeClampMeasureLineToGround = reaction(
-      () => this.terria?.clampMeasureLineToGround,
-      (clampMeasureLineToGround) => {
-        if (
-          this.otherEntities.entities.values.length > 0 &&
-          this.otherEntities.entities.values[0]?.polyline
-        ) {
-          this.otherEntities.entities.values[0].polyline.clampToGround =
-            new ConstantProperty(clampMeasureLineToGround);
-        }
-      },
-      { equals: (a, b) => a === b }
-    );
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -229,6 +215,19 @@ export default class UserDrawing extends MappableMixin(
     runInAction(() => {
       this.inDrawMode = true;
     });
+
+    this.disposeClampMeasureLineToGround = reaction(
+      () => this.terria?.clampMeasureLineToGround,
+      (clampMeasureLineToGround) => {
+        if (
+          this.otherEntities.entities.values.length > 0 &&
+          this.otherEntities.entities.values[0]?.polyline
+        ) {
+          this.otherEntities.entities.values[0].polyline.clampToGround =
+            new ConstantProperty(clampMeasureLineToGround);
+        }
+      }
+    );
 
     if (isDefined(this.terria.cesium)) {
       this.terria.cesium.cesiumWidget.canvas.setAttribute(
@@ -648,8 +647,10 @@ export default class UserDrawing extends MappableMixin(
    */
   cleanUp() {
     this.terria.overlays.remove(this);
-    this.pointEntities = new CustomDataSource("Points");
-    this.otherEntities = new CustomDataSource("Lines and polygons");
+    //this.pointEntities = new CustomDataSource("Points");
+    //this.otherEntities = new CustomDataSource("Lines and polygons");
+    this.pointEntities.entities.removeAll();
+    this.otherEntities.entities.removeAll();
 
     this.terria.allowFeatureInfoRequests = true;
 
