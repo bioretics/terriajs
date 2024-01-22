@@ -225,6 +225,7 @@ export default class UserDrawing extends MappableMixin(
         ) {
           this.otherEntities.entities.values[0].polyline.clampToGround =
             new ConstantProperty(clampMeasureLineToGround);
+          this.terria.currentViewer.notifyRepaintRequired();
         }
       }
     );
