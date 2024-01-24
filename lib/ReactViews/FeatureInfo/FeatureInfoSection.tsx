@@ -80,24 +80,23 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   @observable featureChangedCounter = 0;
 
   componentDidMount() {
+    this.checkAuth();
+
     this.templateReactionDisposer = reaction(
       () => [
         this.props.feature,
         this.props.catalogItem.featureInfoTemplate.template,
         this.props.catalogItem.featureInfoTemplate.partials,
+        this.props.catalogItem.featureInfoTemplate.perProfileInfoFields,
         // Note `mustacheContextData` will trigger update when `currentTime` changes (through this.featureProperties)
         this.mustacheContextData
       ],
       () => {
-        this.checkAuth();
-
-        if (
-          this.props.catalogItem.featureInfoTemplate.template &&
-          this.mustacheContextData
-        ) {
+        if (this.template && this.mustacheContextData) {
           this.templatedFeatureInfoReactNode = parseCustomMarkdownToReact(
             Mustache.render(
-              this.props.catalogItem.featureInfoTemplate.template,
+              //this.props.catalogItem.featureInfoTemplate.template,
+              this.template,
               this.mustacheContextData,
               this.props.catalogItem.featureInfoTemplate.partials
             ),
@@ -161,6 +160,20 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         : undefined,
       this.fields
     );
+  }
+
+  @computed get template() {
+    if (this.fields && this.fields.length > 0) {
+      return `<table><tbody><tr><td>
+        ${this.fields
+          .map((fieldName) => {
+            return `{{#terria.partialByName}}${fieldName}{{/terria.partialByName}}</td><td>{{${fieldName}}}`;
+          })
+          .join("</td></tr><tr><td>")}
+      </td></tr></tbody></table>`;
+    } else {
+      return this.props.catalogItem.featureInfoTemplate.template;
+    }
   }
 
   /** This monstrosity contains properties which can be used by Mustache templates:
@@ -291,11 +304,11 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       feature.description?.getValue(currentTime);
 
     if (this.fields && this.fields.length > 0) {
-      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><th>${this.fields
+      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><td>${this.fields
         .map((fieldName) => {
-          return `${fieldName}</th><td>${feature.properties?.[fieldName]}`;
+          return `${fieldName}</td><td>${feature.properties?.[fieldName]}`;
         })
-        .join("</td></tr><tr><th>")}</td></tr></tbody></table>`;
+        .join("</td></tr><tr><td>")}</td></tr></tbody></table>`;
     }
 
     if (isDefined(description)) return description;
@@ -384,15 +397,13 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
             url: proxiedUrl,
             queryParameters: {
               idIntervento:
-                /*feature.properties?.["id"]*/ feature.properties?.[
-                  feature.properties.propertyNames[0]
-                ],
+                feature.properties?.[feature.properties.propertyNames[0]],
               authToken: this.props.terria.userAuthToken
             }
           });
 
           if (result && result.status === 200) {
-            this.setFields(undefined);
+            this.setFields(this.props.feature.properties?.propertyNames);
           } else {
             throw "Request failed";
           }
