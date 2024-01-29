@@ -60,7 +60,12 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
       if (item.queryProperties) {
         const featProps = item.getFeaturePropertiesByName(
           Object.entries(item.queryProperties)
-            .filter(([_, elem]) => elem.canAggregate || elem.sumOnAggregation || elem.distributionOnAggregation)
+            .filter(
+              ([_, elem]) =>
+                elem.canAggregate ||
+                elem.sumOnAggregation ||
+                elem.distributionOnAggregation
+            )
             .map(([key, _]) => key)
         );
 
@@ -102,8 +107,11 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
           setAggregationFunction(functions[0].key);
         }
 
-        setDistributionProperty(Object.entries(item.queryProperties ?? {})
-          .find(([_, elem]) => { return elem.distributionOnAggregation })?.[0]);
+        setDistributionProperty(
+          Object.entries(item.queryProperties ?? {}).find(([_, elem]) => {
+            return elem.distributionOnAggregation;
+          })?.[0]
+        );
 
         setFilterText(
           Object.entries(item.queryValues ?? {})
@@ -130,27 +138,39 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
           : featureProperties.current.filter(
               (elem) => !!(elem.show as ConstantProperty).valueOf()
             );
-        
-        const distrib = !functionIsCount && distributionProperty ? 
-          item.queryProperties?.[distributionProperty].dictionaryKeyProperties.find(elem => elem.queryProperty === aggregationProperty) :
-          undefined;
+
+        const distrib =
+          !functionIsCount && distributionProperty
+            ? item.queryProperties?.[
+                distributionProperty
+              ].dictionaryKeyProperties.find(
+                (elem) => elem.queryProperty === aggregationProperty
+              )
+            : undefined;
 
         const percCount: { [key: string]: number } = {};
         const featuresPerClass: { [key: string]: number } = features.reduce(
           (obj, val) => {
             const name = val[aggregationProperty];
 
-            if(distrib && distributionProperty) {
-              const distribDictionary = val[distributionProperty][distrib.key] as { [key: string]: any }[];
+            if (distrib && distributionProperty) {
+              const distribDictionary = val[distributionProperty][
+                distrib.key
+              ] as { [key: string]: any }[];
               distribDictionary.forEach((elem) => {
                 const alias = elem[distrib.alias] as string;
-                const distribution = elem[distrib.valueProperty] as number * 0.01;
-                obj[alias] = (obj[alias] ?? 0) + (functionIsCount ? 1 : val[aggregationFunction]) * distribution;
+                const distribution =
+                  (elem[distrib.valueProperty] as number) * 0.01;
+                obj[alias] =
+                  (obj[alias] ?? 0) +
+                  (functionIsCount ? 1 : val[aggregationFunction]) *
+                    distribution;
               });
-            }
-            else if (Array.isArray(name)) {
+            } else if (Array.isArray(name)) {
               name.forEach((kk) => {
-                obj[kk] = (obj[kk] ?? 0) + (functionIsCount ? 1 : val[aggregationFunction]);
+                obj[kk] =
+                  (obj[kk] ?? 0) +
+                  (functionIsCount ? 1 : val[aggregationFunction]);
                 percCount[kk] = (percCount[kk] ?? 0) + 1 / name.length;
               });
             } else {
@@ -175,7 +195,12 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             return {
               name: key,
               value: value,
-              valuePerc: Math.round(((functionIsCount ? percCount[key] : value) / tot + Number.EPSILON) * 1000) / 10
+              valuePerc:
+                Math.round(
+                  ((functionIsCount ? percCount[key] : value) / tot +
+                    Number.EPSILON) *
+                    1000
+                ) / 10
             };
           })
         );

@@ -16,7 +16,12 @@ export interface QueryableProperties {
     sumOnAggregation: boolean;
     distributionOnAggregation: boolean;
     enumMultiValue: boolean;
-    dictionaryKeyProperties: {key: string, alias: string, queryProperty: string, valueProperty: string}[];
+    dictionaryKeyProperties: {
+      key: string;
+      alias: string;
+      queryProperty: string;
+      valueProperty: string;
+    }[];
   };
 }
 
@@ -47,9 +52,16 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       return Object.assign(
         {},
         ...this.queryableProperties.map((property) => {
-          const dictionaryKeyProperties = property.dictionaryKeyProperties.map(elem => {
-            return { key: elem.key, alias: elem.alias, queryProperty: elem.queryProperty, valueProperty: elem.valueProperty };
-          });
+          const dictionaryKeyProperties = property.dictionaryKeyProperties.map(
+            (elem) => {
+              return {
+                key: elem.key,
+                alias: elem.alias,
+                queryProperty: elem.queryProperty,
+                valueProperty: elem.valueProperty
+              };
+            }
+          );
 
           return {
             [property.propertyName]: {
