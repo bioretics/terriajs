@@ -194,26 +194,27 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
             </StyledLabel>
             <Spacing bottom={3} />
             <Box style={{ display: "flex", flexDirection: "row-reverse" }}>
-              {viewState.terria.isFeatureAllowedByProfile("QueryData") && (
-                <Button
-                  primary
-                  title="Mostra i dati come grafici e tabelle"
-                  css={`
-                    width: 14px;
-                    border-radius: 2px;
-                    margin: 2px;
-                  `}
-                  onClick={() =>
-                    runInAction(() => viewState.openQueryData(item))
-                  }
-                >
-                  <StyledIcon
-                    light={true}
-                    glyph={GLYPHS.chartTable}
-                    styledWidth="30px"
-                  />
-                </Button>
-              )}
+              {viewState.terria.isFeatureAllowedByProfile("QueryData") &&
+                !viewState.useSmallScreenInterface && (
+                  <Button
+                    primary
+                    title="Mostra i dati come grafici e tabelle"
+                    css={`
+                      width: 14px;
+                      border-radius: 2px;
+                      margin: 2px;
+                    `}
+                    onClick={() =>
+                      runInAction(() => viewState.openQueryData(item))
+                    }
+                  >
+                    <StyledIcon
+                      light={true}
+                      glyph={GLYPHS.chartTable}
+                      styledWidth="30px"
+                    />
+                  </Button>
+                )}
               <Button
                 primary
                 title="Cancella i filtri"
