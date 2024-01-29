@@ -86,7 +86,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
             <Box displayInlineBlock fullWidth>
               {Object.entries(item.queryProperties)
                 .filter(([_, property]) => {
-                  return !property.sumOnAggregation;
+                  return !(property.sumOnAggregation || property.distributionOnAggregation);
                 })
                 .map(([propertyName, property]) => {
                   return (

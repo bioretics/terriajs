@@ -14,7 +14,9 @@ export interface QueryableProperties {
     decimalPlaces: number;
     canAggregate: boolean;
     sumOnAggregation: boolean;
+    distributionOnAggregation: boolean;
     enumMultiValue: boolean;
+    dictionaryKeyProperties: {key: string, alias: string, queryProperty: string, valueProperty: string}[];
   };
 }
 
@@ -45,6 +47,10 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       return Object.assign(
         {},
         ...this.queryableProperties.map((property) => {
+          const dictionaryKeyProperties = property.dictionaryKeyProperties.map(elem => {
+            return { key: elem.key, alias: elem.alias, queryProperty: elem.queryProperty, valueProperty: elem.valueProperty };
+          });
+
           return {
             [property.propertyName]: {
               type: property.propertyType,
@@ -53,7 +59,9 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
               decimalPlaces: property.propertyDecimalPlaces,
               canAggregate: property.canAggregate,
               sumOnAggregation: property.sumOnAggregation,
-              enumMultiValue: property.enumMultiValue
+              distributionOnAggregation: property.distributionOnAggregation,
+              enumMultiValue: property.enumMultiValue,
+              dictionaryKeyProperties: dictionaryKeyProperties
             }
           };
         })

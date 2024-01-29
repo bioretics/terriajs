@@ -2,6 +2,36 @@ import ModelTraits from "../ModelTraits";
 import primitiveTrait from "../Decorators/primitiveTrait";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
 
+export class DictionaryPropertyTraits extends ModelTraits {
+  @primitiveTrait({
+    type: "string",
+    name: "key",
+    description: "The dictionary key"
+  })
+  key: string = "";
+
+  @primitiveTrait({
+    type: "string",
+    name: "alias",
+    description: "The alias used"
+  })
+  alias: string = "";
+
+  @primitiveTrait({
+    type: "string",
+    name: "queryProperty",
+    description: "The QueryableProperty to use in key"
+  })
+  queryProperty: string = "";
+
+  @primitiveTrait({
+    type: "string",
+    name: "valueProperty",
+    description: "The QueryableProperty to use in value"
+  })
+  valueProperty: string = "";
+}
+
 export class QueryablePropertyTraits extends ModelTraits {
   @primitiveTrait({
     type: "string",
@@ -40,7 +70,7 @@ export class QueryablePropertyTraits extends ModelTraits {
     description:
       "The type of the property, one of string, number, enum (use all property values from the layer), date (use a range of two dates)"
   })
-  propertyType: "string" | "number" | "enum" | "date" = "string";
+  propertyType: "string" | "number" | "enum" | "date" | "dictionary" = "string";
 
   @primitiveTrait({
     type: "boolean",
@@ -63,6 +93,22 @@ export class QueryablePropertyTraits extends ModelTraits {
     description: "If true, enum values can represents multiple values."
   })
   enumMultiValue: boolean = false;
+
+  @objectArrayTrait({
+    name: "Properties used key of dictionary",
+    type: DictionaryPropertyTraits,
+    description: "The properties to use as key of dictionary properties",
+    idProperty: "key"
+  })
+  dictionaryKeyProperties?: DictionaryPropertyTraits[];
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "distributionOnAggregation",
+    description:
+      "If true, on aggregation use the properties to distribute values (only if type is 'dictionary')"
+  })
+  distributionOnAggregation: boolean = false;
 }
 
 export default class QueryableCatalogItemTraits extends ModelTraits {

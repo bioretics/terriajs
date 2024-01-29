@@ -1575,7 +1575,9 @@ function GeoJsonMixin<T extends Constructor<Model<GeoJsonTraits>>>(Base: T) {
               const property = this.queryProperties?.[name];
               return [
                 name,
-                property?.type === "enum" && property?.enumMultiValue
+                property?.type === "dictionary"
+                  ? JSON.parse((value as ConstantProperty).valueOf() as string)
+                  : property?.type === "enum" && property?.enumMultiValue
                   ? ((value as ConstantProperty).valueOf() as string)
                       .split(",")
                       .map((txt) => txt.trim())
