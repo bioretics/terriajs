@@ -235,13 +235,15 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               return measureUnit === "€"
                 ? currencyFormatter.format(row.value)
                 : `${measureUnit} ${row.value.toFixed(decimalPlaces)}`;
-            }
+            },
+            right: true
           },
           {
             name: "Percentuale",
             selector: (row) => row.valuePerc,
             sortable: true,
-            format: (row) => `${row.valuePerc}%`
+            format: (row) => `${row.valuePerc.toFixed(1)}%`,
+            right: true
           }
         ]);
       }
@@ -346,7 +348,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
               >
                 Cambia colori
               </Button>
-              {terria.isFeatureAllowedByProfile("DownloadQueryData") && (
+              {terria?.isFeatureAllowedByProfile("DownloadQueryData") && (
                 <Button
                   primary
                   css={`

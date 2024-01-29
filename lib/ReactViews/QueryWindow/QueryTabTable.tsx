@@ -34,13 +34,8 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
         item.queryProperties
       ) {
         const fields = Object.entries(item.queryProperties ?? {})
-          .filter(([key, elem]) => {
-            return (
-              elem.canAggregate || elem.sumOnAggregation /*&&
-              !item.queryValues?.[key].some(
-                (val) => val && val !== "" && val !== item.ENUM_ALL_VALUE
-              )*/
-            );
+          .filter(([_, elem]) => {
+            return elem.canAggregate || elem.sumOnAggregation;
           })
           .map(([key, elem]) => {
             return {
@@ -111,7 +106,7 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
           striped
           highlightOnHover
         />
-        {terria.isFeatureAllowedByProfile("DownloadQueryData") && (
+        {terria?.isFeatureAllowedByProfile("DownloadQueryData") && (
           <Box>
             <Button
               primary

@@ -135,10 +135,10 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
       this.queryValues = Object.assign({}, ...initialValues);
     }
 
-    @action
-    resetQueryValues() {
+    /*@action
+    resetQueryValues() {      
       this.queryValues = undefined;
-    }
+    }*/
 
     @action
     cleanQueryValues() {

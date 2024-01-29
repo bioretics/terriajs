@@ -40,13 +40,13 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
       }
     }, [showQuerySection, item]);
 
-    useEffect(() => {
+    /*useEffect(() => {
       return () => {
-        if (QueryableCatalogItemMixin.isMixedInto(item)) {
+        if (QueryableCatalogItemMixin.isMixedInto(item) && !item.queryValues) {
           item.resetQueryValues();
         }
       };
-    }, []);
+    }, []);*/
 
     if (
       !QueryableCatalogItemMixin.isMixedInto(item) ||
