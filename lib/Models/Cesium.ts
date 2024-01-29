@@ -88,6 +88,12 @@ import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 import Color from "terriajs-cesium/Source/Core/Color";
 import CommonStrata from "./Definition/CommonStrata";
+import {
+  SceneMode,
+  WebMercatorProjection,
+  GeographicProjection
+} from "terriajs-cesium";
+import ViewerMode from "./ViewerMode";
 
 //import Cesium3DTilesInspector from "terriajs-cesium/Source/Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector";
 
@@ -172,6 +178,14 @@ export default class Cesium extends GlobeOrMap {
       clock: this.terria.timelineClock,
       imageryProvider: new SingleTileImageryProvider({ url: img }),
       scene3DOnly: true,
+      sceneMode:
+        terriaViewer.viewerMode && terriaViewer.viewerMode === ViewerMode.Cesium
+          ? SceneMode.SCENE3D
+          : SceneMode.SCENE2D,
+      mapProjection:
+        terriaViewer.viewerMode && terriaViewer.viewerMode === ViewerMode.Cesium
+          ? new GeographicProjection()
+          : new WebMercatorProjection(),
       shadows: true,
       useBrowserRecommendedResolution: !this.terria.useNativeResolution
     };
@@ -797,6 +811,13 @@ export default class Cesium extends GlobeOrMap {
       if (target instanceof Rectangle) {
         // target is a Rectangle
 
+        if (this.terriaViewer.viewerMode === ViewerMode.Leaflet) {
+          return flyToPromise(camera, {
+            duration: flightDurationSeconds,
+            destination: target
+          });
+        }
+
         // Work out the destination that the camera would naturally fly to
         const destinationCartesian =
           camera.getRectangleCameraCoordinates(target);
@@ -979,6 +1000,16 @@ export default class Cesium extends GlobeOrMap {
   getCurrentCameraView(): CameraView {
     const scene = this.scene;
     const camera = scene.camera;
+
+    if (
+      this.terriaViewer.viewerMode &&
+      this.terriaViewer.viewerMode === ViewerMode.Cesium
+    ) {
+      const rect = camera.computeViewRectangle();
+      if (rect) {
+        return new CameraView(rect);
+      }
+    }
 
     const width = scene.canvas.clientWidth;
     const height = scene.canvas.clientHeight;

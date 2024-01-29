@@ -847,7 +847,7 @@ export default class Terria {
   get cesium(): import("./Cesium").default | undefined {
     if (
       isDefined(this.mainViewer) &&
-      this.mainViewer.currentViewer.type === "Cesium"
+      this.mainViewer.currentViewer.type !== "none"
     ) {
       return this.mainViewer.currentViewer as import("./Cesium").default;
     }
@@ -863,12 +863,13 @@ export default class Terria {
 
   @computed
   get leaflet(): import("./Leaflet").default | undefined {
-    if (
+    /*if (
       isDefined(this.mainViewer) &&
       this.mainViewer.currentViewer.type === "Leaflet"
     ) {
       return this.mainViewer.currentViewer as import("./Leaflet").default;
-    }
+    }*/
+    return undefined;
   }
 
   @computed get modelValues() {

@@ -144,9 +144,13 @@ export default class TerriaViewer {
     let newViewer: GlobeOrMap;
     try {
       if (this.attached && this.viewerMode === ViewerMode.Leaflet) {
-        const LeafletOrNoViewer = this._getLeafletIfLoaded();
+        /*const LeafletOrNoViewer = this._getLeafletIfLoaded();
         newViewer = untracked(
           () => new LeafletOrNoViewer(this, this.mapContainer!)
+        );*/
+        const CesiumOrNoViewer = this._getCesiumIfLoaded();
+        newViewer = untracked(
+          () => new CesiumOrNoViewer(this, this.mapContainer!)
         );
       } else if (this.attached && this.viewerMode === ViewerMode.Cesium) {
         const CesiumOrNoViewer = this._getCesiumIfLoaded();
