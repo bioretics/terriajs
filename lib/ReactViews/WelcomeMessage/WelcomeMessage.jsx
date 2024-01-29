@@ -251,7 +251,12 @@ export const WelcomeMessagePure = (props) => {
                 <Spacing bottom={2} />
               </If>
               <Box fullWidth styledMinHeight={"160px"}>
-                <If condition={!viewState.useSmallScreenInterface}>
+                <If
+                  condition={
+                    viewState.terria.configParameters.welcomeMessageVideo
+                      .videoUrl && !viewState.useSmallScreenInterface
+                  }
+                >
                   <Box
                     col6
                     centered
