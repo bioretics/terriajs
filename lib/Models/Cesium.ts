@@ -88,11 +88,9 @@ import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 import Color from "terriajs-cesium/Source/Core/Color";
 import CommonStrata from "./Definition/CommonStrata";
-import {
-  SceneMode,
-  WebMercatorProjection,
-  GeographicProjection
-} from "terriajs-cesium";
+import SceneMode from "terriajs-cesium/Source/Scene/SceneMode";
+import WebMercatorProjection from "terriajs-cesium/Source/Core/WebMercatorProjection";
+import GeographicProjection from "terriajs-cesium/Source/Core/GeographicProjection";
 import ViewerMode from "./ViewerMode";
 
 //import Cesium3DTilesInspector from "terriajs-cesium/Source/Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector";
