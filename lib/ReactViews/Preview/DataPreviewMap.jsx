@@ -113,7 +113,8 @@ class DataPreviewMap extends React.Component {
       })
     );
     runInAction(() => {
-      this.previewViewer.viewerMode = ViewerMode.Leaflet;
+      //this.previewViewer.viewerMode = ViewerMode.Leaflet;
+      this.previewViewer.viewerMode = ViewerMode.Preview;
       this.previewViewer.disableInteraction = true;
       this.previewViewer.homeCamera = this.props.terria.mainViewer.homeCamera;
     });

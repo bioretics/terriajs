@@ -157,6 +157,11 @@ export default class TerriaViewer {
         newViewer = untracked(
           () => new CesiumOrNoViewer(this, this.mapContainer!)
         );
+      } else if (this.attached && this.viewerMode === ViewerMode.Preview) {
+        const LeafletOrNoViewer = this._getLeafletIfLoaded();
+        newViewer = untracked(
+          () => new LeafletOrNoViewer(this, this.mapContainer!)
+        );
       } else {
         newViewer = untracked(() => new NoViewer(this));
       }

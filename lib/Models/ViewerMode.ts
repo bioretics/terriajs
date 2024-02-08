@@ -3,7 +3,8 @@ import TerriaViewer from "../ViewModels/TerriaViewer";
 
 enum ViewerMode {
   Cesium = "cesium",
-  Leaflet = "leaflet"
+  Leaflet = "leaflet",
+  Preview = "preview"
 }
 
 export const MapViewers = Object.seal({
