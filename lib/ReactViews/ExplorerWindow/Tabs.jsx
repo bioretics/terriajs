@@ -137,7 +137,6 @@ const Tabs = observer(
         <div className={Styles.tabs}>
           <ul
             className={Styles.tabList}
-            role="tablist"
             css={`
               background-color: ${(p) => p.theme.colorPrimary};
             `}
@@ -147,9 +146,6 @@ const Tabs = observer(
                 key={i}
                 id={"tablist--" + item.title}
                 className={Styles.tabListItem}
-                role="tab"
-                aria-controls={"panel--" + item.title}
-                aria-selected={item === currentTab}
               >
                 <ButtonTab
                   type="button"
@@ -174,7 +170,6 @@ const Tabs = observer(
             id={"panel--" + currentTab.title}
             className={classNames(Styles.tabPanel, Styles.isActive)}
             aria-labelledby={"tablist--" + currentTab.title}
-            role="tabpanel"
             tabIndex="0"
           >
             <div className={Styles.panelContent}>{currentTab.panel}</div>

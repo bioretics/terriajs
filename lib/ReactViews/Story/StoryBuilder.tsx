@@ -479,6 +479,7 @@ class StoryBuilder extends React.Component<
             css={`
               padding: 15px;
             `}
+            title="close"
             onClick={this.hideStoryBuilder}
           >
             <StyledIcon

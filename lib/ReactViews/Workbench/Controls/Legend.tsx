@@ -313,11 +313,11 @@ export default class Legend extends React.Component<{
         : undefined;
 
       return (
-        <ul className={Styles.legend}>
-          <div
-            className={Styles.legendInner}
-            css={{ position: "relative", " li": { backgroundColor } }}
-          >
+        <div
+          className={Styles.legendInner}
+          css={{ position: "relative", " li": { backgroundColor } }}
+        >
+          <ul className={Styles.legend}>
             {
               // Show temporary "legend button" - if custom styling has been applied
               TableMixin.isMixedInto(this.props.item) &&
@@ -355,8 +355,8 @@ export default class Legend extends React.Component<{
                 </React.Fragment>
               )
             )}
-          </div>
-        </ul>
+          </ul>
+        </div>
       );
     }
 

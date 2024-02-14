@@ -194,6 +194,7 @@ export const WelcomeMessagePure = (props) => {
                 css={`
                   float: right;
                 `}
+                title="close"
               >
                 <StyledIcon
                   styledWidth={"24px"}

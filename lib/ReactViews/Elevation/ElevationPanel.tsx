@@ -155,6 +155,7 @@ const ElevationPanel = observer((props: Props) => {
             type="button"
             onClick={toggleCollapsed}
             className={Styles.btnToggleFeature}
+            title="collapse"
           >
             {props.viewState.elevationPanelIsCollapsed ? (
               <Icon glyph={Icon.GLYPHS.closed} />

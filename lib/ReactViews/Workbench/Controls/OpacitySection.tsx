@@ -49,7 +49,7 @@ class OpacitySection extends React.Component<OpacitySectionProps> {
       <>
         <Spacing bottom={2} />
         <Box verticalCenter>
-          <StyledLabel small htmlFor="opacity">
+          <StyledLabel small htmlFor="opacity" id="opacityLabel">
             {t("workbench.opacity", {
               opacity: Math.round(item.opacity * 100)
             })}
@@ -60,6 +60,7 @@ class OpacitySection extends React.Component<OpacitySectionProps> {
             max={100}
             value={(item.opacity * 100) | 0}
             onChange={this.changeOpacity}
+            aria-labelledby="opacityLabel"
           />
         </Box>
       </>

@@ -51,27 +51,31 @@ class WorkbenchList extends React.Component<IProps> {
         column
       >
         {this.props.terria.showSplitter && (
-          <WorkbenchSplitScreen terria={this.props.terria} />
+          <li>
+            <WorkbenchSplitScreen terria={this.props.terria} />
+          </li>
         )}
-        <Sortable
-          onSort={this.onSort}
-          direction="vertical"
-          dynamic={true}
-          css={`
-            width: 100%;
-          `}
-        >
-          {this.props.terria.workbench.items.map((item) => {
-            return (
-              <WorkbenchItem
-                item={item}
-                sortData={item}
-                key={item.uniqueId}
-                viewState={this.props.viewState}
-              />
-            );
-          })}
-        </Sortable>
+        <li>
+          <Sortable
+            onSort={this.onSort}
+            direction="vertical"
+            dynamic={true}
+            css={`
+              width: 100%;
+            `}
+          >
+            {this.props.terria.workbench.items.map((item) => {
+              return (
+                <WorkbenchItem
+                  item={item}
+                  sortData={item}
+                  key={item.uniqueId}
+                  viewState={this.props.viewState}
+                />
+              );
+            })}
+          </Sortable>
+        </li>
       </StyledUl>
     );
   }

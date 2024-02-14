@@ -174,7 +174,7 @@ export const SearchBox = createReactClass({
         <Text large semiBold>
           <SearchInput
             ref={this.props.inputBoxRef}
-            id="search"
+            id={`searchInput_${this.props.inputBoxRef}`}
             type="text"
             name="search"
             value={this.props.searchText}

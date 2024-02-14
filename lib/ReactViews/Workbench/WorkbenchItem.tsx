@@ -148,7 +148,10 @@ class WorkbenchItemRaw extends React.Component<IProps> {
           </Box>
           {CatalogMemberMixin.isMixedInto(item) ? (
             <Box centered paddedHorizontally>
-              <RawButton onClick={() => this.toggleDisplay()}>
+              <RawButton
+                onClick={() => this.toggleDisplay()}
+                title={this.isOpen ? "opened" : "closed"}
+              >
                 {item.isPrivate && (
                   <BoxSpan paddedHorizontally>
                     <PrivateIndicator inWorkbench />

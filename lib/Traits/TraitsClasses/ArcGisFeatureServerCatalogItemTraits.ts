@@ -71,4 +71,11 @@ export default class ArcGisFeatureServerCatalogItemTraits extends mixTraits(
       "Whether this feature service supports pagination. By default, this will be inferred from the server's response."
   })
   supportsPagination?: boolean;
+
+  @objectTrait({
+    type: RerFeatureServerTraits,
+    name: "rerFeatureService",
+    description: "Defines if the layer is a 'rerFeatureService' and its rules"
+  })
+  rerFeatureService?: RerFeatureServerTraits;
 }

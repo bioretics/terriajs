@@ -108,7 +108,7 @@ const DataPreview = observer(
               </div>
             </When>
             <Otherwise>
-              <div className={Styles.placeholder}>
+              <div className={Styles.placeholder} style={{ lineHeight: 1.5 }}>
                 <Trans i18nKey="preview.selectToPreview">
                   <p>Select a dataset to see a preview</p>
                   <p>- OR -</p>

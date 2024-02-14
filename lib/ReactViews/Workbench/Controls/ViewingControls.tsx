@@ -48,7 +48,6 @@ import SplitterTraits from "../../../Traits/TraitsClasses/SplitterTraits";
 import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
-import QueryableCatalogItemMixin from "../../../ModelMixins/QueryableCatalogItemMixin";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -473,20 +472,6 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
-        {/*QueryableCatalogItemMixin.isMixedInto(item) &&
-          item.queryableProperties?.length > 0 && (
-            <li>
-              <ViewingControlMenuButton
-                onClick={() => runInAction(() => viewState.openQueryData(item))}
-                title="Mostra la finestra di aggregazione dei dati"
-              >
-                <BoxViewingControl>
-                  <StyledIcon glyph={Icon.GLYPHS.barChart} />
-                  <span>Aggrega</span>
-                </BoxViewingControl>
-              </ViewingControlMenuButton>
-            </li>
-          )*/}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
@@ -523,6 +508,7 @@ class ViewingControls extends React.Component<
               display: block;
               float: left;
               box-sizing: border-box;
+              margin-right: 0;
             }
             & > button:last-child {
               margin-right: 0;

@@ -84,7 +84,7 @@ const FullScreenButton = observer(
           )}
           <button
             type="button"
-            id="toggle-workbench"
+            id={`toggle-workbench${this.props.minified}`}
             aria-label={
               this.props.viewState.isMapFullScreen
                 ? t("sui.showWorkbench")

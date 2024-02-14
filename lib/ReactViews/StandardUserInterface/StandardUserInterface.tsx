@@ -220,7 +220,11 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
                   >
                     <FullScreenButton
                       minified={false}
-                      btnText={t("sui.showWorkbench")}
+                      btnText={
+                        props.viewState.isMapFullScreen
+                          ? t("sui.showWorkbench")
+                          : t("sui.hideWorkbench")
+                      }
                       animationDuration={animationDuration}
                       elementConfig={props.terria.elements.get(
                         "show-workbench"

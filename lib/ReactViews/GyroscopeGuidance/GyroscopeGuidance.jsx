@@ -145,6 +145,7 @@ export default function GyroscopeGuidance(props) {
           buttonRef={controlsMapIcon}
           neverCollapse
           iconElement={() => <Icon glyph={Icon.GLYPHS.questionMark} />}
+          title="Gyroscope help"
           onClick={() => setControlPanelOpen(!controlPanelOpen)}
           inverted
           css={`
