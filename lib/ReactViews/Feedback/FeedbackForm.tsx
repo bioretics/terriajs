@@ -167,6 +167,15 @@ class FeedbackForm extends React.Component<IProps, IState> {
 
   render() {
     const { t, i18n, viewState, theme } = this.props;
+
+    if (viewState.terria.configParameters?.feedbackUrl?.startsWith("mailto:")) {
+      window.open(
+        `${viewState.terria.configParameters?.feedbackUrl}?subject=${viewState.terria.configParameters?.feedbackPreamble}`,
+        "_blank"
+      );
+      return null;
+    }
+
     const preamble = parseCustomMarkdownToReact(
       applyTranslationIfExists(
         viewState.terria.configParameters.feedbackPreamble ||

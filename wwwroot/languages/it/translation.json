@@ -91,7 +91,7 @@
     "yourName": "Il tuo nome (opzionale)",
     "shareWithDevelopers": "Condividi la mia mappa con gli sviluppatori di {{appName}}",
     "close": "chiudi feedback",
-    "feedbackBtnText": "Fornite un feedback",
+    "feedbackBtnText": "Invia un feedback",
     "sending": "Invio...",
     "minLength": "La lunghezza minima del commento di feedback è {{minLength}}",
     "captionText": "Questo ci aiuta a risolvere i problemi permettendoci di vedere quello che stai vedendo",
