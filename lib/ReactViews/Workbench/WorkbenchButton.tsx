@@ -5,7 +5,6 @@ import Box from "../../Styled/Box";
 import { SpacingSpan } from "./../../Styled/Spacing";
 import { TextSpan } from "../../Styled/Text";
 import { RawButton } from "../../Styled/Button";
-import { Li } from "../../Styled/List";
 
 // only spans are valid html for buttons (even though divs work)
 const ButtonWrapper = styled(Box).attrs({
@@ -23,9 +22,8 @@ interface IStyledWorkbenchButton {
 
 // styles half ripped from nav.scss
 const StyledWorkbenchButton = styled(RawButton)<IStyledWorkbenchButton>`
-
-padding-left: 10px;
-    padding-right: 10px;
+  padding-left: 10px;
+  padding-right: 10px;
 
   border-radius: 3px;
   background: ${(props) => props.theme.dark};
@@ -98,37 +96,37 @@ const WorkbenchButton: React.FC<IProps> = (props: IProps) => {
 
   return (
     <li>
-    <StyledWorkbenchButton
-      primary={primary}
-      disabled={disabled}
-      iconOnly={iconOnly}
-      inverted={inverted}
-      type="button"
-      title={title}
-      onClick={props.onClick}
-      {...props}
-    >
-      <ButtonWrapper>
-        {/* only spans are valid html for buttons (even though divs work) */}
-        {props.iconElement && props.iconElement()}
-        {children && (
-          <>
-            <SpacingSpan right={1}></SpacingSpan>
-            <TextSpan
-              noWrap
-              small
-              css={`
-                display: block;
-                text-transform: uppercase;
-                letter-spacing: 0.08px;
-              `}
-            >
-              {children}
-            </TextSpan>
-          </>
-        )}
-      </ButtonWrapper>
-    </StyledWorkbenchButton>
+      <StyledWorkbenchButton
+        primary={primary}
+        disabled={disabled}
+        iconOnly={iconOnly}
+        inverted={inverted}
+        type="button"
+        title={title}
+        onClick={props.onClick}
+        {...props}
+      >
+        <ButtonWrapper>
+          {/* only spans are valid html for buttons (even though divs work) */}
+          {props.iconElement && props.iconElement()}
+          {children && (
+            <>
+              <SpacingSpan right={1}></SpacingSpan>
+              <TextSpan
+                noWrap
+                small
+                css={`
+                  display: block;
+                  text-transform: uppercase;
+                  letter-spacing: 0.08px;
+                `}
+              >
+                {children}
+              </TextSpan>
+            </>
+          )}
+        </ButtonWrapper>
+      </StyledWorkbenchButton>
     </li>
   );
 };
