@@ -369,6 +369,11 @@ interface ConfigParameters {
   userProfilesDefinition?: {
     [key: string]: { allowed: string[]; isAdmin: boolean };
   };
+
+  /**
+   * Side size for the drill pick in Cesium
+   */
+  pickSize?: number;
 }
 
 interface StartOptions {
@@ -609,7 +614,8 @@ export default class Terria {
     useMyLocationFromDesktop: true,
     useElevationMeanSeaLevel: false,
     userProfilesDefinition: undefined,
-    userProfileLoginServiceUrl: undefined
+    userProfileLoginServiceUrl: undefined,
+    pickSize: undefined
   };
 
   @observable

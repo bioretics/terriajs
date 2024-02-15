@@ -42,6 +42,13 @@ import SearchableCatalogItemMixin, {
   SearchableData
 } from "../../../ModelMixins/SearchableCatalogItemMixin";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import GeographicProjection from "terriajs-cesium/Source/Core/GeographicProjection";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import WebMercatorProjection from "terriajs-cesium/Source/Core/WebMercatorProjection";
+import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
+import defined from "terriajs-cesium/Source/Core/defined";
 import { FeatureCollection, Geometry, bbox } from "@turf/turf";
 import { JsonObject } from "../../../Core/Json";
 
@@ -513,6 +520,113 @@ export default class ArcGisMapServerCatalogItem extends SearchableCatalogItemMix
         token: stratum.token,
         credit: this.attribution
       });
+
+      const pickSize: number = this.terria.configParameters.pickSize ?? 2;
+      imageryProvider.pickFeatures = function (
+        x,
+        y,
+        level,
+        longitude,
+        latitude
+      ) {
+        if (!this.enablePickFeatures) {
+          return undefined;
+        }
+
+        const rectangle = this.tilingScheme.tileXYToNativeRectangle(
+          x,
+          y,
+          level
+        );
+
+        let horizontal;
+        let vertical;
+        let sr;
+        if (this.tilingScheme.projection instanceof GeographicProjection) {
+          horizontal = CesiumMath.toDegrees(longitude);
+          vertical = CesiumMath.toDegrees(latitude);
+          sr = "4326";
+        } else {
+          const projected = this.tilingScheme.projection.project(
+            new Cartographic(longitude, latitude, 0.0)
+          );
+          horizontal = projected.x;
+          vertical = projected.y;
+          sr = "3857";
+        }
+
+        let layers = "visible";
+        if (defined(this.layers)) {
+          layers += `:${this.layers}`;
+        }
+
+        const query = {
+          f: "json",
+          tolerance: pickSize,
+          geometryType: "esriGeometryPoint",
+          geometry: `${horizontal},${vertical}`,
+          mapExtent: `${rectangle.west},${rectangle.south},${rectangle.east},${rectangle.north}`,
+          imageDisplay: `${this.tileWidth},${this.tileHeight},96`,
+          sr: sr,
+          layers: layers
+        };
+
+        const resource = new CesiumResource({ url: this.url });
+        const newResource = resource.getDerivedResource({
+          url: "identify",
+          queryParameters: query
+        });
+        return newResource.fetchJson()?.then(function (json: any) {
+          const result: ImageryLayerFeatureInfo[] = [];
+
+          const features = json.results;
+          if (!defined(features)) {
+            return result;
+          }
+
+          for (let i = 0; i < features.length; ++i) {
+            const feature = features[i];
+
+            const featureInfo = new ImageryLayerFeatureInfo();
+            featureInfo.data = feature;
+            featureInfo.name = feature.value;
+            featureInfo.properties = feature.attributes;
+            featureInfo.configureDescriptionFromProperties(feature.attributes);
+
+            // If this is a point feature, use the coordinates of the point.
+            if (
+              feature.geometryType === "esriGeometryPoint" &&
+              feature.geometry
+            ) {
+              const wkid =
+                feature.geometry.spatialReference &&
+                feature.geometry.spatialReference.wkid
+                  ? feature.geometry.spatialReference.wkid
+                  : 4326;
+              if (wkid === 4326 || wkid === 4283) {
+                featureInfo.position = Cartographic.fromDegrees(
+                  feature.geometry.x,
+                  feature.geometry.y,
+                  feature.geometry.z
+                );
+              } else if (wkid === 102100 || wkid === 900913 || wkid === 3857) {
+                const projection = new WebMercatorProjection();
+                featureInfo.position = projection.unproject(
+                  new Cartesian3(
+                    feature.geometry.x,
+                    feature.geometry.y,
+                    feature.geometry.z
+                  )
+                );
+              }
+            }
+
+            result.push(featureInfo);
+          }
+
+          return result;
+        });
+      };
 
       return this.updateRequestImage(imageryProvider, false);
     }
