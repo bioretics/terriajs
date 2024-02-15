@@ -416,7 +416,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         }
       } else {
         this.setFields(
-          this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
+          this.props.catalogItem.featureInfoTemplate?.perProfileInfoFields?.[
             String(this.props.terria?.userProfile)
           ] as string[]
         );
