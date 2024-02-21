@@ -560,28 +560,29 @@ const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
         <span>Dove sono?</span>
         <TextSpan small>{whereAmI}</TextSpan>
       </div>
-      <div className={Styles.location} style={{ flexDirection: "row-reverse" }}>
-        <Button
-          primary
-          onClick={() => {
-            /*viewState.openMessageModal(
-              "Dettagli della posizione",
-              whereAmIDetailed ?? ""
-            );*/
-            viewState.terria.notificationState.addNotificationToQueue({
-              title: "Dettagli della posizione",
-              message: whereAmIDetailed ?? ""
-            });
-          }}
-          css={`
-            display: flex;
-            align-items: center;
-            border-radius: 2px;
-          `}
+      {whereAmIDetailed && (
+        <div
+          className={Styles.location}
+          style={{ flexDirection: "row-reverse" }}
         >
-          Dettagli
-        </Button>
-      </div>
+          <Button
+            primary
+            onClick={() => {
+              viewState.terria.notificationState.addNotificationToQueue({
+                title: "Dettagli della posizione",
+                message: whereAmIDetailed ?? ""
+              });
+            }}
+            css={`
+              display: flex;
+              align-items: center;
+              border-radius: 2px;
+            `}
+          >
+            Dettagli
+          </Button>
+        </div>
+      )}
       <StyledHr />
     </>
   );
