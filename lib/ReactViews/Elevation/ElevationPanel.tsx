@@ -17,8 +17,9 @@ import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
 import Input from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
-import Terria, { PathCustom } from "../../Models/Terria";
+import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
+import { PathCustom } from "../../ViewModels/PathManager";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -67,15 +68,15 @@ const ElevationPanel = observer((props: Props) => {
   const getBearing = computed(() => {
     if (
       !terria?.cesium?.scene?.globe?.ellipsoid ||
-      !terria?.path?.stopPoints ||
-      terria.path.stopPoints.length === 0
+      !terria?.pathManager?.path?.stopPoints ||
+      terria.pathManager.path.stopPoints.length === 0
     ) {
       return "";
     }
 
     const ellipsoid = terria.cesium.scene.globe.ellipsoid;
-    const start = terria.path.stopPoints[0];
-    const end = terria.path.stopPoints.at(-1);
+    const start = terria.pathManager.path.stopPoints[0];
+    const end = terria.pathManager.path.stopPoints.at(-1);
     const geo = new EllipsoidGeodesic(start, end, ellipsoid);
     const bearing = (CesiumMath.toDegrees(geo.startHeading) + 360) % 360;
 
@@ -83,23 +84,28 @@ const ElevationPanel = observer((props: Props) => {
   });
 
   const getHeightDifference = computed(() => {
-    if (!terria?.path?.stopPoints || terria.path.stopPoints.length < 2) {
+    if (
+      !terria?.pathManager?.path?.stopPoints ||
+      terria.pathManager.path.stopPoints.length < 2
+    ) {
       return "";
     }
 
-    const start = terria.path.stopPoints[0];
-    const end = terria.path.stopPoints.at(-1) as Cartographic;
+    const start = terria.pathManager.path.stopPoints[0];
+    const end = terria.pathManager.path.stopPoints.at(-1) as Cartographic;
     const difference = end.height - start.height;
 
     return `${difference.toFixed(0)} m`;
   });
 
   const heights = computed(() => {
-    return terria?.path?.stopPoints?.map((elem) => elem.height) || [];
+    return (
+      terria?.pathManager?.path?.stopPoints?.map((elem) => elem.height) || []
+    );
   });
 
   const rangeSamplingPathStep = computed(() => {
-    if (!terria?.path?.geodeticDistance) {
+    if (!terria?.pathManager?.path?.geodeticDistance) {
       return [0, 0];
     }
     const minExponent = 0;
@@ -109,7 +115,8 @@ const ElevationPanel = observer((props: Props) => {
       maxExponent,
       Math.max(
         minExponent,
-        terria.path.geodeticDistance.toFixed(0).length - thousandthExponent
+        terria.pathManager.path.geodeticDistance.toFixed(0).length -
+          thousandthExponent
       )
     );
     const minSamplingPathStep = 10 ** exponent;
@@ -237,7 +244,7 @@ const ElevationPanel = observer((props: Props) => {
     return (
       <div className={Styles.body}>
         <Box>
-          {!terria?.path?.hasArea && (
+          {!terria?.pathManager?.path?.hasArea && (
             <Button
               css={`
                 background: #519ac2;
@@ -272,18 +279,21 @@ const ElevationPanel = observer((props: Props) => {
               : "vedi percorso al suolo"}
           </Button>
         </Box>
-        {!terria?.path?.hasArea && renderSamplingStep()}
+        {!terria?.pathManager?.path?.hasArea && renderSamplingStep()}
         <br />
-        {!terria?.path?.hasArea ? renderPathSummary() : renderAreaSummary()}
+        {!terria?.pathManager?.path?.hasArea
+          ? renderPathSummary()
+          : renderAreaSummary()}
         <br />
-        {terria.path?.sampledDistances && renderStepDetails()}
-        {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.path && (
-          <ElevationDownload
-            path={terria.path as PathCustom}
-            name="path"
-            ellipsoid={terria.cesium.scene.globe.ellipsoid}
-          />
-        )}
+        {terria.pathManager.path?.sampledDistances && renderStepDetails()}
+        {!!terria?.cesium?.scene?.globe?.ellipsoid &&
+          terria.pathManager.path && (
+            <ElevationDownload
+              path={terria.pathManager.path as PathCustom}
+              name="path"
+              ellipsoid={terria.cesium.scene.globe.ellipsoid}
+            />
+          )}
       </div>
     );
   };
@@ -335,9 +345,17 @@ const ElevationPanel = observer((props: Props) => {
             </thead>
             <tbody>
               <tr>
-                <td>{prettifyNumber(terria.path?.geodeticDistance ?? 0)}</td>
-                <td>{prettifyNumber(terria.path?.airDistance ?? 0)}</td>
-                <td>{prettifyNumber(terria.path?.groundDistance ?? 0)}</td>
+                <td>
+                  {prettifyNumber(
+                    terria.pathManager.path?.geodeticDistance ?? 0
+                  )}
+                </td>
+                <td>
+                  {prettifyNumber(terria.pathManager.path?.airDistance ?? 0)}
+                </td>
+                <td>
+                  {prettifyNumber(terria.pathManager.path?.groundDistance ?? 0)}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -380,10 +398,23 @@ const ElevationPanel = observer((props: Props) => {
             </thead>
             <tbody>
               <tr>
-                <td>{prettifyNumber(terria.path?.geodeticDistance ?? 0)}</td>
-                <td>{prettifyNumber(terria.path?.airDistance ?? 0)}</td>
-                <td>{prettifyNumber(terria.path?.geodeticArea ?? 0, true)}</td>
-                <td>{prettifyNumber(terria.path?.airArea ?? 0, true)}</td>
+                <td>
+                  {prettifyNumber(
+                    terria.pathManager.path?.geodeticDistance ?? 0
+                  )}
+                </td>
+                <td>
+                  {prettifyNumber(terria.pathManager.path?.airDistance ?? 0)}
+                </td>
+                <td>
+                  {prettifyNumber(
+                    terria.pathManager.path?.geodeticArea ?? 0,
+                    true
+                  )}
+                </td>
+                <td>
+                  {prettifyNumber(terria.pathManager.path?.airArea ?? 0, true)}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -427,9 +458,9 @@ const ElevationPanel = observer((props: Props) => {
               </tr>
             </thead>
             <tbody>
-              {terria?.path?.stopPoints &&
-                terria.path.stopPoints.length > 0 &&
-                terria.path.stopPoints.map((point, idx, array) => {
+              {terria?.pathManager?.path?.stopPoints &&
+                terria.pathManager.path.stopPoints.length > 0 &&
+                terria.pathManager.path.stopPoints.map((point, idx, array) => {
                   return (
                     <tr key={idx}>
                       <td>{idx + 1}</td>
@@ -442,27 +473,40 @@ const ElevationPanel = observer((props: Props) => {
                           : ""}
                       </td>
                       <td>
-                        {idx > 0 && terria?.path
+                        {idx > 0 &&
+                        terria?.pathManager?.path?.stopGeodeticDistances &&
+                        terria.pathManager.path.stopGeodeticDistances.length >
+                          idx
                           ? prettifyNumber(
-                              terria.path.stopGeodeticDistances[idx]
+                              terria.pathManager.path.stopGeodeticDistances[idx]
                             )
                           : ""}
                       </td>
                       <td>
-                        {idx > 0 && terria?.path?.stopAirDistances
-                          ? prettifyNumber(terria.path.stopAirDistances[idx])
+                        {idx > 0 &&
+                        terria?.pathManager?.path?.stopAirDistances &&
+                        terria.pathManager.path.stopAirDistances.length > idx
+                          ? prettifyNumber(
+                              terria.pathManager.path.stopAirDistances[idx]
+                            )
                           : ""}
                       </td>
                       <td>
-                        {idx > 0 && terria?.path?.stopGroundDistances
-                          ? prettifyNumber(terria.path.stopGroundDistances[idx])
+                        {idx > 0 &&
+                        terria?.pathManager?.path?.stopGroundDistances &&
+                        terria.pathManager.path.stopGroundDistances.length > idx
+                          ? prettifyNumber(
+                              terria.pathManager.path.stopGroundDistances[idx]
+                            )
                           : ""}
                       </td>
                       <td>
-                        {idx > 0 && terria?.path?.stopAirDistances
+                        {idx > 0 &&
+                        terria?.pathManager?.path?.stopAirDistances &&
+                        terria.pathManager.path.stopAirDistances.length > idx
                           ? Math.abs(
                               (100 * (point.height - array[idx - 1].height)) /
-                                terria.path.stopAirDistances[idx]
+                                terria.pathManager.path.stopAirDistances[idx]
                             ).toFixed(1)
                           : ""}
                       </td>

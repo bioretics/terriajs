@@ -340,7 +340,7 @@ export default class MouseCoords {
         const geoidHeight = result[0] || 0.0;
         this.tileRequestInFlight = undefined;
         if (Cartographic.equals(position, this.cartographic)) {
-          if (!terria.configParameters.useElevationMeanSeaLevel) {
+          if (terria.configParameters.useElevationMeanSeaLevel) {
             position.height = positionWithHeight.height - geoidHeight;
           }
           this.cartographicToFields(position);

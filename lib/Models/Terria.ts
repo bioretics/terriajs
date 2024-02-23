@@ -111,6 +111,7 @@ import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import PathManager from "../ViewModels/PathManager";
 
 // import overrides from "../Overrides/defaults.jsx";
 
@@ -442,22 +443,6 @@ interface HomeCameraInit {
   west: number;
 }
 
-export interface PathCustom {
-  isClosed: boolean;
-  hasArea: boolean;
-  stopPoints: Cartographic[];
-  stopGeodeticDistances: number[];
-  stopAirDistances?: number[];
-  stopGroundDistances?: number[];
-  geodeticDistance?: number;
-  airDistance?: number;
-  groundDistance?: number;
-  sampledPoints?: Cartographic[];
-  sampledDistances?: number[];
-  geodeticArea?: number;
-  airArea?: number;
-}
-
 export interface MessageModal {
   isVisible: boolean;
   header?: string;
@@ -513,6 +498,9 @@ export default class Terria {
       )
     )
   );
+
+  @observable
+  readonly pathManager = new PathManager(this);
 
   appName: string = "TerriaJS App";
   supportEmail: string = "info@terria.io";
@@ -638,12 +626,6 @@ export default class Terria {
    * @type {string}
    */
   @observable pickedPositionElevation: string | undefined;
-
-  /**
-   * Gets or sets the data computed sampling a path drawn with the MeasureTool.
-   * @type {PathCustom}
-   */
-  @observable path: PathCustom | undefined;
 
   /**
    * Gets or sets the distance, in meters, at which sampling the terrain along the path.
@@ -1267,6 +1249,8 @@ export default class Terria {
 
   dispose() {
     this._initSourceLoader.dispose();
+
+    this.pathManager.dispose();
   }
 
   async updateFromStartData(

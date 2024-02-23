@@ -12,8 +12,6 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
-//import CesiumColor from "terriajs-cesium/Source/Core/Color";
-//import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 
 import markerIcon from "./markerIcon";
 
@@ -95,7 +93,7 @@ const ElevationChartPanel = observer((props: Props) => {
         ?.find((item) => item.key === ChartKeys.GroundChart)
         ?.points.findIndex((elem) => elem === newPoint);
       if (!pointIndex) return;
-      const coords = terria?.path?.sampledPoints?.[pointIndex];
+      const coords = terria?.pathManager?.path?.sampledPoints?.[pointIndex];
       if (!coords) return;
 
       if (!billboardCollection.current) {
@@ -124,16 +122,16 @@ const ElevationChartPanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (terria?.path) {
+    if (terria?.pathManager?.path) {
       const airData = fetchPathDataChart(
-        terria.path.stopPoints,
-        terria.path.stopAirDistances,
-        terria.path.airDistance
+        terria.pathManager.path.stopPoints,
+        terria.pathManager.path.stopAirDistances,
+        terria.pathManager.path.airDistance
       );
       const groundData = fetchPathDataChart(
-        terria.path.sampledPoints,
-        terria.path.sampledDistances,
-        terria.path.groundDistance
+        terria.pathManager.path.sampledPoints,
+        terria.pathManager.path.sampledDistances,
+        terria.pathManager.path.groundDistance
       );
 
       const items: ChartItem[] = [];
@@ -167,7 +165,7 @@ const ElevationChartPanel = observer((props: Props) => {
 
       setChartItems(items);
     }
-  }, [terria.path, terria.samplingPathStep]);
+  }, [terria.pathManager.path, terria.samplingPathStep]);
 
   return (
     <div className={Styles.holder}>

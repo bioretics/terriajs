@@ -61,8 +61,8 @@ class BottomDock extends React.Component<PropsType> {
         <ChartDisclaimer terria={terria} viewState={this.props.viewState} />
         <ChartPanel terria={terria} viewState={this.props.viewState} />
         {this.props.viewState.elevationChartIsVisible &&
-          !!terria?.path?.stopPoints &&
-          terria.path.stopPoints.length > 0 && (
+          !!terria?.pathManager?.path?.stopPoints &&
+          terria.pathManager.path.stopPoints.length > 0 && (
             <ElevationChartPanel
               terria={terria}
               viewState={this.props.viewState}

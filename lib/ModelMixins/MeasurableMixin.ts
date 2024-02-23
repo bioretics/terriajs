@@ -4,10 +4,8 @@ import Model from "../Models/Definition/Model";
 import StratumOrder from "../Models/Definition/StratumOrder";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
-import { PathCustom } from "../Models/Terria";
 
 type MixinModel = Model<MappableTraits>;
 
@@ -23,27 +21,8 @@ function MeasurableMixin<T extends Constructor<MixinModel>>(Base: T) {
     abstract computePath(): void;
 
     @action
-    update(newPositions: Cartographic[]) {
-      //let dist = 0.0;
-      const stepDistanceMeters: number[] = [0.0];
-
-      newPositions.forEach((elem, index) => {
-        elem.height = Math.round(elem.height);
-        if (index > 0) {
-          const geodesic = new EllipsoidGeodesic(elem, newPositions[index - 1]);
-          /*dist += geodesic.surfaceDistance;
-          stepDistanceMeters.push(dist);*/
-          stepDistanceMeters.push(geodesic.surfaceDistance);
-        }
-      });
-      if (newPositions.length > 1) {
-        //this.terria.pathPoints = newPositions;
-        //this.terria.pathDistances = stepDistanceMeters;
-        this.terria.path = <PathCustom>{
-          stopPoints: newPositions,
-          stopGeodeticDistances: stepDistanceMeters
-        };
-      }
+    update(stopPoints: Cartographic[]) {
+      this.terria.pathManager.sampleFromCartographics(stopPoints);
     }
 
     asPath(positions: Cartographic[]) {

@@ -8,7 +8,6 @@ import {
 } from "mobx";
 import { Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import addedByUser from "../Core/addedByUser";
 import {
   Category,
@@ -25,7 +24,7 @@ import ReferenceMixin from "../ModelMixins/ReferenceMixin";
 import CommonStrata from "../Models/Definition/CommonStrata";
 import { BaseModel } from "../Models/Definition/Model";
 import getAncestors from "../Models/getAncestors";
-import Terria, { PathCustom } from "../Models/Terria";
+import Terria from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
@@ -36,6 +35,7 @@ import {
 } from "./defaultTourPoints";
 import DisclaimerHandler from "./DisclaimerHandler";
 import SearchState from "./SearchState";
+import { PathCustom } from "../ViewModels/PathManager";
 
 export const DATA_CATALOG_NAME = "data-catalog";
 export const USER_DATA_NAME = "my-data";
@@ -497,7 +497,7 @@ export default class ViewState {
     );
 
     this._elevationPanelIsVisibleSubscription = reaction(
-      () => this.terria.path,
+      () => this.terria.pathManager.path,
       (path: PathCustom | undefined) => {
         if (defined(path) && path?.stopPoints && path.stopPoints.length > 0) {
           this.elevationPanelIsVisible = true;

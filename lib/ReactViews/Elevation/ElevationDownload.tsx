@@ -8,12 +8,10 @@ import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphic
 import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
 import DataUri from "../../Core/DataUri";
-//import Dropdown from "../Generic/Dropdown";
 import Icon from "../../Styled/Icon";
 import Styles from "./elevation-download.scss";
-//import PropTypes from "prop-types";
-import { PathCustom } from "../../Models/Terria";
 import { exportKmlResultKml } from "terriajs-cesium";
+import { PathCustom } from "../../ViewModels/PathManager";
 
 const Dropdown = require("../Generic/Dropdown");
 
