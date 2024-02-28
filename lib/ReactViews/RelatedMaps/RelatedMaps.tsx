@@ -41,15 +41,15 @@ class RelatedMaps extends React.Component<PropTypes> {
     return (
       <MenuPanel
         theme={dropdownTheme}
-        btnText="Related Maps"
+        btnText="Collegamenti"
         smallScreen={smallScreen}
         viewState={this.props.viewState}
         btnTitle="See related maps"
         showDropdownInCenter
       >
-        <h2>Related Maps</h2>
+        <h3>Collegamenti</h3>
 
-        <p>Clicking on a map below will open it in a separate window or tab.</p>
+        {/*<p>Clicking on a map below will open it in a separate window or tab.</p>*/}
 
         {this.props.relatedMaps.map((map, i) => (
           <Box flex key={i}>
@@ -59,8 +59,8 @@ class RelatedMaps extends React.Component<PropTypes> {
                   style={{
                     marginRight: "10px",
                     marginBottom: "10px",
-                    width: "200px",
-                    height: "150px"
+                    width: "200px"
+                    //height: "150px"
                   }}
                   src={map.imageUrl}
                   alt={map.title}
@@ -69,11 +69,7 @@ class RelatedMaps extends React.Component<PropTypes> {
             </Box>
 
             <Box displayInlineBlock>
-              <a
-                target="_blank"
-                style={{ color: this.props.theme.colorPrimary }}
-                href={map.url}
-              >
+              <a target="_blank" style={{ color: "white" }} href={map.url}>
                 {map.title}
                 <ExternalLinkIcon />
               </a>
