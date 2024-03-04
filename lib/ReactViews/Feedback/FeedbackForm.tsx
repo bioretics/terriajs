@@ -173,6 +173,7 @@ class FeedbackForm extends React.Component<IProps, IState> {
         `${viewState.terria.configParameters?.feedbackUrl}?subject=${viewState.terria.configParameters?.feedbackPreamble}`,
         "_blank"
       );
+      this.onDismiss();
       return null;
     }
 
