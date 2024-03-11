@@ -47,6 +47,12 @@
     "resetAlignmentMessage": "Ripristino dell'allineamento della bussola. Se l'allineamento non corrisponde al mondo reale, prova a muovere il dispositivo con un movimento a 8 per ricalibrarlo. Questo può essere fatto in qualsiasi momento.<br /> <br />Evitare luoghi con campi magnetici o oggetti metallici, poiché questi possono disorientare la bussola del dispositivo.",
     "experimentalFeatureMessage": "La modalità Realtà Aumentata è attualmente in beta. Questa modalità è progettata solo per l'uso sui più recenti dispositivi mobili di fascia alta. <br /><br />ATTENZIONE: Questa modalità può consumare molti dati, fai attenzione ai costi di utilizzo dei dati da parte del tuo provider di rete. <br /><br />La precisione di questa modalità dipende dalla precisione della bussola interna del tuo dispositivo mobile."
   },
+  "browsers": {
+    "chrome": "Google Chrome",
+    "edge": "Microsoft Edge",
+    "firefox": "Mozilla Firefox",
+    "safari": "Apple Safari"
+  },
   "measure": {
     "measureDistance": "Misura la distanza fra punti",
     "measureTool": "Misura di linee e percorsi",
@@ -168,7 +174,10 @@
     "convertNotificationMessage": "Questo link di condivisione è basato su una vecchia versione di TerriaJS - il software che alimenta questa mappa web. Anche se sono stati fatti i migliori sforzi per preservare il link, potresti incontrare problemi con la visualizzazione dei dati.  \n\nSe sei l'utente che ha condiviso il link, clicca su OK per far scomparire il messaggio di avviso e continuare ad accedere ai dati.",
     "convertErrorTitle": "Impossibile aggiornare il link di condivisione alla versione 8",
     "convertNotificationFeedback": "Per domande o feedback, clicca qui.",
-    "convertNotificationHelp": "Se hai creato il link di condivisione, controlla il menu Aiuto per vedere i suggerimenti su come aggiornare il link di condivisione."
+    "convertNotificationHelp": "Se hai creato il link di condivisione, controlla il menu Aiuto per vedere i suggerimenti su come aggiornare il link di condivisione.",
+    "downloadMap": "Download (png)",
+    "embedDescription": "Per includere questa mappa in una pagina HTML copiate questo codice:",
+    "getShareSaveHelpMessage": "How to Bookmark Sharelinks"
   },
   "zoomCotrol": {
     "zoomReset": "Ripristina lo zoom",
@@ -237,6 +246,7 @@
       "devError": "È necessaria un'istanza di Terria.",
       "otherEntities": "Linee e poligoni",
       "messageHeader": "Disegnare sulla mappa",
+      "clickToRedrawRectangle": "Click another point to redraw the rectangle",
       "clickToAddAnotherPoint": "Clicca per aggiungere un altro punto, clicca su un punto esistente per rimuoverlo, trascina un punto per spostarlo.",
       "clickToAddFirstPoint": "Clicca per aggiungere il primo punto."
     },
@@ -906,6 +916,19 @@
     "terria-reference": {
       "failedToLoadTarget": "Impossibile caricare un membro dal catalogo esterno"
     },
+    "clippingBox": {
+      "clipDirection": {
+        "name": "Direzione del taglio",
+        "options": {
+          "inside": "Taglia l'interno del box",
+          "outside": "Taglia l'esterno del box"
+        }
+      },
+      "clipModel": "Taglia il modello",
+      "groupName": "Box di taglio",
+      "keepBoxAboveGround": "Solo sopra il terreno",
+      "showClippingBox": "Mostra il box di taglio"
+    },
     "commonModelErrors": {
       "3dTypeIn2dMode": "**Nota:** Questo set di dati non può essere visualizzato nel visualizzatore 2D. Passa a una delle modalità di mappa 3D."
     }
@@ -927,6 +950,7 @@
     "extraCreditLinks": {
       "disclaimer": "Scarico di responsabilità",
       "dataAttribution": "Attribuzione dei dati",
+      "dataProvider": "Dati forniti da:",
       "basemap": "Attribuzione dei dati"
     },
     "drawExtentHelper": {
@@ -946,6 +970,8 @@
       "devError": "cesium è richiesto.",
       "unusalTilingScheme": "Questo set di dati non può essere visualizzato sulla mappa 2D perché utilizza uno schema di tile insolito che non è supportato.",
       "notWebMercatorTilingScheme": "Questo set di dati non può essere visualizzato sulla mappa 2D perché non supporta la proiezione Web Mercator (EPSG:3857).",
+      "stoppedRenderingMessage": "L'errore potrebbe essere stato causato dall'aggiunta di un layer. Prova a rimuoverlo, se il problema rimane prova a ricaricare l'applicazione {{appName}}.",
+      "stoppedRenderingTitle": "Errore nel rendering della mappa Cesium",
       "failedToObtain": "Impossibile ottenere la tile dell'immagine X: {{x}} Y: {{y}} Livello: {{level}}."
     },
     "imageryProviderHooks": {
@@ -980,6 +1006,7 @@
     "dataType": {
       "json": "JSON",
       "gpx": "GPX",
+      "ifc": "IFC",
       "csv": "CSV",
       "opendatasoft-group": "Portale Opendatasoft",
       "shp": "Shapefile (zip)",
@@ -988,6 +1015,7 @@
       "sdmx-group": "SDMX-JSON",
       "gltf": "GLTF",
       "carto": "Carto",
+      "carto-v3": "Carto V3",
       "czml": "CZML",
       "geoRss": "GeoRSS",
       "other": "Altro (usare il servizio di conversione)",
@@ -995,12 +1023,17 @@
       "kml": "KML o KMZ",
       "esri-group": "Esri ArcGIS Server",
       "geojson": "GeoJSON",
+      "socrata-group": "Socrata Server",
       "esri-featureServer": "Esri ArcGIS FeatureServer (singolo livello)",
       "esri-mapServer": "Esri ArcGIS MapServer (singolo livello)",
       "wps-getCapabilities": "Server Web Processing Service (WPS)",
       "wfs-group": "Server Web Feature Service (WFS)",
       "wms-group": "Server Web Map Service (WMS)",
-      "wmts-group": "Server Web Map Tile Service (WMTS)"
+      "wmts-group": "Server Web Map Tile Service (WMTS)",
+      "assimp-local": "3D file converter (zip) (experimental)",
+      "assimp-local-description": "**Warning:** 3D file converter is experimental.  \nSee list of [supported formats](https://github.com/assimp/assimp/blob/master/doc/Fileformats.md).  \nFiles must be zipped.",
+      "assimp-remote": "3D file converter (experimental)",
+      "assimp-remote-description": "**Warning:** 3D file converter is experimental.  \nSee list of [supported formats](https://github.com/assimp/assimp/blob/master/doc/Fileformats.md).  \nZip files are also supported"
     },
     "printWindow": {
       "errorTitle": "Errore nella stampa",
@@ -1018,6 +1051,12 @@
       "networkRequestTitle": "Si è verificato un errore nella richiesta di rete",
       "networkRequestMessage": "I dati potrebbero non essere disponibili o visualizzati correttamente a causa di un'interruzione del servizio del custode dei dati. Prova a ricaricare la mappa, ad accedere ai dati in un secondo momento o a selezionare un altro set di dati. <feedbacklink feedback-message='If the problem persists, please submit feedback here.' email-message='If the problem persists, please report to {{email}}'/>",
       "networkRequestMessageDetailed": "Questo può indicare una delle seguenti cose:\n\n* L'hostname del server non può essere risolto\n* Il server non ha risposto alla richiesta - o è temporaneamente non disponibile\n* Il server ha negato l'accesso [Cross-Origin Resource Sharing (CORS)](https://docs.terria.io/guide/connecting-to-data/cross-origin-resource-sharing/) a questo URL\n* C'è un problema con la tua connessione internet\n\nSe hai inserito il link manualmente, verifica che il link sia corretto."
+    },
+    "unverifiedExternalLink": {
+      "confirmText": "Apri in una nuova tab",
+      "denyText": "Cancella",
+      "message": "Stai per aprire: \n\n`{{url}}`  \n\nQuesto link non è verificato e potrebbe non essere sicuro.",
+      "title": "Attenzione: link non verificato"
     },
     "chartData": "Dati del grafico",
     "userAddedData": "Dati aggiunti dall'utente",
@@ -1133,7 +1172,10 @@
     "toggleSplitterToolTitle": "Confronta",
     "title": "Trascina a sinistra o a destra per regolare le viste",
     "toggleSplitterToolDisabled": "Si prega di disabilitare le altre funzionalità di confronto fianco a fianco per abilitare il confronto standard",
-    "toggleSplitterTool": "Abilita il confronto affiancato tra due diversi set di dati"
+    "toggleSplitterTool": "Abilita il confronto affiancato tra due diversi set di dati",
+    "duplicateModelErrorMessage": "Errore nel confronto del layer `\"{{name}}\"`. Questo layer potrebbe non supportare la funzionalità di \"confronto\"",
+    "errorTitle": "Errore nella comparazione dei layer.",
+    "modelNotFoundErrorMessage": "Model ID `\"{{id}}\"` could not be found"
   },
   "deltaTool": {
     "cancelBtn": "Annulla",
@@ -1175,7 +1217,8 @@
     "sectionLabel": "Grafici",
     "closePanel": "Chiudi pannello",
     "loading": "Caricamento dei dati del grafico...",
-    "noData": "Non sono stati trovati dati cartografici."
+    "noData": "Non sono stati trovati dati cartografici.",
+    "showItemInChart": "Mostra il grafico di {{value}}"
   },
   "catalogItem": {
     "add": "Aggiungi",
@@ -1209,6 +1252,9 @@
       "addFirstText": "Aggiungi una nuova condizione",
       "addMoreText": "Aggiungi una condizione"
     }
+  },
+  "printView": {
+    "loading": "Creazione della vista di stampa in corso…"
   },
   "satellite": {
     "newLocation": "Nuova posizione",
@@ -1269,6 +1315,7 @@
     "previewItem": "Informazioni",
     "zoomTo": "Zoom ideale",
     "splitItemTitle": "Duplicare e mostrare lo splitter",
+    "splitScreenMode": "Confronta",
     "colorScaleRangeTitle": "Gamma di scala di colore non valida",
     "addItemErrorMessage": "Si è verificato un errore durante il caricamento dell'elemento del catalogo.",
     "addItemErrorTitle": "L'articolo del catalogo non può essere aggiunto alla workbench.",
@@ -1341,6 +1388,12 @@
       "cancelBtn": "annulla",
       "placeholder": "Inserisci un titolo"
     },
+    "collapse": "Collassa",
+    "expand": "Espandi",
+    "next": "Prossimo",
+    "playStory": "Storia",
+    "prev": "Precedente",
+    "restart": "Riavvia",
     "removeAllStories": "Rimuovi Tutto",
     "delete": "Cancella",
     "deleteStory": "elimina",
@@ -1509,6 +1562,43 @@
     },
     "closeButtonTitle": "Chiudere lo strumento {{toolName}}"
   },
+  "compare": {
+    "dataset": {
+      "label": "Dataset",
+      "selectOne": "Seleziona"
+    },
+    "dateButton": {
+      "left": "Sinistra",
+      "right": "Destra",
+      "select": "Seleziona una data"
+    },
+    "dateLocationFilter": {
+      "cancel": "Cancella",
+      "filter": "Filtra per posizione",
+      "loading": "Caricamento...",
+      "location": "Ora mostra i dati disponibili in {{latitude}}, {{longitude}}",
+      "mouseTooltipMessage": "Click del tasto detro per cancellare",
+      "mouseTooltipTitle": "Seleziona una posizione"
+    },
+    "dimensionSelector": {
+      "undefinedLabel": "Non specificato"
+    },
+    "done": "Fatto",
+    "entireMap": {
+      "emptyText": "Add new data to show across the entire map via the dotted menu above.",
+      "title": "Mappa intera"
+    },
+    "entireMapMenu": {
+      "browse": "Browse map data",
+      "hideAll": "Nascondi tutto",
+      "sendAllToBack": "Porta dietro",
+      "sendAllToFront": "Porta in primo piano"
+    },
+    "info": "Compare spatial datasets from your workbench side-by-side on the map.",
+    "leftPanel": "Pannello di sinistra",
+    "rightPanel": "Pannello di destra",
+    "title": "Compara"
+  },
   "compass": {
     "guidance": {
       "outerRingTitle": "Anello esterno",
@@ -1575,6 +1665,9 @@
     "takeTour": "Fai il tour",
     "promptMessage": "Trova il Tour, i video come fare e altri contenuti di aiuto qui",
     "menuPaneBody": "Trova consigli utili su come usare TerriaJS controllando le guide qui sotto o contattando il team a [{{supportEmail}}]({{supportEmail}})"
+  },
+  "includeStory": {
+    "message": "Includi la Storia nella condivisione"
   },
   "term": {
     "missingContent": "contenuto mancante"
