@@ -21,7 +21,7 @@ export const MapViewers = Object.seal({
     available: true
   },*/
   "2d": {
-    viewerMode: ViewerMode.Leaflet,
+    viewerMode: ViewerMode.Preview,
     terrain: false,
     label: "settingPanel.viewerModeLabels.Leaflet",
     available: true
@@ -40,7 +40,7 @@ export function setViewerMode(
       viewer.viewerMode = ViewerMode.Cesium;
       viewer.viewerOptions.useTerrain = viewerMode === "3d";
     } else if (viewerMode === "2d") {
-      viewer.viewerMode = ViewerMode.Leaflet;
+      viewer.viewerMode = viewer.terria.viewer2DMode;
     } else {
       console.error(
         `Trying to select ViewerMode ${viewerMode} that doesn't exist`

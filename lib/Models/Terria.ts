@@ -107,7 +107,7 @@ import CatalogIndex from "./SearchProviders/CatalogIndex";
 import ShareDataService from "./ShareDataService";
 import { StoryVideoSettings } from "./StoryVideoSettings";
 import TimelineStack from "./TimelineStack";
-import { isViewerMode, setViewerMode } from "./ViewerMode";
+import ViewerMode, { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -375,6 +375,11 @@ interface ConfigParameters {
    * Side size for the drill pick in Cesium
    */
   pickSize?: number;
+
+  /**
+   * If true use Cesium2D instead of Leaflet
+   */
+  useCesiumAs2DViewer: boolean;
 }
 
 interface StartOptions {
@@ -603,7 +608,8 @@ export default class Terria {
     useElevationMeanSeaLevel: false,
     userProfilesDefinition: undefined,
     userProfileLoginServiceUrl: undefined,
-    pickSize: undefined
+    pickSize: undefined,
+    useCesiumAs2DViewer: false
   };
 
   @observable
@@ -728,6 +734,12 @@ export default class Terria {
     return this.userProfile
       ? this.configParameters.userProfilesDefinition?.[this.userProfile]
       : undefined;
+  }
+
+  @computed
+  get viewer2DMode () {
+    //TODO: tmp!
+    return this.configParameters.useCesiumAs2DViewer ? ViewerMode.Leaflet : ViewerMode.Preview;
   }
 
   /**
