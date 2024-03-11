@@ -224,7 +224,7 @@ class ViewingControls extends React.Component<
     const item = this.props.item;
     const terria = item.terria;
 
-    const splitRef = new SplitItemReference(createGuid(), terria);
+    //const splitRef = new SplitItemReference(createGuid(), terria);
     runInAction(async () => {
       if (!hasTraits(item, SplitterTraits, "splitDirection")) return;
 
@@ -236,11 +236,11 @@ class ViewingControls extends React.Component<
         );
       }
 
-      splitRef.setTrait(CommonStrata.user, "splitSourceItemId", item.uniqueId);
-      terria.addModel(splitRef);
+      //splitRef.setTrait(CommonStrata.user, "splitSourceItemId", item.uniqueId);
+      //terria.addModel(splitRef);
       terria.showSplitter = true;
 
-      await splitRef.loadReference();
+      /*await splitRef.loadReference();
       runInAction(() => {
         const target = splitRef.target;
         if (target) {
@@ -259,6 +259,38 @@ class ViewingControls extends React.Component<
             item.splitDirection === SplitDirection.LEFT
               ? SplitDirection.RIGHT
               : SplitDirection.LEFT
+          );
+        }
+      });
+
+      // Add it to terria.catalog, which is required so the new item can be shared.
+      addUserCatalogMember(terria, splitRef, {
+        open: false
+      });*/
+    });
+  }
+
+  copyItem() {
+    const { t } = this.props;
+    const item = this.props.item;
+    const terria = item.terria;
+
+    const splitRef = new SplitItemReference(createGuid(), terria);
+
+    runInAction(async () => {
+      splitRef.setTrait(CommonStrata.user, "splitSourceItemId", item.uniqueId);
+      terria.addModel(splitRef);
+
+      await splitRef.loadReference();
+      runInAction(() => {
+        const target = splitRef.target;
+        if (target) {
+          target.setTrait(
+            CommonStrata.user,
+            "name",
+            t("splitterTool.workbench.copyName", {
+              name: getName(item)
+            })
           );
         }
       });
@@ -409,6 +441,19 @@ class ViewingControls extends React.Component<
               <BoxViewingControl>
                 <StyledIcon glyph={Icon.GLYPHS.compare} />
                 <span>{t("workbench.splitItem")}</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        ) : null}
+        {canSplit ? (
+          <li key={"workbench.splitItem"}>
+            <ViewingControlMenuButton
+              onClick={this.copyItem.bind(this)}
+              title="Copia"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.copy} />
+                <span>Copia</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>
