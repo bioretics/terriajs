@@ -354,7 +354,7 @@ class SettingPanel extends React.Component<PropTypes> {
               </Checkbox>
             </Box>
           </>
-          {this.props.terria.mainViewer.viewerMode !== this.props.terria.viewer2DMode && (
+          {this.props.terria.mainViewer.viewerMode !== ViewerMode.Preview /*this.props.terria.viewer2DMode*/ && (
             <>
               <Spacing bottom={2} />
               <Box column>
