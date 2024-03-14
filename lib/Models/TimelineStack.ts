@@ -86,6 +86,7 @@ export default class TimelineStack {
     }
     if (this._disposeTickSubscription) {
       this._disposeTickSubscription();
+      this._disposeTickSubscription = undefined;
     }
   }
 
