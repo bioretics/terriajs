@@ -313,7 +313,8 @@ class MapServerStratum extends LoadableStratum(
       });
     });
 
-    items = uniqWith(items, (a, b) => a.imageUrl === b.imageUrl);
+    // Comment, otherwise the legend may be truncated when the same symbol is used multiple times
+    //items = uniqWith(items, (a, b) => a.imageUrl === b.imageUrl);
 
     return [createStratumInstance(LegendTraits, { items })];
   }
