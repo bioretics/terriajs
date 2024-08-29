@@ -94,7 +94,7 @@ class MobileHeader extends React.Component {
   onMobileSwitchViewClicked() {
     runInAction(() => {
       const mainViewer = this.props.viewState.terria.mainViewer;
-      if (mainViewer.viewerMode === ViewerMode.Leaflet) {
+      if (mainViewer.viewerMode === ViewerMode.Leaflet || mainViewer.viewerMode === ViewerMode.Preview) {
         setViewerMode("3d", mainViewer);
         this.props.viewState.terria.setLocalProperty(
           "viewermode",
