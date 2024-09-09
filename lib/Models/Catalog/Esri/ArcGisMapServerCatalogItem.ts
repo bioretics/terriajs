@@ -308,8 +308,6 @@ class MapServerStratum extends LoadableStratum(
       });
     });
 
-    items = uniqWith(items, (a, b) => a.imageUrl === b.imageUrl);
-
     return [createStratumInstance(LegendTraits, { items })];
   }
 
