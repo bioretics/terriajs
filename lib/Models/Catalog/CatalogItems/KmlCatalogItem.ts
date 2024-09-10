@@ -21,6 +21,9 @@ import CreateModel from "../../Definition/CreateModel";
 import HasLocalData from "../../HasLocalData";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -154,7 +157,7 @@ class KmlCatalogItem
         }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrain(terrainProvider, 11, positionsToSample).then(function () {
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
         for (let i = 0; i < positionsToSample.length; ++i) {
           const position = positionsToSample[i];
           if (!isDefined(position.height)) {
