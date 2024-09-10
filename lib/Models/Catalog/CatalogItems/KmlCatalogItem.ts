@@ -142,6 +142,16 @@ class KmlCatalogItem
             );
           }
         }
+
+        // Clamp to ground
+        if (isDefined(entity.polyline)) {
+          entity.polyline.clampToGround = new ConstantProperty(true);
+          entity.polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
+        } else if (isDefined(entity.billboard)) {
+          entity.billboard.heightReference = new ConstantProperty(
+            HeightReference.CLAMP_TO_GROUND
+          );
+        }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
       sampleTerrain(terrainProvider, 11, positionsToSample).then(function () {
