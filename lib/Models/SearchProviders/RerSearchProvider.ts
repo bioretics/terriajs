@@ -214,7 +214,7 @@ export default class RerSearchProvider extends SearchProvider {
       })
     ];
 
-    /*
+
     const rect = this.computeSearchAreaRectangle();
 
 
@@ -245,7 +245,7 @@ export default class RerSearchProvider extends SearchProvider {
         })
       );
     }
-    */
+    
 
     try {
       const results = await Promise.all(searchPromises);
