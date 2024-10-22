@@ -93,13 +93,14 @@ export const SearchBox = createReactClass({
   handleChange(event) {
     const value = event.target.value;
     // immediately bypass debounce if we started with no value
-    if (this.props.searchText.length === 0) {
-      this.props.onSearchTextChanged(value);
+
+    this.props.onSearchTextChanged(value);
+
+    if (this.props.searchText.length >= 2) {
       this.search();
-    } else {
-      this.props.onSearchTextChanged(value);
+    } /*else {
       this.searchWithDebounce();
-    }
+    }*/
   },
 
   clearSearch() {
