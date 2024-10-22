@@ -440,7 +440,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
           layout="vertical"
           data={data}
           margin={{
-            top: 5,
+            top: 20,
             right: 10,
             left: 20,
             bottom: 5
@@ -496,7 +496,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
     const showFilters = filterText.length > 0 && !useHidden;
 
     return (
-      <div style={{ width: "100%", height: "100%" }} ref={ref}>
+      <div style={{ width: "100%", height: "100%", overflowY: "auto" }} ref={ref}>
         <Box fullHeight column>
           <Box fullHeight overflow="hidden">
             <Box styledWidth={showFilters ? "80%" : "100%"}>
