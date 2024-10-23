@@ -21,6 +21,9 @@ import CreateModel from "../../Definition/CreateModel";
 import HasLocalData from "../../HasLocalData";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 
 const kmzRegex = /\.kmz$/i;
@@ -147,9 +150,19 @@ class KmlCatalogItem
             );
           }
         }
+
+        // Clamp to ground
+        if (isDefined(entity.polyline)) {
+          entity.polyline.clampToGround = new ConstantProperty(true);
+          entity.polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
+        } else if (isDefined(entity.billboard)) {
+          entity.billboard.heightReference = new ConstantProperty(
+            HeightReference.CLAMP_TO_GROUND
+          );
+        }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrain(terrainProvider, 11, positionsToSample).then(function () {
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
         for (let i = 0; i < positionsToSample.length; ++i) {
           const position = positionsToSample[i];
           if (!isDefined(position.height)) {
