@@ -370,6 +370,11 @@ export interface ConfigParameters {
    */
   searchBarConfig?: ModelPropertiesFromTraits<SearchBarTraits>;
   searchProviders: ModelPropertiesFromTraits<SearchProviderTraits>[];
+
+  /**
+   * If true search also in info of catalog layers.
+   */
+  searchInCatalogItemInfo: boolean;
 }
 
 interface StartOptions {
@@ -591,7 +596,8 @@ export default class Terria {
     aboutButtonHrefUrl: "about.html",
     plugins: undefined,
     searchBarConfig: undefined,
-    searchProviders: []
+    searchProviders: [],
+    searchInCatalogItemInfo: false
   };
 
   @observable
