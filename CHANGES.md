@@ -1,8 +1,23 @@
 # Change Log
 
-#### next release (8.7.7)
+#### next release (8.7.8)
 
+- Add support for Cloud Optimised Geotiff (cog) in Cesium mode. Currently supports EPSG 4326 and 3857. There is experimental support for other projections but performance might suffer and there could be other issues.
+- Fix `Workbench.collapseAll()` and `Workbench.expandAll()` for References.
+- Add to the "doZoomTo" function the case of an imagery layer with imageryProvider.rectangle
 - [The next improvement]
+
+#### 8.7.7 - 2024-10-01
+
+- **Breaking changes:**
+
+  - Remove RollbarErrorServiceProvder
+  - Error services now instantiated externally to terriajs
+
+- Fix remaining lint warnings
+- Augment cesium types and start using import instead of require in ts files
+- Update to sass 1.79.1
+- Add option to import assets from Cesium ion through the Add data panel. Use map config parameter "cesiumIonOAuth2ApplicationID" to enable the feature.
 
 #### 8.7.6 - 2024-08-22
 
@@ -24,7 +39,6 @@
 - Increase `maxRefreshIntervals` from 1000 to 10000 for `WebMapServiceCatalogItem` and `ArcGisMapServerCatalogItem`.
 - Add `nextDiscreteJulianDate` helper computed value to `DiscretelyTimeVaryingMixin`
 - Add `EPSG:7899` to `Proj4Definitions`
-- [The next improvement]
 
 #### 8.7.5 - 2024-06-26
 

@@ -96,8 +96,7 @@ import updateModelFromJson from "./Definition/updateModelFromJson";
 import upsertModelFromJson from "./Definition/upsertModelFromJson";
 import {
   ErrorServiceOptions,
-  ErrorServiceProvider,
-  initializeErrorServiceProvider
+  ErrorServiceProvider
 } from "./ErrorServiceProviders/ErrorService";
 import StubErrorServiceProvider from "./ErrorServiceProviders/StubErrorServiceProvider";
 import TerriaFeature from "./Feature/Feature";
@@ -210,6 +209,26 @@ export interface ConfigParameters {
    * True to use Bing Maps from Cesium ion (Cesium World Imagery). By default, Ion will be used, unless the `bingMapsKey` property is specified, in which case that will be used instead. To disable the Bing Maps layers entirely, set this property to false and set `bingMapsKey` to null.
    */
   useCesiumIonBingImagery?: boolean;
+  /**
+   * The OAuth2 application ID to use to allow login to Cesium ion on the "Add Data" panel. The referenced application must be configured on
+   * Cesium ion with a Redirect URI of `[TerriaMap Base URL]/build/TerriaJS/cesium-ion-oauth2.html`. For example, if users access your TerriaJS
+   * application at `https://example.com/AwesomeMap` then the Redirect URI must be exactly
+   * `https://example.com/AwesomeMap/build/TerriaJS/cesium-ion-oauth2.html`.
+   */
+  cesiumIonOAuth2ApplicationID?: number;
+  /**
+   * Specifies where to store the Cesium ion login token. Valid values are:
+   *   - `page` (default) - The login token is associated with the current page load. Even simply reloading the current page will clear the token. This is the safest option.
+   *   - `sessionStorage` - The login token is associated with a browser session, which means it is shared/accessible from any page hosted on the same domain and running in the same browser tab.
+   *   - `localStorage` - The login token is shared/accessible from any page hosted on the same domain, even when running in different tabs or after exiting and restarted the web browser.
+   */
+  cesiumIonLoginTokenPersistence?: string;
+  /**
+   * Whether or not Cesium ion assets added via the "Add Data" panel will be shared with others via share links. If true, users will be asked to select a Cesium ion token when adding assets,
+   * and this choice must be made carefully to avoid exposing more Cesium ion assets than intended. If false (the default), the user's login token will be used, which is safe because this
+   * token will not be shared with others.
+   */
+  cesiumIonAllowSharingAddedAssets?: boolean;
   /**
    * A [Bing Maps API key](https://msdn.microsoft.com/en-us/library/ff428642.aspx) used for requesting Bing Maps base maps and using the Bing Maps geocoder for searching. It is your responsibility to request a key and comply with all terms and conditions.
    */
@@ -344,6 +363,11 @@ export interface ConfigParameters {
    */
   plugins?: Record<string, any>;
 
+  /**
+   * If true start with Info enabled
+   */
+  isPickInfoEnabledDefaultValue: boolean;
+
   aboutButtonHrefUrl?: string | null;
 
   /**
@@ -351,6 +375,11 @@ export interface ConfigParameters {
    */
   searchBarConfig?: ModelPropertiesFromTraits<SearchBarTraits>;
   searchProviders: ModelPropertiesFromTraits<SearchProviderTraits>[];
+
+  /**
+   * If true search also in info of catalog layers.
+   */
+  searchInCatalogItemInfo: boolean;
 }
 
 interface StartOptions {
@@ -360,6 +389,7 @@ interface StartOptions {
   };
   applicationUrl?: Location;
   shareDataService?: ShareDataService;
+  errorService?: ErrorServiceProvider;
   /**
    * i18nOptions is explicitly a separate option from `languageConfiguration`,
    * as `languageConfiguration` can be serialised, but `i18nOptions` may have
@@ -516,6 +546,9 @@ export default class Terria {
     cesiumTerrainAssetId: undefined,
     cesiumIonAccessToken: undefined,
     useCesiumIonBingImagery: undefined,
+    cesiumIonOAuth2ApplicationID: undefined,
+    cesiumIonLoginTokenPersistence: "page",
+    cesiumIonAllowSharingAddedAssets: false,
     bingMapsKey: undefined,
     hideTerriaLogo: false,
     brandBarElements: undefined,
@@ -567,8 +600,10 @@ export default class Terria {
     relatedMaps: defaultRelatedMaps,
     aboutButtonHrefUrl: "about.html",
     plugins: undefined,
+    isPickInfoEnabledDefaultValue: false,
     searchBarConfig: undefined,
-    searchProviders: []
+    searchProviders: [],
+    searchInCatalogItemInfo: false
   };
 
   @observable
@@ -637,6 +672,9 @@ export default class Terria {
   @observable stories: StoryData[] = [];
   @observable storyPromptShown: number = 0; // Story Prompt modal will be rendered when this property changes. See StandardUserInterface, section regarding sui.notifications. Ideally move this to ViewState.
 
+  /* Custom Info Tool */
+  @observable isPickInfoEnabled: boolean = false;
+
   /**
    * Gets or sets the ID of the catalog member that is currently being
    * previewed. This is observed in ViewState. It is used to open "Add data" if a catalog member is open in a share link.
@@ -679,8 +717,8 @@ export default class Terria {
   readonly developmentEnv = process?.env?.NODE_ENV === "development";
 
   /**
-   * An error service instance. The instance can be configured by setting the
-   * `errorService` config parameter. Here we initialize it to stub provider so
+   * An error service instance. The instance can be provided via the
+   * `errorService` startOption. Here we initialize it to stub provider so
    * that the `terria.errorService` always exists.
    */
   errorService: ErrorServiceProvider = new StubErrorServiceProvider();
@@ -792,7 +830,7 @@ export default class Terria {
   }
 
   @computed get modelValues() {
-    return Array.from(this.models.values());
+    return Array.from<BaseModel>(this.models.values());
   }
 
   @computed
@@ -912,19 +950,6 @@ export default class Terria {
       this.modelIdShareKeysMap.set(id, [shareKey]);
   }
 
-  /**
-   * Initialize errorService from config parameters.
-   */
-  setupErrorServiceProvider(errorService: ErrorServiceOptions) {
-    initializeErrorServiceProvider(errorService)
-      .then((errorService) => {
-        this.errorService = errorService;
-      })
-      .catch((e) => {
-        console.error("Failed to initialize error service", e);
-      });
-  }
-
   setupInitializationUrls(baseUri: uri.URI, config: any) {
     const initializationUrls: string[] = config?.initializationUrls || [];
     const initSources: InitSource[] = initializationUrls.map((url) => ({
@@ -1016,10 +1041,6 @@ export default class Terria {
         if (isJsonObject(config) && isJsonObject(config.parameters)) {
           this.updateParameters(config.parameters);
         }
-
-        if (this.configParameters.errorService) {
-          this.setupErrorServiceProvider(this.configParameters.errorService);
-        }
         this.setupInitializationUrls(baseUri, config);
       });
     } catch (error) {
@@ -1041,7 +1062,17 @@ export default class Terria {
     setCustomRequestSchedulerDomainLimits(
       this.configParameters.customRequestSchedulerLimits
     );
-
+    if (options.errorService) {
+      try {
+        this.errorService = options.errorService;
+        this.errorService.init(this.configParameters);
+      } catch (e) {
+        console.error(
+          `Failed to initialize error service: ${this.configParameters.errorService?.provider}`,
+          e
+        );
+      }
+    }
     this.analytics?.start(this.configParameters);
     this.analytics?.logEvent(
       Category.launch,
@@ -1090,6 +1121,8 @@ export default class Terria {
         console.log(error);
       }
     }
+
+    this.isPickInfoEnabled = this.configParameters.isPickInfoEnabledDefaultValue;
 
     await this.restoreAppState(options);
   }
@@ -2094,16 +2127,18 @@ export default class Terria {
         featureIndex[hash] = (featureIndex[hash] || []).concat([feature]);
       });
 
-      // Find picked feature by matching feature hash
-      // Also try to match name if defined
-      const current = pickedFeatures.current;
-      if (isJsonObject(current) && typeof current.hash === "number") {
-        const selectedFeature =
-          (featureIndex[current.hash] || []).find(
-            (feature) => feature.name === current.name
-          ) ?? featureIndex[current.hash]?.[0];
-        if (selectedFeature) {
-          this.selectedFeature = selectedFeature;
+      if (this.isPickInfoEnabled) {
+        // Find picked feature by matching feature hash
+        // Also try to match name if defined
+        const current = pickedFeatures.current;
+        if (isJsonObject(current) && typeof current.hash === "number") {
+          const selectedFeature =
+            (featureIndex[current.hash] || []).find(
+              (feature) => feature.name === current.name
+            ) ?? featureIndex[current.hash]?.[0];
+          if (selectedFeature) {
+            this.selectedFeature = selectedFeature;
+          }
         }
       }
     });

@@ -24,12 +24,15 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
   extends MappableMixin(
-    UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+    UrlMixin(
+      CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+    )
   )
   implements HasLocalData
 {
@@ -77,6 +80,8 @@ class KmlCatalogItem
           } else {
             resolve(readXml(this._kmlFile));
           }
+        } else if (isDefined(this.ionResource)) {
+          resolve(this.ionResource);
         } else if (isDefined(this.url)) {
           resolve(proxyCatalogItemUrl(this, this.url));
         } else {
@@ -118,7 +123,7 @@ class KmlCatalogItem
   }
 
   protected forceLoadMetadata(): Promise<void> {
-    return Promise.resolve();
+    return this.loadIonResource();
   }
 
   private doneLoading(kmlDataSource: KmlDataSource) {
