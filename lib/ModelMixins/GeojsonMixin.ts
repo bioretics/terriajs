@@ -1228,7 +1228,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               styles.clampToGround
                 ? HeightReference.RELATIVE_TO_GROUND
                 : undefined
-            )
+            ),
+            disableDepthTestDistance:
+              this.name === i18next.t("location.myLocation")
+                ? new ConstantProperty(Number.POSITIVE_INFINITY)
+                : undefined
           });
           if (
             properties &&

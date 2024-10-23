@@ -7,7 +7,7 @@ import {
   runInAction,
   makeObservable
 } from "mobx";
-import { Ref } from "react";
+import React, { Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import addedByUser from "../Core/addedByUser";
 import {
@@ -108,6 +108,17 @@ export default class ViewState {
   @observable currentTrainerStepIndex: number = 0;
 
   @observable printWindow: Window | null = null;
+
+  /**
+   * The currently-selected web service type on the My Data -> Add web data panel.
+   */
+  @observable remoteDataType: any | undefined = undefined;
+
+  /**
+   * The ID of the Cesium ion token that is currently selected on the
+   * My Data -> Add web data -> Cesium ion panel.
+   */
+  @observable currentCesiumIonToken: string | undefined = undefined;
 
   /**
    * Toggles ActionBar visibility. Do not set manually, it is
@@ -409,14 +420,13 @@ export default class ViewState {
     this._pickedFeaturesSubscription = reaction(
       () => this.terria.pickedFeatures,
       (pickedFeatures: PickedFeatures | undefined) => {
-
-console.log("qqqq")
-
-        if (defined(pickedFeatures)) {
-          this.featureInfoPanelIsVisible = true;
-          this.featureInfoPanelIsCollapsed = false;
-        } else {
-          this.featureInfoPanelIsVisible = false;
+        if (this.terria.isPickInfoEnabled) {
+          if (defined(pickedFeatures)) {
+            this.featureInfoPanelIsVisible = true;
+            this.featureInfoPanelIsCollapsed = false;
+          } else {
+            this.featureInfoPanelIsVisible = false;
+          }
         }
       }
     );
@@ -574,7 +584,7 @@ console.log("qqqq")
     this._locationMarkerSubscription();
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
-
+    this._storyBeforeUnloadSubscription();
     this.searchState.dispose();
   }
 

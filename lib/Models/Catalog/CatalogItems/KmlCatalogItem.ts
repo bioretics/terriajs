@@ -23,13 +23,19 @@ import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
   extends MeasurableGeometryMixin(
     MappableMixin(
-      UrlMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+      UrlMixin(
+        CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+      )
     )
   )
   implements HasLocalData
@@ -78,6 +84,8 @@ class KmlCatalogItem
           } else {
             resolve(readXml(this._kmlFile));
           }
+        } else if (isDefined(this.ionResource)) {
+          resolve(this.ionResource);
         } else if (isDefined(this.url)) {
           resolve(proxyCatalogItemUrl(this, this.url));
         } else {
@@ -119,7 +127,7 @@ class KmlCatalogItem
   }
 
   protected forceLoadMetadata(): Promise<void> {
-    return Promise.resolve();
+    return this.loadIonResource();
   }
 
   private doneLoading(kmlDataSource: KmlDataSource) {
@@ -146,9 +154,19 @@ class KmlCatalogItem
             );
           }
         }
+
+        // Clamp to ground
+        if (isDefined(entity.polyline)) {
+          entity.polyline.clampToGround = new ConstantProperty(true);
+          entity.polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
+        } else if (isDefined(entity.billboard)) {
+          entity.billboard.heightReference = new ConstantProperty(
+            HeightReference.CLAMP_TO_GROUND
+          );
+        }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrain(terrainProvider, 11, positionsToSample).then(function () {
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
         for (let i = 0; i < positionsToSample.length; ++i) {
           const position = positionsToSample[i];
           if (!isDefined(position.height)) {

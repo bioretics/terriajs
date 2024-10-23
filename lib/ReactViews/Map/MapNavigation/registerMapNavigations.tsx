@@ -29,6 +29,7 @@ import {
   ZoomControl,
   ZOOM_CONTROL_ID
 } from "./Items";
+import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -150,6 +151,17 @@ export const registerMapNavigations = (viewState: ViewState) => {
     controller: measureLineTool,
     screenSize: undefined,
     order: 6
+  });
+
+  const toggleInfoController = new TogglePickInfoController(viewState);
+  mapNavigationModel.addItem({
+    id: TogglePickInfoController.id,
+    name: "translate#pickInfo.toolName",
+    title: "translate#pickInfo.title",
+    location: "TOP",
+    controller: toggleInfoController,
+    screenSize: undefined,
+    order: 7
   });
 
   const pedestrianModeToolController = new ToolButtonController({

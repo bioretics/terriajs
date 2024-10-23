@@ -211,6 +211,26 @@ export interface ConfigParameters {
    */
   useCesiumIonBingImagery?: boolean;
   /**
+   * The OAuth2 application ID to use to allow login to Cesium ion on the "Add Data" panel. The referenced application must be configured on
+   * Cesium ion with a Redirect URI of `[TerriaMap Base URL]/build/TerriaJS/cesium-ion-oauth2.html`. For example, if users access your TerriaJS
+   * application at `https://example.com/AwesomeMap` then the Redirect URI must be exactly
+   * `https://example.com/AwesomeMap/build/TerriaJS/cesium-ion-oauth2.html`.
+   */
+  cesiumIonOAuth2ApplicationID?: number;
+  /**
+   * Specifies where to store the Cesium ion login token. Valid values are:
+   *   - `page` (default) - The login token is associated with the current page load. Even simply reloading the current page will clear the token. This is the safest option.
+   *   - `sessionStorage` - The login token is associated with a browser session, which means it is shared/accessible from any page hosted on the same domain and running in the same browser tab.
+   *   - `localStorage` - The login token is shared/accessible from any page hosted on the same domain, even when running in different tabs or after exiting and restarted the web browser.
+   */
+  cesiumIonLoginTokenPersistence?: string;
+  /**
+   * Whether or not Cesium ion assets added via the "Add Data" panel will be shared with others via share links. If true, users will be asked to select a Cesium ion token when adding assets,
+   * and this choice must be made carefully to avoid exposing more Cesium ion assets than intended. If false (the default), the user's login token will be used, which is safe because this
+   * token will not be shared with others.
+   */
+  cesiumIonAllowSharingAddedAssets?: boolean;
+  /**
    * A [Bing Maps API key](https://msdn.microsoft.com/en-us/library/ff428642.aspx) used for requesting Bing Maps base maps and using the Bing Maps geocoder for searching. It is your responsibility to request a key and comply with all terms and conditions.
    */
   bingMapsKey?: string;
@@ -344,6 +364,11 @@ export interface ConfigParameters {
    */
   plugins?: Record<string, any>;
 
+  /**
+   * If true start with Info enabled
+   */
+  isPickInfoEnabledDefaultValue: boolean;
+
   aboutButtonHrefUrl?: string | null;
 
   /**
@@ -356,6 +381,11 @@ export interface ConfigParameters {
    * If true elevation is intended MSL, otherwise WGS84
    */
   useElevationMeanSeaLevel: boolean;
+
+  /**
+   * If true search also in info of catalog layers.
+   */
+  searchInCatalogItemInfo: boolean;
 }
 
 interface StartOptions {
@@ -529,6 +559,9 @@ export default class Terria {
     cesiumTerrainAssetId: undefined,
     cesiumIonAccessToken: undefined,
     useCesiumIonBingImagery: undefined,
+    cesiumIonOAuth2ApplicationID: undefined,
+    cesiumIonLoginTokenPersistence: "page",
+    cesiumIonAllowSharingAddedAssets: false,
     bingMapsKey: undefined,
     hideTerriaLogo: false,
     brandBarElements: undefined,
@@ -580,9 +613,11 @@ export default class Terria {
     relatedMaps: defaultRelatedMaps,
     aboutButtonHrefUrl: "about.html",
     plugins: undefined,
+    isPickInfoEnabledDefaultValue: false,
     searchBarConfig: undefined,
     searchProviders: [],
-    useElevationMeanSeaLevel: false
+    useElevationMeanSeaLevel: false,
+    searchInCatalogItemInfo: false
   };
 
   @observable
@@ -656,6 +691,9 @@ export default class Terria {
 
   @observable stories: StoryData[] = [];
   @observable storyPromptShown: number = 0; // Story Prompt modal will be rendered when this property changes. See StandardUserInterface, section regarding sui.notifications. Ideally move this to ViewState.
+
+  /* Custom Info Tool */
+  @observable isPickInfoEnabled: boolean = false;
 
   /**
    * Gets or sets the ID of the catalog member that is currently being
@@ -812,7 +850,7 @@ export default class Terria {
   }
 
   @computed get modelValues() {
-    return Array.from(this.models.values());
+    return Array.from<BaseModel>(this.models.values());
   }
 
   @computed
@@ -1103,6 +1141,8 @@ export default class Terria {
         console.log(error);
       }
     }
+
+    this.isPickInfoEnabled = this.configParameters.isPickInfoEnabledDefaultValue;
 
     await this.restoreAppState(options);
   }
@@ -2107,16 +2147,18 @@ export default class Terria {
         featureIndex[hash] = (featureIndex[hash] || []).concat([feature]);
       });
 
-      // Find picked feature by matching feature hash
-      // Also try to match name if defined
-      const current = pickedFeatures.current;
-      if (isJsonObject(current) && typeof current.hash === "number") {
-        const selectedFeature =
-          (featureIndex[current.hash] || []).find(
-            (feature) => feature.name === current.name
-          ) ?? featureIndex[current.hash]?.[0];
-        if (selectedFeature) {
-          this.selectedFeature = selectedFeature;
+      if (this.isPickInfoEnabled) {
+        // Find picked feature by matching feature hash
+        // Also try to match name if defined
+        const current = pickedFeatures.current;
+        if (isJsonObject(current) && typeof current.hash === "number") {
+          const selectedFeature =
+            (featureIndex[current.hash] || []).find(
+              (feature) => feature.name === current.name
+            ) ?? featureIndex[current.hash]?.[0];
+          if (selectedFeature) {
+            this.selectedFeature = selectedFeature;
+          }
         }
       }
     });
