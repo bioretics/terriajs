@@ -372,8 +372,15 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
     runInAction(() => {
       this.strata.set(MapServerStratum.stratumName, stratum);
 
-      if (isDefined(this.maximumScale) && !isDefined(this.minScaleDenominator)) {
-        this.setTrait(CommonStrata.user, "minScaleDenominator", this.maximumScale);
+      if (
+        isDefined(this.maximumScale) &&
+        !isDefined(this.minScaleDenominator)
+      ) {
+        this.setTrait(
+          CommonStrata.user,
+          "minScaleDenominator",
+          this.maximumScale
+        );
       }
     });
   }
@@ -586,9 +593,10 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
         {
           layers: this.layersArray.map((l) => l.id).join(","),
           tilingScheme: new WebMercatorTilingScheme(),
-          maximumLevel: !!maximumLevel && this.hideLayerAfterMinScaleDenominator
-            ? maximumLevel + 1
-            : maximumLevel,
+          maximumLevel:
+            !!maximumLevel && this.hideLayerAfterMinScaleDenominator
+              ? maximumLevel + 1
+              : maximumLevel,
           tileHeight: this.tileHeight,
           tileWidth: this.tileWidth,
           parameters: params,
