@@ -282,7 +282,7 @@ class MapServerStratum extends LoadableStratum(
     const noDataRegex = /^No[\s_-]?Data$/i;
     const labelsRegex = /_Labels$/;
 
-    let items: StratumFromTraits<LegendItemTraits>[] = [];
+    const items: StratumFromTraits<LegendItemTraits>[] = [];
 
     (this._legends?.layers || []).forEach((l) => {
       if (noDataRegex.test(l.layerName) || labelsRegex.test(l.layerName)) {
