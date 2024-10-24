@@ -96,11 +96,9 @@ export const SearchBox = createReactClass({
 
     this.props.onSearchTextChanged(value);
 
-    if (this.props.searchText.length >= 2) {
+    if (event.target.value.length >= 3) {
       this.search();
-    } /*else {
-      this.searchWithDebounce();
-    }*/
+    }
   },
 
   clearSearch() {
@@ -113,7 +111,7 @@ export const SearchBox = createReactClass({
   },
 
   onKeyDown(event) {
-    if (event.keyCode === 13) {
+    if (event.keyCode === 13 && this.props.searchText.length >= 3) {
       this.search();
     }
   },
@@ -146,7 +144,9 @@ export const SearchBox = createReactClass({
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
-          this.search();
+          if(this.props.searchText.length >= 3) {
+            this.search();
+          }
         }}
         css={`
           position: relative;
