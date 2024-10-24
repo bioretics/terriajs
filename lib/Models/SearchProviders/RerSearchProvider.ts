@@ -160,7 +160,7 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
       )
     ];
 
-    const rect = this.terria.currentViewer.getCurrentCameraView().rectangle;
+    /*const rect = this.terria.currentViewer.getCurrentCameraView().rectangle;
 
     if (
       rect &&
@@ -187,7 +187,7 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
           }
         )
       );
-    }
+    }*/
 
     return Promise.all(searchPromises).then((results) => {
       let resultsArray: any[] = [];
