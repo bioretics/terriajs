@@ -10,10 +10,7 @@ export default function registerSearchProviders() {
     BingMapsSearchProvider
   );
 
-  SearchProviderFactory.register(
-    RerSearchProvider.type,
-    RerSearchProvider
-  );
+  SearchProviderFactory.register(RerSearchProvider.type, RerSearchProvider);
 
   SearchProviderFactory.register(
     CesiumIonSearchProvider.type,

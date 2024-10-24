@@ -1,8 +1,6 @@
-import i18next from "i18next";
 import { makeObservable, runInAction } from "mobx";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import { Feature, Point } from "@turf/helpers";
 import { Category } from "../../Core/AnalyticEvents/analyticEvents";
 import loadJson from "../../Core/loadJson";
 import LocationSearchProviderMixin from "../../ModelMixins/SearchProviders/LocationSearchProviderMixin";
@@ -10,11 +8,15 @@ import CreateModel from "../Definition/CreateModel";
 import Terria from "../Terria";
 import SearchProviderResults from "./SearchProviderResults";
 import SearchResult from "./SearchResult";
-import LocationSearchProviderTraits, { SearchProviderMapCenterTraits } from "../../Traits/SearchProviders/LocationSearchProviderTraits";
+import LocationSearchProviderTraits, {
+  SearchProviderMapCenterTraits
+} from "../../Traits/SearchProviders/LocationSearchProviderTraits";
 import mixTraits from "../../Traits/mixTraits";
 
 export default class RerSearchProvider extends LocationSearchProviderMixin(
-  CreateModel(mixTraits(LocationSearchProviderTraits, SearchProviderMapCenterTraits))
+  CreateModel(
+    mixTraits(LocationSearchProviderTraits, SearchProviderMapCenterTraits)
+  )
 ) {
   handle?: string;
 
@@ -39,11 +41,7 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
   }
 
   protected logEvent(searchText: string) {
-    this.terria.analytics?.logEvent(
-      Category.search,
-      "Rer",
-      searchText
-    );
+    this.terria.analytics?.logEvent(Category.search, "Rer", searchText);
   }
 
   protected async getHandle(searchResults: SearchProviderResults) {
@@ -145,26 +143,8 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
       this.handle = await this.getHandle(searchResults);
     }
 
-    const searchPromises = [loadJson(
-      this.urlAddress,
-      {
-        soapAction: this.urlAddress
-      },
-      {
-        Norm_Indirizzo_UnicoInputParams: {
-          p_Indirizzo: searchText,
-          p_Tipo_Coord: "WGS84",
-          p_Rif_Geo_Civ: "ECIV",
-          p_Handle: this.handle
-        }
-      }
-    )];
-
-    const rect = this.terria.currentViewer.getCurrentCameraView().rectangle;
-
-    if (rect && (rect.width < 2 * CesiumMath.RADIANS_PER_DEGREE ||
-      rect.height < 2 * CesiumMath.RADIANS_PER_DEGREE)) {
-      searchPromises.unshift(loadJson(
+    const searchPromises = [
+      loadJson(
         this.urlAddress,
         {
           soapAction: this.urlAddress
@@ -174,28 +154,57 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
             p_Indirizzo: searchText,
             p_Tipo_Coord: "WGS84",
             p_Rif_Geo_Civ: "ECIV",
-            p_Handle: this.handle,
-            p_minx: `${CesiumMath.toDegrees(rect.west)}`,
-            p_miny: `${CesiumMath.toDegrees(rect.south)}`,
-            p_maxx: `${CesiumMath.toDegrees(rect.east)}`,
-            p_maxy: `${CesiumMath.toDegrees(rect.north)}`
+            p_Handle: this.handle
           }
         }
-      ));
+      )
+    ];
+
+    const rect = this.terria.currentViewer.getCurrentCameraView().rectangle;
+
+    if (
+      rect &&
+      (rect.width < 2 * CesiumMath.RADIANS_PER_DEGREE ||
+        rect.height < 2 * CesiumMath.RADIANS_PER_DEGREE)
+    ) {
+      searchPromises.unshift(
+        loadJson(
+          this.urlAddress,
+          {
+            soapAction: this.urlAddress
+          },
+          {
+            Norm_Indirizzo_UnicoInputParams: {
+              p_Indirizzo: searchText,
+              p_Tipo_Coord: "WGS84",
+              p_Rif_Geo_Civ: "ECIV",
+              p_Handle: this.handle,
+              p_minx: `${CesiumMath.toDegrees(rect.west)}`,
+              p_miny: `${CesiumMath.toDegrees(rect.south)}`,
+              p_maxx: `${CesiumMath.toDegrees(rect.east)}`,
+              p_maxy: `${CesiumMath.toDegrees(rect.north)}`
+            }
+          }
+        )
+      );
     }
 
-    return Promise.all(searchPromises).then(results => {
+    return Promise.all(searchPromises).then((results) => {
       let resultsArray: any[] = [];
 
-      for (let i in results) {
-        const obj = results[i];
-        if (obj?.norm_Indirizzo_Unico_AreaOutput?.norm_Indirizzo_Unico_AreaOutputRecordsetArray) {
+      for (const obj of results) {
+        if (
+          obj?.norm_Indirizzo_Unico_AreaOutput
+            ?.norm_Indirizzo_Unico_AreaOutputRecordsetArray
+        ) {
           resultsArray = [
             ...resultsArray,
             ...obj.norm_Indirizzo_Unico_AreaOutput
               .norm_Indirizzo_Unico_AreaOutputRecordsetArray
           ];
-        } else if (obj?.norm_Indirizzo_UnicoOutput?.norm_Indirizzo_UnicoOutputRecordsetArray
+        } else if (
+          obj?.norm_Indirizzo_UnicoOutput
+            ?.norm_Indirizzo_UnicoOutputRecordsetArray
         ) {
           resultsArray = [
             ...resultsArray,
@@ -211,7 +220,6 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
         searchResults.results.push(...locations);
       });
 
-
       if (searchResults.results.length === 0) {
         searchResults.message = {
           content: "translate#viewModels.searchNoLocations"
@@ -221,8 +229,12 @@ export default class RerSearchProvider extends LocationSearchProviderMixin(
   }
 }
 
-function createZoomToFunction(model: RerSearchProvider, centerX: number,
-  centerY: number, isHouseNumber: boolean) {
+function createZoomToFunction(
+  model: RerSearchProvider,
+  centerX: number,
+  centerY: number,
+  isHouseNumber: boolean
+) {
   const delta = isHouseNumber ? 0.0025 : 0.005;
   const rectangle = Rectangle.fromDegrees(
     centerX - delta,
