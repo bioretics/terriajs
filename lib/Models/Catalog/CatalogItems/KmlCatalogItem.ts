@@ -157,39 +157,41 @@ class KmlCatalogItem
         }
       }
       const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
-      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(function() {
-        for (let i = 0; i < positionsToSample.length; ++i) {
-          const position = positionsToSample[i];
-          if (!isDefined(position.height)) {
-            continue;
-          }
+      sampleTerrainMostDetailed(terrainProvider, positionsToSample).then(
+        function () {
+          for (let i = 0; i < positionsToSample.length; ++i) {
+            const position = positionsToSample[i];
+            if (!isDefined(position.height)) {
+              continue;
+            }
 
-          Ellipsoid.WGS84.cartographicToCartesian(
-            position,
-            correspondingCartesians[i]
-          );
-        }
-
-        // Force the polygons to be rebuilt.
-        for (let i = 0; i < entities.length; ++i) {
-          const polygon = entities[i].polygon;
-          if (!isDefined(polygon)) {
-            continue;
-          }
-
-          const existingHierarchy = getPropertyValue<PolygonHierarchy>(
-            polygon.hierarchy
-          );
-          if (existingHierarchy) {
-            polygon.hierarchy = new ConstantProperty(
-              new PolygonHierarchy(
-                existingHierarchy.positions,
-                existingHierarchy.holes
-              )
+            Ellipsoid.WGS84.cartographicToCartesian(
+              position,
+              correspondingCartesians[i]
             );
           }
+
+          // Force the polygons to be rebuilt.
+          for (let i = 0; i < entities.length; ++i) {
+            const polygon = entities[i].polygon;
+            if (!isDefined(polygon)) {
+              continue;
+            }
+
+            const existingHierarchy = getPropertyValue<PolygonHierarchy>(
+              polygon.hierarchy
+            );
+            if (existingHierarchy) {
+              polygon.hierarchy = new ConstantProperty(
+                new PolygonHierarchy(
+                  existingHierarchy.positions,
+                  existingHierarchy.holes
+                )
+              );
+            }
+          }
         }
-      });
+      );
     }
   }
 }
