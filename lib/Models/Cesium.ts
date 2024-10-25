@@ -92,6 +92,7 @@ import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 import { setViewerMode } from "./ViewerMode";
 import ScreenSpaceEventHandler from "terriajs-cesium/Source/Core/ScreenSpaceEventHandler";
+import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
 
 //import Cesium3DTilesInspector from "terriajs-cesium/Source/Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector";
 
@@ -196,7 +197,7 @@ export default class Cesium extends GlobeOrMap {
 
     // Workaround for Firefox bug with WebGL and printing:
     // https://bugzilla.mozilla.org/show_bug.cgi?id=976173
-    const firefoxBugOptions = (FeatureDetection as any).isFirefox()
+    const firefoxBugOptions = FeatureDetection.isFirefox()
       ? {
           contextOptions: {
             webgl: { preserveDrawingBuffer: true }
@@ -240,7 +241,7 @@ export default class Cesium extends GlobeOrMap {
     this._eventHelper.add(
       this.scene.globe.tileLoadProgressEvent,
       (currentLoadQueueLength: number) =>
-        this._updateTilesLoadingCount(currentLoadQueueLength) as any
+        this._updateTilesLoadingCount(currentLoadQueueLength)
     );
 
     // Disable HDR lighting for better performance and to avoid changing imagery colors.
@@ -372,34 +373,36 @@ export default class Cesium extends GlobeOrMap {
 
     this.pauser = new CesiumRenderLoopPauser(this.cesiumWidget, () => {
       // Post render, update selection indicator position
-      const feature = this.terria.selectedFeature;
+      if (this.terria.isPickInfoEnabled) {
+        const feature = this.terria.selectedFeature;
 
-      // If the feature has an associated primitive and that primitive has
-      // a clamped position, use that instead, because the regular
-      // position doesn't take terrain clamping into account.
-      if (isDefined(feature)) {
-        if (
-          isDefined(feature.cesiumPrimitive) &&
-          isDefined(feature.cesiumPrimitive._clampedPosition)
-        ) {
-          this._selectionIndicator.position =
-            feature.cesiumPrimitive._clampedPosition;
-        } else if (
-          isDefined(feature.cesiumPrimitive) &&
-          isDefined(feature.cesiumPrimitive._clampedModelMatrix)
-        ) {
-          this._selectionIndicator.position = Matrix4.getTranslation(
-            feature.cesiumPrimitive._clampedModelMatrix,
-            this._selectionIndicator.position || new Cartesian3()
-          );
-        } else if (isDefined(feature.position)) {
-          this._selectionIndicator.position = feature.position.getValue(
-            this.terria.timelineClock.currentTime
-          );
+        // If the feature has an associated primitive and that primitive has
+        // a clamped position, use that instead, because the regular
+        // position doesn't take terrain clamping into account.
+        if (isDefined(feature)) {
+          if (
+            isDefined(feature.cesiumPrimitive) &&
+            isDefined(feature.cesiumPrimitive._clampedPosition)
+          ) {
+            this._selectionIndicator.position =
+              feature.cesiumPrimitive._clampedPosition;
+          } else if (
+            isDefined(feature.cesiumPrimitive) &&
+            isDefined(feature.cesiumPrimitive._clampedModelMatrix)
+          ) {
+            this._selectionIndicator.position = Matrix4.getTranslation(
+              feature.cesiumPrimitive._clampedModelMatrix,
+              this._selectionIndicator.position || new Cartesian3()
+            );
+          } else if (isDefined(feature.position)) {
+            this._selectionIndicator.position = feature.position.getValue(
+              this.terria.timelineClock.currentTime
+            );
+          }
         }
-      }
 
-      this._selectionIndicator.update();
+        this._selectionIndicator.update();
+      }
     });
 
     this._disposeSelectedFeatureSubscription = autorun(() => {
@@ -409,16 +412,15 @@ export default class Cesium extends GlobeOrMap {
     this._disposeWorkbenchMapItemsSubscription = this.observeModelLayer();
     this._disposeTerrainReaction = autorun(() => {
       this.scene.globe.terrainProvider = this.terrainProvider;
-      // TODO: bring over globe and atmosphere splitting support from terriajs-cesium
-      // this.scene.globe.splitDirection = this.terria.showSplitter
-      //   ? this.terria.terrainSplitDirection
-      //   : SplitDirection.NONE;
+      this.scene.globe.splitDirection = this.terria.showSplitter
+        ? this.terria.terrainSplitDirection
+        : SplitDirection.NONE;
       this.scene.globe.depthTestAgainstTerrain =
         this.terria.depthTestAgainstTerrainEnabled;
-      // if (this.scene.skyAtmosphere) {
-      //   this.scene.skyAtmosphere.splitDirection =
-      //     this.scene.globe.splitDirection;
-      // }
+      if (this.scene.skyAtmosphere) {
+        this.scene.skyAtmosphere.splitDirection =
+          this.scene.globe.splitDirection;
+      }
     });
     this._disposeSplitterReaction = this._reactToSplitterChanges();
 
@@ -928,6 +930,14 @@ export default class Cesium extends GlobeOrMap {
           duration: flightDurationSeconds,
           destination: target.rectangle
         });
+      } else if (
+        defined(target.imageryProvider) &&
+        defined(target.imageryProvider.rectangle)
+      ) {
+        return flyToPromise(camera, {
+          duration: flightDurationSeconds,
+          destination: target.imageryProvider.rectangle
+        });
       } else {
         return Promise.resolve();
       }
@@ -1281,7 +1291,10 @@ export default class Cesium extends GlobeOrMap {
    *
    */
   @action
-  pickFromScreenPosition(screenPosition: Cartesian2, ignoreSplitter: boolean) {
+  async pickFromScreenPosition(
+    screenPosition: Cartesian2,
+    ignoreSplitter: boolean
+  ) {
     const pickRay = this.scene.camera.getPickRay(screenPosition);
     const pickPosition = isDefined(pickRay)
       ? this.scene.globe.pick(pickRay, this.scene)
@@ -1289,7 +1302,7 @@ export default class Cesium extends GlobeOrMap {
     const pickPositionCartographic =
       pickPosition && Ellipsoid.WGS84.cartesianToCartographic(pickPosition);
 
-    const vectorFeatures = this.pickVectorFeatures(screenPosition);
+    const vectorFeatures = await this.pickVectorFeatures(screenPosition);
 
     const providerCoords = this._attachProviderCoordHooks();
     const pickRasterPromise =
@@ -1407,7 +1420,7 @@ export default class Cesium extends GlobeOrMap {
    * @param screenPosition position on the screen to look for features
    * @returns The features found.
    */
-  private pickVectorFeatures(screenPosition: Cartesian2) {
+  private async pickVectorFeatures(screenPosition: Cartesian2) {
     // Pick vector features
     const vectorFeatures = [];
     const pickedList = this.scene.drillPick(screenPosition);
@@ -1436,7 +1449,9 @@ export default class Cesium extends GlobeOrMap {
         typeof catalogItem?.getFeaturesFromPickResult === "function" &&
         this.terria.allowFeatureInfoRequests
       ) {
-        const result = catalogItem.getFeaturesFromPickResult.bind(catalogItem)(
+        const result = await catalogItem.getFeaturesFromPickResult.bind(
+          catalogItem
+        )(
           screenPosition,
           picked,
           vectorFeatures.length < catalogItem.maxRequests
@@ -1634,10 +1649,12 @@ export default class Cesium extends GlobeOrMap {
           return this._makeImageryLayerFromParts(m, item) as ImageryLayer;
         } else if (isCesium3DTileset(m)) {
           return m;
+        } else if (m instanceof I3SDataProvider) {
+          return filterOutUndefined(m.layers.map((layer) => layer.tileset));
         }
         return undefined;
       })
-    );
+    ).flat(1); /* Flatten I3S tilesets */
   }
 
   private _makeImageryLayerFromParts(
@@ -1687,12 +1704,16 @@ export default class Cesium extends GlobeOrMap {
 
     this._highlightFeature(feature);
 
-    if (isDefined(feature) && isDefined(feature.position)) {
+    if (
+      isDefined(feature) &&
+      isDefined(feature.position) &&
+      this.terria.isPickInfoEnabled
+    ) {
       this._selectionIndicator.position = feature.position.getValue(
         this.terria.timelineClock.currentTime
       );
       this._selectionIndicator.animateAppear();
-    } else {
+    } else if (!(isDefined(feature) && isDefined(feature.position))) {
       this._selectionIndicator.animateDepart();
     }
 
@@ -1742,7 +1763,7 @@ export default class Cesium extends GlobeOrMap {
 
   _addVectorTileHighlight(
     imageryProvider: MapboxVectorTileImageryProvider | ProtomapsImageryProvider,
-    rectangle: Rectangle
+    _rectangle: Rectangle
   ): () => void {
     const result = new ImageryLayer(imageryProvider, {
       show: true,
