@@ -10,6 +10,9 @@ import sampleTerrain from "terriajs-cesium/Source/Core/sampleTerrain";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import KmlDataSource from "terriajs-cesium/Source/DataSources/KmlDataSource";
 import Property from "terriajs-cesium/Source/DataSources/Property";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import isDefined from "../../../Core/isDefined";
 import readXml from "../../../Core/readXml";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
@@ -21,9 +24,6 @@ import CreateModel from "../../Definition/CreateModel";
 import HasLocalData from "../../HasLocalData";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
-import ArcType from "terriajs-cesium/Source/Core/ArcType";
-import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 
 const kmzRegex = /\.kmz$/i;
 
