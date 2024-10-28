@@ -97,10 +97,8 @@ export const SearchBox = createReactClass({
     this.props.onSearchTextChanged(value);
 
     if (this.props.searchText.length >= 2) {
-      this.search();
-    } /*else {
       this.searchWithDebounce();
-    }*/
+    }
   },
 
   clearSearch() {
