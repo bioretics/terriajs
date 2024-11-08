@@ -596,7 +596,7 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
         true,
         false
       );
-      
+
       const pickSize: number = this.terria.configParameters.pickSize ?? 2;
       ArcGisMapServerImageryProvider.prototype.pickFeatures = function (
         x,
@@ -676,7 +676,7 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
             ) {
               const wkid =
                 feature.geometry.spatialReference &&
-                  feature.geometry.spatialReference.wkid
+                feature.geometry.spatialReference.wkid
                   ? feature.geometry.spatialReference.wkid
                   : 4326;
               if (wkid === 4326 || wkid === 4283) {
