@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, { useEffect, useRef } from "react";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -17,7 +17,6 @@ import { useTheme } from "styled-components";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import MeasurableDownload from "./MeasurableDownload";
 import i18next from "i18next";
-import {ChartPoint} from "../../Charts/ChartData";
 import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
 import markerIcon from "../Custom/Chart/markerIcon";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -30,29 +29,11 @@ interface Props {
   terria: Terria;
 }
 
-enum ChartKeys {
-  AirChart = "path",
-  GroundChart = "path_sampled"
-}
-
-interface ChartItem {
-  categoryName: string;
-  name: string;
-  units: string;
-  key: string;
-  type: string;
-  glyphStyle: string;
-  getColor: () => string;
-  points: ChartPoint[];
-  domain: { x: number[]; y: number[] };
-}
-
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
 
   const theme = useTheme();
 
-  const [chartItems, setChartItems] = useState<ChartItem[]>();
   const billboardCollection = useRef<BillboardCollection>();
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
@@ -431,109 +412,35 @@ const MeasurablePanel = observer((props: Props) => {
     );
   };
 
-  const fetchPathDataChart = (
-    points: Cartographic[] | undefined,
-    distances: number[] | undefined,
-    totalDistance: number | undefined
-  ) => {
-    if (!points || !distances || !totalDistance) {
-      return;
-    }
-
-    const pointsHeight = points.map((point) => point.height);
-
-    const chartPoints = pointsHeight.map((height, i) => ({
-      x: distances.map((v, j) => (j <= i ? v : 0)).reduce((a, b) => a + b, 0),
-      y: height
-    }));
-
-    const chartDomain = {
-      x: [0, totalDistance],
-      y: [Math.min(...pointsHeight), Math.max(...pointsHeight)]
-    };
-
-    return { chartPoints, chartDomain };
-  };
-
   useEffect(() => {
-    if (terria?.measurableGeom) {
-      const airData = fetchPathDataChart(
-        terria.measurableGeom.stopPoints,
-        terria.measurableGeom.stopAirDistances,
-        terria.measurableGeom.airDistance
-      );
-      const groundData = fetchPathDataChart(
-        terria.measurableGeom.sampledPoints,
-        terria.measurableGeom.sampledDistances,
-        terria.measurableGeom.groundDistance
-      );
+    if (terria.cesium) {
+      terria.cesium.scene.primitives.add(billboardCollection.current);
 
-      const items: ChartItem[] = [];
-
-      if (groundData?.chartPoints && groundData.chartDomain) {
-        items.push({
-          categoryName: i18next.t("elevationChart.measure"),
-          name: i18next.t("elevationChart.measureGround"),
-          units: "m",
-          key: ChartKeys.GroundChart,
-          type: "lineAndPoint",
-          glyphStyle: "circle",
-          getColor: () => "#0f0",
-          points: groundData?.chartPoints,
-          domain: groundData?.chartDomain
-        });
-      }
-      if (airData?.chartPoints && airData.chartDomain) {
-        items.push({
-          categoryName: i18next.t("elevationChart.measure"),
-          name: i18next.t("elevationChart.measureAir"),
-          units: "m",
-          key: ChartKeys.AirChart,
-          type: "lineAndPoint",
-          glyphStyle: "circle",
-          getColor: () => "#f00",
-          points: airData?.chartPoints,
-          domain: airData?.chartDomain
-        });
-      }
-
-      console.log("Measurable Panel \n\nItems: ", items);
-
-      setChartItems(items);
+      return () => {
+        billboardCollection.current?.removeAll();
+        terria.cesium
+          ? terria.cesium.scene.primitives.remove(billboardCollection.current)
+          : undefined;
+      };
     }
-  }, [terria.measurableGeom, terria.measurableGeomSamplingStep]);
+  }, [terria]);
 
   const renderStepDetails = () => {
-    const convertToChartPoint = (idx: number, point: any): ChartPoint => {
-      if(terria.measurableGeom?.stopGeodeticDistances) {
-        return {
-          x: terria.measurableGeom.stopGeodeticDistances[idx],
-          y: point.height,
-        };
-      }
-      return { x: 0, y: 0 }
-    };
+    const updateChartPoint = (idx: number) => {
+      console.log(
+        "Stop Points Length: " + terria?.measurableGeom?.stopPoints?.length
+      );
+      const coords = terria?.measurableGeom?.stopPoints?.[idx];
+      if (!coords) return;
 
-    const updateChartPoint = (idx: number, point: any) => {
-      console.log("Measurable Panel \n\nIDX: "+idx+"\nPunto: ", point);
-      const newPoint = convertToChartPoint(idx, point);
-      console.log("Measurable Panel \n\nNewPoint: ", newPoint);
-      if (terria.cesium?.scene) {
-        const pointIndex = chartItems
-          ?.find((item) => item.key === ChartKeys.GroundChart)
-          ?.points.findIndex((elem) => elem === newPoint);
-        console.log("Measurable Panel \n\nPointIndex: "+ pointIndex);
-        if (!pointIndex) return;
-        const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
-        console.log("Measurable Panel \n\nPointIndex: "+ pointIndex +"\nCoords: ", coords);
-        if (!coords) return;
-
-        if (!billboardCollection.current) {
+      if (!billboardCollection.current) {
+        if (terria.cesium) {
           billboardCollection.current = new BillboardCollection({
             scene: terria.cesium.scene
           });
           terria.cesium.scene.primitives.add(billboardCollection.current);
         }
+      } else {
         billboardCollection.current.removeAll();
         billboardCollection.current.add({
           position: Cartographic.toCartesian(coords),
@@ -543,6 +450,7 @@ const MeasurablePanel = observer((props: Props) => {
           id: "chartPointPlaceholder"
         });
       }
+      terria.currentViewer.notifyRepaintRequired();
     };
 
     return (
@@ -578,10 +486,7 @@ const MeasurablePanel = observer((props: Props) => {
                 terria.measurableGeom.stopPoints.length > 0 &&
                 terria.measurableGeom.stopPoints.map((point, idx, array) => {
                   return (
-                    <tr
-                      key={idx}
-                      onClick={() => updateChartPoint(idx, point)}
-                    >
+                    <tr key={idx} onClick={() => updateChartPoint(idx)}>
                       <td>{idx + 1}</td>
                       <td>{`${point.height.toFixed(0)} m`}</td>
                       <td>
