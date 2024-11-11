@@ -49,6 +49,9 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
+    if(billboardCollection.current){
+      billboardCollection.current.removeAll();
+    }
     viewState.measurablePanelIsVisible = false;
   });
 
@@ -427,12 +430,8 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
-      console.log(
-        "Stop Points Length: " + terria?.measurableGeom?.stopPoints?.length
-      );
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
-
       if (!billboardCollection.current) {
         if (terria.cesium) {
           billboardCollection.current = new BillboardCollection({
@@ -447,6 +446,7 @@ const MeasurablePanel = observer((props: Props) => {
           image: markerIcon,
           eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
           heightReference: HeightReference.CLAMP_TO_GROUND,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
           id: "chartPointPlaceholder"
         });
       }

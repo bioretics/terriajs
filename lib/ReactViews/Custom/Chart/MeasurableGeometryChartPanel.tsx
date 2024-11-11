@@ -89,14 +89,11 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
-      console.log("MeasurableGeometryChartPanel \n\nNewPoint: ", newPoint);
       const pointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.GroundChart)
         ?.points.findIndex((elem) => elem === newPoint);
-      console.log("MeasurableGeometryChartPanel \n\nNewPoint: ", newPoint);
       if (!pointIndex) return;
       const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
-      console.log("MeasurableGeometryChartPanel \n\nPointIndex: "+ pointIndex +"\nCoords: ", coords);
       if (!coords) return;
 
       if (!billboardCollection.current) {
@@ -111,6 +108,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         image: markerIcon,
         eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
         heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
         id: "chartPointPlaceholder"
       });
 
