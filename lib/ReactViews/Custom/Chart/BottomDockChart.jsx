@@ -227,6 +227,7 @@ class Chart extends React.Component {
 
   @action
   setMouseCoords(coords) {
+    console.log("BottomDockChart test mouse coords: ", coords);
     this.mouseCoords = coords;
   }
 

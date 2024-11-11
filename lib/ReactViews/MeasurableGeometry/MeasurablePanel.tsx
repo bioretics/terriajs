@@ -430,6 +430,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
+      terria.selectedStopSummaryRowIndex = idx;
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
       if (!billboardCollection.current) {
@@ -486,7 +487,12 @@ const MeasurablePanel = observer((props: Props) => {
                 terria.measurableGeom.stopPoints.length > 0 &&
                 terria.measurableGeom.stopPoints.map((point, idx, array) => {
                   return (
-                    <tr key={idx} onClick={() => updateChartPoint(idx)}>
+                    <tr key={idx}
+                        onMouseOver={() => updateChartPoint(idx)}
+                        onMouseLeave={() => {
+                          if(billboardCollection.current)
+                            billboardCollection.current.removeAll()
+                        }}>
                       <td>{idx + 1}</td>
                       <td>{`${point.height.toFixed(0)} m`}</td>
                       <td>

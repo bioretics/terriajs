@@ -2242,6 +2242,8 @@ export default class Terria {
     window.localStorage.setItem(this.appName + "." + key, value.toString());
     return true;
   }
+
+  @observable selectedStopSummaryRowIndex: number | null = null;
 }
 
 function generateInitializationUrl(
