@@ -857,7 +857,9 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               color: useOutlineColorForLineFeatures
                 ? getOutlineColorValue
                 : getColorValue,
-              width: this.terria.configParameters.polylineWidth ?? getOutlineWidthValue
+              width:
+                this.terria.configParameters.polylineWidth ??
+                getOutlineWidthValue
             }),
             minzoom: 0,
             maxzoom: Infinity,
