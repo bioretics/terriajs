@@ -49,7 +49,7 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
-    if(billboardCollection.current){
+    if (billboardCollection.current) {
       billboardCollection.current.removeAll();
     }
     viewState.measurablePanelIsVisible = false;
@@ -487,12 +487,15 @@ const MeasurablePanel = observer((props: Props) => {
                 terria.measurableGeom.stopPoints.length > 0 &&
                 terria.measurableGeom.stopPoints.map((point, idx, array) => {
                   return (
-                    <tr key={idx}
-                        onMouseOver={() => updateChartPoint(idx)}
-                        onMouseLeave={() => {
-                          if(billboardCollection.current)
-                            billboardCollection.current.removeAll()
-                        }}>
+                    <tr
+                      key={idx}
+                      onMouseOver={() => updateChartPoint(idx)}
+                      onMouseLeave={() => {
+                        terria.selectedStopSummaryRowIndex = null;
+                        if (billboardCollection.current)
+                          billboardCollection.current.removeAll();
+                      }}
+                    >
                       <td>{idx + 1}</td>
                       <td>{`${point.height.toFixed(0)} m`}</td>
                       <td>

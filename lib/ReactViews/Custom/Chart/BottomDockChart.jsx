@@ -1,5 +1,12 @@
 import { observer } from "mobx-react";
-import { action, computed, observable, makeObservable, autorun } from "mobx";
+import {
+  action,
+  computed,
+  observable,
+  makeObservable,
+  autorun,
+  reaction
+} from "mobx";
 import { AxisLeft, AxisBottom } from "@visx/axis";
 import { RectClipPath } from "@visx/clip-path";
 import { localPoint } from "@visx/event";
@@ -21,6 +28,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 
 const chartMinWidth = 110;
 const defaultGridColor = "#efefef";
@@ -227,7 +235,6 @@ class Chart extends React.Component {
 
   @action
   setMouseCoords(coords) {
-    console.log("BottomDockChart test mouse coords: ", coords);
     this.mouseCoords = coords;
   }
 
@@ -241,6 +248,42 @@ class Chart extends React.Component {
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
     });
+  }
+
+  componentDidMount() {
+    this.disposeReaction = reaction(
+      () => this.props.terria.selectedStopSummaryRowIndex,
+      (idx) => {
+        if (idx !== null && this.props.chartItems) {
+          let sumDistances = 0;
+          for (let i = idx; i > 0; i--) {
+            sumDistances +=
+              this.props.terria.measurableGeom.stopGroundDistances[i];
+          }
+
+          // Calculate the selected point coords in the chart.
+          const selectedPoint = {
+            x: sumDistances,
+            y: this.props.terria.measurableGeom.stopPoints[idx].height
+          };
+
+          // Simulate the mouse coords from the selected point coords in the chart.
+          const xCoord = this.xScale(selectedPoint.x);
+          const yCoord = this.yAxes[0].scale(selectedPoint.y);
+
+          this.setMouseCoords({
+            x: xCoord,
+            y: yCoord
+          });
+        }
+      }
+    );
+  }
+
+  componentWillUnmount() {
+    if (this.disposeReaction) {
+      this.disposeReaction();
+    }
   }
 
   componentDidUpdate(prevProps) {

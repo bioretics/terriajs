@@ -164,15 +164,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     }
   }, [terria.measurableGeom, terria.measurableGeomSamplingStep]);
 
-  useEffect(() => {
-    if (terria.selectedStopSummaryRowIndex !== null) {
-      const coords = terria?.measurableGeom?.stopPoints?.[terria.selectedStopSummaryRowIndex];
-      if (coords) {
-        console.log("MeasurableGeometryChart test coords: ", coords);
-      }
-    }
-  }, [terria?.measurableGeom?.stopPoints, terria.selectedStopSummaryRowIndex]);
-
   return (
     <div className={Styles.holder}>
       <div className={Styles.inner}>
