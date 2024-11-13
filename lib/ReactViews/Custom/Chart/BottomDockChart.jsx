@@ -190,11 +190,44 @@ class Chart extends React.Component {
           chartItem.points,
           this.mouseCoords,
           this.xScale,
-          7
+          7,
+          chartItem === this.chartItems[1] ? chartItem : undefined
         )
       }))
       .filter(({ point }) => point !== undefined);
   }
+
+  /*
+  @computed
+  get pointsNearMouse() {
+    if (!this.mouseCoords || !this.chartItems[1]) return [];
+    const chartItem = this.chartItems[1];
+    console.log("this.chartItems[1]: ", this.chartItems[1]);
+
+    const point = findNearestPoint(
+      chartItem.points,
+      this.mouseCoords,
+      this.xScale,
+      7
+    );
+    return point !== undefined ? [{ chartItem, point }] : [];
+  }
+
+
+  @computed
+  get pointNearMouseIndex() {
+    if (!this.mouseCoords || !this.chartItems[1]) return [];
+    const chartItem = this.chartItems[1];
+    console.log("this.chartItems[1]: ", this.chartItems[1]);
+    const point = findNearestPoint(chartItem.points, this.mouseCoords, this.xScale, 7, true);
+
+    console.log("Point: ", point);
+
+    const pointIndex = chartItem.points.indexOf(point);
+    console.log("pointIndex: ", pointIndex);
+
+    return point !== undefined ? [{ chartItem, pointIndex }] : [];
+  }*/
 
   @computed
   get tooltip() {
@@ -306,6 +339,7 @@ class Chart extends React.Component {
         if (pointNearMouse) {
           this.props.onPointMouseNear(pointNearMouse.point);
         }
+        //this.pointNearMouseIndex;
       }
     });
   }
@@ -615,7 +649,13 @@ function sortChartItemsByType(chartItems) {
   });
 }
 
-function findNearestPoint(points, coords, xScale, maxDistancePx) {
+function findNearestPoint(
+  points,
+  coords,
+  xScale,
+  maxDistancePx,
+  cI = undefined
+) {
   function distance(coords, point) {
     return point ? coords.x - xScale(point.x) : Infinity;
   }
@@ -638,6 +678,18 @@ function findNearestPoint(points, coords, xScale, maxDistancePx) {
   const nearestPoint = minBy([leftPoint, midPoint, rightPoint], (p) =>
     p ? Math.abs(distance(coords, p)) : Infinity
   );
+
+  if (cI !== undefined) {
+    console.log("Nearestpoint; ", nearestPoint);
+    console.log("cI ", cI);
+    const index = cI.points.indexOf(nearestPoint);
+    console.log("Index: ", index);
+
+    /*console.log("this.props.terria.selectedStopSummaryRowIndex PRIMA: ", this.props.terria.selectedStopSummaryRowIndex);
+    this.props.terria.selectedStopSummaryRowIndex = index;
+    console.log("this.props.terria.selectedStopSummaryRowIndex DOPO: ", this.props.terria.selectedStopSummaryRowIndex);*/
+    //return nearestPoint;
+  }
 
   return Math.abs(distance(coords, nearestPoint)) <= maxDistancePx
     ? nearestPoint

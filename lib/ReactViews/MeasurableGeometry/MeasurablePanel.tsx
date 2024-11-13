@@ -34,6 +34,10 @@ const MeasurablePanel = observer((props: Props) => {
 
   const theme = useTheme();
 
+  const [highlightedRow, setHighlightedRow] = React.useState<number | null>(
+    null
+  );
+
   const billboardCollection = useRef<BillboardCollection>();
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
@@ -428,8 +432,13 @@ const MeasurablePanel = observer((props: Props) => {
     }
   }, [terria]);
 
+  useEffect(() => {
+    setHighlightedRow(terria.selectedStopSummaryRowIndex);
+  }, [terria.selectedStopSummaryRowIndex]);
+
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
+      setHighlightedRow(idx);
       terria.selectedStopSummaryRowIndex = idx;
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
@@ -455,6 +464,7 @@ const MeasurablePanel = observer((props: Props) => {
     };
 
     const handleMouseLeave = () => {
+      setHighlightedRow(null);
       terria.selectedStopSummaryRowIndex = null;
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
@@ -494,12 +504,16 @@ const MeasurablePanel = observer((props: Props) => {
               {terria?.measurableGeom?.stopPoints &&
                 terria.measurableGeom.stopPoints.length > 0 &&
                 terria.measurableGeom.stopPoints.map((point, idx, array) => {
+                  const isHighlighted = idx === highlightedRow;
                   return (
                     <tr
                       key={idx}
                       onMouseOver={() => updateChartPoint(idx)}
-                      onMouseLeave={() => {
-                        handleMouseLeave();
+                      onMouseLeave={() => handleMouseLeave()}
+                      style={{
+                        backgroundColor: isHighlighted
+                          ? "#519ac2"
+                          : "transparent"
                       }}
                     >
                       <td>{idx + 1}</td>
