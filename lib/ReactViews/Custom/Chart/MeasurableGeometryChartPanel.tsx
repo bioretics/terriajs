@@ -113,8 +113,13 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       });
 
       terria.currentViewer.notifyRepaintRequired();
-    } else if (newPoint === undefined && billboardCollection.current) {
-      billboardCollection.current.removeAll();
+    } else if (billboardCollection.current) {
+      if (
+        newPoint === undefined ||
+        terria.selectedStopSummaryRowIndex !== null
+      ) {
+        billboardCollection.current.removeAll();
+      }
     }
   };
 

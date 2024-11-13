@@ -454,6 +454,14 @@ const MeasurablePanel = observer((props: Props) => {
       terria.currentViewer.notifyRepaintRequired();
     };
 
+    const handleMouseLeave = () => {
+      terria.selectedStopSummaryRowIndex = null;
+      if (billboardCollection.current) {
+        billboardCollection.current.removeAll();
+        terria.currentViewer.notifyRepaintRequired();
+      }
+    };
+
     return (
       <>
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -491,9 +499,7 @@ const MeasurablePanel = observer((props: Props) => {
                       key={idx}
                       onMouseOver={() => updateChartPoint(idx)}
                       onMouseLeave={() => {
-                        terria.selectedStopSummaryRowIndex = null;
-                        if (billboardCollection.current)
-                          billboardCollection.current.removeAll();
+                        handleMouseLeave();
                       }}
                     >
                       <td>{idx + 1}</td>
