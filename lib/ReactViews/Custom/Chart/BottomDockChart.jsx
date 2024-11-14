@@ -182,16 +182,8 @@ class Chart extends React.Component {
   @computed
   get pointsNearMouse() {
     if (!this.mouseCoords) return [];
-    console.log(
-      "New Index: ",
-      changeSelectedStopSummaryRowIndex(
-        this.chartItems[1].points,
-        this.mouseCoords,
-        this.xScale
-      )
-    );
-
-    this.props.terria.setSelectedStopSummaryRowIndexFromChart(
+    this.props.terria.setSelectedStopSummaryRowIndex(
+      "fromChart",
       changeSelectedStopSummaryRowIndex(
         this.chartItems[1].points,
         this.mouseCoords,
@@ -268,7 +260,7 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposeReaction = reaction(
-      () => this.props.terria.selectedStopSummaryRowIndexFromTable,
+      () => this.props.terria.selectedStopSummaryRowIndex.fromTable,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
           let sumDistances = 0;

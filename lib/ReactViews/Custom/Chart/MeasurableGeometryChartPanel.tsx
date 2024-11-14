@@ -116,7 +116,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     } else if (billboardCollection.current) {
       if (
         newPoint === undefined ||
-        terria.selectedStopSummaryRowIndexFromTable !== null
+        terria.selectedStopSummaryRowIndex.fromTable !== null
       ) {
         billboardCollection.current.removeAll();
       }
