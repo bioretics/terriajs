@@ -433,13 +433,13 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria]);
 
   useEffect(() => {
-    setHighlightedRow(terria.selectedStopSummaryRowIndex);
-  }, [terria.selectedStopSummaryRowIndex]);
+    setHighlightedRow(terria.selectedStopSummaryRowIndexFromChart);
+  }, [terria.selectedStopSummaryRowIndexFromChart]);
 
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
       setHighlightedRow(idx);
-      terria.selectedStopSummaryRowIndex = idx;
+      terria.setSelectedStopSummaryRowIndexFromTable(idx);
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
       if (!billboardCollection.current) {
@@ -465,7 +465,8 @@ const MeasurablePanel = observer((props: Props) => {
 
     const handleMouseLeave = () => {
       setHighlightedRow(null);
-      terria.selectedStopSummaryRowIndex = null;
+      terria.setSelectedStopSummaryRowIndexFromChart(null);
+      terria.setSelectedStopSummaryRowIndexFromTable(null);
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
         terria.currentViewer.notifyRepaintRequired();

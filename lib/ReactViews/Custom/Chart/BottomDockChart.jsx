@@ -1,13 +1,13 @@
 import { observer } from "mobx-react";
 import {
   action,
-  computed,
-  observable,
-  makeObservable,
   autorun,
+  computed,
+  makeObservable,
+  observable,
   reaction
 } from "mobx";
-import { AxisLeft, AxisBottom } from "@visx/axis";
+import { AxisBottom, AxisLeft } from "@visx/axis";
 import { RectClipPath } from "@visx/clip-path";
 import { localPoint } from "@visx/event";
 import { GridRows } from "@visx/grid";
@@ -28,7 +28,6 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 
 const chartMinWidth = 110;
 const defaultGridColor = "#efefef";
@@ -183,6 +182,23 @@ class Chart extends React.Component {
   @computed
   get pointsNearMouse() {
     if (!this.mouseCoords) return [];
+    console.log(
+      "New Index: ",
+      changeSelectedStopSummaryRowIndex(
+        this.chartItems[1].points,
+        this.mouseCoords,
+        this.xScale
+      )
+    );
+
+    this.props.terria.setSelectedStopSummaryRowIndexFromChart(
+      changeSelectedStopSummaryRowIndex(
+        this.chartItems[1].points,
+        this.mouseCoords,
+        this.xScale
+      )
+    );
+
     return this.chartItems
       .map((chartItem) => ({
         chartItem,
@@ -190,44 +206,11 @@ class Chart extends React.Component {
           chartItem.points,
           this.mouseCoords,
           this.xScale,
-          7,
-          chartItem === this.chartItems[1] ? chartItem : undefined
+          7
         )
       }))
       .filter(({ point }) => point !== undefined);
   }
-
-  /*
-  @computed
-  get pointsNearMouse() {
-    if (!this.mouseCoords || !this.chartItems[1]) return [];
-    const chartItem = this.chartItems[1];
-    console.log("this.chartItems[1]: ", this.chartItems[1]);
-
-    const point = findNearestPoint(
-      chartItem.points,
-      this.mouseCoords,
-      this.xScale,
-      7
-    );
-    return point !== undefined ? [{ chartItem, point }] : [];
-  }
-
-
-  @computed
-  get pointNearMouseIndex() {
-    if (!this.mouseCoords || !this.chartItems[1]) return [];
-    const chartItem = this.chartItems[1];
-    console.log("this.chartItems[1]: ", this.chartItems[1]);
-    const point = findNearestPoint(chartItem.points, this.mouseCoords, this.xScale, 7, true);
-
-    console.log("Point: ", point);
-
-    const pointIndex = chartItem.points.indexOf(point);
-    console.log("pointIndex: ", pointIndex);
-
-    return point !== undefined ? [{ chartItem, pointIndex }] : [];
-  }*/
 
   @computed
   get tooltip() {
@@ -285,7 +268,7 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposeReaction = reaction(
-      () => this.props.terria.selectedStopSummaryRowIndex,
+      () => this.props.terria.selectedStopSummaryRowIndexFromTable,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
           let sumDistances = 0;
@@ -649,13 +632,7 @@ function sortChartItemsByType(chartItems) {
   });
 }
 
-function findNearestPoint(
-  points,
-  coords,
-  xScale,
-  maxDistancePx,
-  cI = undefined
-) {
+function findNearestPoint(points, coords, xScale, maxDistancePx) {
   function distance(coords, point) {
     return point ? coords.x - xScale(point.x) : Infinity;
   }
@@ -679,21 +656,36 @@ function findNearestPoint(
     p ? Math.abs(distance(coords, p)) : Infinity
   );
 
-  if (cI !== undefined) {
-    console.log("Nearestpoint; ", nearestPoint);
-    console.log("cI ", cI);
-    const index = cI.points.indexOf(nearestPoint);
-    console.log("Index: ", index);
-
-    /*console.log("this.props.terria.selectedStopSummaryRowIndex PRIMA: ", this.props.terria.selectedStopSummaryRowIndex);
-    this.props.terria.selectedStopSummaryRowIndex = index;
-    console.log("this.props.terria.selectedStopSummaryRowIndex DOPO: ", this.props.terria.selectedStopSummaryRowIndex);*/
-    //return nearestPoint;
-  }
-
   return Math.abs(distance(coords, nearestPoint)) <= maxDistancePx
     ? nearestPoint
     : undefined;
+}
+
+function changeSelectedStopSummaryRowIndex(points, coords, xScale) {
+  function distance(coords, point) {
+    return point ? coords.x - xScale(point.x) : Infinity;
+  }
+
+  let left = 0;
+  let right = points.length;
+  let mid = 0;
+  for (;;) {
+    if (left === right) break;
+    mid = left + Math.floor((right - left) / 2);
+    if (distance(coords, points[mid]) === 0) break;
+    else if (distance(coords, points[mid]) < 0) right = mid;
+    else left = mid + 1;
+  }
+
+  const leftPoint = points[mid - 1];
+  const midPoint = points[mid];
+  const rightPoint = points[mid + 1];
+
+  const nearestPoint = minBy([leftPoint, midPoint, rightPoint], (p) =>
+    p ? Math.abs(distance(coords, p)) : Infinity
+  );
+
+  return points.indexOf(nearestPoint);
 }
 
 function sanitizeIdString(id) {

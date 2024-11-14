@@ -2243,7 +2243,19 @@ export default class Terria {
     return true;
   }
 
-  @observable selectedStopSummaryRowIndex: number | null = null;
+  @observable selectedStopSummaryRowIndexFromTable: number | null = null;
+
+  @action
+  setSelectedStopSummaryRowIndexFromTable(index: number | null) {
+    this.selectedStopSummaryRowIndexFromTable = index;
+  }
+
+  @observable selectedStopSummaryRowIndexFromChart: number | null = null;
+
+  @action
+  setSelectedStopSummaryRowIndexFromChart(index: number | null) {
+    this.selectedStopSummaryRowIndexFromChart = index;
+  }
 }
 
 function generateInitializationUrl(
