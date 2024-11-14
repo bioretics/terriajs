@@ -182,15 +182,6 @@ class Chart extends React.Component {
   @computed
   get pointsNearMouse() {
     if (!this.mouseCoords) return [];
-    this.props.terria.setSelectedStopSummaryRowIndex(
-      "fromChart",
-      changeSelectedStopSummaryRowIndex(
-        this.chartItems[1].points,
-        this.mouseCoords,
-        this.xScale
-      )
-    );
-
     return this.chartItems
       .map((chartItem) => ({
         chartItem,
@@ -198,7 +189,9 @@ class Chart extends React.Component {
           chartItem.points,
           this.mouseCoords,
           this.xScale,
-          7
+          7,
+          chartItem === this.chartItems[1],
+          this.props.terria
         )
       }))
       .filter(({ point }) => point !== undefined);
@@ -624,7 +617,14 @@ function sortChartItemsByType(chartItems) {
   });
 }
 
-function findNearestPoint(points, coords, xScale, maxDistancePx) {
+function findNearestPoint(
+  points,
+  coords,
+  xScale,
+  maxDistancePx,
+  isAirChartItem = false,
+  terria = undefined
+) {
   function distance(coords, point) {
     return point ? coords.x - xScale(point.x) : Infinity;
   }
@@ -647,37 +647,17 @@ function findNearestPoint(points, coords, xScale, maxDistancePx) {
   const nearestPoint = minBy([leftPoint, midPoint, rightPoint], (p) =>
     p ? Math.abs(distance(coords, p)) : Infinity
   );
+
+  if (isAirChartItem) {
+    terria.setSelectedStopSummaryRowIndex(
+      "fromChart",
+      points.indexOf(nearestPoint)
+    );
+  }
 
   return Math.abs(distance(coords, nearestPoint)) <= maxDistancePx
     ? nearestPoint
     : undefined;
-}
-
-function changeSelectedStopSummaryRowIndex(points, coords, xScale) {
-  function distance(coords, point) {
-    return point ? coords.x - xScale(point.x) : Infinity;
-  }
-
-  let left = 0;
-  let right = points.length;
-  let mid = 0;
-  for (;;) {
-    if (left === right) break;
-    mid = left + Math.floor((right - left) / 2);
-    if (distance(coords, points[mid]) === 0) break;
-    else if (distance(coords, points[mid]) < 0) right = mid;
-    else left = mid + 1;
-  }
-
-  const leftPoint = points[mid - 1];
-  const midPoint = points[mid];
-  const rightPoint = points[mid + 1];
-
-  const nearestPoint = minBy([leftPoint, midPoint, rightPoint], (p) =>
-    p ? Math.abs(distance(coords, p)) : Infinity
-  );
-
-  return points.indexOf(nearestPoint);
 }
 
 function sanitizeIdString(id) {
