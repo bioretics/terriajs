@@ -256,11 +256,11 @@ class Chart extends React.Component {
       () => this.props.terria.selectedStopSummaryRowIndex.fromTable,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
-          let sumDistances = 0;
-          for (let i = idx; i > 0; i--) {
-            sumDistances +=
-              this.props.terria.measurableGeom.stopGroundDistances[i];
-          }
+          const sumDistances =
+            this.props.terria.measurableGeom.stopGroundDistances
+              .slice(0, idx)
+              .reverse()
+              .reduce((acc, distance) => acc + distance, 0);
 
           // Calculate the selected point coords in the chart.
           const selectedPoint = {

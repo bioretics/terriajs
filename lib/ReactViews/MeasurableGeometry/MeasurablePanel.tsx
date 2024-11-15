@@ -420,19 +420,6 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (terria.cesium) {
-      terria.cesium.scene.primitives.add(billboardCollection.current);
-
-      return () => {
-        billboardCollection.current?.removeAll();
-        terria.cesium
-          ? terria.cesium.scene.primitives.remove(billboardCollection.current)
-          : undefined;
-      };
-    }
-  }, [terria]);
-
-  useEffect(() => {
     setHighlightedRow(terria.selectedStopSummaryRowIndex.fromChart);
   }, [terria.selectedStopSummaryRowIndex.fromChart]);
 
@@ -442,24 +429,22 @@ const MeasurablePanel = observer((props: Props) => {
       terria.setSelectedStopSummaryRowIndex("fromTable", idx);
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
+      if (!terria.cesium) return;
       if (!billboardCollection.current) {
-        if (terria.cesium) {
-          billboardCollection.current = new BillboardCollection({
-            scene: terria.cesium.scene
-          });
-          terria.cesium.scene.primitives.add(billboardCollection.current);
-        }
-      } else {
-        billboardCollection.current.removeAll();
-        billboardCollection.current.add({
-          position: Cartographic.toCartesian(coords),
-          image: markerIcon,
-          eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
-          heightReference: HeightReference.CLAMP_TO_GROUND,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY,
-          id: "chartPointPlaceholder"
+        billboardCollection.current = new BillboardCollection({
+          scene: terria.cesium.scene
         });
+        terria.cesium.scene.primitives.add(billboardCollection.current);
       }
+      billboardCollection.current.removeAll();
+      billboardCollection.current.add({
+        position: Cartographic.toCartesian(coords),
+        image: markerIcon,
+        eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        id: "chartPointPlaceholder"
+      });
       terria.currentViewer.notifyRepaintRequired();
     };
 
