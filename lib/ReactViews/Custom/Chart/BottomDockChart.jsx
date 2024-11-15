@@ -183,17 +183,26 @@ class Chart extends React.Component {
   get pointsNearMouse() {
     if (!this.mouseCoords) return [];
     return this.chartItems
-      .map((chartItem) => ({
-        chartItem,
-        point: findNearestPoint(
+      .map((chartItem, idx) => {
+        const point = findNearestPoint(
           chartItem.points,
           this.mouseCoords,
           this.xScale,
-          7,
-          chartItem === this.chartItems[1],
-          this.props.terria
-        )
-      }))
+          7
+        );
+
+        if (idx === 1) {
+          this.props.terria.setSelectedStopSummaryRowIndex(
+            "fromChart",
+            point ? chartItem.points.indexOf(point) : null
+          );
+        }
+
+        return {
+          chartItem,
+          point
+        };
+      })
       .filter(({ point }) => point !== undefined);
   }
 
@@ -258,7 +267,7 @@ class Chart extends React.Component {
         if (idx !== null && this.props.chartItems) {
           const sumDistances =
             this.props.terria.measurableGeom.stopGroundDistances
-              .slice(0, idx)
+              .slice(0, idx + 1)
               .reverse()
               .reduce((acc, distance) => acc + distance, 0);
 
@@ -617,14 +626,7 @@ function sortChartItemsByType(chartItems) {
   });
 }
 
-function findNearestPoint(
-  points,
-  coords,
-  xScale,
-  maxDistancePx,
-  isAirChartItem = false,
-  terria = undefined
-) {
+function findNearestPoint(points, coords, xScale, maxDistancePx) {
   function distance(coords, point) {
     return point ? coords.x - xScale(point.x) : Infinity;
   }
@@ -647,13 +649,6 @@ function findNearestPoint(
   const nearestPoint = minBy([leftPoint, midPoint, rightPoint], (p) =>
     p ? Math.abs(distance(coords, p)) : Infinity
   );
-
-  if (isAirChartItem) {
-    terria.setSelectedStopSummaryRowIndex(
-      "fromChart",
-      points.indexOf(nearestPoint)
-    );
-  }
 
   return Math.abs(distance(coords, nearestPoint)) <= maxDistancePx
     ? nearestPoint
