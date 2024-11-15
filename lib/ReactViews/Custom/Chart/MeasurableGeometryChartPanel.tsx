@@ -118,6 +118,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         newPoint === undefined ||
         terria.selectedStopSummaryRowIndex.fromTable !== null
       ) {
+        terria.setSelectedStopSummaryRowIndex("fromChart", null);
+        terria.setSelectedStopSummaryRowIndex("fromTable", null);
         billboardCollection.current.removeAll();
       }
     }

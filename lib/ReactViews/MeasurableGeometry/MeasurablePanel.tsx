@@ -513,7 +513,7 @@ const MeasurablePanel = observer((props: Props) => {
                       onMouseLeave={() => handleMouseLeave()}
                       style={{
                         backgroundColor: isHighlighted
-                          ? "#519ac2"
+                          ? theme.colorPrimary
                           : "transparent"
                       }}
                     >
