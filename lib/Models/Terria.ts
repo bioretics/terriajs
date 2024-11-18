@@ -2246,14 +2246,22 @@ export default class Terria {
   @observable selectedStopSummaryRowIndex: {
     fromTable: number | null;
     fromChart: number | null;
-  } = { fromTable: null, fromChart: null };
+    fromMap: number | null;
+  } = { fromTable: null, fromChart: null, fromMap: null };
 
   @action
   setSelectedStopSummaryRowIndex(
-    source: "fromTable" | "fromChart",
+    source: "fromTable" | "fromChart" | "fromMap",
     index: number | null
   ) {
     this.selectedStopSummaryRowIndex[source] = index;
+  }
+
+  @action
+  removeSelectedStopSummaryRowIndex() {
+    this.setSelectedStopSummaryRowIndex("fromChart", null);
+    this.setSelectedStopSummaryRowIndex("fromTable", null);
+    this.setSelectedStopSummaryRowIndex("fromMap", null);
   }
 }
 

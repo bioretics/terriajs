@@ -262,7 +262,9 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposeReaction = reaction(
-      () => this.props.terria.selectedStopSummaryRowIndex.fromTable,
+      () =>
+        this.props.terria.selectedStopSummaryRowIndex.fromTable ||
+        this.props.terria.selectedStopSummaryRowIndex.fromMap,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
           const sumDistances =

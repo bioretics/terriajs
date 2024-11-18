@@ -116,10 +116,10 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     } else if (billboardCollection.current) {
       if (
         newPoint === undefined ||
-        terria.selectedStopSummaryRowIndex.fromTable !== null
+        terria.selectedStopSummaryRowIndex.fromTable !== null ||
+        terria.selectedStopSummaryRowIndex.fromMap !== null
       ) {
-        terria.setSelectedStopSummaryRowIndex("fromChart", null);
-        terria.setSelectedStopSummaryRowIndex("fromTable", null);
+        terria.removeSelectedStopSummaryRowIndex();
         billboardCollection.current.removeAll();
       }
     }
