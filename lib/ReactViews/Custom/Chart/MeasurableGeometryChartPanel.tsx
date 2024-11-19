@@ -95,7 +95,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       if (!pointIndex) return;
       const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
       if (!coords) return;
-
       if (!billboardCollection.current) {
         billboardCollection.current = new BillboardCollection({
           scene: terria.cesium.scene
@@ -113,14 +112,13 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       });
 
       terria.currentViewer.notifyRepaintRequired();
-    } else if (billboardCollection.current) {
-      if (
-        newPoint === undefined ||
-        terria.selectedStopSummaryRowIndex.fromTable !== null ||
-        terria.selectedStopSummaryRowIndex.fromMap !== null
-      ) {
-        terria.removeSelectedStopSummaryRowIndex();
-        billboardCollection.current.removeAll();
+    } else {
+      if (newPoint === undefined) {
+        terria.setSelectedStopPointIdx(null);
+        if (billboardCollection.current) {
+          billboardCollection.current.removeAll();
+          terria.currentViewer.notifyRepaintRequired();
+        }
       }
     }
   };

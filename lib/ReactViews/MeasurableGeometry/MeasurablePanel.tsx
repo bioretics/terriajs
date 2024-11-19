@@ -421,27 +421,15 @@ const MeasurablePanel = observer((props: Props) => {
 
   useEffect(() => {
     console.log(
-      "aiudo terria.selectedStopSummaryRowIndex.fromMap",
-      terria.selectedStopSummaryRowIndex.fromMap
-    );
-    console.log(
-      "aiudo terria.selectedStopSummaryRowIndex.fromChart",
-      terria.selectedStopSummaryRowIndex.fromChart
+      "aiudo terria.selectedStopPointIdx",
+      terria.selectedStopPointIdx
     );
 
-    if (terria.selectedStopSummaryRowIndex.fromChart !== null)
-      setHighlightedRow(terria.selectedStopSummaryRowIndex.fromChart);
-    if (terria.selectedStopSummaryRowIndex.fromMap !== null)
-      setHighlightedRow(terria.selectedStopSummaryRowIndex.fromMap);
-    if (
-      terria.selectedStopSummaryRowIndex.fromChart === null &&
-      terria.selectedStopSummaryRowIndex.fromMap === null
-    )
-      setHighlightedRow(null);
-  }, [
-    terria.selectedStopSummaryRowIndex.fromChart,
-    terria.selectedStopSummaryRowIndex.fromMap
-  ]);
+    if (terria.selectedStopPointIdx !== null)
+      setHighlightedRow(terria.selectedStopPointIdx);
+    else setHighlightedRow(null);
+    terria.currentViewer.notifyRepaintRequired();
+  }, [terria.selectedStopPointIdx]);
 
   useEffect(() => {
     const rangeThreshold = 0.001; // ~ 100 meters of range
@@ -458,6 +446,7 @@ const MeasurablePanel = observer((props: Props) => {
 
       if (terria.cesium) {
         if (nearbyStopPoint) {
+          console.log("You're near the point: ", nearbyStopPoint);
           if (!billboardCollection.current) {
             billboardCollection.current = new BillboardCollection({
               scene: terria.cesium.scene
@@ -477,13 +466,15 @@ const MeasurablePanel = observer((props: Props) => {
           });
           const idx = terria.measurableGeom.stopPoints.indexOf(nearbyStopPoint);
           console.log("idx: ", idx);
-          terria.setSelectedStopSummaryRowIndex("fromMap", idx);
-          terria.currentViewer.notifyRepaintRequired();
-        } else if (billboardCollection.current) {
-          billboardCollection.current.removeAll();
-          terria.removeSelectedStopSummaryRowIndex();
-          terria.currentViewer.notifyRepaintRequired();
+          terria.setSelectedStopPointIdx(idx);
+        } else {
+          console.log("You're not near any points.");
+          if (billboardCollection.current) {
+            billboardCollection.current.removeAll();
+          }
+          terria.setSelectedStopPointIdx(null);
         }
+        terria.currentViewer.notifyRepaintRequired();
       }
     };
 
@@ -498,7 +489,7 @@ const MeasurablePanel = observer((props: Props) => {
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
       setHighlightedRow(idx);
-      terria.setSelectedStopSummaryRowIndex("fromTable", idx);
+      terria.setSelectedStopPointIdx(idx);
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
       if (!terria.cesium) return;
@@ -522,7 +513,7 @@ const MeasurablePanel = observer((props: Props) => {
 
     const handleMouseLeave = () => {
       setHighlightedRow(null);
-      terria.removeSelectedStopSummaryRowIndex();
+      terria.setSelectedStopPointIdx(null);
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
         terria.currentViewer.notifyRepaintRequired();

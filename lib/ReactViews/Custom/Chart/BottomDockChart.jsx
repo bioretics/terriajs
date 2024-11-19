@@ -192,10 +192,11 @@ class Chart extends React.Component {
         );
 
         if (idx === 1) {
-          this.props.terria.setSelectedStopSummaryRowIndex(
-            "fromChart",
+          this.props.terria.setSelectedStopPointIdx(
             point ? chartItem.points.indexOf(point) : null
           );
+        } else {
+          this.props.terria.setSelectedStopPointIdx(null);
         }
 
         return {
@@ -262,11 +263,14 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposeReaction = reaction(
-      () =>
-        this.props.terria.selectedStopSummaryRowIndex.fromTable ||
-        this.props.terria.selectedStopSummaryRowIndex.fromMap,
+      () => this.props.terria.selectedStopPointIdx,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
+          console.log(
+            "this.props.terria.selectedStopPointIdx: ",
+            this.props.terria.selectedStopPointIdx
+          );
+          console.log("idx: ", idx);
           const sumDistances =
             this.props.terria.measurableGeom.stopGroundDistances
               .slice(0, idx + 1)
@@ -287,6 +291,8 @@ class Chart extends React.Component {
             x: xCoord,
             y: yCoord
           });
+        } else {
+          this.setMouseCoords(undefined);
         }
       }
     );
