@@ -89,20 +89,15 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
-      console.log("newPoint", newPoint);
       const pointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.GroundChart)
         ?.points.findIndex((elem) => elem === newPoint);
-      console.log("pointIndex", pointIndex);
       if (!pointIndex) return;
       const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
-      console.log("coords", coords);
       if (!coords) return;
-      console.log("chartItems: ", chartItems);
       const airPointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.AirChart)
         ?.points.findIndex((elem) => elem.y === newPoint.y);
-      console.log("airPointIndex", airPointIndex);
       viewState.setSelectedStopPointIdx(
         airPointIndex && airPointIndex !== -1 ? airPointIndex : null
       );
@@ -199,7 +194,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
             {chartItems && (
               <Chart
                 terria={terria}
-                viewState={viewState}
                 chartItems={chartItems}
                 xAxis={{
                   scale: "linear",
@@ -208,6 +202,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                 height={CHART_HEIGHT}
                 chartItemKeyForPointMouseNear={ChartKeys.GroundChart}
                 onPointMouseNear={updateChartPointNearMouse}
+                selectedStopPointIdx={viewState.selectedStopPointIdx}
               />
             )}
           </div>
