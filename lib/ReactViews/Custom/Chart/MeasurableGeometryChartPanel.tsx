@@ -99,13 +99,13 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       console.log("coords", coords);
       if (!coords) return;
       console.log("chartItems: ", chartItems);
-
-      if (chartItems) {
-        const airPointIndex = chartItems[1].points.findIndex(
-          (elem) => elem === newPoint
-        );
-        console.log("airPointIndex", airPointIndex);
-      }
+      const airPointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.AirChart)
+        ?.points.findIndex((elem) => elem.y === newPoint.y);
+      console.log("airPointIndex", airPointIndex);
+      terria.setSelectedStopPointIdx(
+        airPointIndex && airPointIndex !== -1 ? airPointIndex : null
+      );
 
       if (!billboardCollection.current) {
         billboardCollection.current = new BillboardCollection({
@@ -126,7 +126,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       terria.currentViewer.notifyRepaintRequired();
     }
     if (newPoint === undefined || terria.selectedStopPointIdx !== null) {
-      //terria.setSelectedStopPointIdx(null);
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
         terria.currentViewer.notifyRepaintRequired();

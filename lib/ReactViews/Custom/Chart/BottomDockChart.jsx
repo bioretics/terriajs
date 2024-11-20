@@ -191,14 +191,6 @@ class Chart extends React.Component {
           7
         );
 
-        if (idx === 1) {
-          this.props.terria.setSelectedStopPointIdx(
-            point ? chartItem.points.indexOf(point) : null
-          );
-        } else {
-          this.props.terria.setSelectedStopPointIdx(null);
-        }
-
         return {
           chartItem,
           point
