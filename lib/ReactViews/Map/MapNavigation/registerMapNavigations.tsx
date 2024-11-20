@@ -253,12 +253,12 @@ export const registerMapNavigations = (viewState: ViewState) => {
     toolName: KEYBOARD_MODE_ID,
     viewState: viewState,
     getToolComponent: () => KeyboardMode as any,
-    icon: GLYPHS.tour
+    icon: GLYPHS.keyboard
   });
   mapNavigationModel.addItem({
     id: KEYBOARD_MODE_ID,
-    name: "translate#pedestrianMode.toolButtonTitle",
-    title: "translate#pedestrianMode.toolButtonTitle",
+    name: "translate#keyboardControls.toolButtonTitle",
+    title: "translate#keyboardControls.toolButtonTitle",
     location: "TOP",
     screenSize: "medium",
     controller: keyboardModeToolController,

@@ -1,6 +1,5 @@
-import { reaction } from "mobx";
 import { observer } from "mobx-react";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import Cesium from "../../../Models/Cesium";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -8,12 +7,12 @@ import PositionRightOfWorkbench from "../../Workbench/PositionRightOfWorkbench";
 import MovementControls from "./MovementControls";
 
 
-type PedestrianModeProps = {
+type KeyboardModeProps = {
   viewState: ViewState;
 };
 export const KEYBOARD_MODE_ID = "keyboard-mode";
 
-const KeyboardMode: React.FC<PedestrianModeProps> = observer((props) => {
+const KeyboardMode: React.FC<KeyboardModeProps> = observer((props) => {
   const { viewState } = props;
 
   const cesium = viewState.terria.currentViewer;

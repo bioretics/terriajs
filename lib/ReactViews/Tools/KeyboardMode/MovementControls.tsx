@@ -4,15 +4,11 @@ import styled from "styled-components";
 import Cesium from "../../../Models/Cesium";
 import Box from "../../../Styled/Box";
 import Button from "../../../Styled/Button";
-import Spacing from "../../../Styled/Spacing";
 import Text from "../../../Styled/Text";
 import Icon, { StyledIcon } from "../../../Styled/Icon";
 import MovementsController from "./MovementsController";
 
-
-const mouseControlsImage = require("../../../../wwwroot/images/mouse-control.svg");
-const wasdControlsImage = require("../../../../wwwroot/images/wasd.svg");
-const heightControlsImage = require("../../../../wwwroot/images/height-controls.svg");
+const wasdControlsImage = require("../../../../wwwroot/images/keyboard_controls.svg");
 
 type MovementControlsProps = {
   cesium: Cesium;
@@ -36,7 +32,7 @@ const MovementControls: React.FC<MovementControlsProps> = (props) => {
   return (
     <Container>
       <Title>
-        <Text medium>{t("pedestrianMode.controls.title")}</Text>
+        <Text medium>{t("keyboardControls.header")}</Text>
         <MinimizeMaximizeButton
           onClick={toggleMaximized}
           maximized={isMaximized}
@@ -44,10 +40,7 @@ const MovementControls: React.FC<MovementControlsProps> = (props) => {
       </Title>
       {isMaximized && (
         <Body>
-          <img alt="Mouse controls" src={mouseControlsImage} />
           <img alt="Direction controls" src={wasdControlsImage} />
-          <Spacing bottom={1} />
-          <img alt="Height controls" src={heightControlsImage} />
         </Body>
       )}
     </Container>
