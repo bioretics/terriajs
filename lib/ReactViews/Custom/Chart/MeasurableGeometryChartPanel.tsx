@@ -89,12 +89,24 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
+      console.log("newPoint", newPoint);
       const pointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.GroundChart)
         ?.points.findIndex((elem) => elem === newPoint);
+      console.log("pointIndex", pointIndex);
       if (!pointIndex) return;
       const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
+      console.log("coords", coords);
       if (!coords) return;
+      console.log("chartItems: ", chartItems);
+
+      if (chartItems) {
+        const airPointIndex = chartItems[1].points.findIndex(
+          (elem) => elem === newPoint
+        );
+        console.log("airPointIndex", airPointIndex);
+      }
+
       if (!billboardCollection.current) {
         billboardCollection.current = new BillboardCollection({
           scene: terria.cesium.scene
@@ -112,13 +124,12 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       });
 
       terria.currentViewer.notifyRepaintRequired();
-    } else {
-      if (newPoint === undefined) {
-        terria.setSelectedStopPointIdx(null);
-        if (billboardCollection.current) {
-          billboardCollection.current.removeAll();
-          terria.currentViewer.notifyRepaintRequired();
-        }
+    }
+    if (newPoint === undefined || terria.selectedStopPointIdx !== null) {
+      //terria.setSelectedStopPointIdx(null);
+      if (billboardCollection.current) {
+        billboardCollection.current.removeAll();
+        terria.currentViewer.notifyRepaintRequired();
       }
     }
   };

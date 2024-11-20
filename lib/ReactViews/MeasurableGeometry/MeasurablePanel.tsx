@@ -420,11 +420,6 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    console.log(
-      "aiudo terria.selectedStopPointIdx",
-      terria.selectedStopPointIdx
-    );
-
     if (terria.selectedStopPointIdx !== null)
       setHighlightedRow(terria.selectedStopPointIdx);
     else setHighlightedRow(null);
@@ -446,7 +441,6 @@ const MeasurablePanel = observer((props: Props) => {
 
       if (terria.cesium) {
         if (nearbyStopPoint) {
-          console.log("You're near the point: ", nearbyStopPoint);
           if (!billboardCollection.current) {
             billboardCollection.current = new BillboardCollection({
               scene: terria.cesium.scene
@@ -465,10 +459,8 @@ const MeasurablePanel = observer((props: Props) => {
             id: "chartPointPlaceholder"
           });
           const idx = terria.measurableGeom.stopPoints.indexOf(nearbyStopPoint);
-          console.log("idx: ", idx);
           terria.setSelectedStopPointIdx(idx);
         } else {
-          console.log("You're not near any points.");
           if (billboardCollection.current) {
             billboardCollection.current.removeAll();
           }

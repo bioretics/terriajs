@@ -266,11 +266,6 @@ class Chart extends React.Component {
       () => this.props.terria.selectedStopPointIdx,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
-          console.log(
-            "this.props.terria.selectedStopPointIdx: ",
-            this.props.terria.selectedStopPointIdx
-          );
-          console.log("idx: ", idx);
           const sumDistances =
             this.props.terria.measurableGeom.stopGroundDistances
               .slice(0, idx + 1)
