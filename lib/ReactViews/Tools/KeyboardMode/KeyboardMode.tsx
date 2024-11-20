@@ -6,7 +6,6 @@ import ViewState from "../../../ReactViewModels/ViewState";
 import PositionRightOfWorkbench from "../../Workbench/PositionRightOfWorkbench";
 import MovementControls from "./MovementControls";
 
-
 type KeyboardModeProps = {
   viewState: ViewState;
 };
@@ -24,9 +23,7 @@ const KeyboardMode: React.FC<KeyboardModeProps> = observer((props) => {
 
   return (
     <ControlsContainer viewState={viewState}>
-      <MovementControls
-        cesium={cesium}
-      />
+      <MovementControls cesium={cesium} />
     </ControlsContainer>
   );
 });
@@ -37,6 +34,5 @@ const ControlsContainer = styled(PositionRightOfWorkbench)`
   left: 0;
   bottom: 300px;
 `;
-
 
 export default KeyboardMode;

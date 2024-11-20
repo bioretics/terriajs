@@ -21,9 +21,7 @@ const MovementControls: React.FC<MovementControlsProps> = (props) => {
   const toggleMaximized = () => setIsMaximized(!isMaximized);
 
   useEffect(() => {
-    const movementsController = new MovementsController(
-      props.cesium
-    );
+    const movementsController = new MovementsController(props.cesium);
     const detach = movementsController.activate();
     return detach;
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
@@ -70,7 +68,7 @@ const MinimizeMaximizeButton = styled(Button).attrs(({ maximized }) => ({
       glyph={maximized ? Icon.GLYPHS.minimize : Icon.GLYPHS.maximize}
     />
   )
-})) <{ maximized: boolean }>`
+}))<{ maximized: boolean }>`
   padding: 0;
   margin: 0;
   border: 0;

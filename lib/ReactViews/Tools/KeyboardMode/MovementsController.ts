@@ -31,9 +31,7 @@ export default class MovementsController {
   // Current active movements
   activeMovements: Set<Movement> = new Set();
 
-  constructor(
-    readonly cesium: Cesium,
-  ) {
+  constructor(readonly cesium: Cesium) {
     makeObservable(this);
   }
 
@@ -139,8 +137,8 @@ export default class MovementsController {
   }
 
   /**
- * Animate on each clock tick
- */
+   * Animate on each clock tick
+   */
   startAnimating() {
     const stopAnimating =
       this.cesium.cesiumWidget.clock.onTick.addEventListener(

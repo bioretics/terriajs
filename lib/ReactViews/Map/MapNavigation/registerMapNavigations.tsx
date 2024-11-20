@@ -30,7 +30,9 @@ import {
   ZOOM_CONTROL_ID
 } from "./Items";
 import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
-import KeyboardMode, { KEYBOARD_MODE_ID } from "../../Tools/KeyboardMode/KeyboardMode";
+import KeyboardMode, {
+  KEYBOARD_MODE_ID
+} from "../../Tools/KeyboardMode/KeyboardMode";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
