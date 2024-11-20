@@ -918,6 +918,13 @@ export default class ViewState {
   get isMapInteractionActive() {
     return this.terria.mapInteractionModeStack.length > 0;
   }
+
+  @observable selectedStopPointIdx: number | null = null;
+
+  @action
+  setSelectedStopPointIdx(index: number | null) {
+    this.selectedStopPointIdx = index;
+  }
 }
 
 interface Tool {

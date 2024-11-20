@@ -2242,13 +2242,6 @@ export default class Terria {
     window.localStorage.setItem(this.appName + "." + key, value.toString());
     return true;
   }
-
-  @observable selectedStopPointIdx: number | null = null;
-
-  @action
-  setSelectedStopPointIdx(index: number | null) {
-    this.selectedStopPointIdx = index;
-  }
 }
 
 function generateInitializationUrl(

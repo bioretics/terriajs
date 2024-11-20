@@ -37,6 +37,7 @@ const labelColor = "#efefef";
 class BottomDockChart extends React.Component {
   static propTypes = {
     terria: PropTypes.object.isRequired,
+    viewState: PropTypes.object,
     parentWidth: PropTypes.number,
     width: PropTypes.number,
     height: PropTypes.number,
@@ -61,6 +62,7 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
+        viewState={this.props.viewState}
       />
     );
   }
@@ -72,6 +74,7 @@ export default withParentSize(BottomDockChart);
 class Chart extends React.Component {
   static propTypes = {
     terria: PropTypes.object.isRequired,
+    viewState: PropTypes.object,
     width: PropTypes.number,
     height: PropTypes.number,
     chartItems: PropTypes.array.isRequired,
@@ -255,7 +258,7 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposeReaction = reaction(
-      () => this.props.terria.selectedStopPointIdx,
+      () => this.props.viewState.selectedStopPointIdx,
       (idx) => {
         if (idx !== null && this.props.chartItems) {
           const sumDistances =

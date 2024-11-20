@@ -103,7 +103,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         ?.find((item) => item.key === ChartKeys.AirChart)
         ?.points.findIndex((elem) => elem.y === newPoint.y);
       console.log("airPointIndex", airPointIndex);
-      terria.setSelectedStopPointIdx(
+      viewState.setSelectedStopPointIdx(
         airPointIndex && airPointIndex !== -1 ? airPointIndex : null
       );
 
@@ -125,7 +125,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
       terria.currentViewer.notifyRepaintRequired();
     }
-    if (newPoint === undefined || terria.selectedStopPointIdx !== null) {
+    if (newPoint === undefined || viewState.selectedStopPointIdx !== null) {
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
         terria.currentViewer.notifyRepaintRequired();
@@ -199,6 +199,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
             {chartItems && (
               <Chart
                 terria={terria}
+                viewState={viewState}
                 chartItems={chartItems}
                 xAxis={{
                   scale: "linear",
