@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -17,10 +17,7 @@ import { useTheme } from "styled-components";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import MeasurableDownload from "./MeasurableDownload";
 import i18next from "i18next";
-import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
-import markerIcon from "../Custom/Chart/markerIcon";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
-import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -38,7 +35,7 @@ const MeasurablePanel = observer((props: Props) => {
     null
   );
 
-  const billboardCollection = useRef<BillboardCollection>();
+  MeasurablePanelManager.initialize(terria);
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
     terria.measurableGeomSamplingStep
@@ -53,9 +50,7 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
-    if (billboardCollection.current) {
-      billboardCollection.current.removeAll();
-    }
+    MeasurablePanelManager.removeAllMarkers();
     viewState.measurablePanelIsVisible = false;
   });
 
@@ -420,10 +415,7 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (
-      viewState.selectedStopPointIdx !== null &&
-      viewState.selectedStopPointIdx !== -1
-    ) {
+    if (viewState.selectedStopPointIdx !== null) {
       setHighlightedRow(viewState.selectedStopPointIdx);
     } else {
       setHighlightedRow(null);
@@ -445,30 +437,13 @@ const MeasurablePanel = observer((props: Props) => {
 
       if (terria.cesium) {
         if (nearbyStopPoint) {
-          if (!billboardCollection.current) {
-            billboardCollection.current = new BillboardCollection({
-              scene: terria.cesium.scene
-            });
-            terria.cesium.scene.primitives.add(billboardCollection.current);
-          }
+          MeasurablePanelManager.addMarker(nearbyStopPoint);
 
-          billboardCollection.current.removeAll();
-
-          billboardCollection.current.add({
-            position: Cartographic.toCartesian(nearbyStopPoint),
-            image: markerIcon,
-            eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            disableDepthTestDistance: Number.POSITIVE_INFINITY,
-            id: "chartPointPlaceholder"
-          });
           const idx = terria.measurableGeom.stopPoints.indexOf(nearbyStopPoint);
           viewState.setSelectedStopPointIdx(idx);
         } else {
-          if (billboardCollection.current) {
-            billboardCollection.current.removeAll();
-          }
-          viewState.setSelectedStopPointIdx(-1);
+          MeasurablePanelManager.removeAllMarkers();
+          viewState.setSelectedStopPointIdx(null);
         }
         terria.currentViewer.notifyRepaintRequired();
       }
@@ -489,31 +464,13 @@ const MeasurablePanel = observer((props: Props) => {
       const coords = terria?.measurableGeom?.stopPoints?.[idx];
       if (!coords) return;
       if (!terria.cesium) return;
-      if (!billboardCollection.current) {
-        billboardCollection.current = new BillboardCollection({
-          scene: terria.cesium.scene
-        });
-        terria.cesium.scene.primitives.add(billboardCollection.current);
-      }
-      billboardCollection.current.removeAll();
-      billboardCollection.current.add({
-        position: Cartographic.toCartesian(coords),
-        image: markerIcon,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        id: "chartPointPlaceholder"
-      });
-      terria.currentViewer.notifyRepaintRequired();
+      MeasurablePanelManager.addMarker(coords);
     };
 
     const handleMouseLeave = () => {
       setHighlightedRow(null);
-      viewState.setSelectedStopPointIdx(-1);
-      if (billboardCollection.current) {
-        billboardCollection.current.removeAll();
-        terria.currentViewer.notifyRepaintRequired();
-      }
+      viewState.setSelectedStopPointIdx(null);
+      MeasurablePanelManager.removeAllMarkers();
     };
 
     return (

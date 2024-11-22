@@ -12,6 +12,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
+import MeasurablePanelManager from "../MeasurablePanelManager";
 
 import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
@@ -52,7 +53,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   const [chartItems, setChartItems] = useState<ChartItem[]>();
 
   const chartPoint = useRef<ChartPoint>();
-  const billboardCollection = useRef<BillboardCollection>();
+
+  MeasurablePanelManager.initialize(terria);
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
@@ -102,39 +104,12 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         airPointIndex && airPointIndex !== -1 ? airPointIndex : null
       );
 
-      if (!billboardCollection.current) {
-        billboardCollection.current = new BillboardCollection({
-          scene: terria.cesium.scene
-        });
-        terria.cesium.scene.primitives.add(billboardCollection.current);
-      }
-      billboardCollection.current.removeAll();
-      billboardCollection.current.add({
-        position: Cartographic.toCartesian(coords),
-        image: markerIcon,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY,
-        id: "chartPointPlaceholder"
-      });
-
-      terria.currentViewer.notifyRepaintRequired();
-    } else if (newPoint === undefined && billboardCollection.current) {
-      billboardCollection.current.removeAll();
+      MeasurablePanelManager.addMarker(coords);
+    } else if (newPoint === undefined) {
+      MeasurablePanelManager.removeAllMarkers();
       terria.currentViewer.notifyRepaintRequired();
     }
   };
-
-  useEffect(() => {
-    if (
-      (viewState.selectedStopPointIdx === -1 ||
-        viewState.selectedStopPointIdx === 0) &&
-      billboardCollection.current
-    ) {
-      billboardCollection.current.removeAll();
-      terria.currentViewer.notifyRepaintRequired();
-    }
-  }, [viewState.selectedStopPointIdx]);
 
   useEffect(() => {
     if (terria?.measurableGeom) {

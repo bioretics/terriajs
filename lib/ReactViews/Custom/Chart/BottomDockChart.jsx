@@ -260,7 +260,7 @@ class Chart extends React.Component {
     this.disposeReaction = reaction(
       () => this.props.selectedStopPointIdx,
       (idx) => {
-        if (idx !== null && idx !== -1 && this.props.chartItems) {
+        if (idx && this.props.chartItems) {
           const sumDistances =
             this.props.terria.measurableGeom.stopGroundDistances
               .slice(0, idx + 1)
