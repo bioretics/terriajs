@@ -119,14 +119,22 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       });
 
       terria.currentViewer.notifyRepaintRequired();
-    }
-    if (newPoint === undefined || viewState.selectedStopPointIdx !== null) {
-      if (billboardCollection.current) {
-        billboardCollection.current.removeAll();
-        terria.currentViewer.notifyRepaintRequired();
-      }
+    } else if (newPoint === undefined && billboardCollection.current) {
+      billboardCollection.current.removeAll();
+      terria.currentViewer.notifyRepaintRequired();
     }
   };
+
+  useEffect(() => {
+    if (
+      (viewState.selectedStopPointIdx === -1 ||
+        viewState.selectedStopPointIdx === 0) &&
+      billboardCollection.current
+    ) {
+      billboardCollection.current.removeAll();
+      terria.currentViewer.notifyRepaintRequired();
+    }
+  }, [viewState.selectedStopPointIdx]);
 
   useEffect(() => {
     if (terria?.measurableGeom) {

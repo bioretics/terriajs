@@ -420,15 +420,19 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (viewState.selectedStopPointIdx !== null)
+    if (
+      viewState.selectedStopPointIdx !== null &&
+      viewState.selectedStopPointIdx !== -1
+    ) {
       setHighlightedRow(viewState.selectedStopPointIdx);
-    else setHighlightedRow(null);
+    } else {
+      setHighlightedRow(null);
+    }
     terria.currentViewer.notifyRepaintRequired();
   }, [viewState.selectedStopPointIdx]);
 
   useEffect(() => {
-    const rangeThreshold = 0.001; // ~ 100 meters of range
-
+    const rangeThreshold = 0.001;
     const checkProximityToStopPoints = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
       if (!mouseCoords || !terria.measurableGeom?.stopPoints) return;
@@ -464,7 +468,7 @@ const MeasurablePanel = observer((props: Props) => {
           if (billboardCollection.current) {
             billboardCollection.current.removeAll();
           }
-          viewState.setSelectedStopPointIdx(null);
+          viewState.setSelectedStopPointIdx(-1);
         }
         terria.currentViewer.notifyRepaintRequired();
       }
@@ -505,7 +509,7 @@ const MeasurablePanel = observer((props: Props) => {
 
     const handleMouseLeave = () => {
       setHighlightedRow(null);
-      viewState.setSelectedStopPointIdx(null);
+      viewState.setSelectedStopPointIdx(-1);
       if (billboardCollection.current) {
         billboardCollection.current.removeAll();
         terria.currentViewer.notifyRepaintRequired();
