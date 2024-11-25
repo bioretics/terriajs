@@ -9,12 +9,8 @@ import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
 import Terria from "../../../Models/Terria";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
-import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
-import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollection";
 import MeasurablePanelManager from "../MeasurablePanelManager";
 
-import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
 
 enum ChartKeys {
@@ -97,9 +93,14 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       if (!pointIndex) return;
       const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
       if (!coords) return;
+
       const airPointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.AirChart)
-        ?.points.findIndex((elem) => elem.y === newPoint.y);
+        ?.points.findIndex(
+          (elem) =>
+            Math.abs(elem.x - newPoint.x) <=
+            terria.measurableGeomSamplingStep + 5
+        );
       viewState.setSelectedStopPointIdx(
         airPointIndex && airPointIndex !== -1 ? airPointIndex : null
       );
@@ -183,7 +184,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                   units: "m"
                 }}
                 height={CHART_HEIGHT}
-                chartItemKeyForPointMouseNear={ChartKeys.GroundChart}
+                chartItemKeyForPointMouseNear={ChartKeys}
                 onPointMouseNear={updateChartPointNearMouse}
                 selectedStopPointIdx={viewState.selectedStopPointIdx}
               />

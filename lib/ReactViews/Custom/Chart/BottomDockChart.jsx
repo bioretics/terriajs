@@ -43,7 +43,7 @@ class BottomDockChart extends React.Component {
     chartItems: PropTypes.array.isRequired,
     xAxis: PropTypes.object.isRequired,
     margin: PropTypes.object,
-    chartItemKeyForPointMouseNear: PropTypes.string,
+    chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
     selectedStopPointIdx: PropTypes.number
   };
@@ -79,7 +79,7 @@ class Chart extends React.Component {
     chartItems: PropTypes.array.isRequired,
     xAxis: PropTypes.object.isRequired,
     margin: PropTypes.object,
-    chartItemKeyForPointMouseNear: PropTypes.string,
+    chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
     selectedStopPointIdx: PropTypes.number
   };
@@ -186,19 +186,15 @@ class Chart extends React.Component {
   get pointsNearMouse() {
     if (!this.mouseCoords) return [];
     return this.chartItems
-      .map((chartItem, idx) => {
-        const point = findNearestPoint(
+      .map((chartItem) => ({
+        chartItem,
+        point: findNearestPoint(
           chartItem.points,
           this.mouseCoords,
           this.xScale,
           7
-        );
-
-        return {
-          chartItem,
-          point
-        };
-      })
+        )
+      }))
       .filter(({ point }) => point !== undefined);
   }
 
@@ -260,7 +256,7 @@ class Chart extends React.Component {
     this.disposeReaction = reaction(
       () => this.props.selectedStopPointIdx,
       (idx) => {
-        if (idx && this.props.chartItems) {
+        if (typeof idx === "number" && this.props.chartItems) {
           const sumDistances =
             this.props.terria.measurableGeom.stopGroundDistances
               .slice(0, idx + 1)
@@ -309,12 +305,14 @@ class Chart extends React.Component {
       ) {
         const pointNearMouse = this.pointsNearMouse.find(
           (elem) =>
-            elem.chartItem.key === this.props.chartItemKeyForPointMouseNear
+            elem.chartItem.key ===
+              this.props.chartItemKeyForPointMouseNear.AirChart ||
+            elem.chartItem.key ===
+              this.props.chartItemKeyForPointMouseNear.GroundChart
         );
         if (pointNearMouse) {
           this.props.onPointMouseNear(pointNearMouse.point);
         }
-        //this.pointNearMouseIndex;
       }
     });
   }

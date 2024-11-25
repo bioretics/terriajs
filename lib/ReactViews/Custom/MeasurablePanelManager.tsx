@@ -18,7 +18,6 @@ export default class MeasurablePanelManager {
       !MeasurablePanelManager.billboardCollection &&
       MeasurablePanelManager.terria.cesium?.scene
     ) {
-      console.log("Sto creando un nuovo billboard!!");
       MeasurablePanelManager.billboardCollection = new BillboardCollection({
         scene: MeasurablePanelManager.terria.cesium.scene
       });

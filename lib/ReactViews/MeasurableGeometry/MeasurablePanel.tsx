@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect } from "react";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -421,7 +421,7 @@ const MeasurablePanel = observer((props: Props) => {
       setHighlightedRow(null);
     }
     terria.currentViewer.notifyRepaintRequired();
-  }, [viewState.selectedStopPointIdx]);
+  }, [terria.currentViewer, viewState.selectedStopPointIdx]);
 
   useEffect(() => {
     const rangeThreshold = 0.001;
@@ -455,7 +455,7 @@ const MeasurablePanel = observer((props: Props) => {
       );
 
     return () => disposer();
-  }, [terria.cesium, terria.currentViewer, terria.measurableGeom]);
+  }, [terria.cesium, terria.currentViewer, terria.measurableGeom, viewState]);
 
   const renderStepDetails = () => {
     const updateChartPoint = (idx: number) => {
