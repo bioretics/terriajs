@@ -424,34 +424,61 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, viewState.selectedStopPointIdx]);
 
   useEffect(() => {
-    const rangeThreshold = 0.001;
-    const checkProximityToStopPoints = () => {
+    const rangeThreshold = 0.0002;
+
+    const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
-      if (!mouseCoords || !terria.measurableGeom?.stopPoints) return;
+      if (!mouseCoords || !terria.measurableGeom) return;
 
-      const nearbyStopPoint = terria.measurableGeom.stopPoints.find((point) => {
-        const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
-        const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-        return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
-      });
+      const findNearbyPoint = (
+        points: Cartographic[],
+        action: (point: Cartographic | null, idx: number | null) => void
+      ) => {
+        const nearbyPoint = points.find((point) => {
+          const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
+          const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
+          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
+        });
 
-      if (terria.cesium) {
-        if (nearbyStopPoint) {
-          MeasurablePanelManager.addMarker(nearbyStopPoint);
-
-          const idx = terria.measurableGeom.stopPoints.indexOf(nearbyStopPoint);
-          viewState.setSelectedStopPointIdx(idx);
+        if (nearbyPoint) {
+          const idx = points.indexOf(nearbyPoint);
+          action(nearbyPoint, idx);
         } else {
-          MeasurablePanelManager.removeAllMarkers();
-          viewState.setSelectedStopPointIdx(null);
+          action(null, null);
         }
-        terria.currentViewer.notifyRepaintRequired();
+      };
+
+      if (terria.measurableGeom.sampledPoints) {
+        findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
+          if (point) {
+            MeasurablePanelManager.addMarker(point);
+            viewState.setSelectedStopPointIdx(idx);
+          } else {
+            MeasurablePanelManager.removeAllMarkers();
+            viewState.setSelectedStopPointIdx(null);
+          }
+        });
       }
+
+      if (terria.measurableGeom.stopPoints) {
+        findNearbyPoint(terria.measurableGeom.stopPoints, (point, idx) => {
+          if (point) {
+            MeasurablePanelManager.addMarker(point);
+            setHighlightedRow(idx);
+            viewState.setSelectedStopPointIdx(idx);
+          } else {
+            setHighlightedRow(null);
+            viewState.setSelectedStopPointIdx(null);
+          }
+        });
+      }
+
+      terria.currentViewer.notifyRepaintRequired();
     };
 
     const disposer =
       terria.currentViewer.mouseCoords.updateEvent.addEventListener(
-        checkProximityToStopPoints
+        handleMouseProximity
       );
 
     return () => disposer();
