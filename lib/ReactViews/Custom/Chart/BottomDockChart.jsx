@@ -28,6 +28,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import { Cartographic } from "terriajs-cesium";
 
 const chartMinWidth = 110;
 const defaultGridColor = "#efefef";
@@ -45,7 +46,8 @@ class BottomDockChart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    selectedStopPointIdx: PropTypes.number
+    selectedStopPointIdx: PropTypes.number,
+    selectedSampledPointIdx: PropTypes.number
   };
 
   static defaultProps = {
@@ -62,7 +64,8 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
-        viewState={this.props.selectedStopPointIdx}
+        selectedStopPointIdx={this.props.selectedStopPointIdx}
+        selectedSampledPointIdx={this.props.selectedSampledPointIdx}
       />
     );
   }
@@ -81,7 +84,8 @@ class Chart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    selectedStopPointIdx: PropTypes.number
+    selectedStopPointIdx: PropTypes.number,
+    selectedSampledPointIdx: PropTypes.number
   };
 
   static defaultProps = {
@@ -253,20 +257,60 @@ class Chart extends React.Component {
   }
 
   componentDidMount() {
+    function cartesianDistance(x1, y1, z1, x2, y2, z2) {
+      return Math.sqrt(
+        Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2)
+      );
+    }
+
+    function calculateTotalCartesianDistance(points) {
+      let totalDistance = 0;
+
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+
+        const prevCartesian = Cartographic.toCartesian(prev);
+        const currCartesian = Cartographic.toCartesian(curr);
+
+        if (prevCartesian && currCartesian) {
+          totalDistance += cartesianDistance(
+            prevCartesian.x,
+            prevCartesian.y,
+            prevCartesian.z,
+            currCartesian.x,
+            currCartesian.y,
+            currCartesian.z
+          );
+        }
+      }
+
+      return totalDistance;
+    }
+
     this.disposeReaction = reaction(
-      () => this.props.selectedStopPointIdx,
+      () =>
+        this.props.selectedStopPointIdx || this.props.selectedSampledPointIdx,
       (idx) => {
         if (typeof idx === "number" && this.props.chartItems) {
-          const sumDistances =
-            this.props.terria.measurableGeom.stopGroundDistances
-              .slice(0, idx + 1)
-              .reverse()
-              .reduce((acc, distance) => acc + distance, 0);
+          const isStopPointSelected = this.props.selectedStopPointIdx !== null;
 
-          // Calculate the selected point coords in the chart.
+          const points = isStopPointSelected
+            ? this.props.terria.measurableGeom.stopPoints
+            : this.props.terria.measurableGeom.sampledPoints;
+
+          const sumDistances = isStopPointSelected
+            ? this.props.terria.measurableGeom.stopAirDistances
+                .slice(0, idx + 1)
+                .reverse()
+                .reduce((acc, distance) => acc + distance, 0)
+            : calculateTotalCartesianDistance(
+                points.slice(0, idx + 1).reverse()
+              );
+
           const selectedPoint = {
             x: sumDistances,
-            y: this.props.terria.measurableGeom.stopPoints[idx].height
+            y: points[idx].height
           };
 
           // Simulate the mouse coords from the selected point coords in the chart.

@@ -919,6 +919,13 @@ export default class ViewState {
     return this.terria.mapInteractionModeStack.length > 0;
   }
 
+  @observable selectedSampledPointIdx: number | null = null;
+
+  @action
+  setSelectedSampledPointIdx(index: number | null) {
+    this.selectedSampledPointIdx = index;
+  }
+
   @observable selectedStopPointIdx: number | null = null;
 
   @action

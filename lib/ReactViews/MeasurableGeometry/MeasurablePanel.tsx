@@ -424,7 +424,7 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, viewState.selectedStopPointIdx]);
 
   useEffect(() => {
-    const rangeThreshold = 0.0002;
+    const rangeThreshold = 0.0001;
 
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
@@ -452,10 +452,10 @@ const MeasurablePanel = observer((props: Props) => {
         findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
           if (point) {
             MeasurablePanelManager.addMarker(point);
-            viewState.setSelectedStopPointIdx(idx);
+            viewState.setSelectedSampledPointIdx(idx);
           } else {
             MeasurablePanelManager.removeAllMarkers();
-            viewState.setSelectedStopPointIdx(null);
+            viewState.setSelectedSampledPointIdx(null);
           }
         });
       }

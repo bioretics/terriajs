@@ -187,6 +187,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                 chartItemKeyForPointMouseNear={ChartKeys}
                 onPointMouseNear={updateChartPointNearMouse}
                 selectedStopPointIdx={viewState.selectedStopPointIdx}
+                selectedSampledPointIdx={viewState.selectedSampledPointIdx}
               />
             )}
           </div>
