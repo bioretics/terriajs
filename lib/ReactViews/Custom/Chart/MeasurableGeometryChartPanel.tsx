@@ -15,6 +15,7 @@ import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollectio
 
 import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
+import {downloadImg} from "../../Map/Panels/SharePanel/Print/PrintView";
 
 enum ChartKeys {
   AirChart = "path",
@@ -53,6 +54,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const chartPoint = useRef<ChartPoint>();
   const billboardCollection = useRef<BillboardCollection>();
+
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
@@ -171,6 +173,13 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
             <label className={Styles.sectionLabel}>
               {i18next.t("elevationChart.header")}
             </label>
+            <button
+              type="button"
+              className={Styles.btn}
+              style={{ marginTop: 8, color: "black"}}
+            >
+              Download
+            </button>
             <button
               type="button"
               className={Styles.btnCloseChartPanel}
