@@ -89,7 +89,9 @@
     "geometrySummaryPerimeterAir": "Perimetro in aria",
     "geometrySummaryAreaGeo": "Area geodetica",
     "geometrySummaryAreaAir": "Area in aria",
-    "geometrySummarySlope": "Pendenza %"
+    "geometrySummarySlope": "Pendenza %",
+    "textareaPlaceholder": "Inserisci le tue note...",
+    "filenamePlaceholder": "Cambia nome file..."
   },
   "elevationChart": {
     "header": "Profilo altimetrico",

@@ -10,7 +10,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
-import Input from "../../Styled/Input";
+import Input, {StyledTextArea} from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
@@ -35,6 +35,8 @@ const MeasurablePanel = observer((props: Props) => {
   );
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
+  const [fileName, setFileName] = React.useState("");
+  const [pathNotes, setPathNotes] = React.useState("");
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
@@ -281,11 +283,24 @@ const MeasurablePanel = observer((props: Props) => {
         <br />
         {terria.measurableGeom?.sampledDistances && renderStepDetails()}
         {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
-          <MeasurableDownload
-            geom={terria.measurableGeom as MeasurableGeometry}
-            name="path"
-            ellipsoid={terria.cesium.scene.globe.ellipsoid}
-          />
+          <Box>
+            <MeasurableDownload
+              geom={terria.measurableGeom as MeasurableGeometry}
+              name={fileName}
+              ellipsoid={terria.cesium.scene.globe.ellipsoid}
+            />
+            <Input
+              css={`
+                margin-top: 10px;
+                margin-left: 10px;
+                max-width: 200px;
+                height: 30px;
+              `}
+              placeholder={i18next.t("measurableGeometry.filenamePlaceholder")}
+              value={fileName}
+              onChange={(e) => setFileName(e.target.value)}
+            />
+          </Box>
         )}
       </div>
     );
@@ -294,62 +309,67 @@ const MeasurablePanel = observer((props: Props) => {
   const renderPathSummary = () => {
     return (
       <>
+        <StyledTextArea
+          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+          value={pathNotes}
+          onChange={(e) => setPathNotes(e.target.value)}
+        />
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>
         <small>
           <table className={Styles.elevation}>
             <thead>
-              <tr>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationMin")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationMax")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationBear")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
-                </th>
-              </tr>
+            <tr>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryElevationMin")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryElevationMax")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryElevationBear")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
+              </th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>{prettifyNumber(Math.min(...heights.get()))}</td>
-                <td>{prettifyNumber(Math.max(...heights.get()))}</td>
-                <td>{getBearing.get()}</td>
-                <td>{getHeightDifference.get()}</td>
-              </tr>
+            <tr>
+              <td>{prettifyNumber(Math.min(...heights.get()))}</td>
+              <td>{prettifyNumber(Math.max(...heights.get()))}</td>
+              <td>{getBearing.get()}</td>
+              <td>{getHeightDifference.get()}</td>
+            </tr>
             </tbody>
           </table>
           <table className={Styles.elevation}>
             <thead>
-              <tr>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistAir")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGround")}
-                </th>
-              </tr>
+            <tr>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryDistAir")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryDistGround")}
+              </th>
+            </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)}
-                </td>
-              </tr>
+            <tr>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
+              </td>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
+              </td>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)}
+              </td>
+            </tr>
             </tbody>
           </table>
         </small>

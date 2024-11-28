@@ -86,7 +86,9 @@
     "geometrySummaryPerimeterAir": "Air perimeter",
     "geometrySummaryAreaGeo": "Geodetic area",
     "geometrySummaryAreaAir": "Air area",
-    "geometrySummarySlope": "Slope %"
+    "geometrySummarySlope": "Slope %",
+    "textareaPlaceholder": "Enter your notes here...",
+    "filenamePlaceholder": "Change the filename..."
   },
   "elevationChart": {
     "header": "Elevation profile",
