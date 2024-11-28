@@ -15,7 +15,8 @@ import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollectio
 
 import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
-import {downloadImg} from "../../Map/Panels/SharePanel/Print/PrintView";
+import { downloadImg } from "../../Map/Panels/SharePanel/Print/PrintView";
+import html2canvas from "html2canvas";
 
 enum ChartKeys {
   AirChart = "path",
@@ -54,7 +55,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const chartPoint = useRef<ChartPoint>();
   const billboardCollection = useRef<BillboardCollection>();
-
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
@@ -119,6 +119,30 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     }
   };
 
+  const downloadChart = () => {
+    setIsDownloading(true);
+    const chartElement = document.querySelector(`.${Styles.chartPanel}`);
+    if (chartElement) {
+      html2canvas(chartElement as HTMLElement)
+        .then((canvas) => {
+          const dataURL = canvas.toDataURL("image/png");
+          const link = document.createElement("a");
+          link.href = dataURL;
+          link.download = "chart-screenshot.png";
+          link.click();
+          setIsDownloading(false);
+        })
+        .catch((error) => {
+          console.error("Errore durante la cattura del grafico", error);
+          setIsDownloading(false);
+        });
+    } else {
+      setIsDownloading(false);
+    }
+  };
+
+  const [isDownloading, setIsDownloading] = useState(false);
+
   useEffect(() => {
     if (terria?.measurableGeom) {
       const airData = fetchPathDataChart(
@@ -176,7 +200,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
             <button
               type="button"
               className={Styles.btn}
-              style={{ marginTop: 8, color: "black"}}
+              style={{ marginTop: 8, color: "black" }}
+              onClick={downloadChart}
             >
               Download
             </button>
