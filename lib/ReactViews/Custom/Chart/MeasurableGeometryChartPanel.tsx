@@ -132,7 +132,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           setIsDownloading(false);
         })
         .catch((error) => {
-          console.error("Errore durante la cattura del grafico", error);
+          console.error(error);
           setIsDownloading(false);
         });
     } else {

@@ -10,7 +10,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
-import Input, {StyledTextArea} from "../../Styled/Input";
+import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
@@ -275,13 +275,6 @@ const MeasurablePanel = observer((props: Props) => {
               : i18next.t("measurableGeometry.dontClampLineToGround")}
           </Button>
         </Box>
-        {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
-        <br />
-        {!terria?.measurableGeom?.hasArea
-          ? renderPathSummary()
-          : renderAreaSummary()}
-        <br />
-        {terria.measurableGeom?.sampledDistances && renderStepDetails()}
         {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
           <Box>
             <MeasurableDownload
@@ -302,6 +295,13 @@ const MeasurablePanel = observer((props: Props) => {
             />
           </Box>
         )}
+        {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
+        <br />
+        {!terria?.measurableGeom?.hasArea
+          ? renderPathSummary()
+          : renderAreaSummary()}
+        <br />
+        {terria.measurableGeom?.sampledDistances && renderStepDetails()}
       </div>
     );
   };
@@ -320,56 +320,56 @@ const MeasurablePanel = observer((props: Props) => {
         <small>
           <table className={Styles.elevation}>
             <thead>
-            <tr>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryElevationMin")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryElevationMax")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryElevationBear")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
-              </th>
-            </tr>
+              <tr>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryElevationMin")}
+                </th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryElevationMax")}
+                </th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryElevationBear")}
+                </th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
+                </th>
+              </tr>
             </thead>
             <tbody>
-            <tr>
-              <td>{prettifyNumber(Math.min(...heights.get()))}</td>
-              <td>{prettifyNumber(Math.max(...heights.get()))}</td>
-              <td>{getBearing.get()}</td>
-              <td>{getHeightDifference.get()}</td>
-            </tr>
+              <tr>
+                <td>{prettifyNumber(Math.min(...heights.get()))}</td>
+                <td>{prettifyNumber(Math.max(...heights.get()))}</td>
+                <td>{getBearing.get()}</td>
+                <td>{getHeightDifference.get()}</td>
+              </tr>
             </tbody>
           </table>
           <table className={Styles.elevation}>
             <thead>
-            <tr>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryDistAir")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryDistGround")}
-              </th>
-            </tr>
+              <tr>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
+                </th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryDistAir")}
+                </th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryDistGround")}
+                </th>
+              </tr>
             </thead>
             <tbody>
-            <tr>
-              <td>
-                {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
-              </td>
-              <td>
-                {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
-              </td>
-              <td>
-                {prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)}
-              </td>
-            </tr>
+              <tr>
+                <td>
+                  {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
+                </td>
+                <td>
+                  {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
+                </td>
+                <td>
+                  {prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)}
+                </td>
+              </tr>
             </tbody>
           </table>
         </small>
