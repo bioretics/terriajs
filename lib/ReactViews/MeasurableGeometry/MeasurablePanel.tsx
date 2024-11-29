@@ -275,25 +275,36 @@ const MeasurablePanel = observer((props: Props) => {
               : i18next.t("measurableGeometry.dontClampLineToGround")}
           </Button>
         </Box>
+
         {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
-          <Box>
-            <MeasurableDownload
-              geom={terria.measurableGeom as MeasurableGeometry}
-              name={fileName}
-              ellipsoid={terria.cesium.scene.globe.ellipsoid}
-            />
-            <Input
-              css={`
-                margin-top: 10px;
-                margin-left: 10px;
-                max-width: 200px;
-                height: 30px;
-              `}
-              placeholder={i18next.t("measurableGeometry.filenamePlaceholder")}
-              value={fileName}
-              onChange={(e) => setFileName(e.target.value)}
-            />
-          </Box>
+          <div
+            css={`
+              margin-left: 5px;
+              margin-top: 5px;
+              margin-bottom: 5px;
+            `}
+          >
+            <Box>
+              <Input
+                css={`
+                  max-width: 200px;
+                  height: 30px;
+                `}
+                placeholder={i18next.t(
+                  "measurableGeometry.filenamePlaceholder"
+                )}
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+              />
+            </Box>
+            <Box>
+              <MeasurableDownload
+                geom={terria.measurableGeom as MeasurableGeometry}
+                name={fileName}
+                ellipsoid={terria.cesium.scene.globe.ellipsoid}
+              />
+            </Box>
+          </div>
         )}
         {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
         <br />
