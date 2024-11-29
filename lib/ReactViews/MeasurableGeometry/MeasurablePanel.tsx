@@ -279,6 +279,7 @@ const MeasurablePanel = observer((props: Props) => {
         {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
           <div
             css={`
+              display: flex;
               margin-left: 5px;
               margin-top: 5px;
               margin-bottom: 5px;
@@ -287,6 +288,7 @@ const MeasurablePanel = observer((props: Props) => {
             <Box>
               <Input
                 css={`
+                  margin-top: 10px;
                   max-width: 200px;
                   height: 30px;
                 `}
@@ -301,6 +303,7 @@ const MeasurablePanel = observer((props: Props) => {
               <MeasurableDownload
                 geom={terria.measurableGeom as MeasurableGeometry}
                 name={fileName}
+                pathNotes={pathNotes}
                 ellipsoid={terria.cesium.scene.globe.ellipsoid}
               />
             </Box>

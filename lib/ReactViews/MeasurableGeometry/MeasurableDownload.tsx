@@ -18,11 +18,12 @@ import Dropdown from "../Generic/Dropdown";
 interface Props {
   geom: MeasurableGeometry;
   name: string;
+  pathNotes: string;
   ellipsoid: Ellipsoid;
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { geom, name, ellipsoid } = props;
+  const { geom, name, pathNotes, ellipsoid } = props;
 
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
@@ -163,8 +164,8 @@ const MeasurableDownload = (props: Props) => {
           ${geom.stopPoints
             .map(
               (elem) =>
-                `<trkpt lat="${CesiumMath.toDegrees(elem.latitude)}" 
-                  lon="${CesiumMath.toDegrees(elem.longitude)}" 
+                `<trkpt lat="${CesiumMath.toDegrees(elem.latitude)}"
+                  lon="${CesiumMath.toDegrees(elem.longitude)}"
                   ele="${elem.height.toFixed(2)}">
                 </trkpt>`
             )
@@ -204,6 +205,29 @@ const MeasurableDownload = (props: Props) => {
     return rows.join("\n");
   };
 
+  /*const generateCsvData = (geom: MeasurableGeometry) => {
+    const header = [...["Name", "Path Notes"], ...Object.keys(geom.stopPoints[0])];
+
+    const nameValue = props.name || "";
+    const pathNotesValue = props.pathNotes || "";
+
+    const rows = [
+      header.join(","),
+      [nameValue, pathNotesValue, "", "", ""].join(","),
+      ...geom.stopPoints.map((elem) => {
+        return [
+          "",
+          "",
+          CesiumMath.toDegrees(elem.longitude),
+          CesiumMath.toDegrees(elem.latitude),
+          Math.round(elem.height)
+        ].join(",");
+      })
+    ];
+
+    return rows.join("\n");
+  };*/
+
   const icon = (
     <span className={Styles.iconDownload}>
       <Icon glyph={Icon.GLYPHS.opened} />
@@ -229,6 +253,7 @@ const MeasurableDownload = (props: Props) => {
         button: Styles.dropdownButton,
         icon: icon
       }}
+      disabled={!name}
     >
       Download
     </Dropdown>
