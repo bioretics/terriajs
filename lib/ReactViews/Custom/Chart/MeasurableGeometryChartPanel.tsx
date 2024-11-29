@@ -15,7 +15,6 @@ import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollectio
 
 import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
-import { downloadImg } from "../../Map/Panels/SharePanel/Print/PrintView";
 import html2canvas from "html2canvas";
 
 enum ChartKeys {
@@ -121,7 +120,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const downloadChart = () => {
     setIsDownloading(true);
-    const chartElement = document.querySelector(`.${Styles.chartPanel}`);
+    const chartElement = document.querySelector(`.${Styles.holder}`);
     if (chartElement) {
       html2canvas(chartElement as HTMLElement)
         .then((canvas) => {
@@ -202,6 +201,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
               className={Styles.btn}
               style={{ marginTop: 8, color: "black" }}
               onClick={downloadChart}
+              disabled={isDownloading}
             >
               Download
             </button>
