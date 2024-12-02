@@ -191,7 +191,7 @@ const MeasurableDownload = (props: Props) => {
     </gpx>`;
   };
 
-  const generateCsvData = (geom: MeasurableGeometry) => {
+  /*const generateCsvData = (geom: MeasurableGeometry) => {
     const rows = [Object.keys(geom.stopPoints[0]).join(",")];
     rows.push(
       ...geom.stopPoints.map((elem) =>
@@ -203,30 +203,42 @@ const MeasurableDownload = (props: Props) => {
       )
     );
     return rows.join("\n");
-  };
+  };*/
 
-  /*const generateCsvData = (geom: MeasurableGeometry) => {
-    const header = [...["Name", "Path Notes"], ...Object.keys(geom.stopPoints[0])];
+  const generateCsvData = (geom: MeasurableGeometry) => {
+    const header = [
+      ...["name", "path_notes"],
+      ...Object.keys(geom.stopPoints[0])
+    ];
 
     const nameValue = props.name || "";
     const pathNotesValue = props.pathNotes || "";
 
     const rows = [
       header.join(","),
-      [nameValue, pathNotesValue, "", "", ""].join(","),
       ...geom.stopPoints.map((elem) => {
-        return [
-          "",
-          "",
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
-        ].join(",");
+        if (elem === geom.stopPoints[0]) {
+          return [
+            nameValue,
+            pathNotesValue,
+            CesiumMath.toDegrees(elem.longitude),
+            CesiumMath.toDegrees(elem.latitude),
+            Math.round(elem.height)
+          ].join(",");
+        } else {
+          return [
+            "",
+            "",
+            CesiumMath.toDegrees(elem.longitude),
+            CesiumMath.toDegrees(elem.latitude),
+            Math.round(elem.height)
+          ].join(",");
+        }
       })
     ];
 
     return rows.join("\n");
-  };*/
+  };
 
   const icon = (
     <span className={Styles.iconDownload}>

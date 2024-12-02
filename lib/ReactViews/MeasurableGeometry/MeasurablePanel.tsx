@@ -240,7 +240,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderBody = () => {
     return (
-      <div className={Styles.body}>
+      <div className={Styles.body} style={{ padding: "1rem" }}>
         <Box>
           {!terria?.measurableGeom?.hasArea && (
             <Button
