@@ -125,6 +125,8 @@ const MeasurableDownload = (props: Props) => {
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {
     return JSON.stringify({
+      name: name || "",
+      path_notes: pathNotes || "",
       type: "LineString",
       coordinates: geom.stopPoints.map((elem) => [
         CesiumMath.toDegrees(elem.longitude),
@@ -136,6 +138,8 @@ const MeasurableDownload = (props: Props) => {
 
   const generateJsonPoints = (geom: MeasurableGeometry) => {
     return JSON.stringify({
+      name: name || "",
+      path_notes: pathNotes || "",
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem) => {
         return {
@@ -211,8 +215,8 @@ const MeasurableDownload = (props: Props) => {
       ...Object.keys(geom.stopPoints[0])
     ];
 
-    const nameValue = props.name || "";
-    const pathNotesValue = props.pathNotes || "";
+    const nameValue = name || "";
+    const pathNotesValue = pathNotes || "";
 
     const rows = [
       header.join(","),

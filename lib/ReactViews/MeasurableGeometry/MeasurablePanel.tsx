@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -37,6 +37,11 @@ const MeasurablePanel = observer((props: Props) => {
     React.useState(true);
   const [fileName, setFileName] = React.useState("");
   const [pathNotes, setPathNotes] = React.useState("");
+
+  useEffect(() => {
+    setFileName(terria.measurableGeom?.filename || "");
+    setPathNotes(terria.measurableGeom?.pathNotes || "");
+  }, [terria.measurableGeom]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,

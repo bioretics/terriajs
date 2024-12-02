@@ -21,6 +21,8 @@ export interface MeasurableGeometry {
   sampledDistances?: number[];
   geodeticArea?: number;
   airArea?: number;
+  filename?: string;
+  pathNotes?: string;
 }
 
 export default class MeasurableGeometryManager {
@@ -80,8 +82,13 @@ export default class MeasurableGeometryManager {
   @action
   sampleFromCartographics(
     cartoPositions: Cartographic[],
-    closeLoop: boolean = false
+    closeLoop: boolean = false,
+    filename?: string,
+    pathNotes?: string
   ) {
+    console.log("filename in sampleFromCartographics", filename);
+    console.log("path_notes in sampleFromCartographics", pathNotes);
+
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
 
@@ -180,7 +187,9 @@ export default class MeasurableGeometryManager {
         distances3d,
         sampledCartographics[0],
         stepDistances,
-        closeLoop
+        closeLoop,
+        filename,
+        pathNotes
       );
     });
   }
@@ -193,7 +202,9 @@ export default class MeasurableGeometryManager {
     stopGroundDistances: number[],
     sampledPoints: Cartographic[],
     sampledDistances: number[],
-    isClosed: boolean
+    isClosed: boolean,
+    filename?: string,
+    pathNotes?: string
   ) {
     this.terria.measurableGeom = {
       isClosed: isClosed,
@@ -212,7 +223,9 @@ export default class MeasurableGeometryManager {
         0
       ),
       sampledPoints: sampledPoints,
-      sampledDistances: sampledDistances
+      sampledDistances: sampledDistances,
+      filename: filename,
+      pathNotes: pathNotes
     };
   }
 }
