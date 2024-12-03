@@ -97,8 +97,15 @@ const MeasurableDownload = (props: Props) => {
         })
       })
     );
+
     const res = (await exportKml(output)) as exportKmlResultKml;
-    return res.kml;
+
+    return res.kml.replace(
+      /<Document xmlns="">/,
+      `<Document xmlns="">
+      <name>${name}</name>
+      <description>${pathNotes}</description>`
+    );
   };
 
   const generateKmlPoints = async (geom: MeasurableGeometry) => {
@@ -119,8 +126,15 @@ const MeasurableDownload = (props: Props) => {
         })
       );
     });
+
     const res = (await exportKml(output)) as exportKmlResultKml;
-    return res.kml;
+
+    return res.kml.replace(
+      /<Document xmlns="">/,
+      `<Document xmlns="">
+      <name>${name}</name>
+      <description>${pathNotes}</description>`
+    );
   };
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {
@@ -162,8 +176,8 @@ const MeasurableDownload = (props: Props) => {
     return `<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="runtracker">
       <metadata/>
       <trk>
-        <name>Percorso</name>
-        <desc>Percorso salvato da rer3d-map</desc>
+        <name>Percorso: ${name}</name>
+        <desc>Percorso salvato da rer3d-map: ${pathNotes}</desc>
         <trkseg>
           ${geom.stopPoints
             .map(

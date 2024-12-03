@@ -227,7 +227,7 @@ class KmlCatalogItem
     return false;
   }
 
-  computePath() {
+  computePath(filename: string, pathNotes: string) {
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
@@ -239,7 +239,7 @@ class KmlCatalogItem
       const positions: Cartographic[] = coordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
-      this.asPath(positions);
+      this.asPath(positions, filename, pathNotes);
     }
   }
 }

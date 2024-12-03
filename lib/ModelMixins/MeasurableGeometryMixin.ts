@@ -20,7 +20,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
 
     abstract get canUseAsPath(): boolean;
 
-    abstract computePath(): void;
+    abstract computePath(filename?: string, pathNotes?: string): void;
 
     @action
     update(stopPoints: Cartographic[], filename?: any, pathNotes?: any) {
