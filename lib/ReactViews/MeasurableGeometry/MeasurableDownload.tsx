@@ -103,8 +103,7 @@ const MeasurableDownload = (props: Props) => {
     return res.kml.replace(
       /<Document xmlns="">/,
       `<Document xmlns="">
-      <name>${name}</name>
-      <description>${pathNotes}</description>`
+      <name>${name}|${pathNotes}</name>`
     );
   };
 
@@ -132,8 +131,7 @@ const MeasurableDownload = (props: Props) => {
     return res.kml.replace(
       /<Document xmlns="">/,
       `<Document xmlns="">
-      <name>${name}</name>
-      <description>${pathNotes}</description>`
+      <name>${name}|${pathNotes}</name>`
     );
   };
 

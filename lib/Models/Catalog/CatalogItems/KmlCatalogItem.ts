@@ -227,11 +227,15 @@ class KmlCatalogItem
     return false;
   }
 
-  computePath(filename: string, pathNotes: string) {
+  computePath() {
+    const dataSourceInfo = this?._dataSource?.name
+      ? this?._dataSource?.name.split("|")
+      : ["", ""];
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
       ) ?? [];
+    console.log("KML computePath: items", items);
     const coordinates: Cartesian3[] = items[0]?.polyline?.positions?.getValue(
       JulianDate.now()
     );
@@ -239,7 +243,7 @@ class KmlCatalogItem
       const positions: Cartographic[] = coordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
-      this.asPath(positions, filename, pathNotes);
+      this.asPath(positions, dataSourceInfo[0], dataSourceInfo[1]);
     }
   }
 }
