@@ -1510,14 +1510,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
 
       if (!filename || !pathNotes) {
-        filename =
-          this.readyData && this.readyData.features[0].properties
-            ? this.readyData.features[0].properties.name.split(": ")[1]
-            : "";
-        pathNotes =
-          this.readyData && this.readyData.features[0].properties
-            ? this.readyData.features[0].properties.desc.split(": ")[1]
-            : "";
+        const properties = this.readyData?.features[0]?.properties ?? {};
+
+        filename = properties.name?.split(/:(.+)/)[1]?.trim() || "";
+        pathNotes = properties.desc?.split(/:(.+)/)[1]?.trim() || "";
       }
 
       if (
