@@ -222,35 +222,17 @@ const MeasurableDownload = (props: Props) => {
   };*/
 
   const generateCsvData = (geom: MeasurableGeometry) => {
-    const header = [
-      ...["name", "path_notes"],
-      ...Object.keys(geom.stopPoints[0])
-    ];
-
-    const nameValue = name || "";
-    const pathNotesValue = pathNotes || "";
-
     const rows = [
-      header.join(","),
+      [Object.keys(geom.stopPoints[0]).join(",")],
       ...geom.stopPoints.map((elem) => {
-        if (elem === geom.stopPoints[0]) {
-          return [
-            nameValue,
-            pathNotesValue,
-            CesiumMath.toDegrees(elem.longitude),
-            CesiumMath.toDegrees(elem.latitude),
-            Math.round(elem.height)
-          ].join(",");
-        } else {
-          return [
-            "",
-            "",
-            CesiumMath.toDegrees(elem.longitude),
-            CesiumMath.toDegrees(elem.latitude),
-            Math.round(elem.height)
-          ].join(",");
-        }
-      })
+        return [
+          CesiumMath.toDegrees(elem.longitude),
+          CesiumMath.toDegrees(elem.latitude),
+          Math.round(elem.height)
+        ].join(",");
+      }),
+      ["name", "path_notes"],
+      [name || "", pathNotes || ""].join(",")
     ];
 
     return rows.join("\n");

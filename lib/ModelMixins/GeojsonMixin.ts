@@ -1500,25 +1500,23 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           ) {
             filename = this.readyData.features[0].geometry.name
               ? this.readyData.features[0].geometry.name
-              : "";
+              : null;
             pathNotes = this.readyData.features[0].geometry.path_notes
               ? this.readyData.features[0].geometry.path_notes
-              : "";
+              : null;
             jsonCoords = this.readyData.features[0].geometry.coordinates;
           }
           break;
       }
 
-      if (filename || filename.length === 0) {
+      if (!filename || !pathNotes) {
         filename =
           this.readyData && this.readyData.features[0].properties
-            ? this.readyData.features[0].properties.name.split(":")[1]
+            ? this.readyData.features[0].properties.name.split(": ")[1]
             : "";
-      }
-      if (pathNotes || pathNotes.length === 0) {
         pathNotes =
           this.readyData && this.readyData.features[0].properties
-            ? this.readyData.features[0].properties.desc.split(":")[1]
+            ? this.readyData.features[0].properties.desc.split(": ")[1]
             : "";
       }
 
