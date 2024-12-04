@@ -1467,7 +1467,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       let jsonCoords: JsonArray | undefined;
       let filename: any;
       let pathNotes: any;
-      console.log("this.readyData", this.readyData);
 
       switch (this._pathType) {
         case PathTypes.featureCollectionMultiLineString:
@@ -1481,16 +1480,12 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             this.readyData.features[0].geometry.coordinates.length > 0 &&
             isJsonArray(this.readyData.features[0].geometry.coordinates[0])
           ) {
-            console.log(
-              "PathTypes.featureCollectionMultiLineString this.readyData.features[0].geometry.name",
-              this.readyData.features[0].geometry.name
-            );
-            console.log(
-              "PathTypes.featureCollectionMultiLineString this.readyData.features[0].geometry.path_notes",
-              this.readyData.features[0].geometry.path_notes
-            );
-            filename = this.readyData.features[0].geometry.name;
-            pathNotes = this.readyData.features[0].geometry.path_notes;
+            filename = this.readyData.features[0].geometry.name
+              ? this.readyData.features[0].geometry.name
+              : "";
+            pathNotes = this.readyData.features[0].geometry.path_notes
+              ? this.readyData.features[0].geometry.path_notes
+              : "";
             jsonCoords = this.readyData.features[0].geometry.coordinates[0];
           }
           break;
@@ -1503,19 +1498,28 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             isJsonObject(this.readyData.features[0].geometry) &&
             isJsonArray(this.readyData.features[0].geometry.coordinates)
           ) {
-            console.log(
-              "PathTypes.featureCollectionLineString this.readyData.features[0].geometry.name",
-              this.readyData.features[0].geometry.name
-            );
-            console.log(
-              "PathTypes.featureCollectionLineString this.readyData.features[0].geometry.path_notes",
-              this.readyData.features[0].geometry.path_notes
-            );
-            filename = this.readyData.features[0].geometry.name;
-            pathNotes = this.readyData.features[0].geometry.path_notes;
+            filename = this.readyData.features[0].geometry.name
+              ? this.readyData.features[0].geometry.name
+              : "";
+            pathNotes = this.readyData.features[0].geometry.path_notes
+              ? this.readyData.features[0].geometry.path_notes
+              : "";
             jsonCoords = this.readyData.features[0].geometry.coordinates;
           }
           break;
+      }
+
+      if (filename || filename.length === 0) {
+        filename =
+          this.readyData && this.readyData.features[0].properties
+            ? this.readyData.features[0].properties.name.split(":")[1]
+            : "";
+      }
+      if (pathNotes || pathNotes.length === 0) {
+        pathNotes =
+          this.readyData && this.readyData.features[0].properties
+            ? this.readyData.features[0].properties.desc.split(":")[1]
+            : "";
       }
 
       if (
