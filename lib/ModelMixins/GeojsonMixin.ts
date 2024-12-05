@@ -1511,7 +1511,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       if (!filename || !pathNotes) {
         const properties = this.readyData?.features[0]?.properties ?? {};
-
         filename = properties.name?.split(/:(.+)/)[1]?.trim() || "";
         pathNotes = properties.desc?.split(/:(.+)/)[1]?.trim() || "";
       }

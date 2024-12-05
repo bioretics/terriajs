@@ -229,7 +229,10 @@ class KmlCatalogItem
 
   computePath() {
     const dataSourceInfo = this?._dataSource?.name
-      ? this?._dataSource?.name.split("|")
+      ? this._dataSource.name
+          .split(/\|(.+)/)
+          .slice(0, 2)
+          .map((part) => part.trim())
       : ["", ""];
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
