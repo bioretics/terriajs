@@ -1467,7 +1467,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       let jsonCoords: JsonArray | undefined;
       let filename: any;
       let pathNotes: any;
-
       switch (this._pathType) {
         case PathTypes.featureCollectionMultiLineString:
           if (
@@ -1511,8 +1510,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       if (!filename || !pathNotes) {
         const properties = this.readyData?.features[0]?.properties ?? {};
-        filename = properties.name?.split(/:(.+)/)[1]?.trim() || "";
-        pathNotes = properties.desc?.split(/:(.+)/)[1]?.trim() || "";
+        filename = properties.name || "";
+        pathNotes = properties.desc || "";
       }
 
       if (
