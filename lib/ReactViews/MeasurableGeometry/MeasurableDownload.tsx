@@ -103,7 +103,7 @@ const MeasurableDownload = (props: Props) => {
     return res.kml.replace(
       /<Document xmlns="">/,
       `<Document xmlns="">
-      <name>${name}|${pathNotes}</name>`
+       <name>${name}|${pathNotes}</name>`
     );
   };
 
@@ -131,7 +131,7 @@ const MeasurableDownload = (props: Props) => {
     return res.kml.replace(
       /<Document xmlns="">/,
       `<Document xmlns="">
-      <name>${name}|${pathNotes}</name>`
+       <name>${name}|${pathNotes}</name>`
     );
   };
 
@@ -207,35 +207,24 @@ const MeasurableDownload = (props: Props) => {
     </gpx>`;
   };
 
-  /*const generateCsvData = (geom: MeasurableGeometry) => {
-    const rows = [Object.keys(geom.stopPoints[0]).join(",")];
-    rows.push(
-      ...geom.stopPoints.map((elem) =>
-        [
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
-        ].join(",")
-      )
-    );
-    return rows.join("\n");
-  };*/
-
   const generateCsvData = (geom: MeasurableGeometry) => {
-    const rows = [
-      [Object.keys(geom.stopPoints[0]).join(",")],
-      ...geom.stopPoints.map((elem) => {
-        return [
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
-        ].join(",");
-      }),
-      ["name", "path_notes"],
-      [name || "", pathNotes || ""].join(",")
-    ];
+    const headers = [
+      "name",
+      "path_notes",
+      ...Object.keys(geom.stopPoints[0])
+    ].join(",");
 
-    return rows.join("\n");
+    const rows = geom.stopPoints.map((elem) => {
+      return [
+        name || "",
+        pathNotes || "",
+        CesiumMath.toDegrees(elem.longitude),
+        CesiumMath.toDegrees(elem.latitude),
+        Math.round(elem.height)
+      ].join(",");
+    });
+
+    return [headers, ...rows].join("\n");
   };
 
   const icon = (
