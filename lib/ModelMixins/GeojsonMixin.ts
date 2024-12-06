@@ -1467,6 +1467,9 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       let jsonCoords: JsonArray | undefined;
       let filename: any;
       let pathNotes: any;
+
+      console.log("this.readyData", this.readyData);
+
       switch (this._pathType) {
         case PathTypes.featureCollectionMultiLineString:
           if (
@@ -1523,24 +1526,31 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return;
       }
 
+      console.log("GPX: jsonCoords", jsonCoords);
+
       const coordinates: Cartographic[] = jsonCoords.map((elem) => {
+        console.log("elem", elem);
         if (
           elem &&
           isJsonArray(elem) &&
-          elem.length === 3 &&
           isJsonNumber(elem[0]) &&
-          isJsonNumber(elem[1]) &&
-          isJsonNumber(elem[2])
+          isJsonNumber(elem[1])
         ) {
-          return Cartographic.fromDegrees(
-            elem[0],
-            elem[1],
-            Math.round(elem[2])
-          );
+          if (elem.length === 3 && isJsonNumber(elem[2])) {
+            return Cartographic.fromDegrees(
+              elem[0],
+              elem[1],
+              Math.round(elem[2])
+            );
+          } else {
+            return Cartographic.fromDegrees(elem[0], elem[1], 0);
+          }
         } else {
           return Cartographic.fromDegrees(0, 0, 0);
         }
       });
+
+      console.log("GPX: coordinates", coordinates);
 
       this.asPath(coordinates, filename, pathNotes);
     }
