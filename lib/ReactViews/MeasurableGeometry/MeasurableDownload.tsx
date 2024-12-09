@@ -94,17 +94,16 @@ const MeasurableDownload = (props: Props) => {
           positions: geom.stopPoints.map((elem) =>
             Cartographic.toCartesian(elem, ellipsoid)
           )
-        })
+        }),
+        description: `
+          <p id="name"><strong>${name}</strong></p>
+          <p id="pathNotes"><strong>${pathNotes}</strong></p>
+        `
       })
     );
 
     const res = (await exportKml(output)) as exportKmlResultKml;
-
-    return res.kml.replace(
-      /<Document xmlns="">/,
-      `<Document xmlns="">
-       <name>${name}|${pathNotes}</name>`
-    );
+    return res.kml;
   };
 
   const generateKmlPoints = async (geom: MeasurableGeometry) => {
@@ -121,18 +120,18 @@ const MeasurableDownload = (props: Props) => {
         new Entity({
           id: index.toString(),
           point: new PointGraphics({}),
-          position: Cartographic.toCartesian(elem, ellipsoid)
+          position: Cartographic.toCartesian(elem, ellipsoid),
+          description: `
+            <p id="name"><strong>${name}</strong></p>
+            <p id="pathNotes"><strong>${pathNotes}</strong></p>
+          `
         })
       );
     });
 
     const res = (await exportKml(output)) as exportKmlResultKml;
 
-    return res.kml.replace(
-      /<Document xmlns="">/,
-      `<Document xmlns="">
-       <name>${name}|${pathNotes}</name>`
-    );
+    return res.kml;
   };
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {

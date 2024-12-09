@@ -228,25 +228,36 @@ class KmlCatalogItem
   }
 
   computePath() {
-    const dataSourceInfo = this?._dataSource?.name
-      ? this._dataSource.name
-          .split(/\|(.+)/)
-          .slice(0, 2)
-          .map((part) => part.trim())
-      : ["", ""];
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
       ) ?? [];
-    console.log("KML computePath: items", items);
-    const coordinates: Cartesian3[] = items[0]?.polyline?.positions?.getValue(
-      JulianDate.now()
-    );
-    if (coordinates && coordinates.length > 0) {
-      const positions: Cartographic[] = coordinates.map((elem) =>
-        Cartographic.fromCartesian(elem)
+
+    if (items.length > 0) {
+      const firstItem = items[0];
+      const description = firstItem.description?.getValue(JulianDate.now());
+
+      let name = "";
+      let pathNotes = "";
+
+      if (description) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(description, "text/html");
+
+        name = doc.querySelector("#name")?.textContent?.trim() || "";
+        pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+      }
+
+      const coordinates: Cartesian3[] = firstItem.polyline?.positions?.getValue(
+        JulianDate.now()
       );
-      this.asPath(positions, dataSourceInfo[0], dataSourceInfo[1]);
+
+      if (coordinates && coordinates.length > 0) {
+        const positions: Cartographic[] = coordinates.map((elem) =>
+          Cartographic.fromCartesian(elem)
+        );
+        this.asPath(positions, name, pathNotes);
+      }
     }
   }
 }
