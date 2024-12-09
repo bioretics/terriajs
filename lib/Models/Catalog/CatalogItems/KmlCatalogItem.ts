@@ -208,6 +208,8 @@ class KmlCatalogItem
 
   @computed
   get canUseAsPath() {
+    console.log("dataSource", this._dataSource);
+
     if (
       this._dataSource &&
       this._dataSource.entities &&
@@ -217,13 +219,31 @@ class KmlCatalogItem
       const items = this._dataSource.entities.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
       );
-      if (
-        items.length === 1 &&
-        items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1
-      ) {
+      console.log("items", items);
+      if (items.length > 0) {
+        const allPoints = items.map((item) =>
+          item?.polyline?.positions?.getValue(JulianDate.now())
+        );
+
+        console.log("allPoints", allPoints);
+
+        for (let i = 0; i < allPoints.length - 1; i++) {
+          const lastPoint = allPoints[i][allPoints[i].length - 1];
+          const firstPointNext = allPoints[i + 1][0];
+
+          if (lastPoint === firstPointNext) {
+            console.log(
+              `different points founded: ${lastPoint}, ${firstPointNext}`
+            );
+            return false;
+          }
+        }
+
+        console.log("return true");
         return true;
       }
     }
+    console.log("return false");
     return false;
   }
 
