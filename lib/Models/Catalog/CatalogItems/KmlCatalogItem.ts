@@ -208,8 +208,6 @@ class KmlCatalogItem
 
   @computed
   get canUseAsPath() {
-    console.log("dataSource", this._dataSource);
-
     if (
       this._dataSource &&
       this._dataSource.entities &&
@@ -219,31 +217,27 @@ class KmlCatalogItem
       const items = this._dataSource.entities.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
       );
-      console.log("items", items);
-      if (items.length > 0) {
+
+      if (
+        items.length === 1 &&
+        items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1
+      ) {
+        return true;
+      } else if (items.length > 1) {
         const allPoints = items.map((item) =>
           item?.polyline?.positions?.getValue(JulianDate.now())
         );
 
-        console.log("allPoints", allPoints);
-
-        for (let i = 0; i < allPoints.length - 1; i++) {
-          const lastPoint = allPoints[i][allPoints[i].length - 1];
-          const firstPointNext = allPoints[i + 1][0];
-
-          if (lastPoint === firstPointNext) {
-            console.log(
-              `different points founded: ${lastPoint}, ${firstPointNext}`
-            );
-            return false;
-          }
-        }
-
-        console.log("return true");
-        return true;
+        return allPoints.some((points, i) => {
+          const lastPoint = points[points.length - 1];
+          return allPoints.some((otherPoints, j) => {
+            if (i === j) return false;
+            const firstPointNext = otherPoints[0];
+            return Cartesian3.equals(lastPoint, firstPointNext);
+          });
+        });
       }
     }
-    console.log("return false");
     return false;
   }
 
@@ -252,11 +246,45 @@ class KmlCatalogItem
       this?._dataSource?.entities?.values.filter(
         (elem) => elem && typeof elem.polyline !== "undefined"
       ) ?? [];
-    const coordinates: Cartesian3[] = items[0]?.polyline?.positions?.getValue(
-      JulianDate.now()
-    );
-    if (coordinates && coordinates.length > 0) {
-      const positions: Cartographic[] = coordinates.map((elem) =>
+
+    if (items.length > 0) {
+      let allCoordinates: Cartesian3[] = [];
+      if (items.length === 1) {
+        allCoordinates =
+          items[0].polyline?.positions?.getValue(JulianDate.now()) ?? [];
+      } else if (items.length > 1) {
+        const orderedItems: Entity[] = [items[0]];
+        items.splice(0, 1);
+        while (items.length > 0) {
+          const lastPoint = orderedItems[
+            orderedItems.length - 1
+          ].polyline?.positions
+            ?.getValue(JulianDate.now())
+            ?.slice(-1)[0];
+          const nextItemIndex = items.findIndex((item) => {
+            const firstPoint = item.polyline?.positions?.getValue(
+              JulianDate.now()
+            )?.[0];
+            return (
+              firstPoint &&
+              lastPoint &&
+              Cartesian3.equals(firstPoint, lastPoint)
+            );
+          });
+          if (nextItemIndex !== -1) {
+            orderedItems.push(items[nextItemIndex]);
+            items.splice(nextItemIndex, 1);
+          } else {
+            orderedItems.push(items[0]);
+            items.splice(0, 1);
+          }
+        }
+        allCoordinates = orderedItems.flatMap(
+          (item) => item.polyline?.positions?.getValue(JulianDate.now()) ?? []
+        );
+      }
+
+      const positions: Cartographic[] = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
       this.asPath(positions);
