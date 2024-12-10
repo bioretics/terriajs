@@ -215,17 +215,24 @@ class KmlCatalogItem
       this._dataSource.entities.values.length > 0
     ) {
       const items = this._dataSource.entities.values.filter(
-        (elem) => elem && typeof elem.polyline !== "undefined"
+        (elem) =>
+          elem &&
+          (typeof elem.polyline !== "undefined" ||
+            typeof elem.polygon !== "undefined")
       );
 
       if (
         items.length === 1 &&
-        items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1
+        (items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1 ||
+          items[0]?.polygon?.hierarchy?.getValue(JulianDate.now()).positions
+            .length > 1)
       ) {
         return true;
       } else if (items.length > 1) {
-        const allPoints = items.map((item) =>
-          item?.polyline?.positions?.getValue(JulianDate.now())
+        const allPoints = items.map(
+          (item) =>
+            item?.polyline?.positions?.getValue(JulianDate.now()) ||
+            item?.polygon?.hierarchy?.getValue(JulianDate.now()).positions
         );
 
         return allPoints.some((points, i) => {
@@ -244,27 +251,34 @@ class KmlCatalogItem
   computePath() {
     const items: Entity[] =
       this?._dataSource?.entities?.values.filter(
-        (elem) => elem && typeof elem.polyline !== "undefined"
+        (elem) =>
+          elem &&
+          (typeof elem.polyline !== "undefined" ||
+            typeof elem.polygon !== "undefined")
       ) ?? [];
 
     if (items.length > 0) {
       let allCoordinates: Cartesian3[] = [];
       if (items.length === 1) {
         allCoordinates =
-          items[0].polyline?.positions?.getValue(JulianDate.now()) ?? [];
+          items[0].polyline?.positions?.getValue(JulianDate.now()) ??
+          items[0].polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
+          [];
       } else if (items.length > 1) {
         const orderedItems: Entity[] = [items[0]];
         items.splice(0, 1);
         while (items.length > 0) {
-          const lastPoint = orderedItems[
-            orderedItems.length - 1
-          ].polyline?.positions
-            ?.getValue(JulianDate.now())
-            ?.slice(-1)[0];
+          const lastPoint =
+            orderedItems[orderedItems.length - 1].polyline?.positions
+              ?.getValue(JulianDate.now())
+              ?.slice(-1)[0] ||
+            orderedItems[orderedItems.length - 1].polygon?.hierarchy
+              ?.getValue(JulianDate.now())
+              .positions.slice(-1)[0];
           const nextItemIndex = items.findIndex((item) => {
-            const firstPoint = item.polyline?.positions?.getValue(
-              JulianDate.now()
-            )?.[0];
+            const firstPoint =
+              item.polyline?.positions?.getValue(JulianDate.now())?.[0] ||
+              item.polygon?.hierarchy?.getValue(JulianDate.now()).positions[0];
             return (
               firstPoint &&
               lastPoint &&
@@ -280,7 +294,10 @@ class KmlCatalogItem
           }
         }
         allCoordinates = orderedItems.flatMap(
-          (item) => item.polyline?.positions?.getValue(JulianDate.now()) ?? []
+          (item) =>
+            item.polyline?.positions?.getValue(JulianDate.now()) ??
+            item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
+            []
         );
       }
 
