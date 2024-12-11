@@ -1426,7 +1426,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @computed get canUseAsPath() {
       let pathType: PathTypes = PathTypes.noPath;
-
+      console.log("this.readyData", this.readyData);
       if (
         this.readyData &&
         isJsonObject(this.readyData.crs) &&
@@ -1441,10 +1441,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonObject(this.readyData.features[0])
         ) {
           const geometry = this.readyData.features[0].geometry;
+          console.log("geometry", geometry);
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               geometry.type === "MultiLineString" &&
-              geometry.coordinates.length === 1 &&
+              geometry.coordinates.length >= 1 &&
               isJsonArray(geometry.coordinates[0]) &&
               geometry.coordinates[0].length > 1
             ) {
@@ -1455,6 +1456,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             ) {
               pathType = PathTypes.featureCollectionLineString;
             }
+            console.log("pathType", pathType);
           }
         }
       }
@@ -1475,10 +1477,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             isJsonObject(this.readyData.features[0]) &&
             isJsonObject(this.readyData.features[0].geometry) &&
             isJsonArray(this.readyData.features[0].geometry.coordinates) &&
-            this.readyData.features[0].geometry.coordinates.length > 0 &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates[0])
+            this.readyData.features[0].geometry.coordinates.length > 0
           ) {
-            jsonCoords = this.readyData.features[0].geometry.coordinates[0];
+            console.log("featureCollectionMultiLineString");
+            jsonCoords = this.readyData.features[0].geometry.coordinates.flat();
           }
           break;
         case PathTypes.featureCollectionLineString:
@@ -1490,10 +1492,12 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             isJsonObject(this.readyData.features[0].geometry) &&
             isJsonArray(this.readyData.features[0].geometry.coordinates)
           ) {
+            console.log("featureCollectionLineString");
             jsonCoords = this.readyData.features[0].geometry.coordinates;
           }
           break;
       }
+      console.log("jsonCoords", jsonCoords);
 
       if (!jsonCoords || jsonCoords.length === 0) {
         return;
@@ -1503,16 +1507,18 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         if (
           elem &&
           isJsonArray(elem) &&
-          elem.length === 3 &&
           isJsonNumber(elem[0]) &&
-          isJsonNumber(elem[1]) &&
-          isJsonNumber(elem[2])
+          isJsonNumber(elem[1])
         ) {
-          return Cartographic.fromDegrees(
-            elem[0],
-            elem[1],
-            Math.round(elem[2])
-          );
+          if (elem.length === 3 && isJsonNumber(elem[2])) {
+            return Cartographic.fromDegrees(
+              elem[0],
+              elem[1],
+              Math.round(elem[2])
+            );
+          } else {
+            return Cartographic.fromDegrees(elem[0], elem[1], 0);
+          }
         } else {
           return Cartographic.fromDegrees(0, 0, 0);
         }
