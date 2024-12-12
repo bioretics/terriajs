@@ -116,7 +116,8 @@ enum PathTypes {
   featureCollectionLineString = 1,
   featureCollectionMultiLineString = 2,
   lineString = 3,
-  multiLineString = 4
+  multiLineString = 4,
+  featureCollectionPolygon = 5
 }
 
 export const FEATURE_ID_PROP = "_id_";
@@ -1424,9 +1425,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     protected _pathType: PathTypes = PathTypes.noPath;
 
-    @computed get canUseAsPath() {
+    @computed
+    get canUseAsPath() {
       let pathType: PathTypes = PathTypes.noPath;
-      console.log("this.readyData", this.readyData);
+
       if (
         this.readyData &&
         isJsonObject(this.readyData.crs) &&
@@ -1441,7 +1443,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonObject(this.readyData.features[0])
         ) {
           const geometry = this.readyData.features[0].geometry;
-          console.log("geometry", geometry);
+
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               geometry.type === "MultiLineString" &&
@@ -1455,8 +1457,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               geometry.coordinates.length > 1
             ) {
               pathType = PathTypes.featureCollectionLineString;
+            } else if (
+              geometry.type === "Polygon" &&
+              geometry.coordinates.length > 0 &&
+              isJsonArray(geometry.coordinates[0]) &&
+              geometry.coordinates[0].length > 1
+            ) {
+              pathType = PathTypes.featureCollectionPolygon;
             }
-            console.log("pathType", pathType);
           }
         }
       }
@@ -1475,6 +1483,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
         case PathTypes.featureCollectionLineString:
           jsonCoords = this.getLineStringCoordinates();
+          break;
+
+        case PathTypes.featureCollectionPolygon:
+          jsonCoords = this.getPolygonCoordinates();
           break;
       }
 
@@ -1505,6 +1517,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       this.asPath(coordinates);
     }
 
+    // Get the ordered segments
     private getOrderedSegments(): JsonArray | undefined {
       if (
         this.readyData &&
@@ -1608,7 +1621,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return orderedSegments;
     }
 
-    // Order the segments based on the matching points
+    // Get coordinates from the LineString feature
     private getLineStringCoordinates(): JsonArray | undefined {
       if (
         this.readyData &&
@@ -1619,6 +1632,20 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         isJsonArray(this.readyData.features[0].geometry.coordinates)
       ) {
         return this.readyData.features[0].geometry.coordinates;
+      }
+    }
+
+    // Get coordinates from the Polygon feature
+    private getPolygonCoordinates(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates)
+      ) {
+        return this.readyData.features[0].geometry.coordinates[0] as JsonArray;
       }
     }
 
