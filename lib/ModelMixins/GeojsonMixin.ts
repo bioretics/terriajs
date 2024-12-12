@@ -1470,104 +1470,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       switch (this._pathType) {
         case PathTypes.featureCollectionMultiLineString:
-          if (
-            this.readyData &&
-            isJsonArray(this.readyData.features) &&
-            this.readyData.features.length > 0 &&
-            isJsonObject(this.readyData.features[0]) &&
-            isJsonObject(this.readyData.features[0].geometry) &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates) &&
-            this.readyData.features[0].geometry.coordinates.length > 0
-          ) {
-            const segments = this.readyData.features[0].geometry.coordinates;
-
-            const findLowestPoint = (seg: JsonArray) => {
-              if (
-                Array.isArray(seg) &&
-                seg.length >= 2 &&
-                Array.isArray(seg[0]) &&
-                Array.isArray(seg[1])
-              ) {
-                return (
-                  Math.min(seg[0][0] as number, seg[1][0] as number) +
-                  Math.min(seg[0][1] as number, seg[1][1] as number)
-                );
-              }
-              throw new Error("Invalid segment format");
-            };
-
-            const startingSegmentIndex = segments.reduce(
-              (
-                lowestIndex: number,
-                segment: JsonValue,
-                index: number,
-                array: JsonValue[]
-              ) => {
-                if (
-                  !Array.isArray(segment) ||
-                  !Array.isArray(array[lowestIndex])
-                ) {
-                  throw new Error("Invalid segment format");
-                }
-                return findLowestPoint(segment as JsonArray) <
-                  findLowestPoint(array[lowestIndex] as JsonArray)
-                  ? index
-                  : lowestIndex;
-              },
-              0
-            );
-
-            const orderedSegments: JsonArray[] = [
-              segments[startingSegmentIndex] as JsonArray
-            ];
-            segments.splice(startingSegmentIndex, 1);
-
-            while (segments.length > 0) {
-              const lastPoint: JsonArray = orderedSegments[
-                orderedSegments.length - 1
-              ][1] as JsonArray;
-
-              const nextSegmentIndex = segments.findIndex((segment) => {
-                if (segment && Array.isArray(segment) && segment.length > 0) {
-                  const firstPoint = segment[0] as JsonArray;
-                  return (
-                    firstPoint[0] === lastPoint[0] &&
-                    firstPoint[1] === lastPoint[1]
-                  );
-                }
-              });
-
-              if (nextSegmentIndex !== -1) {
-                orderedSegments.push(segments[nextSegmentIndex] as JsonArray);
-                segments.splice(nextSegmentIndex, 1);
-              } else {
-                break;
-              }
-            }
-
-            jsonCoords = orderedSegments.flat().filter(
-              (item, index, self) =>
-                index ===
-                self.findIndex((coord) => {
-                  if (Array.isArray(coord) && Array.isArray(item)) {
-                    return coord[0] === item[0] && coord[1] === item[1];
-                  }
-                })
-            );
-          }
+          jsonCoords = this.getOrderedSegments();
           break;
 
         case PathTypes.featureCollectionLineString:
-          if (
-            this.readyData &&
-            isJsonArray(this.readyData.features) &&
-            this.readyData.features.length > 0 &&
-            isJsonObject(this.readyData.features[0]) &&
-            isJsonObject(this.readyData.features[0].geometry) &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates)
-          ) {
-            jsonCoords = this.readyData.features[0].geometry.coordinates;
-          }
+          jsonCoords = this.getLineStringCoordinates();
           break;
       }
 
@@ -1575,7 +1482,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return;
       }
 
-      const coordinates: Cartographic[] = jsonCoords.map((elem) => {
+      const coordinates = jsonCoords.map((elem) => {
         if (
           elem &&
           isJsonArray(elem) &&
@@ -1595,8 +1502,121 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           return Cartographic.fromDegrees(0, 0, 0);
         }
       });
-
       this.asPath(coordinates);
+    }
+
+    private getOrderedSegments(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates) &&
+        this.readyData.features[0].geometry.coordinates.length > 0
+      ) {
+        const segments = this.readyData.features[0].geometry.coordinates;
+
+        const startingSegmentIndex = this.findStartingSegmentIndex(
+          segments as JsonArray[]
+        );
+        const orderedSegments = this.orderSegments(
+          segments as JsonArray[],
+          startingSegmentIndex
+        );
+
+        return orderedSegments.flat().filter(
+          (item, index, self) =>
+            index ===
+            self.findIndex((coord) => {
+              if (Array.isArray(coord) && Array.isArray(item)) {
+                return coord[0] === item[0] && coord[1] === item[1];
+              }
+            })
+        );
+      }
+    }
+
+    private findStartingSegmentIndex(segments: JsonArray[]): number {
+      const findLowestPoint = (seg: JsonArray) => {
+        if (
+          Array.isArray(seg) &&
+          seg.length >= 2 &&
+          Array.isArray(seg[0]) &&
+          Array.isArray(seg[1])
+        ) {
+          return (
+            Math.min(seg[0][0] as number, seg[1][0] as number) +
+            Math.min(seg[0][1] as number, seg[1][1] as number)
+          );
+        }
+        throw new Error("Invalid segment format");
+      };
+
+      return segments.reduce(
+        (
+          lowestIndex: number,
+          segment: JsonValue,
+          index: number,
+          array: JsonValue[]
+        ) => {
+          if (!Array.isArray(segment) || !Array.isArray(array[lowestIndex])) {
+            throw new Error("Invalid segment format");
+          }
+          return findLowestPoint(segment as JsonArray) <
+            findLowestPoint(array[lowestIndex] as JsonArray)
+            ? index
+            : lowestIndex;
+        },
+        0
+      );
+    }
+
+    private orderSegments(
+      segments: JsonArray[],
+      startingSegmentIndex: number
+    ): JsonArray[] {
+      const orderedSegments: JsonArray[] = [
+        segments[startingSegmentIndex] as JsonArray
+      ];
+      segments.splice(startingSegmentIndex, 1);
+
+      while (segments.length > 0) {
+        const lastPoint: JsonArray = orderedSegments[
+          orderedSegments.length - 1
+        ][1] as JsonArray;
+
+        const nextSegmentIndex = segments.findIndex((segment) => {
+          if (segment && Array.isArray(segment) && segment.length > 0) {
+            const firstPoint = segment[0] as JsonArray;
+            return (
+              firstPoint[0] === lastPoint[0] && firstPoint[1] === lastPoint[1]
+            );
+          }
+        });
+
+        if (nextSegmentIndex !== -1) {
+          orderedSegments.push(segments[nextSegmentIndex] as JsonArray);
+          segments.splice(nextSegmentIndex, 1);
+        } else {
+          break;
+        }
+      }
+
+      return orderedSegments;
+    }
+
+    private getLineStringCoordinates(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates)
+      ) {
+        return this.readyData.features[0].geometry.coordinates;
+      }
     }
 
     @override
