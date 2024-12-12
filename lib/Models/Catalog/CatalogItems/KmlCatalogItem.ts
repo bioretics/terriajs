@@ -258,54 +258,85 @@ class KmlCatalogItem
       ) ?? [];
 
     if (items.length > 0) {
-      let allCoordinates: Cartesian3[] = [];
-      if (items.length === 1) {
-        allCoordinates =
-          items[0].polyline?.positions?.getValue(JulianDate.now()) ??
-          items[0].polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
-          [];
-      } else if (items.length > 1) {
-        const orderedItems: Entity[] = [items[0]];
-        items.splice(0, 1);
-        while (items.length > 0) {
-          const lastPoint =
-            orderedItems[orderedItems.length - 1].polyline?.positions
-              ?.getValue(JulianDate.now())
-              ?.slice(-1)[0] ||
-            orderedItems[orderedItems.length - 1].polygon?.hierarchy
-              ?.getValue(JulianDate.now())
-              .positions.slice(-1)[0];
-          const nextItemIndex = items.findIndex((item) => {
-            const firstPoint =
-              item.polyline?.positions?.getValue(JulianDate.now())?.[0] ||
-              item.polygon?.hierarchy?.getValue(JulianDate.now()).positions[0];
-            return (
-              firstPoint &&
-              lastPoint &&
-              Cartesian3.equals(firstPoint, lastPoint)
-            );
-          });
-          if (nextItemIndex !== -1) {
-            orderedItems.push(items[nextItemIndex]);
-            items.splice(nextItemIndex, 1);
-          } else {
-            orderedItems.push(items[0]);
-            items.splice(0, 1);
-          }
-        }
-        allCoordinates = orderedItems.flatMap(
-          (item) =>
-            item.polyline?.positions?.getValue(JulianDate.now()) ??
-            item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
-            []
-        );
-      }
+      const allCoordinates =
+        items.length === 1
+          ? this.getCoordinatesFromSingleItem(items[0])
+          : this.getCoordinatesFromMultipleItems(items);
 
       const positions: Cartographic[] = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
+
       this.asPath(positions);
     }
+  }
+
+  // Get coordinates from a single item (either polyline or polygon)
+  private getCoordinatesFromSingleItem(item: Entity): Cartesian3[] {
+    return (
+      item.polyline?.positions?.getValue(JulianDate.now()) ??
+      item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
+      []
+    );
+  }
+
+  // Get coordinates from multiple items and order them
+  private getCoordinatesFromMultipleItems(items: Entity[]): Cartesian3[] {
+    const orderedItems = this.orderEntities(items);
+
+    return orderedItems.flatMap(
+      (item) =>
+        item.polyline?.positions?.getValue(JulianDate.now()) ??
+        item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
+        []
+    );
+  }
+
+  // Order entities based on their coordinates to form a continuous path
+  private orderEntities(entities: Entity[]): Entity[] {
+    const orderedItems: Entity[] = [entities[0]];
+    entities.splice(0, 1);
+
+    while (entities.length > 0) {
+      const lastPoint = this.getLastPointFromEntity(
+        orderedItems[orderedItems.length - 1]
+      );
+
+      const nextItemIndex = entities.findIndex((item) => {
+        const firstPoint = this.getFirstPointFromEntity(item);
+        return (
+          firstPoint && lastPoint && Cartesian3.equals(firstPoint, lastPoint)
+        );
+      });
+
+      if (nextItemIndex !== -1) {
+        orderedItems.push(entities[nextItemIndex]);
+        entities.splice(nextItemIndex, 1);
+      } else {
+        orderedItems.push(entities[0]);
+        entities.splice(0, 1);
+      }
+    }
+
+    return orderedItems;
+  }
+
+  // Get the last point from an entity (either polyline or polygon)
+  private getLastPointFromEntity(entity: Entity): Cartesian3 | undefined {
+    return (
+      entity.polyline?.positions?.getValue(JulianDate.now())?.slice(-1)[0] ||
+      entity.polygon?.hierarchy
+        ?.getValue(JulianDate.now())
+        .positions.slice(-1)[0]
+    );
+  }
+
+  // Get the first point from an entity (either polyline or polygon)
+  private getFirstPointFromEntity(entity: Entity): Cartesian3 | undefined {
+    return (
+      entity.polyline?.positions?.getValue(JulianDate.now())?.[0] ||
+      entity.polygon?.hierarchy?.getValue(JulianDate.now()).positions[0]
+    );
   }
 }
 
