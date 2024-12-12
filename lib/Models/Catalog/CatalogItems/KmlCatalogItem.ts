@@ -263,9 +263,19 @@ class KmlCatalogItem
           ? this.getCoordinatesFromSingleItem(items[0])
           : this.getCoordinatesFromMultipleItems(items);
 
-      const positions: Cartographic[] = allCoordinates.map((elem) =>
-        Cartographic.fromCartesian(elem)
-      );
+      const positions: Cartographic[] = allCoordinates
+        .map((elem) => Cartographic.fromCartesian(elem))
+        .filter(
+          (item, index, self) =>
+            index ===
+            self.findIndex((coord) => {
+              return (
+                coord.latitude === item.latitude &&
+                coord.longitude === item.longitude &&
+                coord.height === item.height
+              );
+            })
+        );
 
       this.asPath(positions);
     }
