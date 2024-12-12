@@ -1537,6 +1537,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
     }
 
+    // Find the starting segment index by locating the segment with the lowest coordinates
     private findStartingSegmentIndex(segments: JsonArray[]): number {
       const findLowestPoint = (seg: JsonArray) => {
         if (
@@ -1572,6 +1573,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       );
     }
 
+    // Order the segments based on the matching points
     private orderSegments(
       segments: JsonArray[],
       startingSegmentIndex: number
@@ -1606,6 +1608,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return orderedSegments;
     }
 
+    // Order the segments based on the matching points
     private getLineStringCoordinates(): JsonArray | undefined {
       if (
         this.readyData &&
