@@ -102,6 +102,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.panel = undefined;
+        viewState.measurablePanelIsVisible = false;
+        viewState.measurableChartIsVisible = false;
       });
     },
     onOpen: () => {
@@ -132,6 +134,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
         viewState.panel = undefined;
+        viewState.measurablePanelIsVisible = false;
+        viewState.measurableChartIsVisible = false;
       });
     },
     onOpen: () => {

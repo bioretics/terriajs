@@ -17,6 +17,10 @@ import { useTheme } from "styled-components";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import MeasurableDownload from "./MeasurableDownload";
 import i18next from "i18next";
+import {
+  MeasureLineTool,
+  MeasurePolygonTool
+} from "../Map/MapNavigation/Items";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -44,6 +48,16 @@ const MeasurablePanel = observer((props: Props) => {
 
   const close = action(() => {
     viewState.measurablePanelIsVisible = false;
+    const deactivateTool = (toolId: string) => {
+      const item =
+        viewState.terria.mapNavigationModel.findItem(toolId)?.controller;
+      if (item && item.active) {
+        item.deactivate();
+      }
+    };
+
+    deactivateTool(MeasureLineTool.id);
+    deactivateTool(MeasurePolygonTool.id);
   });
 
   const toggleCollapsed = action(() => {
