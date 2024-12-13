@@ -1550,40 +1550,48 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
     }
 
-    // Find the starting segment index by locating the segment with the lowest coordinates
+    // Find the starting segment index by locating the segment that has no other segment ending at its starting point
     private findStartingSegmentIndex(segments: JsonArray[]): number {
-      const findLowestPoint = (seg: JsonArray) => {
-        if (
-          Array.isArray(seg) &&
-          seg.length >= 2 &&
-          Array.isArray(seg[0]) &&
-          Array.isArray(seg[1])
-        ) {
-          return (
-            Math.min(seg[0][0] as number, seg[1][0] as number) +
-            Math.min(seg[0][1] as number, seg[1][1] as number)
-          );
-        }
-        throw new Error("Invalid segment format");
+      // Helper function to compare two points
+      const pointsAreEqual = (
+        pointA: JsonArray,
+        pointB: JsonArray
+      ): boolean => {
+        return pointA[0] === pointB[0] && pointA[1] === pointB[1];
       };
 
-      return segments.reduce(
-        (
-          lowestIndex: number,
-          segment: JsonValue,
-          index: number,
-          array: JsonValue[]
-        ) => {
-          if (!Array.isArray(segment) || !Array.isArray(array[lowestIndex])) {
+      // Iterate through each segment and check if its starting point is the endpoint of any other segment
+      for (let i = 0; i < segments.length; i++) {
+        const currentSegment = segments[i];
+        if (!Array.isArray(currentSegment) || currentSegment.length < 2) {
+          throw new Error("Invalid segment format");
+        }
+
+        const startPoint = currentSegment[0] as JsonArray;
+        let isStartingPoint = true;
+
+        for (let j = 0; j < segments.length; j++) {
+          if (i === j) continue;
+
+          const otherSegment = segments[j];
+          if (!Array.isArray(otherSegment) || otherSegment.length < 2) {
             throw new Error("Invalid segment format");
           }
-          return findLowestPoint(segment as JsonArray) <
-            findLowestPoint(array[lowestIndex] as JsonArray)
-            ? index
-            : lowestIndex;
-        },
-        0
-      );
+
+          const endPoint = otherSegment[1] as JsonArray;
+          if (pointsAreEqual(startPoint, endPoint)) {
+            isStartingPoint = false;
+            break;
+          }
+        }
+
+        if (isStartingPoint) {
+          console.log("index of the starting point segment", i);
+          return i; // Return the index of the segment with no preceding segment
+        }
+      }
+
+      throw new Error("No valid starting segment found");
     }
 
     // Order the segments based on the matching points
