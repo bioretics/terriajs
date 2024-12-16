@@ -1465,10 +1465,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     computePath() {
       let jsonCoords: JsonArray | undefined;
-      let filename: any;
-      let pathNotes: any;
-
-      console.log("this.readyData", this.readyData);
+      let filename: string | undefined;
+      let pathNotes: string | undefined;
 
       switch (this._pathType) {
         case PathTypes.featureCollectionMultiLineString:
@@ -1482,12 +1480,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             this.readyData.features[0].geometry.coordinates.length > 0 &&
             isJsonArray(this.readyData.features[0].geometry.coordinates[0])
           ) {
-            filename = this.readyData.features[0].geometry.name
-              ? this.readyData.features[0].geometry.name
-              : "";
-            pathNotes = this.readyData.features[0].geometry.path_notes
-              ? this.readyData.features[0].geometry.path_notes
-              : "";
+            filename =
+              typeof this.readyData.features[0].geometry.name === "string"
+                ? this.readyData.features[0].geometry.name
+                : "";
+            pathNotes =
+              typeof this.readyData.features[0].geometry.path_notes === "string"
+                ? this.readyData.features[0].geometry.path_notes
+                : "";
             jsonCoords = this.readyData.features[0].geometry.coordinates[0];
           }
           break;
@@ -1500,12 +1500,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             isJsonObject(this.readyData.features[0].geometry) &&
             isJsonArray(this.readyData.features[0].geometry.coordinates)
           ) {
-            filename = this.readyData.features[0].geometry.name
-              ? this.readyData.features[0].geometry.name
-              : null;
-            pathNotes = this.readyData.features[0].geometry.path_notes
-              ? this.readyData.features[0].geometry.path_notes
-              : null;
+            filename =
+              typeof this.readyData.features[0].geometry.name === "string"
+                ? this.readyData.features[0].geometry.name
+                : "";
+            pathNotes =
+              typeof this.readyData.features[0].geometry.path_notes === "string"
+                ? this.readyData.features[0].geometry.path_notes
+                : "";
             jsonCoords = this.readyData.features[0].geometry.coordinates;
           }
           break;
@@ -1526,10 +1528,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return;
       }
 
-      console.log("GPX: jsonCoords", jsonCoords);
-
       const coordinates: Cartographic[] = jsonCoords.map((elem) => {
-        console.log("elem", elem);
         if (
           elem &&
           isJsonArray(elem) &&
@@ -1549,8 +1548,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           return Cartographic.fromDegrees(0, 0, 0);
         }
       });
-
-      console.log("GPX: coordinates", coordinates);
 
       this.asPath(coordinates, filename, pathNotes);
     }
