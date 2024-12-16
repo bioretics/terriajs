@@ -53,8 +53,10 @@
     }
   },
   "measure": {
+    "measurePointTool": "Measure Point Tool",
     "measureLineTool": "Measure Line Tool",
     "measurePolygonTool": "Measure Polygon Tool",
+    "measurePointToolTitle": "Point Measure",
     "measureLineToolTitle": "Line Measure",
     "measurePolygonToolTitle": "Polygon Measure",
     "measureDistance": "Measure distance between locations",

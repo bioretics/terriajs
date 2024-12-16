@@ -33,6 +33,7 @@ import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
 import KeyboardMode, {
   KEYBOARD_MODE_ID
 } from "../../Tools/KeyboardMode/KeyboardMode";
+import { MeasurePointTool } from "./Items/MeasurePointTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -101,18 +102,26 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasurePointTool.id);
         viewState.panel = undefined;
       });
     },
     onOpen: () => {
       runInAction(() => {
-        const item = viewState.terria.mapNavigationModel.findItem(
+        let item = viewState.terria.mapNavigationModel.findItem(
           MeasureLineTool.id
         )?.controller;
         if (item && item.active) {
           item.deactivate();
         }
         viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
+        item = viewState.terria.mapNavigationModel.findItem(
+          MeasurePointTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
       });
     }
   });
@@ -131,12 +140,58 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasurePointTool.id);
         viewState.panel = undefined;
       });
     },
     onOpen: () => {
       runInAction(() => {
-        const item = viewState.terria.mapNavigationModel.findItem(
+        let item = viewState.terria.mapNavigationModel.findItem(
+          MeasurePolygonTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
+        item = viewState.terria.mapNavigationModel.findItem(
+          MeasurePointTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
+      });
+    }
+  });
+  mapNavigationModel.addItem({
+    id: MeasureLineTool.id,
+    name: "translate#measure.measureLineToolTitle",
+    title: "translate#measure.measureDistance",
+    location: "TOP",
+    controller: measureLineTool,
+    screenSize: undefined,
+    order: 6
+  });
+
+  const measurePointTool = new MeasurePointTool({
+    terria,
+    onClose: () => {
+      runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
+        viewState.panel = undefined;
+      });
+    },
+    onOpen: () => {
+      runInAction(() => {
+        let item = viewState.terria.mapNavigationModel.findItem(
+          MeasureLineTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
+        item = viewState.terria.mapNavigationModel.findItem(
           MeasurePolygonTool.id
         )?.controller;
         if (item && item.active) {
@@ -147,11 +202,11 @@ export const registerMapNavigations = (viewState: ViewState) => {
     }
   });
   mapNavigationModel.addItem({
-    id: MeasureLineTool.id,
-    name: "translate#measure.measureLineToolTitle",
+    id: MeasurePointTool.id,
+    name: "translate#measure.measurePointToolTitle",
     title: "translate#measure.measureDistance",
     location: "TOP",
-    controller: measureLineTool,
+    controller: measurePointTool,
     screenSize: undefined,
     order: 6
   });
