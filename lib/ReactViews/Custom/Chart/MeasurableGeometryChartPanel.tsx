@@ -50,6 +50,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   const PANEL_HEIGHT = 300;
   const CHART_HEIGHT = 266;
 
+  const chartRef = useRef<HTMLDivElement>(null);
   const [chartItems, setChartItems] = useState<ChartItem[]>();
 
   const chartPoint = useRef<ChartPoint>();
@@ -120,9 +121,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const downloadChart = () => {
     setIsDownloading(true);
-    const chartElement = document.querySelector(`.${Styles.holder}`);
-    if (chartElement) {
-      html2canvas(chartElement as HTMLElement)
+    if (chartRef.current) {
+      html2canvas(chartRef.current)
         .then((canvas) => {
           const dataURL = canvas.toDataURL("image/png");
           const link = document.createElement("a");
@@ -189,7 +189,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   }, [terria.measurableGeom, terria.measurableGeomSamplingStep]);
 
   return (
-    <div className={Styles.holder}>
+    <div ref={chartRef} className={Styles.holder}>
       <div className={Styles.inner}>
         <div className={Styles.chartPanel} style={{ height: PANEL_HEIGHT }}>
           <div className={Styles.header}>
