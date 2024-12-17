@@ -21,6 +21,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import html2canvas from "html2canvas";
 
 const chartMinWidth = 110;
 const defaultGridColor = "#efefef";
@@ -266,92 +267,132 @@ class Chart extends React.Component {
     });
   }
 
+  @observable isDownloading;
+  chartRef = React.createRef();
+
+  @action
+  setIsDownloading(isDownloading) {
+    this.isDownloading = isDownloading;
+  }
+
+  downloadChart = () => {
+    this.setIsDownloading(true);
+    if (this.chartRef.current) {
+      html2canvas(this.chartRef.current)
+        .then((canvas) => {
+          const dataURL = canvas.toDataURL("image/jpg");
+          const link = document.createElement("a");
+          link.href = dataURL;
+          link.download = "chart-screenshot.jpg";
+          link.click();
+          this.setIsDownloading(false);
+        })
+        .catch((error) => {
+          console.error(error);
+          this.setIsDownloading(false);
+        });
+    } else {
+      this.setIsDownloading(false);
+    }
+  };
+
   render() {
     const { height, xAxis, terria } = this.props;
     if (this.chartItems.length === 0)
       return <div className={Styles.empty}>No data available</div>;
-
     return (
-      <ZoomX
-        surface="#zoomSurface"
-        initialScale={this.initialXScale}
-        scaleExtent={[1, Infinity]}
-        translateExtent={[
-          [0, 0],
-          [Infinity, Infinity]
-        ]}
-        onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
-      >
-        <Legends width={this.plotWidth} chartItems={this.chartItems} />
-        <div style={{ position: "relative" }}>
-          <svg
-            width="100%"
-            height={height}
-            onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
-            onMouseLeave={() => {
-              this.setMouseCoords(undefined);
-              // On mouseLeave event remove position placeholder
-              this.props.onPointMouseNear(undefined);
-            }}
-          >
-            <Group
-              left={this.adjustedMargin.left}
-              top={this.adjustedMargin.top}
+      <div className={Styles.chart} ref={this.chartRef}>
+        <ZoomX
+          surface="#zoomSurface"
+          initialScale={this.initialXScale}
+          scaleExtent={[1, Infinity]}
+          translateExtent={[
+            [0, 0],
+            [Infinity, Infinity]
+          ]}
+          onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
+        >
+          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+            <button
+              type="button"
+              style={{ marginTop: 8, color: "black" }}
+              onClick={this.downloadChart}
+              disabled={this.isDownloading}
             >
-              <RectClipPath
-                id="plotClip"
-                width={this.plotWidth}
-                height={this.plotHeight}
-              />
-              <XAxis
-                top={this.plotHeight + 1}
-                scale={this.xScale}
-                label={xAxis.units || (xAxis.scale === "time" && "Date")}
-              />
-              {this.yAxes.map((y, i) => (
-                <YAxis
-                  {...y}
-                  key={`y-axis-${y.units}`}
-                  color={this.yAxes.length > 1 ? y.color : defaultGridColor}
-                  offset={i * 50}
-                />
-              ))}
-              {this.yAxes.map((y, i) => (
-                <GridRows
-                  key={`grid-${y.units}`}
-                  width={this.plotWidth}
-                  height={this.plotHeight}
-                  scale={y.scale}
-                  numTicks={4}
-                  stroke={this.yAxes.length > 1 ? y.color : defaultGridColor}
-                  lineStyle={{ opacity: 0.3 }}
-                />
-              ))}
-              <svg
-                id="zoomSurface"
-                clipPath="url(#plotClip)"
-                pointerEvents="all"
+              Download
+            </button>
+            <Legends width={this.plotWidth} chartItems={this.chartItems} />
+          </div>
+          <div style={{ position: "relative" }}>
+            <svg
+              width="100%"
+              height={height}
+              onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
+              onMouseLeave={() => {
+                this.setMouseCoords(undefined);
+                // On mouseLeave event remove position placeholder
+                this.props.onPointMouseNear(undefined);
+              }}
+            >
+              <Group
+                left={this.adjustedMargin.left}
+                top={this.adjustedMargin.top}
               >
-                <rect
+                <RectClipPath
+                  id="plotClip"
                   width={this.plotWidth}
                   height={this.plotHeight}
-                  fill="transparent"
                 />
-                {this.cursorX && (
-                  <Cursor x={this.cursorX} stroke={defaultGridColor} />
-                )}
-                <Plot
-                  chartItems={this.chartItems}
-                  initialScales={this.initialScales}
-                  zoomedScales={this.zoomedScales}
+                <XAxis
+                  top={this.plotHeight + 1}
+                  scale={this.xScale}
+                  label={xAxis.units || (xAxis.scale === "time" && "Date")}
                 />
-              </svg>
-            </Group>
-          </svg>
-          <Tooltip {...this.tooltip} />
-          <PointsOnMap terria={terria} chartItems={this.chartItems} />
-        </div>
-      </ZoomX>
+                {this.yAxes.map((y, i) => (
+                  <YAxis
+                    {...y}
+                    key={`y-axis-${y.units}`}
+                    color={this.yAxes.length > 1 ? y.color : defaultGridColor}
+                    offset={i * 50}
+                  />
+                ))}
+                {this.yAxes.map((y, i) => (
+                  <GridRows
+                    key={`grid-${y.units}`}
+                    width={this.plotWidth}
+                    height={this.plotHeight}
+                    scale={y.scale}
+                    numTicks={4}
+                    stroke={this.yAxes.length > 1 ? y.color : defaultGridColor}
+                    lineStyle={{ opacity: 0.3 }}
+                  />
+                ))}
+                <svg
+                  id="zoomSurface"
+                  clipPath="url(#plotClip)"
+                  pointerEvents="all"
+                >
+                  <rect
+                    width={this.plotWidth}
+                    height={this.plotHeight}
+                    fill="transparent"
+                  />
+                  {this.cursorX && (
+                    <Cursor x={this.cursorX} stroke={defaultGridColor} />
+                  )}
+                  <Plot
+                    chartItems={this.chartItems}
+                    initialScales={this.initialScales}
+                    zoomedScales={this.zoomedScales}
+                  />
+                </svg>
+              </Group>
+            </svg>
+            <Tooltip {...this.tooltip} />
+            <PointsOnMap terria={terria} chartItems={this.chartItems} />
+          </div>
+        </ZoomX>
+      </div>
     );
   }
 }

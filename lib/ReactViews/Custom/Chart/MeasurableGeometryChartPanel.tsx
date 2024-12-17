@@ -15,7 +15,6 @@ import BillboardCollection from "terriajs-cesium/Source/Scene/BillboardCollectio
 
 import markerIcon from "./markerIcon.js";
 import i18next from "i18next";
-import html2canvas from "html2canvas";
 
 enum ChartKeys {
   AirChart = "path",
@@ -50,7 +49,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   const PANEL_HEIGHT = 300;
   const CHART_HEIGHT = 266;
 
-  const chartRef = useRef<HTMLDivElement>(null);
   const [chartItems, setChartItems] = useState<ChartItem[]>();
 
   const chartPoint = useRef<ChartPoint>();
@@ -119,31 +117,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     }
   };
 
-  const downloadChart = () => {
-    setIsDownloading(true);
-    if (chartRef.current) {
-      html2canvas(chartRef.current, {
-        ignoreElements: (element) => element.classList?.contains(Styles.btn)
-      })
-        .then((canvas) => {
-          const dataURL = canvas.toDataURL("image/png");
-          const link = document.createElement("a");
-          link.href = dataURL;
-          link.download = "chart-screenshot.png";
-          link.click();
-          setIsDownloading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          setIsDownloading(false);
-        });
-    } else {
-      setIsDownloading(false);
-    }
-  };
-
-  const [isDownloading, setIsDownloading] = useState(false);
-
   useEffect(() => {
     if (terria?.measurableGeom) {
       const airData = fetchPathDataChart(
@@ -191,22 +164,13 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   }, [terria.measurableGeom, terria.measurableGeomSamplingStep]);
 
   return (
-    <div ref={chartRef} className={Styles.holder}>
+    <div className={Styles.holder}>
       <div className={Styles.inner}>
         <div className={Styles.chartPanel} style={{ height: PANEL_HEIGHT }}>
           <div className={Styles.header}>
             <label className={Styles.sectionLabel}>
               {i18next.t("elevationChart.header")}
             </label>
-            <button
-              type="button"
-              className={Styles.btn}
-              style={{ marginTop: 8, color: "black" }}
-              onClick={downloadChart}
-              disabled={isDownloading}
-            >
-              Download
-            </button>
             <button
               type="button"
               className={Styles.btnCloseChartPanel}
