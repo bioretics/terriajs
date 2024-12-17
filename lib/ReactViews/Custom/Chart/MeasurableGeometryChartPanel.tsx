@@ -122,7 +122,9 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   const downloadChart = () => {
     setIsDownloading(true);
     if (chartRef.current) {
-      html2canvas(chartRef.current)
+      html2canvas(chartRef.current, {
+        ignoreElements: (element) => element.classList?.contains(Styles.btn)
+      })
         .then((canvas) => {
           const dataURL = canvas.toDataURL("image/png");
           const link = document.createElement("a");
