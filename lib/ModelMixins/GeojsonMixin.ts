@@ -1538,56 +1538,22 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           startingSegmentIndex
         );
 
-        return orderedSegments.flat().filter(
-          (item, index, self) =>
-            index ===
-            self.findIndex((coord) => {
-              if (Array.isArray(coord) && Array.isArray(item)) {
-                return coord[0] === item[0] && coord[1] === item[1];
-              }
-            })
-        );
+        return Array.from(
+          new Set(orderedSegments.flat().map((coord) => JSON.stringify(coord)))
+        ).map((coord) => JSON.parse(coord));
       }
     }
 
     // Find the starting segment index by locating the segment that has no other segment ending at its starting point
     private findStartingSegmentIndex(segments: JsonArray[]): number {
-      // Helper function to compare two points
-      const pointsAreEqual = (
-        pointA: JsonArray,
-        pointB: JsonArray
-      ): boolean => {
-        return pointA[0] === pointB[0] && pointA[1] === pointB[1];
-      };
+      const endPoints = new Set<string>(
+        segments.map((segment) => JSON.stringify(segment[1]))
+      );
 
-      // Iterate through each segment and check if its starting point is the endpoint of any other segment
       for (let i = 0; i < segments.length; i++) {
-        const currentSegment = segments[i];
-        if (!Array.isArray(currentSegment) || currentSegment.length < 2) {
-          throw new Error("Invalid segment format");
-        }
-
-        const startPoint = currentSegment[0] as JsonArray;
-        let isStartingPoint = true;
-
-        for (let j = 0; j < segments.length; j++) {
-          if (i === j) continue;
-
-          const otherSegment = segments[j];
-          if (!Array.isArray(otherSegment) || otherSegment.length < 2) {
-            throw new Error("Invalid segment format");
-          }
-
-          const endPoint = otherSegment[1] as JsonArray;
-          if (pointsAreEqual(startPoint, endPoint)) {
-            isStartingPoint = false;
-            break;
-          }
-        }
-
-        if (isStartingPoint) {
-          console.log("index of the starting point segment", i);
-          return i; // Return the index of the segment with no preceding segment
+        const startPoint = JSON.stringify(segments[i][0]);
+        if (!endPoints.has(startPoint)) {
+          return i;
         }
       }
 
@@ -1604,23 +1570,21 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ];
       segments.splice(startingSegmentIndex, 1);
 
-      while (segments.length > 0) {
-        const lastPoint: JsonArray = orderedSegments[
-          orderedSegments.length - 1
-        ][1] as JsonArray;
+      const segmentMap = new Map<string, JsonArray>();
+      segments.forEach((segment) => {
+        const key = JSON.stringify(segment[0]);
+        segmentMap.set(key, segment as JsonArray);
+      });
 
-        const nextSegmentIndex = segments.findIndex((segment) => {
-          if (segment && Array.isArray(segment) && segment.length > 0) {
-            const firstPoint = segment[0] as JsonArray;
-            return (
-              firstPoint[0] === lastPoint[0] && firstPoint[1] === lastPoint[1]
-            );
-          }
-        });
+      while (segmentMap.size > 0) {
+        const lastPoint = JSON.stringify(
+          orderedSegments[orderedSegments.length - 1][1]
+        );
+        const nextSegment = segmentMap.get(lastPoint);
 
-        if (nextSegmentIndex !== -1) {
-          orderedSegments.push(segments[nextSegmentIndex] as JsonArray);
-          segments.splice(nextSegmentIndex, 1);
+        if (nextSegment) {
+          orderedSegments.push(nextSegment);
+          segmentMap.delete(lastPoint);
         } else {
           break;
         }
