@@ -270,8 +270,9 @@ class KmlCatalogItem
 
   computePath() {
     const entities = this._dataSource?.entities?.values ?? [];
-    const items = entities.filter((e) => e && (e.polyline || e.polygon));
-
+    const polygons = entities.filter((e) => e && e.polygon);
+    const polylines = entities.filter((e) => e && e.polyline);
+    const items = [...polygons, ...polylines];
     if (items.length === 0) return;
 
     const allCoordinates =
@@ -279,7 +280,14 @@ class KmlCatalogItem
         ? this.getPositions(items[0])
         : this.orderEntities(items).flatMap(this.getPositions);
 
-    const positions = this.getUniqueCartographics(allCoordinates);
+    const allCartographics = allCoordinates.map((elem) =>
+      Cartographic.fromCartesian(elem)
+    );
+
+    const positions =
+      polylines.length > 0
+        ? this.getUniqueCartographics(allCartographics)
+        : allCartographics;
 
     this.asPath(positions);
   }
@@ -310,20 +318,14 @@ class KmlCatalogItem
     return ordered;
   }
 
-  private getUniqueCartographics(coordinates: Cartesian3[]): Cartographic[] {
-    return coordinates
-      .map((elem) => Cartographic.fromCartesian(elem))
-      .filter(
-        (item, index, self) =>
-          index ===
-          self.findIndex((coord) => {
-            return (
-              coord.latitude === item.latitude &&
-              coord.longitude === item.longitude &&
-              coord.height === item.height
-            );
-          })
-      );
+  private getUniqueCartographics(coordinates: Cartographic[]): Cartographic[] {
+    const seen = new Set<string>();
+    return coordinates.filter((coord) => {
+      const key = `${coord.latitude},${coord.longitude},${coord.height}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 }
 
