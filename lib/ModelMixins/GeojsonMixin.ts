@@ -1448,20 +1448,19 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             if (
               geometry.type === "MultiLineString" &&
               geometry.coordinates.length >= 1 &&
-              isJsonArray(geometry.coordinates[0]) &&
-              geometry.coordinates[0].length > 1
+              this.arePolylinesValid(geometry.coordinates)
             ) {
               pathType = PathTypes.featureCollectionMultiLineString;
             } else if (
               geometry.type === "LineString" &&
-              geometry.coordinates.length > 1
+              geometry.coordinates.length > 1 &&
+              this.arePolylinesValid([geometry.coordinates])
             ) {
               pathType = PathTypes.featureCollectionLineString;
             } else if (
               geometry.type === "Polygon" &&
               geometry.coordinates.length > 0 &&
-              isJsonArray(geometry.coordinates[0]) &&
-              geometry.coordinates[0].length > 1
+              this.isPolygonValid(geometry.coordinates)
             ) {
               pathType = PathTypes.featureCollectionPolygon;
             }
@@ -1471,6 +1470,61 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       this._pathType = pathType;
       return pathType !== PathTypes.noPath;
+    }
+
+    // Validates if the coordinates of the polyline are correct by ensuring the first and last points are connected.
+    private arePolylinesValid(coordinates: any[]): boolean {
+      const pointOccurrences: { point: number[]; count: number }[] = [];
+
+      coordinates.forEach((line) => {
+        const firstPoint = line[0]; // First point of the line
+        const lastPoint = line[line.length - 1]; // Last point of the line
+
+        this.updatePointOccurrences(pointOccurrences, firstPoint);
+        this.updatePointOccurrences(pointOccurrences, lastPoint);
+      });
+
+      const validPoints = pointOccurrences.filter(
+        ({ count }) => count === 1
+      ).length;
+      return validPoints === 2;
+    }
+
+    // Validates if the coordinates of the polygon are correct by ensuring the first and last points are the same.
+    private isPolygonValid(coordinates: any[]): boolean {
+      const pointOccurrences: { point: number[]; count: number }[] = [];
+
+      coordinates.forEach((ring) => {
+        for (let i = 0; i < ring.length; i++) {
+          const point = ring[i];
+          this.updatePointOccurrences(pointOccurrences, point);
+        }
+      });
+
+      const validPoints = pointOccurrences.filter(
+        ({ count }) => count === 2
+      ).length;
+      return validPoints === 1;
+    }
+
+    // Updates the occurrences of a given point in the pointOccurrences array.
+    private updatePointOccurrences(
+      pointOccurrences: { point: number[]; count: number }[],
+      point: number[]
+    ) {
+      const occurrence = pointOccurrences.find((item) =>
+        this.arePointsEqual(item.point, point)
+      );
+      if (occurrence) {
+        occurrence.count++;
+      } else {
+        pointOccurrences.push({ point, count: 1 });
+      }
+    }
+
+    // Compares two points to check if they are equal.
+    private arePointsEqual(pointA: number[], pointB: number[]): boolean {
+      return pointA[0] === pointB[0] && pointA[1] === pointB[1];
     }
 
     computePath() {
