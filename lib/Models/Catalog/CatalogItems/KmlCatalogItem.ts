@@ -223,6 +223,7 @@ class KmlCatalogItem
     return polygons.length > 0 || polylines.length > 0;
   }
 
+  // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private arePolygonsValid(polygons: Entity[]): boolean {
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];
 
@@ -239,6 +240,7 @@ class KmlCatalogItem
     return singleConnectionCount === 1;
   }
 
+  // Checks if the provided polylines are valid by ensuring exactly two points are connected only once.
   private arePolylinesValid(polylines: Entity[]): boolean {
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];
 
@@ -254,6 +256,7 @@ class KmlCatalogItem
     return singleConnectionCount === 2;
   }
 
+  // Updates the occurrences of a given point in the pointOccurrences array.
   private updatePointOccurrences(
     pointOccurrences: { point: Cartesian3; count: number }[],
     point: Cartesian3
@@ -292,6 +295,7 @@ class KmlCatalogItem
     this.asPath(positions);
   }
 
+  // Retrieves the positions of an entity, either from a polyline or polygon.
   private getPositions(entity: Entity): Cartesian3[] {
     return (
       entity.polyline?.positions?.getValue(JulianDate.now()) ??
@@ -300,6 +304,7 @@ class KmlCatalogItem
     );
   }
 
+  // Orders the given entities based on their positions, ensuring they form a continuous path.
   private orderEntities(entities: Entity[]): Entity[] {
     const ordered: Entity[] = [entities.shift()!];
 
@@ -318,6 +323,7 @@ class KmlCatalogItem
     return ordered;
   }
 
+  // Filters out duplicate Cartographic coordinates, ensuring only unique coordinates remain.
   private getUniqueCartographics(coordinates: Cartographic[]): Cartographic[] {
     const seen = new Set<string>();
     return coordinates.filter((coord) => {
