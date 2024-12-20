@@ -18,10 +18,10 @@ const SidePanelContainer = styled.div.attrs<PropsType>(({ viewState }) => ({
   display: flex;
   flex-direction: column;
   position: absolute;
-  left: 21px;
-  top: 21px;
-  max-height: calc(100% - 42px);
-  min-height: calc(100% - 42px);
+  left: 2%;
+  top: 3%;
+  max-height: 80%;
+  min-height: 80%;
   z-index: 100;
   background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(5px);

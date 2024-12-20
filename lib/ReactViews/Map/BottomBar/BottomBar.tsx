@@ -10,12 +10,15 @@ export const BottomBar: VFC = () => {
   const viewState = useViewState();
   return (
     <Box
-      fullWidth
       justifySpaceBetween
       css={`
-        background: linear-gradient(180deg, #000000 0%, #000000 100%);
+        border-radius: 8px 8px 8px 8px;
         font-size: 0.7rem;
+        width: 96%;
+        background: rgb(17, 24, 39);
         opacity: 0.75;
+        backdrop-filter: blur(5px);
+        margin-top: 2px;
       `}
     >
       <MapCredits
