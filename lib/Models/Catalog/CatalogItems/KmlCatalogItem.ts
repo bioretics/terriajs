@@ -208,145 +208,130 @@ class KmlCatalogItem
 
   @computed
   get canUseAsPath() {
-    if (
-      this._dataSource &&
-      this._dataSource.entities &&
-      this._dataSource.entities.values &&
-      this._dataSource.entities.values.length > 0
-    ) {
-      const items = this._dataSource.entities.values.filter(
-        (elem) =>
-          elem &&
-          (typeof elem.polyline !== "undefined" ||
-            typeof elem.polygon !== "undefined")
-      );
+    const entities = this._dataSource?.entities?.values ?? [];
+    const polygons = entities.filter((e) => e?.polygon);
+    const polylines = entities.filter((e) => e?.polyline);
 
-      if (
-        items.length === 1 &&
-        (items[0]?.polyline?.positions?.getValue(JulianDate.now()).length > 1 ||
-          items[0]?.polygon?.hierarchy?.getValue(JulianDate.now()).positions
-            .length > 1)
-      ) {
-        return true;
-      } else if (items.length > 1) {
-        const allPoints = items.map(
-          (item) =>
-            item?.polyline?.positions?.getValue(JulianDate.now()) ||
-            item?.polygon?.hierarchy?.getValue(JulianDate.now()).positions
-        );
-
-        return allPoints.some((points, i) => {
-          const lastPoint = points[points.length - 1];
-          return allPoints.some((otherPoints, j) => {
-            if (i === j) return false;
-            const firstPointNext = otherPoints[0];
-            return Cartesian3.equals(lastPoint, firstPointNext);
-          });
-        });
-      }
+    if (polygons.length > 0 && !this.isPolygonValid(polygons)) {
+      return false;
     }
-    return false;
+
+    if (polylines.length > 0 && !this.arePolylinesValid(polylines)) {
+      return false;
+    }
+
+    return polygons.length > 0 || polylines.length > 0;
+  }
+
+  // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
+  private isPolygonValid(polygons: Entity[]): boolean {
+    const pointOccurrences: { point: Cartesian3; count: number }[] = [];
+
+    polygons.forEach((polygon) => {
+      const points = this.getPositions(polygon);
+      points.forEach((point) =>
+        this.updatePointOccurrences(pointOccurrences, point)
+      );
+    });
+
+    const validPoints = pointOccurrences.filter(
+      ({ count }) => count === 2
+    ).length;
+    return validPoints === 1;
+  }
+
+  // Checks if the provided polylines are valid by ensuring exactly two points are connected only once.
+  private arePolylinesValid(polylines: Entity[]): boolean {
+    const pointOccurrences: { point: Cartesian3; count: number }[] = [];
+
+    polylines.forEach((polyline) => {
+      const points = this.getPositions(polyline);
+      this.updatePointOccurrences(pointOccurrences, points[0]);
+      this.updatePointOccurrences(pointOccurrences, points[points.length - 1]);
+    });
+
+    const validPoints = pointOccurrences.filter(
+      ({ count }) => count === 1
+    ).length;
+    return validPoints === 2;
+  }
+
+  // Updates the occurrences of a given point in the pointOccurrences array.
+  private updatePointOccurrences(
+    pointOccurrences: { point: Cartesian3; count: number }[],
+    point: Cartesian3
+  ) {
+    const occurrence = pointOccurrences.find((item) =>
+      Cartesian3.equals(item.point, point)
+    );
+    if (occurrence) {
+      occurrence.count++;
+    } else {
+      pointOccurrences.push({ point, count: 1 });
+    }
   }
 
   computePath() {
-    const items: Entity[] =
-      this?._dataSource?.entities?.values.filter(
-        (elem) =>
-          elem &&
-          (typeof elem.polyline !== "undefined" ||
-            typeof elem.polygon !== "undefined")
-      ) ?? [];
+    const entities = this._dataSource?.entities?.values ?? [];
+    const polygons = entities.filter((e) => e && e.polygon);
+    const polylines = entities.filter((e) => e && e.polyline);
+    const items = [...polygons, ...polylines];
+    if (items.length === 0) return;
 
-    if (items.length > 0) {
-      const allCoordinates =
-        items.length === 1
-          ? this.getCoordinatesFromSingleItem(items[0])
-          : this.getCoordinatesFromMultipleItems(items);
+    const allCoordinates =
+      items.length === 1
+        ? this.getPositions(items[0])
+        : this.orderEntities(items).flatMap(this.getPositions);
 
-      const positions: Cartographic[] = allCoordinates
-        .map((elem) => Cartographic.fromCartesian(elem))
-        .filter(
-          (item, index, self) =>
-            index ===
-            self.findIndex((coord) => {
-              return (
-                coord.latitude === item.latitude &&
-                coord.longitude === item.longitude &&
-                coord.height === item.height
-              );
-            })
-        );
+    const allCartographics = allCoordinates.map((elem) =>
+      Cartographic.fromCartesian(elem)
+    );
 
-      this.asPath(positions);
-    }
+    const positions =
+      polylines.length > 0
+        ? this.getUniqueCartographics(allCartographics)
+        : allCartographics;
+
+    this.asPath(positions);
   }
 
-  // Get coordinates from a single item (either polyline or polygon)
-  private getCoordinatesFromSingleItem(item: Entity): Cartesian3[] {
+  // Retrieves the positions of an entity, either from a polyline or polygon.
+  private getPositions(entity: Entity): Cartesian3[] {
     return (
-      item.polyline?.positions?.getValue(JulianDate.now()) ??
-      item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
+      entity.polyline?.positions?.getValue(JulianDate.now()) ??
+      entity.polygon?.hierarchy?.getValue(JulianDate.now())?.positions ??
       []
     );
   }
 
-  // Get coordinates from multiple items and order them
-  private getCoordinatesFromMultipleItems(items: Entity[]): Cartesian3[] {
-    const orderedItems = this.orderEntities(items);
-
-    return orderedItems.flatMap(
-      (item) =>
-        item.polyline?.positions?.getValue(JulianDate.now()) ??
-        item.polygon?.hierarchy?.getValue(JulianDate.now()).positions ??
-        []
-    );
-  }
-
-  // Order entities based on their coordinates to form a continuous path
+  // Orders the given entities based on their positions, ensuring they form a continuous path.
   private orderEntities(entities: Entity[]): Entity[] {
-    const orderedItems: Entity[] = [entities[0]];
-    entities.splice(0, 1);
+    const ordered: Entity[] = [entities.shift()!];
 
     while (entities.length > 0) {
-      const lastPoint = this.getLastPointFromEntity(
-        orderedItems[orderedItems.length - 1]
+      const lastPoint = this.getPositions(ordered[ordered.length - 1]).slice(
+        -1
+      )[0];
+      const index = entities.findIndex((e) =>
+        Cartesian3.equals(this.getPositions(e)[0], lastPoint)
       );
-
-      const nextItemIndex = entities.findIndex((item) => {
-        const firstPoint = this.getFirstPointFromEntity(item);
-        return (
-          firstPoint && lastPoint && Cartesian3.equals(firstPoint, lastPoint)
-        );
-      });
-
-      if (nextItemIndex !== -1) {
-        orderedItems.push(entities[nextItemIndex]);
-        entities.splice(nextItemIndex, 1);
-      } else {
-        orderedItems.push(entities[0]);
-        entities.splice(0, 1);
-      }
+      ordered.push(
+        index !== -1 ? entities.splice(index, 1)[0] : entities.splice(0, 1)[0]
+      );
     }
 
-    return orderedItems;
+    return ordered;
   }
 
-  // Get the last point from an entity (either polyline or polygon)
-  private getLastPointFromEntity(entity: Entity): Cartesian3 | undefined {
-    return (
-      entity.polyline?.positions?.getValue(JulianDate.now())?.slice(-1)[0] ||
-      entity.polygon?.hierarchy
-        ?.getValue(JulianDate.now())
-        .positions.slice(-1)[0]
-    );
-  }
-
-  // Get the first point from an entity (either polyline or polygon)
-  private getFirstPointFromEntity(entity: Entity): Cartesian3 | undefined {
-    return (
-      entity.polyline?.positions?.getValue(JulianDate.now())?.[0] ||
-      entity.polygon?.hierarchy?.getValue(JulianDate.now()).positions[0]
-    );
+  // Filters out duplicate Cartographic coordinates, ensuring only unique coordinates remain.
+  private getUniqueCartographics(coordinates: Cartographic[]): Cartographic[] {
+    const seen = new Set<string>();
+    return coordinates.filter((coord) => {
+      const key = `${coord.latitude},${coord.longitude},${coord.height}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 }
 
