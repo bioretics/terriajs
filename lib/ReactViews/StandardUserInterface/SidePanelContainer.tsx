@@ -17,7 +17,14 @@ const SidePanelContainer = styled.div.attrs<PropsType>(({ viewState }) => ({
 }))<PropsType>`
   display: flex;
   flex-direction: column;
-  position: relative;
+  position: absolute;
+  left: 21px;
+  top: 21px;
+  max-height: calc(100% - 42px);
+  min-height: calc(100% - 42px);
+  z-index: 100;
+  background: rgba(17, 24, 39, 0.75);
+  backdrop-filter: blur(5px);
   font-family: ${(p) => p.theme.fontPop}px;
   width: ${(p) => p.theme.workbenchWidth}px;
   flex-basis: ${(p) => p.theme.workbenchWidth}px;
@@ -33,6 +40,7 @@ const SidePanelContainer = styled.div.attrs<PropsType>(({ viewState }) => ({
   visibility: ${(p) => (p.show ? "visible" : "hidden")};
   opacity: ${(p) => (p.show ? 1 : 0)};
   margin-left: ${(p) => (p.show ? "0px" : `-${p.theme.workbenchWidth}px`)};
+  border-radius: 8px;
 `;
 
 export default withViewState(SidePanelContainer);
