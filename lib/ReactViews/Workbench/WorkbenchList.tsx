@@ -11,7 +11,6 @@ import WorkbenchItem from "./WorkbenchItem";
 import WorkbenchSplitScreen from "./WorkbenchSplitScreen";
 
 const StyledUl = styled(Ul)`
-  margin: 5px 0;
   li {
     &:first-child {
       margin-top: 0;
@@ -49,7 +48,6 @@ class WorkbenchList extends React.Component<IProps> {
         overflowY="auto"
         overflowX="hidden"
         scroll
-        paddedHorizontally
         fullWidth
         fullHeight
         column
