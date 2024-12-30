@@ -92,9 +92,10 @@ class FullScreenButton extends React.Component {
               ? t("sui.showWorkbench")
               : t("sui.hideWorkbench")
           }
-          css={`
-            opacity: 0.75;
-          `}
+          style={{
+            backgroundColor: "#111827",
+            opacity: 0.75
+          }}
         >
           {this.renderButtonText()}
         </button>
