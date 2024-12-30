@@ -33,6 +33,7 @@ import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
 import KeyboardMode, {
   KEYBOARD_MODE_ID
 } from "../../Tools/KeyboardMode/KeyboardMode";
+import { MeasureTool } from "./Items/MeasureTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -157,6 +158,17 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: measureLineTool,
     screenSize: undefined,
+    order: 6
+  });
+
+  const measureTool = new MeasureTool(terria, viewState);
+  mapNavigationModel.addItem({
+    id: MeasureTool.id,
+    name: "Strumenti di misura", //"translate#measure.measureToolTitle",
+    title: "Apri gli strumenti di misura", //"translate#measure.measureToolDescription",
+    location: "TOP",
+    screenSize: undefined,
+    controller: measureTool,
     order: 6
   });
 
