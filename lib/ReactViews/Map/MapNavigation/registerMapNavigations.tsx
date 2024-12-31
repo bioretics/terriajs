@@ -33,7 +33,8 @@ import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
 import KeyboardMode, {
   KEYBOARD_MODE_ID
 } from "../../Tools/KeyboardMode/KeyboardMode";
-import { MeasureTool } from "./Items/MeasureTool";
+import { MeasureToolsController } from "./Items/MeasureToolsController";
+import MeasureTools from "./Items/MeasureTools";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -119,6 +120,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
       });
     }
   });
+  measurePolygonTool.setVisible(false);
   mapNavigationModel.addItem({
     id: MeasurePolygonTool.id,
     name: "translate#measure.measurePolygonToolTitle",
@@ -141,6 +143,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
+        console.log("MeasurePolygonTool.id", MeasurePolygonTool.id);
         const item = viewState.terria.mapNavigationModel.findItem(
           MeasurePolygonTool.id
         )?.controller;
@@ -151,6 +154,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
       });
     }
   });
+  measureLineTool.setVisible(false);
   mapNavigationModel.addItem({
     id: MeasureLineTool.id,
     name: "translate#measure.measureLineToolTitle",
@@ -161,14 +165,23 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 6
   });
 
-  const measureTool = new MeasureTool(terria, viewState);
+  const measureToolsController = new MeasureToolsController(viewState);
   mapNavigationModel.addItem({
-    id: MeasureTool.id,
-    name: "Strumenti di misura", //"translate#measure.measureToolTitle",
-    title: "Apri gli strumenti di misura", //"translate#measure.measureToolDescription",
+    id: MeasureToolsController.id,
+    name: "translate#measure.measureToolTitle",
+    title: "translate#measure.measureTool",
     location: "TOP",
     screenSize: undefined,
-    controller: measureTool,
+    controller: measureToolsController,
+    render: (
+      <MeasureTools
+        controller={{
+          toggleDropdown: () => measureToolsController.toggleDropdown(),
+          activateTool: (toolId: string) =>
+            measureToolsController.activateTool(toolId)
+        }}
+      />
+    ),
     order: 6
   });
 
