@@ -5,6 +5,7 @@ import { GLYPHS, Icon } from "../../../../Styled/Icon";
 import { Box } from "../../../../Styled/Box";
 import styled from "styled-components";
 import MapIconButton from "../../../MapIconButton/MapIconButton";
+import i18next from "i18next";
 
 interface MeasureToolsProps {
   controller: {
@@ -19,12 +20,12 @@ const MeasureTools: React.FC<MeasureToolsProps> = ({ controller }) => {
   const options = [
     {
       id: MeasureLineTool.id,
-      name: MeasureLineTool.name,
+      name: i18next.t("measure.measureLineToolTitle"),
       glyph: GLYPHS.measure
     },
     {
       id: MeasurePolygonTool.id,
-      name: MeasurePolygonTool.name,
+      name: i18next.t("measure.measurePolygonToolTitle"),
       glyph: GLYPHS.measurePolygon
     }
   ];
@@ -40,12 +41,12 @@ const MeasureTools: React.FC<MeasureToolsProps> = ({ controller }) => {
         expandInPlace={true}
         noExpand={false}
         iconElement={() => <Icon glyph={GLYPHS.map} />}
-        title="Open Measure Tools"
+        title={i18next.t("measure.measureTool")}
         onClick={toggleList}
         disabled={false}
         primary={isOpen}
       >
-        Measure Tools
+        {i18next.t("measure.measureToolTitle")}
       </MapIconButton>
 
       {isOpen && (
