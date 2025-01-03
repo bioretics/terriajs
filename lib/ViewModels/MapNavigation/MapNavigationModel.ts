@@ -17,6 +17,7 @@ export interface IMapNavigationItem
   location: NavigationItemLocation;
   noExpand?: boolean;
   render?: ReactNode;
+  childrenItems?: IMapNavigationItem[];
 }
 
 export default class MapNavigationModel extends CompositeBarModel<IMapNavigationItem> {

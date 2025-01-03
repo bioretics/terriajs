@@ -98,74 +98,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 4
   });
 
-  const measurePolygonTool = new MeasurePolygonTool({
-    terria,
-    onClose: () => {
-      runInAction(() => {
-        viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
-        viewState.panel = undefined;
-        viewState.measurablePanelIsVisible = false;
-        viewState.measurableChartIsVisible = false;
-      });
-    },
-    onOpen: () => {
-      runInAction(() => {
-        const item = viewState.terria.mapNavigationModel.findItem(
-          MeasureLineTool.id
-        )?.controller;
-        if (item && item.active) {
-          item.deactivate();
-        }
-        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
-      });
-    }
-  });
-  measurePolygonTool.setVisible(false);
-  mapNavigationModel.addItem({
-    id: MeasurePolygonTool.id,
-    name: "translate#measure.measurePolygonToolTitle",
-    title: "translate#measure.measureArea",
-    location: "TOP",
-    controller: measurePolygonTool,
-    screenSize: undefined,
-    order: 6
-  });
-
-  const measureLineTool = new MeasureLineTool({
-    terria,
-    onClose: () => {
-      runInAction(() => {
-        viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
-        viewState.panel = undefined;
-        viewState.measurablePanelIsVisible = false;
-        viewState.measurableChartIsVisible = false;
-      });
-    },
-    onOpen: () => {
-      runInAction(() => {
-        console.log("MeasurePolygonTool.id", MeasurePolygonTool.id);
-        const item = viewState.terria.mapNavigationModel.findItem(
-          MeasurePolygonTool.id
-        )?.controller;
-        if (item && item.active) {
-          item.deactivate();
-        }
-        viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
-      });
-    }
-  });
-  measureLineTool.setVisible(false);
-  mapNavigationModel.addItem({
-    id: MeasureLineTool.id,
-    name: "translate#measure.measureLineToolTitle",
-    title: "translate#measure.measureDistance",
-    location: "TOP",
-    controller: measureLineTool,
-    screenSize: undefined,
-    order: 6
-  });
-
-  const measureToolsController = new MeasureToolsController(viewState);
+  const measureToolsController = new MeasureToolsController();
   mapNavigationModel.addItem({
     id: MeasureToolsController.id,
     name: "translate#measure.measureToolTitle",
@@ -173,15 +106,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureToolsController,
-    render: (
-      <MeasureTools
-        controller={{
-          toggleDropdown: () => measureToolsController.toggleDropdown(),
-          activateTool: (toolId: string) =>
-            measureToolsController.activateTool(toolId)
-        }}
-      />
-    ),
+    render: <MeasureTools viewState={viewState} />,
     order: 6
   });
 

@@ -19,22 +19,34 @@ interface PropTypes {
 }
 
 @observer
-class MapNavigationItemBase extends React.Component<PropTypes> {
+class MapNavigationItemBase extends React.Component<
+  PropTypes,
+  { isOpen: boolean }
+> {
   constructor(props: PropTypes) {
     super(props);
+    this.state = {
+      isOpen: false
+    };
   }
+
+  toggleList = () => {
+    this.setState((prevState) => ({ isOpen: !prevState.isOpen }));
+  };
 
   render() {
     const { closeTool = true, item, expandInPlace, i18n } = this.props;
+    const { isOpen } = this.state;
+
     if (item.render)
       return (
         <Control key={item.id} ref={item.controller.itemRef}>
           {item.render}
         </Control>
       );
+
     return (
       <Control ref={item.controller.itemRef}>
-        {/* in small screens, do not expand in place to avoid overlapping buttons */}
         <MapIconButton
           expandInPlace={expandInPlace === undefined ? true : expandInPlace}
           noExpand={item.noExpand}
@@ -42,6 +54,7 @@ class MapNavigationItemBase extends React.Component<PropTypes> {
           title={applyTranslationIfExists(item.title || item.name, i18n)}
           onClick={() => {
             item.controller.handleClick();
+            this.toggleList();
           }}
           disabled={item.controller.disabled}
           primary={item.controller.active}
@@ -51,6 +64,21 @@ class MapNavigationItemBase extends React.Component<PropTypes> {
         >
           {applyTranslationIfExists(item.name, i18n)}
         </MapIconButton>
+
+        {item.childrenItems && item.childrenItems.length > 0 && (
+          <NestedListWrapper isOpen={isOpen}>
+            <NestedList isOpen={isOpen}>
+              {item.childrenItems.map((childItem) => (
+                <li key={childItem.id}>
+                  <MapNavigationItem
+                    item={childItem}
+                    terria={this.props.terria}
+                  />
+                </li>
+              ))}
+            </NestedList>
+          </NestedListWrapper>
+        )}
       </Control>
     );
   }
@@ -61,16 +89,47 @@ export const Control = styled(Box).attrs({
   column: true
 })`
   pointer-events: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
   @media (min-width: ${(props) => props.theme.sm}px) {
     margin: 0;
     padding-top: 10px;
     height: auto;
   }
+
   @media (max-width: ${(props) => props.theme.mobile}px) {
     padding-right: 10px;
     margin-bottom: 5px;
   }
-  text-align: center;
+`;
+
+const NestedListWrapper = styled.div<{ isOpen: boolean }>`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin-top: ${(props) => (props.isOpen ? "10px" : "0")};
+  align-items: flex-start;
+`;
+
+const NestedList = styled.ul<{ isOpen: boolean }>`
+  position: relative;
+  padding: 10px;
+  margin: 0;
+  list-style-type: none;
+  border-radius: 4px;
+  z-index: 10;
+  visibility: ${(props) => (props.isOpen ? "visible" : "hidden")};
+  opacity: ${(props) => (props.isOpen ? 1 : 0)};
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+  display: flex;
+  flex-direction: column;
+
+  li {
+    margin-left: 0;
+  }
 `;
 
 export const MapNavigationItem = withTranslation()(MapNavigationItemBase);

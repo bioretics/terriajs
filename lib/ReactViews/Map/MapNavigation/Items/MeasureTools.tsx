@@ -1,26 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { runInAction } from "mobx";
 import { MeasureLineTool } from "./MeasureLineTool";
 import { MeasurePolygonTool } from "./MeasurePolygonTool";
-import { GLYPHS, Icon } from "../../../../Styled/Icon";
 import { Box } from "../../../../Styled/Box";
 import styled from "styled-components";
-import MapIconButton from "../../../MapIconButton/MapIconButton";
-import i18next from "i18next";
 import { MeasureToolsController } from "./MeasureToolsController";
 import ViewState from "../../../../ReactViewModels/ViewState";
+import { MapNavigationItem } from "./MapNavigationItem";
+import { IMapNavigationItem } from "../../../../ViewModels/MapNavigation/MapNavigationModel";
 
 interface MeasureToolsProps {
-  controller: MeasureToolsController;
   viewState: ViewState;
 }
 
-const MeasureTools: React.FC<MeasureToolsProps> = ({
-  controller,
-  viewState
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-
+const MeasureTools: React.FC<MeasureToolsProps> = ({ viewState }) => {
   const measureLineTool = new MeasureLineTool({
     terria: viewState.terria,
     onClose: () => {
@@ -43,6 +36,16 @@ const MeasureTools: React.FC<MeasureToolsProps> = ({
       });
     }
   });
+  measureLineTool.setVisible(false);
+  const measureLineToolItem: IMapNavigationItem = {
+    id: MeasureLineTool.id,
+    name: "translate#measure.measureLineToolTitle",
+    title: "translate#measure.measureDistance",
+    location: "TOP",
+    controller: measureLineTool,
+    screenSize: undefined,
+    order: 6
+  };
 
   const measurePolygonTool = new MeasurePolygonTool({
     terria: viewState.terria,
@@ -66,136 +69,37 @@ const MeasureTools: React.FC<MeasureToolsProps> = ({
       });
     }
   });
+  measurePolygonTool.setVisible(false);
+  const measurePolygonToolItem: IMapNavigationItem = {
+    id: MeasurePolygonTool.id,
+    name: "translate#measure.measurePolygonToolTitle",
+    title: "translate#measure.measureArea",
+    location: "TOP",
+    controller: measurePolygonTool,
+    screenSize: undefined,
+    order: 6
+  };
 
-  const options = [
-    {
-      id: MeasureLineTool.id,
-      name: i18next.t("measure.measureLineToolTitle"),
-      glyph: GLYPHS.measure
-    },
-    {
-      id: MeasurePolygonTool.id,
-      name: i18next.t("measure.measurePolygonToolTitle"),
-      glyph: GLYPHS.measurePolygon
-    }
-  ];
+  viewState.terria.mapNavigationModel.addItem(measureLineToolItem);
+  viewState.terria.mapNavigationModel.addItem(measurePolygonToolItem);
 
-  const toggleList = () => setIsOpen(!isOpen);
+  const measureToolsController = new MeasureToolsController();
 
   return (
-    <Control onClick={toggleList}>
-      <MapIconButton
-        expandInPlace={true}
-        noExpand={false}
-        iconElement={() => <Icon glyph={GLYPHS.map} />}
-        title={i18next.t("measure.measureTool")}
-        disabled={false}
-        primary={isOpen}
-      >
-        {i18next.t("measure.measureToolTitle")}
-      </MapIconButton>
-      <StyledList isOpen={isOpen}>
-        {options.map((option) => (
-          <StyledLi key={option.id}>
-            <MapIconButton
-              iconElement={() => <Icon glyph={option.glyph} />}
-              title={option.name}
-              onClick={() => controller.activateTool(option.id)}
-              disabled={false}
-            >
-              {option.name}
-            </MapIconButton>
-          </StyledLi>
-        ))}
-      </StyledList>
-    </Control>
+    <MapNavigationItem
+      terria={viewState.terria}
+      item={{
+        id: MeasureToolsController.id,
+        name: "translate#measure.measureToolTitle",
+        title: "translate#measure.measureTool",
+        location: "TOP",
+        screenSize: undefined,
+        controller: measureToolsController,
+        order: 6,
+        childrenItems: [measureLineToolItem, measurePolygonToolItem]
+      }}
+    />
   );
 };
-
-const Control = styled(Box).attrs({
-  centered: true,
-  column: true
-})`
-  pointer-events: auto;
-  text-align: center;
-  cursor: pointer;
-`;
-
-const StyledList = styled(Box)<{ isOpen: boolean }>`
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  position: absolute;
-  top: 100%;
-  right: 0;
-  display: flex;
-  flex-direction: row-reverse;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  visibility: ${(props) => (props.isOpen ? "visible" : "hidden")};
-  transform: translateY(${(props) => (props.isOpen ? "0" : "-10px")});
-  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s;
-
-  ${Control}:hover & {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  @media (max-width: 768px) {
-    top: auto;
-    bottom: 100%;
-    right: 0;
-    flex-direction: column;
-    transform: translateY(${(props) => (props.isOpen ? "0" : "10px")});
-  }
-`;
-
-const StyledLi = styled(Box)`
-  padding: 10px 15px;
-  cursor: pointer;
-  font-size: 14px;
-  white-space: nowrap;
-  background-color: white;
-  border-left: 1px solid #ccc;
-  color: #333;
-
-  &:hover {
-    background-color: #f0f0f0;
-    color: #000;
-  }
-
-  &:first-child {
-    border-left: none;
-  }
-
-  button {
-    width: 100%;
-    text-align: center;
-    background: none;
-    border: none;
-    padding: 0;
-    font-size: 14px;
-    color: inherit;
-    cursor: pointer;
-    outline: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  @media (max-width: 768px) {
-    border-left: none;
-    border-bottom: 1px solid #ccc;
-    &:last-child {
-      border-bottom: none;
-    }
-  }
-`;
 
 export default MeasureTools;
