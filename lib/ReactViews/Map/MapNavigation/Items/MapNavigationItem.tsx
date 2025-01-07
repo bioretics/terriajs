@@ -67,7 +67,7 @@ class MapNavigationItemBase extends React.Component<
 
         {item.childrenItems && item.childrenItems.length > 0 && (
           <NestedListWrapper isOpen={isOpen}>
-            <NestedList isOpen={isOpen}>
+            <NestedList>
               {item.childrenItems.map((childItem) => (
                 <li key={childItem.id}>
                   <MapNavigationItem
@@ -108,22 +108,22 @@ export const Control = styled(Box).attrs({
 
 const NestedListWrapper = styled.div<{ isOpen: boolean }>`
   position: relative;
+  overflow: hidden;
+  max-height: ${(props) => (props.isOpen ? "200px" : "0")};
+  transition: max-height 0.3s ease;
   display: flex;
   flex-direction: column;
-  margin-top: ${(props) => (props.isOpen ? "10px" : "0")};
+  margin-top: 10px;
   align-items: flex-start;
 `;
 
-const NestedList = styled.ul<{ isOpen: boolean }>`
+const NestedList = styled.ul`
   position: relative;
   padding: 10px;
   margin: 0;
   list-style-type: none;
   border-radius: 4px;
   z-index: 10;
-  visibility: ${(props) => (props.isOpen ? "visible" : "hidden")};
-  opacity: ${(props) => (props.isOpen ? 1 : 0)};
-  transition: opacity 0.3s ease, visibility 0.3s ease;
   display: flex;
   flex-direction: column;
 

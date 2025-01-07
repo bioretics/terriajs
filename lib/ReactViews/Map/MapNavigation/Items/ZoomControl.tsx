@@ -233,7 +233,7 @@ const StyledZoomControl = styled(Box).attrs((props) => ({
   centered: true,
   column: true,
   styledWidth: "32px",
-  styledMargin: "7px 0 0 0"
+  styledMargin: "7px 0 0 10px"
 }))`
   border-radius: 100px;
   svg {
