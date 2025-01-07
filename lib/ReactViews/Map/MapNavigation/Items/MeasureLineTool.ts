@@ -158,7 +158,7 @@ export class MeasureLineTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
-    this.userDrawing.enterDrawMode();
+    this.userDrawing.enterDrawMode(MeasureLineTool.id);
     super.activate();
   }
 }

@@ -300,7 +300,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
-    this.userDrawing.enterDrawMode();
+    this.userDrawing.enterDrawMode(MeasurePolygonTool.id);
     super.activate();
   }
 }

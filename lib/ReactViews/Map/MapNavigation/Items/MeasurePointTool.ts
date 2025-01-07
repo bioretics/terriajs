@@ -56,6 +56,11 @@ export class MeasurePointTool extends MapNavigationItemController {
 
   onPointClicked(pointEntities: CustomDataSource) {
     console.log("Ho cliccato su: ", pointEntities);
+    this.terria.measurableGeometryManager.sampleFromCustomDataSource(
+      pointEntities,
+      this.userDrawing.closeLoop,
+      true
+    );
   }
 
   onPointMoved(pointEntities: CustomDataSource) {
@@ -63,7 +68,7 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    return i18next.t("measure.measurePointToolMessage");
+    return i18next.t("measure.measurePointToolTitle");
   };
 
   /**
@@ -80,7 +85,7 @@ export class MeasurePointTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
-    this.userDrawing.enterDrawMode();
+    this.userDrawing.enterDrawMode(MeasurePointTool.id);
     super.activate();
   }
 }

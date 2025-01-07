@@ -43,7 +43,8 @@ export default class MeasurableGeometryManager {
 
   sampleFromCustomDataSource(
     pointEntities: CustomDataSource,
-    closeLoop: boolean = false
+    closeLoop: boolean = false,
+    onlyPoint: boolean = false
   ) {
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
     if (!ellipsoid) {
@@ -73,14 +74,15 @@ export default class MeasurableGeometryManager {
         return Cartographic.fromCartesian(elem, ellipsoid);
       });
 
-    this.sampleFromCartographics(cartoPositions, closeLoop);
+    this.sampleFromCartographics(cartoPositions, closeLoop, onlyPoint);
   }
 
   // sample the entire path (polyline) every "samplingStep" meters
   @action
   sampleFromCartographics(
     cartoPositions: Cartographic[],
-    closeLoop: boolean = false
+    closeLoop: boolean = false,
+    onlyPoint: boolean = false
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -173,15 +175,27 @@ export default class MeasurableGeometryManager {
       }
 
       // update state of Terria
-      this.updatePath(
-        cartoPositions,
-        stopGeodeticDistances,
-        stopAirDistances,
-        distances3d,
-        sampledCartographics[0],
-        stepDistances,
-        closeLoop
-      );
+      if (onlyPoint) {
+        this.updatePath(
+          cartoPositions,
+          [],
+          [],
+          [],
+          sampledCartographics[0],
+          [],
+          closeLoop
+        );
+      } else {
+        this.updatePath(
+          cartoPositions,
+          stopGeodeticDistances,
+          stopAirDistances,
+          distances3d,
+          sampledCartographics[0],
+          stepDistances,
+          closeLoop
+        );
+      }
     });
   }
 

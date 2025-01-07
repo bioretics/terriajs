@@ -36,6 +36,7 @@ import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantPropert
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
 import * as turf from "@turf/turf";
+import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasurePointTool";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -202,7 +203,7 @@ export default class UserDrawing extends MappableMixin(
     return this.getRectangleForShape();
   }
 
-  enterDrawMode() {
+  enterDrawMode(sender?: string) {
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -305,7 +306,7 @@ export default class UserDrawing extends MappableMixin(
       };
 
       this.otherEntities.entities.add(rectangle as any);
-    } else {
+    } else if (sender !== MeasurePointTool.id) {
       // Line will show up once user has drawn some points. Vertices of line are user points.
       this.otherEntities.entities.add({
         name: "Line",
