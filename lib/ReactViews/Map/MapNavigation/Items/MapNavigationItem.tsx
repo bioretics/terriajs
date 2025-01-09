@@ -102,7 +102,6 @@ export const Control = styled(Box).attrs({
 
   @media (max-width: ${(props) => props.theme.mobile}px) {
     padding-right: 10px;
-    margin-bottom: 5px;
   }
 `;
 
@@ -113,7 +112,6 @@ const NestedListWrapper = styled.div<{ isOpen: boolean }>`
   transition: max-height 0.3s ease;
   display: flex;
   flex-direction: column;
-  margin-top: 10px;
   align-items: flex-start;
 `;
 
@@ -128,7 +126,10 @@ const NestedList = styled.ul`
   flex-direction: column;
 
   li {
-    margin-left: 0;
+    margin-left: 2px;
+    @media (max-width: ${(props) => props.theme.mobile}px) {
+      margin: 10px 0;
+    }
   }
 `;
 
