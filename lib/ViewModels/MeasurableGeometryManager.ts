@@ -21,6 +21,7 @@ export interface MeasurableGeometry {
   sampledDistances?: number[];
   geodeticArea?: number;
   airArea?: number;
+  onlyPoints?: boolean;
 }
 
 export default class MeasurableGeometryManager {
@@ -183,7 +184,8 @@ export default class MeasurableGeometryManager {
           [],
           sampledCartographics[0],
           [],
-          closeLoop
+          closeLoop,
+          true
         );
       } else {
         this.updatePath(
@@ -207,7 +209,8 @@ export default class MeasurableGeometryManager {
     stopGroundDistances: number[],
     sampledPoints: Cartographic[],
     sampledDistances: number[],
-    isClosed: boolean
+    isClosed: boolean,
+    onlyPoints: boolean = false
   ) {
     this.terria.measurableGeom = {
       isClosed: isClosed,
@@ -226,7 +229,8 @@ export default class MeasurableGeometryManager {
         0
       ),
       sampledPoints: sampledPoints,
-      sampledDistances: sampledDistances
+      sampledDistances: sampledDistances,
+      onlyPoints: onlyPoints
     };
   }
 }
