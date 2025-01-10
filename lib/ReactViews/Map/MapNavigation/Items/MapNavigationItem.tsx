@@ -19,24 +19,13 @@ interface PropTypes {
 }
 
 @observer
-class MapNavigationItemBase extends React.Component<
-  PropTypes,
-  { isOpen: boolean }
-> {
+class MapNavigationItemBase extends React.Component<PropTypes> {
   constructor(props: PropTypes) {
     super(props);
-    this.state = {
-      isOpen: false
-    };
   }
-
-  toggleList = () => {
-    this.setState((prevState) => ({ isOpen: !prevState.isOpen }));
-  };
 
   render() {
     const { closeTool = true, item, expandInPlace, i18n } = this.props;
-    const { isOpen } = this.state;
 
     if (item.render)
       return (
@@ -54,7 +43,6 @@ class MapNavigationItemBase extends React.Component<
           title={applyTranslationIfExists(item.title || item.name, i18n)}
           onClick={() => {
             item.controller.handleClick();
-            this.toggleList();
           }}
           disabled={item.controller.disabled}
           primary={item.controller.active}
@@ -64,21 +52,6 @@ class MapNavigationItemBase extends React.Component<
         >
           {applyTranslationIfExists(item.name, i18n)}
         </MapIconButton>
-
-        {item.childrenItems && item.childrenItems.length > 0 && (
-          <NestedListWrapper isOpen={isOpen}>
-            <NestedList>
-              {item.childrenItems.map((childItem) => (
-                <li key={childItem.id}>
-                  <MapNavigationItem
-                    item={childItem}
-                    terria={this.props.terria}
-                  />
-                </li>
-              ))}
-            </NestedList>
-          </NestedListWrapper>
-        )}
       </Control>
     );
   }
@@ -89,10 +62,6 @@ export const Control = styled(Box).attrs({
   column: true
 })`
   pointer-events: auto;
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
 
   @media (min-width: ${(props) => props.theme.sm}px) {
     margin: 0;
@@ -102,35 +71,9 @@ export const Control = styled(Box).attrs({
 
   @media (max-width: ${(props) => props.theme.mobile}px) {
     padding-right: 10px;
+    padding-top: 15px;
   }
-`;
-
-const NestedListWrapper = styled.div<{ isOpen: boolean }>`
-  position: relative;
-  overflow: hidden;
-  max-height: ${(props) => (props.isOpen ? "200px" : "0")};
-  transition: max-height 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-`;
-
-const NestedList = styled.ul`
-  position: relative;
-  padding: 10px;
-  margin: 0;
-  list-style-type: none;
-  border-radius: 4px;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-
-  li {
-    margin-left: 2px;
-    @media (max-width: ${(props) => props.theme.mobile}px) {
-      margin: 10px 0;
-    }
-  }
+  text-align: center;
 `;
 
 export const MapNavigationItem = withTranslation()(MapNavigationItemBase);

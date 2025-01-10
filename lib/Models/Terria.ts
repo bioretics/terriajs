@@ -787,6 +787,8 @@ export default class Terria {
 
   augmentedVirtuality?: any;
 
+  measureTools?: any;
+
   readonly notificationState: NotificationState = new NotificationState();
 
   readonly developmentEnv = process?.env?.NODE_ENV === "development";
