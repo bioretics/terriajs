@@ -26,6 +26,8 @@ interface IProps {
   terria: Terria;
   viewState: ViewState;
   measureTools: MeasureTools;
+  onOpen?(): void;
+  onClose?(): void;
 }
 
 async function requestDeviceMotionPermission(): Promise<"granted" | "denied"> {
@@ -52,9 +54,14 @@ export class MeasureToolsController extends MapNavigationItemController {
   static id = "measure-tool";
   static displayName = "MeasureTools";
 
+  onOpen: () => void;
+  onClose: () => void;
   constructor(private props: IProps) {
     super();
     makeObservable(this);
+
+    this.onOpen = props.onOpen || (() => {});
+    this.onClose = props.onClose || (() => {});
   }
 
   @computed
@@ -72,8 +79,8 @@ export class MeasureToolsController extends MapNavigationItemController {
 
   @action.bound
   activate() {
+    this.onOpen();
     this.props.terria.measureTools = this.props.measureTools;
-
     requestDeviceMotionPermission()
       .then((permissionState) => {
         if (permissionState !== "granted") {
@@ -94,13 +101,9 @@ export class MeasureToolsController extends MapNavigationItemController {
   }
 
   deactivate() {
+    this.onClose();
     this.props.measureTools.deactivate();
   }
-}
-
-export interface MeasureToolOptions extends IProps {
-  onOpen(): void;
-  onClose(): void;
 }
 
 export class MeasureLineTool extends MapNavigationItemController {
@@ -116,7 +119,7 @@ export class MeasureLineTool extends MapNavigationItemController {
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
   measureTools: MeasureTools;
 
-  constructor(private props: MeasureToolOptions) {
+  constructor(private props: IProps) {
     super();
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
@@ -128,8 +131,8 @@ export class MeasureLineTool extends MapNavigationItemController {
       onCleanUp: this.onCleanUp.bind(this),
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
     });
-    this.onOpen = props.onOpen;
-    this.onClose = props.onClose;
+    this.onOpen = props.onOpen || (() => {});
+    this.onClose = props.onClose || (() => {});
     this.measureTools = props.measureTools;
   }
 
@@ -270,7 +273,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
   onClose: () => void;
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-  constructor(private props: MeasureToolOptions) {
+  constructor(private props: IProps) {
     super();
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
@@ -283,8 +286,8 @@ export class MeasurePolygonTool extends MapNavigationItemController {
       onCleanUp: this.onCleanUp.bind(this),
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
     });
-    this.onOpen = props.onOpen;
-    this.onClose = props.onClose;
+    this.onOpen = props.onOpen || (() => {});
+    this.onClose = props.onClose || (() => {});
   }
 
   get glyph(): any {

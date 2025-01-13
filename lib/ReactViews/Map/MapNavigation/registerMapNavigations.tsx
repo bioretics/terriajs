@@ -104,7 +104,16 @@ export const registerMapNavigations = (viewState: ViewState) => {
   const measureToolsController = new MeasureToolsController({
     terria: terria,
     viewState: viewState,
-    measureTools: measureTools
+    measureTools: measureTools,
+    onClose: () => {
+      runInAction(() => {
+        viewState.panel = undefined;
+        viewState.measurablePanelIsVisible = false;
+        viewState.measurableChartIsVisible = false;
+        viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
+      });
+    }
   });
   mapNavigationModel.addItem({
     id: MeasureToolsController.id,
