@@ -1,4 +1,5 @@
 import React from "react";
+import { Rnd } from "react-rnd"; // <--- Libreria per drag & resize
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -22,8 +23,6 @@ import {
   MeasurePolygonTool
 } from "../Map/MapNavigation/Items";
 
-const DragWrapper = require("../DragWrapper");
-
 interface Props {
   viewState: ViewState;
   terria: Terria;
@@ -31,7 +30,6 @@ interface Props {
 
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
-
   const theme = useTheme();
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
@@ -40,6 +38,7 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
 
+  // Calcolo delle classi CSS in base allo stato del pannello
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
     [Styles.isVisible]: viewState.measurablePanelIsVisible,
@@ -55,7 +54,6 @@ const MeasurablePanel = observer((props: Props) => {
         item.deactivate();
       }
     };
-
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
   });
@@ -85,13 +83,11 @@ const MeasurablePanel = observer((props: Props) => {
     ) {
       return "";
     }
-
     const ellipsoid = terria.cesium.scene.globe.ellipsoid;
     const start = terria.measurableGeom.stopPoints[0];
     const end = terria.measurableGeom.stopPoints.at(-1);
     const geo = new EllipsoidGeodesic(start, end, ellipsoid);
     const bearing = (CesiumMath.toDegrees(geo.startHeading) + 360) % 360;
-
     return `${bearing.toFixed(0)}°`;
   });
 
@@ -102,11 +98,9 @@ const MeasurablePanel = observer((props: Props) => {
     ) {
       return "";
     }
-
     const start = terria.measurableGeom.stopPoints[0];
     const end = terria.measurableGeom.stopPoints.at(-1) as Cartographic;
     const difference = end.height - start.height;
-
     return `${difference.toFixed(0)} m`;
   });
 
@@ -138,25 +132,27 @@ const MeasurablePanel = observer((props: Props) => {
     if (number <= 0) {
       return "";
     }
-    // Given a number representing a number in metres, make it human readable
+    // Gestione di metri vs km
     let label = "m";
     if (squared) {
+      // per aree (m² vs km²)
       if (number > 999999) {
         label = "km";
         number = number / 1000000.0;
       }
     } else {
+      // per distanze (m vs km)
       if (number > 999) {
         label = "km";
         number = number / 1000.0;
       }
     }
     let numberStr = number.toFixed(2);
-    // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-    numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    // Aggiunta di virgole come separatori di migliaia
+    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     numberStr = `${numberStr} ${label}`;
     if (squared) {
-      numberStr += "\u00B2";
+      numberStr += "\u00B2"; // apice "2"
     }
     return numberStr;
   };
@@ -512,15 +508,43 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   return (
-    <DragWrapper>
+    <Rnd
+      bounds="parent"
+      default={{
+        x: 100,
+        y: 100,
+        width: 420,
+        height: 400
+      }}
+      dragHandleClassName="drag-handle"
+      enableResizing={{
+        top: true,
+        right: true,
+        bottom: true,
+        left: true,
+        topRight: true,
+        bottomRight: true,
+        bottomLeft: true,
+        topLeft: true
+      }}
+      style={{
+        pointerEvents:
+          viewState.measurablePanelIsVisible &&
+          !viewState.measurablePanelIsCollapsed
+            ? "auto"
+            : "none",
+        zIndex: 9999
+      }}
+    >
       <div
         className={panelClassName}
+        style={{ pointerEvents: "auto" }}
         aria-hidden={!viewState.measurablePanelIsVisible}
       >
         {renderHeader()}
         {renderBody()}
       </div>
-    </DragWrapper>
+    </Rnd>
   );
 });
 
