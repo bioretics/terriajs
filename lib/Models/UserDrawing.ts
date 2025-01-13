@@ -35,7 +35,7 @@ import Terria from "./Terria";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
-import FILL_AND_OUTLINE from "terriajs-cesium/Source/Scene/Label";
+import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 
@@ -206,6 +206,75 @@ export default class UserDrawing extends MappableMixin(
     return this.getRectangleForShape();
   }
 
+  private createSegmentLabel(
+    name: string,
+    entityA: Entity,
+    entityB: Entity
+  ): Entity {
+    return new Entity({
+      name,
+      position: new CallbackProperty((time: JulianDate) => {
+        const posA = entityA.position?.getValue(time);
+        const posB = entityB.position?.getValue(time);
+        if (!posA || !posB) return undefined;
+        return Cartesian3.midpoint(posA, posB, new Cartesian3());
+      }, false) as any,
+      label: {
+        text: new CallbackProperty((time: JulianDate) => {
+          const posA = entityA.position?.getValue(time);
+          const posB = entityB.position?.getValue(time);
+          if (!posA || !posB) return "";
+          return (Cartesian3.distance(posA, posB) / 1000).toFixed(2) + " km";
+        }, false),
+        font: "16px sans-serif",
+        style: LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Color.BLACK,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        pixelOffset: new Cartesian2(0, -10),
+        verticalOrigin: VerticalOrigin.BOTTOM
+      }
+    });
+  }
+
+  private updateSegmentLabels() {
+    const toRemove: Entity[] = [];
+    for (const entity of this.otherEntities.entities.values) {
+      if (entity.name && entity.name.startsWith("SegmentLabel-")) {
+        toRemove.push(entity);
+      }
+    }
+    toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+
+    const numPoints = this.pointEntities.entities.values.length;
+    for (let i = 0; i < numPoints - 1; i++) {
+      const entityA = this.pointEntities.entities.values[i];
+      const entityB = this.pointEntities.entities.values[i + 1];
+      if (entityA && entityB) {
+        const labelEntity = this.createSegmentLabel(
+          `SegmentLabel-${i}`,
+          entityA,
+          entityB
+        );
+        this.otherEntities.entities.add(labelEntity);
+      }
+    }
+
+    if (this.closeLoop && numPoints > 1) {
+      const lastIndex = numPoints - 1;
+      const entityA = this.pointEntities.entities.values[lastIndex];
+      const entityB = this.pointEntities.entities.values[0];
+      if (entityA && entityB) {
+        const labelEntity = this.createSegmentLabel(
+          "SegmentLabel-close",
+          entityA,
+          entityB
+        );
+        this.otherEntities.entities.add(labelEntity);
+      }
+    }
+  }
+
   enterDrawMode() {
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
@@ -331,46 +400,6 @@ export default class UserDrawing extends MappableMixin(
           } as any),
           width: 20
         } as any
-      } as any);
-
-      this.otherEntities.entities.add({
-        name: "LineDistanceLabel",
-        position: new CallbackProperty((time: JulianDate) => {
-          const positions = that.getPointsForShape();
-          if (!positions || positions.length < 1) return undefined;
-
-          const midIndex = Math.floor(positions.length / 2);
-          return positions[midIndex];
-        }, false),
-
-        label: {
-          text: new CallbackProperty((time: JulianDate) => {
-            const positions = that.getPointsForShape();
-            if (!positions || positions.length < 2) {
-              return "";
-            }
-            let totalDistance = 0;
-            for (let i = 0; i < positions.length - 1; i++) {
-              totalDistance += Cartesian3.distance(
-                positions[i],
-                positions[i + 1]
-              );
-            }
-
-            const distanceKm = (totalDistance / 1000).toFixed(2);
-            return distanceKm + " km";
-          }, false),
-
-          font: "16px sans-serif",
-          pixelOffset: new Cartesian2(0, -20),
-
-          style: FILL_AND_OUTLINE,
-          fillColor: Color.BLACK,
-          outlineColor: Color.BLACK,
-          outlineWidth: 2,
-
-          verticalOrigin: VerticalOrigin.BOTTOM
-        }
       } as any);
     }
 
@@ -591,6 +620,7 @@ export default class UserDrawing extends MappableMixin(
                 );
               } else {
                 this.addPointToPointEntities("Another Point", pickedPoint);
+                this.updateSegmentLabels();
               }
             } else {
               this.dragHelper?.resetDragCount();
