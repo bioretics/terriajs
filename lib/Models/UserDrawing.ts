@@ -35,6 +35,10 @@ import Terria from "./Terria";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
+import FILL_AND_OUTLINE from "terriajs-cesium/Source/Scene/Label";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+
 import * as turf from "@turf/turf";
 
 interface OnDrawingCompleteParams {
@@ -327,6 +331,46 @@ export default class UserDrawing extends MappableMixin(
           } as any),
           width: 20
         } as any
+      } as any);
+
+      this.otherEntities.entities.add({
+        name: "LineDistanceLabel",
+        position: new CallbackProperty((time: JulianDate) => {
+          const positions = that.getPointsForShape();
+          if (!positions || positions.length < 1) return undefined;
+
+          const midIndex = Math.floor(positions.length / 2);
+          return positions[midIndex];
+        }, false),
+
+        label: {
+          text: new CallbackProperty((time: JulianDate) => {
+            const positions = that.getPointsForShape();
+            if (!positions || positions.length < 2) {
+              return "";
+            }
+            let totalDistance = 0;
+            for (let i = 0; i < positions.length - 1; i++) {
+              totalDistance += Cartesian3.distance(
+                positions[i],
+                positions[i + 1]
+              );
+            }
+
+            const distanceKm = (totalDistance / 1000).toFixed(2);
+            return distanceKm + " km";
+          }, false),
+
+          font: "16px sans-serif",
+          pixelOffset: new Cartesian2(0, -20),
+
+          style: FILL_AND_OUTLINE,
+          fillColor: Color.BLACK,
+          outlineColor: Color.BLACK,
+          outlineWidth: 2,
+
+          verticalOrigin: VerticalOrigin.BOTTOM
+        }
       } as any);
     }
 
