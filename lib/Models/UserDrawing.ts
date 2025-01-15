@@ -36,6 +36,7 @@ import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantPropert
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
 import * as turf from "@turf/turf";
+import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureAngleTool";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -202,7 +203,62 @@ export default class UserDrawing extends MappableMixin(
     return this.getRectangleForShape();
   }
 
-  enterDrawMode() {
+  generateArcPositions(
+    center: Cartesian3,
+    p1: Cartesian3,
+    p3: Cartesian3,
+    segments: number = 30
+  ): Cartesian3[] {
+    const v1 = Cartesian3.subtract(p1, center, new Cartesian3());
+    const v2 = Cartesian3.subtract(p3, center, new Cartesian3());
+    const len1 = Cartesian3.magnitude(v1);
+    const len2 = Cartesian3.magnitude(v2);
+
+    if (len1 === 0 || len2 === 0) {
+      return [];
+    }
+
+    const radius = (len1 + len2) / 2;
+
+    const u = Cartesian3.normalize(v1, new Cartesian3());
+    const v = Cartesian3.normalize(v2, new Cartesian3());
+
+    let angle = Math.acos(Cartesian3.dot(u, v));
+    if (isNaN(angle)) {
+      angle = 0;
+    }
+
+    const axis = Cartesian3.normalize(
+      Cartesian3.cross(u, v, new Cartesian3()),
+      new Cartesian3()
+    );
+    const w = Cartesian3.cross(axis, u, new Cartesian3());
+
+    const positions: Cartesian3[] = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = (angle * i) / segments;
+      const part1 = Cartesian3.multiplyByScalar(
+        u,
+        Math.cos(t),
+        new Cartesian3()
+      );
+      const part2 = Cartesian3.multiplyByScalar(
+        w,
+        Math.sin(t),
+        new Cartesian3()
+      );
+      const direction = Cartesian3.add(part1, part2, new Cartesian3());
+      const position = Cartesian3.add(
+        center,
+        Cartesian3.multiplyByScalar(direction, radius, new Cartesian3()),
+        new Cartesian3()
+      );
+      positions.push(position);
+    }
+    return positions;
+  }
+
+  enterDrawMode(sender?: string) {
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -328,6 +384,30 @@ export default class UserDrawing extends MappableMixin(
           width: 20
         } as any
       } as any);
+
+      if (sender == MeasureAngleTool.id) {
+        this.otherEntities.entities.add({
+          name: "Angle",
+          polyline: {
+            positions: new CallbackProperty(() => {
+              const pos = that.getPointsForShape();
+              if (pos && pos.length >= 3) {
+                return this.generateArcPositions(
+                  pos[pos.length - 2],
+                  pos[pos.length - 1],
+                  pos[pos.length - 3]
+                );
+              }
+              return [];
+            }, false),
+            material: new PolylineGlowMaterialProperty({
+              color: new Color(0.0, 0.0, 0.0, 0.1),
+              glowPower: 0.15
+            } as any),
+            width: 20
+          } as any
+        } as any);
+      }
     }
 
     this.terria.overlays.add(this);

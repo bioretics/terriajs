@@ -58,13 +58,17 @@
   "measure": {
     "measureLineTool": "Strumento di misura di linee",
     "measurePolygonTool": "Strumento di misura di aree",
+    "measureAngleTool": "Strumento di misura degli angoli",
     "measureLineToolTitle": "Misuratore lineare",
     "measurePolygonToolTitle": "Misuratore di area",
+    "measureAngleToolTitle": "Misuratore di angoli",
     "measureDistance": "Misura la lunghezza di una lina",
     "measureArea": "Misura l'area di un poligono",
+    "measureAngle": "Misura l'angolo tra due linee",
     "measureLineToolMessage": "dist. geodetica",
     "measurePolygonToolMessagePerimeter": "perimetro",
-    "measurePolygonToolMessageArea": "area"
+    "measurePolygonToolMessageArea": "area",
+    "measureAngleToolMessage": "angolo"
   },
   "measurableGeometry": {
     "header": "MISURE",

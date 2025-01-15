@@ -55,13 +55,17 @@
   "measure": {
     "measureLineTool": "Measure Line Tool",
     "measurePolygonTool": "Measure Polygon Tool",
+    "measureAngleTool": "Measure Angle Tool",
     "measureLineToolTitle": "Line Measure",
     "measurePolygonToolTitle": "Polygon Measure",
+    "measureAngleToolTitle": "Angle Measure",
     "measureDistance": "Measure distance between locations",
     "measureArea": "Measure the area of a polygon",
+    "measureAngle": "Measure the angle between two lines",
     "measureLineToolMessage": "geodetic dist.",
     "measurePolygonToolMessagePerimeter": "perimeter",
-    "measurePolygonToolMessageArea": "area"
+    "measurePolygonToolMessageArea": "area",
+    "measureAngleToolMessage": "angle"
   },
   "measurableGeometry": {
     "header": "MEASURABLE",

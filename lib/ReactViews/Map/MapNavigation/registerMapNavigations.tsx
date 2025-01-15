@@ -33,6 +33,7 @@ import { TogglePickInfoController } from "./Items/TogglePickInfoTool";
 import KeyboardMode, {
   KEYBOARD_MODE_ID
 } from "../../Tools/KeyboardMode/KeyboardMode";
+import { MeasureAngleTool } from "./Items/MeasureAngleTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -96,10 +97,43 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 4
   });
 
+  const measureAngleToolController = new MeasureAngleTool({
+    terria,
+    onOpen: () => {
+      runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
+        viewState.panel = undefined;
+      });
+    },
+    onClose: () => {
+      runInAction(() => {
+        const item = viewState.terria.mapNavigationModel.findItem(
+          MeasureLineTool.id || MeasurePolygonTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
+        viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
+      });
+    }
+  });
+  mapNavigationModel.addItem({
+    id: MeasureAngleTool.id,
+    name: "translate#measure.measureAngleToolTitle",
+    title: "translate#measure.measureAngle",
+    location: "TOP",
+    controller: measureAngleToolController,
+    screenSize: undefined,
+    order: 6
+  });
+
   const measurePolygonTool = new MeasurePolygonTool({
     terria,
     onClose: () => {
       runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.panel = undefined;
       });
@@ -107,12 +141,13 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onOpen: () => {
       runInAction(() => {
         const item = viewState.terria.mapNavigationModel.findItem(
-          MeasureLineTool.id
+          MeasureLineTool.id || MeasurePolygonTool.id
         )?.controller;
         if (item && item.active) {
           item.deactivate();
         }
         viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
+        viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
       });
     }
   });
@@ -130,6 +165,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     terria,
     onClose: () => {
       runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
         viewState.panel = undefined;
       });
@@ -137,11 +173,12 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onOpen: () => {
       runInAction(() => {
         const item = viewState.terria.mapNavigationModel.findItem(
-          MeasurePolygonTool.id
+          MeasureLineTool.id || MeasurePolygonTool.id
         )?.controller;
         if (item && item.active) {
           item.deactivate();
         }
+        viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
       });
     }
