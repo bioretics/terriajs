@@ -3,7 +3,6 @@ import i18next from "i18next";
 import React from "react";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
 import UserDrawing from "../../../../Models/UserDrawing";

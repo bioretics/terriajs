@@ -99,14 +99,14 @@ export const registerMapNavigations = (viewState: ViewState) => {
 
   const measureAngleToolController = new MeasureAngleTool({
     terria,
-    onOpen: () => {
+    onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.panel = undefined;
       });
     },
-    onClose: () => {
+    onOpen: () => {
       runInAction(() => {
         const item = viewState.terria.mapNavigationModel.findItem(
           MeasureLineTool.id || MeasurePolygonTool.id
