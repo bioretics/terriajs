@@ -218,7 +218,7 @@ export default class UserDrawing extends MappableMixin(
       return [];
     }
 
-    const radius = Math.min(len1, len2) * 0.8;
+    const radius = Math.min(len1, len2) * 0.6;
     const u = Cartesian3.normalize(v1, new Cartesian3());
     const v = Cartesian3.normalize(v2, new Cartesian3());
 
@@ -249,7 +249,7 @@ export default class UserDrawing extends MappableMixin(
       const direction = Cartesian3.add(part1, part2, new Cartesian3());
       const position = Cartesian3.add(
         center,
-        Cartesian3.multiplyByScalar(direction, radius * 0.8, new Cartesian3()),
+        Cartesian3.multiplyByScalar(direction, radius * 0.6, new Cartesian3()),
         new Cartesian3()
       );
       positions.push(position);
