@@ -37,6 +37,10 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
 import * as turf from "@turf/turf";
 import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureAngleTool";
+import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -375,7 +379,6 @@ export default class UserDrawing extends MappableMixin(
 
           // Clamp to ground lines of Measure Tool
           clampToGround: !!this.terria?.clampMeasureLineToGround,
-
           material: new PolylineGlowMaterialProperty({
             color: new Color(0.0, 0.0, 0.0, 0.1),
             glowPower: 0.25
@@ -406,6 +409,45 @@ export default class UserDrawing extends MappableMixin(
             width: 20
           } as any
         } as any);
+
+        this.otherEntities.entities.add({
+          name: "Angle Label",
+          position: new CallbackProperty(() => {
+            const pos = that.getPointsForShape();
+            if (pos && pos.length >= 3) {
+              return pos[pos.length - 2];
+            }
+            return undefined;
+          }, false) as any,
+          label: {
+            text: new CallbackProperty(() => {
+              const pos = that.getPointsForShape();
+              if (pos && pos.length >= 3) {
+                const pA = pos[pos.length - 3];
+                const pB = pos[pos.length - 2];
+                const pC = pos[pos.length - 1];
+
+                const v1 = Cartesian3.subtract(pA, pB, new Cartesian3());
+                const v2 = Cartesian3.subtract(pC, pB, new Cartesian3());
+                Cartesian3.normalize(v1, v1);
+                Cartesian3.normalize(v2, v2);
+                let angleRad = Math.acos(Cartesian3.dot(v1, v2));
+                let angleDeg = (angleRad * 180) / Math.PI;
+                angleDeg = Math.round(angleDeg * 100) / 100;
+                return `${angleDeg}°`;
+              }
+              return "";
+            }, false),
+            font: "16px sans-serif",
+            fillColor: Color.WHITE,
+            outlineColor: Color.BLACK,
+            outlineWidth: 2,
+            style: LabelStyle.FILL_AND_OUTLINE,
+            horizontalOrigin: HorizontalOrigin.CENTER,
+            verticalOrigin: VerticalOrigin.BOTTOM,
+            pixelOffset: new Cartesian2(0, -20)
+          }
+        });
       }
     }
 
