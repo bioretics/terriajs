@@ -439,13 +439,13 @@ export default class UserDrawing extends MappableMixin(
               return "";
             }, false),
             font: "16px sans-serif",
-            fillColor: Color.WHITE,
-            outlineColor: Color.BLACK,
-            outlineWidth: 2,
             style: LabelStyle.FILL_AND_OUTLINE,
-            horizontalOrigin: HorizontalOrigin.CENTER,
+            fillColor: Color.BLACK,
+            outlineColor: Color.WHITE,
+            outlineWidth: 2,
+            pixelOffset: new Cartesian2(0, -10),
             verticalOrigin: VerticalOrigin.BOTTOM,
-            pixelOffset: new Cartesian2(0, -20)
+            horizontalOrigin: HorizontalOrigin.CENTER
           }
         });
       }
