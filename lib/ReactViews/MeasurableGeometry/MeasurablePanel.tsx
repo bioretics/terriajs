@@ -149,7 +149,12 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderHeader = () => {
     return (
-      <div className={Styles.header}>
+      <div
+        className={Styles.header}
+        css={`
+          background: rgba(17, 24, 39, 0.45);
+        `}
+      >
         <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
           <span style={{ display: "flex", justifyContent: "center" }}>
             <b>{i18next.t("measurableGeometry.header")}</b>
@@ -500,6 +505,9 @@ const MeasurablePanel = observer((props: Props) => {
   return (
     <DragWrapper>
       <div
+        css={`
+          background: rgba(17, 24, 39, 0.77);
+        `}
         className={panelClassName}
         aria-hidden={!viewState.measurablePanelIsVisible}
       >
