@@ -274,8 +274,7 @@ export default class UserDrawing extends MappableMixin(
     return Math.round(angleDeg * 100) / 100;
   }
 
-  private recreateAllAngleEntities(positions: Cartesian3[]) {
-    // 1) Rimuovi entità precedenti di tipo "Angle"/"Angle Label"
+  private recreateAllAngleEntities() {
     const oldAngles = this.otherEntities.entities.values.filter(
       (e) =>
         e.name &&
@@ -285,22 +284,30 @@ export default class UserDrawing extends MappableMixin(
       this.otherEntities.entities.remove(angleEnt);
     });
 
-    // 2) Se ci sono meno di 3 punti, non creiamo nulla
-    if (positions.length < 3) {
+    const positions = this.getPointsForShape();
+    if (!positions || positions.length < 3) {
       return;
     }
 
-    // 3) Crea entità "Angle X" e "Angle Label X" per ogni tripletta (p[i-1], p[i], p[i+1])
     for (let i = 1; i < positions.length - 1; i++) {
-      const pA = positions[i - 1];
-      const pB = positions[i];
-      const pC = positions[i + 1];
-
-      // A) Entità polilinea (arco)
       this.otherEntities.entities.add({
         name: `Angle ${i}`,
         polyline: {
           positions: new CallbackProperty(() => {
+            const updatedPositions = this.getPointsForShape();
+            if (!updatedPositions || updatedPositions.length < 3) {
+              return [];
+            }
+            if (i >= updatedPositions.length - 1) {
+              return [];
+            }
+
+            const pA = updatedPositions[i - 1];
+            const pB = updatedPositions[i];
+            const pC = updatedPositions[i + 1];
+            if (!pA || !pB || !pC) {
+              return [];
+            }
             return this.generateArcPositions(pB, pC, pA, 30);
           }, false),
           width: 20,
@@ -311,12 +318,30 @@ export default class UserDrawing extends MappableMixin(
         }
       });
 
-      // B) Entità label (testo angolo in gradi)
       this.otherEntities.entities.add({
         name: `Angle Label ${i}`,
-        position: new CallbackProperty(() => pB, false) as any,
+        position: new CallbackProperty(() => {
+          const updatedPositions = this.getPointsForShape();
+          if (!updatedPositions || updatedPositions.length < 3) {
+            return undefined;
+          }
+          return updatedPositions[i] || undefined;
+        }, false) as any,
         label: {
           text: new CallbackProperty(() => {
+            const updatedPositions = this.getPointsForShape();
+            if (!updatedPositions || updatedPositions.length < 3) {
+              return "";
+            }
+            if (i >= updatedPositions.length - 1) {
+              return "";
+            }
+            const pA = updatedPositions[i - 1];
+            const pB = updatedPositions[i];
+            const pC = updatedPositions[i + 1];
+            if (!pA || !pB || !pC) {
+              return "";
+            }
             const angleDeg = this.computeAngleDegrees(pA, pB, pC);
             return `${angleDeg}°`;
           }, false),
@@ -340,10 +365,7 @@ export default class UserDrawing extends MappableMixin(
       if (typeof this.onPointMoved === "function") {
         this.onPointMoved(customDataSource);
         if (this.isAngleMeasuring) {
-          const pts = this.getPointsForShape();
-          if (pts) {
-            this.recreateAllAngleEntities(pts);
-          }
+          this.recreateAllAngleEntities();
         }
       }
       this.prepareToAddNewPoint();
@@ -579,10 +601,7 @@ export default class UserDrawing extends MappableMixin(
     if (isDefined(this.onPointClicked)) {
       this.onPointClicked(this.pointEntities);
       if (this.isAngleMeasuring) {
-        const pts = this.getPointsForShape();
-        if (pts) {
-          this.recreateAllAngleEntities(pts);
-        }
+        this.recreateAllAngleEntities();
       }
     }
   }
@@ -610,10 +629,7 @@ export default class UserDrawing extends MappableMixin(
     }
     this.pointEntities.entities.add(pointEntity);
     if (this.isAngleMeasuring) {
-      const pts = this.getPointsForShape();
-      if (pts) {
-        this.recreateAllAngleEntities(pts);
-      }
+      this.recreateAllAngleEntities();
     }
     for (let i = index; i < points.length; ++i) {
       this.pointEntities.entities.add(points[i]);
@@ -843,10 +859,7 @@ export default class UserDrawing extends MappableMixin(
         // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
         if (this.isAngleMeasuring) {
-          const pts = this.getPointsForShape();
-          if (pts) {
-            this.recreateAllAngleEntities(pts);
-          }
+          this.recreateAllAngleEntities();
         }
         // If it gets down to 2 points, it should stop acting like a polygon.
         if (this.pointEntities.entities.values.length < 2 && this.closeLoop) {
