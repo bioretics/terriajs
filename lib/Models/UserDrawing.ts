@@ -487,69 +487,6 @@ export default class UserDrawing extends MappableMixin(
           width: 20
         } as any
       } as any);
-
-      /*if (sender == MeasureAngleTool.id) {
-        this.otherEntities.entities.add({
-          name: "Angle",
-          polyline: {
-            positions: new CallbackProperty(() => {
-              const pos = that.getPointsForShape();
-              if (pos && pos.length >= 3) {
-                return this.generateArcPositions(
-                  pos[pos.length - 2],
-                  pos[pos.length - 1],
-                  pos[pos.length - 3]
-                );
-              }
-              return [];
-            }, false),
-            material: new PolylineGlowMaterialProperty({
-              color: new Color(0.0, 0.0, 0.0, 0.1),
-              glowPower: 0.15
-            } as any),
-            width: 20
-          } as any
-        } as any);
-
-        this.otherEntities.entities.add({
-          name: "Angle Label",
-          position: new CallbackProperty(() => {
-            const pos = that.getPointsForShape();
-            if (pos && pos.length >= 3) {
-              return pos[pos.length - 2];
-            }
-            return undefined;
-          }, false) as any,
-          label: {
-            text: new CallbackProperty(() => {
-              const pos = that.getPointsForShape();
-              if (pos && pos.length >= 3) {
-                const pA = pos[pos.length - 3];
-                const pB = pos[pos.length - 2];
-                const pC = pos[pos.length - 1];
-
-                const v1 = Cartesian3.subtract(pA, pB, new Cartesian3());
-                const v2 = Cartesian3.subtract(pC, pB, new Cartesian3());
-                Cartesian3.normalize(v1, v1);
-                Cartesian3.normalize(v2, v2);
-                let angleRad = Math.acos(Cartesian3.dot(v1, v2));
-                let angleDeg = (angleRad * 180) / Math.PI;
-                angleDeg = Math.round(angleDeg * 100) / 100;
-                return `${angleDeg}°`;
-              }
-              return "";
-            }, false),
-            font: "16px sans-serif",
-            style: LabelStyle.FILL_AND_OUTLINE,
-            fillColor: Color.BLACK,
-            outlineColor: Color.WHITE,
-            outlineWidth: 2,
-            pixelOffset: new Cartesian2(0, -10),
-            verticalOrigin: VerticalOrigin.BOTTOM,
-            horizontalOrigin: HorizontalOrigin.CENTER
-          }
-        });
-      }*/
     }
 
     this.terria.overlays.add(this);
