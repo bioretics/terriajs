@@ -49,7 +49,7 @@ export class MeasureAngleTool extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.share;
+    return GLYPHS.measureAngle;
   }
 
   get viewerMode(): ViewerMode | undefined {
