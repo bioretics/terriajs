@@ -274,88 +274,64 @@ export default class UserDrawing extends MappableMixin(
     return Math.round(angleDeg * 100) / 100;
   }
 
-  private recreateAllAngleEntities() {
-    const oldAngles = this.otherEntities.entities.values.filter(
-      (e) =>
-        e.name &&
-        (e.name.startsWith("Angle ") || e.name.startsWith("Angle Label "))
-    );
-    oldAngles.forEach((angleEnt) => {
-      this.otherEntities.entities.remove(angleEnt);
-    });
+  private updateAngle() {
+    this.otherEntities.entities.removeById("Angle");
+    this.otherEntities.entities.removeById("Angle Label");
 
     const positions = this.getPointsForShape();
-    if (!positions || positions.length < 3) {
-      return;
-    }
+    if (!positions || positions.length < 3) return;
 
-    for (let i = 1; i < positions.length - 1; i++) {
-      this.otherEntities.entities.add({
-        name: `Angle ${i}`,
-        polyline: {
-          positions: new CallbackProperty(() => {
-            const updatedPositions = this.getPointsForShape();
-            if (!updatedPositions || updatedPositions.length < 3) {
-              return [];
-            }
-            if (i >= updatedPositions.length - 1) {
-              return [];
-            }
+    const arcPositions = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      if (!updatedPositions || updatedPositions.length < 3) return [];
+      const [pA, pB, pC] = updatedPositions;
+      return this.generateArcPositions(pB, pC, pA, 30);
+    }, false);
 
-            const pA = updatedPositions[i - 1];
-            const pB = updatedPositions[i];
-            const pC = updatedPositions[i + 1];
-            if (!pA || !pB || !pC) {
-              return [];
-            }
-            return this.generateArcPositions(pB, pC, pA, 30);
-          }, false),
-          width: 20,
-          material: new PolylineGlowMaterialProperty({
-            color: new Color(0.0, 0.0, 0.0, 0.1),
-            glowPower: 0.15
-          } as any)
-        }
-      });
+    const labelPosition = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      return updatedPositions?.[1] || Cartesian3.ZERO;
+    }, false) as any;
 
-      this.otherEntities.entities.add({
-        name: `Angle Label ${i}`,
-        position: new CallbackProperty(() => {
-          const updatedPositions = this.getPointsForShape();
-          if (!updatedPositions || updatedPositions.length < 3) {
-            return undefined;
-          }
-          return updatedPositions[i] || undefined;
-        }, false) as any,
-        label: {
-          text: new CallbackProperty(() => {
-            const updatedPositions = this.getPointsForShape();
-            if (!updatedPositions || updatedPositions.length < 3) {
-              return "";
-            }
-            if (i >= updatedPositions.length - 1) {
-              return "";
-            }
-            const pA = updatedPositions[i - 1];
-            const pB = updatedPositions[i];
-            const pC = updatedPositions[i + 1];
-            if (!pA || !pB || !pC) {
-              return "";
-            }
-            const angleDeg = this.computeAngleDegrees(pA, pB, pC);
-            return `${angleDeg}°`;
-          }, false),
-          font: "16px sans-serif",
-          style: LabelStyle.FILL_AND_OUTLINE,
-          fillColor: Color.BLACK,
-          outlineColor: Color.WHITE,
-          outlineWidth: 2,
-          pixelOffset: new Cartesian2(0, -10),
-          verticalOrigin: VerticalOrigin.BOTTOM,
-          horizontalOrigin: HorizontalOrigin.CENTER
-        }
-      });
-    }
+    const labelText = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      if (!updatedPositions || updatedPositions.length < 3) return "";
+      const [pA, pB, pC] = updatedPositions;
+      return `${this.computeAngleDegrees(pA, pB, pC)}°`;
+    }, false);
+
+    this.otherEntities.entities.add({
+      id: "Angle",
+      name: "Angle",
+      polyline: {
+        positions: arcPositions,
+        width: 20,
+        clampToGround: !!this.terria?.clampMeasureLineToGround,
+        material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 0.0, 0.0, 0.1),
+          glowPower: 0.15
+        } as any)
+      }
+    });
+
+    this.otherEntities.entities.add({
+      id: "Angle Label",
+      name: "Angle Label",
+      position: labelPosition,
+      label: {
+        text: labelText,
+        font: "16px sans-serif",
+        style: LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Color.BLACK,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        pixelOffset: new Cartesian2(0, -10),
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        horizontalOrigin: HorizontalOrigin.CENTER
+      }
+    });
+
+    this.terria.currentViewer.notifyRepaintRequired();
   }
 
   enterDrawMode(sender?: string) {
@@ -365,7 +341,7 @@ export default class UserDrawing extends MappableMixin(
       if (typeof this.onPointMoved === "function") {
         this.onPointMoved(customDataSource);
         if (this.isAngleMeasuring) {
-          this.recreateAllAngleEntities();
+          this.updateAngle();
         }
       }
       this.prepareToAddNewPoint();
@@ -518,6 +494,11 @@ export default class UserDrawing extends MappableMixin(
    * Add new point to list of pointEntities
    */
   private addPointToPointEntities(name: string, position: Cartesian3) {
+    if (this.pointEntities.entities.values.length >= 3) {
+      const lastPoint = this.pointEntities.entities.values[2];
+      this.pointEntities.entities.remove(lastPoint);
+    }
+
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
@@ -527,20 +508,11 @@ export default class UserDrawing extends MappableMixin(
         eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
       } as any
     });
-    // Remove the existing points if we are in drawRectangle mode and the user
-    // has picked a 3rd point. This lets the user draw new rectangle that
-    // replaces the current one.
-    if (this.drawRectangle && this.pointEntities.entities.values.length === 2) {
-      this.pointEntities.entities.removeAll();
-    }
+
     this.pointEntities.entities.add(pointEntity);
     this.dragHelper?.updateDraggableObjects(this.pointEntities);
-    if (isDefined(this.onPointClicked)) {
-      this.onPointClicked(this.pointEntities);
-      if (this.isAngleMeasuring) {
-        this.recreateAllAngleEntities();
-      }
-    }
+
+    this.updateAngle();
   }
 
   private insertPointToPointEntities(
@@ -566,7 +538,7 @@ export default class UserDrawing extends MappableMixin(
     }
     this.pointEntities.entities.add(pointEntity);
     if (this.isAngleMeasuring) {
-      this.recreateAllAngleEntities();
+      this.updateAngle();
     }
     for (let i = index; i < points.length; ++i) {
       this.pointEntities.entities.add(points[i]);
@@ -723,6 +695,12 @@ export default class UserDrawing extends MappableMixin(
             }
           }
         }
+        if (this.pointEntities.entities.values.length > 3) {
+          const points = this.pointEntities.entities.values;
+          const firstTwoPoints = points.slice(0, 2);
+          this.pointEntities.entities.removeAll();
+          firstTwoPoints.forEach((p) => this.pointEntities.entities.add(p));
+        }
       }
     );
   }
@@ -796,7 +774,7 @@ export default class UserDrawing extends MappableMixin(
         // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
         if (this.isAngleMeasuring) {
-          this.recreateAllAngleEntities();
+          this.updateAngle();
         }
         // If it gets down to 2 points, it should stop acting like a polygon.
         if (this.pointEntities.entities.values.length < 2 && this.closeLoop) {
