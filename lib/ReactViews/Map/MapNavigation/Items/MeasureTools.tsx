@@ -669,3 +669,84 @@ export class MeasureAngleTool extends MapNavigationItemController {
     super.deactivate();
   }
 }
+
+export class MeasurePointTool extends MapNavigationItemController {
+  static id = "measure-point-tool";
+  static displayName = "MeasurePointTool";
+
+  private readonly terria: Terria;
+  private userDrawing: UserDrawing;
+
+  onOpen: () => void;
+  onClose: () => void;
+  itemRef: React.RefObject<HTMLDivElement> = React.createRef();
+
+  constructor(private props: IProps) {
+    super();
+    this.terria = props.terria;
+    this.userDrawing = new UserDrawing({
+      terria: props.terria,
+      messageHeader: () => i18next.t("measure.measurePointTool"),
+      allowPolygon: false,
+      onPointClicked: this.onPointClicked.bind(this),
+      onPointMoved: this.onPointMoved.bind(this),
+      onCleanUp: this.onCleanUp.bind(this),
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
+    });
+    this.onOpen = props.onOpen || (() => {});
+    this.onClose = props.onClose || (() => {});
+  }
+
+  get glyph(): any {
+    return GLYPHS.menuDotted;
+  }
+
+  get viewerMode(): ViewerMode | undefined {
+    return undefined;
+  }
+
+  @computed
+  get visible(): boolean {
+    return this.props.measureTools.active && super.visible;
+  }
+
+  onCleanUp() {
+    this.onClose();
+    super.deactivate();
+  }
+
+  onPointClicked(pointEntities: CustomDataSource) {
+    console.log("Ho cliccato su: ", pointEntities);
+    this.terria.measurableGeometryManager.sampleFromCustomDataSource(
+      pointEntities,
+      this.userDrawing.closeLoop,
+      true
+    );
+  }
+
+  onPointMoved(pointEntities: CustomDataSource) {
+    console.log("Ho spostato: ", pointEntities);
+  }
+
+  onMakeDialogMessage = () => {
+    return i18next.t("measure.measurePointToolTitle");
+  };
+
+  /**
+   * @overrides
+   */
+  deactivate() {
+    this.onClose();
+    this.userDrawing.endDrawing();
+    super.deactivate();
+  }
+
+  /**
+   * @overrides
+   */
+  activate() {
+    this.onOpen();
+    this.userDrawing.enterDrawMode(MeasurePointTool.id);
+    super.activate();
+  }
+}

@@ -41,7 +41,7 @@ import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
-import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasurePointTool";
+import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -97,6 +97,7 @@ export default class UserDrawing extends MappableMixin(
   private disposeClampMeasureLineToGround?: IReactionDisposer;
 
   private isAngleMeasuring: boolean = false;
+  private isPointMeasuring: boolean = false;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -406,6 +407,7 @@ export default class UserDrawing extends MappableMixin(
 
   enterDrawMode(sender?: any) {
     this.isAngleMeasuring = sender === MeasureAngleTool.id;
+    this.isPointMeasuring = sender === MeasurePointTool.id;
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -766,7 +768,9 @@ export default class UserDrawing extends MappableMixin(
                 );
               } else {
                 this.addPointToPointEntities("Another Point", pickedPoint);
-                this.updateSegmentLabels();
+                if (!this.isAngleMeasuring && !this.isPointMeasuring) {
+                  this.updateSegmentLabels();
+                }
               }
             } else {
               this.dragHelper?.resetDragCount();

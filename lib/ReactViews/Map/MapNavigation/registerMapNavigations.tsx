@@ -35,10 +35,10 @@ import {
   MeasureLineTool,
   MeasurePolygonTool,
   MeasureAngleTool,
+  MeasurePointTool,
   MeasureToolsController
 } from "./Items/MeasureTools";
 import MeasureTools from "../../../Models/MeasureTools";
-import { MeasurePointTool } from "./Items/MeasurePointTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -241,7 +241,9 @@ export const registerMapNavigations = (viewState: ViewState) => {
   });
 
   const measurePointTool = new MeasurePointTool({
-    terria,
+    terria: terria,
+    viewState: viewState,
+    measureTools: measureTools,
     onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
