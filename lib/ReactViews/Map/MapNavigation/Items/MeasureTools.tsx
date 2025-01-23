@@ -698,7 +698,7 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.menuDotted;
+    return GLYPHS.measurePoint;
   }
 
   get viewerMode(): ViewerMode | undefined {

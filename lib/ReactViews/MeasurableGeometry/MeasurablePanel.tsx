@@ -495,11 +495,13 @@ const MeasurablePanel = observer((props: Props) => {
                 <th>
                   {i18next.t("measurableGeometry.geometrySummaryElevation")}
                 </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
-                </th>
                 {!terria?.measurableGeom?.onlyPoints && (
                   <>
+                    <th>
+                      {i18next.t(
+                        "measurableGeometry.geometrySummaryElevationDiff"
+                      )}
+                    </th>
                     <th>
                       {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
                     </th>
@@ -526,15 +528,15 @@ const MeasurablePanel = observer((props: Props) => {
                     <tr key={idx}>
                       <td>{idx + 1}</td>
                       <td>{`${point.height.toFixed(0)} m`}</td>
-                      <td>
-                        {idx > 0
-                          ? `${(point.height - array[idx - 1].height).toFixed(
-                              0
-                            )} m`
-                          : ""}
-                      </td>
                       {!terria?.measurableGeom?.onlyPoints && (
                         <>
+                          <td>
+                            {idx > 0
+                              ? `${(
+                                  point.height - array[idx - 1].height
+                                ).toFixed(0)} m`
+                              : ""}
+                          </td>
                           <td>
                             {idx > 0 &&
                             terria?.measurableGeom?.stopGeodeticDistances &&
@@ -600,14 +602,8 @@ const MeasurablePanel = observer((props: Props) => {
       }}
       dragHandleClassName="drag-handle"
       enableResizing={{
-        top: true,
         right: true,
-        bottom: true,
-        left: true,
-        topRight: true,
-        bottomRight: true,
-        bottomLeft: true,
-        topLeft: true
+        left: true
       }}
       style={{
         pointerEvents:
