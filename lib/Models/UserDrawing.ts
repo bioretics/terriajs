@@ -36,11 +36,11 @@ import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantPropert
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
 import * as turf from "@turf/turf";
-import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureAngleTool";
 import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
+import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -403,7 +403,8 @@ export default class UserDrawing extends MappableMixin(
     this.terria.currentViewer.notifyRepaintRequired();
   }
 
-  enterDrawMode() {
+  enterDrawMode(sender?: any) {
+    this.isAngleMeasuring = sender === MeasureAngleTool.id;
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {

@@ -34,6 +34,7 @@ import KeyboardMode, {
 import {
   MeasureLineTool,
   MeasurePolygonTool,
+  MeasureAngleTool,
   MeasureToolsController
 } from "./Items/MeasureTools";
 import MeasureTools from "../../../Models/MeasureTools";
@@ -112,6 +113,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.measurableChartIsVisible = false;
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
+        viewState.terria.mapNavigationModel.enable(MeasureAngleTool.id);
       });
     }
   });
@@ -126,7 +128,9 @@ export const registerMapNavigations = (viewState: ViewState) => {
   });
 
   const measureAngleToolController = new MeasureAngleTool({
-    terria,
+    terria: terria,
+    viewState: viewState,
+    measureTools: measureTools,
     onClose: () => {
       runInAction(() => {
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
@@ -152,8 +156,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     name: "translate#measure.measureAngleToolTitle",
     title: "translate#measure.measureAngle",
     location: "TOP",
-    controller: measureAngleToolController,
     screenSize: undefined,
+    controller: measureAngleToolController,
     order: 6
   });
 
@@ -173,7 +177,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onOpen: () => {
       runInAction(() => {
         const item = viewState.terria.mapNavigationModel.findItem(
-          MeasureLineTool.id || MeasurePolygonTool.id
+          MeasureLineTool.id || MeasureAngleTool.id
         )?.controller;
         if (item && item.active) {
           item.deactivate();
@@ -209,7 +213,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     onOpen: () => {
       runInAction(() => {
         const item = viewState.terria.mapNavigationModel.findItem(
-          MeasureLineTool.id || MeasurePolygonTool.id
+          MeasureAngleTool.id || MeasurePolygonTool.id
         )?.controller;
         if (item && item.active) {
           item.deactivate();
