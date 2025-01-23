@@ -11,7 +11,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
-import Input from "../../Styled/Input";
+import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
@@ -518,6 +518,7 @@ const MeasurablePanel = observer((props: Props) => {
                     </th>
                   </>
                 )}
+                {terria?.measurableGeom?.onlyPoints && <th>Descrizione</th>}
               </tr>
             </thead>
             <tbody>
@@ -580,6 +581,11 @@ const MeasurablePanel = observer((props: Props) => {
                               : ""}
                           </td>
                         </>
+                      )}
+                      {terria?.measurableGeom?.onlyPoints && (
+                        <td>
+                          <StyledTextArea placeholder="Note..." />
+                        </td>
                       )}
                     </tr>
                   );
