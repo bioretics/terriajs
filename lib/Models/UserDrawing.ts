@@ -336,6 +336,7 @@ export default class UserDrawing extends MappableMixin(
 
   enterDrawMode(sender?: string) {
     this.isAngleMeasuring = sender === MeasureAngleTool.id;
+    console.log("isAngleMeasuring", this.isAngleMeasuring);
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -494,7 +495,10 @@ export default class UserDrawing extends MappableMixin(
    * Add new point to list of pointEntities
    */
   private addPointToPointEntities(name: string, position: Cartesian3) {
-    if (this.pointEntities.entities.values.length >= 3) {
+    if (
+      this.isAngleMeasuring &&
+      this.pointEntities.entities.values.length >= 3
+    ) {
       const lastPoint = this.pointEntities.entities.values[2];
       this.pointEntities.entities.remove(lastPoint);
     }
@@ -512,7 +516,9 @@ export default class UserDrawing extends MappableMixin(
     this.pointEntities.entities.add(pointEntity);
     this.dragHelper?.updateDraggableObjects(this.pointEntities);
 
-    this.updateAngle();
+    if (this.isAngleMeasuring) {
+      this.updateAngle();
+    }
   }
 
   private insertPointToPointEntities(
@@ -695,7 +701,10 @@ export default class UserDrawing extends MappableMixin(
             }
           }
         }
-        if (this.pointEntities.entities.values.length > 3) {
+        if (
+          this.isAngleMeasuring &&
+          this.pointEntities.entities.values.length > 3
+        ) {
           const points = this.pointEntities.entities.values;
           const firstTwoPoints = points.slice(0, 2);
           this.pointEntities.entities.removeAll();
