@@ -41,6 +41,7 @@ import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
+import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasurePointTool";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -510,7 +511,7 @@ export default class UserDrawing extends MappableMixin(
       };
 
       this.otherEntities.entities.add(rectangle as any);
-    } else {
+    } else if (sender !== MeasurePointTool.id) {
       // Line will show up once user has drawn some points. Vertices of line are user points.
       this.otherEntities.entities.add({
         name: "Line",

@@ -53,9 +53,11 @@
     }
   },
   "measure": {
+    "measurePointTool": "Measure Point Tool",
     "measureTool": "Open Measure Tool",
     "measureLineTool": "Measure Line Tool",
     "measurePolygonTool": "Measure Polygon Tool",
+    "measurePointToolTitle": "Point Measure",
     "measureToolTitle": "Measure Tools",
     "measureAngleTool": "Measure Angle Tool",
     "measureLineToolTitle": "Line Measure",

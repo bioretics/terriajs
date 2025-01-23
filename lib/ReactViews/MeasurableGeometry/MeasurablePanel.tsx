@@ -286,7 +286,9 @@ const MeasurablePanel = observer((props: Props) => {
         {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
         <br />
         {!terria?.measurableGeom?.hasArea
-          ? renderPathSummary()
+          ? terria?.measurableGeom?.onlyPoints
+            ? renderPointsSummary()
+            : renderPathSummary()
           : renderAreaSummary()}
         <br />
         {terria.measurableGeom?.sampledDistances && renderStepDetails()}
@@ -298,6 +300,69 @@ const MeasurablePanel = observer((props: Props) => {
           />
         )}
       </div>
+    );
+  };
+
+  const renderPointsSummary = () => {
+    const tableHeaders = [
+      "measurableGeometry.geometrySummaryElevationMin",
+      "measurableGeometry.geometrySummaryElevationMax",
+      "measurableGeometry.geometrySummaryElevationBear",
+      "measurableGeometry.geometrySummaryElevationDiff"
+    ];
+
+    const tableData = [
+      prettifyNumber(Math.min(...heights.get())),
+      prettifyNumber(Math.max(...heights.get())),
+      getBearing.get(),
+      getHeightDifference.get()
+    ];
+
+    return (
+      <>
+        <Text textLight style={{ marginLeft: 1 }} title="">
+          {i18next.t("measurableGeometry.geometrySummaryHeader")}
+        </Text>
+        <small>
+          <table
+            className={Styles.elevation}
+            css={`
+              width: 300px;
+              border-collapse: collapse;
+            `}
+          >
+            <thead>
+              <tr>
+                {tableHeaders.map((header, index) => (
+                  <th
+                    key={index}
+                    css={`
+                      padding: 8px;
+                      text-align: left;
+                    `}
+                  >
+                    {i18next.t(header)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {tableData.map((data, index) => (
+                  <td
+                    key={index}
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {data}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </small>
+      </>
     );
   };
 
@@ -433,16 +498,24 @@ const MeasurablePanel = observer((props: Props) => {
                 <th>
                   {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
                 </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistAir")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGround")}
-                </th>
-                <th>{i18next.t("measurableGeometry.geometrySummarySlope")}</th>
+                {!terria?.measurableGeom?.onlyPoints && (
+                  <>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
+                    </th>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummaryDistAir")}
+                    </th>
+                    <th>
+                      {i18next.t(
+                        "measurableGeometry.geometrySummaryDistGround"
+                      )}
+                    </th>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummarySlope")}
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
@@ -460,43 +533,52 @@ const MeasurablePanel = observer((props: Props) => {
                             )} m`
                           : ""}
                       </td>
-                      <td>
-                        {idx > 0 &&
-                        terria?.measurableGeom?.stopGeodeticDistances &&
-                        terria.measurableGeom.stopGeodeticDistances.length > idx
-                          ? prettifyNumber(
-                              terria.measurableGeom.stopGeodeticDistances[idx]
-                            )
-                          : ""}
-                      </td>
-                      <td>
-                        {idx > 0 &&
-                        terria?.measurableGeom?.stopAirDistances &&
-                        terria.measurableGeom.stopAirDistances.length > idx
-                          ? prettifyNumber(
-                              terria.measurableGeom.stopAirDistances[idx]
-                            )
-                          : ""}
-                      </td>
-                      <td>
-                        {idx > 0 &&
-                        terria?.measurableGeom?.stopGroundDistances &&
-                        terria.measurableGeom.stopGroundDistances.length > idx
-                          ? prettifyNumber(
-                              terria.measurableGeom.stopGroundDistances[idx]
-                            )
-                          : ""}
-                      </td>
-                      <td>
-                        {idx > 0 &&
-                        terria?.measurableGeom?.stopAirDistances &&
-                        terria.measurableGeom.stopAirDistances.length > idx
-                          ? Math.abs(
-                              (100 * (point.height - array[idx - 1].height)) /
-                                terria.measurableGeom.stopAirDistances[idx]
-                            ).toFixed(1)
-                          : ""}
-                      </td>
+                      {!terria?.measurableGeom?.onlyPoints && (
+                        <>
+                          <td>
+                            {idx > 0 &&
+                            terria?.measurableGeom?.stopGeodeticDistances &&
+                            terria.measurableGeom.stopGeodeticDistances.length >
+                              idx
+                              ? prettifyNumber(
+                                  terria.measurableGeom.stopGeodeticDistances[
+                                    idx
+                                  ]
+                                )
+                              : ""}
+                          </td>
+                          <td>
+                            {idx > 0 &&
+                            terria?.measurableGeom?.stopAirDistances &&
+                            terria.measurableGeom.stopAirDistances.length > idx
+                              ? prettifyNumber(
+                                  terria.measurableGeom.stopAirDistances[idx]
+                                )
+                              : ""}
+                          </td>
+                          <td>
+                            {idx > 0 &&
+                            terria?.measurableGeom?.stopGroundDistances &&
+                            terria.measurableGeom.stopGroundDistances.length >
+                              idx
+                              ? prettifyNumber(
+                                  terria.measurableGeom.stopGroundDistances[idx]
+                                )
+                              : ""}
+                          </td>
+                          <td>
+                            {idx > 0 &&
+                            terria?.measurableGeom?.stopAirDistances &&
+                            terria.measurableGeom.stopAirDistances.length > idx
+                              ? Math.abs(
+                                  (100 *
+                                    (point.height - array[idx - 1].height)) /
+                                    terria.measurableGeom.stopAirDistances[idx]
+                                ).toFixed(1)
+                              : ""}
+                          </td>
+                        </>
+                      )}
                     </tr>
                   );
                 })}

@@ -55,6 +55,7 @@ export const GLYPHS = {
   measure: require("../../wwwroot/images/icons/measure.svg"),
   measurePolygon: require("../../wwwroot/images/icons/measure_polygon.svg"),
   measureAngle: require("../../wwwroot/images/icons/measure_angle.svg"),
+  measurePoint: require("../../wwwroot/images/icons/measure_point.svg"),
   opened: require("../../wwwroot/images/icons/opened.svg"),
   pause: require("../../wwwroot/images/icons/pause.svg"),
   play: require("../../wwwroot/images/icons/play.svg"),
