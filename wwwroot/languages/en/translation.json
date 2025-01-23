@@ -57,13 +57,17 @@
     "measureLineTool": "Measure Line Tool",
     "measurePolygonTool": "Measure Polygon Tool",
     "measureToolTitle": "Measure Tools",
+    "measureAngleTool": "Measure Angle Tool",
     "measureLineToolTitle": "Line Measure",
     "measurePolygonToolTitle": "Polygon Measure",
+    "measureAngleToolTitle": "Angle Measure",
     "measureDistance": "Measure distance between locations",
     "measureArea": "Measure the area of a polygon",
+    "measureAngle": "Measure the angle between two lines",
     "measureLineToolMessage": "geodetic dist.",
     "measurePolygonToolMessagePerimeter": "perimeter",
-    "measurePolygonToolMessageArea": "area"
+    "measurePolygonToolMessageArea": "area",
+    "measureAngleToolMessage": "angle"
   },
   "measurableGeometry": {
     "header": "MEASURABLE",
@@ -130,7 +134,7 @@
       "copyName": "{{name}} (copy)"
     }
   },
-  "zoomControl": {
+  "zoomCotrol": {
     "zoomIn": "Zoom in",
     "zoomReset": "Reset zoom",
     "zoomOut": "Zoom out"

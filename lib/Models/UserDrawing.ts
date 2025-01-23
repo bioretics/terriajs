@@ -35,11 +35,12 @@ import Terria from "./Terria";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { clone } from "terriajs-cesium";
+import * as turf from "@turf/turf";
+import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureAngleTool";
 import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
-
-import * as turf from "@turf/turf";
+import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -93,6 +94,8 @@ export default class UserDrawing extends MappableMixin(
   private mousePointEntity?: Entity;
 
   private disposeClampMeasureLineToGround?: IReactionDisposer;
+
+  private isAngleMeasuring: boolean = false;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -275,11 +278,139 @@ export default class UserDrawing extends MappableMixin(
     }
   }
 
+  private generateArcPositions(
+    center: Cartesian3,
+    p1: Cartesian3,
+    p3: Cartesian3,
+    segments: number = 30
+  ): Cartesian3[] {
+    const v1 = Cartesian3.subtract(p1, center, new Cartesian3());
+    const v2 = Cartesian3.subtract(p3, center, new Cartesian3());
+    const len1 = Cartesian3.magnitude(v1);
+    const len2 = Cartesian3.magnitude(v2);
+
+    if (len1 === 0 || len2 === 0) {
+      return [];
+    }
+
+    const radius = Math.min(len1, len2) * 0.6;
+    const u = Cartesian3.normalize(v1, new Cartesian3());
+    const v = Cartesian3.normalize(v2, new Cartesian3());
+
+    let angle = Math.acos(Cartesian3.dot(u, v));
+    if (isNaN(angle)) {
+      angle = 0;
+    }
+
+    const axis = Cartesian3.normalize(
+      Cartesian3.cross(u, v, new Cartesian3()),
+      new Cartesian3()
+    );
+    const w = Cartesian3.cross(axis, u, new Cartesian3());
+
+    const positions: Cartesian3[] = [];
+    for (let i = 0; i <= segments; i++) {
+      const t = (angle * i) / segments;
+      const part1 = Cartesian3.multiplyByScalar(
+        u,
+        Math.cos(t),
+        new Cartesian3()
+      );
+      const part2 = Cartesian3.multiplyByScalar(
+        w,
+        Math.sin(t),
+        new Cartesian3()
+      );
+      const direction = Cartesian3.add(part1, part2, new Cartesian3());
+      const position = Cartesian3.add(
+        center,
+        Cartesian3.multiplyByScalar(direction, radius * 0.6, new Cartesian3()),
+        new Cartesian3()
+      );
+      positions.push(position);
+    }
+    return positions;
+  }
+
+  private computeAngleDegrees(pA: Cartesian3, pB: Cartesian3, pC: Cartesian3) {
+    const v1 = Cartesian3.subtract(pA, pB, new Cartesian3());
+    const v2 = Cartesian3.subtract(pC, pB, new Cartesian3());
+    Cartesian3.normalize(v1, v1);
+    Cartesian3.normalize(v2, v2);
+    const dot = Cartesian3.dot(v1, v2);
+    const angleRad = Math.acos(dot);
+    const angleDeg = (angleRad * 180) / Math.PI;
+    return Math.round(angleDeg * 100) / 100;
+  }
+
+  private updateAngle() {
+    this.otherEntities.entities.removeById("Angle");
+    this.otherEntities.entities.removeById("Angle Label");
+
+    const positions = this.getPointsForShape();
+    if (!positions || positions.length < 3) return;
+
+    const arcPositions = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      if (!updatedPositions || updatedPositions.length < 3) return [];
+      const [pA, pB, pC] = updatedPositions;
+      return this.generateArcPositions(pB, pC, pA, 30);
+    }, false);
+
+    const labelPosition = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      return updatedPositions?.[1] || Cartesian3.ZERO;
+    }, false) as any;
+
+    const labelText = new CallbackProperty(() => {
+      const updatedPositions = this.getPointsForShape();
+      if (!updatedPositions || updatedPositions.length < 3) return "";
+      const [pA, pB, pC] = updatedPositions;
+      return `${this.computeAngleDegrees(pA, pB, pC)}°`;
+    }, false);
+
+    this.otherEntities.entities.add({
+      id: "Angle",
+      name: "Angle",
+      polyline: {
+        positions: arcPositions,
+        width: 20,
+        clampToGround: !!this.terria?.clampMeasureLineToGround,
+        material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 0.0, 0.0, 0.1),
+          glowPower: 0.15
+        } as any)
+      }
+    });
+
+    this.otherEntities.entities.add({
+      id: "Angle Label",
+      name: "Angle Label",
+      position: labelPosition,
+      label: {
+        text: labelText,
+        font: "16px sans-serif",
+        style: LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Color.BLACK,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        pixelOffset: new Cartesian2(0, -10),
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        horizontalOrigin: HorizontalOrigin.CENTER
+      }
+    });
+
+    this.terria.currentViewer.notifyRepaintRequired();
+  }
+
   enterDrawMode() {
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
         this.onPointMoved(customDataSource);
+        if (this.isAngleMeasuring) {
+          this.updateAngle();
+        }
       }
       this.prepareToAddNewPoint();
     });
@@ -393,7 +524,6 @@ export default class UserDrawing extends MappableMixin(
 
           // Clamp to ground lines of Measure Tool
           clampToGround: !!this.terria?.clampMeasureLineToGround,
-
           material: new PolylineGlowMaterialProperty({
             color: new Color(0.0, 0.0, 0.0, 0.1),
             glowPower: 0.25
@@ -432,6 +562,14 @@ export default class UserDrawing extends MappableMixin(
    * Add new point to list of pointEntities
    */
   private addPointToPointEntities(name: string, position: Cartesian3) {
+    if (
+      this.isAngleMeasuring &&
+      this.pointEntities.entities.values.length >= 3
+    ) {
+      const lastPoint = this.pointEntities.entities.values[2];
+      this.pointEntities.entities.remove(lastPoint);
+    }
+
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
@@ -449,6 +587,9 @@ export default class UserDrawing extends MappableMixin(
     }
     this.pointEntities.entities.add(pointEntity);
     this.dragHelper?.updateDraggableObjects(this.pointEntities);
+    if (this.isAngleMeasuring) {
+      this.updateAngle();
+    }
     if (isDefined(this.onPointClicked)) {
       this.onPointClicked(this.pointEntities);
     }
@@ -476,6 +617,9 @@ export default class UserDrawing extends MappableMixin(
       this.pointEntities.entities.add(points[i]);
     }
     this.pointEntities.entities.add(pointEntity);
+    if (this.isAngleMeasuring) {
+      this.updateAngle();
+    }
     for (let i = index; i < points.length; ++i) {
       this.pointEntities.entities.add(points[i]);
     }
@@ -541,7 +685,7 @@ export default class UserDrawing extends MappableMixin(
           }, false) as any;
         }
       },
-      invisible: true
+      invisible: this.invisible
     });
     runInAction(() => {
       this.terria.mapInteractionModeStack.push(pickPointMode);
@@ -632,6 +776,15 @@ export default class UserDrawing extends MappableMixin(
             }
           }
         }
+        if (
+          this.isAngleMeasuring &&
+          this.pointEntities.entities.values.length > 3
+        ) {
+          const points = this.pointEntities.entities.values;
+          const firstTwoPoints = points.slice(0, 2);
+          this.pointEntities.entities.removeAll();
+          firstTwoPoints.forEach((p) => this.pointEntities.entities.add(p));
+        }
       }
     );
   }
@@ -704,6 +857,9 @@ export default class UserDrawing extends MappableMixin(
       } else {
         // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
+        if (this.isAngleMeasuring) {
+          this.updateAngle();
+        }
         // If it gets down to 2 points, it should stop acting like a polygon.
         if (this.pointEntities.entities.values.length < 2 && this.closeLoop) {
           this.closeLoop = false;
