@@ -519,6 +519,10 @@ export default class UserDrawing extends MappableMixin(
     if (this.isAngleMeasuring) {
       this.updateAngle();
     }
+
+    if (isDefined(this.onPointClicked)) {
+      this.onPointClicked(this.pointEntities);
+    }
   }
 
   private insertPointToPointEntities(
