@@ -43,7 +43,7 @@ import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
-
+import { Rnd } from "react-rnd";
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
@@ -181,21 +181,40 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                         <WorkflowPanelPortal
                           show={props.terria.isWorkflowPanelActive}
                         />
-                        <SidePanelContainer
-                          tabIndex={0}
-                          show={
-                            props.viewState.isMapFullScreen === false &&
-                            props.terria.isWorkflowPanelActive === false
-                          }
+                        <Rnd
+                          default={{
+                            x: 15,
+                            y: 5,
+                            width: 355,
+                            height: 500
+                          }}
+                          minHeight={370}
+                          bounds="#ui"
+                          enableResizing={{
+                            top: true,
+                            bottom: true
+                          }}
+                          style={{
+                            zIndex: 9999,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
+                          }}
                         >
-                          <FullScreenButton
-                            minified
-                            animationDuration={250}
-                            btnText={t("addData.btnHide")}
-                          />
-                          <Branding version={props.version} />
-                          <SidePanel />
-                        </SidePanelContainer>
+                          <SidePanelContainer
+                            tabIndex={0}
+                            show={
+                              props.viewState.isMapFullScreen === false &&
+                              props.terria.isWorkflowPanelActive === false
+                            }
+                          >
+                            <FullScreenButton
+                              minified
+                              animationDuration={250}
+                              btnText={t("addData.btnHide")}
+                            />
+                            <Branding version={props.version} />
+                            <SidePanel />
+                          </SidePanelContainer>
+                        </Rnd>
                       </>
                     </Medium>
                   </>
