@@ -555,15 +555,16 @@ export class MeasureAngleTool extends MapNavigationItemController {
   private readonly terria: Terria;
   private userDrawing: UserDrawing;
 
-  angleMeasurements: number[] = [];
+  private currentAngle: number = 0;
 
   onOpen: () => void;
   onClose: () => void;
-
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
 
   constructor(private props: IProps) {
     super();
+    makeObservable(this);
+
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
@@ -572,7 +573,8 @@ export class MeasureAngleTool extends MapNavigationItemController {
       autoClosePolygon: false,
       onPointClicked: this.onPointUpdated.bind(this),
       onPointMoved: this.onPointUpdated.bind(this),
-      onCleanUp: this.onCleanUp.bind(this)
+      onCleanUp: this.onCleanUp.bind(this),
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
     });
 
     this.onOpen = props.onOpen || (() => {});
@@ -599,17 +601,10 @@ export class MeasureAngleTool extends MapNavigationItemController {
       )
       .filter((pos): pos is Cartesian3 => pos !== undefined);
 
-    this.angleMeasurements = [];
+    this.currentAngle = 0;
 
-    if (points.length >= 3) {
-      for (let i = 0; i < points.length - 2; i++) {
-        const angle = this.calculateAngle(
-          points[i],
-          points[i + 1],
-          points[i + 2]
-        );
-        this.angleMeasurements.push(angle);
-      }
+    if (points.length === 3) {
+      this.currentAngle = this.calculateAngle(points[0], points[1], points[2]);
     }
   }
 
@@ -631,28 +626,24 @@ export class MeasureAngleTool extends MapNavigationItemController {
     const dot = v1.x * v2.x + v1.y * v2.y;
     const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
     const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-
     if (norm1 === 0 || norm2 === 0) return 0;
 
-    let angleRad = Math.acos(dot / (norm1 * norm2));
-
+    const angleRad = Math.acos(dot / (norm1 * norm2));
     const angleDeg = angleRad * (180 / Math.PI);
     return angleDeg;
   }
 
   onMakeDialogMessage = () => {
-    if (this.angleMeasurements.length === 0) return "";
-    let message = "";
-    this.angleMeasurements.forEach((angle, index) => {
-      message += `${i18next.t("measure.angle")} ${index + 1}: ${angle.toFixed(
-        2
-      )}°<br/>`;
-    });
-    return message;
+    if (this.currentAngle <= 0) {
+      return "";
+    }
+    return `${i18next.t(
+      "measure.measureAngleToolMessage"
+    )}: ${this.currentAngle.toFixed(2)}°`;
   };
 
   onCleanUp() {
-    this.angleMeasurements = [];
+    this.currentAngle = 0;
     this.onClose();
     super.deactivate();
   }
