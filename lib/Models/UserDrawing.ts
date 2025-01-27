@@ -334,7 +334,7 @@ export default class UserDrawing extends MappableMixin(
     return positions;
   }
 
-  private computeAngleDegrees(pA: Cartesian3, pB: Cartesian3, pC: Cartesian3) {
+  public computeAngleDegrees(pA: Cartesian3, pB: Cartesian3, pC: Cartesian3) {
     const v1 = Cartesian3.subtract(pA, pB, new Cartesian3());
     const v2 = Cartesian3.subtract(pC, pB, new Cartesian3());
     Cartesian3.normalize(v1, v1);

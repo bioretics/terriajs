@@ -246,6 +246,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     measureTools: measureTools,
     onClose: () => {
       runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.enable(MeasurePolygonTool.id);
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.panel = undefined;

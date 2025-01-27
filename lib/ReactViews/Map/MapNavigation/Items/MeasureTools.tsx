@@ -604,33 +604,12 @@ export class MeasureAngleTool extends MapNavigationItemController {
     this.currentAngle = 0;
 
     if (points.length === 3) {
-      this.currentAngle = this.calculateAngle(points[0], points[1], points[2]);
+      this.currentAngle = this.userDrawing.computeAngleDegrees(
+        points[0],
+        points[1],
+        points[2]
+      );
     }
-  }
-
-  calculateAngle(p1: Cartesian3, p2: Cartesian3, p3: Cartesian3): number {
-    const carto1 = Ellipsoid.WGS84.cartesianToCartographic(p1);
-    const carto2 = Ellipsoid.WGS84.cartesianToCartographic(p2);
-    const carto3 = Ellipsoid.WGS84.cartesianToCartographic(p3);
-
-    const x1 = carto1.longitude;
-    const y1 = carto1.latitude;
-    const x2 = carto2.longitude;
-    const y2 = carto2.latitude;
-    const x3 = carto3.longitude;
-    const y3 = carto3.latitude;
-
-    const v1 = { x: x1 - x2, y: y1 - y2 };
-    const v2 = { x: x3 - x2, y: y3 - y2 };
-
-    const dot = v1.x * v2.x + v1.y * v2.y;
-    const norm1 = Math.sqrt(v1.x * v1.x + v1.y * v1.y);
-    const norm2 = Math.sqrt(v2.x * v2.x + v2.y * v2.y);
-    if (norm1 === 0 || norm2 === 0) return 0;
-
-    const angleRad = Math.acos(dot / (norm1 * norm2));
-    const angleDeg = angleRad * (180 / Math.PI);
-    return angleDeg;
   }
 
   onMakeDialogMessage = () => {
