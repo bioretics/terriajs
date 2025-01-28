@@ -22,6 +22,8 @@ import {
   MeasureLineTool,
   MeasurePolygonTool
 } from "../Map/MapNavigation/Items";
+import { Simulate } from "react-dom/test-utils";
+import pointerOut = Simulate.pointerOut;
 
 interface Props {
   viewState: ViewState;
@@ -31,6 +33,22 @@ interface Props {
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
+  const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
+    []
+  );
+
+  React.useEffect(() => {
+    const stopPoints = terria?.measurableGeom?.stopPoints || [];
+    setPointsDescriptions((prev) => {
+      const newLength = stopPoints.length;
+      return prev.length === newLength
+        ? prev
+        : [
+            ...prev.slice(0, newLength),
+            ...new Array(Math.max(newLength - prev.length, 0)).fill("")
+          ];
+    });
+  }, [terria?.measurableGeom?.stopPoints]);
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
     terria.measurableGeomSamplingStep
@@ -297,6 +315,7 @@ const MeasurablePanel = observer((props: Props) => {
             geom={terria.measurableGeom as MeasurableGeometry}
             name="path"
             ellipsoid={terria.cesium.scene.globe.ellipsoid}
+            pointDescriptions={pointsDescriptions}
           />
         )}
       </div>
@@ -584,7 +603,16 @@ const MeasurablePanel = observer((props: Props) => {
                       )}
                       {terria?.measurableGeom?.onlyPoints && (
                         <td>
-                          <StyledTextArea placeholder="Note..." />
+                          <StyledTextArea
+                            placeholder="Note..."
+                            value={pointsDescriptions[idx] || ""}
+                            onChange={(e) => {
+                              const newDescriptions = [...pointsDescriptions];
+                              newDescriptions[idx] = e.target.value;
+                              console.log("newDescriptions: ", newDescriptions);
+                              setPointsDescriptions(newDescriptions);
+                            }}
+                          />
                         </td>
                       )}
                     </tr>

@@ -19,6 +19,7 @@ interface Props {
   geom: MeasurableGeometry;
   name: string;
   ellipsoid: Ellipsoid;
+  pointDescriptions?: string[];
 }
 
 const MeasurableDownload = (props: Props) => {
@@ -28,6 +29,9 @@ const MeasurableDownload = (props: Props) => {
   const [kmlPoints, setKmlPoints] = useState<string>();
 
   const getLinks = () => {
+    const showOnlyPoints =
+      props.pointDescriptions && props.pointDescriptions.length > 0;
+
     return [
       {
         href: DataUri.make("csv", generateCsvData(geom)),
@@ -74,7 +78,14 @@ const MeasurableDownload = (props: Props) => {
         download: `${name}_points.gpx`,
         label: `${i18next.t("downloadData.points")} GPX`
       }
-    ].filter((download) => !!download.href);
+    ]
+      .filter((download) => !!download.href)
+      .filter((download) => {
+        if (showOnlyPoints) {
+          return !download.download.includes("_lines.");
+        }
+        return true;
+      });
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
@@ -163,8 +174,8 @@ const MeasurableDownload = (props: Props) => {
           ${geom.stopPoints
             .map(
               (elem) =>
-                `<trkpt lat="${CesiumMath.toDegrees(elem.latitude)}" 
-                  lon="${CesiumMath.toDegrees(elem.longitude)}" 
+                `<trkpt lat="${CesiumMath.toDegrees(elem.latitude)}"
+                  lon="${CesiumMath.toDegrees(elem.longitude)}"
                   ele="${elem.height.toFixed(2)}">
                 </trkpt>`
             )
