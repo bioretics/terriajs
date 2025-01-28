@@ -202,16 +202,23 @@ const MeasurableDownload = (props: Props) => {
   };
 
   const generateCsvData = (geom: MeasurableGeometry) => {
-    const rows = [Object.keys(geom.stopPoints[0]).join(",")];
+    const headers = [...Object.keys(geom.stopPoints[0]), "description"].join(
+      ","
+    );
+
+    const rows = [headers];
+
     rows.push(
-      ...geom.stopPoints.map((elem) =>
+      ...geom.stopPoints.map((elem, index) =>
         [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
+          Math.round(elem.height),
+          props.pointDescriptions?.[index] || ""
         ].join(",")
       )
     );
+
     return rows.join("\n");
   };
 

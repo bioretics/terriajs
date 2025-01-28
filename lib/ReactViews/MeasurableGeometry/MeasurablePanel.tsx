@@ -315,7 +315,9 @@ const MeasurablePanel = observer((props: Props) => {
             geom={terria.measurableGeom as MeasurableGeometry}
             name="path"
             ellipsoid={terria.cesium.scene.globe.ellipsoid}
-            pointDescriptions={pointsDescriptions}
+            pointDescriptions={
+              terria?.measurableGeom?.onlyPoints ? pointsDescriptions : []
+            }
           />
         )}
       </div>
