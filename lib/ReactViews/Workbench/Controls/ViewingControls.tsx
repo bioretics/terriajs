@@ -45,6 +45,11 @@ import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
+import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import { isJsonArray, isJsonNumber, JsonArray } from "../../../Core/Json";
+import CsvCatalogItem from "../../../Models/Catalog/CatalogItems/CsvCatalogItem";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -471,6 +476,52 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
+        {
+          <li key={"workbench.measureItem"}>
+            <ViewingControlMenuButton
+              onClick={() =>
+                runInAction(() => {
+                  let csvItem = item as CsvCatalogItem;
+                  console.log(
+                    "Hai aperto il measurable dei puntssssi.",
+                    csvItem.forceLoadTableData()
+                  );
+
+                  let positions =
+                    this.props.viewState.terria.measurableGeom?.stopPoints!!;
+                  let prova = item.terria.measurableGeom?.stopPoints!!;
+
+                  //COMPUTE PATH
+                  /*
+
+                  // AS PATH
+                  if (!this.props.viewState.terria?.cesium?.scene) {
+                    return;
+                  }
+                  const terrainProvider: TerrainProvider =
+                    this.props.viewState.terria?.cesium?.scene.terrainProvider;
+
+                  let prom = Promise.resolve(positions);
+                  if (positions.every((element) => element.height < 1)) {
+                    prom = prom.then((pos) =>
+                      sampleTerrainMostDetailed(terrainProvider, pos)
+                    );
+                  }
+
+                  prom.then((newPositions: Cartographic[]) => {
+                    this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(newPositions);
+                  });*/
+                })
+              }
+              title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.lineChart} />
+                <span>Punti</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        }
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
