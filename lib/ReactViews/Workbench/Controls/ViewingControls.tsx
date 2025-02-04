@@ -480,12 +480,15 @@ class ViewingControls extends React.Component<
           <li key={"workbench.measureItem"}>
             <ViewingControlMenuButton
               onClick={() =>
-                runInAction(() => {
+                runInAction(async () => {
                   let csvItem = item as CsvCatalogItem;
-                  console.log(
-                    "Hai aperto il measurable dei puntssssi.",
-                    csvItem.forceLoadTableData()
-                  );
+                  const data = await csvItem.forceLoadTableData();
+                  console.log("Hai aperto il measurable dei puntssssi.", data);
+                  console.log("PRIMA FOREACH");
+                  for (let i = 0; i < data.length; i++) {
+                    console.log("PROVASDATA", data[i]);
+                  }
+                  console.log("DOPO FOREACH");
 
                   let positions =
                     this.props.viewState.terria.measurableGeom?.stopPoints!!;
