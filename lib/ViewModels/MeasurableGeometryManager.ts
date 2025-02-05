@@ -22,6 +22,7 @@ export interface MeasurableGeometry {
   geodeticArea?: number;
   airArea?: number;
   onlyPoints?: boolean;
+  descriptions?: string[];
 }
 
 export default class MeasurableGeometryManager {
@@ -83,7 +84,8 @@ export default class MeasurableGeometryManager {
   sampleFromCartographics(
     cartoPositions: Cartographic[],
     closeLoop: boolean = false,
-    onlyPoint: boolean = false
+    onlyPoint: boolean = false,
+    description: string[] = []
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -185,7 +187,8 @@ export default class MeasurableGeometryManager {
           sampledCartographics[0],
           [],
           closeLoop,
-          true
+          true,
+          description
         );
       } else {
         this.updatePath(
@@ -210,7 +213,8 @@ export default class MeasurableGeometryManager {
     sampledPoints: Cartographic[],
     sampledDistances: number[],
     isClosed: boolean,
-    onlyPoints: boolean = false
+    onlyPoints: boolean = false,
+    descriptions: string[] = []
   ) {
     this.terria.measurableGeom = {
       isClosed: isClosed,
@@ -230,7 +234,8 @@ export default class MeasurableGeometryManager {
       ),
       sampledPoints: sampledPoints,
       sampledDistances: sampledDistances,
-      onlyPoints: onlyPoints
+      onlyPoints: onlyPoints,
+      descriptions: descriptions
     };
   }
 }

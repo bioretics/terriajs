@@ -493,7 +493,7 @@ class ViewingControls extends React.Component<
                   const longitudes = columns["longitude"] || [];
                   const latitudes = columns["latitude"] || [];
                   const heights = columns["height"] || [];
-                  const descriptions = columns["Description"] || [];
+                  const descriptions = columns["description"] || [];
 
                   const positions: Cartographic[] = [];
                   for (let i = 0; i < longitudes.length; i++) {
@@ -519,9 +519,14 @@ class ViewingControls extends React.Component<
                     );
                   }
 
+                  console.log("DESCRIPTION", descriptions);
+
                   prom.then((newPositions: Cartographic[]) => {
                     this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(
-                      newPositions
+                      newPositions,
+                      false,
+                      true,
+                      descriptions
                     );
                   });
                 })

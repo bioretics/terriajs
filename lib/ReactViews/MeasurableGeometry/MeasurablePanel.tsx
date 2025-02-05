@@ -22,8 +22,6 @@ import {
   MeasureLineTool,
   MeasurePolygonTool
 } from "../Map/MapNavigation/Items";
-import { Simulate } from "react-dom/test-utils";
-import pointerOut = Simulate.pointerOut;
 
 interface Props {
   viewState: ViewState;
@@ -36,6 +34,10 @@ const MeasurablePanel = observer((props: Props) => {
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
   );
+
+  React.useEffect(() => {
+    setPointsDescriptions(terria.measurableGeom?.descriptions || []);
+  }, [terria.measurableGeom?.descriptions]);
 
   React.useEffect(() => {
     const stopPoints = terria?.measurableGeom?.stopPoints || [];
