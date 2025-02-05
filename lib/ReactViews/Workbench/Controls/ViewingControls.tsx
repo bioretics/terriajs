@@ -483,21 +483,29 @@ class ViewingControls extends React.Component<
                 runInAction(async () => {
                   let csvItem = item as CsvCatalogItem;
                   const data = await csvItem.forceLoadTableData();
-                  console.log("Hai aperto il measurable dei puntssssi.", data);
-                  console.log("PRIMA FOREACH");
-                  for (let i = 0; i < data.length; i++) {
-                    console.log("PROVASDATA", data[i]);
+
+                  const columns: { [key: string]: any[] } = {};
+                  data.forEach((row: any[]) => {
+                    const columnName: string = row[0];
+                    columns[columnName] = row.slice(1);
+                  });
+
+                  const longitudes = columns["longitude"] || [];
+                  const latitudes = columns["latitude"] || [];
+                  const heights = columns["height"] || [];
+                  const descriptions = columns["Description"] || [];
+
+                  const positions: Cartographic[] = [];
+                  for (let i = 0; i < longitudes.length; i++) {
+                    positions.push(
+                      Cartographic.fromDegrees(
+                        longitudes[i],
+                        latitudes[i],
+                        heights[i]
+                      )
+                    );
                   }
-                  console.log("DOPO FOREACH");
 
-                  let positions =
-                    this.props.viewState.terria.measurableGeom?.stopPoints!!;
-                  let prova = item.terria.measurableGeom?.stopPoints!!;
-
-                  //COMPUTE PATH
-                  /*
-
-                  // AS PATH
                   if (!this.props.viewState.terria?.cesium?.scene) {
                     return;
                   }
@@ -512,8 +520,10 @@ class ViewingControls extends React.Component<
                   }
 
                   prom.then((newPositions: Cartographic[]) => {
-                    this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(newPositions);
-                  });*/
+                    this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(
+                      newPositions
+                    );
+                  });
                 })
               }
               title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
