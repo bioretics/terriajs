@@ -636,7 +636,8 @@
     "addItemErrorMessage": "An error occurred while loading the catalog item.",
     "searchItem": "Search",
     "searchItemTitle": "Search",
-    "splitScreenMode": "SPLIT SCREEN MODE"
+    "splitScreenMode": "SPLIT SCREEN MODE",
+    "pointsItem": "Points"
   },
   "dateTime": {
     "selectorLabel": "Time:",

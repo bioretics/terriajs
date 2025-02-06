@@ -535,7 +535,7 @@ class ViewingControls extends React.Component<
             >
               <BoxViewingControl>
                 <StyledIcon glyph={Icon.GLYPHS.lineChart} />
-                <span>Punti</span>
+                <span>{t("workbench.pointsItem")}</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>

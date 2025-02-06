@@ -1403,6 +1403,7 @@
     "colorScaleRangeMin": "Il valore minimo deve essere un numero.",
     "searchItemTitle": "Cerca",
     "searchItem": "Cerca",
+    "pointsItem": "Punti",
     "dimensionsSelector": {
       "undefinedLabel": "Non specificato"
     },
