@@ -1,5 +1,5 @@
 import React from "react";
-import { Rnd } from "react-rnd"; // <--- Libreria per drag & resize
+import { Rnd } from "react-rnd";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -22,6 +22,7 @@ import {
   MeasureLineTool,
   MeasurePolygonTool
 } from "../Map/MapNavigation/Items";
+import { SortableContainer, SortableElement } from "react-sortable-hoc";
 
 interface Props {
   viewState: ViewState;
@@ -504,7 +505,158 @@ const MeasurablePanel = observer((props: Props) => {
     );
   };
 
+  function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
+    const result = Array.from(list);
+    const [removed] = result.splice(startIndex, 1);
+    result.splice(endIndex, 0, removed);
+    return result;
+  }
+
+  const SortableItem = SortableElement(
+    ({
+      point,
+      idx,
+      array,
+      onlyPoints,
+      pointsDescriptions,
+      onDescriptionChange,
+      prettifyNumber,
+      terria
+    }: {
+      point: any;
+      idx: number;
+      array: any[];
+      onlyPoints?: boolean;
+      pointsDescriptions: string[];
+      onDescriptionChange: (index: number, value: string) => void;
+      prettifyNumber: (num: number, squared?: boolean) => string;
+      terria: any;
+    }) => {
+      return (
+        <tr>
+          <td>{idx + 1}</td>
+          <td>{`${point.height.toFixed(0)} m`}</td>
+          {!onlyPoints && (
+            <>
+              <td>
+                {idx > 0
+                  ? `${(point.height - array[idx - 1].height).toFixed(0)} m`
+                  : ""}
+              </td>
+              <td>
+                {idx > 0 &&
+                terria?.measurableGeom?.stopGeodeticDistances &&
+                terria.measurableGeom.stopGeodeticDistances.length > idx
+                  ? prettifyNumber(
+                      terria.measurableGeom.stopGeodeticDistances[idx]
+                    )
+                  : ""}
+              </td>
+              <td>
+                {idx > 0 &&
+                terria?.measurableGeom?.stopAirDistances &&
+                terria.measurableGeom.stopAirDistances.length > idx
+                  ? prettifyNumber(terria.measurableGeom.stopAirDistances[idx])
+                  : ""}
+              </td>
+              <td>
+                {idx > 0 &&
+                terria?.measurableGeom?.stopGroundDistances &&
+                terria.measurableGeom.stopGroundDistances.length > idx
+                  ? prettifyNumber(
+                      terria.measurableGeom.stopGroundDistances[idx]
+                    )
+                  : ""}
+              </td>
+              <td>
+                {idx > 0 &&
+                terria?.measurableGeom?.stopAirDistances &&
+                terria.measurableGeom.stopAirDistances.length > idx
+                  ? Math.abs(
+                      (100 * (point.height - array[idx - 1].height)) /
+                        terria.measurableGeom.stopAirDistances[idx]
+                    ).toFixed(1)
+                  : ""}
+              </td>
+            </>
+          )}
+          {onlyPoints && (
+            <td>
+              <StyledTextArea
+                placeholder="Note..."
+                value={pointsDescriptions[idx] || ""}
+                onChange={(e) => onDescriptionChange(idx, e.target.value)}
+              />
+            </td>
+          )}
+        </tr>
+      );
+    }
+  );
+
+  const SortableList = SortableContainer(
+    ({
+      items,
+      onlyPoints,
+      pointsDescriptions,
+      onDescriptionChange,
+      prettifyNumber,
+      terria
+    }: {
+      items: any[];
+      onlyPoints?: boolean;
+      pointsDescriptions: string[];
+      onDescriptionChange: (index: number, value: string) => void;
+      prettifyNumber: (num: number, squared?: boolean) => string;
+      terria: any;
+    }) => {
+      return (
+        <tbody>
+          {items.map((point, idx) => (
+            <SortableItem
+              key={`item-${idx}`}
+              index={idx}
+              idx={idx}
+              array={items}
+              onlyPoints={onlyPoints}
+              pointsDescriptions={pointsDescriptions}
+              onDescriptionChange={onDescriptionChange}
+              prettifyNumber={prettifyNumber}
+              terria={terria}
+              point={point}
+            />
+          ))}
+        </tbody>
+      );
+    }
+  );
+
   const renderStepDetails = () => {
+    const stopPoints = terria?.measurableGeom?.stopPoints || [];
+    const onlyPoints = terria?.measurableGeom?.onlyPoints;
+
+    const handleDescriptionChange = (index: number, value: string) => {
+      const newDescriptions = [...pointsDescriptions];
+      newDescriptions[index] = value;
+      setPointsDescriptions(newDescriptions);
+    };
+
+    const onSortEnd = ({
+      oldIndex,
+      newIndex
+    }: {
+      oldIndex: number;
+      newIndex: number;
+    }) => {
+      if (oldIndex === newIndex) return;
+      const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
+      if (terria.measurableGeom)
+        terria.measurableGeom.stopPoints = newStopPoints;
+
+      const newDescriptions = reorder(pointsDescriptions, oldIndex, newIndex);
+      setPointsDescriptions(newDescriptions);
+    };
+
     return (
       <>
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -518,7 +670,7 @@ const MeasurablePanel = observer((props: Props) => {
                 <th>
                   {i18next.t("measurableGeometry.geometrySummaryElevation")}
                 </th>
-                {!terria?.measurableGeom?.onlyPoints && (
+                {!onlyPoints && (
                   <>
                     <th>
                       {i18next.t(
@@ -541,88 +693,19 @@ const MeasurablePanel = observer((props: Props) => {
                     </th>
                   </>
                 )}
-                {terria?.measurableGeom?.onlyPoints && <th>Descrizione</th>}
+                {onlyPoints && <th>Descrizione</th>}
               </tr>
             </thead>
-            <tbody>
-              {terria?.measurableGeom?.stopPoints &&
-                terria.measurableGeom.stopPoints.length > 0 &&
-                terria.measurableGeom.stopPoints.map((point, idx, array) => {
-                  return (
-                    <tr key={idx}>
-                      <td>{idx + 1}</td>
-                      <td>{`${point.height.toFixed(0)} m`}</td>
-                      {!terria?.measurableGeom?.onlyPoints && (
-                        <>
-                          <td>
-                            {idx > 0
-                              ? `${(
-                                  point.height - array[idx - 1].height
-                                ).toFixed(0)} m`
-                              : ""}
-                          </td>
-                          <td>
-                            {idx > 0 &&
-                            terria?.measurableGeom?.stopGeodeticDistances &&
-                            terria.measurableGeom.stopGeodeticDistances.length >
-                              idx
-                              ? prettifyNumber(
-                                  terria.measurableGeom.stopGeodeticDistances[
-                                    idx
-                                  ]
-                                )
-                              : ""}
-                          </td>
-                          <td>
-                            {idx > 0 &&
-                            terria?.measurableGeom?.stopAirDistances &&
-                            terria.measurableGeom.stopAirDistances.length > idx
-                              ? prettifyNumber(
-                                  terria.measurableGeom.stopAirDistances[idx]
-                                )
-                              : ""}
-                          </td>
-                          <td>
-                            {idx > 0 &&
-                            terria?.measurableGeom?.stopGroundDistances &&
-                            terria.measurableGeom.stopGroundDistances.length >
-                              idx
-                              ? prettifyNumber(
-                                  terria.measurableGeom.stopGroundDistances[idx]
-                                )
-                              : ""}
-                          </td>
-                          <td>
-                            {idx > 0 &&
-                            terria?.measurableGeom?.stopAirDistances &&
-                            terria.measurableGeom.stopAirDistances.length > idx
-                              ? Math.abs(
-                                  (100 *
-                                    (point.height - array[idx - 1].height)) /
-                                    terria.measurableGeom.stopAirDistances[idx]
-                                ).toFixed(1)
-                              : ""}
-                          </td>
-                        </>
-                      )}
-                      {terria?.measurableGeom?.onlyPoints && (
-                        <td>
-                          <StyledTextArea
-                            placeholder="Note..."
-                            value={pointsDescriptions[idx] || ""}
-                            onChange={(e) => {
-                              const newDescriptions = [...pointsDescriptions];
-                              newDescriptions[idx] = e.target.value;
-                              console.log("newDescriptions: ", newDescriptions);
-                              setPointsDescriptions(newDescriptions);
-                            }}
-                          />
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-            </tbody>
+            <SortableList
+              items={stopPoints}
+              onlyPoints={onlyPoints}
+              pointsDescriptions={pointsDescriptions}
+              onDescriptionChange={handleDescriptionChange}
+              onSortEnd={onSortEnd}
+              distance={5}
+              prettifyNumber={prettifyNumber}
+              terria={terria}
+            />
           </table>
         </small>
       </>
