@@ -476,7 +476,7 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
-        {
+        {(item as CsvCatalogItem)?.uniqueId?.endsWith(".csv") && (
           <li key={"workbench.measureItem"}>
             <ViewingControlMenuButton
               onClick={() =>
@@ -539,7 +539,7 @@ class ViewingControls extends React.Component<
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>
-        }
+        )}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
