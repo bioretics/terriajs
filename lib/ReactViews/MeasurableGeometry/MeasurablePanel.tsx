@@ -533,7 +533,12 @@ const MeasurablePanel = observer((props: Props) => {
       terria: any;
     }) => {
       return (
-        <tr>
+        <tr
+          onMouseDown={(e) => {
+            e.preventDefault();
+          }}
+          style={{ cursor: "move" }}
+        >
           <td>{idx + 1}</td>
           <td>{`${point.height.toFixed(0)} m`}</td>
           {!onlyPoints && (
