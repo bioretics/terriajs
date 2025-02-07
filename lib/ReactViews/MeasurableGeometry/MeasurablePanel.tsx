@@ -537,7 +537,7 @@ const MeasurablePanel = observer((props: Props) => {
           onMouseDown={(e) => {
             e.preventDefault();
           }}
-          style={{ cursor: "move" }}
+          style={{ cursor: "row-resize" }}
         >
           <td>{idx + 1}</td>
           <td>{`${point.height.toFixed(0)} m`}</td>
@@ -710,6 +710,7 @@ const MeasurablePanel = observer((props: Props) => {
               distance={5}
               prettifyNumber={prettifyNumber}
               terria={terria}
+              lockAxis="y"
             />
           </table>
         </small>
