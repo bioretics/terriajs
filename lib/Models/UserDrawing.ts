@@ -93,7 +93,7 @@ export default class UserDrawing extends MappableMixin(
   private drawRectangle: boolean;
 
   private mousePointEntity?: Entity;
-
+  private disposeStopPointsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
 
   private isAngleMeasuring: boolean = false;
@@ -429,6 +429,49 @@ export default class UserDrawing extends MappableMixin(
     runInAction(() => {
       this.inDrawMode = true;
     });
+
+    this.disposeStopPointsReaction = reaction(
+      () => this.terria.measurableGeom?.stopPoints,
+      (stopPoints, previousStopPoints) => {
+        if (stopPoints) {
+          const previousSize = previousStopPoints?.length || 0;
+          const newSize = stopPoints.length;
+
+          if (previousSize === newSize) {
+            runInAction(() => {
+              this.pointEntities.entities.removeAll();
+              for (let i = 0; i < stopPoints.length; ++i) {
+                const pointEntity = new Entity({
+                  position: new ConstantPositionProperty(
+                    Cartographic.toCartesian(stopPoints[i])
+                  ),
+                  billboard: {
+                    image: this.svgPoint,
+                    heightReference: HeightReference.CLAMP_TO_GROUND,
+                    eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+                  }
+                });
+                this.pointEntities.entities.add(pointEntity);
+              }
+            });
+            /*this.otherEntities.entities.removeAll();
+            const numPoints = this.pointEntities.entities.values.length;
+            for (let i = 0; i < numPoints - 1; i++) {
+              const entityA = this.pointEntities.entities.values[i];
+              const entityB = this.pointEntities.entities.values[i + 1];
+              if (entityA && entityB) {
+                const labelEntity = this.createSegmentLabel(
+                  `SegmentLabel-${i}`,
+                  entityA,
+                  entityB
+                );
+                this.otherEntities.entities.add(labelEntity);
+              }
+            }*/
+          }
+        }
+      }
+    );
 
     this.disposeClampMeasureLineToGround = reaction(
       () => this.terria?.clampMeasureLineToGround,
