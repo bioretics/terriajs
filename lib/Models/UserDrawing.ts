@@ -454,20 +454,8 @@ export default class UserDrawing extends MappableMixin(
                 this.pointEntities.entities.add(pointEntity);
               }
             });
-            /*this.otherEntities.entities.removeAll();
-            const numPoints = this.pointEntities.entities.values.length;
-            for (let i = 0; i < numPoints - 1; i++) {
-              const entityA = this.pointEntities.entities.values[i];
-              const entityB = this.pointEntities.entities.values[i + 1];
-              if (entityA && entityB) {
-                const labelEntity = this.createSegmentLabel(
-                  `SegmentLabel-${i}`,
-                  entityA,
-                  entityB
-                );
-                this.otherEntities.entities.add(labelEntity);
-              }
-            }*/
+            this.updateSegmentLabels();
+            this.terria.currentViewer.notifyRepaintRequired();
           }
         }
       }
