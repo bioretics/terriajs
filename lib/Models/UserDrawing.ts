@@ -244,6 +244,7 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
+    console.log("ORIVAL", this.terria.measurableGeom?.showDistanceLabels);
     if (!this.terria.measurableGeom?.showDistanceLabels) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
@@ -254,7 +255,6 @@ export default class UserDrawing extends MappableMixin(
       toRemove.forEach((e) => this.otherEntities.entities.remove(e));
       return;
     }
-
     const toRemove: Entity[] = [];
     for (const entity of this.otherEntities.entities.values) {
       if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -477,6 +477,7 @@ export default class UserDrawing extends MappableMixin(
     this.disposeShowDistanceLabelsReaction = reaction(
       () => this.terria.measurableGeom?.showDistanceLabels!!,
       (showLabels: boolean) => {
+        console.log("ORIVAL444", showLabels);
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];
           for (const entity of this.otherEntities.entities.values) {
@@ -829,7 +830,11 @@ export default class UserDrawing extends MappableMixin(
                 );
               } else {
                 this.addPointToPointEntities("Another Point", pickedPoint);
-                if (!this.isAngleMeasuring && !this.isPointMeasuring) {
+                if (
+                  !this.isAngleMeasuring &&
+                  !this.isPointMeasuring &&
+                  this.terria.measurableGeom?.showDistanceLabels
+                ) {
                   this.updateSegmentLabels();
                 }
               }

@@ -481,47 +481,39 @@ class ViewingControls extends React.Component<
             <ViewingControlMenuButton
               onClick={() =>
                 runInAction(async () => {
-                  let csvItem = item as CsvCatalogItem;
+                  const csvItem = item as CsvCatalogItem;
                   const data = await csvItem.forceLoadTableData();
 
-                  const columns: { [key: string]: any[] } = {};
-                  data.forEach((row: any[]) => {
-                    const columnName: string = row[0];
-                    columns[columnName] = row.slice(1);
-                  });
+                  const columns = data.reduce((acc, row) => {
+                    const [columnName, ...values] = row;
+                    acc[columnName] = values;
+                    return acc;
+                  }, {} as { [key: string]: any[] });
 
                   const longitudes = columns["longitude"] || [];
                   const latitudes = columns["latitude"] || [];
                   const heights = columns["height"] || [];
                   const descriptions = columns["description"] || [];
 
-                  const positions: Cartographic[] = [];
-                  for (let i = 0; i < longitudes.length; i++) {
-                    positions.push(
-                      Cartographic.fromDegrees(
-                        longitudes[i],
-                        latitudes[i],
-                        heights[i]
-                      )
-                    );
-                  }
+                  const positions = longitudes.map((longitude, i) =>
+                    Cartographic.fromDegrees(
+                      longitude,
+                      latitudes[i],
+                      heights[i]
+                    )
+                  );
 
                   if (!this.props.viewState.terria?.cesium?.scene) {
                     return;
                   }
-                  const terrainProvider: TerrainProvider =
+                  const terrainProvider =
                     this.props.viewState.terria?.cesium?.scene.terrainProvider;
 
-                  let prom = Promise.resolve(positions);
-                  if (positions.every((element) => element.height < 1)) {
-                    prom = prom.then((pos) =>
-                      sampleTerrainMostDetailed(terrainProvider, pos)
-                    );
-                  }
+                  const prom = positions.every((pos) => pos.height < 1)
+                    ? sampleTerrainMostDetailed(terrainProvider, positions)
+                    : Promise.resolve(positions);
 
-                  console.log("DESCRIPTION", descriptions);
-
-                  prom.then((newPositions: Cartographic[]) => {
+                  prom.then((newPositions) => {
                     this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(
                       newPositions,
                       false,

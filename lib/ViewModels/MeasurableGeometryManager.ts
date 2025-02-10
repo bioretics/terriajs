@@ -34,7 +34,6 @@ export default class MeasurableGeometryManager {
   constructor(terria: Terria) {
     makeObservable(this);
     this.terria = terria;
-
     this.geoidModel = new EarthGravityModel1996(
       require("file-loader!../../wwwroot/data/WW15MGH.DAC")
     );

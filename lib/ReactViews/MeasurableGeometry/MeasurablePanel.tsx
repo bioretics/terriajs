@@ -20,7 +20,9 @@ import MeasurableDownload from "./MeasurableDownload";
 import i18next from "i18next";
 import {
   MeasureLineTool,
-  MeasurePolygonTool
+  MeasurePolygonTool,
+  MeasureAngleTool,
+  MeasurePointTool
 } from "../Map/MapNavigation/Items";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 
@@ -35,17 +37,10 @@ const MeasurablePanel = observer((props: Props) => {
   const [showDistances, setShowDistances] = React.useState(
     !terria?.measurableGeom?.onlyPoints
   );
+
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
   );
-
-  if (
-    terria.measurableGeom &&
-    terria.measurableGeom?.showDistanceLabels === undefined
-  ) {
-    terria.measurableGeom.showDistanceLabels =
-      !terria?.measurableGeom?.onlyPoints;
-  }
 
   React.useEffect(() => {
     setPointsDescriptions(terria.measurableGeom?.pointDescriptions || []);
@@ -70,7 +65,7 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
 
-  // Calcolo delle classi CSS in base allo stato del pannello
+  // Gestione delle classi CSS in base allo stato del pannello
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
     [Styles.isVisible]: viewState.measurablePanelIsVisible,
@@ -86,8 +81,10 @@ const MeasurablePanel = observer((props: Props) => {
         item.deactivate();
       }
     };
+    deactivateTool(MeasurePointTool.id);
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
+    deactivateTool(MeasureAngleTool.id);
   });
 
   const toggleCollapsed = action(() => {
@@ -279,13 +276,14 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   const renderToggleDistanceLabels = () => (
-    <label style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
+    <label style={{ display: "flex", alignItems: "center", margin: "0 10px" }}>
       <input
         type="checkbox"
         checked={showDistances}
         onChange={(e) => {
           setShowDistances(e.target.checked);
           terria.measurableGeom!.showDistanceLabels = e.target.checked;
+          console.log("ORIVAL222", terria.measurableGeom!.showDistanceLabels);
         }}
         style={{ marginRight: "5px" }}
       />
@@ -369,6 +367,41 @@ const MeasurablePanel = observer((props: Props) => {
       getHeightDifference.get()
     ];
 
+    const renderTableHeader = () => (
+      <thead>
+        <tr>
+          {tableHeaders.map((header, index) => (
+            <th
+              key={index}
+              css={`
+                padding: 8px;
+                text-align: left;
+              `}
+            >
+              {i18next.t(header)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+    );
+
+    const renderTableBody = () => (
+      <tbody>
+        <tr>
+          {tableData.map((data, index) => (
+            <td
+              key={index}
+              css={`
+                padding: 8px;
+              `}
+            >
+              {data}
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    );
+
     return (
       <>
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -382,35 +415,8 @@ const MeasurablePanel = observer((props: Props) => {
               border-collapse: collapse;
             `}
           >
-            <thead>
-              <tr>
-                {tableHeaders.map((header, index) => (
-                  <th
-                    key={index}
-                    css={`
-                      padding: 8px;
-                      text-align: left;
-                    `}
-                  >
-                    {i18next.t(header)}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                {tableData.map((data, index) => (
-                  <td
-                    key={index}
-                    css={`
-                      padding: 8px;
-                    `}
-                  >
-                    {data}
-                  </td>
-                ))}
-              </tr>
-            </tbody>
+            {renderTableHeader()}
+            {renderTableBody()}
           </table>
         </small>
       </>
@@ -418,37 +424,70 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   const renderPathSummary = () => {
+    const tableHeaders = [
+      "measurableGeometry.geometrySummaryElevationMin",
+      "measurableGeometry.geometrySummaryElevationMax",
+      "measurableGeometry.geometrySummaryElevationBear",
+      "measurableGeometry.geometrySummaryElevationDiff"
+    ];
+
+    const tableData = [
+      prettifyNumber(Math.min(...heights.get())),
+      prettifyNumber(Math.max(...heights.get())),
+      getBearing.get(),
+      getHeightDifference.get()
+    ];
+
+    const renderTableHeader = () => (
+      <thead>
+        <tr>
+          {tableHeaders.map((header, index) => (
+            <th
+              key={index}
+              css={`
+                padding: 8px;
+                text-align: left;
+              `}
+            >
+              {i18next.t(header)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+    );
+
+    const renderTableBody = () => (
+      <tbody>
+        <tr>
+          {tableData.map((data, index) => (
+            <td
+              key={index}
+              css={`
+                padding: 8px;
+              `}
+            >
+              {data}
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    );
+
     return (
       <>
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>
         <small>
-          <table className={Styles.elevation}>
-            <thead>
-              <tr>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationMin")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationMax")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationBear")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevationDiff")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{prettifyNumber(Math.min(...heights.get()))}</td>
-                <td>{prettifyNumber(Math.max(...heights.get()))}</td>
-                <td>{getBearing.get()}</td>
-                <td>{getHeightDifference.get()}</td>
-              </tr>
-            </tbody>
+          <table
+            className={Styles.elevation}
+            css={`
+              width: 300px;
+              border-collapse: collapse;
+            `}
+          >
+            {renderTableHeader()}
+            {renderTableBody()}
           </table>
           <table className={Styles.elevation}>
             <thead>
@@ -483,54 +522,43 @@ const MeasurablePanel = observer((props: Props) => {
     );
   };
 
-  const renderAreaSummary = () => {
-    return (
-      <>
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryHeader")}
-        </Text>
-        <small>
-          <table className={Styles.elevation}>
-            <thead>
-              <tr>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryPerimeterGeo")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryPerimeterAir")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(
-                    terria.measurableGeom?.geodeticArea ?? 0,
-                    true
-                  )}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.airArea ?? 0, true)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </small>
-      </>
-    );
-  };
+  const renderAreaSummary = () => (
+    <>
+      <Text textLight style={{ marginLeft: 1 }} title="">
+        {i18next.t("measurableGeometry.geometrySummaryHeader")}
+      </Text>
+      <small>
+        <table className={Styles.elevation}>
+          <thead>
+            <tr>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryPerimeterGeo")}
+              </th>
+              <th>
+                {i18next.t("measurableGeometry.geometrySummaryPerimeterAir")}
+              </th>
+              <th>{i18next.t("measurableGeometry.geometrySummaryAreaGeo")}</th>
+              <th>{i18next.t("measurableGeometry.geometrySummaryAreaAir")}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
+              </td>
+              <td>{prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}</td>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.geodeticArea ?? 0, true)}
+              </td>
+              <td>
+                {prettifyNumber(terria.measurableGeom?.airArea ?? 0, true)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </small>
+    </>
+  );
 
   function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
     const result = Array.from(list);
@@ -559,6 +587,23 @@ const MeasurablePanel = observer((props: Props) => {
       prettifyNumber: (num: number, squared?: boolean) => string;
       terria: any;
     }) => {
+      const renderDistanceData = (distanceArray: any[], index: number) => {
+        return index > 0 && distanceArray && distanceArray.length > index
+          ? prettifyNumber(distanceArray[index])
+          : "";
+      };
+
+      const renderSlope = (index: number) => {
+        return index > 0 &&
+          terria?.measurableGeom?.stopAirDistances &&
+          terria.measurableGeom.stopAirDistances.length > index
+          ? Math.abs(
+              (100 * (point.height - array[index - 1].height)) /
+                terria.measurableGeom.stopAirDistances[index]
+            ).toFixed(1)
+          : "";
+      };
+
       return (
         <tr
           onMouseDown={(e) => {
@@ -576,40 +621,24 @@ const MeasurablePanel = observer((props: Props) => {
                   : ""}
               </td>
               <td>
-                {idx > 0 &&
-                terria?.measurableGeom?.stopGeodeticDistances &&
-                terria.measurableGeom.stopGeodeticDistances.length > idx
-                  ? prettifyNumber(
-                      terria.measurableGeom.stopGeodeticDistances[idx]
-                    )
-                  : ""}
+                {renderDistanceData(
+                  terria?.measurableGeom?.stopGeodeticDistances,
+                  idx
+                )}
               </td>
               <td>
-                {idx > 0 &&
-                terria?.measurableGeom?.stopAirDistances &&
-                terria.measurableGeom.stopAirDistances.length > idx
-                  ? prettifyNumber(terria.measurableGeom.stopAirDistances[idx])
-                  : ""}
+                {renderDistanceData(
+                  terria?.measurableGeom?.stopAirDistances,
+                  idx
+                )}
               </td>
               <td>
-                {idx > 0 &&
-                terria?.measurableGeom?.stopGroundDistances &&
-                terria.measurableGeom.stopGroundDistances.length > idx
-                  ? prettifyNumber(
-                      terria.measurableGeom.stopGroundDistances[idx]
-                    )
-                  : ""}
+                {renderDistanceData(
+                  terria?.measurableGeom?.stopGroundDistances,
+                  idx
+                )}
               </td>
-              <td>
-                {idx > 0 &&
-                terria?.measurableGeom?.stopAirDistances &&
-                terria.measurableGeom.stopAirDistances.length > idx
-                  ? Math.abs(
-                      (100 * (point.height - array[idx - 1].height)) /
-                        terria.measurableGeom.stopAirDistances[idx]
-                    ).toFixed(1)
-                  : ""}
-              </td>
+              <td>{renderSlope(idx)}</td>
             </>
           )}
           {onlyPoints && (
@@ -764,8 +793,7 @@ const MeasurablePanel = observer((props: Props) => {
           viewState.measurablePanelIsVisible &&
           !viewState.measurablePanelIsCollapsed
             ? "auto"
-            : "none",
-        zIndex: 9999
+            : "none"
       }}
     >
       <div
