@@ -32,7 +32,9 @@ interface Props {
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
-  const [showDistances, setShowDistances] = React.useState(true);
+  const [showDistances, setShowDistances] = React.useState(
+    !terria?.measurableGeom?.onlyPoints
+  );
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
   );
@@ -41,12 +43,13 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeom &&
     terria.measurableGeom?.showDistanceLabels === undefined
   ) {
-    terria.measurableGeom.showDistanceLabels = true;
+    terria.measurableGeom.showDistanceLabels =
+      !terria?.measurableGeom?.onlyPoints;
   }
 
   React.useEffect(() => {
-    setPointsDescriptions(terria.measurableGeom?.descriptions || []);
-  }, [terria.measurableGeom?.descriptions]);
+    setPointsDescriptions(terria.measurableGeom?.pointDescriptions || []);
+  }, [terria.measurableGeom?.pointDescriptions]);
 
   React.useEffect(() => {
     const stopPoints = terria?.measurableGeom?.stopPoints || [];
@@ -326,7 +329,7 @@ const MeasurablePanel = observer((props: Props) => {
               ? i18next.t("measurableGeometry.clampLineToGround")
               : i18next.t("measurableGeometry.dontClampLineToGround")}
           </Button>
-          {renderToggleDistanceLabels()}
+          {!terria?.measurableGeom?.onlyPoints && renderToggleDistanceLabels()}
         </Box>
         {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
         <br />

@@ -22,7 +22,7 @@ export interface MeasurableGeometry {
   geodeticArea?: number;
   airArea?: number;
   onlyPoints?: boolean;
-  descriptions?: string[];
+  pointDescriptions?: string[];
   showDistanceLabels?: boolean;
 }
 
@@ -47,7 +47,7 @@ export default class MeasurableGeometryManager {
   sampleFromCustomDataSource(
     pointEntities: CustomDataSource,
     closeLoop: boolean = false,
-    onlyPoint: boolean = false
+    onlyPoints: boolean = false
   ) {
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
     if (!ellipsoid) {
@@ -77,7 +77,7 @@ export default class MeasurableGeometryManager {
         return Cartographic.fromCartesian(elem, ellipsoid);
       });
 
-    this.sampleFromCartographics(cartoPositions, closeLoop, onlyPoint);
+    this.sampleFromCartographics(cartoPositions, closeLoop, onlyPoints);
   }
 
   // sample the entire path (polyline) every "samplingStep" meters
@@ -85,8 +85,8 @@ export default class MeasurableGeometryManager {
   sampleFromCartographics(
     cartoPositions: Cartographic[],
     closeLoop: boolean = false,
-    onlyPoint: boolean = false,
-    description: string[] = []
+    onlyPoints: boolean = false,
+    pointDescriptions: string[] = []
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -179,7 +179,7 @@ export default class MeasurableGeometryManager {
       }
 
       // update state of Terria
-      if (onlyPoint) {
+      if (onlyPoints) {
         this.updatePath(
           cartoPositions,
           [],
@@ -189,7 +189,7 @@ export default class MeasurableGeometryManager {
           [],
           closeLoop,
           true,
-          description
+          pointDescriptions
         );
       } else {
         this.updatePath(
@@ -215,7 +215,7 @@ export default class MeasurableGeometryManager {
     sampledDistances: number[],
     isClosed: boolean,
     onlyPoints: boolean = false,
-    descriptions: string[] = []
+    pointDescriptions: string[] = []
   ) {
     this.terria.measurableGeom = {
       isClosed: isClosed,
@@ -236,7 +236,7 @@ export default class MeasurableGeometryManager {
       sampledPoints: sampledPoints,
       sampledDistances: sampledDistances,
       onlyPoints: onlyPoints,
-      descriptions: descriptions
+      pointDescriptions: pointDescriptions
     };
   }
 }
