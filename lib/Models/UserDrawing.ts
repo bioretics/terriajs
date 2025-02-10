@@ -290,6 +290,7 @@ export default class UserDrawing extends MappableMixin(
         this.otherEntities.entities.add(labelEntity);
       }
     }
+    this.terria.currentViewer.notifyRepaintRequired();
   }
 
   private generateArcPositions(
@@ -476,7 +477,6 @@ export default class UserDrawing extends MappableMixin(
     this.disposeShowDistanceLabelsReaction = reaction(
       () => this.terria.measurableGeom?.showDistanceLabels!!,
       (showLabels: boolean) => {
-        console.log("CHANGEEE");
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];
           for (const entity of this.otherEntities.entities.values) {

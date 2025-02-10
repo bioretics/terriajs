@@ -281,7 +281,6 @@ const MeasurablePanel = observer((props: Props) => {
         type="checkbox"
         checked={showDistances}
         onChange={(e) => {
-          console.log("CAMBIOO", e.target.checked);
           setShowDistances(e.target.checked);
           terria.measurableGeom!.showDistanceLabels = e.target.checked;
         }}
