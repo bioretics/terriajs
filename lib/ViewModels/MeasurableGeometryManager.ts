@@ -23,6 +23,7 @@ export interface MeasurableGeometry {
   airArea?: number;
   onlyPoints?: boolean;
   descriptions?: string[];
+  showDistanceLabels?: boolean;
 }
 
 export default class MeasurableGeometryManager {

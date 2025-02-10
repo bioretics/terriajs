@@ -32,9 +32,17 @@ interface Props {
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
+  const [showDistances, setShowDistances] = React.useState(true);
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
   );
+
+  if (
+    terria.measurableGeom &&
+    terria.measurableGeom?.showDistanceLabels === undefined
+  ) {
+    terria.measurableGeom.showDistanceLabels = true;
+  }
 
   React.useEffect(() => {
     setPointsDescriptions(terria.measurableGeom?.descriptions || []);
@@ -267,6 +275,22 @@ const MeasurablePanel = observer((props: Props) => {
     );
   };
 
+  const renderToggleDistanceLabels = () => (
+    <label style={{ display: "flex", alignItems: "center", margin: "10px 0" }}>
+      <input
+        type="checkbox"
+        checked={showDistances}
+        onChange={(e) => {
+          console.log("CAMBIOO", e.target.checked);
+          setShowDistances(e.target.checked);
+          terria.measurableGeom!.showDistanceLabels = e.target.checked;
+        }}
+        style={{ marginRight: "5px" }}
+      />
+      {i18next.t("Mostra etichette distanze")}
+    </label>
+  );
+
   const renderBody = () => {
     return (
       <div className={Styles.body}>
@@ -303,6 +327,7 @@ const MeasurablePanel = observer((props: Props) => {
               ? i18next.t("measurableGeometry.clampLineToGround")
               : i18next.t("measurableGeometry.dontClampLineToGround")}
           </Button>
+          {renderToggleDistanceLabels()}
         </Box>
         {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
         <br />

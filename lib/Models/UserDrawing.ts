@@ -94,6 +94,7 @@ export default class UserDrawing extends MappableMixin(
 
   private mousePointEntity?: Entity;
   private disposeStopPointsReaction?: IReactionDisposer;
+  private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
 
   private isAngleMeasuring: boolean = false;
@@ -243,6 +244,17 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
+    if (!this.terria.measurableGeom?.showDistanceLabels) {
+      const toRemove: Entity[] = [];
+      for (const entity of this.otherEntities.entities.values) {
+        if (entity.name && entity.name.startsWith("SegmentLabel-")) {
+          toRemove.push(entity);
+        }
+      }
+      toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+      return;
+    }
+
     const toRemove: Entity[] = [];
     for (const entity of this.otherEntities.entities.values) {
       if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -457,6 +469,24 @@ export default class UserDrawing extends MappableMixin(
             this.updateSegmentLabels();
             this.terria.currentViewer.notifyRepaintRequired();
           }
+        }
+      }
+    );
+
+    this.disposeShowDistanceLabelsReaction = reaction(
+      () => this.terria.measurableGeom?.showDistanceLabels!!,
+      (showLabels: boolean) => {
+        console.log("CHANGEEE");
+        if (!showLabels) {
+          const labelsToRemove: Entity[] = [];
+          for (const entity of this.otherEntities.entities.values) {
+            if (entity.name && entity.name.startsWith("SegmentLabel-")) {
+              labelsToRemove.push(entity);
+            }
+          }
+          labelsToRemove.forEach((e) => this.otherEntities.entities.remove(e));
+        } else {
+          this.updateSegmentLabels();
         }
       }
     );
@@ -948,6 +978,9 @@ export default class UserDrawing extends MappableMixin(
     // Allow client to clean up too
     if (typeof this.onCleanUp === "function") {
       this.onCleanUp();
+    }
+    if (this.disposeShowDistanceLabelsReaction) {
+      this.disposeShowDistanceLabelsReaction();
     }
   }
 
