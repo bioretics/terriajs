@@ -353,6 +353,46 @@ const MeasurablePanel = observer((props: Props) => {
     );
   };
 
+  const renderSummaryTable = (headers: string[], data: string[]) => (
+    <table
+      className={Styles.elevation}
+      css={`
+        width: 300px;
+        border-collapse: collapse;
+      `}
+    >
+      <thead>
+        <tr>
+          {headers.map((header, index) => (
+            <th
+              key={index}
+              css={`
+                padding: 8px;
+                text-align: left;
+              `}
+            >
+              {i18next.t(header)}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          {data.map((item, index) => (
+            <td
+              key={index}
+              css={`
+                padding: 8px;
+              `}
+            >
+              {item}
+            </td>
+          ))}
+        </tr>
+      </tbody>
+    </table>
+  );
+
   const renderPointsSummary = () => {
     const tableHeaders = [
       "measurableGeometry.geometrySummaryElevationMin",
@@ -368,58 +408,12 @@ const MeasurablePanel = observer((props: Props) => {
       getHeightDifference.get()
     ];
 
-    const renderTableHeader = () => (
-      <thead>
-        <tr>
-          {tableHeaders.map((header, index) => (
-            <th
-              key={index}
-              css={`
-                padding: 8px;
-                text-align: left;
-              `}
-            >
-              {i18next.t(header)}
-            </th>
-          ))}
-        </tr>
-      </thead>
-    );
-
-    const renderTableBody = () => (
-      <tbody>
-        <tr>
-          {tableData.map((data, index) => (
-            <td
-              key={index}
-              css={`
-                padding: 8px;
-              `}
-            >
-              {data}
-            </td>
-          ))}
-        </tr>
-      </tbody>
-    );
-
     return (
       <>
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>
-        <small>
-          <table
-            className={Styles.elevation}
-            css={`
-              width: 300px;
-              border-collapse: collapse;
-            `}
-          >
-            {renderTableHeader()}
-            {renderTableBody()}
-          </table>
-        </small>
+        <small>{renderSummaryTable(tableHeaders, tableData)}</small>
       </>
     );
   };
@@ -439,40 +433,17 @@ const MeasurablePanel = observer((props: Props) => {
       getHeightDifference.get()
     ];
 
-    const renderTableHeader = () => (
-      <thead>
-        <tr>
-          {tableHeaders.map((header, index) => (
-            <th
-              key={index}
-              css={`
-                padding: 8px;
-                text-align: left;
-              `}
-            >
-              {i18next.t(header)}
-            </th>
-          ))}
-        </tr>
-      </thead>
-    );
+    const distanceHeaders = [
+      "measurableGeometry.geometrySummaryDistGeo",
+      "measurableGeometry.geometrySummaryDistAir",
+      "measurableGeometry.geometrySummaryDistGround"
+    ];
 
-    const renderTableBody = () => (
-      <tbody>
-        <tr>
-          {tableData.map((data, index) => (
-            <td
-              key={index}
-              css={`
-                padding: 8px;
-              `}
-            >
-              {data}
-            </td>
-          ))}
-        </tr>
-      </tbody>
-    );
+    const distanceData = [
+      prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0),
+      prettifyNumber(terria.measurableGeom?.airDistance ?? 0),
+      prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)
+    ];
 
     return (
       <>
@@ -480,44 +451,8 @@ const MeasurablePanel = observer((props: Props) => {
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>
         <small>
-          <table
-            className={Styles.elevation}
-            css={`
-              width: 300px;
-              border-collapse: collapse;
-            `}
-          >
-            {renderTableHeader()}
-            {renderTableBody()}
-          </table>
-          <table className={Styles.elevation}>
-            <thead>
-              <tr>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistAir")}
-                </th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryDistGround")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}
-                </td>
-                <td>
-                  {prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          {renderSummaryTable(tableHeaders, tableData)}
+          {renderSummaryTable(distanceHeaders, distanceData)}
         </small>
       </>
     );
