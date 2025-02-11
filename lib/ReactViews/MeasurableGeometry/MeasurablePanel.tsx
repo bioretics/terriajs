@@ -35,9 +35,7 @@ const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
 
-  const [showDistances, setShowDistances] = React.useState(
-    !terria?.measurableGeom?.onlyPoints
-  );
+  const [showDistances, setShowDistances] = React.useState(true);
   if (terria.measurableGeom) {
     terria.measurableGeom.showDistanceLabels = showDistances;
   }

@@ -178,29 +178,29 @@ export default class MeasurableGeometryManager {
       }
 
       // update state of Terria
-      if (onlyPoints) {
-        this.updatePath(
-          cartoPositions,
-          [],
-          [],
-          [],
-          sampledCartographics[0],
-          [],
-          closeLoop,
-          true,
-          pointDescriptions
-        );
-      } else {
-        this.updatePath(
-          cartoPositions,
-          stopGeodeticDistances,
-          stopAirDistances,
-          distances3d,
-          sampledCartographics[0],
-          stepDistances,
-          closeLoop
-        );
-      }
+      const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints
+        ? [
+            cartoPositions,
+            [],
+            [],
+            [],
+            sampledCartographics[0],
+            [],
+            closeLoop,
+            true,
+            pointDescriptions
+          ]
+        : [
+            cartoPositions,
+            stopGeodeticDistances,
+            stopAirDistances,
+            distances3d,
+            sampledCartographics[0],
+            stepDistances,
+            closeLoop
+          ];
+
+      this.updatePath(...updatePathParams);
     });
   }
 

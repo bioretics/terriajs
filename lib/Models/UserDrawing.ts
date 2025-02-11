@@ -254,39 +254,41 @@ export default class UserDrawing extends MappableMixin(
       toRemove.forEach((e) => this.otherEntities.entities.remove(e));
       return;
     }
-    const toRemove: Entity[] = [];
-    for (const entity of this.otherEntities.entities.values) {
-      if (entity.name && entity.name.startsWith("SegmentLabel-")) {
-        toRemove.push(entity);
+    if (!this.terria.measurableGeom.onlyPoints) {
+      const toRemove: Entity[] = [];
+      for (const entity of this.otherEntities.entities.values) {
+        if (entity.name && entity.name.startsWith("SegmentLabel-")) {
+          toRemove.push(entity);
+        }
       }
-    }
-    toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+      toRemove.forEach((e) => this.otherEntities.entities.remove(e));
 
-    const numPoints = this.pointEntities.entities.values.length;
-    for (let i = 0; i < numPoints - 1; i++) {
-      const entityA = this.pointEntities.entities.values[i];
-      const entityB = this.pointEntities.entities.values[i + 1];
-      if (entityA && entityB) {
-        const labelEntity = this.createSegmentLabel(
-          `SegmentLabel-${i}`,
-          entityA,
-          entityB
-        );
-        this.otherEntities.entities.add(labelEntity);
+      const numPoints = this.pointEntities.entities.values.length;
+      for (let i = 0; i < numPoints - 1; i++) {
+        const entityA = this.pointEntities.entities.values[i];
+        const entityB = this.pointEntities.entities.values[i + 1];
+        if (entityA && entityB) {
+          const labelEntity = this.createSegmentLabel(
+            `SegmentLabel-${i}`,
+            entityA,
+            entityB
+          );
+          this.otherEntities.entities.add(labelEntity);
+        }
       }
-    }
 
-    if (this.closeLoop && numPoints > 1) {
-      const lastIndex = numPoints - 1;
-      const entityA = this.pointEntities.entities.values[lastIndex];
-      const entityB = this.pointEntities.entities.values[0];
-      if (entityA && entityB) {
-        const labelEntity = this.createSegmentLabel(
-          "SegmentLabel-close",
-          entityA,
-          entityB
-        );
-        this.otherEntities.entities.add(labelEntity);
+      if (this.closeLoop && numPoints > 1) {
+        const lastIndex = numPoints - 1;
+        const entityA = this.pointEntities.entities.values[lastIndex];
+        const entityB = this.pointEntities.entities.values[0];
+        if (entityA && entityB) {
+          const labelEntity = this.createSegmentLabel(
+            "SegmentLabel-close",
+            entityA,
+            entityB
+          );
+          this.otherEntities.entities.add(labelEntity);
+        }
       }
     }
     this.terria.currentViewer.notifyRepaintRequired();
