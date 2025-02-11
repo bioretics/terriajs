@@ -244,7 +244,6 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
-    console.log("ORIVAL", this.terria.measurableGeom?.showDistanceLabels);
     if (!this.terria.measurableGeom?.showDistanceLabels) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
@@ -477,7 +476,6 @@ export default class UserDrawing extends MappableMixin(
     this.disposeShowDistanceLabelsReaction = reaction(
       () => this.terria.measurableGeom?.showDistanceLabels!!,
       (showLabels: boolean) => {
-        console.log("ORIVAL444", showLabels);
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];
           for (const entity of this.otherEntities.entities.values) {

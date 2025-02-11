@@ -34,9 +34,13 @@ interface Props {
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
+
   const [showDistances, setShowDistances] = React.useState(
     !terria?.measurableGeom?.onlyPoints
   );
+  if (terria.measurableGeom) {
+    terria.measurableGeom.showDistanceLabels = showDistances;
+  }
 
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
@@ -283,7 +287,6 @@ const MeasurablePanel = observer((props: Props) => {
         onChange={(e) => {
           setShowDistances(e.target.checked);
           terria.measurableGeom!.showDistanceLabels = e.target.checked;
-          console.log("ORIVAL222", terria.measurableGeom!.showDistanceLabels);
         }}
         style={{ marginRight: "5px" }}
       />
