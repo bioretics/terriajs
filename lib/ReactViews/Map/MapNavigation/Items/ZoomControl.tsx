@@ -196,7 +196,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
               <RawButton
                 type="button"
                 onClick={this.zoomIn.bind(this)}
-                title={t("zoomControl.zoomIn")}
+                title={t("zoomCotrol.zoomIn")}
               >
                 <Icon glyph={Icon.GLYPHS.zoomIn} />
               </RawButton>
@@ -206,7 +206,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
             <RawButton
               type="button"
               onClick={this.zoomReset.bind(this)}
-              title={t("zoomControl.zoomReset")}
+              title={t("zoomCotrol.zoomReset")}
             >
               <Icon glyph={Icon.GLYPHS.zoomReset} />
             </RawButton>
@@ -216,7 +216,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
               <RawButton
                 type="button"
                 onClick={this.zoomOut.bind(this)}
-                title={t("zoomControl.zoomOut")}
+                title={t("zoomCotrol.zoomOut")}
               >
                 <Icon glyph={GLYPHS.zoomOut} />
               </RawButton>
