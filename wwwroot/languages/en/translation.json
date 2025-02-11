@@ -88,7 +88,7 @@
     "geometrySummaryAreaAir": "Air area",
     "geometrySummarySlope": "Slope %",
     "textareaPlaceholder": "Enter your notes here...",
-    "filenamePlaceholder": "Change the filename..."
+    "filenamePlaceholder": "Filename..."
   },
   "elevationChart": {
     "header": "Elevation profile",

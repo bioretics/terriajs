@@ -91,7 +91,7 @@
     "geometrySummaryAreaAir": "Area in aria",
     "geometrySummarySlope": "Pendenza %",
     "textareaPlaceholder": "Inserisci le tue note...",
-    "filenamePlaceholder": "Cambia nome file..."
+    "filenamePlaceholder": "Nome file..."
   },
   "elevationChart": {
     "header": "Profilo altimetrico",

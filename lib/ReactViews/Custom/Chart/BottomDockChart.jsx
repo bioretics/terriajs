@@ -21,6 +21,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import { terriaTheme } from "./../../StandardUserInterface/StandardTheme";
 import html2canvas from "html2canvas";
 
 const chartMinWidth = 110;
@@ -277,23 +278,26 @@ class Chart extends React.Component {
 
   downloadChart = () => {
     this.setIsDownloading(true);
-    if (this.chartRef.current) {
-      html2canvas(this.chartRef.current)
-        .then((canvas) => {
-          const dataURL = canvas.toDataURL("image/jpg");
-          const link = document.createElement("a");
-          link.href = dataURL;
-          link.download = "chart-screenshot.jpg";
-          link.click();
-          this.setIsDownloading(false);
-        })
-        .catch((error) => {
-          console.error(error);
-          this.setIsDownloading(false);
-        });
-    } else {
-      this.setIsDownloading(false);
-    }
+    setTimeout(() => {
+      if (this.chartRef.current) {
+        html2canvas(this.chartRef.current)
+          .then((canvas) => {
+            const dataURL = canvas.toDataURL("image/jpeg");
+            const link = document.createElement("a");
+            link.href = dataURL;
+            link.download = "chart-screenshot.jpeg";
+            link.click();
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+          .finally(() => {
+            this.setIsDownloading(false);
+          });
+      } else {
+        this.setIsDownloading(false);
+      }
+    }, 0);
   };
 
   render() {
@@ -301,7 +305,11 @@ class Chart extends React.Component {
     if (this.chartItems.length === 0)
       return <div className={Styles.empty}>No data available</div>;
     return (
-      <div className={Styles.chart} ref={this.chartRef}>
+      <div
+        className={Styles.chart}
+        ref={this.chartRef}
+        style={{ background: terriaTheme.charcoalGrey }}
+      >
         <ZoomX
           surface="#zoomSurface"
           initialScale={this.initialXScale}
@@ -315,7 +323,12 @@ class Chart extends React.Component {
           <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
             <button
               type="button"
-              style={{ marginTop: 8, color: "black" }}
+              className={Styles.btn}
+              style={{
+                marginTop: 8,
+                color: "black",
+                display: this.isDownloading ? "none" : "inline-block"
+              }}
               onClick={this.downloadChart}
               disabled={this.isDownloading}
             >
