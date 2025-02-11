@@ -194,10 +194,7 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                             top: true,
                             bottom: true
                           }}
-                          style={{
-                            zIndex: 9999,
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.3)"
-                          }}
+                          style={{ zIndex: 9999 }}
                         >
                           <SidePanelContainer
                             tabIndex={0}
