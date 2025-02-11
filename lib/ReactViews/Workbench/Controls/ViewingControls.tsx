@@ -45,10 +45,8 @@ import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
-import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import { isJsonArray, isJsonNumber, JsonArray } from "../../../Core/Json";
 import CsvCatalogItem from "../../../Models/Catalog/CatalogItems/CsvCatalogItem";
 
 const BoxViewingControl = styled(Box).attrs({
