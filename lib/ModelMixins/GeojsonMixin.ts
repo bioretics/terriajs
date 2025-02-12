@@ -66,7 +66,7 @@ import filterOutUndefined from "../Core/filterOutUndefined";
 import formatPropertyValue from "../Core/formatPropertyValue";
 import hashFromString from "../Core/hashFromString";
 import isDefined from "../Core/isDefined";
-import {
+import JsonValue, {
   isJsonArray,
   isJsonNumber,
   isJsonObject,
@@ -116,7 +116,8 @@ enum PathTypes {
   featureCollectionLineString = 1,
   featureCollectionMultiLineString = 2,
   lineString = 3,
-  multiLineString = 4
+  multiLineString = 4,
+  featureCollectionPolygon = 5
 }
 
 export const FEATURE_ID_PROP = "_id_";
@@ -1424,7 +1425,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     protected _pathType: PathTypes = PathTypes.noPath;
 
-    @computed get canUseAsPath() {
+    @computed
+    get canUseAsPath() {
       let pathType: PathTypes = PathTypes.noPath;
 
       if (
@@ -1441,19 +1443,26 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonObject(this.readyData.features[0])
         ) {
           const geometry = this.readyData.features[0].geometry;
+
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               geometry.type === "MultiLineString" &&
-              geometry.coordinates.length === 1 &&
-              isJsonArray(geometry.coordinates[0]) &&
-              geometry.coordinates[0].length > 1
+              geometry.coordinates.length >= 1 &&
+              this.arePolylinesValid(geometry.coordinates)
             ) {
               pathType = PathTypes.featureCollectionMultiLineString;
             } else if (
               geometry.type === "LineString" &&
-              geometry.coordinates.length > 1
+              geometry.coordinates.length > 1 &&
+              this.arePolylinesValid([geometry.coordinates])
             ) {
               pathType = PathTypes.featureCollectionLineString;
+            } else if (
+              geometry.type === "Polygon" &&
+              geometry.coordinates.length > 0 &&
+              this.isPolygonValid(geometry.coordinates)
+            ) {
+              pathType = PathTypes.featureCollectionPolygon;
             }
           }
         }
@@ -1463,31 +1472,65 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return pathType !== PathTypes.noPath;
     }
 
+    // Validates if the coordinates of the polyline are correct by ensuring the first and last points are connected.
+    private arePolylinesValid(coordinates: any[]): boolean {
+      const pointOccurrences: { point: number[]; count: number }[] = [];
+
+      coordinates.forEach((line) => {
+        const firstPoint = line[0]; // First point of the line
+        const lastPoint = line[line.length - 1]; // Last point of the line
+
+        this.updatePointOccurrences(pointOccurrences, firstPoint);
+        this.updatePointOccurrences(pointOccurrences, lastPoint);
+      });
+
+      const validPoints = pointOccurrences.filter(
+        ({ count }) => count === 1
+      ).length;
+      return validPoints === 2;
+    }
+
+    // Validates if the coordinates of the polygon are correct by ensuring the first and last points are the same.
+    private isPolygonValid(coordinates: any[]): boolean {
+      const pointOccurrences: { point: number[]; count: number }[] = [];
+
+      coordinates.forEach((ring) => {
+        for (let i = 0; i < ring.length; i++) {
+          const point = ring[i];
+          this.updatePointOccurrences(pointOccurrences, point);
+        }
+      });
+
+      const validPoints = pointOccurrences.filter(
+        ({ count }) => count === 2
+      ).length;
+      return validPoints === 1;
+    }
+
+    // Updates the occurrences of a given point in the pointOccurrences array.
+    private updatePointOccurrences(
+      pointOccurrences: { point: number[]; count: number }[],
+      point: number[]
+    ) {
+      const occurrence = pointOccurrences.find((item) =>
+        this.arePointsEqual(item.point, point)
+      );
+      if (occurrence) {
+        occurrence.count++;
+      } else {
+        pointOccurrences.push({ point, count: 1 });
+      }
+    }
+
+    // Compares two points to check if they are equal.
+    private arePointsEqual(pointA: number[], pointB: number[]): boolean {
+      return pointA[0] === pointB[0] && pointA[1] === pointB[1];
+    }
+
     computePath() {
       let jsonCoords: JsonArray | undefined;
       let filename: string | undefined;
       let pathNotes: string | undefined;
-
-      const extractPathInfo = (feature: any) => {
-        const geometry = feature.geometry ?? {};
-        filename = geometry.name ?? "";
-        pathNotes = geometry.path_notes ?? "";
-        return geometry.coordinates;
-      };
-
-      const validateCoordinates = (coords: any): JsonArray | undefined => {
-        if (
-          isJsonArray(coords) &&
-          coords.length > 0 &&
-          isJsonArray(coords[0])
-        ) {
-          return coords[0];
-        }
-        if (isJsonArray(coords)) {
-          return coords;
-        }
-        return undefined;
-      };
 
       if (
         this.readyData &&
@@ -1495,11 +1538,17 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         this.readyData.features.length > 0
       ) {
         const feature = this.readyData.features[0];
-
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
+            jsonCoords = this.getOrderedSegments();
+            break;
+
           case PathTypes.featureCollectionLineString:
-            jsonCoords = validateCoordinates(extractPathInfo(feature));
+            jsonCoords = this.getLineStringCoordinates();
+            break;
+
+          case PathTypes.featureCollectionPolygon:
+            jsonCoords = this.getPolygonCoordinates();
             break;
         }
 
@@ -1513,24 +1562,131 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           return;
         }
 
-        const coordinates: Cartographic[] = jsonCoords.map((elem) => {
+        const coordinates = jsonCoords.map((elem) => {
           if (
+            elem &&
             isJsonArray(elem) &&
             isJsonNumber(elem[0]) &&
             isJsonNumber(elem[1])
           ) {
-            return Cartographic.fromDegrees(
-              elem[0],
-              elem[1],
-              elem.length === 3 && isJsonNumber(elem[2])
-                ? Math.round(elem[2])
-                : 0
-            );
+            if (elem.length === 3 && isJsonNumber(elem[2])) {
+              return Cartographic.fromDegrees(
+                elem[0],
+                elem[1],
+                Math.round(elem[2])
+              );
+            } else {
+              return Cartographic.fromDegrees(elem[0], elem[1], 0);
+            }
+          } else {
+            return Cartographic.fromDegrees(0, 0, 0);
           }
-          return Cartographic.fromDegrees(0, 0, 0);
         });
-
         this.asPath(coordinates, filename, pathNotes);
+      }
+    }
+
+    // Get the ordered segments
+    private getOrderedSegments(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates) &&
+        this.readyData.features[0].geometry.coordinates.length > 0
+      ) {
+        const segments = this.readyData.features[0].geometry.coordinates;
+
+        const startingSegmentIndex = this.findStartingSegmentIndex(
+          segments as JsonArray[]
+        );
+        const orderedSegments = this.orderSegments(
+          segments as JsonArray[],
+          startingSegmentIndex
+        );
+
+        return Array.from(
+          new Set(orderedSegments.flat().map((coord) => JSON.stringify(coord)))
+        ).map((coord) => JSON.parse(coord));
+      }
+    }
+
+    // Find the starting segment index by locating the segment that has no other segment ending at its starting point
+    private findStartingSegmentIndex(segments: JsonArray[]): number {
+      const endPoints = new Set<string>(
+        segments.map((segment) => JSON.stringify(segment[1]))
+      );
+
+      for (let i = 0; i < segments.length; i++) {
+        const startPoint = JSON.stringify(segments[i][0]);
+        if (!endPoints.has(startPoint)) {
+          return i;
+        }
+      }
+
+      throw new Error("No valid starting segment found");
+    }
+
+    // Order the segments based on the matching points
+    private orderSegments(
+      segments: JsonArray[],
+      startingSegmentIndex: number
+    ): JsonArray[] {
+      const orderedSegments: JsonArray[] = [
+        segments[startingSegmentIndex] as JsonArray
+      ];
+      segments.splice(startingSegmentIndex, 1);
+
+      const segmentMap = new Map<string, JsonArray>();
+      segments.forEach((segment) => {
+        const key = JSON.stringify(segment[0]);
+        segmentMap.set(key, segment as JsonArray);
+      });
+
+      while (segmentMap.size > 0) {
+        const lastPoint = JSON.stringify(
+          orderedSegments[orderedSegments.length - 1][1]
+        );
+        const nextSegment = segmentMap.get(lastPoint);
+
+        if (nextSegment) {
+          orderedSegments.push(nextSegment);
+          segmentMap.delete(lastPoint);
+        } else {
+          break;
+        }
+      }
+
+      return orderedSegments;
+    }
+
+    // Get coordinates from the LineString feature
+    private getLineStringCoordinates(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates)
+      ) {
+        return this.readyData.features[0].geometry.coordinates;
+      }
+    }
+
+    // Get coordinates from the Polygon feature
+    private getPolygonCoordinates(): JsonArray | undefined {
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0 &&
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[0].geometry) &&
+        isJsonArray(this.readyData.features[0].geometry.coordinates)
+      ) {
+        return this.readyData.features[0].geometry.coordinates[0] as JsonArray;
       }
     }
 
