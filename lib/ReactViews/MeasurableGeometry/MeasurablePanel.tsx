@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -10,7 +10,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
-import Input from "../../Styled/Input";
+import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
@@ -35,6 +35,13 @@ const MeasurablePanel = observer((props: Props) => {
   );
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
+  const [fileName, setFileName] = React.useState("");
+  const [pathNotes, setPathNotes] = React.useState("");
+
+  useEffect(() => {
+    setFileName(terria.measurableGeom?.filename || "");
+    setPathNotes(terria.measurableGeom?.pathNotes || "");
+  }, [terria.measurableGeom]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
@@ -238,7 +245,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderBody = () => {
     return (
-      <div className={Styles.body}>
+      <div className={Styles.body} style={{ padding: "1rem" }}>
         <Box>
           {!terria?.measurableGeom?.hasArea && (
             <Button
@@ -273,6 +280,42 @@ const MeasurablePanel = observer((props: Props) => {
               : i18next.t("measurableGeometry.dontClampLineToGround")}
           </Button>
         </Box>
+
+        {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
+          <div
+            css={`
+              display: flex;
+              margin-left: 5px;
+              margin-top: 5px;
+              margin-bottom: 5px;
+            `}
+          >
+            <Box>
+              <Input
+                css={`
+                  margin-top: 5px;
+                  margin-right: 10px;
+                  max-width: 200px;
+                  height: 30px;
+                `}
+                dark
+                placeholder={i18next.t(
+                  "measurableGeometry.filenamePlaceholder"
+                )}
+                value={fileName}
+                onChange={(e) => setFileName(e.target.value)}
+              />
+            </Box>
+            <Box>
+              <MeasurableDownload
+                geom={terria.measurableGeom as MeasurableGeometry}
+                name={fileName}
+                pathNotes={pathNotes}
+                ellipsoid={terria.cesium.scene.globe.ellipsoid}
+              />
+            </Box>
+          </div>
+        )}
         {!terria?.measurableGeom?.hasArea && renderSamplingStep()}
         <br />
         {!terria?.measurableGeom?.hasArea
@@ -280,13 +323,6 @@ const MeasurablePanel = observer((props: Props) => {
           : renderAreaSummary()}
         <br />
         {terria.measurableGeom?.sampledDistances && renderStepDetails()}
-        {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
-          <MeasurableDownload
-            geom={terria.measurableGeom as MeasurableGeometry}
-            name="path"
-            ellipsoid={terria.cesium.scene.globe.ellipsoid}
-          />
-        )}
       </div>
     );
   };
@@ -294,6 +330,12 @@ const MeasurablePanel = observer((props: Props) => {
   const renderPathSummary = () => {
     return (
       <>
+        <StyledTextArea
+          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+          dark
+          value={pathNotes}
+          onChange={(e) => setPathNotes(e.target.value)}
+        />
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>

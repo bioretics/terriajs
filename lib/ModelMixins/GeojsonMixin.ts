@@ -1465,60 +1465,73 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     computePath() {
       let jsonCoords: JsonArray | undefined;
+      let filename: string | undefined;
+      let pathNotes: string | undefined;
 
-      switch (this._pathType) {
-        case PathTypes.featureCollectionMultiLineString:
-          if (
-            this.readyData &&
-            isJsonArray(this.readyData.features) &&
-            this.readyData.features.length > 0 &&
-            isJsonObject(this.readyData.features[0]) &&
-            isJsonObject(this.readyData.features[0].geometry) &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates) &&
-            this.readyData.features[0].geometry.coordinates.length > 0 &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates[0])
-          ) {
-            jsonCoords = this.readyData.features[0].geometry.coordinates[0];
-          }
-          break;
-        case PathTypes.featureCollectionLineString:
-          if (
-            this.readyData &&
-            isJsonArray(this.readyData.features) &&
-            this.readyData.features.length > 0 &&
-            isJsonObject(this.readyData.features[0]) &&
-            isJsonObject(this.readyData.features[0].geometry) &&
-            isJsonArray(this.readyData.features[0].geometry.coordinates)
-          ) {
-            jsonCoords = this.readyData.features[0].geometry.coordinates;
-          }
-          break;
-      }
+      const extractPathInfo = (feature: any) => {
+        const geometry = feature.geometry ?? {};
+        filename = geometry.name ?? "";
+        pathNotes = geometry.path_notes ?? "";
+        return geometry.coordinates;
+      };
 
-      if (!jsonCoords || jsonCoords.length === 0) {
-        return;
-      }
-
-      const coordinates: Cartographic[] = jsonCoords.map((elem) => {
+      const validateCoordinates = (coords: any): JsonArray | undefined => {
         if (
-          elem &&
-          isJsonArray(elem) &&
-          elem.length === 3 &&
-          isJsonNumber(elem[0]) &&
-          isJsonNumber(elem[1]) &&
-          isJsonNumber(elem[2])
+          isJsonArray(coords) &&
+          coords.length > 0 &&
+          isJsonArray(coords[0])
         ) {
-          return Cartographic.fromDegrees(
-            elem[0],
-            elem[1],
-            Math.round(elem[2])
-          );
-        } else {
-          return Cartographic.fromDegrees(0, 0, 0);
+          return coords[0];
         }
-      });
+        if (isJsonArray(coords)) {
+          return coords;
+        }
+        return undefined;
+      };
 
-      this.asPath(coordinates);
+      if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 0
+      ) {
+        const feature = this.readyData.features[0];
+
+        switch (this._pathType) {
+          case PathTypes.featureCollectionMultiLineString:
+          case PathTypes.featureCollectionLineString:
+            jsonCoords = validateCoordinates(extractPathInfo(feature));
+            break;
+        }
+
+        if (!jsonCoords) {
+          const properties = feature.properties ?? {};
+          filename = filename || properties.name || "";
+          pathNotes = pathNotes || properties.desc || "";
+        }
+
+        if (!filename || !pathNotes || !jsonCoords || jsonCoords.length === 0) {
+          return;
+        }
+
+        const coordinates: Cartographic[] = jsonCoords.map((elem) => {
+          if (
+            isJsonArray(elem) &&
+            isJsonNumber(elem[0]) &&
+            isJsonNumber(elem[1])
+          ) {
+            return Cartographic.fromDegrees(
+              elem[0],
+              elem[1],
+              elem.length === 3 && isJsonNumber(elem[2])
+                ? Math.round(elem[2])
+                : 0
+            );
+          }
+          return Cartographic.fromDegrees(0, 0, 0);
+        });
+
+        this.asPath(coordinates, filename, pathNotes);
+      }
     }
 
     @override
