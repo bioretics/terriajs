@@ -82,7 +82,10 @@ class WorkbenchItemRaw extends React.Component<IProps> {
       (ReferenceMixin.isMixedInto(item) && item.isLoadingReference);
 
     return (
-      <StyledLi style={this.props.style} className={this.props.className}>
+      <StyledLi
+        style={this.props.style}
+        className={`${this.props.className} no-drag`}
+      >
         <Box fullWidth justifySpaceBetween padded styledMinHeight="38px">
           <Box fullWidth>
             <Box left fullWidth paddedHorizontally centered>

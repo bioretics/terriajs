@@ -1,46 +1,52 @@
-import { action } from "mobx";
 import styled from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
+import { Rnd } from "react-rnd";
+import React from "react";
 
 type PropsType = {
   viewState: ViewState;
   show: boolean;
+  children?: React.ReactNode;
 };
 
-const SidePanelContainer = styled.div.attrs<PropsType>(({ viewState }) => ({
-  className: viewState.topElement === "SidePanel" ? "top-element" : "",
-  onClick: action(() => {
-    viewState.topElement = "SidePanel";
-  }),
-  onTransitionEnd: () => viewState.triggerResizeEvent()
-}))<PropsType>`
+const StyledPanel = styled.div<PropsType>`
   display: flex;
   flex-direction: column;
-  position: absolute;
-  left: 2%;
-  top: 3%;
-  max-height: 80%;
-  min-height: 80%;
-  z-index: 100;
   background: rgba(17, 24, 39, 0.75);
   backdrop-filter: blur(5px);
   font-family: ${(p) => p.theme.fontPop}px;
-  width: ${(p) => p.theme.workbenchWidth}px;
-  flex-basis: ${(p) => p.theme.workbenchWidth}px;
-  max-width: ${(p) => p.theme.workbenchWidth}px;
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
-  h1 {
-    margin: 0;
-  }
-
-  /* slide in/out animation */
-  transition: all 0.25s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   visibility: ${(p) => (p.show ? "visible" : "hidden")};
   opacity: ${(p) => (p.show ? 1 : 0)};
-  margin-left: ${(p) => (p.show ? "0px" : `-${p.theme.workbenchWidth}px`)};
-  border-radius: 8px;
 `;
+
+const SidePanelContainer: React.FC<PropsType> = (props) => {
+  return (
+    <Rnd
+      default={{
+        x: 15,
+        y: 5,
+        width: 355,
+        height: 500
+      }}
+      minWidth={300}
+      minHeight={370}
+      bounds="parent"
+      enableResizing={{
+        top: true,
+        bottom: true
+      }}
+      style={{ zIndex: 1 }}
+      cancel=".no-drag"
+    >
+      <StyledPanel {...props}>{props.children}</StyledPanel>
+    </Rnd>
+  );
+};
 
 export default withViewState(SidePanelContainer);

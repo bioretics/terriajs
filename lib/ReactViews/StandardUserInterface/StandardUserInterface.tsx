@@ -181,37 +181,15 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                         <WorkflowPanelPortal
                           show={props.terria.isWorkflowPanelActive}
                         />
-                        <Rnd
-                          default={{
-                            x: 15,
-                            y: 5,
-                            width: 355,
-                            height: 500
-                          }}
-                          minHeight={370}
-                          bounds="#ui"
-                          enableResizing={{
-                            top: true,
-                            bottom: true
-                          }}
-                          style={{ zIndex: 9999 }}
-                        >
-                          <SidePanelContainer
-                            tabIndex={0}
-                            show={
-                              props.viewState.isMapFullScreen === false &&
-                              props.terria.isWorkflowPanelActive === false
-                            }
-                          >
-                            <FullScreenButton
-                              minified
-                              animationDuration={250}
-                              btnText={t("addData.btnHide")}
-                            />
-                            <Branding version={props.version} />
-                            <SidePanel />
-                          </SidePanelContainer>
-                        </Rnd>
+                        <SidePanelContainer show={true}>
+                          <FullScreenButton
+                            minified
+                            animationDuration={250}
+                            btnText={t("addData.btnHide")}
+                          />
+                          <Branding version={props.version} />
+                          <SidePanel />
+                        </SidePanelContainer>
                       </>
                     </Medium>
                   </>
