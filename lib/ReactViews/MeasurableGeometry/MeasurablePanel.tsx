@@ -293,10 +293,12 @@ const MeasurablePanel = observer((props: Props) => {
             <Box>
               <Input
                 css={`
-                  margin-top: 10px;
+                  margin-top: 5px;
+                  margin-right: 10px;
                   max-width: 200px;
                   height: 30px;
                 `}
+                dark
                 placeholder={i18next.t(
                   "measurableGeometry.filenamePlaceholder"
                 )}
@@ -330,6 +332,7 @@ const MeasurablePanel = observer((props: Props) => {
       <>
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+          dark
           value={pathNotes}
           onChange={(e) => setPathNotes(e.target.value)}
         />

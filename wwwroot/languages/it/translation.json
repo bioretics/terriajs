@@ -100,6 +100,7 @@
     "measureGround": "al suolo"
   },
   "downloadData": {
+    "formatPlaceholder": "Seleziona il formato",
     "lines": "Linee",
     "points": "Punti"
   },

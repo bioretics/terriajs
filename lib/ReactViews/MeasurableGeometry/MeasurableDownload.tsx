@@ -13,7 +13,9 @@ import Styles from "./measurable-download.scss";
 import { exportKmlResultKml } from "terriajs-cesium";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import i18next from "i18next";
-import Dropdown from "../Generic/Dropdown";
+import { useTheme } from "styled-components";
+import { Button } from "../../Styled/Button";
+import Select from "../../Styled/Select";
 
 interface Props {
   geom: MeasurableGeometry;
@@ -24,6 +26,8 @@ interface Props {
 
 const MeasurableDownload = (props: Props) => {
   const { geom, name, pathNotes, ellipsoid } = props;
+  const theme = useTheme();
+  const [selectedFormat, setSelectedFormat] = React.useState<string>("");
 
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
@@ -31,11 +35,17 @@ const MeasurableDownload = (props: Props) => {
   const getLinks = () => {
     return [
       {
+        key: "",
+        label: i18next.t("downloadData.formatPlaceholder")
+      },
+      {
+        key: "csv",
         href: DataUri.make("csv", generateCsvData(geom)),
         download: `${name}.csv`,
         label: "CSV"
       },
       {
+        key: "kmlLines",
         href: kmlLines
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
@@ -46,6 +56,7 @@ const MeasurableDownload = (props: Props) => {
         label: `${i18next.t("downloadData.lines")} KML`
       },
       {
+        key: "kmlPoints",
         href: kmlPoints
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
@@ -56,26 +67,30 @@ const MeasurableDownload = (props: Props) => {
         label: `${i18next.t("downloadData.points")} KML`
       },
       {
+        key: "jsonLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
         download: `${name}_lines.json`,
         label: `${i18next.t("downloadData.lines")} JSON`
       },
       {
+        key: "jsonPoints",
         href: DataUri.make("json", generateJsonPoints(geom)),
         download: `${name}_points.json`,
         label: `${i18next.t("downloadData.points")} JSON`
       },
       {
+        key: "gpxTracks",
         href: DataUri.make("xml", generateGpxTracks(geom)),
         download: `${name}_lines.gpx`,
         label: `${i18next.t("downloadData.lines")} GPX`
       },
       {
+        key: "gpxWaypoints",
         href: DataUri.make("xml", generateGpxWaypoints(geom)),
         download: `${name}_points.gpx`,
         label: `${i18next.t("downloadData.points")} GPX`
       }
-    ].filter((download) => !!download.href);
+    ].filter((download) => download.key === "" || !!download.href);
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
@@ -241,20 +256,49 @@ const MeasurableDownload = (props: Props) => {
     });
   }
 
+  const handleDownload = () => {
+    const links = getLinks();
+    const linkObj = links.find((link) => link.key === selectedFormat);
+    if (linkObj && linkObj.href) {
+      const a = document.createElement("a");
+      a.href = linkObj.href as string;
+      a.download = linkObj.download;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+  };
+
   return (
-    <Dropdown
-      options={getLinks()}
-      textProperty="label"
-      theme={{
-        dropdown: Styles.download,
-        list: Styles.dropdownList,
-        button: Styles.dropdownButton,
-        icon: icon
-      }}
-      disabled={!name}
-    >
-      Download
-    </Dropdown>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <Select
+        css={`
+          padding-top: 5px;
+        `}
+        value={selectedFormat}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          setSelectedFormat(e.target.value)
+        }
+        className={Styles.dropdownList}
+      >
+        {getLinks().map((link) => (
+          <option key={link.key} value={link.key}>
+            {link.label}
+          </option>
+        ))}
+      </Select>
+      <Button
+        css={`
+          color: ${theme.textLight};
+          background: ${theme.colorPrimary};
+          margin-left: 10px;
+        `}
+        onClick={handleDownload}
+        disabled={!name || selectedFormat === ""}
+      >
+        {i18next.t("Download")}
+      </Button>
+    </div>
   );
 };
 

@@ -97,6 +97,7 @@
     "measureGround": "clamped to ground"
   },
   "downloadData": {
+    "formatPlaceholder": "Select format",
     "lines": "Lines",
     "points": "Points"
   },
