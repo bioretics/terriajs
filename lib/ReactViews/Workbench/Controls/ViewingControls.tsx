@@ -45,6 +45,9 @@ import { exportData } from "../../Preview/ExportData";
 import LazyItemSearchTool from "../../Tools/ItemSearchTool/LazyItemSearchTool";
 import WorkbenchButton from "../WorkbenchButton";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import CsvCatalogItem from "../../../Models/Catalog/CatalogItems/CsvCatalogItem";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -467,6 +470,62 @@ class ViewingControls extends React.Component<
               <BoxViewingControl>
                 <StyledIcon glyph={Icon.GLYPHS.lineChart} />
                 <span>Percorso</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        )}
+        {(item as CsvCatalogItem)?.uniqueId?.endsWith(".csv") && (
+          <li key={"workbench.measureItem"}>
+            <ViewingControlMenuButton
+              onClick={() =>
+                runInAction(async () => {
+                  const csvItem = item as CsvCatalogItem;
+                  const data = await csvItem.forceLoadTableData();
+
+                  const columns = data.reduce((acc, row) => {
+                    const [columnName, ...values] = row;
+                    acc[columnName] = values;
+                    return acc;
+                  }, {} as { [key: string]: any[] });
+
+                  const longitudes = columns["longitude"] || [];
+                  const latitudes = columns["latitude"] || [];
+                  const heights = columns["height"] || [];
+                  const descriptions = columns["description"] || [];
+
+                  const positions = longitudes.map((longitude, i) =>
+                    Cartographic.fromDegrees(
+                      longitude,
+                      latitudes[i],
+                      heights[i]
+                    )
+                  );
+
+                  if (!this.props.viewState.terria?.cesium?.scene) {
+                    return;
+                  }
+                  const terrainProvider =
+                    this.props.viewState.terria?.cesium?.scene.terrainProvider;
+
+                  const prom = positions.every((pos) => pos.height < 1)
+                    ? sampleTerrainMostDetailed(terrainProvider, positions)
+                    : Promise.resolve(positions);
+
+                  prom.then((newPositions) => {
+                    this.props.viewState.terria.measurableGeometryManager.sampleFromCartographics(
+                      newPositions,
+                      false,
+                      true,
+                      descriptions
+                    );
+                  });
+                })
+              }
+              title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.lineChart} />
+                <span>{t("workbench.pointsItem")}</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>

@@ -22,6 +22,7 @@ interface Props {
   name: string;
   pathNotes: string;
   ellipsoid: Ellipsoid;
+  pointDescriptions?: string[];
 }
 
 const MeasurableDownload = (props: Props) => {
@@ -33,6 +34,9 @@ const MeasurableDownload = (props: Props) => {
   const [kmlPoints, setKmlPoints] = useState<string>();
 
   const getLinks = () => {
+    const showOnlyPoints =
+      props.pointDescriptions && props.pointDescriptions.length > 0;
+
     return [
       {
         key: "",
@@ -90,7 +94,14 @@ const MeasurableDownload = (props: Props) => {
         download: `${name}_points.gpx`,
         label: `${i18next.t("downloadData.points")} GPX`
       }
-    ].filter((download) => download.key === "" || !!download.href);
+    ]
+      .filter((download) => download.key === "" || !!download.href)
+      .filter((download) => {
+        if (showOnlyPoints) {
+          return !download.download?.includes("_lines.");
+        }
+        return true;
+      });
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
@@ -145,7 +156,6 @@ const MeasurableDownload = (props: Props) => {
     });
 
     const res = (await exportKml(output)) as exportKmlResultKml;
-
     return res.kml;
   };
 
@@ -225,20 +235,26 @@ const MeasurableDownload = (props: Props) => {
     const headers = [
       "name",
       "path_notes",
-      ...Object.keys(geom.stopPoints[0])
+      ...Object.keys(geom.stopPoints[0]),
+      "description"
     ].join(",");
 
-    const rows = geom.stopPoints.map((elem) => {
-      return [
-        name || "",
-        pathNotes || "",
-        CesiumMath.toDegrees(elem.longitude),
-        CesiumMath.toDegrees(elem.latitude),
-        Math.round(elem.height)
-      ].join(",");
-    });
+    const rows = [headers];
 
-    return [headers, ...rows].join("\n");
+    rows.push(
+      ...geom.stopPoints.map((elem, index) =>
+        [
+          name,
+          pathNotes,
+          CesiumMath.toDegrees(elem.longitude),
+          CesiumMath.toDegrees(elem.latitude),
+          Math.round(elem.height),
+          props.pointDescriptions?.[index] || ""
+        ].join(",")
+      )
+    );
+
+    return rows.join("\n");
   };
 
   const icon = (

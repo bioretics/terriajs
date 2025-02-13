@@ -21,6 +21,9 @@ export interface MeasurableGeometry {
   sampledDistances?: number[];
   geodeticArea?: number;
   airArea?: number;
+  onlyPoints?: boolean;
+  pointDescriptions?: string[];
+  showDistanceLabels?: boolean;
   filename?: string;
   pathNotes?: string;
 }
@@ -33,7 +36,6 @@ export default class MeasurableGeometryManager {
   constructor(terria: Terria) {
     makeObservable(this);
     this.terria = terria;
-
     this.geoidModel = new EarthGravityModel1996(
       require("file-loader!../../wwwroot/data/WW15MGH.DAC")
     );
@@ -45,7 +47,8 @@ export default class MeasurableGeometryManager {
 
   sampleFromCustomDataSource(
     pointEntities: CustomDataSource,
-    closeLoop: boolean = false
+    closeLoop: boolean = false,
+    onlyPoints: boolean = false
   ) {
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
     if (!ellipsoid) {
@@ -75,7 +78,7 @@ export default class MeasurableGeometryManager {
         return Cartographic.fromCartesian(elem, ellipsoid);
       });
 
-    this.sampleFromCartographics(cartoPositions, closeLoop);
+    this.sampleFromCartographics(cartoPositions, closeLoop, onlyPoints);
   }
 
   // sample the entire path (polyline) every "samplingStep" meters
@@ -83,12 +86,11 @@ export default class MeasurableGeometryManager {
   sampleFromCartographics(
     cartoPositions: Cartographic[],
     closeLoop: boolean = false,
+    onlyPoints: boolean = false,
+    pointDescriptions: string[] = [],
     filename?: string,
     pathNotes?: string
   ) {
-    console.log("filename in sampleFromCartographics", filename);
-    console.log("path_notes in sampleFromCartographics", pathNotes);
-
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
 
@@ -180,17 +182,35 @@ export default class MeasurableGeometryManager {
       }
 
       // update state of Terria
-      this.updatePath(
-        cartoPositions,
-        stopGeodeticDistances,
-        stopAirDistances,
-        distances3d,
-        sampledCartographics[0],
-        stepDistances,
-        closeLoop,
-        filename,
-        pathNotes
-      );
+      const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints
+        ? [
+            cartoPositions,
+            [],
+            [],
+            [],
+            sampledCartographics[0],
+            [],
+            closeLoop,
+            true,
+            pointDescriptions,
+            filename,
+            pathNotes
+          ]
+        : [
+            cartoPositions,
+            stopGeodeticDistances,
+            stopAirDistances,
+            distances3d,
+            sampledCartographics[0],
+            stepDistances,
+            closeLoop,
+            false,
+            [],
+            filename,
+            pathNotes
+          ];
+
+      this.updatePath(...updatePathParams);
     });
   }
 
@@ -203,6 +223,8 @@ export default class MeasurableGeometryManager {
     sampledPoints: Cartographic[],
     sampledDistances: number[],
     isClosed: boolean,
+    onlyPoints: boolean = false,
+    pointDescriptions: string[] = [],
     filename?: string,
     pathNotes?: string
   ) {
@@ -224,6 +246,8 @@ export default class MeasurableGeometryManager {
       ),
       sampledPoints: sampledPoints,
       sampledDistances: sampledDistances,
+      onlyPoints: onlyPoints,
+      pointDescriptions: pointDescriptions,
       filename: filename,
       pathNotes: pathNotes
     };
