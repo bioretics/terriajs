@@ -635,20 +635,9 @@ const MeasurablePanel = observer((props: Props) => {
 
         return (
           <tr
-            onMouseDown={(e) => {
-              if ((e.target as HTMLElement).tagName === "TEXTAREA") {
-                console.log("ESCO onMouseDown");
-                return;
-              }
-              e.preventDefault();
-            }}
             onMouseLeave={handleMouseLeave}
             onMouseUp={(e) => {
-              console.log("e=> ", (e.target as HTMLElement).tagName);
-              if ((e.target as HTMLElement).tagName === "TEXTAREA") {
-                console.log("ESCO onMouseUp");
-                return;
-              }
+              if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
               handleMouseOver();
             }}
             style={{
