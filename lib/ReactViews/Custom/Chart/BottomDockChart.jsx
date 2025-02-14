@@ -421,7 +421,10 @@ class Chart extends React.Component {
               className={Styles.btn}
               style={{
                 marginTop: 8,
-                color: "black",
+                color: "#ffffff",
+                background: "#519ac2",
+                border: "1px solid #ffffff",
+                borderRadius: 4,
                 display: this.isDownloading ? "none" : "inline-block"
               }}
               onClick={this.downloadChart}

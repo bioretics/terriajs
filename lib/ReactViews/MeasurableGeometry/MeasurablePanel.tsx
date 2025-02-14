@@ -845,6 +845,7 @@ const MeasurablePanel = observer((props: Props) => {
                 <StyledTextArea
                   placeholder="Note..."
                   value={localText}
+                  dark
                   onChange={(e) => {
                     setLocalText(e.target.value);
                   }}
