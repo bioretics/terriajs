@@ -21,11 +21,12 @@ const StyledPanel = styled.div<PropsType>`
   box-sizing: border-box;
   border-radius: 8px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  visibility: ${(p) => (p.show ? "visible" : "hidden")};
   opacity: ${(p) => (p.show ? 1 : 0)};
 `;
 
 const SidePanelContainer: React.FC<PropsType> = (props) => {
+  if (!props.show) return null;
+
   return (
     <Rnd
       default={{
@@ -37,6 +38,7 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
       minWidth={300}
       minHeight={370}
       bounds="parent"
+      disableDragging={!props.show}
       enableResizing={{
         top: true,
         bottom: true
