@@ -686,7 +686,6 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onPointClicked(pointEntities: CustomDataSource) {
-    console.log("Ho cliccato su: ", pointEntities);
     this.terria.measurableGeometryManager.sampleFromCustomDataSource(
       pointEntities,
       this.userDrawing.closeLoop,
