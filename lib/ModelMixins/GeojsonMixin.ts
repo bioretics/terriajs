@@ -1551,11 +1551,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             jsonCoords = this.getPolygonCoordinates();
             break;
         }
-
-        if (!jsonCoords) {
+        if (jsonCoords !== undefined) {
           const properties = feature.properties ?? {};
-          filename = filename || properties.name || "";
-          pathNotes = pathNotes || properties.desc || "";
+          const geometry = feature.geometry ?? {};
+
+          filename =
+            filename || properties.name || (geometry as any).name || "";
+          pathNotes =
+            pathNotes || properties.desc || (geometry as any).path_notes || "";
         }
 
         if (!filename || !pathNotes || !jsonCoords || jsonCoords.length === 0) {

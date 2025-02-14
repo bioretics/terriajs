@@ -27,6 +27,8 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       this.terria.measurableGeometryManager.sampleFromCartographics(
         stopPoints,
         false,
+        false,
+        [],
         filename,
         pathNotes
       );
