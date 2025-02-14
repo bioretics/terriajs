@@ -4,6 +4,7 @@ import { useViewState } from "../../Context";
 import { MapCredits } from "./Credits";
 import { DistanceLegend } from "./DistanceLegend";
 import { LocationBar } from "./LocationBar";
+import { useTheme } from "styled-components";
 import React from "react";
 
 export const BottomBar: VFC = () => {
@@ -15,8 +16,7 @@ export const BottomBar: VFC = () => {
         border-radius: 8px 8px 8px 8px;
         font-size: 0.7rem;
         width: 96%;
-        background: rgb(17, 24, 39);
-        opacity: 0.75;
+        background: ${useTheme().darkBackgroundTranslucent};
         backdrop-filter: blur(5px);
         margin-top: 2px;
       `}
