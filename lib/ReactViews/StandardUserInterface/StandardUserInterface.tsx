@@ -181,7 +181,12 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                         <WorkflowPanelPortal
                           show={props.terria.isWorkflowPanelActive}
                         />
-                        <SidePanelContainer show={true}>
+                        <SidePanelContainer
+                          show={
+                            !props.viewState.isMapFullScreen &&
+                            !props.terria.isWorkflowPanelActive
+                          }
+                        >
                           <FullScreenButton
                             minified
                             animationDuration={250}

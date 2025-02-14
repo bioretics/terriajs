@@ -208,7 +208,7 @@ const DraggableBox = styled(Box)`
 `;
 
 const StyledLi = styled(Li)`
-  background: #111827;
+  background: ${(p) => p.theme.darkBackground};
   color: ${(p) => p.theme.textLight};
   border-radius: 4px;
   margin-bottom: 5px;
