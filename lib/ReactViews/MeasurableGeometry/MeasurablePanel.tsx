@@ -755,8 +755,6 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, viewState.selectedStopPointIdx]);
 
   useEffect(() => {
-    const rangeThreshold = 0.0001;
-
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
       if (!mouseCoords || !terria.measurableGeom) return;
@@ -765,6 +763,8 @@ const MeasurablePanel = observer((props: Props) => {
         points: Cartographic[],
         action: (point: Cartographic | null, idx: number | null) => void
       ) => {
+        const rangeThreshold = 0.0001;
+
         const nearbyPoint = points.find((point) => {
           const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
           const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
@@ -779,16 +779,18 @@ const MeasurablePanel = observer((props: Props) => {
         }
       };
 
-      if (terria.measurableGeom.sampledPoints) {
-        findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
-          if (point) {
-            MeasurablePanelManager.addMarker(point);
-            viewState.setSelectedSampledPointIdx(idx);
-          } else {
-            MeasurablePanelManager.removeAllMarkers();
-            viewState.setSelectedSampledPointIdx(null);
-          }
-        });
+      if (terria?.measurableGeom?.onlyPoints === false) {
+        if (terria.measurableGeom.sampledPoints) {
+          findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
+            if (point) {
+              MeasurablePanelManager.addMarker(point);
+              viewState.setSelectedSampledPointIdx(idx);
+            } else {
+              MeasurablePanelManager.removeAllMarkers();
+              viewState.setSelectedSampledPointIdx(null);
+            }
+          });
+        }
       }
 
       if (terria.measurableGeom.stopPoints) {
@@ -798,6 +800,8 @@ const MeasurablePanel = observer((props: Props) => {
             setHighlightedRow(idx);
             viewState.setSelectedStopPointIdx(idx);
           } else {
+            if (terria?.measurableGeom?.onlyPoints)
+              MeasurablePanelManager.removeAllMarkers();
             setHighlightedRow(null);
             viewState.setSelectedStopPointIdx(null);
           }
