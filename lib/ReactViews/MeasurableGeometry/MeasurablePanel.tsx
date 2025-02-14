@@ -33,42 +33,16 @@ interface Props {
 }
 
 const MeasurablePanel = observer((props: Props) => {
+  // Variables
   const { terria, viewState } = props;
   const theme = useTheme();
-
   const [showDistances, setShowDistances] = React.useState(true);
-  runInAction(() => {
-    if (terria.measurableGeom) {
-      terria.measurableGeom.showDistanceLabels = showDistances;
-    }
-  });
-
   const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
     []
   );
-
-  React.useEffect(() => {
-    setPointsDescriptions(terria.measurableGeom?.pointDescriptions || []);
-  }, [terria.measurableGeom?.pointDescriptions]);
-
-  React.useEffect(() => {
-    const stopPoints = terria?.measurableGeom?.stopPoints || [];
-    setPointsDescriptions((prev) => {
-      const newLength = stopPoints.length;
-      return prev.length === newLength
-        ? prev
-        : [
-            ...prev.slice(0, newLength),
-            ...new Array(Math.max(newLength - prev.length, 0)).fill("")
-          ];
-    });
-  }, [terria?.measurableGeom?.stopPoints]);
   const [highlightedRow, setHighlightedRow] = React.useState<number | null>(
     null
   );
-
-  MeasurablePanelManager.initialize(terria);
-
   const [samplingPathStep, setSamplingPathStep] = React.useState(
     terria.measurableGeomSamplingStep
   );
@@ -77,10 +51,14 @@ const MeasurablePanel = observer((props: Props) => {
   const [fileName, setFileName] = React.useState("");
   const [pathNotes, setPathNotes] = React.useState("");
 
-  useEffect(() => {
-    setFileName(terria.measurableGeom?.filename || "");
-    setPathNotes(terria.measurableGeom?.pathNotes || "");
-  }, [terria.measurableGeom]);
+  // Initialize utils methods and variables
+  MeasurablePanelManager.initialize(terria);
+
+  runInAction(() => {
+    if (terria.measurableGeom) {
+      terria.measurableGeom.showDistanceLabels = showDistances;
+    }
+  });
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
@@ -199,6 +177,104 @@ const MeasurablePanel = observer((props: Props) => {
     return numberStr;
   };
 
+  // UseEffects Methods
+  useEffect(() => {
+    setPointsDescriptions(terria.measurableGeom?.pointDescriptions || []);
+  }, [terria.measurableGeom?.pointDescriptions]);
+
+  useEffect(() => {
+    const stopPoints = terria?.measurableGeom?.stopPoints || [];
+    setPointsDescriptions((prev) => {
+      const newLength = stopPoints.length;
+      return prev.length === newLength
+        ? prev
+        : [
+            ...prev.slice(0, newLength),
+            ...new Array(Math.max(newLength - prev.length, 0)).fill("")
+          ];
+    });
+  }, [terria?.measurableGeom?.stopPoints]);
+
+  useEffect(() => {
+    setFileName(terria.measurableGeom?.filename || "");
+    setPathNotes(terria.measurableGeom?.pathNotes || "");
+  }, [terria.measurableGeom]);
+
+  useEffect(() => {
+    if (viewState.selectedStopPointIdx !== null) {
+      setHighlightedRow(viewState.selectedStopPointIdx);
+    } else {
+      setHighlightedRow(null);
+    }
+    terria.currentViewer.notifyRepaintRequired();
+  }, [terria.currentViewer, viewState.selectedStopPointIdx]);
+
+  useEffect(() => {
+    const handleMouseProximity = () => {
+      const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
+      if (!mouseCoords || !terria.measurableGeom) return;
+
+      const findNearbyPoint = (
+        points: Cartographic[],
+        action: (point: Cartographic | null, idx: number | null) => void
+      ) => {
+        const rangeThreshold = 0.0001;
+
+        const nearbyPoint = points.find((point) => {
+          const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
+          const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
+          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
+        });
+
+        if (nearbyPoint) {
+          const idx = points.indexOf(nearbyPoint);
+          action(nearbyPoint, idx);
+        } else {
+          action(null, null);
+        }
+      };
+
+      if (terria?.measurableGeom?.onlyPoints === false) {
+        if (terria.measurableGeom.sampledPoints) {
+          findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
+            if (point) {
+              MeasurablePanelManager.addMarker(point);
+              viewState.setSelectedSampledPointIdx(idx);
+            } else {
+              MeasurablePanelManager.removeAllMarkers();
+              viewState.setSelectedSampledPointIdx(null);
+            }
+          });
+        }
+      }
+
+      if (terria.measurableGeom.stopPoints) {
+        findNearbyPoint(terria.measurableGeom.stopPoints, (point, idx) => {
+          if (point) {
+            MeasurablePanelManager.addMarker(point);
+            setHighlightedRow(idx);
+            viewState.setSelectedStopPointIdx(idx);
+          } else {
+            if (terria?.measurableGeom?.onlyPoints)
+              MeasurablePanelManager.removeAllMarkers();
+            setHighlightedRow(null);
+            viewState.setSelectedStopPointIdx(null);
+          }
+        });
+      }
+
+      terria.currentViewer.notifyRepaintRequired();
+    };
+
+    const disposer =
+      terria.currentViewer.mouseCoords.updateEvent.addEventListener(
+        handleMouseProximity
+      );
+
+    return () => disposer();
+  }, [terria.cesium, terria.currentViewer, terria.measurableGeom, viewState]);
+
+  // Render Methods
   const renderHeader = () => {
     return (
       <div className={Styles.header}>
@@ -555,13 +631,97 @@ const MeasurablePanel = observer((props: Props) => {
     </>
   );
 
-  function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {
-    const result = Array.from(list);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
-  }
+  const renderStepDetails = () => {
+    const stopPoints = terria?.measurableGeom?.stopPoints || [];
+    const onlyPoints = terria?.measurableGeom?.onlyPoints;
 
+    const handleDescriptionChange = (index: number, value: string) => {
+      const newDescriptions = [...pointsDescriptions];
+      newDescriptions[index] = value;
+      setPointsDescriptions(newDescriptions);
+    };
+    const onSortEnd = ({
+      oldIndex,
+      newIndex
+    }: {
+      oldIndex: number;
+      newIndex: number;
+    }) => {
+      function reorder<T>(
+        list: T[],
+        startIndex: number,
+        endIndex: number
+      ): T[] {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+        return result;
+      }
+
+      if (oldIndex === newIndex) return;
+      const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
+      if (terria.measurableGeom)
+        terria.measurableGeom.stopPoints = newStopPoints;
+      const newDescriptions = reorder(pointsDescriptions, oldIndex, newIndex);
+      setPointsDescriptions(newDescriptions);
+    };
+
+    return (
+      <>
+        <Text textLight style={{ marginLeft: 1 }} title="">
+          {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
+        </Text>
+        <small>
+          <table className={Styles.elevation}>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>
+                  {i18next.t("measurableGeometry.geometrySummaryElevation")}
+                </th>
+                {!onlyPoints && (
+                  <>
+                    <th>
+                      {i18next.t(
+                        "measurableGeometry.geometrySummaryElevationDiff"
+                      )}
+                    </th>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
+                    </th>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummaryDistAir")}
+                    </th>
+                    <th>
+                      {i18next.t(
+                        "measurableGeometry.geometrySummaryDistGround"
+                      )}
+                    </th>
+                    <th>
+                      {i18next.t("measurableGeometry.geometrySummarySlope")}
+                    </th>
+                  </>
+                )}
+                {onlyPoints && <th>Descrizione</th>}
+              </tr>
+            </thead>
+            <SortableList
+              items={stopPoints}
+              onlyPoints={onlyPoints}
+              pointsDescriptions={pointsDescriptions}
+              onDescriptionChange={handleDescriptionChange}
+              onSortEnd={onSortEnd}
+              distance={5}
+              prettifyNumber={prettifyNumber}
+              terria={terria}
+            />
+          </table>
+        </small>
+      </>
+    );
+  };
+
+  // Sortable Item and List components.
   const SortableItem = SortableElement(
     React.memo(
       ({
@@ -629,7 +789,7 @@ const MeasurablePanel = observer((props: Props) => {
           pointsDescriptions[idx] || ""
         );
 
-        React.useEffect(() => {
+        useEffect(() => {
           setLocalText(pointsDescriptions[idx] || "");
         }, [pointsDescriptions, idx]);
 
@@ -744,159 +904,6 @@ const MeasurablePanel = observer((props: Props) => {
       );
     }
   );
-
-  useEffect(() => {
-    if (viewState.selectedStopPointIdx !== null) {
-      setHighlightedRow(viewState.selectedStopPointIdx);
-    } else {
-      setHighlightedRow(null);
-    }
-    terria.currentViewer.notifyRepaintRequired();
-  }, [terria.currentViewer, viewState.selectedStopPointIdx]);
-
-  useEffect(() => {
-    const handleMouseProximity = () => {
-      const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
-      if (!mouseCoords || !terria.measurableGeom) return;
-
-      const findNearbyPoint = (
-        points: Cartographic[],
-        action: (point: Cartographic | null, idx: number | null) => void
-      ) => {
-        const rangeThreshold = 0.0001;
-
-        const nearbyPoint = points.find((point) => {
-          const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
-          const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
-        });
-
-        if (nearbyPoint) {
-          const idx = points.indexOf(nearbyPoint);
-          action(nearbyPoint, idx);
-        } else {
-          action(null, null);
-        }
-      };
-
-      if (terria?.measurableGeom?.onlyPoints === false) {
-        if (terria.measurableGeom.sampledPoints) {
-          findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
-            if (point) {
-              MeasurablePanelManager.addMarker(point);
-              viewState.setSelectedSampledPointIdx(idx);
-            } else {
-              MeasurablePanelManager.removeAllMarkers();
-              viewState.setSelectedSampledPointIdx(null);
-            }
-          });
-        }
-      }
-
-      if (terria.measurableGeom.stopPoints) {
-        findNearbyPoint(terria.measurableGeom.stopPoints, (point, idx) => {
-          if (point) {
-            MeasurablePanelManager.addMarker(point);
-            setHighlightedRow(idx);
-            viewState.setSelectedStopPointIdx(idx);
-          } else {
-            if (terria?.measurableGeom?.onlyPoints)
-              MeasurablePanelManager.removeAllMarkers();
-            setHighlightedRow(null);
-            viewState.setSelectedStopPointIdx(null);
-          }
-        });
-      }
-
-      terria.currentViewer.notifyRepaintRequired();
-    };
-
-    const disposer =
-      terria.currentViewer.mouseCoords.updateEvent.addEventListener(
-        handleMouseProximity
-      );
-
-    return () => disposer();
-  }, [terria.cesium, terria.currentViewer, terria.measurableGeom, viewState]);
-
-  const renderStepDetails = () => {
-    const stopPoints = terria?.measurableGeom?.stopPoints || [];
-    const onlyPoints = terria?.measurableGeom?.onlyPoints;
-
-    const handleDescriptionChange = (index: number, value: string) => {
-      const newDescriptions = [...pointsDescriptions];
-      newDescriptions[index] = value;
-      setPointsDescriptions(newDescriptions);
-    };
-    const onSortEnd = ({
-      oldIndex,
-      newIndex
-    }: {
-      oldIndex: number;
-      newIndex: number;
-    }) => {
-      if (oldIndex === newIndex) return;
-      const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
-      if (terria.measurableGeom)
-        terria.measurableGeom.stopPoints = newStopPoints;
-      const newDescriptions = reorder(pointsDescriptions, oldIndex, newIndex);
-      setPointsDescriptions(newDescriptions);
-    };
-
-    return (
-      <>
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
-        </Text>
-        <small>
-          <table className={Styles.elevation}>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>
-                  {i18next.t("measurableGeometry.geometrySummaryElevation")}
-                </th>
-                {!onlyPoints && (
-                  <>
-                    <th>
-                      {i18next.t(
-                        "measurableGeometry.geometrySummaryElevationDiff"
-                      )}
-                    </th>
-                    <th>
-                      {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
-                    </th>
-                    <th>
-                      {i18next.t("measurableGeometry.geometrySummaryDistAir")}
-                    </th>
-                    <th>
-                      {i18next.t(
-                        "measurableGeometry.geometrySummaryDistGround"
-                      )}
-                    </th>
-                    <th>
-                      {i18next.t("measurableGeometry.geometrySummarySlope")}
-                    </th>
-                  </>
-                )}
-                {onlyPoints && <th>Descrizione</th>}
-              </tr>
-            </thead>
-            <SortableList
-              items={stopPoints}
-              onlyPoints={onlyPoints}
-              pointsDescriptions={pointsDescriptions}
-              onDescriptionChange={handleDescriptionChange}
-              onSortEnd={onSortEnd}
-              distance={5}
-              prettifyNumber={prettifyNumber}
-              terria={terria}
-            />
-          </table>
-        </small>
-      </>
-    );
-  };
 
   return (
     <Rnd
