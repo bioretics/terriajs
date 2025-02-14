@@ -13,7 +13,7 @@ type PropsType = {
 const StyledPanel = styled.div<PropsType>`
   display: flex;
   flex-direction: column;
-  background: rgba(17, 24, 39, 0.75);
+  background: ${(p) => p.theme.darkBackgroundTranslucent};
   backdrop-filter: blur(5px);
   font-family: ${(p) => p.theme.fontPop}px;
   width: 100%;

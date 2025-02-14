@@ -27,7 +27,6 @@ interface Props {
 
 const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
-
   const theme = useTheme();
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
@@ -152,7 +151,7 @@ const MeasurablePanel = observer((props: Props) => {
       <div
         className={Styles.header}
         css={`
-          background: rgba(17, 24, 39, 0.45);
+          background: ${theme.darkBackgroundTranslucent};
         `}
       >
         <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
@@ -506,7 +505,7 @@ const MeasurablePanel = observer((props: Props) => {
     <DragWrapper>
       <div
         css={`
-          background: rgba(17, 24, 39, 0.77);
+          background: ${theme.darkBackgroundTranslucent};
         `}
         className={panelClassName}
         aria-hidden={!viewState.measurablePanelIsVisible}
