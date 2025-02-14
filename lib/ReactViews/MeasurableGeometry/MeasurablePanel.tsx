@@ -210,6 +210,8 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, viewState.selectedStopPointIdx]);
 
   useEffect(() => {
+    if (!viewState.measurablePanelIsVisible) return;
+
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
       if (!mouseCoords || !terria.measurableGeom) return;
@@ -272,7 +274,12 @@ const MeasurablePanel = observer((props: Props) => {
       );
 
     return () => disposer();
-  }, [terria.cesium, terria.currentViewer, terria.measurableGeom, viewState]);
+  }, [
+    terria.cesium,
+    terria.currentViewer,
+    terria.measurableGeom,
+    viewState.measurablePanelIsVisible
+  ]);
 
   // Render Methods
   const renderHeader = () => {
