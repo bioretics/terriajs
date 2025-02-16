@@ -488,6 +488,8 @@ class ViewingControls extends React.Component<
                     return acc;
                   }, {} as { [key: string]: any[] });
 
+                  const filename = columns["name"][0] || "";
+                  const path_notes = columns["path_notes"][0] || "";
                   const longitudes = columns["longitude"] || [];
                   const latitudes = columns["latitude"] || [];
                   const heights = columns["height"] || [];
@@ -516,7 +518,9 @@ class ViewingControls extends React.Component<
                       newPositions,
                       false,
                       true,
-                      descriptions
+                      descriptions,
+                      filename,
+                      path_notes
                     );
                   });
                 })
