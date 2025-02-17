@@ -148,8 +148,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
         if (item && item.active) {
           item.deactivate();
         }
-        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
+        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
       });
     }
@@ -186,8 +186,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
         if (item && item.active) {
           item.deactivate();
         }
-        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
+        viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
       });
     }

@@ -209,6 +209,7 @@ class KmlCatalogItem
   @computed
   get canUseAsPath() {
     const entities = this._dataSource?.entities?.values ?? [];
+    console.log("kmlItem", entities);
     const polygons = entities.filter((e) => e?.polygon);
     const polylines = entities.filter((e) => e?.polyline);
 
@@ -343,6 +344,49 @@ class KmlCatalogItem
       seen.add(key);
       return true;
     });
+  }
+
+  public async sampleFromKmlData(): Promise<void> {
+    const entities = this._dataSource?.entities?.values ?? [];
+    if (entities.length === 0) return;
+
+    let name = "";
+    let pathNotes = "";
+    const firstEntity = entities[0];
+    const descriptionValue = firstEntity.description?.getValue(
+      JulianDate.now()
+    );
+    if (descriptionValue) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(descriptionValue, "text/html");
+      name = doc.querySelector("#name")?.textContent?.trim() || "";
+      pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+    }
+
+    let cartesianPositions: Cartesian3[] = entities.flatMap(
+      (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []
+    );
+    const cartographicPositions = cartesianPositions.map((pos) =>
+      Cartographic.fromCartesian(pos)
+    );
+
+    if (!this.terria?.cesium?.scene) return;
+    const terrainProvider = this.terria.cesium.scene.terrainProvider;
+
+    const resolvedPositions = cartographicPositions.every(
+      (pos) => pos.height < 1
+    )
+      ? await sampleTerrainMostDetailed(terrainProvider, cartographicPositions)
+      : cartographicPositions;
+
+    this.terria.measurableGeometryManager.sampleFromCartographics(
+      resolvedPositions,
+      false,
+      true,
+      [],
+      name,
+      pathNotes
+    );
   }
 }
 
