@@ -740,7 +740,7 @@ const MeasurablePanel = observer((props: Props) => {
         idx,
         array,
         onlyPoints,
-        pointsDescriptions,
+        pointsDescription,
         onDescriptionChange,
         prettifyNumber,
         terria
@@ -749,7 +749,7 @@ const MeasurablePanel = observer((props: Props) => {
         idx: number;
         array: any[];
         onlyPoints?: boolean;
-        pointsDescriptions: string[];
+        pointsDescription: string;
         onDescriptionChange: (index: number, value: string) => void;
         prettifyNumber: (num: number, squared?: boolean) => string;
         terria: any;
@@ -796,13 +796,11 @@ const MeasurablePanel = observer((props: Props) => {
           }
         }, [idx, terria, viewState]);
 
-        const [localText, setLocalText] = React.useState(
-          pointsDescriptions[idx] || ""
-        );
+        const [localText, setLocalText] = React.useState(pointsDescription);
 
         useEffect(() => {
-          setLocalText(pointsDescriptions[idx] || "");
-        }, [pointsDescriptions, idx]);
+          setLocalText(pointsDescription);
+        }, [pointsDescription]);
 
         return (
           <tr
@@ -875,8 +873,7 @@ const MeasurablePanel = observer((props: Props) => {
       (prevProps, nextProps) =>
         prevProps.idx === nextProps.idx &&
         prevProps.point === nextProps.point &&
-        prevProps.pointsDescriptions[prevProps.idx] ===
-          nextProps.pointsDescriptions[nextProps.idx]
+        prevProps.pointsDescription === nextProps.pointsDescription
     )
   );
 
@@ -905,7 +902,7 @@ const MeasurablePanel = observer((props: Props) => {
               idx={idx}
               array={items}
               onlyPoints={onlyPoints}
-              pointsDescriptions={pointsDescriptions}
+              pointsDescription={pointsDescriptions[idx]}
               onDescriptionChange={onDescriptionChange}
               prettifyNumber={prettifyNumber}
               terria={terria}
