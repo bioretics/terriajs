@@ -178,10 +178,12 @@ const MeasurableDownload = (props: Props) => {
       name: name || "",
       path_notes: pathNotes || "",
       type: "FeatureCollection",
-      features: geom.stopPoints.map((elem) => {
+      features: geom.stopPoints.map((elem, index) => {
         return {
           type: "Feature",
-          properties: {},
+          properties: {
+            description: pointDescriptions?.[index] || ""
+          },
           geometry: {
             coordinates: [
               CesiumMath.toDegrees(elem.longitude),

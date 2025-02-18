@@ -243,7 +243,6 @@ class GeoJsonCatalogItem
           break;
       }
     });
-
     if (positions.length === 0) return;
 
     if (!this.terria?.cesium?.scene) return;
