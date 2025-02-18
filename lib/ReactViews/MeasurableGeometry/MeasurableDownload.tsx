@@ -26,7 +26,7 @@ interface Props {
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { geom, name, pathNotes, ellipsoid } = props;
+  const { geom, name, pathNotes, ellipsoid, pointDescriptions } = props;
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
 
@@ -219,14 +219,24 @@ const MeasurableDownload = (props: Props) => {
     return `<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="runtracker">
       <metadata/>
       ${geom.stopPoints
-        .map(
-          (elem, index) =>
-            `<wpt name="Tappa ${index}"
-              lat="${CesiumMath.toDegrees(elem.latitude)}"
-              lon="${CesiumMath.toDegrees(elem.longitude)}"
-              ele="${elem.height.toFixed(2)}">
-            </wpt>`
-        )
+        .map((elem, index) => {
+          let waypoint = "";
+          if (index === 0) {
+            waypoint += `<wpt name="Info File" lat="${CesiumMath.toDegrees(
+              geom.stopPoints[0].latitude
+            )}" lon="${CesiumMath.toDegrees(geom.stopPoints[0].latitude)}">
+                             <name>${name}</name>
+                             <desc>${pathNotes}</desc>
+                           </wpt>`;
+          }
+          waypoint += `<wpt name="Tappa ${index}"
+                          lat="${CesiumMath.toDegrees(elem.latitude)}"
+                          lon="${CesiumMath.toDegrees(elem.longitude)}"
+                          ele="${elem.height.toFixed(2)}">
+                          <desc>${pointDescriptions?.[index] || ""}</desc>
+                        </wpt>`;
+          return waypoint;
+        })
         .join("")}
     </gpx>`;
   };
@@ -249,7 +259,7 @@ const MeasurableDownload = (props: Props) => {
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
           Math.round(elem.height),
-          props.pointDescriptions?.[index] || ""
+          pointDescriptions?.[index] || ""
         ].join(",")
       )
     );
