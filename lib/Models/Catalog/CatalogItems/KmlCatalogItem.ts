@@ -209,7 +209,6 @@ class KmlCatalogItem
   @computed
   get canUseAsPath() {
     const entities = this._dataSource?.entities?.values ?? [];
-    console.log("kmlItem", entities);
     const polygons = entities.filter((e) => e?.polygon);
     const polylines = entities.filter((e) => e?.polyline);
 
@@ -349,9 +348,9 @@ class KmlCatalogItem
   public async sampleFromKmlData(): Promise<void> {
     const entities = this._dataSource?.entities?.values ?? [];
     if (entities.length === 0) return;
-
     let name = "";
     let pathNotes = "";
+    let pointDescriptions: string[] = [];
     const firstEntity = entities[0];
     const descriptionValue = firstEntity.description?.getValue(
       JulianDate.now()
@@ -362,6 +361,16 @@ class KmlCatalogItem
       name = doc.querySelector("#name")?.textContent?.trim() || "";
       pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
     }
+
+    pointDescriptions = entities.map((entity, index) => {
+      const descriptionValue = entity.description?.getValue(JulianDate.now());
+      if (descriptionValue) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(descriptionValue, "text/html");
+        return doc.querySelector(`#desc-${index}`)?.textContent?.trim() || "";
+      }
+      return "";
+    });
 
     let cartesianPositions: Cartesian3[] = entities.flatMap(
       (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []
@@ -383,7 +392,7 @@ class KmlCatalogItem
       resolvedPositions,
       false,
       true,
-      [],
+      pointDescriptions,
       name,
       pathNotes
     );
