@@ -178,10 +178,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.panel = undefined;
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
-        if (viewState.terria.measurableGeom) {
-          viewState.terria.measurableGeom.filename = undefined;
-          viewState.terria.measurableGeom.pathNotes = undefined;
-        }
       });
     },
     onOpen: () => {
@@ -220,10 +216,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.panel = undefined;
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
-        if (viewState.terria.measurableGeom) {
-          viewState.terria.measurableGeom.filename = undefined;
-          viewState.terria.measurableGeom.pathNotes = undefined;
-        }
       });
     },
     onOpen: () => {
@@ -261,11 +253,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.terria.mapNavigationModel.enable(MeasureLineTool.id);
         viewState.panel = undefined;
         viewState.measurablePanelIsVisible = false;
-        if (viewState.terria.measurableGeom) {
-          viewState.terria.measurableGeom.filename = undefined;
-          viewState.terria.measurableGeom.pathNotes = undefined;
-          viewState.terria.measurableGeom.pointDescriptions = undefined;
-        }
       });
     },
     onOpen: () => {

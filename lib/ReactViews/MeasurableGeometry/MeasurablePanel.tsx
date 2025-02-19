@@ -37,9 +37,6 @@ const MeasurablePanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const theme = useTheme();
   const [showDistances, setShowDistances] = React.useState(true);
-  const [pointsDescriptions, setPointsDescriptions] = React.useState<string[]>(
-    []
-  );
   const [highlightedRow, setHighlightedRow] = React.useState<number | null>(
     null
   );
@@ -80,6 +77,11 @@ const MeasurablePanel = observer((props: Props) => {
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
     deactivateTool(MeasureAngleTool.id);
+    if (terria.measurableGeom) {
+      terria.measurableGeom.filename = "";
+      terria.measurableGeom.pathNotes = "";
+      terria.measurableGeom.pointDescriptions = [];
+    }
   });
 
   const toggleCollapsed = action(() => {
@@ -178,23 +180,6 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   // UseEffects Methods
-  useEffect(() => {
-    setPointsDescriptions(terria.measurableGeom?.pointDescriptions || []);
-  }, [terria.measurableGeom?.pointDescriptions]);
-
-  useEffect(() => {
-    const stopPoints = terria?.measurableGeom?.stopPoints || [];
-    setPointsDescriptions((prev) => {
-      const newLength = stopPoints.length;
-      return prev.length === newLength
-        ? prev
-        : [
-            ...prev.slice(0, newLength),
-            ...new Array(Math.max(newLength - prev.length, 0)).fill("")
-          ];
-    });
-  }, [terria?.measurableGeom?.stopPoints]);
-
   useEffect(() => {
     setFileName(terria.measurableGeom?.filename || "");
     setPathNotes(terria.measurableGeom?.pathNotes || "");
@@ -453,13 +438,8 @@ const MeasurablePanel = observer((props: Props) => {
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
                 onBlur={(e) => {
-                  console.log("TEST blur del filename");
                   if (terria.measurableGeom) {
                     terria.measurableGeom.filename = e.target.value;
-                    console.log(
-                      "TEST terria.measurableGeom.filename",
-                      terria.measurableGeom.filename
-                    );
                   }
                 }}
               />
@@ -474,7 +454,7 @@ const MeasurablePanel = observer((props: Props) => {
                     ellipsoid={terria.cesium.scene.globe.ellipsoid}
                     pointDescriptions={
                       terria?.measurableGeom?.onlyPoints
-                        ? pointsDescriptions
+                        ? terria.measurableGeom?.pointDescriptions
                         : []
                     }
                   />
@@ -667,46 +647,38 @@ const MeasurablePanel = observer((props: Props) => {
     const onlyPoints = terria?.measurableGeom?.onlyPoints;
 
     const handleDescriptionChange = (index: number, value: string) => {
-      console.log("TEST cambio di descrizione");
-      const newDescriptions = [...pointsDescriptions];
+      const newDescriptions = [...terria.measurableGeom?.pointDescriptions!!];
       newDescriptions[index] = value;
-      setPointsDescriptions(newDescriptions);
       if (terria.measurableGeom) {
         terria.measurableGeom.pointDescriptions = newDescriptions;
-        console.log(
-          "TEST descrizione cambiata",
-          terria.measurableGeom.pointDescriptions
-        );
       }
     };
-    const onSortEnd = ({
-      oldIndex,
-      newIndex
-    }: {
-      oldIndex: number;
-      newIndex: number;
-    }) => {
-      function reorder<T>(
-        list: T[],
-        startIndex: number,
-        endIndex: number
-      ): T[] {
-        const result = Array.from(list);
-        const [removed] = result.splice(startIndex, 1);
-        result.splice(endIndex, 0, removed);
-        return result;
-      }
+    const onSortEnd = action(
+      ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
+        function reorder<T>(
+          list: T[],
+          startIndex: number,
+          endIndex: number
+        ): T[] {
+          const result = Array.from(list);
+          const [removed] = result.splice(startIndex, 1);
+          result.splice(endIndex, 0, removed);
+          return result;
+        }
 
-      if (oldIndex === newIndex) return;
-      const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
-      const newDescriptions = reorder(pointsDescriptions, oldIndex, newIndex);
-      setPointsDescriptions(newDescriptions);
-      if (terria.measurableGeom) {
-        console.log("TEST reorder", newDescriptions);
-        terria.measurableGeom.stopPoints = newStopPoints;
-        terria.measurableGeom.pointDescriptions = newDescriptions;
+        if (oldIndex === newIndex) return;
+        const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
+        if (terria.measurableGeom) {
+          const newDescriptions = reorder(
+            terria.measurableGeom?.pointDescriptions!!,
+            oldIndex,
+            newIndex
+          );
+          terria.measurableGeom.stopPoints = newStopPoints;
+          terria.measurableGeom.pointDescriptions = newDescriptions;
+        }
       }
-    };
+    );
 
     return (
       <>
@@ -750,7 +722,7 @@ const MeasurablePanel = observer((props: Props) => {
             <SortableList
               items={stopPoints}
               onlyPoints={onlyPoints}
-              pointsDescriptions={pointsDescriptions}
+              pointsDescriptions={terria.measurableGeom?.pointDescriptions!!}
               onDescriptionChange={handleDescriptionChange}
               onSortEnd={onSortEnd}
               distance={5}

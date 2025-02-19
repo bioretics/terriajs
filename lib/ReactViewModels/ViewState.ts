@@ -543,8 +543,21 @@ export default class ViewState {
     this._measurablePanelIsVisibleSubscription = reaction(
       () => this.terria.measurableGeom,
       (geom) => {
+        const wasVisible = this.measurablePanelIsVisible;
         this.measurablePanelIsVisible =
           !!geom && geom.stopPoints && geom.stopPoints.length > 0;
+        if (this.measurablePanelIsVisible && !wasVisible) {
+          if (
+            this.terria.measurableGeom &&
+            (!this.terria.measurableGeom.pointDescriptions ||
+              this.terria.measurableGeom.pointDescriptions.length == 0)
+          ) {
+            this.terria.measurableGeom.filename = "";
+            this.terria.measurableGeom.pathNotes = "";
+            this.terria.measurableGeom.pointDescriptions = [];
+            this.terria.measurableGeom.pointDescriptions.push("");
+          }
+        }
       }
     );
 

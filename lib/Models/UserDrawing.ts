@@ -683,13 +683,6 @@ export default class UserDrawing extends MappableMixin(
       this.pointEntities.entities.add(points[i]);
     }
     this.pointEntities.entities.resumeEvents();
-    console.log("TEST 9");
-    console.log("TEST filename ", this.terria.measurableGeom?.filename);
-    console.log("TEST pathnotes ", this.terria.measurableGeom?.pathNotes);
-    console.log(
-      "TEST descriptions ",
-      this.terria.measurableGeom?.pointDescriptions
-    );
     this.dragHelper?.updateDraggableObjects(this.pointEntities);
     if (isDefined(this.onPointClicked)) {
       this.onPointClicked(this.pointEntities);
@@ -762,6 +755,9 @@ export default class UserDrawing extends MappableMixin(
    * Called after a point has been added, prepares to add and draw another point, as well as updating the dialog.
    */
   private prepareToAddNewPoint() {
+    if (this.terria.measurableGeom) {
+      this.terria.measurableGeom.pointDescriptions?.push("");
+    }
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
     });

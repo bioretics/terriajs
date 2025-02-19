@@ -219,10 +219,6 @@ export class MeasureLineTool extends MapNavigationItemController {
 
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
-    console.log(
-      "TEST measureline filename2",
-      this.terria.measurableGeom?.filename
-    );
     // compute sampled path
     this.terria.measurableGeometryManager.sampleFromCustomDataSource(
       pointEntities,

@@ -191,11 +191,6 @@ export default class MeasurableGeometryManager {
         );
       }
 
-      console.log("TEST onlyPoints", onlyPoints);
-      console.log("TEST pointDescriptions", pointDescriptions);
-      console.log("TEST filename", filename);
-      console.log("TEST pathNotes", pathNotes);
-
       // update state of Terria
       const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints
         ? [
