@@ -48,7 +48,10 @@ export default class MeasurableGeometryManager {
   sampleFromCustomDataSource(
     pointEntities: CustomDataSource,
     closeLoop: boolean = false,
-    onlyPoints: boolean = false
+    onlyPoints: boolean = false,
+    pointDescriptions?: string[],
+    filename?: string,
+    pathNotes?: string
   ) {
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
     if (!ellipsoid) {
@@ -78,7 +81,14 @@ export default class MeasurableGeometryManager {
         return Cartographic.fromCartesian(elem, ellipsoid);
       });
 
-    this.sampleFromCartographics(cartoPositions, closeLoop, onlyPoints);
+    this.sampleFromCartographics(
+      cartoPositions,
+      closeLoop,
+      onlyPoints,
+      pointDescriptions,
+      filename,
+      pathNotes
+    );
   }
 
   // sample the entire path (polyline) every "samplingStep" meters
@@ -180,6 +190,11 @@ export default class MeasurableGeometryManager {
             .reduce((sum: number, current: number) => sum + current, 0)
         );
       }
+
+      console.log("TEST onlyPoints", onlyPoints);
+      console.log("TEST pointDescriptions", pointDescriptions);
+      console.log("TEST filename", filename);
+      console.log("TEST pathNotes", pathNotes);
 
       // update state of Terria
       const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints

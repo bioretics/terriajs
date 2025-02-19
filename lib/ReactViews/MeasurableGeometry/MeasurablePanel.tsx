@@ -452,6 +452,16 @@ const MeasurablePanel = observer((props: Props) => {
                 )}
                 value={fileName}
                 onChange={(e) => setFileName(e.target.value)}
+                onBlur={(e) => {
+                  console.log("TEST blur del filename");
+                  if (terria.measurableGeom) {
+                    terria.measurableGeom.filename = e.target.value;
+                    console.log(
+                      "TEST terria.measurableGeom.filename",
+                      terria.measurableGeom.filename
+                    );
+                  }
+                }}
               />
             </Box>
             <Box>
@@ -549,6 +559,11 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={pathNotes}
           onChange={(e) => setPathNotes(e.target.value)}
+          onBlur={(e) => {
+            if (terria.measurableGeom) {
+              terria.measurableGeom.pathNotes = e.target.value;
+            }
+          }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
@@ -592,6 +607,11 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={pathNotes}
           onChange={(e) => setPathNotes(e.target.value)}
+          onBlur={(e) => {
+            if (terria.measurableGeom) {
+              terria.measurableGeom.pathNotes = e.target.value;
+            }
+          }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
@@ -647,9 +667,17 @@ const MeasurablePanel = observer((props: Props) => {
     const onlyPoints = terria?.measurableGeom?.onlyPoints;
 
     const handleDescriptionChange = (index: number, value: string) => {
+      console.log("TEST cambio di descrizione");
       const newDescriptions = [...pointsDescriptions];
       newDescriptions[index] = value;
       setPointsDescriptions(newDescriptions);
+      if (terria.measurableGeom) {
+        terria.measurableGeom.pointDescriptions = newDescriptions;
+        console.log(
+          "TEST descrizione cambiata",
+          terria.measurableGeom.pointDescriptions
+        );
+      }
     };
     const onSortEnd = ({
       oldIndex,
@@ -671,10 +699,13 @@ const MeasurablePanel = observer((props: Props) => {
 
       if (oldIndex === newIndex) return;
       const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
-      if (terria.measurableGeom)
-        terria.measurableGeom.stopPoints = newStopPoints;
       const newDescriptions = reorder(pointsDescriptions, oldIndex, newIndex);
       setPointsDescriptions(newDescriptions);
+      if (terria.measurableGeom) {
+        console.log("TEST reorder", newDescriptions);
+        terria.measurableGeom.stopPoints = newStopPoints;
+        terria.measurableGeom.pointDescriptions = newDescriptions;
+      }
     };
 
     return (

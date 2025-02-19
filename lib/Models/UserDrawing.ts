@@ -454,17 +454,11 @@ export default class UserDrawing extends MappableMixin(
             runInAction(() => {
               this.pointEntities.entities.removeAll();
               for (let i = 0; i < stopPoints.length; ++i) {
-                const pointEntity = new Entity({
-                  position: new ConstantPositionProperty(
-                    Cartographic.toCartesian(stopPoints[i])
-                  ),
-                  billboard: {
-                    image: this.svgPoint,
-                    heightReference: HeightReference.CLAMP_TO_GROUND,
-                    eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-                  }
-                });
-                this.pointEntities.entities.add(pointEntity);
+                this.insertPointToPointEntities(
+                  `Point-${i}`,
+                  Cartographic.toCartesian(stopPoints[i]),
+                  i
+                );
               }
             });
             this.updateSegmentLabels();
@@ -689,7 +683,13 @@ export default class UserDrawing extends MappableMixin(
       this.pointEntities.entities.add(points[i]);
     }
     this.pointEntities.entities.resumeEvents();
-
+    console.log("TEST 9");
+    console.log("TEST filename ", this.terria.measurableGeom?.filename);
+    console.log("TEST pathnotes ", this.terria.measurableGeom?.pathNotes);
+    console.log(
+      "TEST descriptions ",
+      this.terria.measurableGeom?.pointDescriptions
+    );
     this.dragHelper?.updateDraggableObjects(this.pointEntities);
     if (isDefined(this.onPointClicked)) {
       this.onPointClicked(this.pointEntities);

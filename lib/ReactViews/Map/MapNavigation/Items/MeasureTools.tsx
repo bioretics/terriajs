@@ -219,10 +219,18 @@ export class MeasureLineTool extends MapNavigationItemController {
 
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
+    console.log(
+      "TEST measureline filename2",
+      this.terria.measurableGeom?.filename
+    );
     // compute sampled path
     this.terria.measurableGeometryManager.sampleFromCustomDataSource(
       pointEntities,
-      this.userDrawing.closeLoop
+      this.userDrawing.closeLoop,
+      false,
+      this.terria.measurableGeom?.pointDescriptions,
+      this.terria.measurableGeom?.filename,
+      this.terria.measurableGeom?.pathNotes
     );
   }
 
@@ -483,7 +491,11 @@ export class MeasurePolygonTool extends MapNavigationItemController {
     // compute sampled path
     this.terria.measurableGeometryManager.sampleFromCustomDataSource(
       pointEntities,
-      this.userDrawing.closeLoop
+      this.userDrawing.closeLoop,
+      false,
+      this.terria.measurableGeom?.pointDescriptions,
+      this.terria.measurableGeom?.filename,
+      this.terria.measurableGeom?.pathNotes
     );
   }
 
@@ -689,7 +701,10 @@ export class MeasurePointTool extends MapNavigationItemController {
     this.terria.measurableGeometryManager.sampleFromCustomDataSource(
       pointEntities,
       this.userDrawing.closeLoop,
-      true
+      true,
+      this.terria.measurableGeom?.pointDescriptions,
+      this.terria.measurableGeom?.filename,
+      this.terria.measurableGeom?.pathNotes
     );
   }
 
