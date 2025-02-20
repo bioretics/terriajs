@@ -400,7 +400,10 @@ class ViewingControls extends React.Component<
         if (item?.uniqueId?.endsWith("points.kml")) {
           return async () => await (item as KmlCatalogItem).sampleFromKmlData();
         }
-        if (item?.uniqueId?.endsWith("points.json")) {
+        if (
+          item?.uniqueId?.endsWith("points.json") &&
+          !(CatalogMemberMixin.isMixedInto(item) && item.disableAboutData)
+        ) {
           return async () =>
             await (item as GeoJsonCatalogItem).sampleFromGeojsonData();
         }
