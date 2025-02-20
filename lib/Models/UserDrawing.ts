@@ -454,11 +454,17 @@ export default class UserDrawing extends MappableMixin(
             runInAction(() => {
               this.pointEntities.entities.removeAll();
               for (let i = 0; i < stopPoints.length; ++i) {
-                this.insertPointToPointEntities(
-                  `Point-${i}`,
-                  Cartographic.toCartesian(stopPoints[i]),
-                  i
-                );
+                const pointEntity = new Entity({
+                  position: new ConstantPositionProperty(
+                    Cartographic.toCartesian(stopPoints[i])
+                  ),
+                  billboard: {
+                    image: this.svgPoint,
+                    heightReference: HeightReference.CLAMP_TO_GROUND,
+                    eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+                  }
+                });
+                this.pointEntities.entities.add(pointEntity);
               }
             });
             this.updateSegmentLabels();
