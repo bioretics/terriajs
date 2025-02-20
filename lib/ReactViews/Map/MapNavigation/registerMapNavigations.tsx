@@ -191,6 +191,11 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
+        if (viewState.terria.measurableGeom) {
+          viewState.terria.measurableGeom.filename = "";
+          viewState.terria.measurableGeom.pathNotes = "";
+          viewState.terria.measurableGeom.pointDescriptions = [];
+        }
       });
     }
   });
@@ -229,6 +234,11 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePointTool.id);
+        if (viewState.terria.measurableGeom) {
+          viewState.terria.measurableGeom.filename = "";
+          viewState.terria.measurableGeom.pathNotes = "";
+          viewState.terria.measurableGeom.pointDescriptions = [];
+        }
       });
     }
   });
@@ -266,6 +276,11 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.terria.mapNavigationModel.disable(MeasureAngleTool.id);
         viewState.terria.mapNavigationModel.disable(MeasurePolygonTool.id);
         viewState.terria.mapNavigationModel.disable(MeasureLineTool.id);
+        if (viewState.terria.measurableGeom) {
+          viewState.terria.measurableGeom.filename = "";
+          viewState.terria.measurableGeom.pathNotes = "";
+          viewState.terria.measurableGeom.pointDescriptions = [];
+        }
       });
     }
   });

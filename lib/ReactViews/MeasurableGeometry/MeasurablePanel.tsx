@@ -75,11 +75,6 @@ const MeasurablePanel = observer((props: Props) => {
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
     deactivateTool(MeasureAngleTool.id);
-    if (terria.measurableGeom) {
-      terria.measurableGeom.filename = "";
-      terria.measurableGeom.pathNotes = "";
-      terria.measurableGeom.pointDescriptions = [];
-    }
   });
 
   const toggleCollapsed = action(() => {
@@ -88,6 +83,7 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const toggleChart = action(() => {
+    terria.measurableGeometryManager.resample();
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
   });
 
@@ -789,10 +785,11 @@ const MeasurablePanel = observer((props: Props) => {
         }, [idx, terria, viewState]);
 
         const [localText, setLocalText] = React.useState(pointsDescription);
-
         useEffect(() => {
           setLocalText(pointsDescription);
         }, [pointsDescription]);
+
+        const [isDragging, setIsDragging] = React.useState(false);
 
         return (
           <tr
@@ -800,6 +797,15 @@ const MeasurablePanel = observer((props: Props) => {
             onMouseUp={(e) => {
               if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
               handleMouseOver();
+              setIsDragging(false);
+            }}
+            onMouseMove={() => {
+              if (isDragging) {
+                viewState.measurableChartIsVisible = false;
+              }
+            }}
+            onMouseDown={() => {
+              setIsDragging(true);
             }}
             style={{
               cursor: "row-resize",
