@@ -564,7 +564,9 @@ export default class ViewState {
     this._disposeSamplingPathStep = reaction(
       () => this.terria.measurableGeomSamplingStep,
       () => {
-        this.terria.measurableGeometryManager.resample();
+        this.terria.measurableGeometryManager[
+          this.terria.measurableGeometryIndex
+        ].resample();
       }
     );
 

@@ -255,7 +255,9 @@ class GeoJsonCatalogItem
     let name = (fc as any).name || "";
     let pathNotes = (fc as any).path_notes || "";
 
-    this.terria.measurableGeometryManager.sampleFromCartographics(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCartographics(
       resolvedPositions,
       false,
       true,

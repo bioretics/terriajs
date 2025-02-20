@@ -206,7 +206,9 @@ export default class CsvCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, positions)
       : positions;
 
-    this.terria.measurableGeometryManager.sampleFromCartographics(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCartographics(
       resolvedPositions,
       false,
       true,

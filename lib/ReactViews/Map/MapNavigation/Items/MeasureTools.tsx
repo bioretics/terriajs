@@ -220,7 +220,9 @@ export class MeasureLineTool extends MapNavigationItemController {
   onPointClicked(pointEntities: CustomDataSource) {
     this.updateDistance(pointEntities);
     // compute sampled path
-    this.terria.measurableGeometryManager.sampleFromCustomDataSource(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCustomDataSource(
       pointEntities,
       this.userDrawing.closeLoop,
       false,
@@ -485,7 +487,9 @@ export class MeasurePolygonTool extends MapNavigationItemController {
     this.updateDistance(pointEntities);
     this.updateArea(pointEntities);
     // compute sampled path
-    this.terria.measurableGeometryManager.sampleFromCustomDataSource(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCustomDataSource(
       pointEntities,
       this.userDrawing.closeLoop,
       false,
@@ -694,7 +698,9 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onPointClicked(pointEntities: CustomDataSource) {
-    this.terria.measurableGeometryManager.sampleFromCustomDataSource(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCustomDataSource(
       pointEntities,
       this.userDrawing.closeLoop,
       true,

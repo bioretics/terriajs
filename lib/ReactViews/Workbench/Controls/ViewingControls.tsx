@@ -467,7 +467,9 @@ class ViewingControls extends React.Component<
               ? await sampleTerrainMostDetailed(terrainProvider, positions)
               : positions;
 
-            item.terria.measurableGeometryManager.sampleFromCartographics(
+            item.terria.measurableGeometryManager[
+              item.terria.measurableGeometryIndex
+            ].sampleFromCartographics(
               resolvedPositions,
               false,
               true,

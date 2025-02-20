@@ -388,7 +388,9 @@ class KmlCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, cartographicPositions)
       : cartographicPositions;
 
-    this.terria.measurableGeometryManager.sampleFromCartographics(
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].sampleFromCartographics(
       resolvedPositions,
       false,
       true,

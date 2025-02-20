@@ -551,7 +551,12 @@ export default class Terria {
   );
 
   @observable
-  readonly measurableGeometryManager = new MeasurableGeometryManager(this);
+  measurableGeometryIndex: number = 0;
+
+  @observable
+  measurableGeometryManager = [
+    Object.freeze(new MeasurableGeometryManager(this))
+  ];
 
   @observable measurableGeom?: MeasurableGeometry;
 
