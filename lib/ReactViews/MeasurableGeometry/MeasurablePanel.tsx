@@ -26,6 +26,7 @@ import {
 } from "../Map/MapNavigation/Items";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
+import Select from "../../Styled/Select";
 
 interface Props {
   viewState: ViewState;
@@ -370,41 +371,52 @@ const MeasurablePanel = observer((props: Props) => {
     return (
       <div className={Styles.body} style={{ padding: "1rem" }}>
         {!terria?.measurableGeom?.onlyPoints && (
-          <Box>
-            {!terria?.measurableGeom?.hasArea && (
+          <div>
+            <Select>
+              {terria.measurableGeometryManager.map((mgm, index) => (
+                <option key={index} value={index}>{`Path ${index + 1}`}</option>
+              ))}
+            </Select>
+            <Box
+              css={`
+                margin-top: 20px;
+              `}
+            >
+              {!terria?.measurableGeom?.hasArea && (
+                <Button
+                  css={`
+                    background: #519ac2;
+                    margin-left: 5px;
+                    margin-bottom: 20px;
+                  `}
+                  onClick={toggleChart}
+                  title={i18next.t("measurableGeometry.showElevationChart")}
+                >
+                  <StyledIcon
+                    light
+                    realDark={false}
+                    glyph={Icon.GLYPHS.lineChart}
+                    styledWidth="24px"
+                  />
+                </Button>
+              )}
               <Button
                 css={`
-                  background: #519ac2;
+                  color: ${theme.textLight};
+                  background: ${theme.colorPrimary};
                   margin-left: 5px;
                   margin-bottom: 20px;
                 `}
-                onClick={toggleChart}
-                title={i18next.t("measurableGeometry.showElevationChart")}
+                onClick={toggleLineClampToGround}
+                title={i18next.t("measurableGeometry.clampLineButtonTitle")}
               >
-                <StyledIcon
-                  light
-                  realDark={false}
-                  glyph={Icon.GLYPHS.lineChart}
-                  styledWidth="24px"
-                />
+                {terria.clampMeasureLineToGround
+                  ? i18next.t("measurableGeometry.clampLineToGround")
+                  : i18next.t("measurableGeometry.dontClampLineToGround")}
               </Button>
-            )}
-            <Button
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                margin-left: 5px;
-                margin-bottom: 20px;
-              `}
-              onClick={toggleLineClampToGround}
-              title={i18next.t("measurableGeometry.clampLineButtonTitle")}
-            >
-              {terria.clampMeasureLineToGround
-                ? i18next.t("measurableGeometry.clampLineToGround")
-                : i18next.t("measurableGeometry.dontClampLineToGround")}
-            </Button>
-            {renderToggleDistanceLabels()}
-          </Box>
+              {renderToggleDistanceLabels()}
+            </Box>
+          </div>
         )}
 
         {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
