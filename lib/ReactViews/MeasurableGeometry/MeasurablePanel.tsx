@@ -45,8 +45,6 @@ const MeasurablePanel = observer((props: Props) => {
   );
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
-  const [fileName, setFileName] = React.useState("");
-  const [pathNotes, setPathNotes] = React.useState("");
 
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
@@ -180,11 +178,6 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   // UseEffects Methods
-  useEffect(() => {
-    setFileName(terria.measurableGeom?.filename || "");
-    setPathNotes(terria.measurableGeom?.pathNotes || "");
-  }, [terria.measurableGeom]);
-
   useEffect(() => {
     if (viewState.selectedStopPointIdx !== null) {
       setHighlightedRow(viewState.selectedStopPointIdx);
@@ -435,9 +428,8 @@ const MeasurablePanel = observer((props: Props) => {
                 placeholder={i18next.t(
                   "measurableGeometry.filenamePlaceholder"
                 )}
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                onBlur={(e) => {
+                value={terria.measurableGeom.filename}
+                onChange={(e) => {
                   if (terria.measurableGeom) {
                     terria.measurableGeom.filename = e.target.value;
                   }
@@ -449,8 +441,8 @@ const MeasurablePanel = observer((props: Props) => {
                 terria.measurableGeom && (
                   <MeasurableDownload
                     geom={terria.measurableGeom as MeasurableGeometry}
-                    name={fileName}
-                    pathNotes={pathNotes}
+                    name={terria.measurableGeom.filename!!}
+                    pathNotes={terria.measurableGeom.pathNotes!!}
                     ellipsoid={terria.cesium.scene.globe.ellipsoid}
                     pointDescriptions={
                       terria?.measurableGeom?.onlyPoints
@@ -537,12 +529,10 @@ const MeasurablePanel = observer((props: Props) => {
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
-          value={pathNotes}
-          onChange={(e) => setPathNotes(e.target.value)}
-          onBlur={(e) => {
-            if (terria.measurableGeom) {
+          value={terria.measurableGeom?.pathNotes}
+          onChange={(e) => {
+            if (terria.measurableGeom)
               terria.measurableGeom.pathNotes = e.target.value;
-            }
           }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -585,9 +575,8 @@ const MeasurablePanel = observer((props: Props) => {
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
-          value={pathNotes}
-          onChange={(e) => setPathNotes(e.target.value)}
-          onBlur={(e) => {
+          value={terria.measurableGeom?.pathNotes}
+          onChange={(e) => {
             if (terria.measurableGeom) {
               terria.measurableGeom.pathNotes = e.target.value;
             }
