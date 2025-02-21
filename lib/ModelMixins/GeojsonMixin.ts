@@ -1428,7 +1428,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     @computed
     get canUseAsPath() {
       let pathType: PathTypes = PathTypes.noPath;
-
       if (
         this.readyData &&
         isJsonObject(this.readyData.crs) &&
@@ -1446,28 +1445,29 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
-              geometry.type === "MultiLineString" &&
-              geometry.coordinates.length >= 1 &&
-              this.arePolylinesValid(geometry.coordinates)
+              this.arePolylinesValid([geometry.coordinates]) ||
+              this.isPolygonValid([geometry.coordinates])
             ) {
-              pathType = PathTypes.featureCollectionMultiLineString;
-            } else if (
-              geometry.type === "LineString" &&
-              geometry.coordinates.length > 1 &&
-              this.arePolylinesValid([geometry.coordinates])
-            ) {
-              pathType = PathTypes.featureCollectionLineString;
-            } else if (
-              geometry.type === "Polygon" &&
-              geometry.coordinates.length > 0 &&
-              this.isPolygonValid(geometry.coordinates)
-            ) {
-              pathType = PathTypes.featureCollectionPolygon;
+              if (
+                geometry.type === "MultiLineString" &&
+                geometry.coordinates.length >= 1
+              ) {
+                pathType = PathTypes.featureCollectionMultiLineString;
+              } else if (
+                geometry.type === "LineString" &&
+                geometry.coordinates.length > 1
+              ) {
+                pathType = PathTypes.featureCollectionLineString;
+              } else if (
+                geometry.type === "Polygon" &&
+                geometry.coordinates.length > 0
+              ) {
+                pathType = PathTypes.featureCollectionPolygon;
+              }
             }
           }
         }
       }
-
       this._pathType = pathType;
       return pathType !== PathTypes.noPath;
     }
