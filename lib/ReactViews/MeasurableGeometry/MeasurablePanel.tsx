@@ -666,7 +666,8 @@ const MeasurablePanel = observer((props: Props) => {
           terria.measurableGeom.stopPoints = newStopPoints;
           terria.measurableGeom.pointDescriptions = newDescriptions;
         }
-        terria.measurableGeometryManager.resample();
+        if (!terria.measurableGeom?.onlyPoints)
+          terria.measurableGeometryManager.resample();
       }
     );
 
