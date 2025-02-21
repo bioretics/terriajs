@@ -30,7 +30,8 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         false,
         [],
         filename,
-        pathNotes
+        pathNotes,
+        true
       );
     }
 

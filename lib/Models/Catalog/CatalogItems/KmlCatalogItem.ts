@@ -212,21 +212,20 @@ class KmlCatalogItem
     const polygons = entities.filter((e) => e?.polygon);
     const polylines = entities.filter((e) => e?.polyline);
 
-    if (polygons.length > 0 && !this.isPolygonValid(polygons)) {
+    if (polygons.length > 0) {
+      return this.isPolygonValid(polygons) || this.arePolylinesValid(polygons);
+    } else if (polylines.length > 0) {
+      return (
+        this.isPolygonValid(polylines) || this.arePolylinesValid(polylines)
+      );
+    } else {
       return false;
     }
-
-    if (polylines.length > 0 && !this.arePolylinesValid(polylines)) {
-      return false;
-    }
-
-    return polygons.length > 0 || polylines.length > 0;
   }
 
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private isPolygonValid(polygons: Entity[]): boolean {
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];
-
     polygons.forEach((polygon) => {
       const points = this.getPositions(polygon);
       points.forEach((point) =>
@@ -253,6 +252,7 @@ class KmlCatalogItem
     const validPoints = pointOccurrences.filter(
       ({ count }) => count === 1
     ).length;
+
     return validPoints === 2;
   }
 

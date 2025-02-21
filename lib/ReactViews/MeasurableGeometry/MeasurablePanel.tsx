@@ -398,7 +398,8 @@ const MeasurablePanel = observer((props: Props) => {
                 ? i18next.t("measurableGeometry.clampLineToGround")
                 : i18next.t("measurableGeometry.dontClampLineToGround")}
             </Button>
-            {renderToggleDistanceLabels()}
+            {!terria.measurableGeom?.isFileUploaded &&
+              renderToggleDistanceLabels()}
           </Box>
         )}
 
@@ -666,7 +667,10 @@ const MeasurablePanel = observer((props: Props) => {
           terria.measurableGeom.stopPoints = newStopPoints;
           terria.measurableGeom.pointDescriptions = newDescriptions;
         }
-        if (!terria.measurableGeom?.onlyPoints)
+        if (
+          !terria.measurableGeom?.onlyPoints &&
+          !terria.measurableGeom?.isFileUploaded
+        )
           terria.measurableGeometryManager.resample();
       }
     );
