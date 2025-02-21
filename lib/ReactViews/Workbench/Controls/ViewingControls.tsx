@@ -586,7 +586,8 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         )}
-        <VisualizePointsOption item={item} t={t} />
+        {!MeasurableGeometryMixin.isMixedInto(item) ||
+          (!item.canUseAsPath && <VisualizePointsOption item={item} t={t} />)}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}
