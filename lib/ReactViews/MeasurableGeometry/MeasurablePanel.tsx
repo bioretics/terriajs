@@ -83,7 +83,6 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const toggleChart = action(() => {
-    terria.measurableGeometryManager.resample();
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
   });
 
@@ -426,9 +425,10 @@ const MeasurablePanel = observer((props: Props) => {
                 )}
                 value={terria.measurableGeom.filename}
                 onChange={(e) => {
-                  if (terria.measurableGeom) {
-                    terria.measurableGeom.filename = e.target.value;
-                  }
+                  runInAction(() => {
+                    if (terria.measurableGeom)
+                      terria.measurableGeom.filename = e.target.value;
+                  });
                 }}
               />
             </Box>
@@ -527,8 +527,10 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={terria.measurableGeom?.pathNotes}
           onChange={(e) => {
-            if (terria.measurableGeom)
-              terria.measurableGeom.pathNotes = e.target.value;
+            runInAction(() => {
+              if (terria.measurableGeom)
+                terria.measurableGeom.pathNotes = e.target.value;
+            });
           }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -573,9 +575,10 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={terria.measurableGeom?.pathNotes}
           onChange={(e) => {
-            if (terria.measurableGeom) {
-              terria.measurableGeom.pathNotes = e.target.value;
-            }
+            runInAction(() => {
+              if (terria.measurableGeom)
+                terria.measurableGeom.pathNotes = e.target.value;
+            });
           }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -631,13 +634,14 @@ const MeasurablePanel = observer((props: Props) => {
     const stopPoints = terria?.measurableGeom?.stopPoints || [];
     const onlyPoints = terria?.measurableGeom?.onlyPoints;
 
-    const handleDescriptionChange = (index: number, value: string) => {
+    const handleDescriptionChange = action((index: number, value: string) => {
       const newDescriptions = [...terria.measurableGeom?.pointDescriptions!!];
       newDescriptions[index] = value;
       if (terria.measurableGeom) {
         terria.measurableGeom.pointDescriptions = newDescriptions;
       }
-    };
+    });
+
     const onSortEnd = action(
       ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
         function reorder<T>(
@@ -662,6 +666,7 @@ const MeasurablePanel = observer((props: Props) => {
           terria.measurableGeom.stopPoints = newStopPoints;
           terria.measurableGeom.pointDescriptions = newDescriptions;
         }
+        terria.measurableGeometryManager.resample();
       }
     );
 
@@ -789,23 +794,12 @@ const MeasurablePanel = observer((props: Props) => {
           setLocalText(pointsDescription);
         }, [pointsDescription]);
 
-        const [isDragging, setIsDragging] = React.useState(false);
-
         return (
           <tr
             onMouseLeave={handleMouseLeave}
             onMouseUp={(e) => {
               if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
               handleMouseOver();
-              setIsDragging(false);
-            }}
-            onMouseMove={() => {
-              if (isDragging) {
-                viewState.measurableChartIsVisible = false;
-              }
-            }}
-            onMouseDown={() => {
-              setIsDragging(true);
             }}
             style={{
               cursor: "row-resize",
