@@ -287,8 +287,8 @@ class KmlCatalogItem
     if (description) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(description, "text/html");
-      name = doc.querySelector("#name")?.textContent?.trim() || "";
-      pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+      name = firstItem.name || "";
+      pathNotes = doc.body.textContent || "";
     }
 
     const allCoordinates =

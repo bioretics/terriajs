@@ -121,10 +121,8 @@ const MeasurableDownload = (props: Props) => {
             Cartographic.toCartesian(elem, ellipsoid)
           )
         }),
-        description: `
-          <p id="name"><strong>${name}</strong></p>
-          <p id="pathNotes"><strong>${pathNotes}</strong></p>
-        `
+        name: name,
+        description: pathNotes
       })
     );
 
