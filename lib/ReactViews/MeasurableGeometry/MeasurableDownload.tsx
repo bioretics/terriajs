@@ -134,6 +134,7 @@ const MeasurableDownload = (props: Props) => {
     if (!geom?.stopPoints) {
       return;
     }
+
     const output = {
       entities: new EntityCollection(),
       kmz: false,
@@ -145,16 +146,20 @@ const MeasurableDownload = (props: Props) => {
           id: index.toString(),
           point: new PointGraphics({}),
           position: Cartographic.toCartesian(elem, ellipsoid),
-          description: `
-            <p id="name"><strong>${name}</strong></p>
-            <p id="pathNotes"><strong>${pathNotes}</strong></p>
-            <p id="desc-${index}">${pointDescriptions?.[index] || ""}</p>
-          `
+          description: pointDescriptions?.[index]
         })
       );
     });
 
     const res = (await exportKml(output)) as exportKmlResultKml;
+    res.kml = res.kml
+      .replace(
+        /<Document\s+xmlns="">/,
+        `<Document xmlns=""><Folder><name>${name || ""}</name><description>${
+          pathNotes || ""
+        }</description>`
+      )
+      .replace(/<\/Document>/, "</Folder></Document>");
     return res.kml;
   };
 

@@ -351,26 +351,27 @@ class KmlCatalogItem
     let name = "";
     let pathNotes = "";
     let pointDescriptions: string[] = [];
-    const firstEntity = entities[0];
-    const descriptionValue = firstEntity.description?.getValue(
-      JulianDate.now()
-    );
+    const folder = entities[0];
+    const descriptionValue = folder.description?.getValue(JulianDate.now());
+
     if (descriptionValue) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(descriptionValue, "text/html");
-      name = doc.querySelector("#name")?.textContent?.trim() || "";
-      pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+      name = folder.name || "";
+      pathNotes = doc.body.textContent || "";
     }
 
-    pointDescriptions = entities.map((entity, index) => {
-      const descriptionValue = entity.description?.getValue(JulianDate.now());
-      if (descriptionValue) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(descriptionValue, "text/html");
-        return doc.querySelector(`#desc-${index}`)?.textContent?.trim() || "";
+    pointDescriptions = (folder as any)._children.map(
+      (entity: any, index: number) => {
+        const descriptionValue = entity.description?.getValue(JulianDate.now());
+        if (descriptionValue) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(descriptionValue, "text/html");
+          return doc.body.textContent || "";
+        }
+        return "";
       }
-      return "";
-    });
+    );
 
     let cartesianPositions: Cartesian3[] = entities.flatMap(
       (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []
