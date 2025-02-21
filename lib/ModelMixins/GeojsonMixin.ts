@@ -1531,7 +1531,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       let jsonCoords: JsonArray | undefined;
       let filename: string | undefined;
       let pathNotes: string | undefined;
-
       if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
@@ -1561,7 +1560,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             pathNotes || properties.desc || (geometry as any).path_notes || "";
         }
 
-        if (!filename || !pathNotes || !jsonCoords || jsonCoords.length === 0) {
+        if (!jsonCoords || jsonCoords.length === 0) {
           return;
         }
 
