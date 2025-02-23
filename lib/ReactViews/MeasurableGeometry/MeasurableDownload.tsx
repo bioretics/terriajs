@@ -45,7 +45,7 @@ const MeasurableDownload = (props: Props) => {
       {
         key: "csv",
         href: DataUri.make("csv", generateCsvData(geom)),
-        download: `${name}.csv`,
+        download: `${name}_points.csv`,
         label: "CSV"
       },
       {
@@ -100,7 +100,7 @@ const MeasurableDownload = (props: Props) => {
         if (showOnlyPoints) {
           return !download.download?.includes("_lines.");
         }
-        return true;
+        return !download.download?.includes("_points.");
       });
   };
 
