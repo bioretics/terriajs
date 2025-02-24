@@ -394,9 +394,7 @@ class ViewingControls extends React.Component<
       t: (key: string) => string;
     }> = ({ item, t }) => {
       const sampleFn = useMemo(() => {
-        console.log("PROVA", item);
         if (item?.uniqueId?.includes("points.csv")) {
-          console.log("PROVA2", item);
           return async () => await (item as CsvCatalogItem).sampleFromCsvData();
         }
         if (item?.uniqueId?.includes("points.kml")) {
