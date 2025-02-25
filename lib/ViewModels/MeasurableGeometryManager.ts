@@ -43,7 +43,13 @@ export default class MeasurableGeometryManager {
   }
 
   resample() {
-    this.sampleFromCartographics(this.terria.measurableGeom?.stopPoints ?? []);
+    this.sampleFromCartographics(
+      this.terria.measurableGeom?.stopPoints ?? [],
+      undefined,
+      undefined,
+      undefined,
+      this.terria.measurableGeom?.filename
+    );
   }
 
   sampleFromCustomDataSource(
