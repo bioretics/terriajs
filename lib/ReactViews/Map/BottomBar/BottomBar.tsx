@@ -16,7 +16,7 @@ export const BottomBar: VFC = () => {
         border-radius: 8px 8px 8px 8px;
         font-size: 0.7rem;
         width: 96%;
-        background: ${useTheme().darkBackgroundTranslucent};
+        background: ${useTheme().darkTranslucent};
         backdrop-filter: blur(5px);
         margin-top: 2px;
       `}

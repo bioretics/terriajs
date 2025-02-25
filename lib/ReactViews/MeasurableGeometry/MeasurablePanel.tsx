@@ -151,7 +151,7 @@ const MeasurablePanel = observer((props: Props) => {
       <div
         className={Styles.header}
         css={`
-          background: ${theme.darkBackgroundTranslucent};
+          background: ${theme.darkTranslucent};
         `}
       >
         <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
@@ -505,7 +505,7 @@ const MeasurablePanel = observer((props: Props) => {
     <DragWrapper>
       <div
         css={`
-          background: ${theme.darkBackgroundTranslucent};
+          background: ${theme.darkTranslucent};
         `}
         className={panelClassName}
         aria-hidden={!viewState.measurablePanelIsVisible}

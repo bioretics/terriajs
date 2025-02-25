@@ -50,6 +50,7 @@
   textBlack: $text-black;
   turquoiseBlue: $turquoise-blue;
   dark: $dark;
+  darkTranslucent: rgba($dark, 0.75);
   darkWithOverlay: $dark-with-overlay;
   darkLighter: $dark-lighter;
   grey: $grey;
@@ -57,8 +58,6 @@
   greyLighter2: $grey-lighter2;
   greyLightest: $grey-lightest;
   charcoalGrey: $charcoal-grey;
-  darkBackground: $dark-background;
-  darkBackgroundTranslucent: rgba($dark-background, 0.75);
 
   // Fonts
   fontPop: $font-pop;
