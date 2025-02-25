@@ -917,7 +917,7 @@ const MeasurablePanel = observer((props: Props) => {
       default={{
         x: 100,
         y: 100,
-        width: "60%",
+        width: "30%",
         height: "60%"
       }}
       dragHandleClassName="drag-handle"
