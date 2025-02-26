@@ -300,10 +300,11 @@ class KmlCatalogItem
       Cartographic.fromCartesian(elem)
     );
 
-    const positions =
+    /*const positions =
       polylines.length > 0
         ? this.getUniqueCartographics(allCartographics)
-        : allCartographics;
+        : allCartographics;*/
+    const positions = allCartographics;
     this.asPath(positions, name, pathNotes);
   }
 
