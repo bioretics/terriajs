@@ -22,11 +22,10 @@ interface Props {
   name: string;
   pathNotes: string;
   ellipsoid: Ellipsoid;
-  pointDescriptions?: string[];
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { geom, name, pathNotes, ellipsoid, pointDescriptions } = props;
+  const { geom, name, pathNotes, ellipsoid } = props;
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
 
@@ -35,7 +34,7 @@ const MeasurableDownload = (props: Props) => {
 
   const getLinks = () => {
     const showOnlyPoints =
-      props.pointDescriptions && props.pointDescriptions.length > 0;
+      geom.pointDescriptions && geom.pointDescriptions.length > 0;
 
     return [
       {
@@ -47,6 +46,17 @@ const MeasurableDownload = (props: Props) => {
         href: DataUri.make("csv", generateCsvData(geom)),
         download: `${name}_points.csv`,
         label: "CSV"
+      },
+      {
+        key: "kmlPolygon",
+        href: kmlLines
+          ? DataUri.make(
+              "application/vnd.google-earth.kml+xml;charset=utf-8",
+              kmlLines
+            )
+          : false,
+        download: `${name}_polygon.kml`,
+        label: `${i18next.t("downloadData.polygon")} KML`
       },
       {
         key: "kmlLines",
@@ -71,6 +81,12 @@ const MeasurableDownload = (props: Props) => {
         label: `${i18next.t("downloadData.points")} KML`
       },
       {
+        key: "jsonPolygon",
+        href: DataUri.make("json", generateJsonLineStrings(geom)),
+        download: `${name}_polygon.json`,
+        label: `${i18next.t("downloadData.polygon")} JSON`
+      },
+      {
         key: "jsonLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
         download: `${name}_lines.json`,
@@ -81,6 +97,12 @@ const MeasurableDownload = (props: Props) => {
         href: DataUri.make("json", generateJsonPoints(geom)),
         download: `${name}_points.json`,
         label: `${i18next.t("downloadData.points")} JSON`
+      },
+      {
+        key: "gpxPolygon",
+        href: DataUri.make("xml", generateGpxTracks(geom)),
+        download: `${name}_polygon.gpx`,
+        label: `${i18next.t("downloadData.polygon")} GPX`
       },
       {
         key: "gpxTracks",
@@ -98,9 +120,21 @@ const MeasurableDownload = (props: Props) => {
       .filter((download) => download.key === "" || !!download.href)
       .filter((download) => {
         if (showOnlyPoints) {
-          return !download.download?.includes("_lines.");
+          return (
+            !download.download?.includes("_lines.") &&
+            !download.download?.includes("_polygon.")
+          );
+        } else if (geom.isClosed) {
+          return (
+            !download.download?.includes("_points.") &&
+            !download.download?.includes("_lines.")
+          );
+        } else {
+          return (
+            !download.download?.includes("_points.") &&
+            !download.download?.includes("_polygon.")
+          );
         }
-        return !download.download?.includes("_points.");
       });
   };
 
@@ -146,7 +180,7 @@ const MeasurableDownload = (props: Props) => {
           id: index.toString(),
           point: new PointGraphics({}),
           position: Cartographic.toCartesian(elem, ellipsoid),
-          description: pointDescriptions?.[index]
+          description: geom.pointDescriptions?.[index]
         })
       );
     });
@@ -185,7 +219,7 @@ const MeasurableDownload = (props: Props) => {
         return {
           type: "Feature",
           properties: {
-            description: pointDescriptions?.[index] || ""
+            description: geom.pointDescriptions?.[index] || ""
           },
           geometry: {
             coordinates: [
@@ -239,7 +273,7 @@ const MeasurableDownload = (props: Props) => {
                           lat="${CesiumMath.toDegrees(elem.latitude)}"
                           lon="${CesiumMath.toDegrees(elem.longitude)}"
                           ele="${elem.height.toFixed(2)}">
-                          <desc>${pointDescriptions?.[index] || ""}</desc>
+                          <desc>${geom.pointDescriptions?.[index] || ""}</desc>
                         </wpt>`;
           return waypoint;
         })
@@ -265,7 +299,7 @@ const MeasurableDownload = (props: Props) => {
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
           Math.round(elem.height),
-          pointDescriptions?.[index] || ""
+          geom.pointDescriptions?.[index] || ""
         ].join(",")
       )
     );

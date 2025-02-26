@@ -107,7 +107,8 @@
   "downloadData": {
     "formatPlaceholder": "Select format",
     "lines": "Lines",
-    "points": "Points"
+    "points": "Points",
+    "polygon": "Polygon"
   },
   "pickInfo": {
     "toolName": "Info",

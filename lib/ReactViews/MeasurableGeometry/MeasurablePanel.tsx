@@ -441,11 +441,6 @@ const MeasurablePanel = observer((props: Props) => {
                     name={terria.measurableGeom.filename!!}
                     pathNotes={terria.measurableGeom.pathNotes!!}
                     ellipsoid={terria.cesium.scene.globe.ellipsoid}
-                    pointDescriptions={
-                      terria?.measurableGeom?.onlyPoints
-                        ? terria.measurableGeom?.pointDescriptions
-                        : []
-                    }
                   />
                 )}
             </Box>
