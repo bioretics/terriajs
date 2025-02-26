@@ -394,21 +394,21 @@ class ViewingControls extends React.Component<
       t: (key: string) => string;
     }> = ({ item, t }) => {
       const sampleFn = useMemo(() => {
-        if (item?.uniqueId?.includes("points.csv")) {
+        if (item?.uniqueId?.includes(".csv")) {
           return async () => await (item as CsvCatalogItem).sampleFromCsvData();
         }
-        if (item?.uniqueId?.includes("points.kml")) {
+        if (item?.uniqueId?.includes(".kml")) {
           return async () => await (item as KmlCatalogItem).sampleFromKmlData();
         }
         if (
-          item?.uniqueId?.includes("points.json") &&
+          item?.uniqueId?.includes(".json") &&
           !(CatalogMemberMixin.isMixedInto(item) && item.disableAboutData)
         ) {
           return async () =>
             await (item as GeoJsonCatalogItem).sampleFromGeojsonData();
         }
         if (
-          item?.uniqueId?.includes("points.gpx") ||
+          item?.uniqueId?.includes(".gpx") ||
           item?.uniqueId?.includes(".geojson")
         ) {
           return async () => {
@@ -581,7 +581,7 @@ class ViewingControls extends React.Component<
             >
               <BoxViewingControl>
                 <StyledIcon glyph={Icon.GLYPHS.lineChart} />
-                <span>Percorso</span>
+                <span>{t("workbench.pathItem")}</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>
