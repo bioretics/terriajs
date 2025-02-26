@@ -236,10 +236,11 @@ export class MeasureLineTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    const distance = this.prettifyNumber(this.totalDistanceMetres);
+    /*const distance = this.prettifyNumber(this.totalDistanceMetres);
     return distance.length === 0
       ? ""
-      : `${i18next.t("measure.measureLineToolMessage")}: ${distance}`;
+      : `${i18next.t("measure.measureLineToolMessage")}: ${distance}`;*/
+    return "";
   };
 
   /**
@@ -501,7 +502,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    return this.totalDistanceMetres === 0
+    /*return this.totalDistanceMetres === 0
       ? ""
       : `
       <table>
@@ -534,7 +535,8 @@ export class MeasurePolygonTool extends MapNavigationItemController {
           </tr>
         </tbody>
       </table>
-    `;
+    `;*/
+    return "";
   };
 
   /**
@@ -621,12 +623,13 @@ export class MeasureAngleTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    if (this.currentAngle <= 0) {
+    /*if (this.currentAngle <= 0) {
       return "";
     }
     return `${i18next.t(
       "measure.measureAngleToolMessage"
-    )}: ${this.currentAngle.toFixed(2)}°`;
+    )}: ${this.currentAngle.toFixed(2)}°`;*/
+    return "";
   };
 
   onCleanUp() {
@@ -709,7 +712,7 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    return i18next.t("measure.measurePointToolTitle");
+    return ""; //i18next.t("measure.measurePointToolTitle");
   };
 
   /**
