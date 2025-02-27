@@ -82,7 +82,7 @@ const MeasurableDownload = (props: Props) => {
       },
       {
         key: "jsonPolygon",
-        href: DataUri.make("json", generateJsonLineStrings(geom)),
+        href: DataUri.make("json", generateGeoJsonPolygon(geom)),
         download: `${name}_polygon.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
       },
@@ -195,6 +195,36 @@ const MeasurableDownload = (props: Props) => {
       )
       .replace(/<\/Document>/, "</Folder></Document>");
     return res.kml;
+  };
+
+  const generateGeoJsonPolygon = (geom: MeasurableGeometry) => {
+    const coordinates = geom.stopPoints.map((elem) => [
+      CesiumMath.toDegrees(elem.longitude),
+      CesiumMath.toDegrees(elem.latitude)
+    ]);
+
+    if (
+      coordinates.length &&
+      (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+        coordinates[0][1] !== coordinates[coordinates.length - 1][1])
+    ) {
+      coordinates.push(coordinates[0]);
+    }
+
+    return JSON.stringify({
+      type: "FeatureCollection",
+      name: name || "",
+      path_notes: pathNotes || "",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [coordinates]
+          }
+        }
+      ]
+    });
   };
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {

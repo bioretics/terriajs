@@ -1446,7 +1446,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               this.arePolylinesValid([geometry.coordinates]) ||
-              this.isPolygonValid([geometry.coordinates])
+              this.isPolygonValid([geometry.coordinates[0]])
             ) {
               if (
                 geometry.type === "MultiLineString" &&
@@ -1504,7 +1504,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       const validPoints = pointOccurrences.filter(
         ({ count }) => count === 2
       ).length;
-      return validPoints === 1;
+      return validPoints >= 1;
     }
 
     // Updates the occurrences of a given point in the pointOccurrences array.
@@ -1555,9 +1555,16 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           const geometry = feature.geometry ?? {};
 
           filename =
-            filename || properties.name || (geometry as any).name || "";
+            filename || (this.readyData as any).name ||
+            properties.name ||
+            (geometry as any).name ||
+            "";
           pathNotes =
-            pathNotes || properties.desc || (geometry as any).path_notes || "";
+            pathNotes ||
+            (this.readyData as any).path_notes ||
+            properties.desc ||
+            (geometry as any).path_notes ||
+            "";
         }
 
         if (!jsonCoords || jsonCoords.length === 0) {
