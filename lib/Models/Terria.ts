@@ -558,7 +558,7 @@ export default class Terria {
     Object.freeze(new MeasurableGeometryManager(this))
   ];
 
-  @observable measurableGeom?: MeasurableGeometry;
+  @observable measurableGeomList: MeasurableGeometry[] = [];
 
   @observable measurableGeomSamplingStep: number = 500;
 

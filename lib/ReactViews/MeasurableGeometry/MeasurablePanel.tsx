@@ -57,8 +57,13 @@ const MeasurablePanel = observer((props: Props) => {
   MeasurablePanelManager.initialize(terria);
 
   runInAction(() => {
-    if (terria.measurableGeom) {
-      terria.measurableGeom.showDistanceLabels = showDistances;
+    if (
+      terria.measurableGeomList &&
+      terria.measurableGeomList[terria.measurableGeometryIndex]
+    ) {
+      terria.measurableGeomList[
+        terria.measurableGeometryIndex
+      ].showDistanceLabels = showDistances;
     }
   });
 
@@ -105,14 +110,19 @@ const MeasurablePanel = observer((props: Props) => {
   const getBearing = computed(() => {
     if (
       !terria?.cesium?.scene?.globe?.ellipsoid ||
-      !terria?.measurableGeom?.stopPoints ||
-      terria.measurableGeom.stopPoints.length === 0
+      !terria?.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints ||
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
+        .length === 0
     ) {
       return "";
     }
     const ellipsoid = terria.cesium.scene.globe.ellipsoid;
-    const start = terria.measurableGeom.stopPoints[0];
-    const end = terria.measurableGeom.stopPoints.at(-1);
+    const start =
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[0];
+    const end =
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints.at(
+        -1
+      );
     const geo = new EllipsoidGeodesic(start, end, ellipsoid);
     const bearing = (CesiumMath.toDegrees(geo.startHeading) + 360) % 360;
     return `${bearing.toFixed(0)}°`;
@@ -120,23 +130,34 @@ const MeasurablePanel = observer((props: Props) => {
 
   const getHeightDifference = computed(() => {
     if (
-      !terria?.measurableGeom?.stopPoints ||
-      terria.measurableGeom.stopPoints.length < 2
+      !terria?.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints ||
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
+        .length < 2
     ) {
       return "";
     }
-    const start = terria.measurableGeom.stopPoints[0];
-    const end = terria.measurableGeom.stopPoints.at(-1) as Cartographic;
+    const start =
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[0];
+    const end = terria.measurableGeomList[
+      terria.measurableGeometryIndex
+    ].stopPoints.at(-1) as Cartographic;
     const difference = end.height - start.height;
     return `${difference.toFixed(0)} m`;
   });
 
   const heights = computed(() => {
-    return terria?.measurableGeom?.stopPoints?.map((elem) => elem.height) || [];
+    return (
+      terria?.measurableGeomList[
+        terria.measurableGeometryIndex
+      ]?.stopPoints?.map((elem) => elem.height) || []
+    );
   });
 
   const rangeSamplingPathStep = computed(() => {
-    if (!terria?.measurableGeom?.geodeticDistance) {
+    if (
+      !terria?.measurableGeomList[terria.measurableGeometryIndex]
+        ?.geodeticDistance
+    ) {
       return [0, 0];
     }
     const minExponent = 0;
@@ -146,8 +167,9 @@ const MeasurablePanel = observer((props: Props) => {
       maxExponent,
       Math.max(
         minExponent,
-        terria.measurableGeom.geodeticDistance.toFixed(0).length -
-          thousandthExponent
+        (terria.measurableGeomList[
+          terria.measurableGeometryIndex
+        ]?.geodeticDistance?.toFixed(0).length ?? 0) - thousandthExponent
       )
     );
     const minSamplingPathStep = 10 ** exponent;
@@ -216,7 +238,12 @@ const MeasurablePanel = observer((props: Props) => {
 
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
-      if (!mouseCoords || !terria.measurableGeom) return;
+      if (
+        !mouseCoords ||
+        !terria.measurableGeomList ||
+        !terria.measurableGeomList[terria.measurableGeometryIndex]
+      )
+        return;
 
       const findNearbyPoint = (
         points: Cartographic[],
@@ -238,33 +265,51 @@ const MeasurablePanel = observer((props: Props) => {
         }
       };
 
-      if (terria?.measurableGeom?.onlyPoints === false) {
-        if (terria.measurableGeom.sampledPoints) {
-          findNearbyPoint(terria.measurableGeom.sampledPoints, (point, idx) => {
-            if (point) {
-              MeasurablePanelManager.addMarker(point);
-              viewState.setSelectedSampledPointIdx(idx);
-            } else {
-              MeasurablePanelManager.removeAllMarkers();
-              viewState.setSelectedSampledPointIdx(null);
+      if (
+        terria?.measurableGeomList[terria.measurableGeometryIndex]
+          ?.onlyPoints === false
+      ) {
+        if (
+          terria.measurableGeomList[terria.measurableGeometryIndex]
+            .sampledPoints
+        ) {
+          findNearbyPoint(
+            terria.measurableGeomList[terria.measurableGeometryIndex]
+              .sampledPoints ?? [],
+            (point, idx) => {
+              if (point) {
+                MeasurablePanelManager.addMarker(point);
+                viewState.setSelectedSampledPointIdx(idx);
+              } else {
+                MeasurablePanelManager.removeAllMarkers();
+                viewState.setSelectedSampledPointIdx(null);
+              }
             }
-          });
+          );
         }
       }
 
-      if (terria.measurableGeom.stopPoints) {
-        findNearbyPoint(terria.measurableGeom.stopPoints, (point, idx) => {
-          if (point) {
-            MeasurablePanelManager.addMarker(point);
-            setHighlightedRow(idx);
-            viewState.setSelectedStopPointIdx(idx);
-          } else {
-            if (terria?.measurableGeom?.onlyPoints)
-              MeasurablePanelManager.removeAllMarkers();
-            setHighlightedRow(null);
-            viewState.setSelectedStopPointIdx(null);
+      if (
+        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
+      ) {
+        findNearbyPoint(
+          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
+          (point, idx) => {
+            if (point) {
+              MeasurablePanelManager.addMarker(point);
+              setHighlightedRow(idx);
+              viewState.setSelectedStopPointIdx(idx);
+            } else {
+              if (
+                terria?.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.onlyPoints
+              )
+                MeasurablePanelManager.removeAllMarkers();
+              setHighlightedRow(null);
+              viewState.setSelectedStopPointIdx(null);
+            }
           }
-        });
+        );
       }
 
       terria.currentViewer.notifyRepaintRequired();
@@ -279,7 +324,8 @@ const MeasurablePanel = observer((props: Props) => {
   }, [
     terria.cesium,
     terria.currentViewer,
-    terria.measurableGeom,
+    terria.measurableGeomList,
+    terria.measurableGeomList[terria.measurableGeometryIndex],
     viewState.measurablePanelIsVisible
   ]);
 
@@ -381,7 +427,9 @@ const MeasurablePanel = observer((props: Props) => {
         onChange={(e) => {
           setShowDistances(e.target.checked);
           runInAction(() => {
-            terria.measurableGeom!.showDistanceLabels = e.target.checked;
+            terria.measurableGeomList[
+              terria.measurableGeometryIndex
+            ]!.showDistanceLabels = e.target.checked;
           });
         }}
         style={{ marginRight: "5px" }}
@@ -393,7 +441,8 @@ const MeasurablePanel = observer((props: Props) => {
   const renderBody = () => {
     return (
       <div className={Styles.body} style={{ padding: "1rem" }}>
-        {!terria?.measurableGeom?.onlyPoints && (
+        {!terria?.measurableGeomList[terria.measurableGeometryIndex]
+          ?.onlyPoints && (
           <div>
             <Select>
               {terria.measurableGeometryManager.map((mgm, index) => (
@@ -405,7 +454,8 @@ const MeasurablePanel = observer((props: Props) => {
                 margin-top: 20px;
               `}
             >
-              {!terria?.measurableGeom?.hasArea && (
+              {!terria?.measurableGeomList[terria.measurableGeometryIndex]
+                ?.hasArea && (
                 <Button
                   css={`
                     background: #519ac2;
@@ -442,60 +492,88 @@ const MeasurablePanel = observer((props: Props) => {
           </div>
         )}
 
-        {!!terria?.cesium?.scene?.globe?.ellipsoid && terria.measurableGeom && (
-          <div
-            css={`
-              display: flex;
-              margin-left: 5px;
-              margin-top: 5px;
-              margin-bottom: 5px;
-            `}
-          >
-            <Box>
-              <Input
-                css={`
-                  margin-top: 5px;
-                  margin-right: 10px;
-                  max-width: 200px;
-                  height: 30px;
-                `}
-                dark
-                placeholder={i18next.t(
-                  "measurableGeometry.filenamePlaceholder"
-                )}
-                value={terria.measurableGeom.filename}
-                onChange={(e) => {
-                  runInAction(() => {
-                    if (terria.measurableGeom)
-                      terria.measurableGeom.filename = e.target.value;
-                  });
-                }}
-              />
-            </Box>
-            <Box>
-              {!!terria?.cesium?.scene?.globe?.ellipsoid &&
-                terria.measurableGeom && (
-                  <MeasurableDownload
-                    geom={terria.measurableGeom as MeasurableGeometry}
-                    name={terria.measurableGeom.filename!!}
-                    pathNotes={terria.measurableGeom.pathNotes!!}
-                    ellipsoid={terria.cesium.scene.globe.ellipsoid}
-                  />
-                )}
-            </Box>
-          </div>
-        )}
-        {!terria?.measurableGeom?.hasArea &&
-          !terria?.measurableGeom?.onlyPoints &&
+        {!!terria?.cesium?.scene?.globe?.ellipsoid &&
+          terria.measurableGeomList &&
+          terria.measurableGeomList[terria.measurableGeometryIndex] && (
+            <div
+              css={`
+                display: flex;
+                margin-left: 5px;
+                margin-top: 5px;
+                margin-bottom: 5px;
+              `}
+            >
+              <Box>
+                <Input
+                  css={`
+                    margin-top: 5px;
+                    margin-right: 10px;
+                    max-width: 200px;
+                    height: 30px;
+                  `}
+                  dark
+                  placeholder={i18next.t(
+                    "measurableGeometry.filenamePlaceholder"
+                  )}
+                  value={
+                    terria.measurableGeomList[terria.measurableGeometryIndex]
+                      .filename
+                  }
+                  onChange={(e) => {
+                    runInAction(() => {
+                      if (
+                        terria.measurableGeomList &&
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ]
+                      )
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ].filename = e.target.value;
+                    });
+                  }}
+                />
+              </Box>
+              <Box>
+                {!!terria?.cesium?.scene?.globe?.ellipsoid &&
+                  terria.measurableGeomList &&
+                  terria.measurableGeomList[terria.measurableGeometryIndex] && (
+                    <MeasurableDownload
+                      geom={
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ] as MeasurableGeometry
+                      }
+                      name={
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ].filename!!
+                      }
+                      pathNotes={
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ].pathNotes!!
+                      }
+                      ellipsoid={terria.cesium.scene.globe.ellipsoid}
+                    />
+                  )}
+              </Box>
+            </div>
+          )}
+        {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
+          !terria?.measurableGeomList[terria.measurableGeometryIndex]
+            ?.onlyPoints &&
           renderSamplingStep()}
         <br />
-        {!terria?.measurableGeom?.hasArea
-          ? terria?.measurableGeom?.onlyPoints
+        {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea
+          ? terria?.measurableGeomList[terria.measurableGeometryIndex]
+              ?.onlyPoints
             ? renderPointsSummary()
             : renderPathSummary()
           : renderAreaSummary()}
         <br />
-        {terria.measurableGeom?.sampledDistances && renderStepDetails()}
+        {terria.measurableGeomList[terria.measurableGeometryIndex]
+          ?.sampledDistances && renderStepDetails()}
       </div>
     );
   };
@@ -560,11 +638,18 @@ const MeasurablePanel = observer((props: Props) => {
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
-          value={terria.measurableGeom?.pathNotes}
+          value={
+            terria.measurableGeomList[terria.measurableGeometryIndex]?.pathNotes
+          }
           onChange={(e) => {
             runInAction(() => {
-              if (terria.measurableGeom)
-                terria.measurableGeom.pathNotes = e.target.value;
+              if (
+                terria.measurableGeomList &&
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+              )
+                terria.measurableGeomList[
+                  terria.measurableGeometryIndex
+                ].pathNotes = e.target.value;
             });
           }}
         />
@@ -598,9 +683,18 @@ const MeasurablePanel = observer((props: Props) => {
     ];
 
     const distanceData = [
-      prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0),
-      prettifyNumber(terria.measurableGeom?.airDistance ?? 0),
-      prettifyNumber(terria.measurableGeom?.groundDistance ?? 0)
+      prettifyNumber(
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+          ?.geodeticDistance ?? 0
+      ),
+      prettifyNumber(
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+          ?.airDistance ?? 0
+      ),
+      prettifyNumber(
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+          ?.groundDistance ?? 0
+      )
     ];
 
     return (
@@ -608,11 +702,18 @@ const MeasurablePanel = observer((props: Props) => {
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
-          value={terria.measurableGeom?.pathNotes}
+          value={
+            terria.measurableGeomList[terria.measurableGeometryIndex]?.pathNotes
+          }
           onChange={(e) => {
             runInAction(() => {
-              if (terria.measurableGeom)
-                terria.measurableGeom.pathNotes = e.target.value;
+              if (
+                terria.measurableGeomList &&
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+              )
+                terria.measurableGeomList[
+                  terria.measurableGeometryIndex
+                ].pathNotes = e.target.value;
             });
           }}
         />
@@ -649,14 +750,30 @@ const MeasurablePanel = observer((props: Props) => {
           <tbody>
             <tr>
               <td>
-                {prettifyNumber(terria.measurableGeom?.geodeticDistance ?? 0)}
+                {prettifyNumber(
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.geodeticDistance ?? 0
+                )}
               </td>
-              <td>{prettifyNumber(terria.measurableGeom?.airDistance ?? 0)}</td>
               <td>
-                {prettifyNumber(terria.measurableGeom?.geodeticArea ?? 0, true)}
+                {prettifyNumber(
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.airDistance ?? 0
+                )}
               </td>
               <td>
-                {prettifyNumber(terria.measurableGeom?.airArea ?? 0, true)}
+                {prettifyNumber(
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.geodeticArea ?? 0,
+                  true
+                )}
+              </td>
+              <td>
+                {prettifyNumber(
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.airArea ?? 0,
+                  true
+                )}
               </td>
             </tr>
           </tbody>
@@ -666,14 +783,25 @@ const MeasurablePanel = observer((props: Props) => {
   );
 
   const renderStepDetails = () => {
-    const stopPoints = terria?.measurableGeom?.stopPoints || [];
-    const onlyPoints = terria?.measurableGeom?.onlyPoints;
+    const stopPoints =
+      terria?.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints ||
+      [];
+    const onlyPoints =
+      terria?.measurableGeomList[terria.measurableGeometryIndex]?.onlyPoints;
 
     const handleDescriptionChange = action((index: number, value: string) => {
-      const newDescriptions = [...terria.measurableGeom?.pointDescriptions!!];
+      const newDescriptions = [
+        ...terria.measurableGeomList[terria.measurableGeometryIndex]
+          ?.pointDescriptions!!
+      ];
       newDescriptions[index] = value;
-      if (terria.measurableGeom) {
-        terria.measurableGeom.pointDescriptions = newDescriptions;
+      if (
+        terria.measurableGeomList &&
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+      ) {
+        terria.measurableGeomList[
+          terria.measurableGeometryIndex
+        ].pointDescriptions = newDescriptions;
       }
     });
 
@@ -692,20 +820,31 @@ const MeasurablePanel = observer((props: Props) => {
 
         if (oldIndex === newIndex) return;
         const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
-        if (terria.measurableGeom) {
+        if (
+          terria.measurableGeomList &&
+          terria.measurableGeomList[terria.measurableGeometryIndex]
+        ) {
           const newDescriptions = reorder(
-            terria.measurableGeom?.pointDescriptions!!,
+            terria.measurableGeomList[terria.measurableGeometryIndex]
+              ?.pointDescriptions!!,
             oldIndex,
             newIndex
           );
-          terria.measurableGeom.stopPoints = newStopPoints;
-          terria.measurableGeom.pointDescriptions = newDescriptions;
+          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints =
+            newStopPoints;
+          terria.measurableGeomList[
+            terria.measurableGeometryIndex
+          ].pointDescriptions = newDescriptions;
         }
         if (
-          !terria.measurableGeom?.onlyPoints &&
-          !terria.measurableGeom?.isFileUploaded
+          !terria.measurableGeomList[terria.measurableGeometryIndex]
+            ?.onlyPoints &&
+          !terria.measurableGeomList[terria.measurableGeometryIndex]
+            ?.isFileUploaded
         )
-          terria.measurableGeometryManager.resample();
+          terria.measurableGeometryManager[
+            terria.measurableGeometryIndex
+          ].resample();
       }
     );
 
@@ -751,7 +890,10 @@ const MeasurablePanel = observer((props: Props) => {
             <SortableList
               items={stopPoints}
               onlyPoints={onlyPoints}
-              pointsDescriptions={terria.measurableGeom?.pointDescriptions!!}
+              pointsDescriptions={
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.pointDescriptions!!
+              }
               onDescriptionChange={handleDescriptionChange}
               onSortEnd={onSortEnd}
               distance={5}
@@ -801,7 +943,9 @@ const MeasurablePanel = observer((props: Props) => {
         const renderSlope = React.useCallback(
           (index: number) => {
             if (index <= 0) return "";
-            const airDistances = terria?.measurableGeom?.stopAirDistances;
+            const airDistances =
+              terria?.measurableGeomList[terria.measurableGeometryIndex]
+                ?.stopAirDistances;
             return airDistances?.length > index
               ? Math.abs(
                   (100 * (point.height - array[index - 1].height)) /
@@ -809,7 +953,12 @@ const MeasurablePanel = observer((props: Props) => {
                 ).toFixed(1)
               : "";
           },
-          [terria?.measurableGeom, array, point.height]
+          [
+            terria?.measurableGeomList,
+            terria?.measurableGeomList[terria.measurableGeometryIndex],
+            array,
+            point.height
+          ]
         );
 
         const handleMouseLeave = React.useCallback(() => {
@@ -823,7 +972,8 @@ const MeasurablePanel = observer((props: Props) => {
             setHighlightedRow(idx);
             viewState.setSelectedStopPointIdx(idx);
             MeasurablePanelManager.addMarker(
-              terria.measurableGeom.stopPoints[idx]
+              terria.measurableGeomList[terria.measurableGeometryIndex]
+                .stopPoints[idx]
             );
           }
         }, [idx, terria, viewState]);
@@ -871,19 +1021,22 @@ const MeasurablePanel = observer((props: Props) => {
                 </td>
                 <td>
                   {renderDistanceData(
-                    terria?.measurableGeom?.stopGeodeticDistances,
+                    terria?.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopGeodeticDistances,
                     idx
                   )}
                 </td>
                 <td>
                   {renderDistanceData(
-                    terria?.measurableGeom?.stopAirDistances,
+                    terria?.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopAirDistances,
                     idx
                   )}
                 </td>
                 <td>
                   {renderDistanceData(
-                    terria?.measurableGeom?.stopGroundDistances,
+                    terria?.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopGroundDistances,
                     idx
                   )}
                 </td>

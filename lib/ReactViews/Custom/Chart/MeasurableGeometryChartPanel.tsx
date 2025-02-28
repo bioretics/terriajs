@@ -91,7 +91,9 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         ?.find((item) => item.key === ChartKeys.GroundChart)
         ?.points.findIndex((elem) => elem === newPoint);
       if (!pointIndex) return;
-      const coords = terria?.measurableGeom?.sampledPoints?.[pointIndex];
+      const coords =
+        terria?.measurableGeomList[terria.measurableGeometryIndex]
+          ?.sampledPoints?.[pointIndex];
       if (!coords) return;
 
       const airPointIndex = chartItems
@@ -113,16 +115,21 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (terria?.measurableGeom) {
+    if (
+      terria?.measurableGeomList &&
+      terria.measurableGeomList[terria.measurableGeometryIndex]
+    ) {
       const airData = fetchPathDataChart(
-        terria.measurableGeom.stopPoints,
-        terria.measurableGeom.stopAirDistances,
-        terria.measurableGeom.airDistance
+        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+          .stopAirDistances,
+        terria.measurableGeomList[terria.measurableGeometryIndex].airDistance
       );
       const groundData = fetchPathDataChart(
-        terria.measurableGeom.sampledPoints,
-        terria.measurableGeom.sampledDistances,
-        terria.measurableGeom.groundDistance
+        terria.measurableGeomList[terria.measurableGeometryIndex].sampledPoints,
+        terria.measurableGeomList[terria.measurableGeometryIndex]
+          .sampledDistances,
+        terria.measurableGeomList[terria.measurableGeometryIndex].groundDistance
       );
 
       const items: ChartItem[] = [];
@@ -156,7 +163,11 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
       setChartItems(items);
     }
-  }, [terria.measurableGeom, terria.measurableGeomSamplingStep]);
+  }, [
+    terria.measurableGeomList,
+    terria.measurableGeomList[terria.measurableGeometryIndex],
+    terria.measurableGeomSamplingStep
+  ]);
 
   return (
     <div className={Styles.holder}>

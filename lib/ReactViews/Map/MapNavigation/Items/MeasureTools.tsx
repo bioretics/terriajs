@@ -227,9 +227,12 @@ export class MeasureLineTool extends MapNavigationItemController {
       pointEntities,
       this.userDrawing.closeLoop,
       false,
-      this.terria.measurableGeom?.pointDescriptions,
-      this.terria.measurableGeom?.filename,
-      this.terria.measurableGeom?.pathNotes
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pointDescriptions,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.filename,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pathNotes
     );
   }
 
@@ -497,9 +500,12 @@ export class MeasurePolygonTool extends MapNavigationItemController {
       pointEntities,
       this.userDrawing.closeLoop,
       false,
-      this.terria.measurableGeom?.pointDescriptions,
-      this.terria.measurableGeom?.filename,
-      this.terria.measurableGeom?.pathNotes
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pointDescriptions,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.filename,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pathNotes
     );
   }
 
@@ -712,9 +718,12 @@ export class MeasurePointTool extends MapNavigationItemController {
       pointEntities,
       this.userDrawing.closeLoop,
       true,
-      this.terria.measurableGeom?.pointDescriptions,
-      this.terria.measurableGeom?.filename,
-      this.terria.measurableGeom?.pathNotes
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pointDescriptions,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.filename,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pathNotes
     );
   }
 

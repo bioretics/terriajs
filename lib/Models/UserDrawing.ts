@@ -244,7 +244,10 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
-    if (!this.terria.measurableGeom?.showDistanceLabels) {
+    if (
+      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.showDistanceLabels
+    ) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
         if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -254,7 +257,10 @@ export default class UserDrawing extends MappableMixin(
       toRemove.forEach((e) => this.otherEntities.entities.remove(e));
       return;
     }
-    if (!this.terria.measurableGeom.onlyPoints) {
+    if (
+      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        .onlyPoints
+    ) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
         if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -445,7 +451,9 @@ export default class UserDrawing extends MappableMixin(
     });
 
     this.disposeStopPointsReaction = reaction(
-      () => this.terria.measurableGeom?.stopPoints,
+      () =>
+        this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+          ?.stopPoints,
       (stopPoints, previousStopPoints) => {
         if (stopPoints) {
           const previousSize = previousStopPoints?.length || 0;
@@ -475,7 +483,9 @@ export default class UserDrawing extends MappableMixin(
     );
 
     this.disposeShowDistanceLabelsReaction = reaction(
-      () => this.terria.measurableGeom?.showDistanceLabels!!,
+      () =>
+        this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+          ?.showDistanceLabels!!,
       (showLabels: boolean) => {
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];
@@ -761,8 +771,10 @@ export default class UserDrawing extends MappableMixin(
    * Called after a point has been added, prepares to add and draw another point, as well as updating the dialog.
    */
   private prepareToAddNewPoint() {
-    if (this.terria.measurableGeom) {
-      this.terria.measurableGeom.pointDescriptions?.push("");
+    if (this.terria.measurableGeomList[this.terria.measurableGeometryIndex]) {
+      this.terria.measurableGeomList[
+        this.terria.measurableGeometryIndex
+      ].pointDescriptions?.push("");
     }
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
@@ -834,7 +846,9 @@ export default class UserDrawing extends MappableMixin(
                 if (
                   !this.isAngleMeasuring &&
                   !this.isPointMeasuring &&
-                  this.terria.measurableGeom?.showDistanceLabels
+                  this.terria.measurableGeomList[
+                    this.terria.measurableGeometryIndex
+                  ]?.showDistanceLabels
                 ) {
                   this.updateSegmentLabels();
                 }
