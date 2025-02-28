@@ -70,7 +70,7 @@ export class MeasureToolsController extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.map;
+    return GLYPHS.measureTools;
   }
 
   get viewerMode(): ViewerMode | undefined {

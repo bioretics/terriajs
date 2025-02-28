@@ -155,33 +155,33 @@ const MeasurableDownload = (props: Props) => {
     const coordsString = coords.join(" ");
 
     const kml = `<?xml version="1.0" encoding="utf-8"?>
-  <kml xmlns="http://www.opengis.net/kml/2.2">
-    <Document id="root_doc">
-      <Folder>
-      <Placemark id="0">
-          <name>${name}</name>
-          <description>${pathNotes}</description>
-          <Style>
-            <LineStyle>
-              <color>ff0000ff</color>
-            </LineStyle>
-            <PolyStyle>
-              <fill>0</fill>
-            </PolyStyle>
-          </Style>
-          <Polygon>
-            <altitudeMode>clampToGround</altitudeMode>
-            <outerBoundaryIs>
-              <LinearRing>
+      <kml xmlns="http://www.opengis.net/kml/2.2">
+        <Document id="root_doc">
+          <Folder>
+          <Placemark id="0">
+              <name>${name}</name>
+              <description>${pathNotes}</description>
+              <Style>
+                <LineStyle>
+                  <color>ff0000ff</color>
+                </LineStyle>
+                <PolyStyle>
+                  <fill>0</fill>
+                </PolyStyle>
+              </Style>
+              <Polygon>
                 <altitudeMode>clampToGround</altitudeMode>
-                <coordinates>${coordsString}</coordinates>
-              </LinearRing>
-            </outerBoundaryIs>
-          </Polygon>
-        </Placemark>
-      </Folder>
-    </Document>
-  </kml>`;
+                <outerBoundaryIs>
+                  <LinearRing>
+                    <altitudeMode>clampToGround</altitudeMode>
+                    <coordinates>${coordsString}</coordinates>
+                  </LinearRing>
+                </outerBoundaryIs>
+              </Polygon>
+            </Placemark>
+          </Folder>
+        </Document>
+      </kml>`;
 
     return Promise.resolve(kml);
   };
