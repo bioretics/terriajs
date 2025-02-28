@@ -394,19 +394,22 @@ class ViewingControls extends React.Component<
       t: (key: string) => string;
     }> = ({ item, t }) => {
       const sampleFn = useMemo(() => {
-        if (item?.uniqueId?.endsWith(".csv")) {
+        if (item?.uniqueId?.includes(".csv")) {
           return async () => await (item as CsvCatalogItem).sampleFromCsvData();
         }
-        if (item?.uniqueId?.endsWith("points.kml")) {
+        if (item?.uniqueId?.includes(".kml")) {
           return async () => await (item as KmlCatalogItem).sampleFromKmlData();
         }
-        if (item?.uniqueId?.endsWith("points.json")) {
+        if (
+          item?.uniqueId?.includes(".json") &&
+          !(CatalogMemberMixin.isMixedInto(item) && item.disableAboutData)
+        ) {
           return async () =>
             await (item as GeoJsonCatalogItem).sampleFromGeojsonData();
         }
         if (
-          item?.uniqueId?.endsWith("points.gpx") ||
-          item?.uniqueId?.endsWith(".geojson")
+          item?.uniqueId?.includes(".gpx") ||
+          item?.uniqueId?.includes(".geojson")
         ) {
           return async () => {
             const fc = await (
@@ -580,12 +583,14 @@ class ViewingControls extends React.Component<
             >
               <BoxViewingControl>
                 <StyledIcon glyph={Icon.GLYPHS.lineChart} />
-                <span>Percorso</span>
+                <span>{t("workbench.pathItem")}</span>
               </BoxViewingControl>
             </ViewingControlMenuButton>
           </li>
         )}
-        <VisualizePointsOption item={item} t={t} />
+        {(!MeasurableGeometryMixin.isMixedInto(item) || !item.canUseAsPath) && (
+          <VisualizePointsOption item={item} t={t} />
+        )}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}

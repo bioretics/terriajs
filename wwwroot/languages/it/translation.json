@@ -110,7 +110,8 @@
   "downloadData": {
     "formatPlaceholder": "Seleziona il formato",
     "lines": "Linee",
-    "points": "Punti"
+    "points": "Punti",
+    "polygon": "Poligono"
   },
   "pickInfo": {
     "toolName": "Info",
@@ -1405,6 +1406,7 @@
     "colorScaleRangeMin": "Il valore minimo deve essere un numero.",
     "searchItemTitle": "Cerca",
     "searchItem": "Cerca",
+    "pathItem": "Percorso",
     "pointsItem": "Punti",
     "dimensionsSelector": {
       "undefinedLabel": "Non specificato"

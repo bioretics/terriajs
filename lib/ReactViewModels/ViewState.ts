@@ -552,8 +552,6 @@ export default class ViewState {
             (!this.terria.measurableGeom.pointDescriptions ||
               this.terria.measurableGeom.pointDescriptions.length == 0)
           ) {
-            this.terria.measurableGeom.filename = "";
-            this.terria.measurableGeom.pathNotes = "";
             this.terria.measurableGeom.pointDescriptions = [];
             this.terria.measurableGeom.pointDescriptions.push("");
           }

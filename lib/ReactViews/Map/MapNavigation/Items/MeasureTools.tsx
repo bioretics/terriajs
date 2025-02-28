@@ -70,7 +70,7 @@ export class MeasureToolsController extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.map;
+    return GLYPHS.measureTools;
   }
 
   get viewerMode(): ViewerMode | undefined {
@@ -239,10 +239,11 @@ export class MeasureLineTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    const distance = this.prettifyNumber(this.totalDistanceMetres);
+    /*const distance = this.prettifyNumber(this.totalDistanceMetres);
     return distance.length === 0
       ? ""
-      : `${i18next.t("measure.measureLineToolMessage")}: ${distance}`;
+      : `${i18next.t("measure.measureLineToolMessage")}: ${distance}`;*/
+    return "";
   };
 
   /**
@@ -259,6 +260,7 @@ export class MeasureLineTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
+    this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode();
     super.activate();
   }
@@ -507,7 +509,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    return this.totalDistanceMetres === 0
+    /*return this.totalDistanceMetres === 0
       ? ""
       : `
       <table>
@@ -540,7 +542,8 @@ export class MeasurePolygonTool extends MapNavigationItemController {
           </tr>
         </tbody>
       </table>
-    `;
+    `;*/
+    return "";
   };
 
   /**
@@ -557,6 +560,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
+    this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode();
     super.activate();
   }
@@ -627,12 +631,13 @@ export class MeasureAngleTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    if (this.currentAngle <= 0) {
+    /*if (this.currentAngle <= 0) {
       return "";
     }
     return `${i18next.t(
       "measure.measureAngleToolMessage"
-    )}: ${this.currentAngle.toFixed(2)}°`;
+    )}: ${this.currentAngle.toFixed(2)}°`;*/
+    return "";
   };
 
   onCleanUp() {
@@ -643,6 +648,7 @@ export class MeasureAngleTool extends MapNavigationItemController {
 
   activate() {
     this.onOpen();
+    this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode(MeasureAngleTool.id);
     super.activate();
   }
@@ -717,7 +723,7 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
-    return i18next.t("measure.measurePointToolTitle");
+    return ""; //i18next.t("measure.measurePointToolTitle");
   };
 
   /**
@@ -734,6 +740,7 @@ export class MeasurePointTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
+    this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode(MeasurePointTool.id);
     super.activate();
   }

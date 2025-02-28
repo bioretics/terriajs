@@ -46,6 +46,12 @@ const MeasurablePanel = observer((props: Props) => {
   );
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
+  const { width: windowWidth, height: windowHeight } = useWindowSize();
+
+  const initialWidth = windowWidth * 0.2;
+  const initialHeight = windowHeight * 0.6;
+  const maxWidth = windowWidth * 0.6;
+  const maxHeight = windowHeight * 0.8;
 
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
@@ -76,11 +82,6 @@ const MeasurablePanel = observer((props: Props) => {
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
     deactivateTool(MeasureAngleTool.id);
-    if (terria.measurableGeom) {
-      terria.measurableGeom.filename = "";
-      terria.measurableGeom.pathNotes = "";
-      terria.measurableGeom.pointDescriptions = [];
-    }
   });
 
   const toggleCollapsed = action(() => {
@@ -180,6 +181,27 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   // UseEffects Methods
+  function useWindowSize() {
+    const [windowSize, setWindowSize] = React.useState({
+      width: window.innerWidth,
+      height: window.innerHeight
+    });
+
+    useEffect(() => {
+      const handleResize = () => {
+        setWindowSize({
+          width: window.innerWidth,
+          height: window.innerHeight
+        });
+      };
+
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }, []);
+
+    return windowSize;
+  }
+
   useEffect(() => {
     if (viewState.selectedStopPointIdx !== null) {
       setHighlightedRow(viewState.selectedStopPointIdx);
@@ -443,9 +465,10 @@ const MeasurablePanel = observer((props: Props) => {
                 )}
                 value={terria.measurableGeom.filename}
                 onChange={(e) => {
-                  if (terria.measurableGeom) {
-                    terria.measurableGeom.filename = e.target.value;
-                  }
+                  runInAction(() => {
+                    if (terria.measurableGeom)
+                      terria.measurableGeom.filename = e.target.value;
+                  });
                 }}
               />
             </Box>
@@ -457,11 +480,6 @@ const MeasurablePanel = observer((props: Props) => {
                     name={terria.measurableGeom.filename!!}
                     pathNotes={terria.measurableGeom.pathNotes!!}
                     ellipsoid={terria.cesium.scene.globe.ellipsoid}
-                    pointDescriptions={
-                      terria?.measurableGeom?.onlyPoints
-                        ? terria.measurableGeom?.pointDescriptions
-                        : []
-                    }
                   />
                 )}
             </Box>
@@ -544,8 +562,10 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={terria.measurableGeom?.pathNotes}
           onChange={(e) => {
-            if (terria.measurableGeom)
-              terria.measurableGeom.pathNotes = e.target.value;
+            runInAction(() => {
+              if (terria.measurableGeom)
+                terria.measurableGeom.pathNotes = e.target.value;
+            });
           }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -590,9 +610,10 @@ const MeasurablePanel = observer((props: Props) => {
           dark
           value={terria.measurableGeom?.pathNotes}
           onChange={(e) => {
-            if (terria.measurableGeom) {
-              terria.measurableGeom.pathNotes = e.target.value;
-            }
+            runInAction(() => {
+              if (terria.measurableGeom)
+                terria.measurableGeom.pathNotes = e.target.value;
+            });
           }}
         />
         <Text textLight style={{ marginLeft: 1 }} title="">
@@ -648,13 +669,14 @@ const MeasurablePanel = observer((props: Props) => {
     const stopPoints = terria?.measurableGeom?.stopPoints || [];
     const onlyPoints = terria?.measurableGeom?.onlyPoints;
 
-    const handleDescriptionChange = (index: number, value: string) => {
+    const handleDescriptionChange = action((index: number, value: string) => {
       const newDescriptions = [...terria.measurableGeom?.pointDescriptions!!];
       newDescriptions[index] = value;
       if (terria.measurableGeom) {
         terria.measurableGeom.pointDescriptions = newDescriptions;
       }
-    };
+    });
+
     const onSortEnd = action(
       ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
         function reorder<T>(
@@ -679,6 +701,11 @@ const MeasurablePanel = observer((props: Props) => {
           terria.measurableGeom.stopPoints = newStopPoints;
           terria.measurableGeom.pointDescriptions = newDescriptions;
         }
+        if (
+          !terria.measurableGeom?.onlyPoints &&
+          !terria.measurableGeom?.isFileUploaded
+        )
+          terria.measurableGeometryManager.resample();
       }
     );
 
@@ -934,9 +961,11 @@ const MeasurablePanel = observer((props: Props) => {
       default={{
         x: 100,
         y: 100,
-        width: "60%",
-        height: "60%"
+        width: initialWidth,
+        height: initialHeight
       }}
+      maxWidth={maxWidth}
+      maxHeight={maxHeight}
       dragHandleClassName="drag-handle"
       enableResizing={{
         right: true,

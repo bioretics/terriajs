@@ -26,6 +26,7 @@ export interface MeasurableGeometry {
   showDistanceLabels?: boolean;
   filename?: string;
   pathNotes?: string;
+  isFileUploaded?: boolean;
 }
 
 export default class MeasurableGeometryManager {
@@ -42,7 +43,13 @@ export default class MeasurableGeometryManager {
   }
 
   resample() {
-    this.sampleFromCartographics(this.terria.measurableGeom?.stopPoints ?? []);
+    this.sampleFromCartographics(
+      this.terria.measurableGeom?.stopPoints ?? [],
+      undefined,
+      undefined,
+      undefined,
+      this.terria.measurableGeom?.filename
+    );
   }
 
   sampleFromCustomDataSource(
@@ -51,7 +58,8 @@ export default class MeasurableGeometryManager {
     onlyPoints: boolean = false,
     pointDescriptions?: string[],
     filename?: string,
-    pathNotes?: string
+    pathNotes?: string,
+    isFileUploaded?: boolean
   ) {
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
     if (!ellipsoid) {
@@ -87,7 +95,8 @@ export default class MeasurableGeometryManager {
       onlyPoints,
       pointDescriptions,
       filename,
-      pathNotes
+      pathNotes,
+      isFileUploaded
     );
   }
 
@@ -99,7 +108,8 @@ export default class MeasurableGeometryManager {
     onlyPoints: boolean = false,
     pointDescriptions: string[] = [],
     filename?: string,
-    pathNotes?: string
+    pathNotes?: string,
+    isFileUploaded?: boolean
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -204,7 +214,8 @@ export default class MeasurableGeometryManager {
             true,
             pointDescriptions,
             filename,
-            pathNotes
+            pathNotes,
+            isFileUploaded
           ]
         : [
             cartoPositions,
@@ -217,7 +228,8 @@ export default class MeasurableGeometryManager {
             false,
             [],
             filename,
-            pathNotes
+            pathNotes,
+            isFileUploaded
           ];
 
       this.updatePath(...updatePathParams);
@@ -236,7 +248,8 @@ export default class MeasurableGeometryManager {
     onlyPoints: boolean = false,
     pointDescriptions: string[] = [],
     filename?: string,
-    pathNotes?: string
+    pathNotes?: string,
+    isFileUploaded?: boolean
   ) {
     this.terria.measurableGeom = {
       isClosed: isClosed,
@@ -259,7 +272,8 @@ export default class MeasurableGeometryManager {
       onlyPoints: onlyPoints,
       pointDescriptions: pointDescriptions,
       filename: filename,
-      pathNotes: pathNotes
+      pathNotes: pathNotes,
+      isFileUploaded: isFileUploaded
     };
   }
 }

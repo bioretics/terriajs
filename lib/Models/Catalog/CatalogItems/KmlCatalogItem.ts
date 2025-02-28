@@ -212,21 +212,23 @@ class KmlCatalogItem
     const polygons = entities.filter((e) => e?.polygon);
     const polylines = entities.filter((e) => e?.polyline);
 
-    if (polygons.length > 0 && !this.isPolygonValid(polygons)) {
+    console.log("test-kmlcatalogitem canUseAsPath entities", entities);
+
+    if (polygons.length > 0) {
+      return this.isPolygonValid(polygons) || this.arePolylinesValid(polygons);
+    } else if (polylines.length > 0) {
+      return (
+        this.isPolygonValid(polylines) || this.arePolylinesValid(polylines)
+      );
+    } else {
       return false;
     }
-
-    if (polylines.length > 0 && !this.arePolylinesValid(polylines)) {
-      return false;
-    }
-
-    return polygons.length > 0 || polylines.length > 0;
   }
 
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private isPolygonValid(polygons: Entity[]): boolean {
+    console.log("test-kmlcatalogitem canUseAsPath isPolygonValid");
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];
-
     polygons.forEach((polygon) => {
       const points = this.getPositions(polygon);
       points.forEach((point) =>
@@ -234,14 +236,20 @@ class KmlCatalogItem
       );
     });
 
+    console.log(
+      "test-kmlcatalogitem canUseAsPath isPolygonValid pointOccurrences",
+      pointOccurrences
+    );
+
     const validPoints = pointOccurrences.filter(
       ({ count }) => count === 2
     ).length;
-    return validPoints === 1;
+    return validPoints >= 1;
   }
 
   // Checks if the provided polylines are valid by ensuring exactly two points are connected only once.
   private arePolylinesValid(polylines: Entity[]): boolean {
+    console.log("test-kmlcatalogitem arePolylinesValid");
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];
 
     polylines.forEach((polyline) => {
@@ -250,9 +258,15 @@ class KmlCatalogItem
       this.updatePointOccurrences(pointOccurrences, points[points.length - 1]);
     });
 
+    console.log(
+      "test-kmlcatalogitem arePolylinesValid pointOccurences",
+      pointOccurrences
+    );
+
     const validPoints = pointOccurrences.filter(
       ({ count }) => count === 1
     ).length;
+
     return validPoints === 2;
   }
 
@@ -287,8 +301,8 @@ class KmlCatalogItem
     if (description) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(description, "text/html");
-      name = doc.querySelector("#name")?.textContent?.trim() || "";
-      pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+      name = firstItem.name || "";
+      pathNotes = doc.body.textContent || "";
     }
 
     const allCoordinates =
@@ -300,10 +314,11 @@ class KmlCatalogItem
       Cartographic.fromCartesian(elem)
     );
 
-    const positions =
+    /*const positions =
       polylines.length > 0
         ? this.getUniqueCartographics(allCartographics)
-        : allCartographics;
+        : allCartographics;*/
+    const positions = allCartographics;
     this.asPath(positions, name, pathNotes);
   }
 
@@ -351,26 +366,27 @@ class KmlCatalogItem
     let name = "";
     let pathNotes = "";
     let pointDescriptions: string[] = [];
-    const firstEntity = entities[0];
-    const descriptionValue = firstEntity.description?.getValue(
-      JulianDate.now()
-    );
+    const folder = entities[0];
+    const descriptionValue = folder.description?.getValue(JulianDate.now());
+
     if (descriptionValue) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(descriptionValue, "text/html");
-      name = doc.querySelector("#name")?.textContent?.trim() || "";
-      pathNotes = doc.querySelector("#pathNotes")?.textContent?.trim() || "";
+      name = folder.name || "";
+      pathNotes = doc.body.textContent || "";
     }
 
-    pointDescriptions = entities.map((entity, index) => {
-      const descriptionValue = entity.description?.getValue(JulianDate.now());
-      if (descriptionValue) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(descriptionValue, "text/html");
-        return doc.querySelector(`#desc-${index}`)?.textContent?.trim() || "";
+    pointDescriptions = (folder as any)._children.map(
+      (entity: any, index: number) => {
+        const descriptionValue = entity.description?.getValue(JulianDate.now());
+        if (descriptionValue) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(descriptionValue, "text/html");
+          return doc.body.textContent || "";
+        }
+        return "";
       }
-      return "";
-    });
+    );
 
     let cartesianPositions: Cartesian3[] = entities.flatMap(
       (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []

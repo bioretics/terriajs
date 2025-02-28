@@ -22,20 +22,20 @@ interface Props {
   name: string;
   pathNotes: string;
   ellipsoid: Ellipsoid;
-  pointDescriptions?: string[];
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { geom, name, pathNotes, ellipsoid, pointDescriptions } = props;
+  const { geom, name, pathNotes, ellipsoid } = props;
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
 
+  const [kmlPolygon, setKmlPolygon] = useState<string>();
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
 
   const getLinks = () => {
     const showOnlyPoints =
-      props.pointDescriptions && props.pointDescriptions.length > 0;
+      geom.pointDescriptions && geom.pointDescriptions.length > 0;
 
     return [
       {
@@ -45,8 +45,19 @@ const MeasurableDownload = (props: Props) => {
       {
         key: "csv",
         href: DataUri.make("csv", generateCsvData(geom)),
-        download: `${name}.csv`,
+        download: `${name}_points.csv`,
         label: "CSV"
+      },
+      {
+        key: "kmlPolygon",
+        href: kmlPolygon
+          ? DataUri.make(
+              "application/vnd.google-earth.kml+xml;charset=utf-8",
+              kmlPolygon
+            )
+          : false,
+        download: `${name}_polygon.kml`,
+        label: `${i18next.t("downloadData.polygon")} KML`
       },
       {
         key: "kmlLines",
@@ -71,6 +82,12 @@ const MeasurableDownload = (props: Props) => {
         label: `${i18next.t("downloadData.points")} KML`
       },
       {
+        key: "jsonPolygon",
+        href: DataUri.make("json", generateGeoJsonPolygon(geom)),
+        download: `${name}_polygon.json`,
+        label: `${i18next.t("downloadData.polygon")} JSON`
+      },
+      {
         key: "jsonLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
         download: `${name}_lines.json`,
@@ -81,6 +98,12 @@ const MeasurableDownload = (props: Props) => {
         href: DataUri.make("json", generateJsonPoints(geom)),
         download: `${name}_points.json`,
         label: `${i18next.t("downloadData.points")} JSON`
+      },
+      {
+        key: "gpxPolygon",
+        href: DataUri.make("xml", generateGpxTracks(geom)),
+        download: `${name}_polygon.gpx`,
+        label: `${i18next.t("downloadData.polygon")} GPX`
       },
       {
         key: "gpxTracks",
@@ -98,10 +121,69 @@ const MeasurableDownload = (props: Props) => {
       .filter((download) => download.key === "" || !!download.href)
       .filter((download) => {
         if (showOnlyPoints) {
-          return !download.download?.includes("_lines.");
+          return (
+            !download.download?.includes("_lines.") &&
+            !download.download?.includes("_polygon.")
+          );
+        } else if (geom.isClosed) {
+          return (
+            !download.download?.includes("_points.") &&
+            !download.download?.includes("_lines.")
+          );
+        } else {
+          return (
+            !download.download?.includes("_points.") &&
+            !download.download?.includes("_polygon.")
+          );
         }
-        return true;
       });
+  };
+
+  const generateKmlPolygon = (
+    geom: MeasurableGeometry
+  ): Promise<string | undefined> => {
+    const coords = geom.stopPoints.map((point) => {
+      const lon = CesiumMath.toDegrees(point.longitude);
+      const lat = CesiumMath.toDegrees(point.latitude);
+      return `${lon},${lat}`;
+    });
+
+    if (coords[0] !== coords[coords.length - 1]) {
+      coords.push(coords[0]);
+    }
+
+    const coordsString = coords.join(" ");
+
+    const kml = `<?xml version="1.0" encoding="utf-8"?>
+      <kml xmlns="http://www.opengis.net/kml/2.2">
+        <Document id="root_doc">
+          <Folder>
+          <Placemark id="0">
+              <name>${name}</name>
+              <description>${pathNotes}</description>
+              <Style>
+                <LineStyle>
+                  <color>ff0000ff</color>
+                </LineStyle>
+                <PolyStyle>
+                  <fill>0</fill>
+                </PolyStyle>
+              </Style>
+              <Polygon>
+                <altitudeMode>clampToGround</altitudeMode>
+                <outerBoundaryIs>
+                  <LinearRing>
+                    <altitudeMode>clampToGround</altitudeMode>
+                    <coordinates>${coordsString}</coordinates>
+                  </LinearRing>
+                </outerBoundaryIs>
+              </Polygon>
+            </Placemark>
+          </Folder>
+        </Document>
+      </kml>`;
+
+    return Promise.resolve(kml);
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
@@ -121,10 +203,8 @@ const MeasurableDownload = (props: Props) => {
             Cartographic.toCartesian(elem, ellipsoid)
           )
         }),
-        description: `
-          <p id="name"><strong>${name}</strong></p>
-          <p id="pathNotes"><strong>${pathNotes}</strong></p>
-        `
+        name: name,
+        description: pathNotes
       })
     );
 
@@ -136,6 +216,7 @@ const MeasurableDownload = (props: Props) => {
     if (!geom?.stopPoints) {
       return;
     }
+
     const output = {
       entities: new EntityCollection(),
       kmz: false,
@@ -147,17 +228,51 @@ const MeasurableDownload = (props: Props) => {
           id: index.toString(),
           point: new PointGraphics({}),
           position: Cartographic.toCartesian(elem, ellipsoid),
-          description: `
-            <p id="name"><strong>${name}</strong></p>
-            <p id="pathNotes"><strong>${pathNotes}</strong></p>
-            <p id="desc-${index}">${pointDescriptions?.[index] || ""}</p>
-          `
+          description: geom.pointDescriptions?.[index]
         })
       );
     });
 
     const res = (await exportKml(output)) as exportKmlResultKml;
+    res.kml = res.kml
+      .replace(
+        /<Document\s+xmlns="">/,
+        `<Document xmlns=""><Folder><name>${name || ""}</name><description>${
+          pathNotes || ""
+        }</description>`
+      )
+      .replace(/<\/Document>/, "</Folder></Document>");
     return res.kml;
+  };
+
+  const generateGeoJsonPolygon = (geom: MeasurableGeometry) => {
+    const coordinates = geom.stopPoints.map((elem) => [
+      CesiumMath.toDegrees(elem.longitude),
+      CesiumMath.toDegrees(elem.latitude)
+    ]);
+
+    if (
+      coordinates.length &&
+      (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+        coordinates[0][1] !== coordinates[coordinates.length - 1][1])
+    ) {
+      coordinates.push(coordinates[0]);
+    }
+
+    return JSON.stringify({
+      type: "FeatureCollection",
+      name: name || "",
+      path_notes: pathNotes || "",
+      features: [
+        {
+          type: "Feature",
+          geometry: {
+            type: "Polygon",
+            coordinates: [coordinates]
+          }
+        }
+      ]
+    });
   };
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {
@@ -182,7 +297,7 @@ const MeasurableDownload = (props: Props) => {
         return {
           type: "Feature",
           properties: {
-            description: pointDescriptions?.[index] || ""
+            description: geom.pointDescriptions?.[index] || ""
           },
           geometry: {
             coordinates: [
@@ -236,7 +351,7 @@ const MeasurableDownload = (props: Props) => {
                           lat="${CesiumMath.toDegrees(elem.latitude)}"
                           lon="${CesiumMath.toDegrees(elem.longitude)}"
                           ele="${elem.height.toFixed(2)}">
-                          <desc>${pointDescriptions?.[index] || ""}</desc>
+                          <desc>${geom.pointDescriptions?.[index] || ""}</desc>
                         </wpt>`;
           return waypoint;
         })
@@ -262,7 +377,7 @@ const MeasurableDownload = (props: Props) => {
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
           Math.round(elem.height),
-          pointDescriptions?.[index] || ""
+          geom.pointDescriptions?.[index] || ""
         ].join(",")
       )
     );
@@ -277,6 +392,9 @@ const MeasurableDownload = (props: Props) => {
   );
 
   if (ellipsoid) {
+    generateKmlPolygon(geom).then((res) => {
+      setKmlPolygon(res);
+    });
     generateKmlLines(geom).then((res) => {
       setKmlLines(res);
     });

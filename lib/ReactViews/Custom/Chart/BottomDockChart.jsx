@@ -420,7 +420,8 @@ class Chart extends React.Component {
               type="button"
               className={Styles.btn}
               style={{
-                marginTop: 8,
+                marginTop: "auto",
+                marginBottom: "auto",
                 color: "#ffffff",
                 background: "#519ac2",
                 border: "1px solid #ffffff",

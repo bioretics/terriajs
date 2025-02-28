@@ -33,10 +33,10 @@ export default class MeasurablePanelManager {
     MeasurablePanelManager.removeAllMarkers();
     MeasurablePanelManager.billboardCollection.add({
       position: Cartographic.toCartesian(position),
+      scale: 1.5,
       image: markerIcon,
       eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
       heightReference: HeightReference.CLAMP_TO_GROUND,
-      disableDepthTestDistance: Number.POSITIVE_INFINITY,
       id: "chartPointPlaceholder"
     });
 

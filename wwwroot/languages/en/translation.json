@@ -107,7 +107,8 @@
   "downloadData": {
     "formatPlaceholder": "Select format",
     "lines": "Lines",
-    "points": "Points"
+    "points": "Points",
+    "polygon": "Polygon"
   },
   "pickInfo": {
     "toolName": "Info",
@@ -640,6 +641,7 @@
     "searchItem": "Search",
     "searchItemTitle": "Search",
     "splitScreenMode": "SPLIT SCREEN MODE",
+    "pathItem": "Path",
     "pointsItem": "Points"
   },
   "dateTime": {
