@@ -476,7 +476,9 @@ const MeasurablePanel = observer((props: Props) => {
               >
                 {terria.measurableGeomList.map((mgl, index) => (
                   <option key={index} value={index}>
-                    {`${i18next.t("workbench.pathItem")} ${index + 1}`}
+                    {`${i18next.t("measurableGeometry.indexPlaceholder")} ${
+                      index + 1
+                    }`}
                   </option>
                 ))}
               </Select>
