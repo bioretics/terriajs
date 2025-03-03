@@ -94,6 +94,7 @@ export default class UserDrawing extends MappableMixin(
 
   private mousePointEntity?: Entity;
   private disposeStopPointsReaction?: IReactionDisposer;
+  private disposeChangePathReaction?: IReactionDisposer;
   private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
 
@@ -244,7 +245,10 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
-    if (!this.terria.measurableGeom?.showDistanceLabels) {
+    if (
+      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.showDistanceLabels
+    ) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
         if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -254,7 +258,10 @@ export default class UserDrawing extends MappableMixin(
       toRemove.forEach((e) => this.otherEntities.entities.remove(e));
       return;
     }
-    if (!this.terria.measurableGeom.onlyPoints) {
+    if (
+      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        .onlyPoints
+    ) {
       const toRemove: Entity[] = [];
       for (const entity of this.otherEntities.entities.values) {
         if (entity.name && entity.name.startsWith("SegmentLabel-")) {
@@ -445,7 +452,9 @@ export default class UserDrawing extends MappableMixin(
     });
 
     this.disposeStopPointsReaction = reaction(
-      () => this.terria.measurableGeom?.stopPoints,
+      () =>
+        this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+          ?.stopPoints,
       (stopPoints, previousStopPoints) => {
         if (stopPoints) {
           const previousSize = previousStopPoints?.length || 0;
@@ -469,13 +478,45 @@ export default class UserDrawing extends MappableMixin(
             });
             this.updateSegmentLabels();
             this.terria.currentViewer.notifyRepaintRequired();
+          } else {
+            console.log("HO AGGIUNTO UN PUNTO");
           }
         }
       }
     );
 
+    this.disposeChangePathReaction = reaction(
+      () => this.terria.measurableGeometryIndex,
+      (idx) => {
+        console.log("idx2", idx);
+        runInAction(() => {
+          this.pointEntities.entities.removeAll();
+          const stopPoints = this.terria.measurableGeomList[idx]?.stopPoints;
+          if (stopPoints) {
+            for (let i = 0; i < stopPoints.length; ++i) {
+              const pointEntity = new Entity({
+                position: new ConstantPositionProperty(
+                  Cartographic.toCartesian(stopPoints[i])
+                ),
+                billboard: {
+                  image: this.svgPoint,
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+                }
+              });
+              this.pointEntities.entities.add(pointEntity);
+            }
+          }
+          this.updateSegmentLabels();
+          this.terria.currentViewer.notifyRepaintRequired();
+        });
+      }
+    );
+
     this.disposeShowDistanceLabelsReaction = reaction(
-      () => this.terria.measurableGeom?.showDistanceLabels!!,
+      () =>
+        this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+          ?.showDistanceLabels!!,
       (showLabels: boolean) => {
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];
@@ -761,8 +802,10 @@ export default class UserDrawing extends MappableMixin(
    * Called after a point has been added, prepares to add and draw another point, as well as updating the dialog.
    */
   private prepareToAddNewPoint() {
-    if (this.terria.measurableGeom) {
-      this.terria.measurableGeom.pointDescriptions?.push("");
+    if (this.terria.measurableGeomList[this.terria.measurableGeometryIndex]) {
+      this.terria.measurableGeomList[
+        this.terria.measurableGeometryIndex
+      ].pointDescriptions?.push("");
     }
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
@@ -834,7 +877,9 @@ export default class UserDrawing extends MappableMixin(
                 if (
                   !this.isAngleMeasuring &&
                   !this.isPointMeasuring &&
-                  this.terria.measurableGeom?.showDistanceLabels
+                  this.terria.measurableGeomList[
+                    this.terria.measurableGeometryIndex
+                  ]?.showDistanceLabels
                 ) {
                   this.updateSegmentLabels();
                 }

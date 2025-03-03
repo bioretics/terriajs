@@ -24,7 +24,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
 
     @action
     update(stopPoints: Cartographic[], filename?: any, pathNotes?: any) {
-      this.terria.measurableGeometryManager.sampleFromCartographics(
+      this.terria.measurableGeometryManager[
+        this.terria.measurableGeometryIndex
+      ].sampleFromCartographics(
         stopPoints,
         false,
         false,

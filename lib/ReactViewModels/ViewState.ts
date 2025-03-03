@@ -541,19 +541,30 @@ export default class ViewState {
     );
 
     this._measurablePanelIsVisibleSubscription = reaction(
-      () => this.terria.measurableGeom,
+      () => this.terria.measurableGeomList[this.terria.measurableGeometryIndex],
       (geom) => {
         const wasVisible = this.measurablePanelIsVisible;
         this.measurablePanelIsVisible =
           !!geom && geom.stopPoints && geom.stopPoints.length > 0;
         if (this.measurablePanelIsVisible && !wasVisible) {
           if (
-            this.terria.measurableGeom &&
-            (!this.terria.measurableGeom.pointDescriptions ||
-              this.terria.measurableGeom.pointDescriptions.length == 0)
+            this.terria.measurableGeomList &&
+            this.terria.measurableGeomList[
+              this.terria.measurableGeometryIndex
+            ] &&
+            (!this.terria.measurableGeomList[
+              this.terria.measurableGeometryIndex
+            ].pointDescriptions ||
+              this.terria.measurableGeomList[
+                this.terria.measurableGeometryIndex
+              ].pointDescriptions?.length == 0)
           ) {
-            this.terria.measurableGeom.pointDescriptions = [];
-            this.terria.measurableGeom.pointDescriptions.push("");
+            this.terria.measurableGeomList[
+              this.terria.measurableGeometryIndex
+            ].pointDescriptions = [];
+            this.terria.measurableGeomList[
+              this.terria.measurableGeometryIndex
+            ].pointDescriptions?.push("");
           }
         }
       }
@@ -562,7 +573,9 @@ export default class ViewState {
     this._disposeSamplingPathStep = reaction(
       () => this.terria.measurableGeomSamplingStep,
       () => {
-        this.terria.measurableGeometryManager.resample();
+        this.terria.measurableGeometryManager[
+          this.terria.measurableGeometryIndex
+        ].resample();
       }
     );
 

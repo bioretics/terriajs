@@ -44,11 +44,13 @@ export default class MeasurableGeometryManager {
 
   resample() {
     this.sampleFromCartographics(
-      this.terria.measurableGeom?.stopPoints ?? [],
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.stopPoints ?? [],
       undefined,
       undefined,
       undefined,
-      this.terria.measurableGeom?.filename
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.filename
     );
   }
 
@@ -251,7 +253,7 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean
   ) {
-    this.terria.measurableGeom = {
+    this.terria.measurableGeomList[this.terria.measurableGeometryIndex] = {
       isClosed: isClosed,
       hasArea: false,
       stopPoints: stopPoints,
