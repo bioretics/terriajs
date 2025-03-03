@@ -94,6 +94,7 @@ export default class UserDrawing extends MappableMixin(
 
   private mousePointEntity?: Entity;
   private disposeStopPointsReaction?: IReactionDisposer;
+  private disposeChangePathReaction?: IReactionDisposer;
   private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
 
@@ -477,8 +478,38 @@ export default class UserDrawing extends MappableMixin(
             });
             this.updateSegmentLabels();
             this.terria.currentViewer.notifyRepaintRequired();
+          } else {
+            console.log("HO AGGIUNTO UN PUNTO");
           }
         }
+      }
+    );
+
+    this.disposeChangePathReaction = reaction(
+      () => this.terria.measurableGeometryIndex,
+      (idx) => {
+        console.log("idx2", idx);
+        runInAction(() => {
+          this.pointEntities.entities.removeAll();
+          const stopPoints = this.terria.measurableGeomList[idx]?.stopPoints;
+          if (stopPoints) {
+            for (let i = 0; i < stopPoints.length; ++i) {
+              const pointEntity = new Entity({
+                position: new ConstantPositionProperty(
+                  Cartographic.toCartesian(stopPoints[i])
+                ),
+                billboard: {
+                  image: this.svgPoint,
+                  heightReference: HeightReference.CLAMP_TO_GROUND,
+                  eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+                }
+              });
+              this.pointEntities.entities.add(pointEntity);
+            }
+          }
+          this.updateSegmentLabels();
+          this.terria.currentViewer.notifyRepaintRequired();
+        });
       }
     );
 

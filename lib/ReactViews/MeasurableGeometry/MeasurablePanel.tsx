@@ -444,11 +444,65 @@ const MeasurablePanel = observer((props: Props) => {
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.onlyPoints && (
           <div>
-            <Select>
-              {terria.measurableGeometryManager.map((mgm, index) => (
-                <option key={index} value={index}>{`Path ${index + 1}`}</option>
-              ))}
-            </Select>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <Select
+                value={terria.measurableGeometryIndex}
+                onChange={(e: any) => {
+                  runInAction(() => {
+                    terria.measurableGeometryIndex = parseInt(
+                      e.target.value,
+                      10
+                    );
+                    terria.currentViewer.notifyRepaintRequired();
+                    console.log(
+                      "terria.measurableGeometryIndex",
+                      terria.measurableGeometryIndex
+                    );
+                    console.log(
+                      "terria.measurableGeomList",
+                      terria.measurableGeomList
+                    );
+                  });
+                }}
+              >
+                {terria.measurableGeomList.map((mgl, index) => (
+                  <option key={index} value={index}>
+                    {`${i18next.t("workbench.pathItem")} ${index + 1}`}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                css={`
+                  color: ${theme.textLight};
+                  background: ${theme.colorPrimary};
+                  margin-left: 10px;
+                `}
+                onClick={() => {
+                  runInAction(() => {
+                    terria.measurableGeomList.push(
+                      terria?.measurableGeomList[terria.measurableGeometryIndex]
+                    );
+                    terria.measurableGeometryManager.push(
+                      terria?.measurableGeometryManager[
+                        terria.measurableGeometryIndex
+                      ]
+                    );
+                    terria.measurableGeometryIndex =
+                      terria.measurableGeomList.length - 1;
+                    console.log(
+                      "terria.measurableGeometryIndex",
+                      terria.measurableGeometryIndex
+                    );
+                    console.log(
+                      "terria.measurableGeomList",
+                      terria.measurableGeomList
+                    );
+                  });
+                }}
+              >
+                {"+"}
+              </Button>
+            </div>
             <Box
               css={`
                 margin-top: 20px;
@@ -994,7 +1048,9 @@ const MeasurablePanel = observer((props: Props) => {
             }}
             onMouseMove={() => {
               if (isDragging) {
-                viewState.measurableChartIsVisible = false;
+                runInAction(() => {
+                  viewState.measurableChartIsVisible = false;
+                });
               }
             }}
             onMouseDown={() => {
