@@ -1428,7 +1428,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @computed
     get canUseAsPath() {
-      console.log("test-geojsonmixin canUseAsPath");
       let pathType: PathTypes = PathTypes.noPath;
       if (
         this.readyData &&
@@ -1443,9 +1442,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           this.readyData.features.length === 1 &&
           isJsonObject(this.readyData.features[0])
         ) {
-          console.log("test-geojsonmixin this.readyData", this.readyData);
           const geometry = this.readyData.features[0].geometry;
-          console.log("test-geojsonmixin geometry", geometry);
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               this.arePolylinesValid([geometry.coordinates]) ||
@@ -1478,14 +1475,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         }
       }
       this._pathType = pathType;
-      console.log("test-geojsonmixin this._pathType", this._pathType);
       return pathType !== PathTypes.noPath;
     }
 
     // Validates if the coordinates of the polyline are correct by ensuring the first and last points are connected.
     private arePolylinesValid(coordinates: any[]): boolean {
-      console.log("test-geojsonmixin arePolylinesValid");
-
       const pointOccurrences: { point: number[]; count: number }[] = [];
 
       coordinates.forEach((line) => {
@@ -1504,8 +1498,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     // Validates if the coordinates of the polygon are correct by ensuring the first and last points are the same.
     private isPolygonValid(coordinates: any[]): boolean {
-      console.log("test-geojsonmixin isPolygonValid");
-
       const pointOccurrences: { point: number[]; count: number }[] = [];
 
       coordinates.forEach((ring) => {
@@ -1514,11 +1506,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           this.updatePointOccurrences(pointOccurrences, point);
         }
       });
-
-      console.log(
-        "test-geojsonmixin isPolygonValid pointOccurrences",
-        pointOccurrences
-      );
 
       const validPoints = pointOccurrences.filter(
         ({ count }) => count === 2

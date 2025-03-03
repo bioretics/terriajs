@@ -27,6 +27,7 @@ export interface MeasurableGeometry {
   filename?: string;
   pathNotes?: string;
   isFileUploaded?: boolean;
+  isPointAdding?: boolean;
 }
 
 export default class MeasurableGeometryManager {

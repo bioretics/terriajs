@@ -456,6 +456,10 @@ const MeasurablePanel = observer((props: Props) => {
             <div style={{ display: "flex", alignItems: "center" }}>
               <Select
                 value={terria.measurableGeometryIndex}
+                disabled={
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.isPointAdding
+                }
                 onChange={(e: any) => {
                   runInAction(() => {
                     terria.measurableGeometryIndex = parseInt(
@@ -463,14 +467,6 @@ const MeasurablePanel = observer((props: Props) => {
                       10
                     );
                     terria.currentViewer.notifyRepaintRequired();
-                    console.log(
-                      "terria.measurableGeometryIndex",
-                      terria.measurableGeometryIndex
-                    );
-                    console.log(
-                      "terria.measurableGeomList",
-                      terria.measurableGeomList
-                    );
                   });
                 }}
               >
@@ -483,6 +479,10 @@ const MeasurablePanel = observer((props: Props) => {
                 ))}
               </Select>
               <Button
+                disabled={
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.isPointAdding
+                }
                 css={`
                   color: ${theme.textLight};
                   background: ${theme.colorPrimary};
@@ -500,14 +500,6 @@ const MeasurablePanel = observer((props: Props) => {
                     );
                     terria.measurableGeometryIndex =
                       terria.measurableGeomList.length - 1;
-                    console.log(
-                      "terria.measurableGeometryIndex",
-                      terria.measurableGeometryIndex
-                    );
-                    console.log(
-                      "terria.measurableGeomList",
-                      terria.measurableGeomList
-                    );
                   });
                 }}
               >

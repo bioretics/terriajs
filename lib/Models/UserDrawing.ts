@@ -479,7 +479,9 @@ export default class UserDrawing extends MappableMixin(
             this.updateSegmentLabels();
             this.terria.currentViewer.notifyRepaintRequired();
           } else {
-            console.log("HO AGGIUNTO UN PUNTO");
+            this.terria.measurableGeomList[
+              this.terria.measurableGeometryIndex
+            ].isPointAdding = false;
           }
         }
       }
@@ -488,7 +490,6 @@ export default class UserDrawing extends MappableMixin(
     this.disposeChangePathReaction = reaction(
       () => this.terria.measurableGeometryIndex,
       (idx) => {
-        console.log("idx2", idx);
         runInAction(() => {
           this.pointEntities.entities.removeAll();
           const stopPoints = this.terria.measurableGeomList[idx]?.stopPoints;
@@ -806,6 +807,9 @@ export default class UserDrawing extends MappableMixin(
       this.terria.measurableGeomList[
         this.terria.measurableGeometryIndex
       ].pointDescriptions?.push("");
+      this.terria.measurableGeomList[
+        this.terria.measurableGeometryIndex
+      ].isPointAdding = true;
     }
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
