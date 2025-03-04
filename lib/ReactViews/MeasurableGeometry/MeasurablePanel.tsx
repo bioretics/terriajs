@@ -505,6 +505,33 @@ const MeasurablePanel = observer((props: Props) => {
               >
                 {"+"}
               </Button>
+              {terria.measurableGeomList.length > 1 && (
+                <Button
+                  disabled={
+                    terria.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.isPointAdding
+                  }
+                  css={`
+                    color: ${theme.textLight};
+                    background: ${theme.colorPrimary};
+                    margin-left: 10px;
+                  `}
+                  onClick={() => {
+                    runInAction(() => {
+                      const idx = terria.measurableGeometryIndex;
+                      if (idx >= 0 && idx < terria.measurableGeomList.length) {
+                        terria.measurableGeomList.splice(idx, 1);
+                        terria.measurableGeometryManager.splice(idx, 1);
+                        terria.measurableGeometryIndex =
+                          terria.measurableGeomList.length - 1;
+                        terria.currentViewer.notifyRepaintRequired();
+                      }
+                    });
+                  }}
+                >
+                  {"-"}
+                </Button>
+              )}
             </div>
             <Box
               css={`
