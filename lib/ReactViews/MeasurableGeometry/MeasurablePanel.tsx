@@ -596,11 +596,7 @@ const MeasurablePanel = observer((props: Props) => {
                   terria.measurableGeomList &&
                   terria.measurableGeomList[terria.measurableGeometryIndex] && (
                     <MeasurableDownload
-                      geom={
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ] as MeasurableGeometry
-                      }
+                      terria={terria}
                       name={
                         terria.measurableGeomList[
                           terria.measurableGeometryIndex

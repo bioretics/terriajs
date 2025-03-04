@@ -16,16 +16,18 @@ import i18next from "i18next";
 import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
 import Select from "../../Styled/Select";
+import Terria from "../../Models/Terria";
 
 interface Props {
-  geom: MeasurableGeometry;
+  terria: Terria;
   name: string;
   pathNotes: string;
   ellipsoid: Ellipsoid;
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { geom, name, pathNotes, ellipsoid } = props;
+  const { terria, name, pathNotes, ellipsoid } = props;
+  const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
 
@@ -34,9 +36,6 @@ const MeasurableDownload = (props: Props) => {
   const [kmlPoints, setKmlPoints] = useState<string>();
 
   const getLinks = () => {
-    const showOnlyPoints =
-      geom.pointDescriptions && geom.pointDescriptions.length > 0;
-
     return [
       {
         key: "",
@@ -120,7 +119,7 @@ const MeasurableDownload = (props: Props) => {
     ]
       .filter((download) => download.key === "" || !!download.href)
       .filter((download) => {
-        if (showOnlyPoints) {
+        if (geom.onlyPoints) {
           return (
             !download.download?.includes("_lines.") &&
             !download.download?.includes("_polygon.")
