@@ -278,34 +278,72 @@ class KmlCatalogItem
     const items = [...polygons, ...polylines];
     if (items.length === 0) return;
 
-    const firstItem = items[0];
-    const description = firstItem.description?.getValue(JulianDate.now());
+    console.log("KML entities", entities);
+    console.log("KML items", items);
+    console.log("KML items[0]", items[0]);
+    console.log("KML items[1]", items[1]);
+    if (items.length === 1) {
+      const firstItem = items[0];
+      const description = firstItem.description?.getValue(JulianDate.now());
 
-    let name = "";
-    let pathNotes = "";
+      let name = "";
+      let pathNotes = "";
 
-    if (description) {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(description, "text/html");
-      name = firstItem.name || "";
-      pathNotes = doc.body.textContent || "";
+      if (description) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(description, "text/html");
+        name = firstItem.name || "";
+        pathNotes = doc.body.textContent || "";
+      }
+
+      const allCoordinates =
+        items.length === 1
+          ? this.getPositions(firstItem)
+          : this.orderEntities(items).flatMap(this.getPositions);
+
+      const allCartographics = allCoordinates.map((elem) =>
+        Cartographic.fromCartesian(elem)
+      );
+
+      /*const positions =
+        polylines.length > 0
+          ? this.getUniqueCartographics(allCartographics)
+          : allCartographics;*/
+      const positions = allCartographics;
+      this.asPath(positions, name, pathNotes);
+    } else {
+      console.log("KML prova2", items.length);
+      for (let i = 0; i < items.length; i++) {
+        console.log("KML i", i);
+        const element = items[i];
+        const description = element.description?.getValue(JulianDate.now());
+
+        let name = "";
+        let pathNotes = "";
+
+        if (description) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(description, "text/html");
+          name = element.name || "";
+          pathNotes = doc.body.textContent || "";
+        }
+
+        const allCoordinates = this.getPositions(element);
+        console.log("KML allCoordinates", allCoordinates);
+
+        const allCartographics = allCoordinates.map((elem) =>
+          Cartographic.fromCartesian(elem)
+        );
+
+        /*const positions =
+        polylines.length > 0
+          ? this.getUniqueCartographics(allCartographics)
+          : allCartographics;*/
+        const positions = allCartographics;
+        console.log("KML faccio asPath", positions);
+        this.asPath(positions, name, pathNotes, i);
+      }
     }
-
-    const allCoordinates =
-      items.length === 1
-        ? this.getPositions(firstItem)
-        : this.orderEntities(items).flatMap(this.getPositions);
-
-    const allCartographics = allCoordinates.map((elem) =>
-      Cartographic.fromCartesian(elem)
-    );
-
-    /*const positions =
-      polylines.length > 0
-        ? this.getUniqueCartographics(allCartographics)
-        : allCartographics;*/
-    const positions = allCartographics;
-    this.asPath(positions, name, pathNotes);
   }
 
   // Retrieves the positions of an entity, either from a polyline or polygon.

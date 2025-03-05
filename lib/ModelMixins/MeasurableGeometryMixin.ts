@@ -1,4 +1,4 @@
-import { computed, action } from "mobx";
+import { computed, action, runInAction } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
 import StratumOrder from "../Models/Definition/StratumOrder";
@@ -6,6 +6,8 @@ import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
+import { THIS_COLUMN_EXPRESSION_TOKEN } from "../Traits/TraitsClasses/Table/ColumnTraits";
+import MeasurableGeometryManager from "../ViewModels/MeasurableGeometryManager";
 
 type MixinModel = Model<MappableTraits>;
 
@@ -23,7 +25,18 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
     abstract computePath(): void;
 
     @action
-    update(stopPoints: Cartographic[], filename?: any, pathNotes?: any) {
+    update(
+      stopPoints: Cartographic[],
+      filename?: any,
+      pathNotes?: any,
+      indexPath?: number
+    ) {
+      if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
+        this.terria.measurableGeometryManager.push(
+          Object.freeze(new MeasurableGeometryManager(this.terria))
+        );
+      }
+      console.log("KML update ", this.terria.measurableGeometryIndex);
       this.terria.measurableGeometryManager[
         this.terria.measurableGeometryIndex
       ].sampleFromCartographics(
@@ -33,11 +46,18 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         [],
         filename,
         pathNotes,
-        true
+        true,
+        indexPath
       );
     }
 
-    asPath(positions: Cartographic[], filename?: any, pathNotes?: any) {
+    asPath(
+      positions: Cartographic[],
+      filename?: any,
+      pathNotes?: any,
+      indexPath?: number
+    ) {
+      console.log("KML asPath metodo", positions);
       if (!this?.terria?.cesium?.scene) {
         return;
       }
@@ -50,9 +70,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           sampleTerrainMostDetailed(terrainProvider, pos)
         );
       }
-
       prom.then((newPositions: Cartographic[]) => {
-        this.update(newPositions, filename, pathNotes);
+        console.log("KML update chiamata", this.terria.measurableGeometryIndex);
+        this.update(newPositions, filename, pathNotes, indexPath);
       });
     }
   }

@@ -112,7 +112,8 @@ export default class MeasurableGeometryManager {
     pointDescriptions: string[] = [],
     filename?: string,
     pathNotes?: string,
-    isFileUploaded?: boolean
+    isFileUploaded?: boolean,
+    indexPath?: number
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -218,7 +219,8 @@ export default class MeasurableGeometryManager {
             pointDescriptions,
             filename,
             pathNotes,
-            isFileUploaded
+            isFileUploaded,
+            indexPath
           ]
         : [
             cartoPositions,
@@ -232,7 +234,8 @@ export default class MeasurableGeometryManager {
             [],
             filename,
             pathNotes,
-            isFileUploaded
+            isFileUploaded,
+            indexPath
           ];
 
       this.updatePath(...updatePathParams);
@@ -252,9 +255,10 @@ export default class MeasurableGeometryManager {
     pointDescriptions: string[] = [],
     filename?: string,
     pathNotes?: string,
-    isFileUploaded?: boolean
+    isFileUploaded?: boolean,
+    indexPath?: number
   ) {
-    this.terria.measurableGeomList[this.terria.measurableGeometryIndex] = {
+    const newGeometry = {
       isClosed: isClosed,
       hasArea: false,
       stopPoints: stopPoints,
@@ -267,7 +271,7 @@ export default class MeasurableGeometryManager {
       ),
       airDistance: stopAirDistances.reduce((sum, current) => sum + current, 0),
       groundDistance: stopGroundDistances.reduce(
-        (sum, current) => sum + current,
+        (sum: number, current: number) => sum + current,
         0
       ),
       sampledPoints: sampledPoints,
@@ -276,7 +280,34 @@ export default class MeasurableGeometryManager {
       pointDescriptions: pointDescriptions,
       filename: filename,
       pathNotes: pathNotes,
-      isFileUploaded: isFileUploaded
+      isFileUploaded: isFileUploaded,
+      indexPath: indexPath
     };
+    console.log("kml updatepath prima", this.terria.measurableGeomList);
+
+    if (indexPath && this.terria.measurableGeomList[indexPath]) {
+      this.terria.measurableGeomList[indexPath] = newGeometry;
+      console.log(
+        "kml già presente",
+        newGeometry,
+        this.terria.measurableGeometryIndex
+      );
+    } else {
+      this.terria.measurableGeomList.push(newGeometry);
+      console.log(
+        "kml non presente 1",
+        newGeometry,
+        this.terria.measurableGeometryIndex
+      );
+      //this.terria.measurableGeometryIndex += 1;
+
+      console.log(
+        "kml non presente 2",
+        newGeometry,
+        this.terria.measurableGeometryIndex
+      );
+    }
+
+    console.log("kml updatepath dopo", this.terria.measurableGeomList);
   }
 }
