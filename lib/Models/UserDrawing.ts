@@ -486,9 +486,11 @@ export default class UserDrawing extends MappableMixin(
               this.refreshPoints();
             });
           } else {
-            this.terria.measurableGeomList[
-              this.terria.measurableGeometryIndex
-            ].isPointAdding = false;
+            runInAction(() => {
+              this.terria.measurableGeomList[
+                this.terria.measurableGeometryIndex
+              ].isPointAdding = false;
+            });
           }
         }
       }
@@ -806,9 +808,11 @@ export default class UserDrawing extends MappableMixin(
       this.terria.measurableGeomList[
         this.terria.measurableGeometryIndex
       ].pointDescriptions?.push("");
-      this.terria.measurableGeomList[
-        this.terria.measurableGeometryIndex
-      ].isPointAdding = true;
+      runInAction(() => {
+        this.terria.measurableGeomList[
+          this.terria.measurableGeometryIndex
+        ].isPointAdding = true;
+      });
     }
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
