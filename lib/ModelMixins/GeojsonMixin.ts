@@ -110,6 +110,7 @@ import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import { PathType } from "html2canvas/dist/types/render/path";
 
 enum PathTypes {
   noPath = 0,
@@ -1428,6 +1429,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @computed
     get canUseAsPath() {
+      console.log("test-geojson canuseaspath");
       let pathType: PathTypes = PathTypes.noPath;
       if (
         this.readyData &&
@@ -1436,6 +1438,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         isJsonObject(this.readyData.crs.properties) &&
         this.readyData.crs.properties.code === "4326"
       ) {
+        console.log("test-geojson canuseaspath this.readyData", this.readyData);
         if (
           this.readyData.type === "FeatureCollection" &&
           isJsonArray(this.readyData.features) &&
@@ -1443,6 +1446,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonObject(this.readyData.features[0])
         ) {
           const geometry = this.readyData.features[0].geometry;
+          console.log("test-geojson canuseaspath geometry", geometry);
+
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
               this.arePolylinesValid([geometry.coordinates]) ||
@@ -1453,25 +1458,47 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                 geometry.type === "MultiLineString" &&
                 geometry.coordinates.length >= 1
               ) {
+                console.log("test-geojson canuseaspath multilinestring");
                 pathType = PathTypes.featureCollectionMultiLineString;
               } else if (
                 geometry.type === "LineString" &&
                 geometry.coordinates.length > 1
               ) {
+                console.log("test-geojson canuseaspath linestring");
                 pathType = PathTypes.featureCollectionLineString;
               } else if (
                 geometry.type === "Polygon" &&
                 geometry.coordinates.length > 0
               ) {
+                console.log("test-geojson canuseaspath polygon");
                 pathType = PathTypes.featureCollectionPolygon;
               } else if (
                 geometry.type === "MultiPolygon" &&
                 geometry.coordinates.length > 0
               ) {
+                console.log("test-geojson canuseaspath multipolygon");
                 pathType = PathTypes.featureCollectionMultiPolygon;
               }
             }
           }
+        } else if (
+          this.readyData.type === "FeatureCollection" &&
+          isJsonArray(this.readyData.features) &&
+          this.readyData.features.length > 1
+        ) {
+          console.log("test-geojson canuseaspath length maggiore di 1");
+          let allMultiPolygon = true;
+          for (let i = 0; i < this.readyData.features.length; i++) {
+            const feature = this.readyData.features[i];
+            if (feature.geometry.type !== "MultiPolygon") {
+              allMultiPolygon = false;
+              break;
+            }
+          }
+          if (allMultiPolygon)
+            pathType = PathTypes.featureCollectionMultiPolygon;
+
+          console.log("test-geojson canuseaspath pathtype", pathType);
         }
       }
       this._pathType = pathType;
@@ -1534,13 +1561,15 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     }
 
     computePath() {
+      console.log("test-geojson computepath");
+
       let jsonCoords: JsonArray | undefined;
       let filename: string | undefined;
       let pathNotes: string | undefined;
       if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
-        this.readyData.features.length > 0
+        this.readyData.features.length === 1
       ) {
         const feature = this.readyData.features[0];
         switch (this._pathType) {
@@ -1603,6 +1632,73 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           }
         });
         this.asPath(coordinates, filename, pathNotes);
+      } else if (
+        this.readyData &&
+        isJsonArray(this.readyData.features) &&
+        this.readyData.features.length > 1
+      ) {
+        switch (this._pathType) {
+          case PathTypes.featureCollectionMultiLineString:
+            jsonCoords = this.getOrderedSegments();
+            break;
+
+          case PathTypes.featureCollectionMultiPolygon:
+            console.log(
+              "test-geojson this.readyData.features.length:",
+              this.readyData.features.length
+            );
+            for (let i = 0; i < this.readyData.features.length; i++) {
+              jsonCoords = this.getMultiPolygonCoordinates(i);
+
+              console.log("test-geojson jsonCoords:", i, jsonCoords);
+
+              const feature = this.readyData.features[i];
+              if (jsonCoords !== undefined) {
+                const properties = feature.properties ?? {};
+                const geometry = feature.geometry ?? {};
+
+                filename =
+                  filename ||
+                  (this.readyData as any).name ||
+                  properties.name ||
+                  (geometry as any).name ||
+                  "";
+                pathNotes =
+                  pathNotes ||
+                  (this.readyData as any).path_notes ||
+                  properties.desc ||
+                  (geometry as any).path_notes ||
+                  "";
+              }
+
+              if (!jsonCoords || jsonCoords.length === 0) {
+                return;
+              }
+
+              const coordinates = jsonCoords.map((elem) => {
+                if (
+                  elem &&
+                  isJsonArray(elem) &&
+                  isJsonNumber(elem[0]) &&
+                  isJsonNumber(elem[1])
+                ) {
+                  if (elem.length === 3 && isJsonNumber(elem[2])) {
+                    return Cartographic.fromDegrees(
+                      elem[0],
+                      elem[1],
+                      Math.round(elem[2])
+                    );
+                  } else {
+                    return Cartographic.fromDegrees(elem[0], elem[1], 0);
+                  }
+                } else {
+                  return Cartographic.fromDegrees(0, 0, 0);
+                }
+              });
+              this.asPath(coordinates, filename, pathNotes, i);
+              break;
+            }
+        }
       }
     }
 
@@ -1696,18 +1792,28 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
     }
 
-    private getMultiPolygonCoordinates(): JsonArray | undefined {
+    private getMultiPolygonCoordinates(
+      index: number = 0
+    ): JsonArray | undefined {
       if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 0 &&
         isJsonObject(this.readyData.features[0]) &&
-        isJsonObject(this.readyData.features[0].geometry) &&
-        isJsonArray(this.readyData.features[0].geometry.coordinates) &&
-        isJsonArray(this.readyData.features[0].geometry.coordinates[0])
+        isJsonObject(this.readyData.features[index].geometry as any) &&
+        isJsonArray(
+          (this.readyData.features[index].geometry as any).coordinates
+        ) &&
+        isJsonArray(
+          (this.readyData.features[index].geometry as any).coordinates[0]
+        )
       ) {
+        console.log(
+          "test-geojson computepath coordinates",
+          (this.readyData.features[index].geometry as any).coordinates[0]
+        );
         return (
-          this.readyData.features[0].geometry.coordinates[0] as any
+          (this.readyData.features[index].geometry as any).coordinates[0] as any
         )[0] as JsonArray;
       }
     }

@@ -36,7 +36,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           Object.freeze(new MeasurableGeometryManager(this.terria))
         );
       }
-      console.log("KML update ", this.terria.measurableGeometryIndex);
+      console.log("test update ", this.terria.measurableGeometryIndex);
       this.terria.measurableGeometryManager[
         this.terria.measurableGeometryIndex
       ].sampleFromCartographics(
@@ -57,7 +57,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number
     ) {
-      console.log("KML asPath metodo", positions);
+      console.log("test asPath metodo", positions);
       if (!this?.terria?.cesium?.scene) {
         return;
       }
@@ -71,7 +71,10 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         );
       }
       prom.then((newPositions: Cartographic[]) => {
-        console.log("KML update chiamata", this.terria.measurableGeometryIndex);
+        console.log(
+          "test update chiamata",
+          this.terria.measurableGeometryIndex
+        );
         this.update(newPositions, filename, pathNotes, indexPath);
       });
     }

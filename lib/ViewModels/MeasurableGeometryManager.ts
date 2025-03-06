@@ -283,7 +283,7 @@ export default class MeasurableGeometryManager {
       isFileUploaded: isFileUploaded,
       indexPath: indexPath
     };
-    console.log("test kml updatepath prima", this.terria.measurableGeomList);
+    console.log("test updatepath prima", this.terria.measurableGeomList);
     console.log(
       "test measurablegeomindex prima",
       this.terria.measurableGeometryIndex
@@ -312,7 +312,7 @@ export default class MeasurableGeometryManager {
       );
     }
 
-    console.log("test kml updatepath dopo", this.terria.measurableGeomList);
+    console.log("test updatepath dopo", this.terria.measurableGeomList);
     console.log(
       "test measurablegeomindex dopo",
       this.terria.measurableGeometryIndex
