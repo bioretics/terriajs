@@ -283,31 +283,39 @@ export default class MeasurableGeometryManager {
       isFileUploaded: isFileUploaded,
       indexPath: indexPath
     };
-    console.log("kml updatepath prima", this.terria.measurableGeomList);
-
+    console.log("test kml updatepath prima", this.terria.measurableGeomList);
+    console.log(
+      "test measurablegeomindex prima",
+      this.terria.measurableGeometryIndex
+    );
     if (indexPath && this.terria.measurableGeomList[indexPath]) {
       this.terria.measurableGeomList[indexPath] = newGeometry;
       console.log(
-        "kml già presente",
-        newGeometry,
-        this.terria.measurableGeometryIndex
+        "test Aggiornato newGeometry già presente",
+        this.terria.measurableGeomList,
+        "new geometry",
+        newGeometry
       );
+    } else if (
+      !indexPath &&
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+    ) {
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex] =
+        newGeometry;
     } else {
       this.terria.measurableGeomList.push(newGeometry);
       console.log(
-        "kml non presente 1",
-        newGeometry,
-        this.terria.measurableGeometryIndex
-      );
-      //this.terria.measurableGeometryIndex += 1;
-
-      console.log(
-        "kml non presente 2",
-        newGeometry,
-        this.terria.measurableGeometryIndex
+        "test Aggiunto newGeometry",
+        this.terria.measurableGeomList,
+        "new geometry",
+        newGeometry
       );
     }
 
-    console.log("kml updatepath dopo", this.terria.measurableGeomList);
+    console.log("test kml updatepath dopo", this.terria.measurableGeomList);
+    console.log(
+      "test measurablegeomindex dopo",
+      this.terria.measurableGeometryIndex
+    );
   }
 }
