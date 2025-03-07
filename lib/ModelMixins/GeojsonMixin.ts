@@ -1775,12 +1775,15 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         this.readyData &&
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 0 &&
-        isJsonObject(this.readyData.features[index]) &&
-        isJsonObject(this.readyData.features[index].geometry) &&
-        isJsonArray(this.readyData.features[index].geometry.coordinates) &&
-        this.readyData.features[index].geometry.coordinates.length > 0
+        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[index].geometry as any) &&
+        isJsonArray(
+          (this.readyData.features[index].geometry as any).coordinates
+        ) &&
+        (this.readyData.features[index].geometry as any).coordinates.length > 0
       ) {
-        const segments = this.readyData.features[index].geometry.coordinates;
+        const segments = (this.readyData.features[index].geometry as any)
+          .coordinates;
 
         const startingSegmentIndex = this.findStartingSegmentIndex(
           segments as JsonArray[]
