@@ -418,6 +418,7 @@ const MeasurableDownload = (props: Props) => {
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <Select
+        title={i18next.t("downloadData.formatPlaceholder")}
         css={`
           padding-top: 5px;
         `}

@@ -96,8 +96,11 @@
     "geometrySummaryAreaAir": "Air area",
     "geometrySummarySlope": "Slope %",
     "textareaPlaceholder": "Enter your notes here...",
-    "filenamePlaceholder": "Filename...",
-    "indexPlaceholder": "Index"
+    "filenamePlaceholder": "Enter the filename...",
+    "indexPlaceholder": "Index",
+    "changePath": "Change the current path",
+    "addPath": "Add a new path",
+    "removePath": "Delete the current path"
   },
   "elevationChart": {
     "header": "Elevation profile",

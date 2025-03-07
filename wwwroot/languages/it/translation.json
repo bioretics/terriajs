@@ -99,8 +99,11 @@
     "geometrySummaryAreaAir": "Area in aria",
     "geometrySummarySlope": "Pendenza %",
     "textareaPlaceholder": "Inserisci le tue note...",
-    "filenamePlaceholder": "Nome file...",
-    "indexPlaceHolder": "Index"
+    "filenamePlaceholder": "Inserisci il nome del file...",
+    "indexPlaceHolder": "Index",
+    "changePath": "Cambia il percorso",
+    "addPath": "Aggiungi un nuovo percorso",
+    "removePath": "Rimuovi il percorso attuale"
   },
   "elevationChart": {
     "header": "Profilo altimetrico",
