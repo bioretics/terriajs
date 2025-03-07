@@ -1653,7 +1653,60 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ) {
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
-            jsonCoords = this.getOrderedSegments();
+            console.log(
+              "test-geojson this.readyData.features.length:",
+              this.readyData.features.length
+            );
+            for (let i = 0; i < this.readyData.features.length; i++) {
+              jsonCoords = this.getOrderedSegments(i);
+
+              console.log("test-geojson jsonCoords:", i, jsonCoords);
+
+              const feature = this.readyData.features[i];
+              if (jsonCoords !== undefined) {
+                const properties = feature.properties ?? {};
+                const geometry = feature.geometry ?? {};
+
+                filename =
+                  filename ||
+                  (this.readyData as any).name ||
+                  properties.name ||
+                  (geometry as any).name ||
+                  "";
+                pathNotes =
+                  pathNotes ||
+                  (this.readyData as any).path_notes ||
+                  properties.desc ||
+                  (geometry as any).path_notes ||
+                  "";
+              }
+
+              if (!jsonCoords || jsonCoords.length === 0) {
+                return;
+              }
+
+              const coordinates = jsonCoords.map((elem) => {
+                if (
+                  elem &&
+                  isJsonArray(elem) &&
+                  isJsonNumber(elem[0]) &&
+                  isJsonNumber(elem[1])
+                ) {
+                  if (elem.length === 3 && isJsonNumber(elem[2])) {
+                    return Cartographic.fromDegrees(
+                      elem[0],
+                      elem[1],
+                      Math.round(elem[2])
+                    );
+                  } else {
+                    return Cartographic.fromDegrees(elem[0], elem[1], 0);
+                  }
+                } else {
+                  return Cartographic.fromDegrees(0, 0, 0);
+                }
+              });
+              this.asPath(coordinates, filename, pathNotes, i);
+            }
             break;
 
           case PathTypes.featureCollectionMultiPolygon:
@@ -1711,22 +1764,23 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               });
               this.asPath(coordinates, filename, pathNotes, i);
             }
+            break;
         }
       }
     }
 
     // Get the ordered segments
-    private getOrderedSegments(): JsonArray | undefined {
+    private getOrderedSegments(index: number = 0): JsonArray | undefined {
       if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 0 &&
-        isJsonObject(this.readyData.features[0]) &&
-        isJsonObject(this.readyData.features[0].geometry) &&
-        isJsonArray(this.readyData.features[0].geometry.coordinates) &&
-        this.readyData.features[0].geometry.coordinates.length > 0
+        isJsonObject(this.readyData.features[index]) &&
+        isJsonObject(this.readyData.features[index].geometry) &&
+        isJsonArray(this.readyData.features[index].geometry.coordinates) &&
+        this.readyData.features[index].geometry.coordinates.length > 0
       ) {
-        const segments = this.readyData.features[0].geometry.coordinates;
+        const segments = this.readyData.features[index].geometry.coordinates;
 
         const startingSegmentIndex = this.findStartingSegmentIndex(
           segments as JsonArray[]
