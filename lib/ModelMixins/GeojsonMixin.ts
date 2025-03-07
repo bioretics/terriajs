@@ -1487,17 +1487,31 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           this.readyData.features.length > 1
         ) {
           console.log("test-geojson canuseaspath length maggiore di 1");
-          let allMultiPolygon = true;
+          let allMultiLineString = true;
           for (let i = 0; i < this.readyData.features.length; i++) {
             const feature = this.readyData.features[i];
-            if (feature.geometry.type !== "MultiPolygon") {
-              allMultiPolygon = false;
+            if (feature.geometry.type !== "MultiLineString") {
+              allMultiLineString = false;
               break;
             }
           }
-          if (allMultiPolygon)
-            pathType = PathTypes.featureCollectionMultiPolygon;
-
+          if (allMultiLineString) {
+            console.log("test-geojson canuseaspath all multilinestring");
+            pathType = PathTypes.featureCollectionMultiLineString;
+          } else {
+            let allMultiPolygon = true;
+            for (let i = 0; i < this.readyData.features.length; i++) {
+              const feature = this.readyData.features[i];
+              if (feature.geometry.type !== "MultiPolygon") {
+                allMultiPolygon = false;
+                break;
+              }
+            }
+            if (allMultiPolygon) {
+              console.log("test-geojson canuseaspath all multipolygon");
+              pathType = PathTypes.featureCollectionMultiPolygon;
+            }
+          }
           console.log("test-geojson canuseaspath pathtype", pathType);
         }
       }
@@ -1696,7 +1710,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                 }
               });
               this.asPath(coordinates, filename, pathNotes, i);
-              break;
             }
         }
       }
