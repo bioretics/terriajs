@@ -503,7 +503,12 @@ const MeasurablePanel = observer((props: Props) => {
                   });
                 }}
               >
-                {"+"}
+                <StyledIcon
+                  light
+                  realDark={false}
+                  glyph={Icon.GLYPHS.plus}
+                  styledWidth="16px"
+                />
               </Button>
               {terria.measurableGeomList.length > 1 && (
                 <Button
@@ -529,7 +534,12 @@ const MeasurablePanel = observer((props: Props) => {
                     });
                   }}
                 >
-                  {"-"}
+                  <StyledIcon
+                    light
+                    realDark={false}
+                    glyph={Icon.GLYPHS.minus}
+                    styledWidth="16px"
+                  />
                 </Button>
               )}
             </div>
