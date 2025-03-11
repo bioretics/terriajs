@@ -15,8 +15,7 @@ import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
-import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
-import MeasurableDownload from "./MeasurableDownload";
+import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import i18next from "i18next";
 import {
   MeasureLineTool,
@@ -47,6 +46,7 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
+  const [isDownloadPanelOpen, setIsDownloadPanelOpen] = React.useState(false);
 
   const initialWidth = windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
@@ -646,24 +646,20 @@ const MeasurablePanel = observer((props: Props) => {
                 />
               </Box>
               <Box>
-                {!!terria?.cesium?.scene?.globe?.ellipsoid &&
-                  terria.measurableGeomList &&
-                  terria.measurableGeomList[terria.measurableGeometryIndex] && (
-                    <MeasurableDownload
-                      terria={terria}
-                      name={
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ].filename!!
-                      }
-                      pathNotes={
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ].pathNotes!!
-                      }
-                      ellipsoid={terria.cesium.scene.globe.ellipsoid}
-                    />
-                  )}
+                <Button
+                  css={`
+                    color: ${theme.textLight};
+                    background: ${theme.colorPrimary};
+                    margin-left: 10px;
+                  `}
+                  onClick={() => setIsDownloadPanelOpen(true)}
+                  disabled={
+                    !terria.measurableGeomList[terria.measurableGeometryIndex]
+                      .pathNotes
+                  }
+                >
+                  Download
+                </Button>
               </Box>
             </div>
           )}
@@ -1249,6 +1245,13 @@ const MeasurablePanel = observer((props: Props) => {
       >
         {renderHeader()}
         {renderBody()}
+        {isDownloadPanelOpen && (
+          <MeasurableDownloadPanel
+            terria={terria}
+            viewState={viewState}
+            onClose={() => setIsDownloadPanelOpen(false)}
+          />
+        )}
       </div>
     </Rnd>
   );
