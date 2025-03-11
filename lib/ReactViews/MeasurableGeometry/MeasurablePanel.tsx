@@ -650,13 +650,9 @@ const MeasurablePanel = observer((props: Props) => {
                   css={`
                     color: ${theme.textLight};
                     background: ${theme.colorPrimary};
-                    margin-left: 10px;
+                    width: 100%;
                   `}
                   onClick={() => setIsDownloadPanelOpen(true)}
-                  disabled={
-                    !terria.measurableGeomList[terria.measurableGeometryIndex]
-                      .pathNotes
-                  }
                 >
                   Download
                 </Button>
@@ -1249,6 +1245,8 @@ const MeasurablePanel = observer((props: Props) => {
           <MeasurableDownloadPanel
             terria={terria}
             viewState={viewState}
+            initialSize={{ initialWidth, initialHeight }}
+            maxSize={{ maxWidth, maxHeight }}
             onClose={() => setIsDownloadPanelOpen(false)}
           />
         )}

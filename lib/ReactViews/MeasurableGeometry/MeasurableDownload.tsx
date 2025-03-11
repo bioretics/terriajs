@@ -423,9 +423,11 @@ const MeasurableDownload = (props: Props) => {
           padding-top: 5px;
         `}
         value={selectedFormat}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-          setSelectedFormat(e.target.value)
-        }
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          setSelectedFormat(e.target.value);
+          e.target.blur();
+        }}
+        onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
         className={Styles.dropdownList}
       >
         {getLinks().map((link) => (
