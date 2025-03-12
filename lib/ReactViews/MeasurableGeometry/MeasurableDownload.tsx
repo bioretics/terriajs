@@ -30,13 +30,18 @@ const MeasurableDownload = (props: Props) => {
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
+  const [selectedMultiPathFormat, setSelectedMultiPathFormat] =
+    React.useState<string>("");
 
   const [kmlPolygon, setKmlPolygon] = useState<string>();
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
 
-  const getLinks = () => {
-    return [
+  const getDownloadLinks = (
+    geom: MeasurableGeometry,
+    isMultiPath: boolean = false
+  ) => {
+    const baseDownloads = [
       {
         key: "",
         label: i18next.t("downloadData.formatPlaceholder")
@@ -116,23 +121,68 @@ const MeasurableDownload = (props: Props) => {
         download: `${name}_points.gpx`,
         label: `${i18next.t("downloadData.points")} GPX`
       }
-    ]
+    ];
+
+    const multiPathDownloads = [
+      {
+        key: "",
+        label: i18next.t("downloadData.formatPlaceholder")
+      },
+      {
+        key: "kmlMultiPathLinksPolygon",
+        href: kmlPolygon
+          ? DataUri.make(
+              "application/vnd.google-earth.kml+xml;charset=utf-8",
+              kmlPolygon
+            )
+          : false,
+        download: `${name}_polygon_multipath.kml`,
+        label: `${i18next.t("downloadData.polygon")} KML MULTIPATH`
+      },
+      {
+        key: "kmlMultiPathLinksLines",
+        href: kmlLines
+          ? DataUri.make(
+              "application/vnd.google-earth.kml+xml;charset=utf-8",
+              kmlLines
+            )
+          : false,
+        download: `${name}_lines_multipath.kml`,
+        label: `${i18next.t("downloadData.lines")} KML MULTIPATH`
+      },
+      {
+        key: "jsonMultiPathPolygon",
+        href: DataUri.make("json", generateGeoJsonPolygon(geom)),
+        download: `${name}_polygon_multipath.json`,
+        label: `${i18next.t("downloadData.polygon")} JSON MULTIPATH`
+      },
+      {
+        key: "jsonMultiPathLines",
+        href: DataUri.make("json", generateJsonLineStrings(geom)),
+        download: `${name}_lines_multipath.json`,
+        label: `${i18next.t("downloadData.lines")} JSON MULTIPATH`
+      }
+    ];
+
+    const finalDownloads = isMultiPath ? multiPathDownloads : baseDownloads;
+
+    return finalDownloads
       .filter((download) => download.key === "" || !!download.href)
       .filter((download) => {
         if (geom.onlyPoints) {
           return (
-            !download.download?.includes("_lines.") &&
-            !download.download?.includes("_polygon.")
+            !download.download?.includes("_lines") &&
+            !download.download?.includes("_polygon")
           );
         } else if (geom.isClosed) {
           return (
-            !download.download?.includes("_points.") &&
-            !download.download?.includes("_lines.")
+            !download.download?.includes("_points") &&
+            !download.download?.includes("_lines")
           );
         } else {
           return (
-            !download.download?.includes("_points.") &&
-            !download.download?.includes("_polygon.")
+            !download.download?.includes("_points") &&
+            !download.download?.includes("_polygon")
           );
         }
       });
@@ -402,9 +452,11 @@ const MeasurableDownload = (props: Props) => {
     });
   }
 
-  const handleDownload = () => {
-    const links = getLinks();
-    const linkObj = links.find((link) => link.key === selectedFormat);
+  const handleDownload = (isMultiPath: boolean = false) => {
+    const links = getDownloadLinks(geom, isMultiPath);
+    const linkObj = !isMultiPath
+      ? links.find((link) => link.key === selectedFormat)
+      : links.find((link) => link.key === selectedMultiPathFormat);
     if (linkObj && linkObj.href) {
       const a = document.createElement("a");
       a.href = linkObj.href as string;
@@ -416,38 +468,78 @@ const MeasurableDownload = (props: Props) => {
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
-      <Select
-        title={i18next.t("downloadData.formatPlaceholder")}
-        css={`
-          padding-top: 5px;
-        `}
-        value={selectedFormat}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-          setSelectedFormat(e.target.value);
-          e.target.blur();
-        }}
-        onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
-        className={Styles.dropdownList}
-      >
-        {getLinks().map((link) => (
-          <option key={link.key} value={link.key}>
-            {link.label}
-          </option>
-        ))}
-      </Select>
-      <Button
-        css={`
-          color: ${theme.textLight};
-          background: ${theme.colorPrimary};
-          margin-left: 10px;
-        `}
-        onClick={handleDownload}
-        disabled={!name || selectedFormat === ""}
-      >
-        {i18next.t("Download")}
-      </Button>
-    </div>
+    <>
+      <div style={{ display: "flex", alignItems: "center" }}>
+        <Select
+          title={i18next.t("downloadData.formatPlaceholder")}
+          css={`
+            padding-top: 5px;
+          `}
+          value={selectedFormat}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+            setSelectedFormat(e.target.value);
+            e.target.blur();
+          }}
+          onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
+          className={Styles.dropdownList}
+        >
+          {getDownloadLinks(geom, false).map((link) => (
+            <option key={link.key} value={link.key}>
+              {link.label}
+            </option>
+          ))}
+        </Select>
+        <Button
+          css={`
+            color: ${theme.textLight};
+            background: ${theme.colorPrimary};
+            margin-left: 10px;
+          `}
+          onClick={handleDownload}
+          disabled={!name || selectedFormat === ""}
+        >
+          {i18next.t("Download")}
+        </Button>
+      </div>
+      {terria.measurableGeomList.length > 1 && (
+        <div
+          style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
+        >
+          <Select
+            title={i18next.t("downloadData.formatPlaceholder") + "- Multi"}
+            css={`
+              padding-top: 5px;
+            `}
+            value={selectedMultiPathFormat}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              setSelectedMultiPathFormat(e.target.value);
+              e.target.blur();
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              e.target.blur()
+            }
+            className={Styles.dropdownList}
+          >
+            {getDownloadLinks(geom, true).map((link) => (
+              <option key={link.key} value={link.key}>
+                {link.label}
+              </option>
+            ))}
+          </Select>
+          <Button
+            css={`
+              color: ${theme.textLight};
+              background: ${theme.colorPrimary};
+              margin-left: 10px;
+            `}
+            onClick={() => handleDownload(true)}
+            disabled={!name || selectedMultiPathFormat === ""}
+          >
+            {i18next.t("Download")}
+          </Button>
+        </div>
+      )}
+    </>
   );
 };
 

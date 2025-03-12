@@ -56,7 +56,10 @@ const MeasurableDownloadPanel = (props: Props) => {
       }}
       maxWidth={downloadProps.maxSize.maxWidth}
       maxHeight={downloadProps.maxSize.maxHeight}
-      enableResizing={false}
+      enableResizing={{
+        right: true,
+        left: true
+      }}
     >
       <div className={panelClassName} style={{ pointerEvents: "auto" }}>
         {renderHeader()}
