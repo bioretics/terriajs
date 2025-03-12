@@ -75,6 +75,12 @@ const MeasurablePanel = observer((props: Props) => {
 
   const close = action(() => {
     MeasurablePanelManager.removeAllMarkers();
+    terria.measurableGeomList.splice(1, terria.measurableGeomList.length - 1);
+    terria.measurableGeometryManager.splice(
+      1,
+      terria.measurableGeometryManager.length - 1
+    );
+    terria.measurableGeometryIndex = 0;
     viewState.measurablePanelIsVisible = false;
     const deactivateTool = (toolId: string) => {
       const item =
@@ -87,15 +93,6 @@ const MeasurablePanel = observer((props: Props) => {
     deactivateTool(MeasureLineTool.id);
     deactivateTool(MeasurePolygonTool.id);
     deactivateTool(MeasureAngleTool.id);
-
-    runInAction(() => {
-      terria.measurableGeomList.splice(1, terria.measurableGeomList.length - 1);
-      terria.measurableGeometryManager.splice(
-        1,
-        terria.measurableGeometryManager.length - 1
-      );
-      terria.measurableGeometryIndex = 0;
-    });
   });
 
   const toggleCollapsed = action(() => {
