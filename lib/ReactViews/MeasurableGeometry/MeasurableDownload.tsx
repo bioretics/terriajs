@@ -33,6 +33,8 @@ const MeasurableDownload = (props: Props) => {
   const [selectedMultiPathFormat, setSelectedMultiPathFormat] =
     React.useState<string>("");
 
+  const [kmlMultiPathPolygon, setKmlMultiPathPolygon] = useState<string>();
+  const [kmlMultiPathLines, setKmlMultiPathLines] = useState<string>();
   const [kmlPolygon, setKmlPolygon] = useState<string>();
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
@@ -130,10 +132,11 @@ const MeasurableDownload = (props: Props) => {
       },
       {
         key: "kmlMultiPathLinksPolygon",
-        href: kmlPolygon
+        href: kmlMultiPathPolygon
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
-              kmlPolygon
+              kmlMultiPathPolygon
+              //generateMultiPathKmlPolygon(terria.measurableGeomList)
             )
           : false,
         download: `${name}_polygon_multipath.kml`,
@@ -143,10 +146,11 @@ const MeasurableDownload = (props: Props) => {
       },
       {
         key: "kmlMultiPathLinksLines",
-        href: kmlLines
+        href: kmlMultiPathLines
           ? DataUri.make(
               "application/vnd.google-earth.kml+xml;charset=utf-8",
-              kmlLines
+              kmlMultiPathLines
+              //generateMultiPathKmlLines(terria.measurableGeomList, name, pathNotes, ellipsoid)
             )
           : false,
         download: `${name}_lines_multipath.kml`,
@@ -156,7 +160,14 @@ const MeasurableDownload = (props: Props) => {
       },
       {
         key: "jsonMultiPathPolygon",
-        href: DataUri.make("json", generateGeoJsonPolygon(geom)),
+        href: DataUri.make(
+          "json",
+          generateMultiPathGeoJsonPolygon(
+            terria.measurableGeomList,
+            name,
+            pathNotes
+          )
+        ),
         download: `${name}_polygon_multipath.json`,
         label: `${i18next.t("downloadData.polygon")} ${i18next.t(
           "downloadData.multipath"
@@ -164,7 +175,14 @@ const MeasurableDownload = (props: Props) => {
       },
       {
         key: "jsonMultiPathLines",
-        href: DataUri.make("json", generateJsonLineStrings(geom)),
+        href: DataUri.make(
+          "json",
+          generateMultiPathJsonLineStrings(
+            terria.measurableGeomList,
+            name,
+            pathNotes
+          )
+        ),
         download: `${name}_lines_multipath.json`,
         label: `${i18next.t("downloadData.lines")} ${i18next.t(
           "downloadData.multipath"
@@ -244,6 +262,7 @@ const MeasurableDownload = (props: Props) => {
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
+    console.log("generateKmlLines");
     if (!geom?.stopPoints) {
       return;
     }
@@ -442,6 +461,145 @@ const MeasurableDownload = (props: Props) => {
     return rows.join("\n");
   };
 
+  const generateMultiPathKmlPolygon = (
+    geomList: MeasurableGeometry[]
+  ): Promise<string | undefined> => {
+    let polygonsContent = "";
+    geomList.forEach((geom, idx) => {
+      const coords = geom.stopPoints.map((pt) => {
+        const lon = CesiumMath.toDegrees(pt.longitude);
+        const lat = CesiumMath.toDegrees(pt.latitude);
+        return `${lon},${lat}`;
+      });
+
+      if (coords[0] !== coords[coords.length - 1]) {
+        coords.push(coords[0]);
+      }
+
+      const coordsString = coords.join(" ");
+
+      polygonsContent += `
+        <Placemark id="${idx}">
+          <name>${name} ${idx + 1}</name>
+          <description>${pathNotes}</description>
+          <Style>
+            <LineStyle>
+              <color>ff0000ff</color>
+            </LineStyle>
+            <PolyStyle>
+              <fill>0</fill>
+            </PolyStyle>
+          </Style>
+          <Polygon>
+            <altitudeMode>clampToGround</altitudeMode>
+            <outerBoundaryIs>
+              <LinearRing>
+                <altitudeMode>clampToGround</altitudeMode>
+                <coordinates>${coordsString}</coordinates>
+              </LinearRing>
+            </outerBoundaryIs>
+          </Polygon>
+        </Placemark>
+      `;
+    });
+
+    return Promise.resolve(`<?xml version="1.0" encoding="utf-8"?>
+      <kml xmlns="http://www.opengis.net/kml/2.2">
+        <Document id="root_doc">
+          <Folder>
+            ${polygonsContent}
+          </Folder>
+        </Document>
+      </kml>`);
+  };
+
+  const generateMultiPathKmlLines = async (
+    geomList: MeasurableGeometry[]
+  ): Promise<string | undefined> => {
+    const output = {
+      entities: new EntityCollection(),
+      kmz: false,
+      ellipsoid: ellipsoid
+    };
+
+    geomList.forEach((geom, idx) => {
+      output.entities.add(
+        new Entity({
+          id: idx.toString(),
+          polyline: new PolylineGraphics({
+            positions: geom.stopPoints.map((elem) =>
+              Cartographic.toCartesian(elem, ellipsoid)
+            )
+          }),
+          name: `${name} ${idx + 1}`,
+          description: pathNotes
+        })
+      );
+    });
+
+    const res = (await exportKml(output)) as exportKmlResultKml;
+    return res.kml;
+  };
+
+  const generateMultiPathGeoJsonPolygon = (
+    geomList: MeasurableGeometry[],
+    name: string,
+    pathNotes: string
+  ): string => {
+    return JSON.stringify({
+      type: "FeatureCollection",
+      name: name || "",
+      path_notes: pathNotes || "",
+      features: geomList.map((geom) => {
+        const coordinates = geom.stopPoints.map((elem) => [
+          CesiumMath.toDegrees(elem.longitude),
+          CesiumMath.toDegrees(elem.latitude)
+        ]);
+
+        if (
+          coordinates.length &&
+          (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
+            coordinates[0][1] !== coordinates[coordinates.length - 1][1])
+        ) {
+          coordinates.push(coordinates[0]);
+        }
+
+        return {
+          type: "Feature",
+          geometry: {
+            type: "MultiPolygon",
+            coordinates: [[coordinates]]
+          }
+        };
+      })
+    });
+  };
+
+  const generateMultiPathJsonLineStrings = (
+    geomList: MeasurableGeometry[],
+    name: string,
+    pathNotes: string
+  ): string => {
+    return JSON.stringify({
+      type: "FeatureCollection",
+      name: name || "",
+      path_notes: pathNotes || "",
+      features: geomList.map((geom) => ({
+        type: "Feature",
+        geometry: {
+          type: "MultiLineString",
+          coordinates: [
+            geom.stopPoints.map((elem) => [
+              CesiumMath.toDegrees(elem.longitude),
+              CesiumMath.toDegrees(elem.latitude),
+              Math.round(elem.height)
+            ])
+          ]
+        }
+      }))
+    });
+  };
+
   const icon = (
     <span className={Styles.iconDownload}>
       <Icon glyph={Icon.GLYPHS.opened} />
@@ -449,6 +607,12 @@ const MeasurableDownload = (props: Props) => {
   );
 
   if (ellipsoid) {
+    generateMultiPathKmlPolygon(terria.measurableGeomList).then((res) => {
+      setKmlMultiPathPolygon(res);
+    });
+    generateMultiPathKmlLines(terria.measurableGeomList).then((res) => {
+      setKmlMultiPathLines(res);
+    });
     generateKmlPolygon(geom).then((res) => {
       setKmlPolygon(res);
     });
@@ -461,6 +625,7 @@ const MeasurableDownload = (props: Props) => {
   }
 
   const handleDownload = (isMultiPath: boolean = false) => {
+    console.log("handleDownload", isMultiPath);
     const links = getDownloadLinks(geom, isMultiPath);
     const linkObj = !isMultiPath
       ? links.find((link) => link.key === selectedFormat)
@@ -504,7 +669,7 @@ const MeasurableDownload = (props: Props) => {
             background: ${theme.colorPrimary};
             margin-left: 10px;
           `}
-          onClick={handleDownload}
+          onClick={() => handleDownload(false)}
           disabled={!name || selectedFormat === ""}
         >
           {i18next.t("Download")}

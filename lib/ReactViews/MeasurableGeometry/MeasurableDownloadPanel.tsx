@@ -1,4 +1,3 @@
-import React from "react";
 import { Rnd } from "react-rnd";
 import MeasurableDownload from "./MeasurableDownload";
 import Terria from "../../Models/Terria";
