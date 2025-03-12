@@ -115,7 +115,9 @@
     "formatPlaceholder": "Seleziona il formato",
     "lines": "Linee",
     "points": "Punti",
-    "polygon": "Poligono"
+    "polygon": "Poligono",
+    "singlepath": "Percorso singolo",
+    "multipath": "Multi Percorso"
   },
   "pickInfo": {
     "toolName": "Info",

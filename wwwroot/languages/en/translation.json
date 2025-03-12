@@ -112,7 +112,9 @@
     "formatPlaceholder": "Select format",
     "lines": "Lines",
     "points": "Points",
-    "polygon": "Polygon"
+    "polygon": "Polygon",
+    "singlepath": "Single Path",
+    "multipath": "Multi Path"
   },
   "pickInfo": {
     "toolName": "Info",

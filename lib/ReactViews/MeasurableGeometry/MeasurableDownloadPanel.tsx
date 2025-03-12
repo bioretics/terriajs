@@ -11,8 +11,8 @@ import classNames from "classnames";
 interface Props {
   terria: Terria;
   viewState: ViewState;
-  initialSize: { initialWidth: number; initialHeight: number };
-  maxSize: { maxWidth: number; maxHeight: number };
+  initialWidth: number;
+  maxWidth: number;
   onClose: () => void;
 }
 
@@ -51,11 +51,10 @@ const MeasurableDownloadPanel = (props: Props) => {
       default={{
         x: 0,
         y: 0,
-        width: downloadProps.initialSize.initialWidth,
-        height: downloadProps.initialSize.initialHeight
+        width: downloadProps.initialWidth,
+        height: "auto"
       }}
-      maxWidth={downloadProps.maxSize.maxWidth}
-      maxHeight={downloadProps.maxSize.maxHeight}
+      maxWidth={downloadProps.maxWidth}
       enableResizing={{
         right: true,
         left: true

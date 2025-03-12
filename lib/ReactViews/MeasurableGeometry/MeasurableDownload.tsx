@@ -137,7 +137,9 @@ const MeasurableDownload = (props: Props) => {
             )
           : false,
         download: `${name}_polygon_multipath.kml`,
-        label: `${i18next.t("downloadData.polygon")} KML MULTIPATH`
+        label: `${i18next.t("downloadData.polygon")} ${i18next.t(
+          "downloadData.multipath"
+        )} KML`
       },
       {
         key: "kmlMultiPathLinksLines",
@@ -148,19 +150,25 @@ const MeasurableDownload = (props: Props) => {
             )
           : false,
         download: `${name}_lines_multipath.kml`,
-        label: `${i18next.t("downloadData.lines")} KML MULTIPATH`
+        label: `${i18next.t("downloadData.lines")} ${i18next.t(
+          "downloadData.multipath"
+        )} KML`
       },
       {
         key: "jsonMultiPathPolygon",
         href: DataUri.make("json", generateGeoJsonPolygon(geom)),
         download: `${name}_polygon_multipath.json`,
-        label: `${i18next.t("downloadData.polygon")} JSON MULTIPATH`
+        label: `${i18next.t("downloadData.polygon")} ${i18next.t(
+          "downloadData.multipath"
+        )} JSON`
       },
       {
         key: "jsonMultiPathLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
         download: `${name}_lines_multipath.json`,
-        label: `${i18next.t("downloadData.lines")} JSON MULTIPATH`
+        label: `${i18next.t("downloadData.lines")} ${i18next.t(
+          "downloadData.multipath"
+        )} JSON`
       }
     ];
 
@@ -469,6 +477,7 @@ const MeasurableDownload = (props: Props) => {
 
   return (
     <>
+      <p>{i18next.t("downloadData.singlepath")}</p>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
           title={i18next.t("downloadData.formatPlaceholder")}
@@ -502,42 +511,45 @@ const MeasurableDownload = (props: Props) => {
         </Button>
       </div>
       {terria.measurableGeomList.length > 1 && (
-        <div
-          style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
-        >
-          <Select
-            title={i18next.t("downloadData.formatPlaceholder") + "- Multi"}
-            css={`
-              padding-top: 5px;
-            `}
-            value={selectedMultiPathFormat}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              setSelectedMultiPathFormat(e.target.value);
-              e.target.blur();
-            }}
-            onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              e.target.blur()
-            }
-            className={Styles.dropdownList}
+        <>
+          <p>{i18next.t("downloadData.multipath")}</p>
+          <div
+            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
           >
-            {getDownloadLinks(geom, true).map((link) => (
-              <option key={link.key} value={link.key}>
-                {link.label}
-              </option>
-            ))}
-          </Select>
-          <Button
-            css={`
-              color: ${theme.textLight};
-              background: ${theme.colorPrimary};
-              margin-left: 10px;
-            `}
-            onClick={() => handleDownload(true)}
-            disabled={!name || selectedMultiPathFormat === ""}
-          >
-            {i18next.t("Download")}
-          </Button>
-        </div>
+            <Select
+              title={i18next.t("downloadData.formatPlaceholder") + "- Multi"}
+              css={`
+                padding-top: 5px;
+              `}
+              value={selectedMultiPathFormat}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                setSelectedMultiPathFormat(e.target.value);
+                e.target.blur();
+              }}
+              onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                e.target.blur()
+              }
+              className={Styles.dropdownList}
+            >
+              {getDownloadLinks(geom, true).map((link) => (
+                <option key={link.key} value={link.key}>
+                  {link.label}
+                </option>
+              ))}
+            </Select>
+            <Button
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                margin-left: 10px;
+              `}
+              onClick={() => handleDownload(true)}
+              disabled={!name || selectedMultiPathFormat === ""}
+            >
+              {i18next.t("Download")}
+            </Button>
+          </div>
+        </>
       )}
     </>
   );
