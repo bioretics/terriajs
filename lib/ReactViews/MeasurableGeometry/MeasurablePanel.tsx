@@ -444,6 +444,87 @@ const MeasurablePanel = observer((props: Props) => {
     </label>
   );
 
+  const renderGeometrySummary = () => {
+    const currentGeom =
+      terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!currentGeom) return null;
+
+    if (currentGeom.hasArea) {
+      return (
+        <>
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+          </Text>
+          <small>
+            {renderSummaryTable(
+              [
+                "measurableGeometry.geometrySummaryPerimeterGeo",
+                "measurableGeometry.geometrySummaryPerimeterAir",
+                "measurableGeometry.geometrySummaryAreaGeo",
+                "measurableGeometry.geometrySummaryAreaAir"
+              ],
+              [
+                prettifyNumber(currentGeom.geodeticDistance ?? 0),
+                prettifyNumber(currentGeom.airDistance ?? 0),
+                prettifyNumber(currentGeom.geodeticArea ?? 0, true),
+                prettifyNumber(currentGeom.airArea ?? 0, true)
+              ]
+            )}
+          </small>
+        </>
+      );
+    }
+
+    const tableHeaders = [
+      "measurableGeometry.geometrySummaryElevationMin",
+      "measurableGeometry.geometrySummaryElevationMax",
+      "measurableGeometry.geometrySummaryElevationBear",
+      "measurableGeometry.geometrySummaryElevationDiff"
+    ];
+    const tableData = [
+      prettifyNumber(Math.min(...heights.get())),
+      prettifyNumber(Math.max(...heights.get())),
+      getBearing.get(),
+      getHeightDifference.get()
+    ];
+
+    return (
+      <>
+        <StyledTextArea
+          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+          dark
+          value={currentGeom.pathNotes}
+          onChange={(e) => {
+            runInAction(() => {
+              if (terria.measurableGeomList && currentGeom) {
+                currentGeom.pathNotes = e.target.value;
+              }
+            });
+          }}
+        />
+        <Text textLight style={{ marginLeft: 1 }} title="">
+          {i18next.t("measurableGeometry.geometrySummaryHeader")}
+        </Text>
+        <small>
+          {renderSummaryTable(tableHeaders, tableData)}
+          {!currentGeom.onlyPoints &&
+            renderSummaryTable(
+              [
+                "measurableGeometry.geometrySummaryDistGeo",
+                "measurableGeometry.geometrySummaryDistAir",
+                "measurableGeometry.geometrySummaryDistGround"
+              ],
+              [
+                prettifyNumber(currentGeom.geodeticDistance ?? 0),
+                prettifyNumber(currentGeom.airDistance ?? 0),
+                prettifyNumber(currentGeom.groundDistance ?? 0)
+              ]
+            )}
+        </small>
+      </>
+    );
+  };
+
   const renderBody = () => {
     return (
       <div className={Styles.body} style={{ padding: "1rem" }}>
@@ -661,12 +742,7 @@ const MeasurablePanel = observer((props: Props) => {
             ?.onlyPoints &&
           renderSamplingStep()}
         <br />
-        {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea
-          ? terria?.measurableGeomList[terria.measurableGeometryIndex]
-              ?.onlyPoints
-            ? renderPointsSummary()
-            : renderPathSummary()
-          : renderAreaSummary()}
+        {renderGeometrySummary()}
         <br />
         {terria.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledDistances && renderStepDetails()}
@@ -712,171 +788,6 @@ const MeasurablePanel = observer((props: Props) => {
         </tr>
       </tbody>
     </table>
-  );
-
-  const renderPointsSummary = () => {
-    const tableHeaders = [
-      "measurableGeometry.geometrySummaryElevationMin",
-      "measurableGeometry.geometrySummaryElevationMax",
-      "measurableGeometry.geometrySummaryElevationBear",
-      "measurableGeometry.geometrySummaryElevationDiff"
-    ];
-
-    const tableData = [
-      prettifyNumber(Math.min(...heights.get())),
-      prettifyNumber(Math.max(...heights.get())),
-      getBearing.get(),
-      getHeightDifference.get()
-    ];
-
-    return (
-      <>
-        <StyledTextArea
-          title={i18next.t("measurableGeometry.textareaPlaceholder")}
-          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
-          dark
-          value={
-            terria.measurableGeomList[terria.measurableGeometryIndex]?.pathNotes
-          }
-          onChange={(e) => {
-            runInAction(() => {
-              if (
-                terria.measurableGeomList &&
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-              )
-                terria.measurableGeomList[
-                  terria.measurableGeometryIndex
-                ].pathNotes = e.target.value;
-            });
-          }}
-        />
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryHeader")}
-        </Text>
-        <small>{renderSummaryTable(tableHeaders, tableData)}</small>
-      </>
-    );
-  };
-
-  const renderPathSummary = () => {
-    const tableHeaders = [
-      "measurableGeometry.geometrySummaryElevationMin",
-      "measurableGeometry.geometrySummaryElevationMax",
-      "measurableGeometry.geometrySummaryElevationBear",
-      "measurableGeometry.geometrySummaryElevationDiff"
-    ];
-
-    const tableData = [
-      prettifyNumber(Math.min(...heights.get())),
-      prettifyNumber(Math.max(...heights.get())),
-      getBearing.get(),
-      getHeightDifference.get()
-    ];
-
-    const distanceHeaders = [
-      "measurableGeometry.geometrySummaryDistGeo",
-      "measurableGeometry.geometrySummaryDistAir",
-      "measurableGeometry.geometrySummaryDistGround"
-    ];
-
-    const distanceData = [
-      prettifyNumber(
-        terria.measurableGeomList[terria.measurableGeometryIndex]
-          ?.geodeticDistance ?? 0
-      ),
-      prettifyNumber(
-        terria.measurableGeomList[terria.measurableGeometryIndex]
-          ?.airDistance ?? 0
-      ),
-      prettifyNumber(
-        terria.measurableGeomList[terria.measurableGeometryIndex]
-          ?.groundDistance ?? 0
-      )
-    ];
-
-    return (
-      <>
-        <StyledTextArea
-          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
-          dark
-          value={
-            terria.measurableGeomList[terria.measurableGeometryIndex]?.pathNotes
-          }
-          onChange={(e) => {
-            runInAction(() => {
-              if (
-                terria.measurableGeomList &&
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-              )
-                terria.measurableGeomList[
-                  terria.measurableGeometryIndex
-                ].pathNotes = e.target.value;
-            });
-          }}
-        />
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryHeader")}
-        </Text>
-        <small>
-          {renderSummaryTable(tableHeaders, tableData)}
-          {renderSummaryTable(distanceHeaders, distanceData)}
-        </small>
-      </>
-    );
-  };
-
-  const renderAreaSummary = () => (
-    <>
-      <Text textLight style={{ marginLeft: 1 }} title="">
-        {i18next.t("measurableGeometry.geometrySummaryHeader")}
-      </Text>
-      <small>
-        <table className={Styles.elevation}>
-          <thead>
-            <tr>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryPerimeterGeo")}
-              </th>
-              <th>
-                {i18next.t("measurableGeometry.geometrySummaryPerimeterAir")}
-              </th>
-              <th>{i18next.t("measurableGeometry.geometrySummaryAreaGeo")}</th>
-              <th>{i18next.t("measurableGeometry.geometrySummaryAreaAir")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                {prettifyNumber(
-                  terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.geodeticDistance ?? 0
-                )}
-              </td>
-              <td>
-                {prettifyNumber(
-                  terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.airDistance ?? 0
-                )}
-              </td>
-              <td>
-                {prettifyNumber(
-                  terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.geodeticArea ?? 0,
-                  true
-                )}
-              </td>
-              <td>
-                {prettifyNumber(
-                  terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.airArea ?? 0,
-                  true
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </small>
-    </>
   );
 
   const renderStepDetails = () => {
