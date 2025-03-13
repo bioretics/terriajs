@@ -74,7 +74,7 @@ export class MeasureToolsController extends MapNavigationItemController {
   }
 
   get viewerMode(): ViewerMode | undefined {
-    return ViewerMode.Cesium;
+    return undefined;
   }
 
   @action.bound
@@ -307,7 +307,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
   }
 
   get viewerMode(): ViewerMode | undefined {
-    return ViewerMode.Cesium;
+    return undefined;
   }
 
   @computed
