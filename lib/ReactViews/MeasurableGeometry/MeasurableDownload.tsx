@@ -17,6 +17,7 @@ import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
 import Select from "../../Styled/Select";
 import Terria from "../../Models/Terria";
+import Checkbox from "../../Styled/Checkbox";
 
 interface Props {
   terria: Terria;
@@ -30,8 +31,7 @@ const MeasurableDownload = (props: Props) => {
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
-  const [selectedMultiPathFormat, setSelectedMultiPathFormat] =
-    React.useState<string>("");
+  const [downloadAll, setDownloadAll] = React.useState<boolean>(false);
 
   const [kmlMultiPathPolygon, setKmlMultiPathPolygon] = useState<string>();
   const [kmlMultiPathLines, setKmlMultiPathLines] = useState<string>();
@@ -624,12 +624,9 @@ const MeasurableDownload = (props: Props) => {
     });
   }
 
-  const handleDownload = (isMultiPath: boolean = false) => {
-    console.log("handleDownload", isMultiPath);
-    const links = getDownloadLinks(geom, isMultiPath);
-    const linkObj = !isMultiPath
-      ? links.find((link) => link.key === selectedFormat)
-      : links.find((link) => link.key === selectedMultiPathFormat);
+  const handleDownload = () => {
+    const links = getDownloadLinks(geom, downloadAll);
+    const linkObj = links.find((link) => link.key === selectedFormat);
     if (linkObj && linkObj.href) {
       const a = document.createElement("a");
       a.href = linkObj.href as string;
@@ -642,7 +639,6 @@ const MeasurableDownload = (props: Props) => {
 
   return (
     <>
-      <p>{i18next.t("downloadData.singlepath")}</p>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
           title={i18next.t("downloadData.formatPlaceholder")}
@@ -657,7 +653,7 @@ const MeasurableDownload = (props: Props) => {
           onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
           className={Styles.dropdownList}
         >
-          {getDownloadLinks(geom, false).map((link) => (
+          {getDownloadLinks(geom, downloadAll).map((link) => (
             <option key={link.key} value={link.key}>
               {link.label}
             </option>
@@ -669,53 +665,24 @@ const MeasurableDownload = (props: Props) => {
             background: ${theme.colorPrimary};
             margin-left: 10px;
           `}
-          onClick={() => handleDownload(false)}
+          onClick={handleDownload}
           disabled={!name || selectedFormat === ""}
         >
           {i18next.t("Download")}
         </Button>
       </div>
-      {terria.measurableGeomList.length > 1 && (
-        <>
-          <p>{i18next.t("downloadData.multipath")}</p>
-          <div
-            style={{ display: "flex", alignItems: "center", marginTop: "10px" }}
-          >
-            <Select
-              title={i18next.t("downloadData.formatPlaceholder") + "- Multi"}
-              css={`
-                padding-top: 5px;
-              `}
-              value={selectedMultiPathFormat}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setSelectedMultiPathFormat(e.target.value);
-                e.target.blur();
-              }}
-              onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                e.target.blur()
-              }
-              className={Styles.dropdownList}
-            >
-              {getDownloadLinks(geom, true).map((link) => (
-                <option key={link.key} value={link.key}>
-                  {link.label}
-                </option>
-              ))}
-            </Select>
-            <Button
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                margin-left: 10px;
-              `}
-              onClick={() => handleDownload(true)}
-              disabled={!name || selectedMultiPathFormat === ""}
-            >
-              {i18next.t("Download")}
-            </Button>
-          </div>
-        </>
-      )}
+      <div>
+        <label style={{ display: "flex", alignItems: "center" }}>
+          <Checkbox
+            isDisabled={terria.measurableGeomList.length <= 1}
+            isChecked={downloadAll}
+            onChange={(e) => setDownloadAll(e.target.checked)}
+          />
+          <span style={{ marginTop: "10px" }}>
+            {"Download " + i18next.t("downloadData.multipath")}
+          </span>
+        </label>
+      </div>
     </>
   );
 };
