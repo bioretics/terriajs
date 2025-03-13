@@ -1153,8 +1153,8 @@ const MeasurablePanel = observer((props: Props) => {
           <MeasurableDownloadPanel
             terria={terria}
             viewState={viewState}
-            initialSize={{ initialWidth, initialHeight }}
-            maxSize={{ maxWidth, maxHeight }}
+            initialWidth={initialWidth}
+            maxWidth={maxWidth}
             onClose={() => setIsDownloadPanelOpen(false)}
           />
         )}
