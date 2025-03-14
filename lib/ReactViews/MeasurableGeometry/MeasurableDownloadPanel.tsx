@@ -29,7 +29,7 @@ const MeasurableDownloadPanel = (props: Props) => {
       <div className={Styles.header}>
         <div>
           <span style={{ display: "flex", justifyContent: "center" }}>
-            <b>{i18next.t("DOWNLOAD")}</b>
+            <b>DOWNLOAD</b>
           </span>
         </div>
         <button

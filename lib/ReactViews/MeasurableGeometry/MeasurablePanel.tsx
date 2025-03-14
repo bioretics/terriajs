@@ -74,7 +74,6 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
-    console.log("prova MeasurablePanel close inizio");
     MeasurablePanelManager.removeAllMarkers();
     terria.measurableGeomList.splice(1, terria.measurableGeomList.length - 1);
     terria.measurableGeometryManager.splice(

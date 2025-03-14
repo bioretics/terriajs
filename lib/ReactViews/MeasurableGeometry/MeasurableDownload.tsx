@@ -262,7 +262,6 @@ const MeasurableDownload = (props: Props) => {
   };
 
   const generateKmlLines = async (geom: MeasurableGeometry) => {
-    console.log("generateKmlLines");
     if (!geom?.stopPoints) {
       return;
     }
@@ -678,7 +677,7 @@ const MeasurableDownload = (props: Props) => {
             isChecked={downloadAll}
             onChange={(e) => setDownloadAll(e.target.checked)}
           />
-          <span style={{ marginTop: "10px" }}>
+          <span style={{ marginTop: "5px" }}>
             {"Download " + i18next.t("downloadData.multipath")}
           </span>
         </label>
