@@ -348,6 +348,10 @@ const MeasurablePanel = observer((props: Props) => {
             onClick={toggleCollapsed}
             className={Styles.btnToggleFeature}
             title="collapse"
+            disabled={
+              terria.measurableGeomList[terria.measurableGeometryIndex]
+                ?.isPointAdding
+            }
           >
             {props.viewState.measurablePanelIsCollapsed ? (
               <Icon glyph={Icon.GLYPHS.closed} />
@@ -361,6 +365,10 @@ const MeasurablePanel = observer((props: Props) => {
           onClick={close}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
+          disabled={
+            terria.measurableGeomList[terria.measurableGeometryIndex]
+              ?.isPointAdding
+          }
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>
