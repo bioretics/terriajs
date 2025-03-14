@@ -53,6 +53,13 @@ const MeasurablePanel = observer((props: Props) => {
   const maxWidth = windowWidth * 0.6;
   const maxHeight = windowHeight * 0.8;
 
+  const {
+    selectedStopPointIdx,
+    measurablePanelIsVisible,
+    setSelectedStopPointIdx,
+    setSelectedSampledPointIdx
+  } = viewState;
+
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
 
@@ -229,7 +236,6 @@ const MeasurablePanel = observer((props: Props) => {
     return windowSize;
   }
 
-  const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
   useEffect(() => {
     if (selectedStopPointIdx !== null) {
       setHighlightedRow(selectedStopPointIdx);
@@ -241,7 +247,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
   useEffect(() => {
-    if (!viewState.measurablePanelIsVisible) return;
+    if (!measurablePanelIsVisible) return;
 
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
@@ -286,10 +292,10 @@ const MeasurablePanel = observer((props: Props) => {
             (point, idx) => {
               if (point) {
                 MeasurablePanelManager.addMarker(point);
-                viewState.setSelectedSampledPointIdx(idx);
+                setSelectedSampledPointIdx(idx);
               } else {
                 MeasurablePanelManager.removeAllMarkers();
-                viewState.setSelectedSampledPointIdx(null);
+                setSelectedSampledPointIdx(null);
               }
             }
           );
@@ -305,7 +311,7 @@ const MeasurablePanel = observer((props: Props) => {
             if (point) {
               MeasurablePanelManager.addMarker(point);
               setHighlightedRow(idx);
-              viewState.setSelectedStopPointIdx(idx);
+              setSelectedStopPointIdx(idx);
             } else {
               if (
                 terria?.measurableGeomList[terria.measurableGeometryIndex]
@@ -313,7 +319,7 @@ const MeasurablePanel = observer((props: Props) => {
               )
                 MeasurablePanelManager.removeAllMarkers();
               setHighlightedRow(null);
-              viewState.setSelectedStopPointIdx(null);
+              setSelectedStopPointIdx(null);
             }
           }
         );
@@ -329,12 +335,15 @@ const MeasurablePanel = observer((props: Props) => {
 
     return () => disposer();
   }, [
+    viewState,
     terria.cesium,
     terria.currentViewer,
     terria.measurableGeomList,
     terria.measurableGeometryIndex,
     currentGeom,
-    viewState.measurablePanelIsVisible
+    measurablePanelIsVisible,
+    setSelectedSampledPointIdx,
+    setSelectedStopPointIdx
   ]);
 
   // Render Methods
@@ -966,8 +975,7 @@ const MeasurablePanel = observer((props: Props) => {
           (index: number) => {
             if (index <= 0) return "";
             const airDistances =
-              terria?.measurableGeomList[terria.measurableGeometryIndex]
-                ?.stopAirDistances;
+              terria?.measurableGeomList[geomIndex]?.stopAirDistances;
             return airDistances?.length > index
               ? Math.abs(
                   (100 * (point.height - array[index - 1].height)) /
@@ -1150,8 +1158,7 @@ const MeasurablePanel = observer((props: Props) => {
       }}
       style={{
         pointerEvents:
-          viewState.measurablePanelIsVisible &&
-          !viewState.measurablePanelIsCollapsed
+          measurablePanelIsVisible && !viewState.measurablePanelIsCollapsed
             ? "auto"
             : "none"
       }}
@@ -1159,7 +1166,7 @@ const MeasurablePanel = observer((props: Props) => {
       <div
         className={panelClassName}
         style={{ pointerEvents: "auto" }}
-        aria-hidden={!viewState.measurablePanelIsVisible}
+        aria-hidden={!measurablePanelIsVisible}
       >
         {renderHeader()}
         {renderBody()}
