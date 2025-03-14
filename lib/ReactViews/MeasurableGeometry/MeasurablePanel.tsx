@@ -930,208 +930,208 @@ const MeasurablePanelComponent = (props: Props) => {
   };
 
   // Sortable Item and List components.
-  const SortableItem = SortableElement(
-    React.memo(
-      ({
-        point,
-        idx,
-        array,
-        onlyPoints,
-        pointsDescription,
-        onDescriptionChange,
-        prettifyNumber,
-        terria
-      }: {
-        point: any;
-        idx: number;
-        array: any[];
-        onlyPoints?: boolean;
-        pointsDescription: string;
-        onDescriptionChange: (index: number, value: string) => void;
-        prettifyNumber: (num: number, squared?: boolean) => string;
-        terria: any;
-      }) => {
-        const theme = useTheme();
-        const isHighlighted = idx === highlightedRow;
+  interface SortableItemProps {
+    point: any;
+    idx: number;
+    array: any[];
+    onlyPoints?: boolean;
+    pointsDescription: string;
+    onDescriptionChange: (index: number, value: string) => void;
+    prettifyNumber: (num: number, squared?: boolean) => string;
+    terria: any;
+  }
 
-        const renderDistanceData = React.useCallback(
-          (distanceArray: any[], index: number) => {
-            return index > 0 && distanceArray?.length > index
-              ? prettifyNumber(distanceArray[index])
-              : "";
-          },
-          [prettifyNumber]
-        );
+  const SortableItemComponent: React.FC<SortableItemProps> = ({
+    point,
+    idx,
+    array,
+    onlyPoints,
+    pointsDescription,
+    onDescriptionChange,
+    prettifyNumber,
+    terria
+  }) => {
+    const theme = useTheme();
+    const isHighlighted = idx === highlightedRow;
 
-        const geomIndex = terria.measurableGeometryIndex;
-        const renderSlope = React.useCallback(
-          (index: number) => {
-            if (index <= 0) return "";
-            const airDistances =
-              terria?.measurableGeomList[geomIndex]?.stopAirDistances;
-            return airDistances?.length > index
-              ? Math.abs(
-                  (100 * (point.height - array[index - 1].height)) /
-                    airDistances[index]
-                ).toFixed(1)
-              : "";
-          },
-          [geomIndex, terria.measurableGeomList, array, point.height]
-        );
+    const renderDistanceData = React.useCallback(
+      (distanceArray: any[], index: number) =>
+        index > 0 && distanceArray?.length > index
+          ? prettifyNumber(distanceArray[index])
+          : "",
+      [prettifyNumber]
+    );
 
-        const handleMouseLeave = React.useCallback(() => {
-          setHighlightedRow(null);
-          viewState.setSelectedStopPointIdx(null);
-          MeasurablePanelManager.removeAllMarkers();
-        }, []);
-
-        const handleMouseOver = React.useCallback(() => {
-          if (terria.cesium) {
-            setHighlightedRow(idx);
-            viewState.setSelectedStopPointIdx(idx);
-            MeasurablePanelManager.addMarker(
-              terria.measurableGeomList[terria.measurableGeometryIndex]
-                .stopPoints[idx]
-            );
-          }
-        }, [
-          idx,
-          terria.cesium,
-          terria.measurableGeomList,
-          terria.measurableGeometryIndex
-        ]);
-
-        const [localText, setLocalText] = React.useState(pointsDescription);
-        useEffect(() => {
-          setLocalText(pointsDescription);
-        }, [pointsDescription]);
-
-        const [isDragging, setIsDragging] = React.useState(false);
-
-        return (
-          <tr
-            onMouseLeave={handleMouseLeave}
-            onMouseUp={(e) => {
-              if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
-              handleMouseOver();
-            }}
-            onMouseMove={() => {
-              if (isDragging) {
-                runInAction(() => {
-                  viewState.measurableChartIsVisible = false;
-                });
-              }
-            }}
-            onMouseDown={() => {
-              setIsDragging(true);
-            }}
-            style={{
-              cursor: "row-resize",
-              outline: isHighlighted
-                ? `2px solid ${theme.colorPrimary}`
-                : "none",
-              outlineOffset: "-2px",
-              backgroundColor: isHighlighted
-                ? `${theme.colorPrimary}22`
-                : "transparent"
-            }}
-          >
-            <td>{idx + 1}</td>
-            <td>{`${point.height.toFixed(0)} m`}</td>
-            {!onlyPoints && (
-              <>
-                <td>
-                  {idx > 0 &&
-                    `${(point.height - array[idx - 1].height).toFixed(0)} m`}
-                </td>
-                <td>
-                  {renderDistanceData(
-                    terria?.measurableGeomList[terria.measurableGeometryIndex]
-                      ?.stopGeodeticDistances,
-                    idx
-                  )}
-                </td>
-                <td>
-                  {renderDistanceData(
-                    terria?.measurableGeomList[terria.measurableGeometryIndex]
-                      ?.stopAirDistances,
-                    idx
-                  )}
-                </td>
-                <td>
-                  {renderDistanceData(
-                    terria?.measurableGeomList[terria.measurableGeometryIndex]
-                      ?.stopGroundDistances,
-                    idx
-                  )}
-                </td>
-                <td>{renderSlope(idx)}</td>
-              </>
-            )}
-            {onlyPoints && (
-              <td>
-                <StyledTextArea
-                  placeholder="Note..."
-                  value={localText}
-                  dark
-                  onChange={(e) => {
-                    setLocalText(e.target.value);
-                  }}
-                  onBlur={() => {
-                    onDescriptionChange(idx, localText);
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onMouseUp={(e) => e.stopPropagation()}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </td>
-            )}
-          </tr>
-        );
+    const geomIndex = terria.measurableGeometryIndex;
+    const renderSlope = React.useCallback(
+      (index: number) => {
+        if (index <= 0) return "";
+        const airDistances =
+          terria?.measurableGeomList[geomIndex]?.stopAirDistances;
+        return airDistances?.length > index
+          ? Math.abs(
+              (100 * (point.height - array[index - 1].height)) /
+                airDistances[index]
+            ).toFixed(1)
+          : "";
       },
-      (prevProps, nextProps) =>
-        prevProps.idx === nextProps.idx &&
-        prevProps.point === nextProps.point &&
-        prevProps.pointsDescription === nextProps.pointsDescription
-    )
-  );
+      [geomIndex, terria.measurableGeomList, array, point.height]
+    );
 
-  const SortableList = SortableContainer(
-    ({
-      items,
-      onlyPoints,
-      pointsDescriptions,
-      onDescriptionChange,
-      prettifyNumber,
-      terria
-    }: {
-      items: any[];
-      onlyPoints?: boolean;
-      pointsDescriptions: string[];
-      onDescriptionChange: (index: number, value: string) => void;
-      prettifyNumber: (num: number, squared?: boolean) => string;
-      terria: any;
-    }) => {
-      return (
-        <tbody>
-          {items.map((point, idx) => (
-            <SortableItem
-              key={`item-${idx}`}
-              index={idx}
-              idx={idx}
-              array={items}
-              onlyPoints={onlyPoints}
-              pointsDescription={pointsDescriptions[idx]}
-              onDescriptionChange={onDescriptionChange}
-              prettifyNumber={prettifyNumber}
-              terria={terria}
-              point={point}
+    const handleMouseLeave = React.useCallback(() => {
+      setHighlightedRow(null);
+      viewState.setSelectedStopPointIdx(null);
+      MeasurablePanelManager.removeAllMarkers();
+    }, []);
+
+    const handleMouseOver = React.useCallback(() => {
+      if (terria.cesium) {
+        setHighlightedRow(idx);
+        viewState.setSelectedStopPointIdx(idx);
+        MeasurablePanelManager.addMarker(
+          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
+            idx
+          ]
+        );
+      }
+    }, [
+      idx,
+      terria.cesium,
+      terria.measurableGeomList,
+      terria.measurableGeometryIndex
+    ]);
+
+    const [localText, setLocalText] = React.useState(pointsDescription);
+    useEffect(() => {
+      setLocalText(pointsDescription);
+    }, [pointsDescription]);
+
+    const [isDragging, setIsDragging] = React.useState(false);
+
+    return (
+      <tr
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={(e) => {
+          if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
+          handleMouseOver();
+        }}
+        onMouseMove={() => {
+          if (isDragging) {
+            runInAction(() => {
+              viewState.measurableChartIsVisible = false;
+            });
+          }
+        }}
+        onMouseDown={() => {
+          setIsDragging(true);
+        }}
+        style={{
+          cursor: "row-resize",
+          outline: isHighlighted ? `2px solid ${theme.colorPrimary}` : "none",
+          outlineOffset: "-2px",
+          backgroundColor: isHighlighted
+            ? `${theme.colorPrimary}22`
+            : "transparent"
+        }}
+      >
+        <td>{idx + 1}</td>
+        <td>{`${point.height.toFixed(0)} m`}</td>
+        {!onlyPoints && (
+          <>
+            <td>
+              {idx > 0 &&
+                `${(point.height - array[idx - 1].height).toFixed(0)} m`}
+            </td>
+            <td>
+              {renderDistanceData(
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.stopGeodeticDistances,
+                idx
+              )}
+            </td>
+            <td>
+              {renderDistanceData(
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.stopAirDistances,
+                idx
+              )}
+            </td>
+            <td>
+              {renderDistanceData(
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.stopGroundDistances,
+                idx
+              )}
+            </td>
+            <td>{renderSlope(idx)}</td>
+          </>
+        )}
+        {onlyPoints && (
+          <td>
+            <StyledTextArea
+              placeholder="Note..."
+              value={localText}
+              dark
+              onChange={(e) => setLocalText(e.target.value)}
+              onBlur={() => {
+                onDescriptionChange(idx, localText);
+              }}
+              onMouseDown={(e) => e.stopPropagation()}
+              onMouseUp={(e) => e.stopPropagation()}
+              onClick={(e) => e.stopPropagation()}
             />
-          ))}
-        </tbody>
-      );
-    }
-  );
+          </td>
+        )}
+      </tr>
+    );
+  };
+
+  SortableItemComponent.displayName = "SortableItemComponent";
+
+  const SortableItem = SortableElement(React.memo(SortableItemComponent));
+  SortableItem.displayName = "SortableItem";
+
+  interface SortableListProps {
+    items: any[];
+    onlyPoints?: boolean;
+    pointsDescriptions: string[];
+    onDescriptionChange: (index: number, value: string) => void;
+    prettifyNumber: (num: number, squared?: boolean) => string;
+    terria: any;
+  }
+
+  const SortableListComponent: React.FC<SortableListProps> = ({
+    items,
+    onlyPoints,
+    pointsDescriptions,
+    onDescriptionChange,
+    prettifyNumber,
+    terria
+  }) => {
+    return (
+      <tbody>
+        {items.map((point, idx) => (
+          <SortableItem
+            key={`item-${idx}`}
+            index={idx}
+            idx={idx}
+            array={items}
+            onlyPoints={onlyPoints}
+            pointsDescription={pointsDescriptions[idx]}
+            onDescriptionChange={onDescriptionChange}
+            prettifyNumber={prettifyNumber}
+            terria={terria}
+            point={point}
+          />
+        ))}
+      </tbody>
+    );
+  };
+
+  SortableListComponent.displayName = "SortableListComponent";
+
+  const SortableList = SortableContainer(React.memo(SortableListComponent));
+  SortableList.displayName = "SortableList";
 
   return (
     <Rnd
