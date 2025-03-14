@@ -157,7 +157,10 @@ class WorkbenchItemRaw extends React.Component<IProps> {
                 </BoxSpan>
               )}
               <RawButton onClick={() => this.toggleDisplay()}>
-                <BoxSpan padded title={this.isOpen ? t("general.close") : t("general.open")}>
+                <BoxSpan
+                  padded
+                  title={this.isOpen ? t("general.close") : t("general.open")}
+                >
                   {this.isOpen ? (
                     <StyledIcon
                       styledHeight={"8px"}

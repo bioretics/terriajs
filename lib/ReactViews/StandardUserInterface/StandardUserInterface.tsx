@@ -43,7 +43,6 @@ import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
-import { Rnd } from "react-rnd";
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
