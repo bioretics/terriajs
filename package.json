@@ -11,6 +11,10 @@
     "url": "http://github.com/TerriaJS/terriajs"
   },
   "resolutions": {
+    "@types/react": "16.14.21",
+    "@types/react-dom": "16.9.16",
+    "react-rnd": "10.5.2",
+    "re-resizable": "6.11.2",
     "colors": "1.4.0",
     "@types/node": "^18.15.11",
     "@types/css-font-loading-module": "^0.0.9",
