@@ -26,6 +26,7 @@ import {
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
+import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
 
 interface Props {
   viewState: ViewState;
@@ -590,16 +591,36 @@ const MeasurablePanelComponent = (props: Props) => {
                       `}
                       onClick={() => {
                         runInAction(() => {
-                          terria.measurableGeomList.push(
-                            terria?.measurableGeomList[
-                              terria.measurableGeometryIndex
-                            ]
-                          );
+                          const newGeometry = {
+                            isClosed:
+                              terria?.measurableGeomList[
+                                terria.measurableGeometryIndex
+                              ].isClosed,
+                            hasArea:
+                              terria?.measurableGeomList[
+                                terria.measurableGeometryIndex
+                              ].hasArea,
+                            stopPoints: [],
+                            stopGeodeticDistances: [],
+                            stopAirDistances: [],
+                            stopGroundDistances: [],
+                            geodeticDistance: 0,
+                            airDistance: 0,
+                            groundDistance: 0,
+                            sampledPoints: [],
+                            sampledDistances: [],
+                            onlyPoints: false,
+                            pointDescriptions: [],
+                            filename: "",
+                            pathNotes: "",
+                            isFileUploaded: false
+                          };
+
+                          terria.measurableGeomList.push(newGeometry);
                           terria.measurableGeometryManager.push(
-                            terria?.measurableGeometryManager[
-                              terria.measurableGeometryIndex
-                            ]
+                            Object.freeze(new MeasurableGeometryManager(terria))
                           );
+
                           terria.measurableGeometryIndex =
                             terria.measurableGeomList.length - 1;
                         });
