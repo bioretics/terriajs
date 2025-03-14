@@ -758,6 +758,15 @@ export default class UserDrawing extends MappableMixin(
       buttonText: this.getButtonText(),
       onCancel: () => {
         runInAction(() => {
+          this.terria.measurableGeometryIndex = 0;
+          this.terria.measurableGeomList.splice(
+            1,
+            this.terria.measurableGeomList.length - 1
+          );
+          this.terria.measurableGeometryManager.splice(
+            1,
+            this.terria.measurableGeometryManager.length - 1
+          );
           if (this.onDrawingComplete) {
             const isDrawingComplete =
               this.pointEntities.entities.values.length >= 2;

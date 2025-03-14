@@ -80,7 +80,6 @@ const MeasurablePanel = observer((props: Props) => {
       1,
       terria.measurableGeometryManager.length - 1
     );
-    terria.measurableGeometryIndex = 0;
     viewState.measurablePanelIsVisible = false;
     const deactivateTool = (toolId: string) => {
       const item =
@@ -348,6 +347,10 @@ const MeasurablePanel = observer((props: Props) => {
             onClick={toggleCollapsed}
             className={Styles.btnToggleFeature}
             title="collapse"
+            disabled={
+              terria.measurableGeomList[terria.measurableGeometryIndex]
+                ?.isPointAdding
+            }
           >
             {props.viewState.measurablePanelIsCollapsed ? (
               <Icon glyph={Icon.GLYPHS.closed} />
@@ -358,9 +361,16 @@ const MeasurablePanel = observer((props: Props) => {
         </div>
         <button
           type="button"
-          onClick={close}
+          onClick={() => {
+            terria.measurableGeometryIndex = 0;
+            close();
+          }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
+          disabled={
+            terria.measurableGeomList[terria.measurableGeometryIndex]
+              ?.isPointAdding
+          }
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>
