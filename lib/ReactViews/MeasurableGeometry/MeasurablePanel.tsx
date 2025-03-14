@@ -229,15 +229,17 @@ const MeasurablePanel = observer((props: Props) => {
     return windowSize;
   }
 
+  const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
   useEffect(() => {
-    if (viewState.selectedStopPointIdx !== null) {
-      setHighlightedRow(viewState.selectedStopPointIdx);
+    if (selectedStopPointIdx !== null) {
+      setHighlightedRow(selectedStopPointIdx);
     } else {
       setHighlightedRow(null);
     }
     terria.currentViewer.notifyRepaintRequired();
-  }, [terria.currentViewer, viewState.selectedStopPointIdx]);
+  }, [terria.currentViewer, selectedStopPointIdx]);
 
+  const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
   useEffect(() => {
     if (!viewState.measurablePanelIsVisible) return;
 
@@ -331,7 +333,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.currentViewer,
     terria.measurableGeomList,
     terria.measurableGeometryIndex,
-    terria.measurableGeomList[terria.measurableGeometryIndex],
+    currentGeom,
     viewState.measurablePanelIsVisible
   ]);
 
@@ -959,6 +961,7 @@ const MeasurablePanel = observer((props: Props) => {
           [prettifyNumber]
         );
 
+        const geomIndex = terria.measurableGeometryIndex;
         const renderSlope = React.useCallback(
           (index: number) => {
             if (index <= 0) return "";
@@ -972,19 +975,14 @@ const MeasurablePanel = observer((props: Props) => {
                 ).toFixed(1)
               : "";
           },
-          [
-            terria?.measurableGeomList,
-            terria?.measurableGeomList[terria.measurableGeometryIndex],
-            array,
-            point.height
-          ]
+          [geomIndex, terria.measurableGeomList, array, point.height]
         );
 
         const handleMouseLeave = React.useCallback(() => {
           setHighlightedRow(null);
           viewState.setSelectedStopPointIdx(null);
           MeasurablePanelManager.removeAllMarkers();
-        }, [viewState]);
+        }, []);
 
         const handleMouseOver = React.useCallback(() => {
           if (terria.cesium) {
@@ -995,7 +993,12 @@ const MeasurablePanel = observer((props: Props) => {
                 .stopPoints[idx]
             );
           }
-        }, [highlightedRow, terria.measurableGeomList]);
+        }, [
+          idx,
+          terria.cesium,
+          terria.measurableGeomList,
+          terria.measurableGeometryIndex
+        ]);
 
         const [localText, setLocalText] = React.useState(pointsDescription);
         useEffect(() => {

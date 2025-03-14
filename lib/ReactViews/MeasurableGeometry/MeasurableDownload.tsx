@@ -8,7 +8,6 @@ import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphic
 import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
 import DataUri from "../../Core/DataUri";
-import Icon from "../../Styled/Icon";
 import Styles from "./measurable-download.scss";
 import { exportKmlResultKml } from "terriajs-cesium";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";

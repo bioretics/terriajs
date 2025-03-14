@@ -1,7 +1,7 @@
 //"use strict";
 
 import { observer } from "mobx-react";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Icon from "../../../Styled/Icon";
 import Chart from "./BottomDockChart";
 import Styles from "./chart-panel.scss";
@@ -47,6 +47,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     measurableGeometryIndex,
     measurableGeomSamplingStep
   } = terria;
+  const currentMeasurableGeometry = measurableGeomList[measurableGeometryIndex];
 
   const PANEL_HEIGHT = 300;
   const CHART_HEIGHT = 266;
@@ -164,9 +165,10 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       setChartItems(items);
     }
   }, [
+    measurableGeometryIndex,
     measurableGeomList,
-    measurableGeomList[measurableGeometryIndex],
-    measurableGeomSamplingStep
+    measurableGeomSamplingStep,
+    currentMeasurableGeometry
   ]);
 
   return (
