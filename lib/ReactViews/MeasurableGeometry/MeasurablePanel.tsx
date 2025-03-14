@@ -32,7 +32,7 @@ interface Props {
   terria: Terria;
 }
 
-const MeasurablePanel: React.FC<Props> = observer((props: Props) => {
+const MeasurablePanelComponent = (props: Props) => {
   // Variables
   const { terria, viewState } = props;
   const theme = useTheme();
@@ -1175,7 +1175,9 @@ const MeasurablePanel: React.FC<Props> = observer((props: Props) => {
       </div>
     </Rnd>
   );
-});
+};
 
-MeasurablePanel.displayName = "MeasurablePanel";
+MeasurablePanelComponent.displayName = "MeasurablePanel";
+
+const MeasurablePanel = observer(MeasurablePanelComponent);
 export default MeasurablePanel;
