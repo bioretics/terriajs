@@ -32,7 +32,7 @@ interface Props {
   terria: Terria;
 }
 
-const MeasurablePanel = observer((props: Props) => {
+const MeasurablePanel: React.FC<Props> = observer((props: Props) => {
   // Variables
   const { terria, viewState } = props;
   const theme = useTheme();
@@ -53,12 +53,7 @@ const MeasurablePanel = observer((props: Props) => {
   const maxWidth = windowWidth * 0.6;
   const maxHeight = windowHeight * 0.8;
 
-  const {
-    selectedStopPointIdx,
-    measurablePanelIsVisible,
-    setSelectedStopPointIdx,
-    setSelectedSampledPointIdx
-  } = viewState;
+  const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
 
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
@@ -292,10 +287,10 @@ const MeasurablePanel = observer((props: Props) => {
             (point, idx) => {
               if (point) {
                 MeasurablePanelManager.addMarker(point);
-                setSelectedSampledPointIdx(idx);
+                viewState.setSelectedSampledPointIdx(idx);
               } else {
                 MeasurablePanelManager.removeAllMarkers();
-                setSelectedSampledPointIdx(null);
+                viewState.setSelectedSampledPointIdx(null);
               }
             }
           );
@@ -311,7 +306,7 @@ const MeasurablePanel = observer((props: Props) => {
             if (point) {
               MeasurablePanelManager.addMarker(point);
               setHighlightedRow(idx);
-              setSelectedStopPointIdx(idx);
+              viewState.setSelectedStopPointIdx(idx);
             } else {
               if (
                 terria?.measurableGeomList[terria.measurableGeometryIndex]
@@ -319,7 +314,7 @@ const MeasurablePanel = observer((props: Props) => {
               )
                 MeasurablePanelManager.removeAllMarkers();
               setHighlightedRow(null);
-              setSelectedStopPointIdx(null);
+              viewState.setSelectedStopPointIdx(null);
             }
           }
         );
@@ -341,9 +336,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeomList,
     terria.measurableGeometryIndex,
     currentGeom,
-    measurablePanelIsVisible,
-    setSelectedSampledPointIdx,
-    setSelectedStopPointIdx
+    measurablePanelIsVisible
   ]);
 
   // Render Methods
@@ -1184,4 +1177,5 @@ const MeasurablePanel = observer((props: Props) => {
   );
 });
 
+MeasurablePanel.displayName = "MeasurablePanel";
 export default MeasurablePanel;
