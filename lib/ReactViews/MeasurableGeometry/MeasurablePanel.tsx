@@ -330,6 +330,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.cesium,
     terria.currentViewer,
     terria.measurableGeomList,
+    terria.measurableGeometryIndex,
     terria.measurableGeomList[terria.measurableGeometryIndex],
     viewState.measurablePanelIsVisible
   ]);
@@ -994,7 +995,7 @@ const MeasurablePanel = observer((props: Props) => {
                 .stopPoints[idx]
             );
           }
-        }, [idx, terria, viewState]);
+        }, [highlightedRow, terria.measurableGeomList]);
 
         const [localText, setLocalText] = React.useState(pointsDescription);
         useEffect(() => {

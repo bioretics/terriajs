@@ -42,6 +42,11 @@ interface Props {
 
 const MeasurableGeometryChartPanel = observer((props: Props) => {
   const { terria, viewState } = props;
+  const {
+    measurableGeomList,
+    measurableGeometryIndex,
+    measurableGeomSamplingStep
+  } = terria;
 
   const PANEL_HEIGHT = 300;
   const CHART_HEIGHT = 266;
@@ -115,21 +120,16 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   };
 
   useEffect(() => {
-    if (
-      terria?.measurableGeomList &&
-      terria.measurableGeomList[terria.measurableGeometryIndex]
-    ) {
+    if (measurableGeomList && measurableGeomList[measurableGeometryIndex]) {
       const airData = fetchPathDataChart(
-        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
-        terria.measurableGeomList[terria.measurableGeometryIndex]
-          .stopAirDistances,
-        terria.measurableGeomList[terria.measurableGeometryIndex].airDistance
+        measurableGeomList[measurableGeometryIndex].stopPoints,
+        measurableGeomList[measurableGeometryIndex].stopAirDistances,
+        measurableGeomList[measurableGeometryIndex].airDistance
       );
       const groundData = fetchPathDataChart(
-        terria.measurableGeomList[terria.measurableGeometryIndex].sampledPoints,
-        terria.measurableGeomList[terria.measurableGeometryIndex]
-          .sampledDistances,
-        terria.measurableGeomList[terria.measurableGeometryIndex].groundDistance
+        measurableGeomList[measurableGeometryIndex].sampledPoints,
+        measurableGeomList[measurableGeometryIndex].sampledDistances,
+        measurableGeomList[measurableGeometryIndex].groundDistance
       );
 
       const items: ChartItem[] = [];
@@ -164,9 +164,9 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       setChartItems(items);
     }
   }, [
-    terria.measurableGeomList,
-    terria.measurableGeomList[terria.measurableGeometryIndex],
-    terria.measurableGeomSamplingStep
+    measurableGeomList,
+    measurableGeomList[measurableGeometryIndex],
+    measurableGeomSamplingStep
   ]);
 
   return (

@@ -599,12 +599,6 @@ const MeasurableDownload = (props: Props) => {
     });
   };
 
-  const icon = (
-    <span className={Styles.iconDownload}>
-      <Icon glyph={Icon.GLYPHS.opened} />
-    </span>
-  );
-
   if (ellipsoid) {
     generateMultiPathKmlPolygon(terria.measurableGeomList).then((res) => {
       setKmlMultiPathPolygon(res);
