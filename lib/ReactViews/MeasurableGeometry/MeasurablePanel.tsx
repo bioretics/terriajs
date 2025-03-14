@@ -74,13 +74,13 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
+    console.log("prova MeasurablePanel close inizio");
     MeasurablePanelManager.removeAllMarkers();
     terria.measurableGeomList.splice(1, terria.measurableGeomList.length - 1);
     terria.measurableGeometryManager.splice(
       1,
       terria.measurableGeometryManager.length - 1
     );
-    terria.measurableGeometryIndex = 0;
     viewState.measurablePanelIsVisible = false;
     const deactivateTool = (toolId: string) => {
       const item =
@@ -362,7 +362,10 @@ const MeasurablePanel = observer((props: Props) => {
         </div>
         <button
           type="button"
-          onClick={close}
+          onClick={() => {
+            terria.measurableGeometryIndex = 0;
+            close();
+          }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
           disabled={
