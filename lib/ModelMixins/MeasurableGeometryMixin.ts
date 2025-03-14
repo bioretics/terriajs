@@ -1,4 +1,4 @@
-import { computed, action, runInAction } from "mobx";
+import { computed, action } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
 import StratumOrder from "../Models/Definition/StratumOrder";
@@ -6,7 +6,6 @@ import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
-import { THIS_COLUMN_EXPRESSION_TOKEN } from "../Traits/TraitsClasses/Table/ColumnTraits";
 import MeasurableGeometryManager from "../ViewModels/MeasurableGeometryManager";
 
 type MixinModel = Model<MappableTraits>;

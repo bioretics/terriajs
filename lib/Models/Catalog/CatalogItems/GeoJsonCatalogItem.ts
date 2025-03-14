@@ -252,8 +252,8 @@ class GeoJsonCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, positions)
       : positions;
 
-    let name = (fc as any).name || "";
-    let pathNotes = (fc as any).path_notes || "";
+    const name = (fc as any).name || "";
+    const pathNotes = (fc as any).path_notes || "";
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex

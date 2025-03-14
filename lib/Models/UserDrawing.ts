@@ -499,7 +499,7 @@ export default class UserDrawing extends MappableMixin(
     // disposeChangePathReaction
     reaction(
       () => this.terria.measurableGeometryIndex,
-      (idx) => {
+      () => {
         runInAction(() => {
           this.refreshPoints();
         });

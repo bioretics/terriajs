@@ -557,7 +557,7 @@ export default class ViewState {
             ].pointDescriptions ||
               this.terria.measurableGeomList[
                 this.terria.measurableGeometryIndex
-              ].pointDescriptions?.length == 0)
+              ].pointDescriptions?.length === 0)
           ) {
             this.terria.measurableGeomList[
               this.terria.measurableGeometryIndex

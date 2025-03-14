@@ -66,7 +66,7 @@ import filterOutUndefined from "../Core/filterOutUndefined";
 import formatPropertyValue from "../Core/formatPropertyValue";
 import hashFromString from "../Core/hashFromString";
 import isDefined from "../Core/isDefined";
-import JsonValue, {
+import {
   isJsonArray,
   isJsonNumber,
   isJsonObject,
@@ -110,7 +110,6 @@ import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import { PathType } from "html2canvas/dist/types/render/path";
 
 enum PathTypes {
   noPath = 0,

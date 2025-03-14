@@ -400,19 +400,17 @@ class KmlCatalogItem
       pathNotes = doc.body.textContent || "";
     }
 
-    pointDescriptions = (folder as any)._children.map(
-      (entity: any, index: number) => {
-        const descriptionValue = entity.description?.getValue(JulianDate.now());
-        if (descriptionValue) {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(descriptionValue, "text/html");
-          return doc.body.textContent || "";
-        }
-        return "";
+    pointDescriptions = (folder as any)._children.map((entity: any) => {
+      const descriptionValue = entity.description?.getValue(JulianDate.now());
+      if (descriptionValue) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(descriptionValue, "text/html");
+        return doc.body.textContent || "";
       }
-    );
+      return "";
+    });
 
-    let cartesianPositions: Cartesian3[] = entities.flatMap(
+    const cartesianPositions: Cartesian3[] = entities.flatMap(
       (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []
     );
     const cartographicPositions = cartesianPositions.map((pos) =>
