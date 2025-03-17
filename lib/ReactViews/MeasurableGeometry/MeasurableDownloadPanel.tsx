@@ -48,8 +48,8 @@ const MeasurableDownloadPanel = (props: Props) => {
     <Rnd
       bounds="window"
       default={{
-        x: 0,
-        y: 0,
+        x: 50,
+        y: 50,
         width: downloadProps.initialWidth,
         height: "auto"
       }}

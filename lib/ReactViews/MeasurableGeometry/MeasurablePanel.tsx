@@ -613,7 +613,10 @@ const MeasurablePanelComponent = (props: Props) => {
                             pointDescriptions: [],
                             filename: "",
                             pathNotes: "",
-                            isFileUploaded: false
+                            isFileUploaded:
+                              terria?.measurableGeomList[
+                                terria.measurableGeometryIndex
+                              ].isFileUploaded
                           };
 
                           terria.measurableGeomList.push(newGeometry);
