@@ -97,7 +97,7 @@
     "geometrySummarySlope": "Slope %",
     "textareaPlaceholder": "Enter your notes here...",
     "filenamePlaceholder": "Enter the filename...",
-    "indexPlaceholder": "Index",
+    "elementPlaceholder": "Element No.",
     "changePath": "Change the current path",
     "addPath": "Add a new path",
     "removePath": "Delete the current path"

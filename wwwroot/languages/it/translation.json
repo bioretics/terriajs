@@ -100,7 +100,7 @@
     "geometrySummarySlope": "Pendenza %",
     "textareaPlaceholder": "Inserisci le tue note...",
     "filenamePlaceholder": "Inserisci il nome del file...",
-    "indexPlaceHolder": "Index",
+    "elementPlaceholder": "Elemento num.",
     "changePath": "Cambia il percorso",
     "addPath": "Aggiungi un nuovo percorso",
     "removePath": "Rimuovi il percorso attuale"

@@ -567,7 +567,7 @@ const MeasurablePanelComponent = (props: Props) => {
               >
                 {terria.measurableGeomList.map((mgl, index) => (
                   <option key={index} value={index}>
-                    {`${i18next.t("measurableGeometry.indexPlaceholder")} ${
+                    {`${i18next.t("measurableGeometry.elementPlaceholder")} ${
                       index + 1
                     }`}
                   </option>
