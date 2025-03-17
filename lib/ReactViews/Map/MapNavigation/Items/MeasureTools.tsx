@@ -1,6 +1,6 @@
 "use strict";
 
-import { action, computed, makeObservable, runInAction } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";

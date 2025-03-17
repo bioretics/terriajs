@@ -935,6 +935,10 @@ const MeasurablePanelComponent = (props: Props) => {
               </tr>
             </thead>
             <SortableList
+              shouldCancelStart={() =>
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.isFileUploaded === true
+              }
               items={stopPoints}
               onlyPoints={onlyPoints}
               pointsDescriptions={
@@ -1050,7 +1054,10 @@ const MeasurablePanelComponent = (props: Props) => {
           setIsDragging(true);
         }}
         style={{
-          cursor: "row-resize",
+          cursor: terria.measurableGeomList[terria.measurableGeometryIndex]
+            ?.isFileUploaded
+            ? "auto"
+            : "row-resize",
           outline: isHighlighted ? `2px solid ${theme.colorPrimary}` : "none",
           outlineOffset: "-2px",
           backgroundColor: isHighlighted
