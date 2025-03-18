@@ -528,6 +528,15 @@ export default class UserDrawing extends MappableMixin(
       }
     );
 
+    reaction(
+      () => this.terria.measurableGeomList.length,
+      (newLength, oldLength) => {
+        if (newLength < oldLength) {
+          this.refreshPoints();
+        }
+      }
+    );
+
     this.disposeClampMeasureLineToGround = reaction(
       () => this.terria?.clampMeasureLineToGround,
       (clampMeasureLineToGround) => {

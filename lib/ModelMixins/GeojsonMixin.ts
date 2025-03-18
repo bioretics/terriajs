@@ -1637,6 +1637,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 1
       ) {
+        console.log("test this.readyData", this.readyData);
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
             for (let i = 0; i < this.readyData.features.length; i++) {
@@ -1987,7 +1988,7 @@ export function toFeatureCollection(
   }
   if (Array.isArray(json) && json.every((item) => isGeometries(item))) {
     return featureCollection(
-      json.map((item) => feature(item, item.properties))
+      json.map((item) => feature(item, (item as any).properties))
     ) as FeatureCollectionWithCrs;
   }
 }
