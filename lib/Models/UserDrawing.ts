@@ -478,6 +478,7 @@ export default class UserDrawing extends MappableMixin(
         this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
           ?.stopPoints,
       (stopPoints, previousStopPoints) => {
+        console.log("test disposeStopPointsReaction");
         if (stopPoints) {
           const previousSize = previousStopPoints?.length || 0;
           const newSize = stopPoints.length;
@@ -500,6 +501,8 @@ export default class UserDrawing extends MappableMixin(
     reaction(
       () => this.terria.measurableGeometryIndex,
       () => {
+        console.log("test disposeChangePathReaction");
+
         runInAction(() => {
           this.refreshPoints();
         });
@@ -521,15 +524,6 @@ export default class UserDrawing extends MappableMixin(
           labelsToRemove.forEach((e) => this.otherEntities.entities.remove(e));
         } else {
           this.updateSegmentLabels();
-        }
-      }
-    );
-
-    reaction(
-      () => this.terria.measurableGeomList.length,
-      (newLength, oldLength) => {
-        if (newLength < oldLength) {
-          this.refreshPoints();
         }
       }
     );

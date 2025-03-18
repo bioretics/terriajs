@@ -1428,7 +1428,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @computed
     get canUseAsPath() {
-      console.log("test-geojson canuseaspath");
       let pathType: PathTypes = PathTypes.noPath;
       if (
         this.readyData &&
@@ -1437,7 +1436,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         isJsonObject(this.readyData.crs.properties) &&
         this.readyData.crs.properties.code === "4326"
       ) {
-        console.log("test-geojson canuseaspath this.readyData", this.readyData);
         if (
           this.readyData.type === "FeatureCollection" &&
           isJsonArray(this.readyData.features) &&
@@ -1445,7 +1443,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonObject(this.readyData.features[0])
         ) {
           const geometry = this.readyData.features[0].geometry;
-          console.log("test-geojson canuseaspath geometry", geometry);
 
           if (isJsonObject(geometry) && isJsonArray(geometry.coordinates)) {
             if (
@@ -1457,25 +1454,21 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                 geometry.type === "MultiLineString" &&
                 geometry.coordinates.length >= 1
               ) {
-                console.log("test-geojson canuseaspath multilinestring");
                 pathType = PathTypes.featureCollectionMultiLineString;
               } else if (
                 geometry.type === "LineString" &&
                 geometry.coordinates.length > 1
               ) {
-                console.log("test-geojson canuseaspath linestring");
                 pathType = PathTypes.featureCollectionLineString;
               } else if (
                 geometry.type === "Polygon" &&
                 geometry.coordinates.length > 0
               ) {
-                console.log("test-geojson canuseaspath polygon");
                 pathType = PathTypes.featureCollectionPolygon;
               } else if (
                 geometry.type === "MultiPolygon" &&
                 geometry.coordinates.length > 0
               ) {
-                console.log("test-geojson canuseaspath multipolygon");
                 pathType = PathTypes.featureCollectionMultiPolygon;
               }
             }
@@ -1485,7 +1478,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           isJsonArray(this.readyData.features) &&
           this.readyData.features.length > 1
         ) {
-          console.log("test-geojson canuseaspath length maggiore di 1");
           let allMultiLineString = true;
           for (let i = 0; i < this.readyData.features.length; i++) {
             const feature = this.readyData.features[i];
@@ -1495,7 +1487,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             }
           }
           if (allMultiLineString) {
-            console.log("test-geojson canuseaspath all multilinestring");
             pathType = PathTypes.featureCollectionMultiLineString;
           } else {
             let allMultiPolygon = true;
@@ -1507,11 +1498,9 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               }
             }
             if (allMultiPolygon) {
-              console.log("test-geojson canuseaspath all multipolygon");
               pathType = PathTypes.featureCollectionMultiPolygon;
             }
           }
-          console.log("test-geojson canuseaspath pathtype", pathType);
         }
       }
       this._pathType = pathType;
@@ -1574,8 +1563,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     }
 
     computePath() {
-      console.log("test-geojson computepath");
-
       let jsonCoords: JsonArray | undefined;
       let filename: string | undefined;
       let pathNotes: string | undefined;
@@ -1652,14 +1639,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ) {
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
-            console.log(
-              "test-geojson this.readyData.features.length:",
-              this.readyData.features.length
-            );
             for (let i = 0; i < this.readyData.features.length; i++) {
               jsonCoords = this.getOrderedSegments(i);
-
-              console.log("test-geojson jsonCoords:", i, jsonCoords);
 
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
@@ -1709,14 +1690,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             break;
 
           case PathTypes.featureCollectionMultiPolygon:
-            console.log(
-              "test-geojson this.readyData.features.length:",
-              this.readyData.features.length
-            );
             for (let i = 0; i < this.readyData.features.length; i++) {
               jsonCoords = this.getMultiPolygonCoordinates(i);
-
-              console.log("test-geojson jsonCoords:", i, jsonCoords);
 
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
@@ -1877,10 +1852,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           (this.readyData.features[index].geometry as any).coordinates[0]
         )
       ) {
-        console.log(
-          "test-geojson computepath coordinates",
-          (this.readyData.features[index].geometry as any).coordinates[0]
-        );
         return (
           (this.readyData.features[index].geometry as any).coordinates[0] as any
         )[0] as JsonArray;

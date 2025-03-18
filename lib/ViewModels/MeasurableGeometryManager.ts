@@ -283,19 +283,9 @@ export default class MeasurableGeometryManager {
       isFileUploaded: isFileUploaded,
       indexPath: indexPath
     };
-    console.log("test updatepath prima", this.terria.measurableGeomList);
-    console.log(
-      "test measurablegeomindex prima",
-      this.terria.measurableGeometryIndex
-    );
+
     if (indexPath && this.terria.measurableGeomList[indexPath]) {
       this.terria.measurableGeomList[indexPath] = newGeometry;
-      console.log(
-        "test Aggiornato newGeometry già presente",
-        this.terria.measurableGeomList,
-        "new geometry",
-        newGeometry
-      );
     } else if (
       !indexPath &&
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
@@ -304,18 +294,6 @@ export default class MeasurableGeometryManager {
         newGeometry;
     } else {
       this.terria.measurableGeomList.push(newGeometry);
-      console.log(
-        "test Aggiunto newGeometry",
-        this.terria.measurableGeomList,
-        "new geometry",
-        newGeometry
-      );
     }
-
-    console.log("test updatepath dopo", this.terria.measurableGeomList);
-    console.log(
-      "test measurablegeomindex dopo",
-      this.terria.measurableGeometryIndex
-    );
   }
 }

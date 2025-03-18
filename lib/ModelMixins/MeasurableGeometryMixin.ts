@@ -35,7 +35,6 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           Object.freeze(new MeasurableGeometryManager(this.terria))
         );
       }
-      console.log("test update ", this.terria.measurableGeometryIndex);
       this.terria.measurableGeometryManager[
         this.terria.measurableGeometryIndex
       ].sampleFromCartographics(
@@ -56,7 +55,6 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number
     ) {
-      console.log("test asPath metodo", positions);
       if (!this?.terria?.cesium?.scene) {
         return;
       }
