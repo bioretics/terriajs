@@ -95,7 +95,6 @@
     "geometrySummaryAreaGeo": "Geodetic area",
     "geometrySummaryAreaAir": "Air area",
     "geometrySummarySlope": "Slope %",
-    "pathNamePlaceholder": "Assign a name to the path....",
     "textareaPlaceholder": "Enter your notes here...",
     "elementPlaceholder": "Element No.",
     "changePath": "Change the current path",

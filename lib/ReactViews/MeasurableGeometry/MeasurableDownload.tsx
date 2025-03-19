@@ -471,7 +471,6 @@ const MeasurableDownload = (props: Props) => {
 
       polygonsContent += `
         <Placemark id="${idx}">
-          <name>${geom.filename}</name>
           <description>${geom.pathNotes}</description>
           <Style>
             <LineStyle>
@@ -523,7 +522,6 @@ const MeasurableDownload = (props: Props) => {
               Cartographic.toCartesian(elem, ellipsoid)
             )
           }),
-          name: geom.filename,
           description: geom.pathNotes
         })
       );
@@ -566,7 +564,6 @@ const MeasurableDownload = (props: Props) => {
             coordinates: [[coordinates]]
           },
           properties: {
-            name: geom.filename,
             path_notes: geom.pathNotes
           }
         };
@@ -593,7 +590,6 @@ const MeasurableDownload = (props: Props) => {
           ]
         },
         properties: {
-          name: geom.filename,
           path_notes: geom.pathNotes
         }
       }))

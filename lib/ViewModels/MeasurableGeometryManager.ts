@@ -24,7 +24,6 @@ export interface MeasurableGeometry {
   onlyPoints?: boolean;
   pointDescriptions?: string[];
   showDistanceLabels?: boolean;
-  filename?: string;
   pathNotes?: string;
   isFileUploaded?: boolean;
   isPointAdding?: boolean;
@@ -49,9 +48,7 @@ export default class MeasurableGeometryManager {
         ?.stopPoints ?? [],
       undefined,
       undefined,
-      undefined,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.filename
+      undefined
     );
   }
 
@@ -60,7 +57,6 @@ export default class MeasurableGeometryManager {
     closeLoop: boolean = false,
     onlyPoints: boolean = false,
     pointDescriptions?: string[],
-    filename?: string,
     pathNotes?: string,
     isFileUploaded?: boolean
   ) {
@@ -97,7 +93,6 @@ export default class MeasurableGeometryManager {
       closeLoop,
       onlyPoints,
       pointDescriptions,
-      filename,
       pathNotes,
       isFileUploaded
     );
@@ -110,7 +105,6 @@ export default class MeasurableGeometryManager {
     closeLoop: boolean = false,
     onlyPoints: boolean = false,
     pointDescriptions: string[] = [],
-    filename?: string,
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number
@@ -217,7 +211,6 @@ export default class MeasurableGeometryManager {
             closeLoop,
             true,
             pointDescriptions,
-            filename,
             pathNotes,
             isFileUploaded,
             indexPath
@@ -232,7 +225,6 @@ export default class MeasurableGeometryManager {
             closeLoop,
             false,
             [],
-            filename,
             pathNotes,
             isFileUploaded,
             indexPath
@@ -253,7 +245,6 @@ export default class MeasurableGeometryManager {
     isClosed: boolean,
     onlyPoints: boolean = false,
     pointDescriptions: string[] = [],
-    filename?: string,
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number
@@ -278,7 +269,6 @@ export default class MeasurableGeometryManager {
       sampledDistances: sampledDistances,
       onlyPoints: onlyPoints,
       pointDescriptions: pointDescriptions,
-      filename: filename,
       pathNotes: pathNotes,
       isFileUploaded: isFileUploaded,
       indexPath: indexPath

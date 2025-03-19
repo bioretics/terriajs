@@ -420,10 +420,8 @@ class ViewingControls extends React.Component<
             const positions: Cartographic[] = [];
             const descriptions: string[] = [];
 
-            let fileName = "";
             let pathNotes = "";
             if (fc.features.length > 0 && fc.features[0].properties) {
-              fileName = fc.features[0].properties.name || "";
               pathNotes = fc.features[0].properties.desc || "";
               fc.features.shift();
             }
@@ -477,7 +475,6 @@ class ViewingControls extends React.Component<
               false,
               true,
               descriptions,
-              fileName,
               pathNotes
             );
           };

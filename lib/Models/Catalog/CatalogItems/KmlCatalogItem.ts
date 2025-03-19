@@ -314,7 +314,7 @@ class KmlCatalogItem
           ? this.getUniqueCartographics(allCartographics)
           : allCartographics;*/
       const positions = allCartographics;
-      this.asPath(positions, name, pathNotes);
+      this.asPath(positions, pathNotes);
     } else {
       console.log("KML prova2", items.length);
       for (let i = 0; i < items.length; i++) {
@@ -345,7 +345,7 @@ class KmlCatalogItem
           : allCartographics;*/
         const positions = allCartographics;
         console.log("KML faccio asPath", positions);
-        this.asPath(positions, name, pathNotes, i);
+        this.asPath(positions, pathNotes, i);
       }
     }
   }
@@ -437,7 +437,6 @@ class KmlCatalogItem
       false,
       true,
       pointDescriptions,
-      name,
       pathNotes
     );
   }

@@ -186,7 +186,6 @@ export default class CsvCatalogItem
       return acc;
     }, {} as { [key: string]: any[] });
 
-    const filename = columns["name"]?.[0] || "";
     const path_notes = columns["path_notes"]?.[0] || "";
     const longitudes = columns["longitude"] || [];
     const latitudes = columns["latitude"] || [];
@@ -213,7 +212,6 @@ export default class CsvCatalogItem
       false,
       true,
       descriptions,
-      filename,
       path_notes
     );
   }

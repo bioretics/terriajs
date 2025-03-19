@@ -1564,7 +1564,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     computePath() {
       let jsonCoords: JsonArray | undefined;
-      let filename: string | undefined;
       let pathNotes: string | undefined;
       if (
         this.readyData &&
@@ -1593,12 +1592,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           const properties = feature.properties ?? {};
           const geometry = feature.geometry ?? {};
 
-          filename =
-            filename ||
-            (this.readyData as any).name ||
-            properties.name ||
-            (geometry as any).name ||
-            "";
           pathNotes =
             pathNotes ||
             (this.readyData as any).path_notes ||
@@ -1631,7 +1624,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             return Cartographic.fromDegrees(0, 0, 0);
           }
         });
-        this.asPath(coordinates, filename, pathNotes);
+        this.asPath(coordinates, pathNotes);
       } else if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
@@ -1646,7 +1639,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
 
-                filename = properties.name || "";
                 pathNotes = properties.path_notes || "";
               }
 
@@ -1674,7 +1666,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                   return Cartographic.fromDegrees(0, 0, 0);
                 }
               });
-              this.asPath(coordinates, filename, pathNotes, i);
+              this.asPath(coordinates, pathNotes, i);
             }
             break;
 
@@ -1686,13 +1678,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
                 const geometry = feature.geometry ?? {};
-
-                filename =
-                  filename ||
-                  (this.readyData as any).name ||
-                  properties.name ||
-                  (geometry as any).name ||
-                  "";
                 pathNotes =
                   pathNotes ||
                   (this.readyData as any).path_notes ||
@@ -1725,7 +1710,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                   return Cartographic.fromDegrees(0, 0, 0);
                 }
               });
-              this.asPath(coordinates, filename, pathNotes, i);
+              this.asPath(coordinates, pathNotes, i);
             }
             break;
         }

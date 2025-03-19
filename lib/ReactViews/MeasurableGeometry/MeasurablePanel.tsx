@@ -427,6 +427,10 @@ const MeasurablePanel = observer((props: Props) => {
               background: ${theme.colorPrimary};
               margin-left: 5px;
             `}
+            disabled={
+              !terria.measurableGeomList[terria.measurableGeometryIndex]
+                ?.stopPoints.length
+            }
             title={i18next.t("measurableGeometry.samplingStepButtonTitle")}
             onClick={() => {
               if (isValidSamplingPathStep) {
@@ -446,6 +450,10 @@ const MeasurablePanel = observer((props: Props) => {
       <input
         type="checkbox"
         checked={showDistances}
+        disabled={
+          !terria.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints
+            .length
+        }
         onChange={(e) => {
           setShowDistances(e.target.checked);
           runInAction(() => {
@@ -506,30 +514,6 @@ const MeasurablePanel = observer((props: Props) => {
 
     return (
       <>
-        <Input
-          title={i18next.t("measurableGeometry.pathNamePlaceholder")}
-          css={`
-            margin-bottom: 5px;
-            margin-right: 10px;
-            width: 100%;
-          `}
-          dark
-          placeholder={i18next.t("measurableGeometry.pathNamePlaceholder")}
-          value={
-            terria.measurableGeomList[terria.measurableGeometryIndex].filename
-          }
-          onChange={(e) => {
-            runInAction(() => {
-              if (
-                terria.measurableGeomList &&
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-              )
-                terria.measurableGeomList[
-                  terria.measurableGeometryIndex
-                ].filename = e.target.value;
-            });
-          }}
-        />
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
@@ -635,7 +619,6 @@ const MeasurablePanel = observer((props: Props) => {
                             sampledDistances: [],
                             onlyPoints: false,
                             pointDescriptions: [],
-                            filename: "",
                             pathNotes: "",
                             isFileUploaded:
                               terria?.measurableGeomList[
@@ -714,6 +697,10 @@ const MeasurablePanel = observer((props: Props) => {
                     margin-bottom: 20px;
                   `}
                   onClick={toggleChart}
+                  disabled={
+                    !terria.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopPoints.length
+                  }
                   title={i18next.t("measurableGeometry.showElevationChart")}
                 >
                   <StyledIcon
@@ -731,6 +718,10 @@ const MeasurablePanel = observer((props: Props) => {
                   margin-left: 5px;
                   margin-bottom: 20px;
                 `}
+                disabled={
+                  !terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.stopPoints.length
+                }
                 onClick={toggleLineClampToGround}
                 title={i18next.t("measurableGeometry.clampLineButtonTitle")}
               >
@@ -762,6 +753,10 @@ const MeasurablePanel = observer((props: Props) => {
                     background: ${theme.colorPrimary};
                     width: 100%;
                   `}
+                  disabled={
+                    !terria.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopPoints.length
+                  }
                   onClick={() => setIsDownloadPanelOpen(true)}
                 >
                   {i18next.t("downloadData.downloadPanel")}

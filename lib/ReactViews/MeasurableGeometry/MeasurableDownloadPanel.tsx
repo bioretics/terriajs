@@ -67,7 +67,7 @@ const MeasurableDownloadPanel = (props: Props) => {
             pathNotes={
               downloadProps.terria.measurableGeomList[
                 downloadProps.terria.measurableGeometryIndex
-              ].pathNotes!!
+              ].pathNotes ?? ""
             }
             ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
           />

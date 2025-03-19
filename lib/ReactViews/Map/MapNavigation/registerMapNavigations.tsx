@@ -240,9 +240,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
         ) {
           viewState.terria.measurableGeomList[
             viewState.terria.measurableGeometryIndex
-          ].filename = "";
-          viewState.terria.measurableGeomList[
-            viewState.terria.measurableGeometryIndex
           ].pathNotes = "";
           viewState.terria.measurableGeomList[
             viewState.terria.measurableGeometryIndex
@@ -307,9 +304,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
         ) {
           viewState.terria.measurableGeomList[
             viewState.terria.measurableGeometryIndex
-          ].filename = "";
-          viewState.terria.measurableGeomList[
-            viewState.terria.measurableGeometryIndex
           ].pathNotes = "";
           viewState.terria.measurableGeomList[
             viewState.terria.measurableGeometryIndex
@@ -370,9 +364,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
             viewState.terria.measurableGeometryIndex
           ]
         ) {
-          viewState.terria.measurableGeomList[
-            viewState.terria.measurableGeometryIndex
-          ].filename = "";
           viewState.terria.measurableGeomList[
             viewState.terria.measurableGeometryIndex
           ].pathNotes = "";
