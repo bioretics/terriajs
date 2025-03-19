@@ -98,8 +98,8 @@
     "geometrySummaryAreaGeo": "Area geodetica",
     "geometrySummaryAreaAir": "Area in aria",
     "geometrySummarySlope": "Pendenza %",
+    "pathNamePlaceholder": "Assegna un nome al percorso...",
     "textareaPlaceholder": "Inserisci le tue note...",
-    "filenamePlaceholder": "Inserisci il nome del file...",
     "elementPlaceholder": "Elemento num.",
     "changePath": "Cambia il percorso",
     "addPath": "Aggiungi un nuovo percorso",
@@ -112,6 +112,8 @@
     "measureGround": "al suolo"
   },
   "downloadData": {
+    "downloadPanel": "Apri il pannello di download",
+    "filenamePlaceholder": "Inserisci il nome del file...",
     "formatPlaceholder": "Seleziona il formato",
     "lines": "Linee",
     "points": "Punti",

@@ -17,16 +17,17 @@ import { Button } from "../../Styled/Button";
 import Select from "../../Styled/Select";
 import Terria from "../../Models/Terria";
 import Checkbox from "../../Styled/Checkbox";
+import Input from "../../Styled/Input";
 
 interface Props {
   terria: Terria;
-  name: string;
   pathNotes: string;
   ellipsoid: Ellipsoid;
 }
 
 const MeasurableDownload = (props: Props) => {
-  const { terria, name, pathNotes, ellipsoid } = props;
+  const { terria, pathNotes, ellipsoid } = props;
+  const [name, setName] = React.useState<string>("");
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
@@ -161,11 +162,7 @@ const MeasurableDownload = (props: Props) => {
         key: "jsonMultiPathPolygon",
         href: DataUri.make(
           "json",
-          generateMultiPathGeoJsonPolygon(
-            terria.measurableGeomList,
-            name,
-            pathNotes
-          )
+          generateMultiPathGeoJsonPolygon(terria.measurableGeomList)
         ),
         download: `${name}_polygon_multipath.json`,
         label: `${i18next.t("downloadData.polygon")} ${i18next.t(
@@ -176,11 +173,7 @@ const MeasurableDownload = (props: Props) => {
         key: "jsonMultiPathLines",
         href: DataUri.make(
           "json",
-          generateMultiPathJsonLineStrings(
-            terria.measurableGeomList,
-            name,
-            pathNotes
-          )
+          generateMultiPathJsonLineStrings(terria.measurableGeomList)
         ),
         download: `${name}_lines_multipath.json`,
         label: `${i18next.t("downloadData.lines")} ${i18next.t(
@@ -478,8 +471,8 @@ const MeasurableDownload = (props: Props) => {
 
       polygonsContent += `
         <Placemark id="${idx}">
-          <name>${name} ${idx + 1}</name>
-          <description>${pathNotes}</description>
+          <name>${geom.filename}</name>
+          <description>${geom.pathNotes}</description>
           <Style>
             <LineStyle>
               <color>ff0000ff</color>
@@ -505,6 +498,7 @@ const MeasurableDownload = (props: Props) => {
       <kml xmlns="http://www.opengis.net/kml/2.2">
         <Document id="root_doc">
           <Folder>
+          <name>${name || ""}</name>
             ${polygonsContent}
           </Folder>
         </Document>
@@ -529,25 +523,28 @@ const MeasurableDownload = (props: Props) => {
               Cartographic.toCartesian(elem, ellipsoid)
             )
           }),
-          name: `${name} ${idx + 1}`,
-          description: pathNotes
+          name: geom.filename,
+          description: geom.pathNotes
         })
       );
     });
 
     const res = (await exportKml(output)) as exportKmlResultKml;
+    res.kml = res.kml
+      .replace(
+        /<Document\s+xmlns="">/,
+        `<Document xmlns=""><Folder><name>${name || ""}</name>`
+      )
+      .replace(/<\/Document>/, "</Folder></Document>");
     return res.kml;
   };
 
   const generateMultiPathGeoJsonPolygon = (
-    geomList: MeasurableGeometry[],
-    name: string,
-    pathNotes: string
+    geomList: MeasurableGeometry[]
   ): string => {
     return JSON.stringify({
       type: "FeatureCollection",
       name: name || "",
-      path_notes: pathNotes || "",
       features: geomList.map((geom) => {
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
@@ -567,6 +564,10 @@ const MeasurableDownload = (props: Props) => {
           geometry: {
             type: "MultiPolygon",
             coordinates: [[coordinates]]
+          },
+          properties: {
+            name: geom.filename,
+            path_notes: geom.pathNotes
           }
         };
       })
@@ -574,14 +575,11 @@ const MeasurableDownload = (props: Props) => {
   };
 
   const generateMultiPathJsonLineStrings = (
-    geomList: MeasurableGeometry[],
-    name: string,
-    pathNotes: string
+    geomList: MeasurableGeometry[]
   ): string => {
     return JSON.stringify({
       type: "FeatureCollection",
       name: name || "",
-      path_notes: pathNotes || "",
       features: geomList.map((geom) => ({
         type: "Feature",
         geometry: {
@@ -593,6 +591,10 @@ const MeasurableDownload = (props: Props) => {
               Math.round(elem.height)
             ])
           ]
+        },
+        properties: {
+          name: geom.filename,
+          path_notes: geom.pathNotes
         }
       }))
     });
@@ -631,6 +633,15 @@ const MeasurableDownload = (props: Props) => {
 
   return (
     <>
+      <div style={{ marginBottom: "0.5rem" }}>
+        <Input
+          dark
+          type="text"
+          placeholder={i18next.t("downloadData.filenamePlaceholder")}
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </div>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
           title={i18next.t("downloadData.formatPlaceholder")}

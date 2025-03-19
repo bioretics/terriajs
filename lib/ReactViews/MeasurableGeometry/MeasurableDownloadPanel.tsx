@@ -64,11 +64,6 @@ const MeasurableDownloadPanel = (props: Props) => {
         <div className={Styles.body} style={{ padding: "20px" }}>
           <MeasurableDownload
             terria={downloadProps.terria}
-            name={
-              downloadProps.terria.measurableGeomList[
-                downloadProps.terria.measurableGeometryIndex
-              ].filename!!
-            }
             pathNotes={
               downloadProps.terria.measurableGeomList[
                 downloadProps.terria.measurableGeometryIndex

@@ -95,8 +95,8 @@
     "geometrySummaryAreaGeo": "Geodetic area",
     "geometrySummaryAreaAir": "Air area",
     "geometrySummarySlope": "Slope %",
+    "pathNamePlaceholder": "Assign a name to the path....",
     "textareaPlaceholder": "Enter your notes here...",
-    "filenamePlaceholder": "Enter the filename...",
     "elementPlaceholder": "Element No.",
     "changePath": "Change the current path",
     "addPath": "Add a new path",
@@ -109,6 +109,8 @@
     "measureGround": "clamped to ground"
   },
   "downloadData": {
+    "downloadPanel": "Open Download Panel",
+    "filenamePlaceholder": "Enter the filename...",
     "formatPlaceholder": "Select format",
     "lines": "Lines",
     "points": "Points",

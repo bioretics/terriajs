@@ -506,6 +506,30 @@ const MeasurablePanel = observer((props: Props) => {
 
     return (
       <>
+        <Input
+          title={i18next.t("measurableGeometry.pathNamePlaceholder")}
+          css={`
+            margin-bottom: 5px;
+            margin-right: 10px;
+            width: 100%;
+          `}
+          dark
+          placeholder={i18next.t("measurableGeometry.pathNamePlaceholder")}
+          value={
+            terria.measurableGeomList[terria.measurableGeometryIndex].filename
+          }
+          onChange={(e) => {
+            runInAction(() => {
+              if (
+                terria.measurableGeomList &&
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+              )
+                terria.measurableGeomList[
+                  terria.measurableGeometryIndex
+                ].filename = e.target.value;
+            });
+          }}
+        />
         <StyledTextArea
           placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
           dark
@@ -714,7 +738,8 @@ const MeasurablePanel = observer((props: Props) => {
                   ? i18next.t("measurableGeometry.clampLineToGround")
                   : i18next.t("measurableGeometry.dontClampLineToGround")}
               </Button>
-              {renderToggleDistanceLabels()}
+              {!terria.measurableGeomList[terria.measurableGeometryIndex]
+                ?.isFileUploaded && renderToggleDistanceLabels()}
             </Box>
           </div>
         )}
@@ -731,38 +756,6 @@ const MeasurablePanel = observer((props: Props) => {
               `}
             >
               <Box>
-                <Input
-                  title={i18next.t("measurableGeometry.filenamePlaceholder")}
-                  css={`
-                    margin-top: 5px;
-                    margin-right: 10px;
-                    max-width: 200px;
-                    height: 30px;
-                  `}
-                  dark
-                  placeholder={i18next.t(
-                    "measurableGeometry.filenamePlaceholder"
-                  )}
-                  value={
-                    terria.measurableGeomList[terria.measurableGeometryIndex]
-                      .filename
-                  }
-                  onChange={(e) => {
-                    runInAction(() => {
-                      if (
-                        terria.measurableGeomList &&
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ]
-                      )
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ].filename = e.target.value;
-                    });
-                  }}
-                />
-              </Box>
-              <Box>
                 <Button
                   css={`
                     color: ${theme.textLight};
@@ -771,7 +764,7 @@ const MeasurablePanel = observer((props: Props) => {
                   `}
                   onClick={() => setIsDownloadPanelOpen(true)}
                 >
-                  Download
+                  {i18next.t("downloadData.downloadPanel")}
                 </Button>
               </Box>
             </div>

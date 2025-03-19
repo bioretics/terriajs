@@ -1637,7 +1637,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 1
       ) {
-        console.log("test this.readyData", this.readyData);
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
             for (let i = 0; i < this.readyData.features.length; i++) {
@@ -1646,20 +1645,9 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
-                const geometry = feature.geometry ?? {};
 
-                filename =
-                  filename ||
-                  (this.readyData as any).name ||
-                  properties.name ||
-                  (geometry as any).name ||
-                  "";
-                pathNotes =
-                  pathNotes ||
-                  (this.readyData as any).path_notes ||
-                  properties.desc ||
-                  (geometry as any).path_notes ||
-                  "";
+                filename = properties.name || "";
+                pathNotes = properties.path_notes || "";
               }
 
               if (!jsonCoords || jsonCoords.length === 0) {

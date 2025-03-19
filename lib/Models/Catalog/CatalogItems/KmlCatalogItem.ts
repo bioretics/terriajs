@@ -212,12 +212,16 @@ class KmlCatalogItem
     const polygons = entities.filter((e) => e?.polygon);
     const polylines = entities.filter((e) => e?.polyline);
 
-    if (polygons.length > 0) {
+    if (polygons.length == 1) {
       return this.isPolygonValid(polygons) || this.arePolylinesValid(polygons);
-    } else if (polylines.length > 0) {
+    } else if (polylines.length == 1) {
       return (
         this.isPolygonValid(polylines) || this.arePolylinesValid(polylines)
       );
+    } else if (polylines.length > 1) {
+      return polylines.every((polyline) => this.arePolylinesValid([polyline]));
+    } else if (polygons.length > 1) {
+      return polygons.every((polygon) => this.isPolygonValid([polygon]));
     } else {
       return false;
     }
