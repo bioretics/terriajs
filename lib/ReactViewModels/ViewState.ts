@@ -544,9 +544,8 @@ export default class ViewState {
       () => this.terria.measurableGeomList[this.terria.measurableGeometryIndex],
       (geom) => {
         const wasVisible = this.measurablePanelIsVisible;
-        this.measurablePanelIsVisible =
-          !!geom && geom.stopPoints && geom.stopPoints.length > 0;
-        if (this.measurablePanelIsVisible && !wasVisible) {
+        this.measurablePanelIsVisible = !!geom;
+        if (!wasVisible) {
           if (
             this.terria.measurableGeomList &&
             this.terria.measurableGeomList[
