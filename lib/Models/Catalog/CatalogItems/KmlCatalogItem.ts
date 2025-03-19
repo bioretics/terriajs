@@ -290,13 +290,11 @@ class KmlCatalogItem
       const firstItem = items[0];
       const description = firstItem.description?.getValue(JulianDate.now());
 
-      let name = "";
       let pathNotes = "";
 
       if (description) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(description, "text/html");
-        name = firstItem.name || "";
         pathNotes = doc.body.textContent || "";
       }
 
@@ -322,13 +320,11 @@ class KmlCatalogItem
         const element = items[i];
         const description = element.description?.getValue(JulianDate.now());
 
-        let name = "";
         let pathNotes = "";
 
         if (description) {
           const parser = new DOMParser();
           const doc = parser.parseFromString(description, "text/html");
-          name = element.name || "";
           pathNotes = doc.body.textContent || "";
         }
 
@@ -391,7 +387,6 @@ class KmlCatalogItem
   public async sampleFromKmlData(): Promise<void> {
     const entities = this._dataSource?.entities?.values ?? [];
     if (entities.length === 0) return;
-    let name = "";
     let pathNotes = "";
     let pointDescriptions: string[] = [];
     const folder = entities[0];
@@ -400,7 +395,6 @@ class KmlCatalogItem
     if (descriptionValue) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(descriptionValue, "text/html");
-      name = folder.name || "";
       pathNotes = doc.body.textContent || "";
     }
 

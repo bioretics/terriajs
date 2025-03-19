@@ -118,7 +118,7 @@
     "points": "Punti",
     "polygon": "Poligono",
     "singlepath": "Percorso singolo",
-    "multipath": "Multi Percorso"
+    "downloadCurrent": "solo elemento corrente"
   },
   "pickInfo": {
     "toolName": "Info",

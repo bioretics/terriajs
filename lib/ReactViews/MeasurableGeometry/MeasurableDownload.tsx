@@ -31,7 +31,7 @@ const MeasurableDownload = (props: Props) => {
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = React.useState<string>("");
-  const [downloadAll, setDownloadAll] = React.useState<boolean>(false);
+  const [downloadCurrent, setDownloadCurrent] = React.useState<boolean>(true);
 
   const [kmlMultiPathPolygon, setKmlMultiPathPolygon] = useState<string>();
   const [kmlMultiPathLines, setKmlMultiPathLines] = useState<string>();
@@ -39,10 +39,7 @@ const MeasurableDownload = (props: Props) => {
   const [kmlLines, setKmlLines] = useState<string>();
   const [kmlPoints, setKmlPoints] = useState<string>();
 
-  const getDownloadLinks = (
-    geom: MeasurableGeometry,
-    isMultiPath: boolean = false
-  ) => {
+  const getDownloadLinks = (geom: MeasurableGeometry, isMultiPath: boolean) => {
     const baseDownloads = [
       {
         key: "",
@@ -140,9 +137,7 @@ const MeasurableDownload = (props: Props) => {
             )
           : false,
         download: `${name}_polygon_multipath.kml`,
-        label: `${i18next.t("downloadData.polygon")} ${i18next.t(
-          "downloadData.multipath"
-        )} KML`
+        label: `${i18next.t("downloadData.polygon")} KML`
       },
       {
         key: "kmlMultiPathLinksLines",
@@ -154,9 +149,7 @@ const MeasurableDownload = (props: Props) => {
             )
           : false,
         download: `${name}_lines_multipath.kml`,
-        label: `${i18next.t("downloadData.lines")} ${i18next.t(
-          "downloadData.multipath"
-        )} KML`
+        label: `${i18next.t("downloadData.lines")} KML`
       },
       {
         key: "jsonMultiPathPolygon",
@@ -165,9 +158,7 @@ const MeasurableDownload = (props: Props) => {
           generateMultiPathGeoJsonPolygon(terria.measurableGeomList)
         ),
         download: `${name}_polygon_multipath.json`,
-        label: `${i18next.t("downloadData.polygon")} ${i18next.t(
-          "downloadData.multipath"
-        )} JSON`
+        label: `${i18next.t("downloadData.polygon")} JSON`
       },
       {
         key: "jsonMultiPathLines",
@@ -176,9 +167,7 @@ const MeasurableDownload = (props: Props) => {
           generateMultiPathJsonLineStrings(terria.measurableGeomList)
         ),
         download: `${name}_lines_multipath.json`,
-        label: `${i18next.t("downloadData.lines")} ${i18next.t(
-          "downloadData.multipath"
-        )} JSON`
+        label: `${i18next.t("downloadData.lines")} JSON`
       }
     ];
 
@@ -615,7 +604,7 @@ const MeasurableDownload = (props: Props) => {
   }
 
   const handleDownload = () => {
-    const links = getDownloadLinks(geom, downloadAll);
+    const links = getDownloadLinks(geom, !downloadCurrent);
     const linkObj = links.find((link) => link.key === selectedFormat);
     if (linkObj && linkObj.href) {
       const a = document.createElement("a");
@@ -629,7 +618,7 @@ const MeasurableDownload = (props: Props) => {
 
   return (
     <>
-      <div style={{ marginBottom: "0.5rem" }}>
+      <div style={{ marginBottom: "5px" }}>
         <Input
           dark
           type="text"
@@ -637,6 +626,18 @@ const MeasurableDownload = (props: Props) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
+      </div>
+      <div>
+        <label style={{ display: "flex", alignItems: "center" }}>
+          <Checkbox
+            isDisabled={terria.measurableGeomList.length <= 1}
+            isChecked={downloadCurrent}
+            onChange={(e) => setDownloadCurrent(e.target.checked)}
+          />
+          <span style={{ marginTop: "5px" }}>
+            {"Download " + i18next.t("downloadData.downloadCurrent")}
+          </span>
+        </label>
       </div>
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
@@ -652,7 +653,7 @@ const MeasurableDownload = (props: Props) => {
           onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
           className={Styles.dropdownList}
         >
-          {getDownloadLinks(geom, downloadAll).map((link) => (
+          {getDownloadLinks(geom, !downloadCurrent).map((link) => (
             <option key={link.key} value={link.key}>
               {link.label}
             </option>
@@ -669,18 +670,6 @@ const MeasurableDownload = (props: Props) => {
         >
           {i18next.t("Download")}
         </Button>
-      </div>
-      <div>
-        <label style={{ display: "flex", alignItems: "center" }}>
-          <Checkbox
-            isDisabled={terria.measurableGeomList.length <= 1}
-            isChecked={downloadAll}
-            onChange={(e) => setDownloadAll(e.target.checked)}
-          />
-          <span style={{ marginTop: "5px" }}>
-            {"Download " + i18next.t("downloadData.multipath")}
-          </span>
-        </label>
       </div>
     </>
   );
