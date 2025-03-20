@@ -590,7 +590,9 @@ const MeasurablePanel = observer((props: Props) => {
                       disabled={
                         terria.measurableGeomList[
                           terria.measurableGeometryIndex
-                        ]?.isPointAdding || isDownloadPanelOpen === true
+                        ]?.isPointAdding ||
+                        isDownloadPanelOpen === true ||
+                        viewState.measurableChartIsVisible
                       }
                       css={`
                         color: ${theme.textLight};
@@ -1022,24 +1024,12 @@ const MeasurablePanel = observer((props: Props) => {
       setLocalText(pointsDescription);
     }, [pointsDescription]);
 
-    const [isDragging, setIsDragging] = React.useState(false);
-
     return (
       <tr
         onMouseLeave={handleMouseLeave}
         onMouseUp={(e) => {
           if ((e.target as HTMLElement).tagName === "TEXTAREA") return;
           handleMouseOver();
-        }}
-        onMouseMove={() => {
-          if (isDragging) {
-            runInAction(() => {
-              viewState.measurableChartIsVisible = false;
-            });
-          }
-        }}
-        onMouseDown={() => {
-          setIsDragging(true);
         }}
         style={{
           cursor: terria.measurableGeomList[terria.measurableGeometryIndex]
