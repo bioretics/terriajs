@@ -29,7 +29,7 @@ import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import isDefined from "../../Core/isDefined";
-import * as turf from "@turf/turf";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 
 interface Props {
   viewState: ViewState;
@@ -261,9 +261,9 @@ const MeasurablePanel = observer((props: Props) => {
         if (!terria?.cesium) return fallback;
 
         const { scene } = terria.cesium;
-        const { clientWidth: width, clientHeight: height } = scene.canvas;
-        const centerX = Math.floor(width / 2);
-        const bottomY = height - 1;
+        const canvas = scene.canvas;
+        const centerX = Math.floor(canvas.clientWidth / 2);
+        const bottomY = canvas.clientHeight - 1;
 
         const leftRay = scene.camera.getPickRay(
           new Cartesian2(centerX, bottomY)
@@ -279,28 +279,13 @@ const MeasurablePanel = observer((props: Props) => {
         if (!isDefined(leftPosition) || !isDefined(rightPosition))
           return fallback;
 
-        const leftCarto = globe.ellipsoid.cartesianToCartographic(leftPosition);
-        const rightCarto =
-          globe.ellipsoid.cartesianToCartographic(rightPosition);
-
-        const leftDeg: [number, number] = [
-          CesiumMath.toDegrees(leftCarto.longitude),
-          CesiumMath.toDegrees(leftCarto.latitude)
-        ];
-        const rightDeg: [number, number] = [
-          CesiumMath.toDegrees(rightCarto.longitude),
-          CesiumMath.toDegrees(rightCarto.latitude)
-        ];
-
-        const ptLeft = turf.point(leftDeg);
-        const ptRight = turf.point(rightDeg);
-        const metersPerPixel = turf.distance(ptLeft, ptRight, {
-          units: "meters"
-        });
+        const distance = Cartesian3.distance(leftPosition, rightPosition);
         const proximityPixels = 5;
-        const proximityMeters = metersPerPixel * proximityPixels;
-        const earthRadius = 6371000;
-        return Math.max(proximityMeters / earthRadius, fallback);
+        const proximityMeters = distance * proximityPixels;
+        const earthRadius = 6372797;
+
+        const threshold = proximityMeters / earthRadius;
+        return Math.max(threshold, fallback);
       };
 
       const findNearbyPoint = (
@@ -308,7 +293,6 @@ const MeasurablePanel = observer((props: Props) => {
         action: (point: Cartographic | null, idx: number | null) => void
       ) => {
         const rangeThreshold = getDynamicRangeThreshold();
-        console.log("rangethreshold", rangeThreshold);
 
         const nearbyPoint = points.find((point) => {
           const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
