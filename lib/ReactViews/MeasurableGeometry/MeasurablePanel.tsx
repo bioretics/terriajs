@@ -27,6 +27,9 @@ import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import isDefined from "../../Core/isDefined";
+import * as turf from "@turf/turf";
 
 interface Props {
   viewState: ViewState;
@@ -244,7 +247,6 @@ const MeasurablePanel = observer((props: Props) => {
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
   useEffect(() => {
     if (!measurablePanelIsVisible) return;
-
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
       if (
@@ -254,11 +256,59 @@ const MeasurablePanel = observer((props: Props) => {
       )
         return;
 
+      const getDynamicRangeThreshold = (): number => {
+        const fallback = 0.000025;
+        if (!terria?.cesium) return fallback;
+
+        const { scene } = terria.cesium;
+        const { clientWidth: width, clientHeight: height } = scene.canvas;
+        const centerX = Math.floor(width / 2);
+        const bottomY = height - 1;
+
+        const leftRay = scene.camera.getPickRay(
+          new Cartesian2(centerX, bottomY)
+        );
+        const rightRay = scene.camera.getPickRay(
+          new Cartesian2(centerX + 1, bottomY)
+        );
+        if (!isDefined(leftRay) || !isDefined(rightRay)) return fallback;
+
+        const globe = scene.globe;
+        const leftPosition = globe.pick(leftRay, scene);
+        const rightPosition = globe.pick(rightRay, scene);
+        if (!isDefined(leftPosition) || !isDefined(rightPosition))
+          return fallback;
+
+        const leftCarto = globe.ellipsoid.cartesianToCartographic(leftPosition);
+        const rightCarto =
+          globe.ellipsoid.cartesianToCartographic(rightPosition);
+
+        const leftDeg: [number, number] = [
+          CesiumMath.toDegrees(leftCarto.longitude),
+          CesiumMath.toDegrees(leftCarto.latitude)
+        ];
+        const rightDeg: [number, number] = [
+          CesiumMath.toDegrees(rightCarto.longitude),
+          CesiumMath.toDegrees(rightCarto.latitude)
+        ];
+
+        const ptLeft = turf.point(leftDeg);
+        const ptRight = turf.point(rightDeg);
+        const metersPerPixel = turf.distance(ptLeft, ptRight, {
+          units: "meters"
+        });
+        const proximityPixels = 5;
+        const proximityMeters = metersPerPixel * proximityPixels;
+        const earthRadius = 6371000;
+        return Math.max(proximityMeters / earthRadius, fallback);
+      };
+
       const findNearbyPoint = (
         points: Cartographic[],
         action: (point: Cartographic | null, idx: number | null) => void
       ) => {
-        const rangeThreshold = 0.0001;
+        const rangeThreshold = getDynamicRangeThreshold();
+        console.log("rangethreshold", rangeThreshold);
 
         const nearbyPoint = points.find((point) => {
           const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
