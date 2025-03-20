@@ -1638,7 +1638,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
-
                 pathNotes = properties.path_notes || "";
               }
 
@@ -1677,13 +1676,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
-                const geometry = feature.geometry ?? {};
-                pathNotes =
-                  pathNotes ||
-                  (this.readyData as any).path_notes ||
-                  properties.desc ||
-                  (geometry as any).path_notes ||
-                  "";
+                pathNotes = properties.path_notes || "";
               }
 
               if (!jsonCoords || jsonCoords.length === 0) {
