@@ -15,6 +15,7 @@ import CsvCatalogItem from "./CatalogItems/CsvCatalogItem";
 import CzmlCatalogItem from "./CatalogItems/CzmlCatalogItem";
 import GeoJsonCatalogItem from "./CatalogItems/GeoJsonCatalogItem";
 import GeoRssCatalogItem from "./CatalogItems/GeoRssCatalogItem";
+import GoogleTileMapsCatalogItem from "./CatalogItems/GoogleTileMapsCatalogItem";
 import GpxCatalogItem from "./CatalogItems/GpxCatalogItem";
 import IonImageryCatalogItem from "./CatalogItems/IonImageryCatalogItem";
 import KmlCatalogItem from "./CatalogItems/KmlCatalogItem";
@@ -232,6 +233,10 @@ export default function registerCatalogMembers() {
   CatalogMemberFactory.register(
     UrlTemplateImageryCatalogItem.type,
     UrlTemplateImageryCatalogItem
+  );
+  CatalogMemberFactory.register(
+    GoogleTileMapsCatalogItem.type,
+    GoogleTileMapsCatalogItem
   );
   CatalogMemberFactory.register(AssImpCatalogItem.type, AssImpCatalogItem);
 
