@@ -651,7 +651,8 @@ const MeasurablePanel = observer((props: Props) => {
                         terria.measurableGeomList.length <= 1 ||
                         terria.measurableGeomList[
                           terria.measurableGeometryIndex
-                        ]?.isPointAdding
+                        ]?.isPointAdding ||
+                        isDownloadPanelOpen === true
                       }
                       css={`
                         color: ${theme.textLight};

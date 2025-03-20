@@ -46,9 +46,16 @@ export default class MeasurableGeometryManager {
     this.sampleFromCartographics(
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
         ?.stopPoints ?? [],
-      undefined,
-      undefined,
-      undefined
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.isClosed,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.onlyPoints,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pointDescriptions,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.pathNotes,
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.isFileUploaded
     );
   }
 
