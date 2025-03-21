@@ -30,6 +30,7 @@ import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManage
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import isDefined from "../../Core/isDefined";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Checkbox from "../../Styled/Checkbox";
 
 interface Props {
   viewState: ViewState;
@@ -480,10 +481,9 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderToggleDistanceLabels = () => (
     <label style={{ display: "flex", alignItems: "center", margin: "0 10px" }}>
-      <input
-        type="checkbox"
-        checked={showDistances}
-        disabled={
+      <Checkbox
+        isChecked={showDistances}
+        isDisabled={
           !terria.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints
             .length
         }
@@ -495,7 +495,6 @@ const MeasurablePanel = observer((props: Props) => {
             ]!.showDistanceLabels = e.target.checked;
           });
         }}
-        style={{ marginRight: "5px" }}
       />
       {i18next.t("Mostra etichette distanze")}
     </label>
