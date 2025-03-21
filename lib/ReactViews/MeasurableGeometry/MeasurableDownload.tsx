@@ -316,18 +316,15 @@ const MeasurableDownload = (props: Props) => {
     }
 
     return JSON.stringify({
-      type: "FeatureCollection",
       name: name || "",
-      path_notes: pathNotes || "",
-      features: [
-        {
-          type: "Feature",
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates]
-          }
-        }
-      ]
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [coordinates]
+      },
+      properties: {
+        path_notes: pathNotes || ""
+      }
     });
   };
 
@@ -344,7 +341,7 @@ const MeasurableDownload = (props: Props) => {
         ])
       },
       properties: {
-        path_notes: geom.pathNotes
+        path_notes: geom.pathNotes || ""
       }
     });
   };
@@ -463,9 +460,8 @@ const MeasurableDownload = (props: Props) => {
 
       const coordsString = coords.join(" ");
 
-      polygonsContent += `
-        <Placemark id="${idx}">
-          <description>${geom.pathNotes}</description>
+      polygonsContent += `<Placemark id="${idx}">
+          <description>${geom.pathNotes ?? ""}</description>
           <Style>
             <LineStyle>
               <color>ff0000ff</color>
@@ -483,8 +479,7 @@ const MeasurableDownload = (props: Props) => {
               </LinearRing>
             </outerBoundaryIs>
           </Polygon>
-        </Placemark>
-      `;
+        </Placemark>`;
     });
 
     return Promise.resolve(`<?xml version="1.0" encoding="utf-8"?>
