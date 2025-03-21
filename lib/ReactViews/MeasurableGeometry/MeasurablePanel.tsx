@@ -50,7 +50,6 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-  const [isDownloadPanelOpen, setIsDownloadPanelOpen] = React.useState(false);
 
   const initialWidth = windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
@@ -625,7 +624,7 @@ const MeasurablePanel = observer((props: Props) => {
                         terria.measurableGeomList[
                           terria.measurableGeometryIndex
                         ]?.isPointAdding ||
-                        isDownloadPanelOpen === true ||
+                        viewState.measurableDownloadPanelIsVisible == true ||
                         viewState.measurableChartIsVisible
                       }
                       css={`
@@ -686,7 +685,7 @@ const MeasurablePanel = observer((props: Props) => {
                         terria.measurableGeomList[
                           terria.measurableGeometryIndex
                         ]?.isPointAdding ||
-                        isDownloadPanelOpen === true
+                        viewState.measurableDownloadPanelIsVisible === true
                       }
                       css={`
                         color: ${theme.textLight};
@@ -794,7 +793,11 @@ const MeasurablePanel = observer((props: Props) => {
                     !terria.measurableGeomList[terria.measurableGeometryIndex]
                       ?.stopPoints.length
                   }
-                  onClick={() => setIsDownloadPanelOpen(true)}
+                  onClick={() =>
+                    runInAction(() => {
+                      viewState.measurableDownloadPanelIsVisible = true;
+                    })
+                  }
                 >
                   {i18next.t("downloadData.downloadPanel")}
                 </Button>
@@ -1207,13 +1210,17 @@ const MeasurablePanel = observer((props: Props) => {
       >
         {renderHeader()}
         {renderBody()}
-        {isDownloadPanelOpen && (
+        {viewState.measurableDownloadPanelIsVisible && (
           <MeasurableDownloadPanel
             terria={terria}
             viewState={viewState}
             initialWidth={initialWidth}
             maxWidth={maxWidth}
-            onClose={() => setIsDownloadPanelOpen(false)}
+            onClose={() => {
+              runInAction(() => {
+                viewState.measurableDownloadPanelIsVisible = false;
+              });
+            }}
           />
         )}
       </div>

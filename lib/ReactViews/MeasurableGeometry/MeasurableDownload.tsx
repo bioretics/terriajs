@@ -334,13 +334,18 @@ const MeasurableDownload = (props: Props) => {
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {
     return JSON.stringify({
       name: name || "",
-      path_notes: pathNotes || "",
-      type: "LineString",
-      coordinates: geom.stopPoints.map((elem) => [
-        CesiumMath.toDegrees(elem.longitude),
-        CesiumMath.toDegrees(elem.latitude),
-        Math.round(elem.height)
-      ])
+      type: "Feature",
+      geometry: {
+        type: "LineString",
+        coordinates: geom.stopPoints.map((elem) => [
+          CesiumMath.toDegrees(elem.longitude),
+          CesiumMath.toDegrees(elem.latitude),
+          Math.round(elem.height)
+        ])
+      },
+      properties: {
+        path_notes: geom.pathNotes
+      }
     });
   };
 
@@ -674,5 +679,4 @@ const MeasurableDownload = (props: Props) => {
     </>
   );
 };
-
 export default MeasurableDownload;

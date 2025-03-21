@@ -361,6 +361,12 @@ export default class ViewState {
   @observable measurableChartIsVisible: boolean = false;
 
   /**
+   * Gets or sets a value indicating whether the ElevationDownloadPanel is visible.
+   * @type {Boolean}
+   */
+  @observable measurableDownloadPanelIsVisible: boolean = false;
+
+  /**
    * True if this is (or will be) the first time the user has added data to the map.
    * @type {Boolean}
    */
@@ -546,6 +552,7 @@ export default class ViewState {
         const wasVisible = this.measurablePanelIsVisible;
         this.measurablePanelIsVisible = !!geom;
         if (!wasVisible) {
+          this.measurableDownloadPanelIsVisible = false;
           if (
             this.terria.measurableGeomList &&
             this.terria.measurableGeomList[
