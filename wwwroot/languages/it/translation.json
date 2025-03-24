@@ -111,7 +111,7 @@
     "measureGround": "al suolo"
   },
   "downloadData": {
-    "downloadPanel": "Apri il pannello di download",
+    "downloadPanel": "Esporta",
     "filenamePlaceholder": "Inserisci il nome del file...",
     "formatPlaceholder": "Seleziona il formato",
     "lines": "Linee",

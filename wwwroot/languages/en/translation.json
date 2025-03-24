@@ -108,7 +108,7 @@
     "measureGround": "clamped to ground"
   },
   "downloadData": {
-    "downloadPanel": "Open Download Panel",
+    "downloadPanel": "Export",
     "filenamePlaceholder": "Enter the filename...",
     "formatPlaceholder": "Select format",
     "lines": "Lines",
