@@ -624,7 +624,6 @@ const MeasurablePanel = observer((props: Props) => {
                           terria.measurableGeometryIndex
                         ]?.isPointAdding ||
                         viewState.measurableDownloadPanelIsVisible === true
-                        //|| viewState.measurableChartIsVisible
                       }
                       css={`
                         color: ${theme.textLight};
