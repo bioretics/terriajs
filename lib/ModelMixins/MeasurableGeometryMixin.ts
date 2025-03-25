@@ -57,10 +57,6 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         );
       }
       prom.then((newPositions: Cartographic[]) => {
-        console.log(
-          "test update chiamata",
-          this.terria.measurableGeometryIndex
-        );
         this.update(newPositions, pathNotes, indexPath);
       });
     }

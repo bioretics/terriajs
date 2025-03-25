@@ -1565,7 +1565,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     computePath() {
       let jsonCoords: JsonArray | undefined;
       let pathNotes: string | undefined;
-      console.log("computepath ", this.readyData);
       if (
         this.readyData &&
         isJsonArray(this.readyData.features) &&
@@ -1629,7 +1628,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           case PathTypes.featureCollectionMultiLineString:
             for (let i = 0; i < this.readyData.features.length; i++) {
               jsonCoords = this.getOrderedSegments(i);
-
               const feature = this.readyData.features[i];
               if (jsonCoords !== undefined) {
                 const properties = feature.properties ?? {};
@@ -1711,7 +1709,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         this.readyData &&
         isJsonArray(this.readyData.features) &&
         this.readyData.features.length > 0 &&
-        isJsonObject(this.readyData.features[0]) &&
+        isJsonObject(this.readyData.features[index]) &&
         isJsonObject(this.readyData.features[index].geometry as any) &&
         isJsonArray(
           (this.readyData.features[index].geometry as any).coordinates
@@ -1720,12 +1718,13 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ) {
         const segments = (this.readyData.features[index].geometry as any)
           .coordinates;
+        const localSegments = segments.slice();
 
         const startingSegmentIndex = this.findStartingSegmentIndex(
-          segments as JsonArray[]
+          localSegments as JsonArray[]
         );
         const orderedSegments = this.orderSegments(
-          segments as JsonArray[],
+          localSegments as JsonArray[],
           startingSegmentIndex
         );
 

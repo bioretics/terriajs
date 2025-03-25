@@ -281,10 +281,12 @@ export default class MeasurableGeometryManager {
       indexPath: indexPath
     };
 
-    if (indexPath && this.terria.measurableGeomList[indexPath]) {
+    if (indexPath !== undefined) {
+      while (this.terria.measurableGeomList.length < indexPath) {
+        this.terria.measurableGeomList.push(newGeometry);
+      }
       this.terria.measurableGeomList[indexPath] = newGeometry;
     } else if (
-      !indexPath &&
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
     ) {
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex] =
