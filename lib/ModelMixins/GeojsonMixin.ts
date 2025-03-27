@@ -1562,143 +1562,56 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return pointA[0] === pointB[0] && pointA[1] === pointB[1];
     }
 
+    private convertJsonCoords(jsonCoords: JsonArray): Cartographic[] {
+      return jsonCoords.map((elem) => {
+        if (
+          elem &&
+          isJsonArray(elem) &&
+          isJsonNumber(elem[0]) &&
+          isJsonNumber(elem[1])
+        ) {
+          const height =
+            elem.length === 3 && isJsonNumber(elem[2])
+              ? Math.round(elem[2])
+              : 0;
+          return Cartographic.fromDegrees(elem[0], elem[1], height);
+        }
+        return Cartographic.fromDegrees(0, 0, 0);
+      });
+    }
+
     computePath() {
-      let jsonCoords: JsonArray | undefined;
-      let pathNotes: string | undefined;
-      if (
-        this.readyData &&
-        isJsonArray(this.readyData.features) &&
-        this.readyData.features.length === 1
-      ) {
-        const feature = this.readyData.features[0];
+      if (!this.readyData || !isJsonArray(this.readyData.features)) return;
+
+      const processFeature = (feature: any, index?: number) => {
+        let jsonCoords: JsonArray | undefined;
         switch (this._pathType) {
           case PathTypes.featureCollectionMultiLineString:
-            jsonCoords = this.getOrderedSegments();
+            jsonCoords = this.getOrderedSegments(index);
             break;
-
           case PathTypes.featureCollectionLineString:
             jsonCoords = this.getLineStringCoordinates();
             break;
-
           case PathTypes.featureCollectionMultiPolygon:
-            jsonCoords = this.getMultiPolygonCoordinates();
+            jsonCoords = this.getMultiPolygonCoordinates(index);
             break;
-
           case PathTypes.featureCollectionPolygon:
             jsonCoords = this.getPolygonCoordinates();
             break;
         }
-        if (jsonCoords !== undefined) {
-          const properties = feature.properties ?? {};
+        if (!jsonCoords || jsonCoords.length === 0) return;
 
-          pathNotes = properties.desc || properties.path_notes || "";
-        }
+        const properties = feature.properties ?? {};
+        const pathNotes = properties.desc || properties.path_notes || "";
+        const coordinates = this.convertJsonCoords(jsonCoords);
+        this.asPath(coordinates, pathNotes, index);
+      };
 
-        if (!jsonCoords || jsonCoords.length === 0) {
-          return;
-        }
-
-        const coordinates = jsonCoords.map((elem) => {
-          if (
-            elem &&
-            isJsonArray(elem) &&
-            isJsonNumber(elem[0]) &&
-            isJsonNumber(elem[1])
-          ) {
-            if (elem.length === 3 && isJsonNumber(elem[2])) {
-              return Cartographic.fromDegrees(
-                elem[0],
-                elem[1],
-                Math.round(elem[2])
-              );
-            } else {
-              return Cartographic.fromDegrees(elem[0], elem[1], 0);
-            }
-          } else {
-            return Cartographic.fromDegrees(0, 0, 0);
-          }
-        });
-        this.asPath(coordinates, pathNotes);
-      } else if (
-        this.readyData &&
-        isJsonArray(this.readyData.features) &&
-        this.readyData.features.length > 1
-      ) {
-        switch (this._pathType) {
-          case PathTypes.featureCollectionMultiLineString:
-            for (let i = 0; i < this.readyData.features.length; i++) {
-              jsonCoords = this.getOrderedSegments(i);
-              const feature = this.readyData.features[i];
-              if (jsonCoords !== undefined) {
-                const properties = feature.properties ?? {};
-                pathNotes = properties.path_notes || "";
-              }
-
-              if (!jsonCoords || jsonCoords.length === 0) {
-                return;
-              }
-
-              const coordinates = jsonCoords.map((elem) => {
-                if (
-                  elem &&
-                  isJsonArray(elem) &&
-                  isJsonNumber(elem[0]) &&
-                  isJsonNumber(elem[1])
-                ) {
-                  if (elem.length === 3 && isJsonNumber(elem[2])) {
-                    return Cartographic.fromDegrees(
-                      elem[0],
-                      elem[1],
-                      Math.round(elem[2])
-                    );
-                  } else {
-                    return Cartographic.fromDegrees(elem[0], elem[1], 0);
-                  }
-                } else {
-                  return Cartographic.fromDegrees(0, 0, 0);
-                }
-              });
-              this.asPath(coordinates, pathNotes, i);
-            }
-            break;
-
-          case PathTypes.featureCollectionMultiPolygon:
-            for (let i = 0; i < this.readyData.features.length; i++) {
-              jsonCoords = this.getMultiPolygonCoordinates(i);
-
-              const feature = this.readyData.features[i];
-              if (jsonCoords !== undefined) {
-                const properties = feature.properties ?? {};
-                pathNotes = properties.path_notes || "";
-              }
-
-              if (!jsonCoords || jsonCoords.length === 0) {
-                return;
-              }
-
-              const coordinates = jsonCoords.map((elem) => {
-                if (
-                  elem &&
-                  isJsonArray(elem) &&
-                  isJsonNumber(elem[0]) &&
-                  isJsonNumber(elem[1])
-                ) {
-                  if (elem.length === 3 && isJsonNumber(elem[2])) {
-                    return Cartographic.fromDegrees(
-                      elem[0],
-                      elem[1],
-                      Math.round(elem[2])
-                    );
-                  } else {
-                    return Cartographic.fromDegrees(elem[0], elem[1], 0);
-                  }
-                } else {
-                  return Cartographic.fromDegrees(0, 0, 0);
-                }
-              });
-              this.asPath(coordinates, pathNotes, i);
-            }
-            break;
+      if (this.readyData.features.length === 1) {
+        processFeature(this.readyData.features[0]);
+      } else {
+        for (let i = 0; i < this.readyData.features.length; i++) {
+          processFeature(this.readyData.features[i], i);
         }
       }
     }
