@@ -50,6 +50,12 @@ import GeoJsonCatalogItem from "../../../Models/Catalog/CatalogItems/GeoJsonCata
 import KmlCatalogItem from "../../../Models/Catalog/CatalogItems/KmlCatalogItem";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import {
+  MeasureAngleTool,
+  MeasureLineTool,
+  MeasurePointTool,
+  MeasurePolygonTool
+} from "../../Map/MapNavigation/Items";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -572,19 +578,33 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         ) : null}
-        {MeasurableGeometryMixin.isMixedInto(item) && item.canUseAsPath && (
-          <li key={"workbench.measureItem"}>
-            <ViewingControlMenuButton
-              onClick={() => runInAction(() => item.computePath())}
-              title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
-            >
-              <BoxViewingControl>
-                <StyledIcon glyph={Icon.GLYPHS.lineChart} />
-                <span>{t("workbench.pathItem")}</span>
-              </BoxViewingControl>
-            </ViewingControlMenuButton>
-          </li>
-        )}
+        {MeasurableGeometryMixin.isMixedInto(item) &&
+          item.canUseAsPath &&
+          !this.props.viewState.measurablePanelIsVisible && (
+            <li key={"workbench.measureItem"}>
+              <ViewingControlMenuButton
+                onClick={() =>
+                  runInAction(() => {
+                    item.computePath();
+                    [
+                      MeasureLineTool.id,
+                      MeasurePolygonTool.id,
+                      MeasurePointTool.id,
+                      MeasureAngleTool.id
+                    ].forEach((id) =>
+                      viewState.terria.mapNavigationModel.disable(id)
+                    );
+                  })
+                }
+                title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
+              >
+                <BoxViewingControl>
+                  <StyledIcon glyph={Icon.GLYPHS.lineChart} />
+                  <span>{t("workbench.pathItem")}</span>
+                </BoxViewingControl>
+              </ViewingControlMenuButton>
+            </li>
+          )}
         {(!MeasurableGeometryMixin.isMixedInto(item) || !item.canUseAsPath) && (
           <VisualizePointsOption item={item} t={t} />
         )}

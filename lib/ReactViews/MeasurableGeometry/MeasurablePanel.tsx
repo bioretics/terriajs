@@ -87,17 +87,18 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeometryManager.length - 1
     );
     viewState.measurablePanelIsVisible = false;
-    const deactivateTool = (toolId: string) => {
-      const item =
-        viewState.terria.mapNavigationModel.findItem(toolId)?.controller;
+    [
+      MeasureLineTool.id,
+      MeasurePolygonTool.id,
+      MeasurePointTool.id,
+      MeasureAngleTool.id
+    ].forEach((id) => {
+      const item = viewState.terria.mapNavigationModel.findItem(id)?.controller;
       if (item && item.active) {
         item.deactivate();
       }
-    };
-    deactivateTool(MeasurePointTool.id);
-    deactivateTool(MeasureLineTool.id);
-    deactivateTool(MeasurePolygonTool.id);
-    deactivateTool(MeasureAngleTool.id);
+      viewState.terria.mapNavigationModel.enable(id);
+    });
   });
 
   const toggleCollapsed = action(() => {
