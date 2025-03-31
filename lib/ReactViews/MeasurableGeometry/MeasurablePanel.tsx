@@ -31,6 +31,7 @@ import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import isDefined from "../../Core/isDefined";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Checkbox from "../../Styled/Checkbox";
+import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 
 interface Props {
   viewState: ViewState;
@@ -88,6 +89,7 @@ const MeasurablePanel = observer((props: Props) => {
     );
     viewState.measurablePanelIsVisible = false;
     [
+      MeasureToolsController.id,
       MeasureLineTool.id,
       MeasurePolygonTool.id,
       MeasurePointTool.id,
