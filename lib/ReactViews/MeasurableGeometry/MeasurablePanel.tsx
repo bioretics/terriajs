@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Rnd } from "react-rnd";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
@@ -8,6 +8,10 @@ import { observer } from "mobx-react";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
@@ -15,7 +19,6 @@ import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
-import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import i18next from "i18next";
 import {
   MeasureLineTool,
@@ -23,13 +26,11 @@ import {
   MeasureAngleTool,
   MeasurePointTool
 } from "../Map/MapNavigation/Items";
-import { SortableContainer, SortableElement } from "react-sortable-hoc";
+import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
-import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import isDefined from "../../Core/isDefined";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 
@@ -52,6 +53,9 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
+
+  const [playingPath, setPlayingPath] = React.useState(false);
+  const abortPlayingPathRef = React.useRef(false);
 
   const initialWidth = windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
@@ -190,6 +194,24 @@ const MeasurablePanel = observer((props: Props) => {
     const maxSamplingPathStep = 2 * 10 ** maxExponent;
     return [minSamplingPathStep, maxSamplingPathStep];
   });
+
+  const playPath = useCallback(async () => {
+    const stopPoints =
+      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints;
+
+    for (let i = 0; i < stopPoints.length && abortPlayingPathRef.current; ++i) {
+      await terria.currentViewer.doZoomTo(
+        Rectangle.fromCartographicArray([stopPoints[i]]),
+        5
+      );
+      //terria.currentViewer.notifyRepaintRequired();
+    }
+    setPlayingPath(false);
+  }, [
+    terria.currentViewer,
+    terria.measurableGeometryIndex,
+    terria.measurableGeomList
+  ]);
 
   const prettifyNumber = (number: number, squared: boolean = false) => {
     if (number <= 0) {
@@ -377,6 +399,13 @@ const MeasurablePanel = observer((props: Props) => {
     measurablePanelIsVisible
   ]);
 
+  useEffect(() => {
+    abortPlayingPathRef.current = playingPath;
+    if (playingPath) {
+      playPath();
+    }
+  }, [playingPath, playPath]);
+
   // Render Methods
   const renderHeader = () => {
     return (
@@ -409,10 +438,10 @@ const MeasurablePanel = observer((props: Props) => {
         </div>
         <button
           type="button"
-          onClick={() => {
+          onClick={action(() => {
             terria.measurableGeometryIndex = 0;
             close();
-          }}
+          })}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
           disabled={
@@ -621,6 +650,24 @@ const MeasurablePanel = observer((props: Props) => {
                   </option>
                 ))}
               </Select>
+              {terria.measurableGeomList &&
+                terria.measurableGeomList[terria.measurableGeometryIndex] && (
+                  <Button
+                    onClick={() => setPlayingPath((s) => !s)}
+                    css={`
+                      color: ${theme.textLight};
+                      background: ${theme.colorPrimary};
+                      margin-left: 5px;
+                    `}
+                  >
+                    <StyledIcon
+                      light
+                      realDark={false}
+                      glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
+                      styledWidth="16px"
+                    />
+                  </Button>
+                )}
               {terria.measurableGeomList &&
                 terria.measurableGeomList[terria.measurableGeometryIndex] &&
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
