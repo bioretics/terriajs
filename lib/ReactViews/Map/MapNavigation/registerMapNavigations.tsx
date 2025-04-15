@@ -1,5 +1,4 @@
 import { runInAction } from "mobx";
-import React from "react";
 import AugmentedVirtuality from "../../../Models/AugmentedVirtuality";
 import ViewerMode from "../../../Models/ViewerMode";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -144,7 +143,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureToolsController,
-    order: 5
+    order: 5,
+    noExpand: window.innerWidth < 768
   });
 
   const measureAngleToolController = new MeasureAngleTool({
@@ -194,7 +194,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureAngleToolController,
-    order: 6
+    order: 6,
+    noExpand: window.innerWidth < 768
   });
 
   const measurePolygonToolController = new MeasurePolygonTool({
@@ -255,7 +256,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measurePolygonToolController,
-    order: 6
+    order: 6,
+    noExpand: window.innerWidth < 768
   });
 
   const measureLineToolController = new MeasureLineTool({
@@ -319,7 +321,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureLineToolController,
-    order: 6
+    order: 6,
+    noExpand: window.innerWidth < 768
   });
 
   const measurePointTool = new MeasurePointTool({
@@ -381,7 +384,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: measurePointTool,
     screenSize: undefined,
-    order: 6
+    order: 6,
+    noExpand: window.innerWidth < 768
   });
 
   const toggleInfoController = new TogglePickInfoController(viewState);

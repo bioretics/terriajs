@@ -52,10 +52,11 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
+  const isMobile = windowWidth < 768;
 
-  const initialWidth = windowWidth * 0.2;
+  const initialWidth = isMobile ? windowWidth * 0.8 : windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
-  const maxWidth = windowWidth * 0.6;
+  const maxWidth = isMobile ? windowWidth * 0.8 : windowWidth * 0.6;
   const maxHeight = windowHeight * 0.8;
 
   const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
@@ -386,8 +387,11 @@ const MeasurablePanel = observer((props: Props) => {
           background: ${theme.darkTranslucent};
         `}
       >
-        <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
-          <span style={{ display: "flex", justifyContent: "center" }}>
+        <div className={classNames(Styles.btnPanelHeading)}>
+          <span
+            className="drag-handle"
+            style={{ display: "flex", justifyContent: "center" }}
+          >
             <b>{i18next.t("measurableGeometry.header")}</b>
           </span>
           <button
