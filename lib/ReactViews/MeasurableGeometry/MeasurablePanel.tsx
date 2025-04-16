@@ -33,6 +33,8 @@ import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManage
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
+import CameraView from "../../Models/CameraView";
+import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
 
 interface Props {
   viewState: ViewState;
@@ -196,21 +198,33 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const playPath = useCallback(async () => {
-    const stopPoints =
-      terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints;
+    const points = terria.cesium ? terria.measurableGeomList[terria.measurableGeometryIndex].sampledPoints : terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints;
+    const camera = terria.cesium?.scene.camera;
+    const cartesianPoints = points?.map(p => Cartographic.toCartesian(p));
+    const useLookAt = camera && points && cartesianPoints;
+    const pitch = camera?.pitch ?? 0;
+    const dist = useLookAt ? Cartesian3.distance(camera?.position, cartesianPoints![0]) : 0;
+    let heading;
+    let hpr;
 
-    for (let i = 0; i < stopPoints.length && abortPlayingPathRef.current; ++i) {
-      await terria.currentViewer.doZoomTo(
-        Rectangle.fromCartographicArray([stopPoints[i]]),
-        5
+    for (let i = 0; abortPlayingPathRef.current && points && i < points.length; ++i) {
+      if(useLookAt && i !== points.length - 1) {
+        heading = (new EllipsoidGeodesic(points[i], points[i + 1]).startHeading + CesiumMath.TWO_PI) % CesiumMath.TWO_PI;
+        hpr = new HeadingPitchRange(heading, -pitch, dist);
+      }      
+      await terria.currentViewer.doZoomTo(useLookAt
+        ? CameraView.fromLookAt(points[i], hpr!)
+        : Rectangle.fromCartographicArray([points[i]]),
+        3
       );
-      //terria.currentViewer.notifyRepaintRequired();
     }
+    terria.currentViewer.notifyRepaintRequired();
     setPlayingPath(false);
   }, [
     terria.currentViewer,
     terria.measurableGeometryIndex,
-    terria.measurableGeomList
+    terria.measurableGeomList,
+    terria.cesium
   ]);
 
   const prettifyNumber = (number: number, squared: boolean = false) => {
