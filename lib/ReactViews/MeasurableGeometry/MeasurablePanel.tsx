@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Rnd } from "react-rnd";
 import Styles from "./measurable-panel.scss";
 import classNames from "classnames";
@@ -10,7 +10,6 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
-import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
@@ -33,8 +32,7 @@ import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManage
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
-import CameraView from "../../Models/CameraView";
-import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
+import PlayPathPanel from "./PlayPathPanel";
 
 interface Props {
   viewState: ViewState;
@@ -55,9 +53,6 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-
-  const [playingPath, setPlayingPath] = React.useState(false);
-  const abortPlayingPathRef = React.useRef(false);
 
   const initialWidth = windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
@@ -196,36 +191,6 @@ const MeasurablePanel = observer((props: Props) => {
     const maxSamplingPathStep = 2 * 10 ** maxExponent;
     return [minSamplingPathStep, maxSamplingPathStep];
   });
-
-  const playPath = useCallback(async () => {
-    const points = terria.cesium ? terria.measurableGeomList[terria.measurableGeometryIndex].sampledPoints : terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints;
-    const camera = terria.cesium?.scene.camera;
-    const cartesianPoints = points?.map(p => Cartographic.toCartesian(p));
-    const useLookAt = camera && points && cartesianPoints;
-    const pitch = camera?.pitch ?? 0;
-    const dist = useLookAt ? Cartesian3.distance(camera?.position, cartesianPoints![0]) : 0;
-    let heading;
-    let hpr;
-
-    for (let i = 0; abortPlayingPathRef.current && points && i < points.length; ++i) {
-      if(useLookAt && i !== points.length - 1) {
-        heading = (new EllipsoidGeodesic(points[i], points[i + 1]).startHeading + CesiumMath.TWO_PI) % CesiumMath.TWO_PI;
-        hpr = new HeadingPitchRange(heading, -pitch, dist);
-      }      
-      await terria.currentViewer.doZoomTo(useLookAt
-        ? CameraView.fromLookAt(points[i], hpr!)
-        : Rectangle.fromCartographicArray([points[i]]),
-        3
-      );
-    }
-    terria.currentViewer.notifyRepaintRequired();
-    setPlayingPath(false);
-  }, [
-    terria.currentViewer,
-    terria.measurableGeometryIndex,
-    terria.measurableGeomList,
-    terria.cesium
-  ]);
 
   const prettifyNumber = (number: number, squared: boolean = false) => {
     if (number <= 0) {
@@ -412,13 +377,6 @@ const MeasurablePanel = observer((props: Props) => {
     currentGeom,
     measurablePanelIsVisible
   ]);
-
-  useEffect(() => {
-    abortPlayingPathRef.current = playingPath;
-    if (playingPath) {
-      playPath();
-    }
-  }, [playingPath, playPath]);
 
   // Render Methods
   const renderHeader = () => {
@@ -667,7 +625,11 @@ const MeasurablePanel = observer((props: Props) => {
               {terria.measurableGeomList &&
                 terria.measurableGeomList[terria.measurableGeometryIndex] && (
                   <Button
-                    onClick={() => setPlayingPath((s) => !s)}
+                    onClick={() =>
+                      runInAction(() => {
+                        viewState.playPathPanelIsVisible = true;
+                      })
+                    }
                     css={`
                       color: ${theme.textLight};
                       background: ${theme.colorPrimary};
@@ -677,7 +639,7 @@ const MeasurablePanel = observer((props: Props) => {
                     <StyledIcon
                       light
                       realDark={false}
-                      glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
+                      glyph={Icon.GLYPHS.playStory}
                       styledWidth="16px"
                     />
                   </Button>
@@ -1291,6 +1253,17 @@ const MeasurablePanel = observer((props: Props) => {
                 viewState.measurableDownloadPanelIsVisible = false;
               });
             }}
+          />
+        )}
+        {viewState.playPathPanelIsVisible && (
+          <PlayPathPanel
+            terria={terria}
+            viewState={viewState}
+            onClose={() =>
+              runInAction(() => {
+                viewState.playPathPanelIsVisible = false;
+              })
+            }
           />
         )}
       </div>
