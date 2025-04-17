@@ -58,6 +58,8 @@ const MeasurablePanel = observer((props: Props) => {
   const initialHeight = windowHeight * 0.6;
   const maxWidth = isMobile ? windowWidth * 0.8 : windowWidth * 0.6;
   const maxHeight = windowHeight * 0.8;
+  const defaultX = (windowWidth - initialWidth) / 2;
+  const defaultY = (windowHeight - initialHeight) / 2;
 
   const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
 
@@ -1194,8 +1196,8 @@ const MeasurablePanel = observer((props: Props) => {
     <Rnd
       bounds="parent"
       default={{
-        x: 100,
-        y: 100,
+        x: defaultX,
+        y: defaultY,
         width: initialWidth,
         height: initialHeight
       }}
