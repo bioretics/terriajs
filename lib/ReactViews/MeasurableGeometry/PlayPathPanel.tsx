@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Rnd } from "react-rnd";
 import Terria from "../../Models/Terria";
 import Styles from "./measurable-panel.scss";
@@ -24,7 +24,7 @@ interface Props {
 }
 
 const PlayPathPanel = (props: Props) => {
-  const { terria, onClose } = props;
+  const { terria, viewState, onClose } = props;
   const [playingPath, setPlayingPath] = useState(false);
   const abortPlayingPathRef = useRef(false);
   const theme = useTheme();
@@ -77,6 +77,12 @@ const PlayPathPanel = (props: Props) => {
       playPath();
     }
   }, [playingPath, playPath]);
+
+  useEffect(() => {
+    if (!viewState.playPathPanelIsVisible) {
+      setPlayingPath(false);
+    }
+  }, [viewState.playPathPanelIsVisible]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: true

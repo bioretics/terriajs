@@ -559,6 +559,7 @@ export default class ViewState {
         this.measurablePanelIsVisible = !!geom;
         if (!wasVisible) {
           this.measurableDownloadPanelIsVisible = false;
+          this.playPathPanelIsVisible = false;
           if (
             this.terria.measurableGeomList &&
             this.terria.measurableGeomList[
