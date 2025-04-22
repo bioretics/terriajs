@@ -46,14 +46,15 @@ const PlayPathPanel = (props: Props) => {
       const dist = Cartesian3.distance(camera.position, cartPt);
       const heading = camera.heading;
       const hpr = new HeadingPitchRange(heading, -pitch, dist);
+      const duration = 1 / playSpeed;
       await terria.currentViewer.doZoomTo(
         terria.cesium
           ? CameraView.fromLookAt(point, hpr)
           : Rectangle.fromCartographicArray([point]),
-        1
+        duration
       );
     },
-    [terria, getPoints]
+    [terria, getPoints, playSpeed]
   );
 
   const zoomToPoint = useCallback(
@@ -68,14 +69,15 @@ const PlayPathPanel = (props: Props) => {
       const dist = baseDist * zoomFactor;
       const heading = camera.heading;
       const hpr = new HeadingPitchRange(heading, -pitch, dist);
+      const duration = 1 / playSpeed;
       await terria.currentViewer.doZoomTo(
         terria.cesium
           ? CameraView.fromLookAt(point, hpr)
           : Rectangle.fromCartographicArray([point]),
-        0
+        duration
       );
     },
-    [getPoints, terria, zoomFactor, currentPointIndex]
+    [getPoints, terria, zoomFactor, currentPointIndex, playSpeed]
   );
 
   const onPlay = () => {
@@ -85,32 +87,6 @@ const PlayPathPanel = (props: Props) => {
     focusToPoint(0);
     setPlayingPath(true);
   };
-  /*
-  const onNext = () => {
-    const pts = getPoints();
-    if (!pts) return;
-    setCurrentPointIndex((i) => {
-      const ni = Math.min(i + 1, pts.length - 1);
-      focusToPoint(ni);
-      return ni;
-    });
-  };
-  const onPrev = () => {
-    const pts = getPoints();
-    if (!pts) return;
-    setCurrentPointIndex((i) => {
-      const ni = Math.max(i - 1, 0);
-      focusToPoint(ni);
-      return ni;
-    });
-  };
-  */
-
-  /*
-  const points = getPoints();
-  const isPrevDisabled = !points || currentPointIndex === 0;
-  const isNextDisabled = !points || currentPointIndex === points.length - 1;
-  */
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: true
@@ -146,23 +122,6 @@ const PlayPathPanel = (props: Props) => {
         </div>
 
         <div className={Styles.body} style={{ padding: "20px" }}>
-          {/* 
-          <Button
-            onClick={onPrev}
-            disabled={isPrevDisabled}
-            css={`
-              color: ${theme.textLight};
-              background: ${theme.colorPrimary};
-              margin-left: 5px;
-            `}
-          >
-            <StyledIcon
-              realDark={false}
-              glyph={Icon.GLYPHS.leftSmall}
-              styledWidth="16px"
-            />
-          </Button>
-         */}
           {playingPath ? (
             <Button
               onClick={() => setPlayingPath(false)}
@@ -170,6 +129,7 @@ const PlayPathPanel = (props: Props) => {
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
                 margin-left: 5px;
+                width: 170px;
               `}
             >
               <StyledIcon
@@ -195,23 +155,6 @@ const PlayPathPanel = (props: Props) => {
               />
             </Button>
           )}
-          {/* 
-          <Button
-            onClick={onNext}
-            disabled={isNextDisabled}
-            css={`
-              color: ${theme.textLight};
-              background: ${theme.colorPrimary};
-              margin-left: 5px;
-            `}
-          >
-            <StyledIcon
-              realDark={false}
-              glyph={Icon.GLYPHS.rightSmall}
-              styledWidth="16px"
-            />
-          </Button>
-         */}
           <div className="no-drag" style={{ marginTop: "10px" }}>
             <label style={{ marginRight: "10px" }}>Velocità:</label>
             <Slider
