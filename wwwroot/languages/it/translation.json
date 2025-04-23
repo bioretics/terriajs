@@ -120,6 +120,10 @@
     "singlepath": "Percorso singolo",
     "downloadCurrent": "solo elemento corrente"
   },
+  "playPath": {
+    "speed": "Velocità",
+    "zoom": "Zoom"
+  },
   "pickInfo": {
     "toolName": "Info",
     "title": "Attiva la funzione Info quando si clicca in un punto della mappa"

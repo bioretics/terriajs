@@ -117,6 +117,10 @@
     "singlepath": "Single Path",
     "downloadCurrent": "only current element"
   },
+  "playPath": {
+    "speed": "Speed",
+    "zoom": "Zoom"
+  },
   "pickInfo": {
     "toolName": "Info",
     "title": "Info on mouse click"
