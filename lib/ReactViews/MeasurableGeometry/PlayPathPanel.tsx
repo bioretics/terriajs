@@ -47,7 +47,7 @@ const PlayPathPanel = (props: Props) => {
     const dist = useLookAt
       ? Cartesian3.distance(camera?.position, cartesianPoints![0])
       : 0;
-    let duration = 3 / playSpeed;
+    const duration = 3 / playSpeed;
     let heading;
     let hpr;
 
