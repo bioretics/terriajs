@@ -5,7 +5,7 @@ import Icon, { StyledIcon } from "../../Styled/Icon";
 import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
-import React, { useEffect, useCallback, useState } from "react";
+import React, { useEffect, useCallback, useState, useRef } from "react";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Button from "../../Styled/Button";
@@ -29,8 +29,18 @@ const PlayPathPanel = (props: Props) => {
   const abortPlayingPathRef = React.useRef(false);
 
   const [playingPath, setPlayingPath] = useState(false);
-  const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const [playSpeed, setPlaySpeed] = useState(1);
+  const playSpeedRef = useRef(1);
+  const [currentPointIndex, setCurrentPointIndex] = useState(0);
+  const currentPointIndexRef = useRef(0);
+
+  useEffect(() => {
+    currentPointIndexRef.current = currentPointIndex;
+  }, [currentPointIndex]);
+
+  useEffect(() => {
+    playSpeedRef.current = playSpeed;
+  }, [playSpeed]);
 
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -47,17 +57,16 @@ const PlayPathPanel = (props: Props) => {
     const dist = useLookAt
       ? Cartesian3.distance(camera?.position, cartesianPoints![0])
       : 0;
-    const duration = 3 / playSpeed;
-    let heading;
-    let hpr;
+    const duration = 3 / playSpeedRef.current;
 
     for (
-      let i = currentPointIndex;
+      let i = currentPointIndexRef.current;
       abortPlayingPathRef.current && points && i < points.length;
       i++
     ) {
+      let hpr;
       if (useLookAt && i !== points.length - 1) {
-        heading =
+        const heading =
           (new EllipsoidGeodesic(points[i], points[i + 1]).startHeading +
             CesiumMath.TWO_PI) %
           CesiumMath.TWO_PI;
@@ -69,11 +78,13 @@ const PlayPathPanel = (props: Props) => {
           : Rectangle.fromCartographicArray([points[i]]),
         duration
       );
-      setCurrentPointIndex(i);
+      const nextIndex = i + 1;
+      currentPointIndexRef.current = nextIndex;
+      setCurrentPointIndex(nextIndex);
       terria.currentViewer.notifyRepaintRequired();
     }
     setPlayingPath(false);
-  }, [terria, getPoints, playSpeed, currentPointIndex]);
+  }, [terria, getPoints]);
 
   const onPlay = () => {
     const pts = getPoints();
