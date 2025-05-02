@@ -33,6 +33,7 @@ const PlayPathPanel = (props: Props) => {
   const playSpeedRef = useRef(1);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const currentPointIndexRef = useRef(0);
+  const distRef = useRef<number>(0);
 
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
@@ -47,6 +48,30 @@ const PlayPathPanel = (props: Props) => {
     return terria.cesium ? geom.sampledPoints : geom.stopPoints;
   }, [terria]);
 
+  useEffect(() => {
+    const camera = terria.cesium?.scene.camera;
+    if (!camera) return;
+
+    const updateDist = () => {
+      console.log("update dist");
+      const points = getPoints();
+      if (!points?.length) return;
+      const cartesianPoints = points.map((p) => Cartographic.toCartesian(p));
+      const idx = currentPointIndexRef.current;
+      distRef.current = Cartesian3.distance(
+        camera.position,
+        cartesianPoints[idx]
+      );
+    };
+
+    updateDist();
+    camera.moveEnd.addEventListener(updateDist);
+
+    return () => {
+      camera.moveEnd.removeEventListener(updateDist);
+    };
+  }, [terria, getPoints]);
+
   const playPath = useCallback(async () => {
     abortPlayingPathRef.current = true;
     const points = getPoints();
@@ -54,9 +79,7 @@ const PlayPathPanel = (props: Props) => {
     const cartesianPoints = points?.map((p) => Cartographic.toCartesian(p));
     const useLookAt = camera && points && cartesianPoints;
     const pitch = camera?.pitch ?? 0;
-    const dist = useLookAt
-      ? Cartesian3.distance(camera?.position, cartesianPoints![0])
-      : 0;
+    const dist = distRef.current;
     const duration = 3 / playSpeedRef.current;
 
     for (
@@ -215,6 +238,7 @@ const PlayPathPanel = (props: Props) => {
               max={3}
               step={0.1}
               value={playSpeed}
+              disabled={playingPath}
               onChange={(val: number) => setPlaySpeed(val)}
               aria-valuetext={`${i18next.t("playPath.speed")} ${playSpeed}x`}
               css={`
