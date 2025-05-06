@@ -34,7 +34,6 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   const currentPointIndexRef = useRef(currentPointIndex);
   const distRef = useRef(0);
 
-  // Sync refs with state
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
   }, [currentPointIndex]);
@@ -43,13 +42,11 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     playSpeedRef.current = playSpeed;
   }, [playSpeed]);
 
-  // Retrieve points list
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     return terria.cesium ? geom.sampledPoints : geom.stopPoints;
   }, [terria]);
 
-  // Recompute distance when camera moves
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
     if (!camera) return;
@@ -69,7 +66,6 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     };
   }, [getPoints, terria]);
 
-  // Main playback loop
   const playPath = useCallback(async () => {
     abortPlayingPathRef.current = true;
     const pts = getPoints();
@@ -173,7 +169,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
               display: "flex"
             }}
           >
-            <b>Play Path</b>
+            <b>{i18next.t("playPath.title")}</b>
           </span>
           <button
             type="button"
@@ -215,6 +211,11 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
                 background: ${theme.colorPrimary};
                 min-width: 120px;
               `}
+              title={
+                playingPath
+                  ? i18next.t("playPath.tooltip.pause")
+                  : i18next.t("playPath.tooltip.play")
+              }
             >
               <StyledIcon
                 glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
@@ -224,6 +225,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
             {(playingPath || currentPointIndex !== 0) && (
               <Button
                 onClick={onStop}
+                title={i18next.t("playPath.tooltip.stop")}
                 css={`
                   color: ${theme.textLight};
                   background: ${theme.colorPrimary};
@@ -254,7 +256,9 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
               value={playSpeed}
               disabled={playingPath}
               onChange={(val) => setPlaySpeed(val)}
-              aria-valuetext={`${i18next.t("playPath.speed")} ${playSpeed}x`}
+              aria-valuetext={`${i18next.t(
+                "playPath.tooltip.speedSlider"
+              )}: ${playSpeed}x`}
               css={`
                 flex: 1;
                 width: 150px;
