@@ -118,8 +118,16 @@
     "downloadCurrent": "only current element"
   },
   "playPath": {
+    "title": "Play Path",
     "speed": "Speed",
-    "zoom": "Zoom"
+    "tooltip": {
+      "play": "Play path",
+      "pause": "Pause path",
+      "stop": "Stop and reset",
+      "speedLabel": "Speed label",
+      "speedSlider": "Adjust playback speed",
+      "currentSpeed": "Current speed"
+    }
   },
   "pickInfo": {
     "toolName": "Info",

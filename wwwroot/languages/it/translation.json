@@ -121,8 +121,16 @@
     "downloadCurrent": "solo elemento corrente"
   },
   "playPath": {
+    "title": "Play Path",
     "speed": "Velocità",
-    "zoom": "Zoom"
+    "tooltip": {
+      "play": "Avvia percorso",
+      "pause": "Pausa percorso",
+      "stop": "Arresta e reimposta",
+      "speedLabel": "Etichetta velocità",
+      "speedSlider": "Regola velocità di riproduzione",
+      "currentSpeed": "Velocità corrente"
+    }
   },
   "pickInfo": {
     "toolName": "Info",
