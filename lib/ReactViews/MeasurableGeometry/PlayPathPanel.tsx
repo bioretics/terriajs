@@ -23,18 +23,18 @@ interface Props {
   onClose: () => void;
 }
 
-const PlayPathPanel = (props: Props) => {
-  const { terria, onClose } = props;
+const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   const theme = useTheme();
-  const abortPlayingPathRef = React.useRef(false);
+  const abortPlayingPathRef = useRef(false);
 
   const [playingPath, setPlayingPath] = useState(false);
   const [playSpeed, setPlaySpeed] = useState(1);
-  const playSpeedRef = useRef(1);
+  const playSpeedRef = useRef(playSpeed);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
-  const currentPointIndexRef = useRef(0);
-  const distRef = useRef<number>(0);
+  const currentPointIndexRef = useRef(currentPointIndex);
+  const distRef = useRef(0);
 
+  // Sync refs with state
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
   }, [currentPointIndex]);
@@ -43,119 +43,131 @@ const PlayPathPanel = (props: Props) => {
     playSpeedRef.current = playSpeed;
   }, [playSpeed]);
 
+  // Retrieve points list
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     return terria.cesium ? geom.sampledPoints : geom.stopPoints;
   }, [terria]);
 
+  // Recompute distance when camera moves
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
     if (!camera) return;
 
     const updateDist = () => {
-      console.log("update dist");
-      const points = getPoints();
-      if (!points?.length) return;
-      const cartesianPoints = points.map((p) => Cartographic.toCartesian(p));
+      const pts = getPoints();
+      if (!pts?.length) return;
+      const cartesians = pts.map((p) => Cartographic.toCartesian(p));
       const idx = currentPointIndexRef.current;
-      distRef.current = Cartesian3.distance(
-        camera.position,
-        cartesianPoints[idx]
-      );
+      distRef.current = Cartesian3.distance(camera.position, cartesians[idx]);
     };
 
     updateDist();
     camera.moveEnd.addEventListener(updateDist);
-
     return () => {
       camera.moveEnd.removeEventListener(updateDist);
     };
-  }, [terria, getPoints]);
+  }, [getPoints, terria]);
 
+  // Main playback loop
   const playPath = useCallback(async () => {
     abortPlayingPathRef.current = true;
-    const points = getPoints();
+    const pts = getPoints();
     const camera = terria.cesium?.scene.camera;
-    const cartesianPoints = points?.map((p) => Cartographic.toCartesian(p));
-    const useLookAt = camera && points && cartesianPoints;
+    const cartesians = pts?.map((p) => Cartographic.toCartesian(p));
+    const useLookAt = Boolean(camera && pts && cartesians);
     const pitch = camera?.pitch ?? 0;
     const dist = distRef.current;
     const duration = 3 / playSpeedRef.current;
 
     for (
       let i = currentPointIndexRef.current;
-      abortPlayingPathRef.current && points && i < points.length;
+      abortPlayingPathRef.current && pts && i < pts.length;
       i++
     ) {
-      let hpr;
-      if (useLookAt && i !== points.length - 1) {
+      let hpr: HeadingPitchRange | undefined;
+      if (useLookAt && i < pts.length - 1) {
         const heading =
-          (new EllipsoidGeodesic(points[i], points[i + 1]).startHeading +
+          (new EllipsoidGeodesic(pts[i], pts[i + 1]).startHeading +
             CesiumMath.TWO_PI) %
           CesiumMath.TWO_PI;
         hpr = new HeadingPitchRange(heading, -pitch, dist);
       }
+
       await terria.currentViewer.doZoomTo(
-        useLookAt
-          ? CameraView.fromLookAt(points[i], hpr!)
-          : Rectangle.fromCartographicArray([points[i]]),
+        useLookAt && hpr
+          ? CameraView.fromLookAt(pts[i], hpr)
+          : Rectangle.fromCartographicArray([pts[i]]),
         duration
       );
-      const nextIndex = i + 1;
-      currentPointIndexRef.current = nextIndex;
-      setCurrentPointIndex(nextIndex);
+
+      setCurrentPointIndex(i + 1);
       terria.currentViewer.notifyRepaintRequired();
     }
     setPlayingPath(false);
-  }, [terria, getPoints]);
+  }, [getPoints, terria]);
 
   const onPlay = () => {
     const pts = getPoints();
-    if (!pts || !pts.length) return;
-    setPlayingPath(true);
+    if (pts?.length) setPlayingPath(true);
   };
 
   const onPause = () => {
     abortPlayingPathRef.current = false;
     setPlayingPath(false);
-    console.log("Paused at point index: ", currentPointIndex);
   };
 
-  const onStop = () => {
+  const onStop = useCallback(() => {
+    abortPlayingPathRef.current = false;
     setPlayingPath(false);
     setCurrentPointIndex(0);
-    abortPlayingPathRef.current = false;
-  };
+
+    const pts = getPoints();
+    const camera = terria.cesium?.scene.camera;
+    if (camera && pts?.length) {
+      const firstPoint = pts[0];
+      const currentCartesian = camera.position;
+      const targetCartesian = Cartographic.toCartesian(firstPoint);
+      const dist = Cartesian3.distance(currentCartesian, targetCartesian);
+      const pitch = camera.pitch ?? 0;
+      let hpr: HeadingPitchRange | undefined;
+      if (pts.length > 1) {
+        const heading =
+          (new EllipsoidGeodesic(firstPoint, pts[1]).startHeading +
+            CesiumMath.TWO_PI) %
+          CesiumMath.TWO_PI;
+        hpr = new HeadingPitchRange(heading, -pitch, dist);
+      }
+      const duration = 3 / playSpeedRef.current;
+      terria.currentViewer.doZoomTo(
+        hpr
+          ? CameraView.fromLookAt(firstPoint, hpr)
+          : Rectangle.fromCartographicArray([firstPoint]),
+        duration
+      );
+    }
+  }, [getPoints, terria]);
 
   useEffect(() => {
-    if (playingPath) {
-      playPath();
-    }
+    if (playingPath) playPath();
   }, [playingPath, playPath]);
 
-  const panelClassName = classNames(Styles.panel, {
+  const panelClass = classNames(Styles.panel, {
     [Styles.isVisible]: true
   });
 
   return (
     <Rnd
       bounds="window"
-      default={{
-        x: 50,
-        y: 50,
-        width: "auto",
-        height: "auto"
-      }}
+      default={{ x: 50, y: 50, width: "auto", height: "auto" }}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
-      <div className={panelClassName} style={{ pointerEvents: "auto" }}>
+      <div className={panelClass} style={{ pointerEvents: "auto" }}>
         <div className={Styles.header}>
-          <div>
-            <span style={{ display: "flex", justifyContent: "center" }}>
-              <b>Play Path</b>
-            </span>
-          </div>
+          <span style={{ flex: 1, textAlign: "center" }}>
+            <b>Play Path</b>
+          </span>
           <button
             type="button"
             onClick={() => {
@@ -171,66 +183,50 @@ const PlayPathPanel = (props: Props) => {
           </button>
         </div>
 
-        <div className={Styles.body} style={{ padding: "20px" }}>
+        <div className={Styles.body} style={{ padding: 20 }}>
           {playingPath ? (
-            <div>
-              <Button
-                onClick={onPause}
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                  margin-left: 5px;
-                  width: 170px;
-                `}
-              >
-                <StyledIcon
-                  realDark={false}
-                  glyph={Icon.GLYPHS.pause}
-                  styledWidth="16px"
-                />
-              </Button>
-            </div>
+            <Button
+              onClick={onPause}
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                width: 170px;
+              `}
+            >
+              <StyledIcon glyph={Icon.GLYPHS.pause} styledWidth="16px" />
+            </Button>
           ) : (
-            <div>
-              <Button
-                onClick={onPlay}
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                  margin-left: 5px;
-                  width: 170px;
-                `}
-              >
-                <StyledIcon
-                  realDark={false}
-                  glyph={Icon.GLYPHS.play}
-                  styledWidth="16px"
-                />
-              </Button>
-            </div>
+            <Button
+              onClick={onPlay}
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                width: 170px;
+              `}
+            >
+              <StyledIcon glyph={Icon.GLYPHS.play} styledWidth="16px" />
+            </Button>
           )}
-          {(playingPath || (!playingPath && currentPointIndex !== 0)) && (
-            <div>
-              <Button
-                onClick={onStop}
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                  margin-top: 10px;
-                  margin-left: 5px;
-                  width: 170px;
-                `}
-              >
-                <StyledIcon
-                  realDark={false}
-                  glyph={Icon.GLYPHS.refresh}
-                  styledWidth="16px"
-                />
-              </Button>
-            </div>
+
+          {(playingPath || currentPointIndex !== 0) && (
+            <Button
+              onClick={onStop}
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                margin-top: 10px;
+                width: 170px;
+              `}
+            >
+              <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
+            </Button>
           )}
-          <div className="no-drag" style={{ marginTop: "10px" }}>
-            <label style={{ marginRight: "10px" }}>
+
+          <div
+            className="no-drag"
+            style={{ marginTop: 10, display: "flex", alignItems: "center" }}
+          >
+            <label style={{ marginRight: 10 }}>
               {i18next.t("playPath.speed")}:
             </label>
             <Slider
@@ -239,11 +235,10 @@ const PlayPathPanel = (props: Props) => {
               step={0.1}
               value={playSpeed}
               disabled={playingPath}
-              onChange={(val: number) => setPlaySpeed(val)}
+              onChange={(val) => setPlaySpeed(val)}
               aria-valuetext={`${i18next.t("playPath.speed")} ${playSpeed}x`}
               css={`
                 margin: 0 10px;
-                margin-top: 5px;
               `}
             />
             <span>{playSpeed}x</span>
