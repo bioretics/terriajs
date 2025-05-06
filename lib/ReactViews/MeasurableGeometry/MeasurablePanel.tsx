@@ -434,62 +434,64 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderSamplingStep = () => {
     return (
-      <>
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.samplingStepHeader")}:
-          <br />
-          [min {rangeSamplingPathStep.get()[0]}, max{" "}
-          {rangeSamplingPathStep.get()[1]}]
-        </Text>
-        <Box styledMargin="5px">
-          <Box styledWidth="120px">
-            <Input
+      !props.viewState.useSmallScreenInterface && (
+        <>
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.samplingStepHeader")}:
+            <br />
+            [min {rangeSamplingPathStep.get()[0]}, max{" "}
+            {rangeSamplingPathStep.get()[1]}]
+          </Text>
+          <Box styledMargin="5px">
+            <Box styledWidth="120px">
+              <Input
+                css={`
+                  border: solid;
+                  border-width: ${isValidSamplingPathStep ? 1 : 2}px;
+                  border-color: ${isValidSamplingPathStep
+                    ? theme.textLight
+                    : "red"};
+                `}
+                title={i18next.t("measurableGeometry.samplingStepHeader")}
+                light={false}
+                dark
+                type="number"
+                min={1}
+                max={2000}
+                step={1}
+                value={samplingPathStep}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setIsValidSamplingPathStep(
+                    val >= rangeSamplingPathStep.get()[0] &&
+                      val <= rangeSamplingPathStep.get()[1]
+                  );
+                  setSamplingPathStep(val);
+                }}
+              />
+            </Box>
+            <Button
               css={`
-                border: solid;
-                border-width: ${isValidSamplingPathStep ? 1 : 2}px;
-                border-color: ${isValidSamplingPathStep
-                  ? theme.textLight
-                  : "red"};
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                margin-left: 5px;
               `}
-              title={i18next.t("measurableGeometry.samplingStepHeader")}
-              light={false}
-              dark
-              type="number"
-              min={1}
-              max={2000}
-              step={1}
-              value={samplingPathStep}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                setIsValidSamplingPathStep(
-                  val >= rangeSamplingPathStep.get()[0] &&
-                    val <= rangeSamplingPathStep.get()[1]
-                );
-                setSamplingPathStep(val);
-              }}
-            />
-          </Box>
-          <Button
-            css={`
-              color: ${theme.textLight};
-              background: ${theme.colorPrimary};
-              margin-left: 5px;
-            `}
-            disabled={
-              !terria.measurableGeomList[terria.measurableGeometryIndex]
-                ?.stopPoints.length
-            }
-            title={i18next.t("measurableGeometry.samplingStepButtonTitle")}
-            onClick={() => {
-              if (isValidSamplingPathStep) {
-                changeSamplingPathStep(samplingPathStep);
+              disabled={
+                !terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.stopPoints.length
               }
-            }}
-          >
-            {i18next.t("measurableGeometry.samplingStepButtonText")}
-          </Button>
-        </Box>
-      </>
+              title={i18next.t("measurableGeometry.samplingStepButtonTitle")}
+              onClick={() => {
+                if (isValidSamplingPathStep) {
+                  changeSamplingPathStep(samplingPathStep);
+                }
+              }}
+            >
+              {i18next.t("measurableGeometry.samplingStepButtonText")}
+            </Button>
+          </Box>
+        </>
+      )
     );
   };
 
@@ -560,18 +562,20 @@ const MeasurablePanel = observer((props: Props) => {
 
     return (
       <>
-        <StyledTextArea
-          placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
-          dark
-          value={currentGeom.pathNotes}
-          onChange={(e) => {
-            runInAction(() => {
-              if (terria.measurableGeomList && currentGeom) {
-                currentGeom.pathNotes = e.target.value;
-              }
-            });
-          }}
-        />
+        {!props.viewState.useSmallScreenInterface && (
+          <StyledTextArea
+            placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+            dark
+            value={currentGeom.pathNotes}
+            onChange={(e) => {
+              runInAction(() => {
+                if (terria.measurableGeomList && currentGeom) {
+                  currentGeom.pathNotes = e.target.value;
+                }
+              });
+            }}
+          />
+        )}
         <Text textLight style={{ marginLeft: 1 }} title="">
           {i18next.t("measurableGeometry.geometrySummaryHeader")}
         </Text>
@@ -630,7 +634,8 @@ const MeasurablePanel = observer((props: Props) => {
               {terria.measurableGeomList &&
                 terria.measurableGeomList[terria.measurableGeometryIndex] &&
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
-                  .isFileUploaded && (
+                  .isFileUploaded &&
+                !props.viewState.useSmallScreenInterface && (
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <Button
                       disabled={
@@ -759,24 +764,26 @@ const MeasurablePanel = observer((props: Props) => {
                   />
                 </Button>
               )}
-              <Button
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                  margin-left: 5px;
-                  margin-bottom: 20px;
-                `}
-                disabled={
-                  !terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.stopPoints.length
-                }
-                onClick={toggleLineClampToGround}
-                title={i18next.t("measurableGeometry.clampLineButtonTitle")}
-              >
-                {terria.clampMeasureLineToGround
-                  ? i18next.t("measurableGeometry.clampLineToGround")
-                  : i18next.t("measurableGeometry.dontClampLineToGround")}
-              </Button>
+              {!props.viewState.useSmallScreenInterface && (
+                <Button
+                  css={`
+                    color: ${theme.textLight};
+                    background: ${theme.colorPrimary};
+                    margin-left: 5px;
+                    margin-bottom: 20px;
+                  `}
+                  disabled={
+                    !terria.measurableGeomList[terria.measurableGeometryIndex]
+                      ?.stopPoints.length
+                  }
+                  onClick={toggleLineClampToGround}
+                  title={i18next.t("measurableGeometry.clampLineButtonTitle")}
+                >
+                  {terria.clampMeasureLineToGround
+                    ? i18next.t("measurableGeometry.clampLineToGround")
+                    : i18next.t("measurableGeometry.dontClampLineToGround")}
+                </Button>
+              )}
               {!terria.measurableGeomList[terria.measurableGeometryIndex]
                 ?.isFileUploaded && renderToggleDistanceLabels()}
             </Box>
@@ -971,7 +978,9 @@ const MeasurablePanel = observer((props: Props) => {
                     </th>
                   </>
                 )}
-                {onlyPoints && <th>Descrizione</th>}
+                {onlyPoints && !props.viewState.useSmallScreenInterface && (
+                  <th>Descrizione</th>
+                )}
               </tr>
             </thead>
             <SortableList
@@ -1125,7 +1134,7 @@ const MeasurablePanel = observer((props: Props) => {
             <td>{renderSlope(idx)}</td>
           </>
         )}
-        {onlyPoints && (
+        {onlyPoints && !props.viewState.useSmallScreenInterface && (
           <td>
             <StyledTextArea
               placeholder="Note..."
