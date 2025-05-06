@@ -165,7 +165,14 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     >
       <div className={panelClass} style={{ pointerEvents: "auto" }}>
         <div className={Styles.header}>
-          <span style={{ flex: 1, textAlign: "center" }}>
+          <span
+            style={{
+              flex: 1,
+              textAlign: "center",
+              justifyContent: "center",
+              display: "flex"
+            }}
+          >
             <b>Play Path</b>
           </span>
           <button
@@ -183,50 +190,61 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
           </button>
         </div>
 
-        <div className={Styles.body} style={{ padding: 20 }}>
-          {playingPath ? (
+        <div
+          className={Styles.body}
+          style={{
+            padding: 20,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 12
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              flexWrap: "wrap",
+              justifyContent: "center"
+            }}
+          >
             <Button
-              onClick={onPause}
+              onClick={playingPath ? onPause : onPlay}
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
-                width: 170px;
+                min-width: 120px;
               `}
             >
-              <StyledIcon glyph={Icon.GLYPHS.pause} styledWidth="16px" />
+              <StyledIcon
+                glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
+                styledWidth="16px"
+              />
             </Button>
-          ) : (
-            <Button
-              onClick={onPlay}
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                width: 170px;
-              `}
-            >
-              <StyledIcon glyph={Icon.GLYPHS.play} styledWidth="16px" />
-            </Button>
-          )}
-
-          {(playingPath || currentPointIndex !== 0) && (
-            <Button
-              onClick={onStop}
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                margin-top: 10px;
-                width: 170px;
-              `}
-            >
-              <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
-            </Button>
-          )}
-
+            {(playingPath || currentPointIndex !== 0) && (
+              <Button
+                onClick={onStop}
+                css={`
+                  color: ${theme.textLight};
+                  background: ${theme.colorPrimary};
+                  min-width: 120px;
+                `}
+              >
+                <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
+              </Button>
+            )}
+          </div>
           <div
             className="no-drag"
-            style={{ marginTop: 10, display: "flex", alignItems: "center" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              width: "100%",
+              maxWidth: 300,
+              gap: 8
+            }}
           >
-            <label style={{ marginRight: 10 }}>
+            <label style={{ whiteSpace: "nowrap" }}>
               {i18next.t("playPath.speed")}:
             </label>
             <Slider
@@ -238,10 +256,13 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
               onChange={(val) => setPlaySpeed(val)}
               aria-valuetext={`${i18next.t("playPath.speed")} ${playSpeed}x`}
               css={`
-                margin: 0 10px;
+                flex: 1;
+                width: 150px;
               `}
             />
-            <span>{playSpeed}x</span>
+            <span style={{ minWidth: 32, textAlign: "right" }}>
+              {playSpeed}x
+            </span>
           </div>
         </div>
       </div>
