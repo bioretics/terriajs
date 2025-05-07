@@ -70,13 +70,58 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     abortPlayingPathRef.current = true;
     const pts = getPoints();
     if (!pts?.length) return;
-    const camera = terria.cesium?.scene.camera;
+    const viewer = terria.currentViewer;
+    const scene = terria.cesium?.scene;
+    if (!scene) return;
+    const camera = scene.camera;
     const cartesians = pts.map((p) => Cartographic.toCartesian(p));
-    const useLookAt = Boolean(camera && pts && cartesians);
+    const useLookAt = Boolean(camera && cartesians.length);
     const pitch = camera?.pitch ?? 0;
     const dist = distRef.current;
     const duration = 3 / playSpeedRef.current;
     const isResume = currentPointIndexRef.current !== startIdxRef.current;
+    const waitForRender = () =>
+      new Promise<boolean>((resolve) => {
+        const handler = () => {
+          scene.postRender.removeEventListener(handler);
+          resolve(true);
+        };
+        scene.postRender.addEventListener(handler);
+      });
+    const waitForAbort = () =>
+      new Promise<boolean>((resolve) => {
+        const check = () => {
+          if (!abortPlayingPathRef.current) {
+            resolve(false);
+          } else {
+            setTimeout(check, 50);
+          }
+        };
+        check();
+      });
+    const tryStep = async (i: number) => {
+      let hpr: HeadingPitchRange | undefined;
+      if (
+        useLookAt &&
+        ((i < pts.length - 1 && !reverseRef.current) ||
+          (reverseRef.current && i > 0))
+      ) {
+        const next = reverseRef.current ? pts[i - 1] : pts[i + 1];
+        const heading =
+          (new EllipsoidGeodesic(pts[i], next).startHeading +
+            CesiumMath.TWO_PI) %
+          CesiumMath.TWO_PI;
+        hpr = new HeadingPitchRange(heading, -pitch, dist);
+      }
+      await viewer.doZoomTo(
+        useLookAt && hpr
+          ? CameraView.fromLookAt(pts[i], hpr)
+          : Rectangle.fromCartographicArray([pts[i]]),
+        duration
+      );
+      const rendered = await Promise.race([waitForRender(), waitForAbort()]);
+      return rendered;
+    };
     if (!reverseRef.current) {
       for (
         let i = currentPointIndexRef.current;
@@ -84,24 +129,11 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
         i++
       ) {
         if (!(isResume && i === currentPointIndexRef.current)) {
-          let hpr: HeadingPitchRange | undefined;
-          if (useLookAt && i < pts.length - 1) {
-            const heading =
-              (new EllipsoidGeodesic(pts[i], pts[i + 1]).startHeading +
-                CesiumMath.TWO_PI) %
-              CesiumMath.TWO_PI;
-            hpr = new HeadingPitchRange(heading, -pitch, dist);
-          }
-          await terria.currentViewer.doZoomTo(
-            useLookAt && hpr
-              ? CameraView.fromLookAt(pts[i], hpr)
-              : Rectangle.fromCartographicArray([pts[i]]),
-            duration
-          );
+          const ok = await tryStep(i);
+          if (!ok) break;
         }
-
         setCurrentPointIndex(i + 1);
-        terria.currentViewer.notifyRepaintRequired();
+        viewer.notifyRepaintRequired();
       }
     } else {
       const lastIdx = pts.length - 1;
@@ -111,24 +143,11 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
         i--
       ) {
         if (!(isResume && i === currentPointIndexRef.current)) {
-          let hpr: HeadingPitchRange | undefined;
-          if (useLookAt && i > 0) {
-            const heading =
-              (new EllipsoidGeodesic(pts[i], pts[i - 1]).startHeading +
-                CesiumMath.TWO_PI) %
-              CesiumMath.TWO_PI;
-            hpr = new HeadingPitchRange(heading, -pitch, dist);
-          }
-          await terria.currentViewer.doZoomTo(
-            useLookAt && hpr
-              ? CameraView.fromLookAt(pts[i], hpr)
-              : Rectangle.fromCartographicArray([pts[i]]),
-            duration
-          );
+          const ok = await tryStep(i);
+          if (!ok) break;
         }
-
         setCurrentPointIndex(i - 1);
-        terria.currentViewer.notifyRepaintRequired();
+        viewer.notifyRepaintRequired();
       }
     }
     setPlayingPath(false);
