@@ -76,27 +76,29 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     const pitch = camera?.pitch ?? 0;
     const dist = distRef.current;
     const duration = 3 / playSpeedRef.current;
+    const isResume = currentPointIndexRef.current !== startIdxRef.current;
     if (!reverseRef.current) {
       for (
         let i = currentPointIndexRef.current;
         abortPlayingPathRef.current && i < pts.length;
         i++
       ) {
-        let hpr: HeadingPitchRange | undefined;
-        if (useLookAt && i < pts.length - 1) {
-          const heading =
-            (new EllipsoidGeodesic(pts[i], pts[i + 1]).startHeading +
-              CesiumMath.TWO_PI) %
-            CesiumMath.TWO_PI;
-          hpr = new HeadingPitchRange(heading, -pitch, dist);
+        if (!(isResume && i === currentPointIndexRef.current)) {
+          let hpr: HeadingPitchRange | undefined;
+          if (useLookAt && i < pts.length - 1) {
+            const heading =
+              (new EllipsoidGeodesic(pts[i], pts[i + 1]).startHeading +
+                CesiumMath.TWO_PI) %
+              CesiumMath.TWO_PI;
+            hpr = new HeadingPitchRange(heading, -pitch, dist);
+          }
+          await terria.currentViewer.doZoomTo(
+            useLookAt && hpr
+              ? CameraView.fromLookAt(pts[i], hpr)
+              : Rectangle.fromCartographicArray([pts[i]]),
+            duration
+          );
         }
-
-        await terria.currentViewer.doZoomTo(
-          useLookAt && hpr
-            ? CameraView.fromLookAt(pts[i], hpr)
-            : Rectangle.fromCartographicArray([pts[i]]),
-          duration
-        );
 
         setCurrentPointIndex(i + 1);
         terria.currentViewer.notifyRepaintRequired();
@@ -108,21 +110,22 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
         abortPlayingPathRef.current && i >= 0;
         i--
       ) {
-        let hpr: HeadingPitchRange | undefined;
-        if (useLookAt && i > 0) {
-          const heading =
-            (new EllipsoidGeodesic(pts[i], pts[i - 1]).startHeading +
-              CesiumMath.TWO_PI) %
-            CesiumMath.TWO_PI;
-          hpr = new HeadingPitchRange(heading, -pitch, dist);
+        if (!(isResume && i === currentPointIndexRef.current)) {
+          let hpr: HeadingPitchRange | undefined;
+          if (useLookAt && i > 0) {
+            const heading =
+              (new EllipsoidGeodesic(pts[i], pts[i - 1]).startHeading +
+                CesiumMath.TWO_PI) %
+              CesiumMath.TWO_PI;
+            hpr = new HeadingPitchRange(heading, -pitch, dist);
+          }
+          await terria.currentViewer.doZoomTo(
+            useLookAt && hpr
+              ? CameraView.fromLookAt(pts[i], hpr)
+              : Rectangle.fromCartographicArray([pts[i]]),
+            duration
+          );
         }
-
-        await terria.currentViewer.doZoomTo(
-          useLookAt && hpr
-            ? CameraView.fromLookAt(pts[i], hpr)
-            : Rectangle.fromCartographicArray([pts[i]]),
-          duration
-        );
 
         setCurrentPointIndex(i - 1);
         terria.currentViewer.notifyRepaintRequired();
