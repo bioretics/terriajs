@@ -52,11 +52,11 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-  const isMobile = windowWidth < 768;
+  const isMobile = props.viewState.useSmallScreenInterface;
 
-  const initialWidth = isMobile ? windowWidth * 0.8 : windowWidth * 0.2;
+  const initialWidth = windowWidth * 0.2;
   const initialHeight = windowHeight * 0.6;
-  const maxWidth = isMobile ? windowWidth * 0.8 : windowWidth * 0.6;
+  const maxWidth = windowWidth * 0.6;
   const maxHeight = windowHeight * 0.8;
   const defaultX = (windowWidth - initialWidth) / 2;
   const defaultY = (windowHeight - initialHeight) / 2;
@@ -91,6 +91,7 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeometryManager.length - 1
     );
     viewState.measurablePanelIsVisible = false;
+    viewState.mobileMeasureToolsButtonVisible = false;
     [
       MeasureToolsController.id,
       MeasureLineTool.id,
@@ -396,22 +397,24 @@ const MeasurablePanel = observer((props: Props) => {
           >
             <b>{i18next.t("measurableGeometry.header")}</b>
           </span>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className={Styles.btnToggleFeature}
-            title="collapse"
-            disabled={
-              terria.measurableGeomList[terria.measurableGeometryIndex]
-                ?.isPointAdding
-            }
-          >
-            {props.viewState.measurablePanelIsCollapsed ? (
-              <Icon glyph={Icon.GLYPHS.closed} />
-            ) : (
-              <Icon glyph={Icon.GLYPHS.opened} />
-            )}
-          </button>
+          {!isMobile && (
+            <button
+              type="button"
+              onClick={toggleCollapsed}
+              className={Styles.btnToggleFeature}
+              title="collapse"
+              disabled={
+                terria.measurableGeomList[terria.measurableGeometryIndex]
+                  ?.isPointAdding
+              }
+            >
+              {props.viewState.measurablePanelIsCollapsed ? (
+                <Icon glyph={Icon.GLYPHS.closed} />
+              ) : (
+                <Icon glyph={Icon.GLYPHS.opened} />
+              )}
+            </button>
+          )}
         </div>
         <button
           type="button"
@@ -434,7 +437,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderSamplingStep = () => {
     return (
-      !props.viewState.useSmallScreenInterface && (
+      !isMobile && (
         <>
           <Text textLight style={{ marginLeft: 1 }} title="">
             {i18next.t("measurableGeometry.samplingStepHeader")}:
@@ -562,7 +565,7 @@ const MeasurablePanel = observer((props: Props) => {
 
     return (
       <>
-        {!props.viewState.useSmallScreenInterface && (
+        {!isMobile && (
           <StyledTextArea
             placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
             dark
@@ -635,7 +638,7 @@ const MeasurablePanel = observer((props: Props) => {
                 terria.measurableGeomList[terria.measurableGeometryIndex] &&
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
                   .isFileUploaded &&
-                !props.viewState.useSmallScreenInterface && (
+                !isMobile && (
                   <div style={{ display: "flex", alignItems: "center" }}>
                     <Button
                       disabled={
@@ -764,7 +767,7 @@ const MeasurablePanel = observer((props: Props) => {
                   />
                 </Button>
               )}
-              {!props.viewState.useSmallScreenInterface && (
+              {!isMobile && (
                 <Button
                   css={`
                     color: ${theme.textLight};
@@ -978,9 +981,7 @@ const MeasurablePanel = observer((props: Props) => {
                     </th>
                   </>
                 )}
-                {onlyPoints && !props.viewState.useSmallScreenInterface && (
-                  <th>Descrizione</th>
-                )}
+                {onlyPoints && !isMobile && <th>Descrizione</th>}
               </tr>
             </thead>
             <SortableList
@@ -1134,7 +1135,7 @@ const MeasurablePanel = observer((props: Props) => {
             <td>{renderSlope(idx)}</td>
           </>
         )}
-        {onlyPoints && !props.viewState.useSmallScreenInterface && (
+        {onlyPoints && !isMobile && (
           <td>
             <StyledTextArea
               placeholder="Note..."
@@ -1201,55 +1202,66 @@ const MeasurablePanel = observer((props: Props) => {
   const SortableList = SortableContainer(React.memo(SortableListComponent));
   SortableList.displayName = "SortableList";
 
-  return (
-    <Rnd
-      bounds="parent"
-      default={{
-        x: defaultX,
-        y: defaultY,
-        width: initialWidth,
-        height: initialHeight
-      }}
-      maxWidth={maxWidth}
-      maxHeight={maxHeight}
-      dragHandleClassName="drag-handle"
-      enableResizing={{
-        right: true,
-        left: true
-      }}
-      style={{
-        pointerEvents:
-          measurablePanelIsVisible && !viewState.measurablePanelIsCollapsed
-            ? "auto"
-            : "none"
-      }}
+  const panelContent = (
+    <div
+      css={`
+        background: ${theme.darkTranslucent};
+        width: ${isMobile ? "100%" : "auto"};
+        height: ${isMobile ? "40%" : "auto"};
+        overflow-y: auto;
+      `}
+      className={panelClassName}
+      style={{ pointerEvents: "auto" }}
+      aria-hidden={!measurablePanelIsVisible}
     >
-      <div
-        css={`
-          background: ${theme.darkTranslucent};
-        `}
-        className={panelClassName}
-        style={{ pointerEvents: "auto" }}
-        aria-hidden={!measurablePanelIsVisible}
-      >
-        {renderHeader()}
-        {renderBody()}
-        {viewState.measurableDownloadPanelIsVisible && (
-          <MeasurableDownloadPanel
-            terria={terria}
-            viewState={viewState}
-            initialWidth={initialWidth}
-            maxWidth={maxWidth}
-            onClose={() => {
-              runInAction(() => {
-                viewState.measurableDownloadPanelIsVisible = false;
-              });
-            }}
-          />
-        )}
-      </div>
-    </Rnd>
+      {renderHeader()}
+      {renderBody()}
+      {viewState.measurableDownloadPanelIsVisible && (
+        <MeasurableDownloadPanel
+          terria={terria}
+          viewState={viewState}
+          initialWidth={initialWidth}
+          maxWidth={maxWidth}
+          onClose={() => {
+            runInAction(() => {
+              viewState.measurableDownloadPanelIsVisible = false;
+            });
+          }}
+        />
+      )}
+    </div>
   );
+
+  if (isMobile) {
+    return panelContent;
+  } else {
+    return (
+      <Rnd
+        bounds="parent"
+        default={{
+          x: defaultX,
+          y: defaultY,
+          width: initialWidth,
+          height: initialHeight
+        }}
+        maxWidth={maxWidth}
+        maxHeight={maxHeight}
+        dragHandleClassName="drag-handle"
+        enableResizing={{
+          right: true,
+          left: true
+        }}
+        style={{
+          pointerEvents:
+            measurablePanelIsVisible && !viewState.measurablePanelIsCollapsed
+              ? "auto"
+              : "none"
+        }}
+      >
+        {panelContent}
+      </Rnd>
+    );
+  }
 });
 
 export default MeasurablePanel;

@@ -235,6 +235,24 @@ class MobileHeader extends React.Component {
                   background-color: ${(p) => p.theme.dark};
                 `}
               >
+                {this.props.viewState.mobileMeasureToolsButtonVisible && (
+                  <button
+                    type="button"
+                    className={Styles.btnAdd}
+                    onClick={() => {
+                      runInAction(() => {
+                        this.props.viewState.measurablePanelIsVisible =
+                          !this.props.viewState.measurablePanelIsVisible;
+                      });
+                    }}
+                  >
+                    <StyledIcon
+                      glyph={Icon.GLYPHS.measureTools}
+                      styledWidth="20px"
+                      styledHeight="20px"
+                    />
+                  </button>
+                )}
                 <button
                   type="button"
                   className={Styles.btnViewMode}
