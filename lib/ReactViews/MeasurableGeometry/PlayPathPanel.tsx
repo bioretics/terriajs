@@ -25,16 +25,17 @@ interface Props {
 
 const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   const theme = useTheme();
-  const abortPlayingPathRef = useRef(false);
-
-  const [playingPath, setPlayingPath] = useState(false);
   const [playSpeed, setPlaySpeed] = useState(1);
-  const playSpeedRef = useRef(playSpeed);
+  const [playingPath, setPlayingPath] = useState(false);
+  const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
-  const currentPointIndexRef = useRef(currentPointIndex);
+
   const distRef = useRef(0);
-  const reverseRef = useRef(false);
   const startIdxRef = useRef(0);
+  const reverseRef = useRef(false);
+  const playSpeedRef = useRef(playSpeed);
+  const abortPlayingPathRef = useRef(false);
+  const currentPointIndexRef = useRef(currentPointIndex);
 
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
@@ -58,10 +59,17 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       const cartesians = pts.map((p) => Cartographic.toCartesian(p));
       const idx = currentPointIndexRef.current;
       distRef.current = Cartesian3.distance(camera.position, cartesians[idx]);
+      console.log("TEST dist", distRef.current);
+      setIsCameraMoving(false);
     };
-    updateDist();
+
+    const onMoveStart = () => setIsCameraMoving(true);
+
+    camera.moveStart?.addEventListener(onMoveStart);
     camera.moveEnd.addEventListener(updateDist);
+
     return () => {
+      camera.moveStart?.removeEventListener(onMoveStart);
       camera.moveEnd.removeEventListener(updateDist);
     };
   }, [getPoints, terria]);
@@ -275,6 +283,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
           >
             <Button
               onClick={playingPath ? onPause : onPlay}
+              disabled={!playingPath && isCameraMoving}
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
