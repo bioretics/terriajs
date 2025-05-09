@@ -300,21 +300,19 @@ const MeasurableTransform = (props: Props) => {
   };
 
   return (
-    <>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <Button
-          css={`
-            color: ${theme.textLight};
-            background: ${theme.colorPrimary};
-            margin-left: 10px;
-          `}
-          onClick={handleTransform}
-          disabled={!name}
-        >
-          {i18next.t("measure.measureTransform")}
-        </Button>
-      </div>
-    </>
+    <div style={{ display: "flex", alignItems: "center" }}>
+      <Button
+        css={`
+          color: ${theme.textLight};
+          background: ${theme.colorPrimary};
+          margin-left: 10px;
+        `}
+        onClick={handleTransform}
+        disabled={!name}
+      >
+        {i18next.t("measure.measureTransform")}
+      </Button>
+    </div>
   );
 };
 export default MeasurableTransform;
