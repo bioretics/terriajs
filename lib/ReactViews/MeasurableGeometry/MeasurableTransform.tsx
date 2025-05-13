@@ -13,10 +13,11 @@ interface Props {
   terria: Terria;
   viewState: ViewState;
   pathNotes: string;
+  onClick?: () => void;
 }
 
 const MeasurableTransform = (props: Props) => {
-  const { terria, viewState, pathNotes } = props;
+  const { terria, viewState, pathNotes, onClick } = props;
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
   const name = getTimeDateStamp();
@@ -307,7 +308,10 @@ const MeasurableTransform = (props: Props) => {
           background: ${theme.colorPrimary};
           margin-left: 10px;
         `}
-        onClick={handleTransform}
+        onClick={() => {
+          onClick?.();
+          handleTransform();
+        }}
         disabled={!name}
       >
         {i18next.t("measure.measureTransform")}

@@ -335,12 +335,20 @@ class ViewingControls extends React.Component<
 
   exportDataClicked() {
     const item = this.props.item;
+    try {
+      if (MeasurableGeometryMixin.isMixedInto(item)) {
+        item.computePath();
+      }
+      runInAction(() => {
+        this.props.viewState.measurableDownloadPanelIsVisible = true;
+      });
+    } catch (e) {
+      if (!ExportableMixin.isMixedInto(item)) return;
 
-    if (!ExportableMixin.isMixedInto(item)) return;
-
-    exportData(item).catch((e) => {
-      this.props.item.terria.raiseErrorToUser(e);
-    });
+      exportData(item).catch((e) => {
+        this.props.item.terria.raiseErrorToUser(e);
+      });
+    }
   }
 
   /**

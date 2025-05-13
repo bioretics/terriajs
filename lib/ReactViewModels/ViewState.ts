@@ -558,6 +558,10 @@ export default class ViewState {
         const wasVisible = this.measurablePanelIsVisible;
         this.measurablePanelIsVisible = !!geom;
         if (!wasVisible) {
+          if (this.measurableDownloadPanelIsVisible) {
+            this.measurablePanelIsVisible = false;
+            return;
+          }
           this.measurableDownloadPanelIsVisible = false;
           this.playPathPanelIsVisible = false;
           if (

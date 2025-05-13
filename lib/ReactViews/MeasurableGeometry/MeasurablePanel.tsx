@@ -25,7 +25,6 @@ import {
   MeasureAngleTool,
   MeasurePointTool
 } from "../Map/MapNavigation/Items";
-import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
@@ -33,6 +32,7 @@ import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 import PlayPathPanel from "./PlayPathPanel";
+import MeasurableTransform from "./MeasurableTransform";
 
 interface Props {
   viewState: ViewState;
@@ -812,24 +812,12 @@ const MeasurablePanel = observer((props: Props) => {
               `}
             >
               <Box>
-                <Button
-                  css={`
-                    color: ${theme.textLight};
-                    background: ${theme.colorPrimary};
-                    width: 100%;
-                  `}
-                  disabled={
-                    !terria.measurableGeomList[terria.measurableGeometryIndex]
-                      ?.stopPoints.length
-                  }
-                  onClick={() =>
-                    runInAction(() => {
-                      viewState.measurableDownloadPanelIsVisible = true;
-                    })
-                  }
-                >
-                  {i18next.t("downloadData.downloadPanel")}
-                </Button>
+                <MeasurableTransform
+                  terria={terria}
+                  viewState={viewState}
+                  pathNotes={currentGeom.pathNotes ?? ""}
+                  onClick={close}
+                />
               </Box>
             </div>
           )}
@@ -1242,19 +1230,6 @@ const MeasurablePanel = observer((props: Props) => {
       >
         {renderHeader()}
         {renderBody()}
-        {viewState.measurableDownloadPanelIsVisible && (
-          <MeasurableDownloadPanel
-            terria={terria}
-            viewState={viewState}
-            initialWidth={initialWidth}
-            maxWidth={maxWidth}
-            onClose={() => {
-              runInAction(() => {
-                viewState.measurableDownloadPanelIsVisible = false;
-              });
-            }}
-          />
-        )}
         {viewState.playPathPanelIsVisible && (
           <PlayPathPanel
             terria={terria}
