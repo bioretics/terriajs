@@ -16,14 +16,15 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CameraView from "../../Models/CameraView";
+import { runInAction } from "mobx";
 
 interface Props {
   terria: Terria;
   viewState: ViewState;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
-const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
+const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
   const theme = useTheme();
   const [playSpeed, setPlaySpeed] = useState(1);
   const [playingPath, setPlayingPath] = useState(false);
@@ -232,7 +233,13 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   return (
     <Rnd
       bounds="window"
-      default={{ x: 50, y: 50, width: "auto", height: "auto" }}
+      default={{
+        x: 50,
+        y: 50,
+        width: window.innerWidth * 0.2,
+        height: "auto"
+      }}
+      maxWidth={window.innerWidth * 0.4}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
@@ -254,7 +261,10 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
               abortPlayingPathRef.current = false;
               setPlayingPath(false);
               setCurrentPointIndex(0);
-              onClose();
+              onClose?.();
+              runInAction(() => {
+                viewState.playPathPanelIsVisible = false;
+              });
             }}
             className={Styles.btnCloseFeature}
             title={i18next.t("general.close")}

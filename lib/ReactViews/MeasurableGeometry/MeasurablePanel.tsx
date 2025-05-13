@@ -31,7 +31,6 @@ import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManage
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
-import PlayPathPanel from "./PlayPathPanel";
 import MeasurableTransform from "./MeasurableTransform";
 
 interface Props {
@@ -623,28 +622,6 @@ const MeasurablePanel = observer((props: Props) => {
                 ))}
               </Select>
               {terria.measurableGeomList &&
-                terria.measurableGeomList[terria.measurableGeometryIndex] && (
-                  <Button
-                    onClick={() =>
-                      runInAction(() => {
-                        viewState.playPathPanelIsVisible = true;
-                      })
-                    }
-                    css={`
-                      color: ${theme.textLight};
-                      background: ${theme.colorPrimary};
-                      margin-left: 5px;
-                    `}
-                  >
-                    <StyledIcon
-                      light
-                      realDark={false}
-                      glyph={Icon.GLYPHS.playStory}
-                      styledWidth="16px"
-                    />
-                  </Button>
-                )}
-              {terria.measurableGeomList &&
                 terria.measurableGeomList[terria.measurableGeometryIndex] &&
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
                   .isFileUploaded && (
@@ -1230,17 +1207,6 @@ const MeasurablePanel = observer((props: Props) => {
       >
         {renderHeader()}
         {renderBody()}
-        {viewState.playPathPanelIsVisible && (
-          <PlayPathPanel
-            terria={terria}
-            viewState={viewState}
-            onClose={() =>
-              runInAction(() => {
-                viewState.playPathPanelIsVisible = false;
-              })
-            }
-          />
-        )}
       </div>
     </Rnd>
   );

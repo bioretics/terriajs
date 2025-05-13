@@ -562,6 +562,10 @@ export default class ViewState {
             this.measurablePanelIsVisible = false;
             return;
           }
+          if (this.playPathPanelIsVisible) {
+            this.measurablePanelIsVisible = false;
+            return;
+          }
           this.measurableDownloadPanelIsVisible = false;
           this.playPathPanelIsVisible = false;
           if (
