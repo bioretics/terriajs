@@ -4,9 +4,13 @@ import DataTable, { TableColumn } from "react-data-table-component";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
 import { TabPropsType } from "./QueryWindow";
 import { ConstantProperty } from "terriajs-cesium";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
+import MappableMixin from "../../ModelMixins/MappableMixin";
+import GeoJsonMixin from "../../ModelMixins/GeojsonMixin";
+import { Geometry } from "@turf/helpers";
 
 const QueryTabTable: React.FC<TabPropsType> = observer(
   ({ item, terria }: TabPropsType) => {
@@ -15,15 +19,66 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
 
     const featureProperties = useRef<{ [key: string]: any }[]>();
 
-    const downloadTable = () => {
+    const downloadFile = (href: string, name: string) => {
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = name;
+      link.click();
+    }
+
+    const exportTable = () => {
       const rows = [Array.from(data[0].keys()).join(",")];
       rows.push(...data.map((elem) => Array.from(elem.values()).join(",")));
       const csvString = rows.join("\n");
       const href = DataUri.make("csv", csvString);
-      var link = document.createElement("a");
-      link.href = href;
-      link.download = "download.csv";
-      link.click();
+      downloadFile(href, "download.csv");
+    };
+
+    const exportData = async () => {
+      if (item && MappableMixin.isMixedInto(item) && GeoJsonMixin.isMixedInto(item) && item.featureInfoTemplate.webServiceUrlProfileCheck) {
+        const proxiedUrl = terria.corsProxy.getURL(item.featureInfoTemplate.webServiceUrlProfileCheck);
+        try {
+          const result = await CesiumResource.fetchJson({
+            url: proxiedUrl,
+            queryParameters: {
+              authToken: terria.userAuthToken
+            }
+          });
+
+          if (result && result.status === 200) {
+            const idList: string[] = result.ids;
+
+            if (item.readyData?.features) {
+              const filteredFeatures = item.readyData.features.filter(elem => {
+                return elem.properties && "id" in elem.properties && idList.includes(elem.properties["id"]) && elem.geometry.type === "Point";
+              });
+
+              const output = JSON.stringify({
+                type: "FeatureCollection",
+                features: filteredFeatures
+              });
+              downloadFile(DataUri.make("json", output), "interventi.json");
+
+              if (filteredFeatures && filteredFeatures.length > 0) {
+                const first = filteredFeatures[0];
+                if(first.properties) {
+                  const header = [...Object.keys(first.properties), "lat", "lon"].join(";");
+                  const values = filteredFeatures.map(elem => [...Object.values(elem.properties!), (elem.geometry as Geometry).coordinates[1], (elem.geometry as Geometry).coordinates[0]].join(";"));
+                  const rows = [header, ...values];
+
+                  const csv = rows.join("\n");
+                  downloadFile(DataUri.make("csv", csv), "interventi.csv");
+              }}
+            }
+          } else {
+            throw "Request failed";
+          }
+        } catch (error) {
+          console.log(error)
+          terria.userProfile = "undefined";
+          terria.userAuthToken = undefined;
+        }
+      }
     };
 
     useEffect(() => {
@@ -115,9 +170,20 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
                 border-radius: 2px;
                 margin: 10px;
               `}
-              onClick={downloadTable}
+              onClick={exportTable}
             >
-              Download
+              Salva tabella
+            </Button>
+            <Button
+              primary
+              css={`
+                width: 100px;
+                border-radius: 2px;
+                margin: 10px;
+              `}
+              onClick={exportData}
+            >
+              Esporta dati
             </Button>
           </Box>
         )}
