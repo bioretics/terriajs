@@ -89,7 +89,7 @@
   max-height: calc(80vh - #{$padding * 2 + $btn-default-line-height});
   font-size: $font-size-feature-info;
 
-  max-width: 50vw;
+  max-width: 30vw;
   @media (max-width: $mobile) {
     max-width: 100vw;
   }

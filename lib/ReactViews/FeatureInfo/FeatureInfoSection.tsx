@@ -167,7 +167,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       return `<table><tbody><tr><td>
         ${this.fields
           .map((fieldName) => {
-            return `{{#terria.partialByName}}${fieldName}{{/terria.partialByName}}</td><td>{{${fieldName}}}`;
+              return `{{#terria.partialByName}}${fieldName}{{/terria.partialByName}}</td><td>{{${fieldName}}}`;
           })
           .join("</td></tr><tr><td>")}
       </td></tr></tbody></table>`;
@@ -532,6 +532,15 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 // Show templated feature info
                 this.templatedFeatureInfoReactNode
               )}
+              {this.props.feature.properties
+                && this.props.feature.properties.hasProperty("percentuale_avanzamento")
+                && this.props.feature.properties["percentuale_avanzamento"].getValue() > 0
+                && this.props.feature.properties["tipo_stato_avanzamento"].getValue() === "Lavori in corso"
+                && (
+                  <span>
+                    <img style={{ marginTop: "10px" }} src={`https://progress-bar.xyz/${Math.round(this.props.feature.properties["percentuale_avanzamento"].getValue())}?width=${280}&title=${"Avanzamento &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}`} />
+                  </span>
+                )}
               {
                 // Show FeatureInfoDownload
                 !this.props.printView &&
