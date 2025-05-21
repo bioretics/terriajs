@@ -43,6 +43,7 @@ import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
+import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPanel";
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
@@ -279,6 +280,13 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 terria={props.terria}
                 viewState={props.viewState}
               />
+
+              {props.viewState.measurableDownloadPanelIsVisible && (
+                <MeasurableDownloadPanel
+                  terria={props.terria}
+                  viewState={props.viewState}
+                />
+              )}
             </div>
             <DragDropFile />
             <DragDropNotification />

@@ -69,7 +69,8 @@
     "measureLineToolMessage": "geodetic dist.",
     "measurePolygonToolMessagePerimeter": "perimeter",
     "measurePolygonToolMessageArea": "area",
-    "measureAngleToolMessage": "angle"
+    "measureAngleToolMessage": "angle",
+    "measureTransform": "Transform into a temporary layer"
   },
   "measurableGeometry": {
     "header": "MEASURABLE",

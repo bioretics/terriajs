@@ -15,7 +15,6 @@ import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
-import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import i18next from "i18next";
 import {
   MeasureLineTool,
@@ -32,6 +31,7 @@ import isDefined from "../../Core/isDefined";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
+import MeasurableTransform from "./MeasurableTransform";
 
 interface Props {
   viewState: ViewState;
@@ -104,6 +104,7 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const toggleCollapsed = action(() => {
+    console.log("toggleCollapsed");
     viewState.measurablePanelIsCollapsed =
       !viewState.measurablePanelIsCollapsed;
   });
@@ -783,30 +784,16 @@ const MeasurablePanel = observer((props: Props) => {
             <div
               css={`
                 display: flex;
-                margin-left: 5px;
-                margin-top: 5px;
                 margin-bottom: 5px;
               `}
             >
               <Box>
-                <Button
-                  css={`
-                    color: ${theme.textLight};
-                    background: ${theme.colorPrimary};
-                    width: 100%;
-                  `}
-                  disabled={
-                    !terria.measurableGeomList[terria.measurableGeometryIndex]
-                      ?.stopPoints.length
-                  }
-                  onClick={() =>
-                    runInAction(() => {
-                      viewState.measurableDownloadPanelIsVisible = true;
-                    })
-                  }
-                >
-                  {i18next.t("downloadData.downloadPanel")}
-                </Button>
+                <MeasurableTransform
+                  terria={terria}
+                  viewState={viewState}
+                  pathNotes={currentGeom.pathNotes ?? ""}
+                  onClick={close}
+                />
               </Box>
             </div>
           )}
@@ -1219,19 +1206,6 @@ const MeasurablePanel = observer((props: Props) => {
       >
         {renderHeader()}
         {renderBody()}
-        {viewState.measurableDownloadPanelIsVisible && (
-          <MeasurableDownloadPanel
-            terria={terria}
-            viewState={viewState}
-            initialWidth={initialWidth}
-            maxWidth={maxWidth}
-            onClose={() => {
-              runInAction(() => {
-                viewState.measurableDownloadPanelIsVisible = false;
-              });
-            }}
-          />
-        )}
       </div>
     </Rnd>
   );
