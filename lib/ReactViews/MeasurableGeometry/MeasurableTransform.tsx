@@ -4,10 +4,13 @@ import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import i18next from "i18next";
 import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
+import Modal from "../../Styled/Modal";
 import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
 import MappableMixin from "../../ModelMixins/MappableMixin";
+import { useState } from "react";
+import Input from "../../Styled/Input";
 
 interface Props {
   terria: Terria;
@@ -20,18 +23,8 @@ const MeasurableTransform = (props: Props) => {
   const { terria, viewState, pathNotes, onClick } = props;
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
-  const name = getTimeDateStamp();
-
-  function getTimeDateStamp() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const year = now.getFullYear();
-    return `${hours}${minutes}${seconds}${day}${month}${year}`;
-  }
+  const [modal, setModal] = useState(false);
+  const [name, setName] = useState("temp_layer");
 
   const getDownloadLinks = (geom: MeasurableGeometry, isMultiPath: boolean) => {
     const baseDownloads = [
@@ -267,11 +260,11 @@ const MeasurableTransform = (props: Props) => {
   };
 
   const handleUploadFile = (e: any) => {
-    console.log("handleUploadFile", e.target.files);
+    //const checkIfPresent = (element: any) =>
+    //  element.uniqueId === e.target.files[0].name;
 
     addUserFiles(e.target.files, terria, viewState).then(
       (addedCatalogItems) => {
-        console.log("addedCatalogItems", addedCatalogItems);
         if (addedCatalogItems && addedCatalogItems.length > 0) {
           onFileAddFinished(addedCatalogItems);
         }
@@ -300,6 +293,11 @@ const MeasurableTransform = (props: Props) => {
     }
   };
 
+  const close = () => {
+    setModal(false);
+    setName("temp_layer");
+  };
+
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <Button
@@ -308,13 +306,30 @@ const MeasurableTransform = (props: Props) => {
           background: ${theme.colorPrimary};
         `}
         onClick={() => {
-          onClick?.();
-          handleTransform();
+          setModal(true);
         }}
         disabled={!name}
       >
-        {i18next.t("measure.measureTransform")}
+        {i18next.t("transformLayer.transform")}
       </Button>
+      <Modal
+        open={modal}
+        onClose={() => close()}
+        title={i18next.t("transformLayer.transformation")}
+        onConfirm={() => {
+          console.log("Confirm");
+          onClick?.();
+          handleTransform();
+          close();
+        }}
+      >
+        <Input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          style={{ width: "100%", padding: "8px", marginBottom: "16px" }}
+        />
+      </Modal>
     </div>
   );
 };

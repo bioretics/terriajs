@@ -69,8 +69,7 @@
     "measureLineToolMessage": "geodetic dist.",
     "measurePolygonToolMessagePerimeter": "perimeter",
     "measurePolygonToolMessageArea": "area",
-    "measureAngleToolMessage": "angle",
-    "measureTransform": "Transform into a temporary layer"
+    "measureAngleToolMessage": "angle"
   },
   "measurableGeometry": {
     "header": "MEASURABLE",
@@ -107,6 +106,10 @@
     "measure": "Measure",
     "measureAir": "free",
     "measureGround": "clamped to ground"
+  },
+  "transformLayer": {
+    "transform": "Transform into a temporary layer",
+    "transformation": "Transformation to a temporary layer"
   },
   "downloadData": {
     "downloadPanel": "Export",
