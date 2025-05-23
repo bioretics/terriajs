@@ -5,17 +5,11 @@ import Icon, { StyledIcon } from "../../Styled/Icon";
 import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
-import React, { useEffect, useCallback, useState, useRef } from "react";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import React from "react";
 import Button from "../../Styled/Button";
 import { useTheme } from "styled-components";
 import Slider from "rc-slider";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
-import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
-import CameraView from "../../Models/CameraView";
+import usePlayPath from "../Custom/PlayPath";
 
 interface Props {
   terria: Terria;
@@ -25,230 +19,17 @@ interface Props {
 
 const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
   const theme = useTheme();
-  const [playSpeed, setPlaySpeed] = useState(1);
-  const [playingPath, setPlayingPath] = useState(false);
-  const [isCameraMoving, setIsCameraMoving] = useState(false);
-  const [currentPointIndex, setCurrentPointIndex] = useState(0);
-  const [countdown, setCountdown] = useState<number | null>(null);
-
-  const distRef = useRef(0);
-  const startIdxRef = useRef(0);
-  const reverseRef = useRef(false);
-  const playSpeedRef = useRef(playSpeed);
-  const abortPlayingPathRef = useRef(false);
-  const currentPointIndexRef = useRef(currentPointIndex);
-
-  useEffect(() => {
-    if (countdown === null) return;
-    if (countdown === 0) {
-      setCountdown(null);
-      setPlayingPath(true);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setCountdown(countdown - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [countdown]);
-
-  useEffect(() => {
-    currentPointIndexRef.current = currentPointIndex;
-  }, [currentPointIndex]);
-
-  useEffect(() => {
-    playSpeedRef.current = playSpeed;
-  }, [playSpeed]);
-
-  const getPoints = useCallback(() => {
-    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-    const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
-    return pts;
-  }, [terria]);
-
-  useEffect(() => {
-    const camera = terria.cesium?.scene.camera;
-    if (!camera) return;
-    const updateDist = () => {
-      const pts = getPoints();
-      if (!pts?.length) return;
-      const cartesians = pts.map((p) => Cartographic.toCartesian(p));
-      const idx = currentPointIndexRef.current;
-      distRef.current = Cartesian3.distance(camera.position, cartesians[idx]);
-      setIsCameraMoving(false);
-    };
-
-    const onMoveStart = () => {
-      setIsCameraMoving(true);
-    };
-
-    camera.moveStart?.addEventListener(onMoveStart);
-    camera.moveEnd.addEventListener(updateDist);
-
-    return () => {
-      camera.moveStart?.removeEventListener(onMoveStart);
-      camera.moveEnd.removeEventListener(updateDist);
-    };
-  }, [getPoints, terria]);
-
-  const playPath = useCallback(async () => {
-    abortPlayingPathRef.current = true;
-    const pts = getPoints();
-    if (!pts?.length) {
-      return;
-    }
-    const viewer = terria.currentViewer;
-    const scene = terria.cesium?.scene;
-    if (!scene) return;
-    const camera = scene.camera;
-    const cartesians = pts.map((p) => Cartographic.toCartesian(p));
-    const useLookAt = Boolean(camera && cartesians.length);
-    const pitch = camera?.pitch ?? 0;
-    const dist = distRef.current;
-    const duration = 3 / playSpeedRef.current;
-    const isResume = currentPointIndexRef.current !== startIdxRef.current;
-
-    const waitForRender = () =>
-      new Promise<boolean>((resolve) => {
-        const handler = () => {
-          scene.postRender.removeEventListener(handler);
-          resolve(true);
-        };
-        scene.postRender.addEventListener(handler);
-      });
-    const waitForAbort = () =>
-      new Promise<boolean>((resolve) => {
-        const check = () => {
-          if (!abortPlayingPathRef.current) {
-            resolve(false);
-          } else {
-            setTimeout(check, 50);
-          }
-        };
-        check();
-      });
-    const tryStep = async (i: number) => {
-      let hpr: HeadingPitchRange | undefined;
-      if (
-        useLookAt &&
-        ((i < pts.length - 1 && !reverseRef.current) ||
-          (reverseRef.current && i > 0))
-      ) {
-        const next = reverseRef.current ? pts[i - 1] : pts[i + 1];
-        const heading =
-          (new EllipsoidGeodesic(pts[i], next).startHeading +
-            CesiumMath.TWO_PI) %
-          CesiumMath.TWO_PI;
-        hpr = new HeadingPitchRange(heading, -pitch, dist);
-      }
-      await viewer.doZoomTo(
-        useLookAt && hpr
-          ? CameraView.fromLookAt(pts[i], hpr)
-          : Rectangle.fromCartographicArray([pts[i]]),
-        duration
-      );
-      const rendered = await Promise.race([waitForRender(), waitForAbort()]);
-      return rendered;
-    };
-    if (!reverseRef.current) {
-      for (
-        let i = currentPointIndexRef.current;
-        abortPlayingPathRef.current && i < pts.length;
-        i++
-      ) {
-        if (!(isResume && i === currentPointIndexRef.current)) {
-          const ok = await tryStep(i);
-          if (!ok) {
-            break;
-          }
-        }
-        setCurrentPointIndex(i + 1);
-        viewer.notifyRepaintRequired();
-      }
-    } else {
-      const lastIdx = pts.length - 1;
-      for (
-        let i = Math.min(currentPointIndexRef.current, lastIdx);
-        abortPlayingPathRef.current && i >= 0;
-        i--
-      ) {
-        if (!(isResume && i === currentPointIndexRef.current)) {
-          const ok = await tryStep(i);
-          if (!ok) {
-            break;
-          }
-        }
-        setCurrentPointIndex(i - 1);
-        viewer.notifyRepaintRequired();
-      }
-    }
-    setPlayingPath(false);
-  }, [getPoints, terria]);
-
-  const onPlay = () => {
-    const pts = getPoints();
-    if (!pts?.length) return;
-    const camera = terria.cesium?.scene.camera;
-    if (currentPointIndex !== startIdxRef.current && !playingPath) {
-      setPlayingPath(true);
-      return;
-    }
-    if (camera) {
-      const cartesian = pts.map((p) => Cartographic.toCartesian(p));
-      const distFirst = Cartesian3.distance(camera.position, cartesian[0]);
-      const distLast = Cartesian3.distance(
-        camera.position,
-        cartesian[cartesian.length - 1]
-      );
-      reverseRef.current = distFirst > distLast;
-      startIdxRef.current = reverseRef.current ? cartesian.length - 1 : 0;
-      setCurrentPointIndex(startIdxRef.current);
-      setCountdown(3);
-    }
-  };
-
-  const onPause = () => {
-    abortPlayingPathRef.current = false;
-    setPlayingPath(false);
-  };
-
-  const onStop = useCallback(() => {
-    abortPlayingPathRef.current = false;
-    setPlayingPath(false);
-    const pts = getPoints();
-    const camera = terria.cesium?.scene.camera;
-    if (camera && pts?.length) {
-      const targetIdx = startIdxRef.current;
-      const point = pts[targetIdx];
-      const currentCartesian = camera.position;
-      const targetCartesian = Cartographic.toCartesian(point);
-      const dist = Cartesian3.distance(currentCartesian, targetCartesian);
-      const pitch = camera.pitch ?? 0;
-      let hpr: HeadingPitchRange | undefined;
-      if (pts.length > 1) {
-        const neighborIdx = reverseRef.current ? targetIdx - 1 : targetIdx + 1;
-        const heading =
-          (new EllipsoidGeodesic(point, pts[neighborIdx]).startHeading +
-            CesiumMath.TWO_PI) %
-          CesiumMath.TWO_PI;
-        hpr = new HeadingPitchRange(heading, -pitch, dist);
-      }
-      const duration = 3 / playSpeedRef.current;
-      terria.currentViewer.doZoomTo(
-        hpr
-          ? CameraView.fromLookAt(point, hpr)
-          : Rectangle.fromCartographicArray([point]),
-        duration
-      );
-      setCurrentPointIndex(targetIdx);
-      terria.currentViewer.notifyRepaintRequired();
-    }
-  }, [getPoints, terria]);
-
-  useEffect(() => {
-    if (playingPath) {
-      playPath();
-    }
-  }, [playingPath, playPath]);
+  const {
+    playSpeed,
+    setPlaySpeed,
+    playingPath,
+    isCameraMoving,
+    countdown,
+    currentPointIndex,
+    onPlay,
+    onPause,
+    onStop
+  } = usePlayPath(terria);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: viewState.playPathPanelIsVisible,
