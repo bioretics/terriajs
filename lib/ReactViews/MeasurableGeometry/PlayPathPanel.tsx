@@ -23,12 +23,13 @@ interface Props {
   onClose: () => void;
 }
 
-const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
+const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
   const theme = useTheme();
   const [playSpeed, setPlaySpeed] = useState(1);
   const [playingPath, setPlayingPath] = useState(false);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const distRef = useRef(0);
   const startIdxRef = useRef(0);
@@ -36,6 +37,19 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   const playSpeedRef = useRef(playSpeed);
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown === 0) {
+      setCountdown(null);
+      setPlayingPath(true);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setCountdown(countdown - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown]);
 
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
@@ -47,7 +61,8 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
 
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-    return terria.cesium ? geom.sampledPoints : geom.stopPoints;
+    const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
+    return pts;
   }, [terria]);
 
   useEffect(() => {
@@ -59,11 +74,12 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       const cartesians = pts.map((p) => Cartographic.toCartesian(p));
       const idx = currentPointIndexRef.current;
       distRef.current = Cartesian3.distance(camera.position, cartesians[idx]);
-      console.log("TEST dist", distRef.current);
       setIsCameraMoving(false);
     };
 
-    const onMoveStart = () => setIsCameraMoving(true);
+    const onMoveStart = () => {
+      setIsCameraMoving(true);
+    };
 
     camera.moveStart?.addEventListener(onMoveStart);
     camera.moveEnd.addEventListener(updateDist);
@@ -77,7 +93,9 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   const playPath = useCallback(async () => {
     abortPlayingPathRef.current = true;
     const pts = getPoints();
-    if (!pts?.length) return;
+    if (!pts?.length) {
+      return;
+    }
     const viewer = terria.currentViewer;
     const scene = terria.cesium?.scene;
     if (!scene) return;
@@ -88,6 +106,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
     const dist = distRef.current;
     const duration = 3 / playSpeedRef.current;
     const isResume = currentPointIndexRef.current !== startIdxRef.current;
+
     const waitForRender = () =>
       new Promise<boolean>((resolve) => {
         const handler = () => {
@@ -138,7 +157,9 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       ) {
         if (!(isResume && i === currentPointIndexRef.current)) {
           const ok = await tryStep(i);
-          if (!ok) break;
+          if (!ok) {
+            break;
+          }
         }
         setCurrentPointIndex(i + 1);
         viewer.notifyRepaintRequired();
@@ -152,7 +173,9 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       ) {
         if (!(isResume && i === currentPointIndexRef.current)) {
           const ok = await tryStep(i);
-          if (!ok) break;
+          if (!ok) {
+            break;
+          }
         }
         setCurrentPointIndex(i - 1);
         viewer.notifyRepaintRequired();
@@ -179,7 +202,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       reverseRef.current = distFirst > distLast;
       startIdxRef.current = reverseRef.current ? cartesian.length - 1 : 0;
       setCurrentPointIndex(startIdxRef.current);
-      setPlayingPath(true);
+      setCountdown(3);
     }
   };
 
@@ -222,12 +245,133 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
   }, [getPoints, terria]);
 
   useEffect(() => {
-    if (playingPath) playPath();
+    if (playingPath) {
+      playPath();
+    }
   }, [playingPath, playPath]);
 
-  const panelClass = classNames(Styles.panel, {
-    [Styles.isVisible]: true
+  const panelClassName = classNames(Styles.panel, {
+    [Styles.isVisible]: viewState.playPathPanelIsVisible,
+    [Styles.isTranslucent]: viewState.explorerPanelIsVisible
   });
+
+  const renderHeader = () => {
+    return (
+      <div className={Styles.header}>
+        <span
+          style={{
+            justifyContent: "center",
+            display: "flex"
+          }}
+        >
+          <b>{i18next.t("playPath.title")}</b>
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+          }}
+          className={Styles.btnCloseFeature}
+          title={i18next.t("general.close")}
+        >
+          <Icon glyph={Icon.GLYPHS.close} />
+        </button>
+      </div>
+    );
+  };
+
+  const renderBody = () => {
+    return (
+      <div
+        className={Styles.body}
+        style={{
+          padding: 10,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 8
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            gap: 8,
+            width: "100%",
+            maxWidth: "100px"
+          }}
+        >
+          <Button
+            onClick={playingPath ? onPause : onPlay}
+            disabled={!playingPath && isCameraMoving}
+            css={`
+              color: ${theme.textLight};
+              background: ${theme.colorPrimary};
+              min-width: 80px;
+            `}
+            title={
+              playingPath
+                ? i18next.t("playPath.tooltip.pause")
+                : i18next.t("playPath.tooltip.play")
+            }
+          >
+            <StyledIcon
+              glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
+              styledWidth="16px"
+            />
+          </Button>
+          {(playingPath || currentPointIndex !== 0) && (
+            <Button
+              onClick={onStop}
+              title={i18next.t("playPath.tooltip.stop")}
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+                min-width: 80px;
+              `}
+            >
+              <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
+            </Button>
+          )}
+        </div>
+        <div
+          className="no-drag"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            maxWidth: "120px",
+            gap: 8
+          }}
+        >
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t("playPath.speed")}:
+          </label>
+          <Slider
+            min={0.5}
+            max={3}
+            step={0.1}
+            value={playSpeed}
+            disabled={playingPath}
+            onChange={(val) => {
+              setPlaySpeed(val);
+            }}
+            aria-valuetext={`${i18next.t(
+              "playPath.tooltip.speedSlider"
+            )}: ${playSpeed}x`}
+            css={`
+              flex: 1;
+              width: 120px;
+            `}
+          />
+          <span style={{ minWidth: 32, textAlign: "right", fontSize: "0.9em" }}>
+            {playSpeed}x
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <Rnd
@@ -236,117 +380,29 @@ const PlayPathPanel: React.FC<Props> = ({ terria, onClose }) => {
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
-      <div className={panelClass} style={{ pointerEvents: "auto" }}>
-        <div className={Styles.header}>
-          <span
-            style={{
-              flex: 1,
-              textAlign: "center",
-              justifyContent: "center",
-              display: "flex"
-            }}
-          >
-            <b>{i18next.t("playPath.title")}</b>
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              abortPlayingPathRef.current = false;
-              setPlayingPath(false);
-              setCurrentPointIndex(0);
-              onClose();
-            }}
-            className={Styles.btnCloseFeature}
-            title={i18next.t("general.close")}
-          >
-            <Icon glyph={Icon.GLYPHS.close} />
-          </button>
-        </div>
-
-        <div
-          className={Styles.body}
-          style={{
-            padding: 20,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 12
-          }}
-        >
+      <div
+        className={panelClassName}
+        style={{ pointerEvents: "auto" }}
+        aria-hidden={!viewState.playPathPanelIsVisible}
+      >
+        {renderHeader()}
+        {countdown !== null ? (
           <div
+            className={Styles.body}
             style={{
-              display: "flex",
-              gap: 12,
-              flexWrap: "wrap",
-              justifyContent: "center"
-            }}
-          >
-            <Button
-              onClick={playingPath ? onPause : onPlay}
-              disabled={!playingPath && isCameraMoving}
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                min-width: 120px;
-              `}
-              title={
-                playingPath
-                  ? i18next.t("playPath.tooltip.pause")
-                  : i18next.t("playPath.tooltip.play")
-              }
-            >
-              <StyledIcon
-                glyph={playingPath ? Icon.GLYPHS.pause : Icon.GLYPHS.play}
-                styledWidth="16px"
-              />
-            </Button>
-            {(playingPath || currentPointIndex !== 0) && (
-              <Button
-                onClick={onStop}
-                title={i18next.t("playPath.tooltip.stop")}
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                  min-width: 120px;
-                `}
-              >
-                <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
-              </Button>
-            )}
-          </div>
-          <div
-            className="no-drag"
-            style={{
+              padding: 20,
               display: "flex",
               alignItems: "center",
-              width: "100%",
-              maxWidth: 300,
-              gap: 8
+              flexDirection: "column",
+              justifyContent: "center",
+              fontSize: "3em"
             }}
           >
-            <label style={{ whiteSpace: "nowrap" }}>
-              {i18next.t("playPath.speed")}:
-            </label>
-            <Slider
-              min={0.5}
-              max={3}
-              step={0.1}
-              value={playSpeed}
-              disabled={playingPath}
-              onChange={(val) => setPlaySpeed(val)}
-              aria-valuetext={`${i18next.t(
-                "playPath.tooltip.speedSlider"
-              )}: ${playSpeed}x`}
-              css={`
-                flex: 1;
-                width: 150px;
-              `}
-            />
-            <span style={{ minWidth: 32, textAlign: "right" }}>
-              {playSpeed}x
-            </span>
+            <b>{countdown}</b>
           </div>
-        </div>
+        ) : (
+          renderBody()
+        )}
       </div>
     </Rnd>
   );
