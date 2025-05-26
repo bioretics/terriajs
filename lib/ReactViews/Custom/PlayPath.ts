@@ -84,9 +84,15 @@ export default function usePlayPath(terria: Terria) {
     const cartesians = pts.map((p) => Cartographic.toCartesian(p));
     const useLookAt = Boolean(camera && cartesians.length);
     const pitch = camera?.pitch ?? 0;
-    const dist = distRef.current;
+    const initialIdx = currentPointIndexRef.current;
+    const rawDist = distRef.current;
+    const computedDist = camera
+      ? Cartesian3.distance(camera.position, cartesians[initialIdx])
+      : 0;
+    const dist = rawDist > 0 ? rawDist : computedDist;
+
     const duration = 3 / playSpeedRef.current;
-    const isResume = currentPointIndexRef.current !== startIdxRef.current;
+    const isResume = initialIdx !== startIdxRef.current;
 
     const waitForRender = () =>
       new Promise<boolean>((resolve) => {
@@ -96,6 +102,7 @@ export default function usePlayPath(terria: Terria) {
         };
         scene?.postRender.addEventListener(handler);
       });
+
     const waitForAbort = () =>
       new Promise<boolean>((resolve) => {
         const check = () => {
