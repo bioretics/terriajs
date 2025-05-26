@@ -604,141 +604,149 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderBody = () => {
     return (
-      <div className={Styles.body} style={{ padding: "1rem" }}>
+      <div className={Styles.body} style={{ padding: "0 1rem" }}>
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.onlyPoints && (
           <div>
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <Select
-                title={i18next.t("measurableGeometry.changePath")}
-                value={terria.measurableGeometryIndex}
-                disabled={
-                  terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.isPointAdding
-                }
-                onChange={(e: any) => {
-                  runInAction(() => {
-                    terria.measurableGeometryIndex = parseInt(
-                      e.target.value,
-                      10
-                    );
-                    terria.currentViewer.notifyRepaintRequired();
-                  });
-                }}
-              >
-                {terria.measurableGeomList.map((mgl, index) => (
-                  <option key={index} value={index}>
-                    {`${i18next.t("measurableGeometry.elementPlaceholder")} ${
-                      index + 1
-                    }`}
-                  </option>
-                ))}
-              </Select>
-              {terria.measurableGeomList &&
-                terria.measurableGeomList[terria.measurableGeometryIndex] &&
-                !terria.measurableGeomList[terria.measurableGeometryIndex]
-                  .isFileUploaded &&
-                !isMobile && (
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <Button
-                      disabled={
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ]?.isPointAdding ||
-                        viewState.measurableDownloadPanelIsVisible === true
-                      }
-                      css={`
-                        color: ${theme.textLight};
-                        background: ${theme.colorPrimary};
-                        margin-left: 10px;
-                      `}
-                      onClick={() => {
-                        runInAction(() => {
-                          const newGeometry = {
-                            isClosed:
-                              terria?.measurableGeomList[
-                                terria.measurableGeometryIndex
-                              ].isClosed,
-                            hasArea:
-                              terria?.measurableGeomList[
-                                terria.measurableGeometryIndex
-                              ].hasArea,
-                            stopPoints: [],
-                            stopGeodeticDistances: [],
-                            stopAirDistances: [],
-                            stopGroundDistances: [],
-                            geodeticDistance: 0,
-                            airDistance: 0,
-                            groundDistance: 0,
-                            sampledPoints: [],
-                            sampledDistances: [],
-                            onlyPoints: false,
-                            pointDescriptions: [],
-                            pathNotes: "",
-                            isFileUploaded:
-                              terria?.measurableGeomList[
-                                terria.measurableGeometryIndex
-                              ].isFileUploaded
-                          };
-
-                          terria.measurableGeomList.push(newGeometry);
-                          terria.measurableGeometryManager.push(
-                            Object.freeze(new MeasurableGeometryManager(terria))
-                          );
-
-                          terria.measurableGeometryIndex =
-                            terria.measurableGeomList.length - 1;
-                        });
-                      }}
-                      title={i18next.t("measurableGeometry.addPath")}
-                    >
-                      <StyledIcon
-                        light
-                        realDark={false}
-                        glyph={Icon.GLYPHS.plus}
-                        styledWidth="16px"
-                      />
-                    </Button>
-                    <Button
-                      disabled={
-                        terria.measurableGeomList.length <= 1 ||
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ]?.isPointAdding ||
-                        viewState.measurableDownloadPanelIsVisible === true
-                      }
-                      css={`
-                        color: ${theme.textLight};
-                        background: ${theme.colorPrimary};
-                        margin-left: 10px;
-                      `}
-                      onClick={() => {
-                        runInAction(() => {
-                          const idx = terria.measurableGeometryIndex;
-                          if (
-                            idx >= 0 &&
-                            idx < terria.measurableGeomList.length
-                          ) {
-                            terria.measurableGeomList.splice(idx, 1);
-                            terria.measurableGeometryManager.splice(idx, 1);
-                            terria.measurableGeometryIndex =
-                              terria.measurableGeomList.length - 1;
-                            terria.currentViewer.notifyRepaintRequired();
+            {terria.measurableGeomList[terria.measurableGeometryIndex] &&
+              ((terria.measurableGeomList[terria.measurableGeometryIndex]
+                .isFileUploaded &&
+                isMobile) ||
+                !isMobile) && (
+                <div style={{ display: "flex", alignItems: "center" }}>
+                  <Select
+                    title={i18next.t("measurableGeometry.changePath")}
+                    value={terria.measurableGeometryIndex}
+                    disabled={
+                      terria.measurableGeomList[terria.measurableGeometryIndex]
+                        ?.isPointAdding
+                    }
+                    onChange={(e: any) => {
+                      runInAction(() => {
+                        terria.measurableGeometryIndex = parseInt(
+                          e.target.value,
+                          10
+                        );
+                        terria.currentViewer.notifyRepaintRequired();
+                      });
+                    }}
+                  >
+                    {terria.measurableGeomList.map((mgl, index) => (
+                      <option key={index} value={index}>
+                        {`${i18next.t(
+                          "measurableGeometry.elementPlaceholder"
+                        )} ${index + 1}`}
+                      </option>
+                    ))}
+                  </Select>
+                  {terria.measurableGeomList &&
+                    terria.measurableGeomList[terria.measurableGeometryIndex] &&
+                    !terria.measurableGeomList[terria.measurableGeometryIndex]
+                      .isFileUploaded &&
+                    !isMobile && (
+                      <div style={{ display: "flex", alignItems: "center" }}>
+                        <Button
+                          disabled={
+                            terria.measurableGeomList[
+                              terria.measurableGeometryIndex
+                            ]?.isPointAdding ||
+                            viewState.measurableDownloadPanelIsVisible === true
                           }
-                        });
-                      }}
-                      title={i18next.t("measurableGeometry.removePath")}
-                    >
-                      <StyledIcon
-                        light
-                        realDark={false}
-                        glyph={Icon.GLYPHS.minus}
-                        styledWidth="16px"
-                      />
-                    </Button>
-                  </div>
-                )}
-            </div>
+                          css={`
+                            color: ${theme.textLight};
+                            background: ${theme.colorPrimary};
+                            margin-left: 10px;
+                          `}
+                          onClick={() => {
+                            runInAction(() => {
+                              const newGeometry = {
+                                isClosed:
+                                  terria?.measurableGeomList[
+                                    terria.measurableGeometryIndex
+                                  ].isClosed,
+                                hasArea:
+                                  terria?.measurableGeomList[
+                                    terria.measurableGeometryIndex
+                                  ].hasArea,
+                                stopPoints: [],
+                                stopGeodeticDistances: [],
+                                stopAirDistances: [],
+                                stopGroundDistances: [],
+                                geodeticDistance: 0,
+                                airDistance: 0,
+                                groundDistance: 0,
+                                sampledPoints: [],
+                                sampledDistances: [],
+                                onlyPoints: false,
+                                pointDescriptions: [],
+                                pathNotes: "",
+                                isFileUploaded:
+                                  terria?.measurableGeomList[
+                                    terria.measurableGeometryIndex
+                                  ].isFileUploaded
+                              };
+
+                              terria.measurableGeomList.push(newGeometry);
+                              terria.measurableGeometryManager.push(
+                                Object.freeze(
+                                  new MeasurableGeometryManager(terria)
+                                )
+                              );
+
+                              terria.measurableGeometryIndex =
+                                terria.measurableGeomList.length - 1;
+                            });
+                          }}
+                          title={i18next.t("measurableGeometry.addPath")}
+                        >
+                          <StyledIcon
+                            light
+                            realDark={false}
+                            glyph={Icon.GLYPHS.plus}
+                            styledWidth="16px"
+                          />
+                        </Button>
+                        <Button
+                          disabled={
+                            terria.measurableGeomList.length <= 1 ||
+                            terria.measurableGeomList[
+                              terria.measurableGeometryIndex
+                            ]?.isPointAdding ||
+                            viewState.measurableDownloadPanelIsVisible === true
+                          }
+                          css={`
+                            color: ${theme.textLight};
+                            background: ${theme.colorPrimary};
+                            margin-left: 10px;
+                          `}
+                          onClick={() => {
+                            runInAction(() => {
+                              const idx = terria.measurableGeometryIndex;
+                              if (
+                                idx >= 0 &&
+                                idx < terria.measurableGeomList.length
+                              ) {
+                                terria.measurableGeomList.splice(idx, 1);
+                                terria.measurableGeometryManager.splice(idx, 1);
+                                terria.measurableGeometryIndex =
+                                  terria.measurableGeomList.length - 1;
+                                terria.currentViewer.notifyRepaintRequired();
+                              }
+                            });
+                          }}
+                          title={i18next.t("measurableGeometry.removePath")}
+                        >
+                          <StyledIcon
+                            light
+                            realDark={false}
+                            glyph={Icon.GLYPHS.minus}
+                            styledWidth="16px"
+                          />
+                        </Button>
+                      </div>
+                    )}
+                </div>
+              )}
             <Box
               css={`
                 margin-top: 20px;
