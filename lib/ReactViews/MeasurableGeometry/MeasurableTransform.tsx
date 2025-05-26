@@ -4,46 +4,42 @@ import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometryManager";
 import i18next from "i18next";
 import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
-import Modal from "../../Styled/Modal";
 import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
 import MappableMixin from "../../ModelMixins/MappableMixin";
-import { useState } from "react";
-import Input from "../../Styled/Input";
 
 interface Props {
   terria: Terria;
   viewState: ViewState;
   pathNotes: string;
+  layerName?: string;
   onClick?: () => void;
 }
 
 const MeasurableTransform = (props: Props) => {
-  const { terria, viewState, pathNotes, onClick } = props;
+  const { terria, viewState, pathNotes, layerName, onClick } = props;
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
-  const [modal, setModal] = useState(false);
-  const [name, setName] = useState("temp_layer");
 
   const getDownloadLinks = (geom: MeasurableGeometry, isMultiPath: boolean) => {
     const baseDownloads = [
       {
         key: "jsonPolygon",
         href: DataUri.make("json", generateGeoJsonPolygon(geom)),
-        download: `${name}_polygon.json`,
+        download: `${layerName}_polygon.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
       },
       {
         key: "jsonLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
-        download: `${name}_lines.json`,
+        download: `${layerName}_lines.json`,
         label: `${i18next.t("downloadData.lines")} JSON`
       },
       {
         key: "jsonPoints",
         href: DataUri.make("json", generateJsonPoints(geom)),
-        download: `${name}_points.json`,
+        download: `${layerName}_points.json`,
         label: `${i18next.t("downloadData.points")} JSON`
       }
     ];
@@ -108,7 +104,7 @@ const MeasurableTransform = (props: Props) => {
     }
 
     return JSON.stringify({
-      name: name || "",
+      name: layerName || "",
       type: "Feature",
       geometry: {
         type: "Polygon",
@@ -122,7 +118,7 @@ const MeasurableTransform = (props: Props) => {
 
   const generateJsonLineStrings = (geom: MeasurableGeometry) => {
     return JSON.stringify({
-      name: name || "",
+      name: layerName || "",
       type: "Feature",
       geometry: {
         type: "LineString",
@@ -140,7 +136,7 @@ const MeasurableTransform = (props: Props) => {
 
   const generateJsonPoints = (geom: MeasurableGeometry) => {
     return JSON.stringify({
-      name: name || "",
+      name: layerName || "",
       path_notes: pathNotes || "",
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
@@ -167,7 +163,7 @@ const MeasurableTransform = (props: Props) => {
   ): string => {
     return JSON.stringify({
       type: "FeatureCollection",
-      name: name || "",
+      name: layerName || "",
       features: geomList.map((geom) => {
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
@@ -201,7 +197,7 @@ const MeasurableTransform = (props: Props) => {
   ): string => {
     return JSON.stringify({
       type: "FeatureCollection",
-      name: name || "",
+      name: layerName || "",
       features: geomList.map((geom) => ({
         type: "Feature",
         geometry: {
@@ -293,11 +289,6 @@ const MeasurableTransform = (props: Props) => {
     }
   };
 
-  const close = () => {
-    setModal(false);
-    setName("temp_layer");
-  };
-
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <Button
@@ -306,30 +297,13 @@ const MeasurableTransform = (props: Props) => {
           background: ${theme.colorPrimary};
         `}
         onClick={() => {
-          setModal(true);
+          onClick?.();
+          handleTransform();
         }}
-        disabled={!name}
+        disabled={!layerName}
       >
         {i18next.t("transformLayer.transform")}
       </Button>
-      <Modal
-        open={modal}
-        onClose={() => close()}
-        title={i18next.t("transformLayer.transformation")}
-        onConfirm={() => {
-          console.log("Confirm");
-          onClick?.();
-          handleTransform();
-          close();
-        }}
-      >
-        <Input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={{ width: "100%", padding: "8px", marginBottom: "16px" }}
-        />
-      </Modal>
     </div>
   );
 };

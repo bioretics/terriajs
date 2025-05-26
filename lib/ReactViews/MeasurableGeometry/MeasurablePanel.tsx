@@ -49,6 +49,7 @@ const MeasurablePanel = observer((props: Props) => {
   const [samplingPathStep, setSamplingPathStep] = React.useState(
     terria.measurableGeomSamplingStep
   );
+  const [layerName, setLayerName] = React.useState("temp_layer");
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -489,7 +490,7 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   const renderToggleDistanceLabels = () => (
-    <label style={{ display: "flex", alignItems: "center", margin: "0 10px" }}>
+    <label style={{ display: "flex", alignItems: "center", margin: "10px" }}>
       <Checkbox
         isChecked={showDistances}
         isDisabled={
@@ -759,7 +760,7 @@ const MeasurablePanel = observer((props: Props) => {
                   color: ${theme.textLight};
                   background: ${theme.colorPrimary};
                   margin-left: 5px;
-                  margin-bottom: 20px;
+                  margin-bottom: 10px;
                 `}
                 disabled={
                   !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -772,9 +773,9 @@ const MeasurablePanel = observer((props: Props) => {
                   ? i18next.t("measurableGeometry.clampLineToGround")
                   : i18next.t("measurableGeometry.dontClampLineToGround")}
               </Button>
-              {!terria.measurableGeomList[terria.measurableGeometryIndex]
-                ?.isFileUploaded && renderToggleDistanceLabels()}
             </Box>
+            {!terria.measurableGeomList[terria.measurableGeometryIndex]
+              ?.isFileUploaded && renderToggleDistanceLabels()}
           </div>
         )}
 
@@ -784,14 +785,26 @@ const MeasurablePanel = observer((props: Props) => {
             <div
               css={`
                 display: flex;
+                flex-direction: column;
                 margin-bottom: 5px;
               `}
             >
+              <Input
+                type="text"
+                value={layerName}
+                onChange={(e) => setLayerName(e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "8px",
+                  marginBottom: "16px"
+                }}
+              />
               <Box>
                 <MeasurableTransform
                   terria={terria}
                   viewState={viewState}
                   pathNotes={currentGeom.pathNotes ?? ""}
+                  layerName={layerName}
                   onClick={close}
                 />
               </Box>
