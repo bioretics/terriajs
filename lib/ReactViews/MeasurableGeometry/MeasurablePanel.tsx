@@ -738,7 +738,6 @@ const MeasurablePanel = observer((props: Props) => {
                   css={`
                     background: #519ac2;
                     margin-left: 5px;
-                    margin-bottom: 20px;
                   `}
                   onClick={toggleChart}
                   disabled={
@@ -760,7 +759,6 @@ const MeasurablePanel = observer((props: Props) => {
                   color: ${theme.textLight};
                   background: ${theme.colorPrimary};
                   margin-left: 5px;
-                  margin-bottom: 10px;
                 `}
                 disabled={
                   !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -785,8 +783,10 @@ const MeasurablePanel = observer((props: Props) => {
             <div
               css={`
                 display: flex;
-                flex-direction: column;
-                margin-bottom: 5px;
+                flex-direction: row;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 16px;
               `}
             >
               <Input
@@ -794,20 +794,18 @@ const MeasurablePanel = observer((props: Props) => {
                 value={layerName}
                 onChange={(e) => setLayerName(e.target.value)}
                 style={{
-                  width: "100%",
-                  padding: "8px",
-                  marginBottom: "16px"
+                  flex: "1",
+                  padding: "8px"
                 }}
+                placeholder={i18next.t("measurableGeometry.layerName")}
               />
-              <Box>
-                <MeasurableTransform
-                  terria={terria}
-                  viewState={viewState}
-                  pathNotes={currentGeom.pathNotes ?? ""}
-                  layerName={layerName}
-                  onClick={close}
-                />
-              </Box>
+              <MeasurableTransform
+                terria={terria}
+                viewState={viewState}
+                pathNotes={currentGeom.pathNotes ?? ""}
+                layerName={layerName}
+                onClick={close}
+              />
             </div>
           )}
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
@@ -826,10 +824,6 @@ const MeasurablePanel = observer((props: Props) => {
   const renderSummaryTable = (headers: string[], data: string[]) => (
     <table
       className={Styles.elevation}
-      css={`
-        width: 300px;
-        border-collapse: collapse;
-      `}
     >
       <thead>
         <tr>

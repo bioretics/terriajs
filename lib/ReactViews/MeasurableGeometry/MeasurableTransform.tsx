@@ -7,7 +7,6 @@ import { Button } from "../../Styled/Button";
 import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
-import MappableMixin from "../../ModelMixins/MappableMixin";
 
 interface Props {
   terria: Terria;
@@ -217,21 +216,6 @@ const MeasurableTransform = (props: Props) => {
     });
   };
 
-  const onFileAddFinished = async (files: any) => {
-    const file = files.find((f: any) => MappableMixin.isMixedInto(f));
-    if (file) {
-      const result = await viewState.viewCatalogMember(file);
-      if (result.error) {
-        result.raiseError(terria);
-      } else {
-        if (!file.disableZoomTo) {
-          terria.currentViewer.zoomTo(file, 1);
-        }
-      }
-    }
-    viewState.myDataIsUploadView = false;
-  };
-
   const dataURItoFile = (dataURI: string, filename: string): File => {
     const [header, data] = dataURI.split(",");
     if (!data) {
@@ -256,16 +240,7 @@ const MeasurableTransform = (props: Props) => {
   };
 
   const handleUploadFile = (e: any) => {
-    //const checkIfPresent = (element: any) =>
-    //  element.uniqueId === e.target.files[0].name;
-
-    addUserFiles(e.target.files, terria, viewState).then(
-      (addedCatalogItems) => {
-        if (addedCatalogItems && addedCatalogItems.length > 0) {
-          onFileAddFinished(addedCatalogItems);
-        }
-      }
-    );
+    addUserFiles(e.target.files, terria, viewState, undefined, true)
   };
 
   const handleTransform = () => {
