@@ -15,7 +15,6 @@ import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
-import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import i18next from "i18next";
 import {
   MeasureLineTool,
@@ -92,6 +91,7 @@ const MeasurablePanel = observer((props: Props) => {
     );
     viewState.measurablePanelIsVisible = false;
     viewState.mobileMeasureToolsButtonVisible = false;
+    viewState.measurableDownloadPanelIsVisible = false;
     [
       MeasureToolsController.id,
       MeasureLineTool.id,
@@ -1224,19 +1224,6 @@ const MeasurablePanel = observer((props: Props) => {
     >
       {renderHeader()}
       {renderBody()}
-      {viewState.measurableDownloadPanelIsVisible && (
-        <MeasurableDownloadPanel
-          terria={terria}
-          viewState={viewState}
-          initialWidth={isMobile ? "100%" : initialWidth}
-          maxWidth={maxWidth}
-          onClose={() => {
-            runInAction(() => {
-              viewState.measurableDownloadPanelIsVisible = false;
-            });
-          }}
-        />
-      )}
     </div>
   );
 

@@ -112,6 +112,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
         viewState.mobileMeasureToolsButtonVisible = false;
+        viewState.measurableDownloadPanelIsVisible = false;
         [
           MeasureLineTool.id,
           MeasurePolygonTool.id,
@@ -161,6 +162,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
         viewState.mobileMeasureToolsButtonVisible = false;
+        viewState.measurableDownloadPanelIsVisible = false;
         terria.measurableGeometryIndex = 0;
         terria.measurableGeomList.splice(
           1,
@@ -213,6 +215,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
         viewState.mobileMeasureToolsButtonVisible = false;
+        viewState.measurableDownloadPanelIsVisible = false;
         terria.measurableGeometryIndex = 0;
         terria.measurableGeomList.splice(
           1,
@@ -277,6 +280,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.measurablePanelIsVisible = false;
         viewState.measurableChartIsVisible = false;
         viewState.mobileMeasureToolsButtonVisible = false;
+        viewState.measurableDownloadPanelIsVisible = false;
         terria.measurableGeometryIndex = 0;
         terria.measurableGeomList.splice(
           1,
@@ -341,6 +345,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
         viewState.panel = undefined;
         viewState.measurablePanelIsVisible = false;
         viewState.mobileMeasureToolsButtonVisible = false;
+        viewState.measurableDownloadPanelIsVisible = false;
         terria.measurableGeometryIndex = 0;
         terria.measurableGeomList.splice(
           1,
