@@ -10,7 +10,7 @@ import classNames from "classnames";
 interface Props {
   terria: Terria;
   viewState: ViewState;
-  initialWidth: number;
+  initialWidth: number | string;
   maxWidth: number;
   onClose: () => void;
 }
