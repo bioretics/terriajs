@@ -49,7 +49,7 @@ const MeasurableDownloadPanel = (props: Props) => {
     <div
       className={panelClassName}
       style={{
-        pointerEvents: "auto",
+        pointerEvents: "auto"
       }}
     >
       {renderHeader()}
@@ -71,7 +71,14 @@ const MeasurableDownloadPanel = (props: Props) => {
     return (
       <div
         style={{
-          touchAction: "auto"
+          touchAction: "auto",
+          position: "fixed",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "90%",
+          maxWidth: "400px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
         }}
       >
         {panelContent}
