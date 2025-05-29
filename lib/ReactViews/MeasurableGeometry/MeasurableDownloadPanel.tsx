@@ -73,7 +73,7 @@ const MeasurableDownloadPanel = (props: Props) => {
         style={{
           touchAction: "auto",
           position: "fixed",
-          top: "50%",
+          top: "20%",
           left: "50%",
           transform: "translate(-50%, -50%)",
           width: "90%",
