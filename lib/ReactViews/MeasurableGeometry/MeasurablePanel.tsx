@@ -26,7 +26,7 @@ import {
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
-import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
+import MeasurableGeometryManager from "../../ViewModels/Measure/MeasurableGeometryManager";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import isDefined from "../../Core/isDefined";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";

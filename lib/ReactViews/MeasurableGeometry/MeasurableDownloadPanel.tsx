@@ -1,5 +1,5 @@
 import { Rnd } from "react-rnd";
-import MeasurableDownload from "./MeasurableDownload";
+import MeasurableDownloadButton from "./MeasurableDownloadButton";
 import Terria from "../../Models/Terria";
 import Styles from "./measurable-panel.scss";
 import Icon from "../../Styled/Icon";
@@ -62,7 +62,7 @@ const MeasurableDownloadPanel = (props: Props) => {
       <div className={panelClassName} style={{ pointerEvents: "auto" }}>
         {renderHeader()}
         <div className={Styles.body} style={{ padding: "20px" }}>
-          <MeasurableDownload
+          <MeasurableDownloadButton
             terria={downloadProps.terria}
             pathNotes={
               downloadProps.terria.measurableGeomList[
