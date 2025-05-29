@@ -992,23 +992,44 @@ const MeasurablePanel = observer((props: Props) => {
                 {onlyPoints && !isMobile && <th>Descrizione</th>}
               </tr>
             </thead>
-            <SortableList
-              shouldCancelStart={() =>
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.isFileUploaded === true
-              }
-              items={stopPoints}
-              onlyPoints={onlyPoints}
-              pointsDescriptions={
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.pointDescriptions!!
-              }
-              onDescriptionChange={handleDescriptionChange}
-              onSortEnd={onSortEnd}
-              distance={5}
-              prettifyNumber={prettifyNumber}
-              terria={terria}
-            />
+            {isMobile ? (
+              <tbody>
+                {stopPoints.map((point, idx) => (
+                  <SortableItemComponent
+                    key={`item-${idx}`}
+                    idx={idx}
+                    array={stopPoints}
+                    onlyPoints={onlyPoints}
+                    pointsDescription={
+                      terria.measurableGeomList[terria.measurableGeometryIndex]
+                        ?.pointDescriptions?.[idx] || ""
+                    }
+                    onDescriptionChange={handleDescriptionChange}
+                    prettifyNumber={prettifyNumber}
+                    terria={terria}
+                    point={point}
+                  />
+                ))}
+              </tbody>
+            ) : (
+              <SortableList
+                shouldCancelStart={() =>
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.isFileUploaded === true
+                }
+                items={stopPoints}
+                onlyPoints={onlyPoints}
+                pointsDescriptions={
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.pointDescriptions!!
+                }
+                onDescriptionChange={handleDescriptionChange}
+                onSortEnd={onSortEnd}
+                distance={5}
+                prettifyNumber={prettifyNumber}
+                terria={terria}
+              />
+            )}
           </table>
         </small>
       </>
