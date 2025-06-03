@@ -506,7 +506,7 @@ const MeasurablePanel = observer((props: Props) => {
           });
         }}
       />
-      {i18next.t("Mostra etichette distanze")}
+      {i18next.t("measurableGeometry.showDistanceCheckbox")}
     </label>
   );
 
@@ -786,6 +786,7 @@ const MeasurablePanel = observer((props: Props) => {
                 flex-direction: row;
                 align-items: center;
                 gap: 10px;
+                margin-top: 10px;
                 margin-bottom: 16px;
               `}
             >
@@ -797,7 +798,7 @@ const MeasurablePanel = observer((props: Props) => {
                   flex: "1",
                   padding: "8px"
                 }}
-                placeholder={i18next.t("measurableGeometry.layerName")}
+                placeholder={i18next.t("measurableGeometry.tempLayerName")}
               />
               <MeasurableTransform
                 terria={terria}

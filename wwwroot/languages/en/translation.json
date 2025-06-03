@@ -99,7 +99,9 @@
     "elementPlaceholder": "Element No.",
     "changePath": "Change the current path",
     "addPath": "Add a new path",
-    "removePath": "Delete the current path"
+    "removePath": "Delete the current path",
+    "showDistanceCheckbox": "Show distaces labels",
+    "tempLayerName": "Insert the temporary layer name"
   },
   "elevationChart": {
     "header": "Elevation profile",
