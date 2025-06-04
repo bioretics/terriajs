@@ -25,7 +25,6 @@ import {
   MeasureAngleTool,
   MeasurePointTool
 } from "../Map/MapNavigation/Items";
-import MeasurableDownloadPanel from "./MeasurableDownloadPanel";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
