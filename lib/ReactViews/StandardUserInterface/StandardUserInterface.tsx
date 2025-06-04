@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import "inobounce";
-import { action } from "mobx";
+import { action, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React, { ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -280,7 +280,6 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 terria={props.terria}
                 viewState={props.viewState}
               />
-
               {props.viewState.measurableDownloadPanelIsVisible && (
                 <MeasurableDownloadPanel
                   terria={props.terria}

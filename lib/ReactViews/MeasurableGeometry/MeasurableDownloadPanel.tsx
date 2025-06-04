@@ -18,6 +18,7 @@ interface Props {
 
 const MeasurableDownloadPanel = (props: Props) => {
   const { onClose, ...downloadProps } = props;
+  const isMobile = downloadProps.viewState.useSmallScreenInterface;
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: downloadProps.viewState.measurablePanelIsCollapsed,
@@ -50,6 +51,47 @@ const MeasurableDownloadPanel = (props: Props) => {
     );
   };
 
+  const panelContent = (
+    <div
+      className={panelClassName}
+      style={{
+        pointerEvents: "auto"
+      }}
+    >
+      {renderHeader()}
+      <div className={Styles.body} style={{ padding: "20px" }}>
+        <MeasurableDownload
+          terria={downloadProps.terria}
+          pathNotes={
+            downloadProps.terria.measurableGeomList[
+              downloadProps.terria.measurableGeometryIndex
+            ].pathNotes ?? ""
+          }
+          ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
+        />
+      </div>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          touchAction: "auto",
+          position: "fixed",
+          top: "20%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: "90%",
+          maxWidth: "400px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+        }}
+      >
+        {panelContent}
+      </div>
+    );
+  }
+
   return (
     <Rnd
       bounds="window"
@@ -65,20 +107,7 @@ const MeasurableDownloadPanel = (props: Props) => {
         left: true
       }}
     >
-      <div className={panelClassName} style={{ pointerEvents: "auto" }}>
-        {renderHeader()}
-        <div className={Styles.body} style={{ padding: "20px" }}>
-          <MeasurableDownload
-            terria={downloadProps.terria}
-            pathNotes={
-              downloadProps.terria.measurableGeomList[
-                downloadProps.terria.measurableGeometryIndex
-              ].pathNotes ?? ""
-            }
-            ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
-          />
-        </div>
-      </div>
+      {panelContent}
     </Rnd>
   );
 };
