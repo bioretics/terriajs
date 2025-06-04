@@ -30,7 +30,7 @@ interface IProps {
   onClose?(): void;
 }
 
-async function requestDeviceMotionPermission(): Promise<"granted" | "denied"> {
+/*async function requestDeviceMotionPermission(): Promise<"granted" | "denied"> {
   const requestPermission: () => Promise<"granted" | "denied"> =
     window.DeviceMotionEvent &&
     typeof (DeviceMotionEvent as any).requestPermission === "function"
@@ -48,7 +48,7 @@ async function requestDeviceOrientationPermission(): Promise<
       ? (DeviceOrientationEvent as any).requestPermission
       : () => Promise.resolve("granted");
   return requestPermission();
-}
+}*/
 
 export class MeasureToolsController extends MapNavigationItemController {
   static id = "measure-tool";
@@ -81,7 +81,8 @@ export class MeasureToolsController extends MapNavigationItemController {
   activate() {
     this.onOpen();
     this.props.terria.measureTools = this.props.measureTools;
-    requestDeviceMotionPermission()
+
+    /*requestDeviceMotionPermission()
       .then((permissionState) => {
         if (permissionState !== "granted") {
           console.error("couldn't get access for motion events");
@@ -95,7 +96,7 @@ export class MeasureToolsController extends MapNavigationItemController {
           console.error("couldn't get access for orientation events");
         }
       })
-      .catch(console.error);
+      .catch(console.error);*/
 
     this.props.measureTools.activate();
   }
