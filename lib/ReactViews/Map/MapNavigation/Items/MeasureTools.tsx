@@ -129,7 +129,8 @@ export class MeasureLineTool extends MapNavigationItemController {
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),
       onCleanUp: this.onCleanUp.bind(this),
-      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
+      invisible: true
     });
     this.onOpen = props.onOpen || (() => {});
     this.onClose = props.onClose || (() => {});
@@ -292,7 +293,8 @@ export class MeasurePolygonTool extends MapNavigationItemController {
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),
       onCleanUp: this.onCleanUp.bind(this),
-      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
+      invisible: true
     });
     this.onOpen = props.onOpen || (() => {});
     this.onClose = props.onClose || (() => {});
@@ -593,7 +595,8 @@ export class MeasureAngleTool extends MapNavigationItemController {
       onPointClicked: this.onPointUpdated.bind(this),
       onPointMoved: this.onPointUpdated.bind(this),
       onCleanUp: this.onCleanUp.bind(this),
-      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
+      invisible: true
     });
 
     this.onOpen = props.onOpen || (() => {});
@@ -682,7 +685,8 @@ export class MeasurePointTool extends MapNavigationItemController {
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),
       onCleanUp: this.onCleanUp.bind(this),
-      onMakeDialogMessage: this.onMakeDialogMessage.bind(this)
+      onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
+      invisible: true
     });
     this.onOpen = props.onOpen || (() => {});
     this.onClose = props.onClose || (() => {});

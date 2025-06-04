@@ -801,7 +801,7 @@ export default class UserDrawing extends MappableMixin(
           }, false) as any;
         }
       },
-      invisible: true
+      invisible: this.invisible
     });
     runInAction(() => {
       this.terria.mapInteractionModeStack.push(pickPointMode);
