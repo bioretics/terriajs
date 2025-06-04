@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import "inobounce";
-import { action, runInAction } from "mobx";
+import { action } from "mobx";
 import { observer } from "mobx-react";
 import React, { ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";

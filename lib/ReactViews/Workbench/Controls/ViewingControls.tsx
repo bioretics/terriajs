@@ -347,7 +347,7 @@ class ViewingControls extends React.Component<
       exportData(item).catch((e) => {
         this.props.item.terria.raiseErrorToUser(e);
       });
-    }   
+    }
   }
 
   /**

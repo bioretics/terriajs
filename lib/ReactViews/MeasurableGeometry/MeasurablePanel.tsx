@@ -851,9 +851,7 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   const renderSummaryTable = (headers: string[], data: string[]) => (
-    <table
-      className={Styles.elevation}
-    >
+    <table className={Styles.elevation}>
       <thead>
         <tr>
           {headers.map((header, index) => (

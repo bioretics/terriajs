@@ -240,7 +240,7 @@ const MeasurableTransform = (props: Props) => {
   };
 
   const handleUploadFile = (e: any) => {
-    addUserFiles(e.target.files, terria, viewState, undefined, true)
+    addUserFiles(e.target.files, terria, viewState, undefined, true);
   };
 
   const handleTransform = () => {

@@ -24,7 +24,12 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
     abstract computePath(): void;
 
     @action
-    update(stopPoints: Cartographic[], pathNotes?: any, indexPath?: number, closeLoop?: boolean) {
+    update(
+      stopPoints: Cartographic[],
+      pathNotes?: any,
+      indexPath?: number,
+      closeLoop?: boolean
+    ) {
       if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
         this.terria.measurableGeometryManager.push(
           Object.freeze(new MeasurableGeometryManager(this.terria))
@@ -43,7 +48,12 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       );
     }
 
-    asPath(positions: Cartographic[], pathNotes?: any, indexPath?: number, closeLoop?: boolean) {
+    asPath(
+      positions: Cartographic[],
+      pathNotes?: any,
+      indexPath?: number,
+      closeLoop?: boolean
+    ) {
       if (!this?.terria?.cesium?.scene) {
         return;
       }

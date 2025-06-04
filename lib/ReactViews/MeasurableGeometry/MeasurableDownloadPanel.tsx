@@ -22,7 +22,8 @@ const MeasurableDownloadPanel = (props: Props) => {
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: downloadProps.viewState.measurablePanelIsCollapsed,
-    [Styles.isVisible]: downloadProps.viewState.measurableDownloadPanelIsVisible,
+    [Styles.isVisible]:
+      downloadProps.viewState.measurableDownloadPanelIsVisible,
     [Styles.isTranslucent]: downloadProps.viewState.explorerPanelIsVisible
   });
 
