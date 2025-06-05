@@ -85,11 +85,9 @@ export default function usePlayPath(terria: Terria) {
     const useLookAt = Boolean(camera && cartesians.length);
     const pitch = camera?.pitch ?? 0;
     const initialIdx = currentPointIndexRef.current;
-    const rawDist = distRef.current;
-    const computedDist = camera
+    const dist = camera
       ? Cartesian3.distance(camera.position, cartesians[initialIdx])
-      : 0;
-    const dist = rawDist > 0 ? rawDist : computedDist;
+      : 1000;
 
     const duration = 3 / playSpeedRef.current;
     const isResume = initialIdx !== startIdxRef.current;

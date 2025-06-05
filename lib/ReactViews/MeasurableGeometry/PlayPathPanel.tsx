@@ -164,7 +164,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.2,
+        width: window.innerWidth * 0.1,
         height: "auto"
       }}
       maxWidth={window.innerWidth * 0.4}
