@@ -608,7 +608,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const renderBody = () => {
     return (
-      <div className={Styles.body} style={{ padding: "0 1rem" }}>
+      <div className={Styles.body} style={{ padding: "1rem" }}>
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.onlyPoints && (
           <div>
@@ -760,8 +760,9 @@ const MeasurablePanel = observer((props: Props) => {
                 ?.hasArea && (
                 <Button
                   css={`
-                    background: #519ac2;
+                    background: ${theme.colorPrimary};
                     margin-left: 5px;
+                    margin-bottom: 10px;
                   `}
                   onClick={toggleChart}
                   disabled={
@@ -784,7 +785,7 @@ const MeasurablePanel = observer((props: Props) => {
                     color: ${theme.textLight};
                     background: ${theme.colorPrimary};
                     margin-left: 5px;
-                    margin-bottom: 20px;
+                    margin-bottom: 10px;
                   `}
                   disabled={
                     !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -798,8 +799,6 @@ const MeasurablePanel = observer((props: Props) => {
                     : i18next.t("measurableGeometry.dontClampLineToGround")}
                 </Button>
               )}
-              {!terria.measurableGeomList[terria.measurableGeometryIndex]
-                ?.isFileUploaded && renderToggleDistanceLabels()}
             </Box>
             {!terria.measurableGeomList[terria.measurableGeometryIndex]
               ?.isFileUploaded && renderToggleDistanceLabels()}
