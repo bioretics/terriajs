@@ -10,11 +10,12 @@ import Button from "../../Styled/Button";
 import { useTheme } from "styled-components";
 import Slider from "rc-slider";
 import usePlayPath from "../Custom/PlayPath";
+import { runInAction } from "mobx";
 
 interface Props {
   terria: Terria;
   viewState: ViewState;
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
@@ -50,7 +51,10 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
         <button
           type="button"
           onClick={() => {
-            onClose();
+            onClose?.();
+            runInAction(() => {
+              viewState.playPathPanelIsVisible = false;
+            });
           }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
@@ -157,7 +161,13 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
   return (
     <Rnd
       bounds="window"
-      default={{ x: 50, y: 50, width: "auto", height: "auto" }}
+      default={{
+        x: 50,
+        y: 50,
+        width: window.innerWidth * 0.2,
+        height: "auto"
+      }}
+      maxWidth={window.innerWidth * 0.4}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >

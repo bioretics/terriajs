@@ -31,7 +31,6 @@ import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManage
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
-import PlayPathPanel from "./PlayPathPanel";
 import MeasurableTransform from "./MeasurableTransform";
 
 interface Props {
@@ -1242,17 +1241,6 @@ const MeasurablePanel = observer((props: Props) => {
     >
       {renderHeader()}
       {renderBody()}
-      {viewState.playPathPanelIsVisible && (
-        <PlayPathPanel
-          terria={terria}
-          viewState={viewState}
-          onClose={() =>
-            runInAction(() => {
-              viewState.playPathPanelIsVisible = false;
-            })
-          }
-        />
-      )}
     </div>
   );
 
