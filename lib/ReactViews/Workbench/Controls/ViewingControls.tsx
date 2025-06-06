@@ -622,11 +622,11 @@ class ViewingControls extends React.Component<
               <ViewingControlMenuButton
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
-                    item.computePath();
+                    runInAction(() => {
+                      item.computePath();
+                      viewState.playPathPanelIsVisible = true;
+                    });
                   }
-                  runInAction(() => {
-                    viewState.playPathPanelIsVisible = true;
-                  });
                 }}
               >
                 <BoxViewingControl>

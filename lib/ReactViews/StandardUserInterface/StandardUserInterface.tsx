@@ -287,12 +287,10 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                   viewState={props.viewState}
                 />
               )}
-              {props.viewState.playPathPanelIsVisible && (
-                <PlayPathPanel
-                  terria={props.terria}
-                  viewState={props.viewState}
-                />
-              )}
+              <PlayPathPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
             </div>
             <DragDropFile />
             <DragDropNotification />

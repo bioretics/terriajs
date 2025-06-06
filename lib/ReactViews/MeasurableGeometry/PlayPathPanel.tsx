@@ -11,6 +11,7 @@ import { useTheme } from "styled-components";
 import Slider from "rc-slider";
 import usePlayPath from "../Custom/PlayPath";
 import { runInAction } from "mobx";
+import { observer } from "mobx-react";
 
 interface Props {
   terria: Terria;
@@ -18,7 +19,7 @@ interface Props {
   onClose?: () => void;
 }
 
-const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
+const PlayPathPanel= observer((props: Props) => {
   const theme = useTheme();
   const {
     playSpeed,
@@ -30,11 +31,11 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
     onPlay,
     onPause,
     onStop
-  } = usePlayPath(terria, viewState);
+  } = usePlayPath(props.terria, props.viewState);
 
   const panelClassName = classNames(Styles.panel, {
-    [Styles.isVisible]: viewState.playPathPanelIsVisible,
-    [Styles.isTranslucent]: viewState.explorerPanelIsVisible
+    [Styles.isVisible]: props.viewState.playPathPanelIsVisible,
+    [Styles.isTranslucent]: props.viewState.explorerPanelIsVisible
   });
 
   const renderHeader = () => {
@@ -51,9 +52,9 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
         <button
           type="button"
           onClick={() => {
-            onClose?.();
+            props.onClose?.();
             runInAction(() => {
-              viewState.playPathPanelIsVisible = false;
+              props.viewState.playPathPanelIsVisible = false;
             });
           }}
           className={Styles.btnCloseFeature}
@@ -174,7 +175,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
       <div
         className={panelClassName}
         style={{ pointerEvents: "auto" }}
-        aria-hidden={!viewState.playPathPanelIsVisible}
+        aria-hidden={!props.viewState.playPathPanelIsVisible}
       >
         {renderHeader()}
         {countdown !== null ? (
@@ -197,6 +198,6 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
       </div>
     </Rnd>
   );
-};
+});
 
 export default PlayPathPanel;
