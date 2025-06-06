@@ -30,7 +30,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
     onPlay,
     onPause,
     onStop
-  } = usePlayPath(terria);
+  } = usePlayPath(terria, viewState);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: viewState.playPathPanelIsVisible,
@@ -126,7 +126,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
             display: "flex",
             alignItems: "center",
             width: "100%",
-            maxWidth: "120px",
+            maxWidth: "130%",
             gap: 8
           }}
         >
@@ -147,7 +147,7 @@ const PlayPathPanel: React.FC<Props> = ({ terria, viewState, onClose }) => {
             )}: ${playSpeed}x`}
             css={`
               flex: 1;
-              width: 120px;
+              width: 100%;
             `}
           />
           <span style={{ minWidth: 32, textAlign: "right", fontSize: "0.9em" }}>
