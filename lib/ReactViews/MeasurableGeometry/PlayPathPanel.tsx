@@ -19,7 +19,7 @@ interface Props {
   onClose?: () => void;
 }
 
-const PlayPathPanel= observer((props: Props) => {
+const PlayPathPanel = observer((props: Props) => {
   const theme = useTheme();
   const {
     playSpeed,
