@@ -49,8 +49,10 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
             const idList: string[] = result.ids;
 
             if (item.readyData?.features) {
+              const filteredIdList = item.getFeaturePropertiesByName(["id", "show"]).filter(elem => elem.show == true).map(elem => (elem.id as ConstantProperty).toString()).filter(elem => idList.includes(elem));
+
               const filteredFeatures = item.readyData.features.filter(elem => {
-                return elem.properties && "id" in elem.properties && idList.includes(elem.properties["id"]) && elem.geometry.type === "Point";
+                return elem.properties && "id" in elem.properties && filteredIdList.includes(elem.properties["id"]) && elem.geometry.type === "Point";
               });
 
               const output = JSON.stringify({
@@ -68,7 +70,9 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
 
                   const csv = rows.join("\n");
                   downloadFile(DataUri.make("csv", csv), "interventi.csv");
-              }}
+              }} else {
+                downloadFile(DataUri.make("csv", "0 features\n"), "interventi.csv");
+              }
             }
           } else {
             throw "Request failed";
