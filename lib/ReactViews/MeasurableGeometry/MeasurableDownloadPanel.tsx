@@ -1,6 +1,6 @@
 import { Rnd } from "react-rnd";
 import { runInAction } from "mobx";
-import MeasurableDownload from "./MeasurableDownload";
+import MeasurableDownloadButton from "./MeasurableDownloadButton";
 import Terria from "../../Models/Terria";
 import Styles from "./measurable-panel.scss";
 import Icon from "../../Styled/Icon";
@@ -61,7 +61,7 @@ const MeasurableDownloadPanel = (props: Props) => {
     >
       {renderHeader()}
       <div className={Styles.body} style={{ padding: "20px" }}>
-        <MeasurableDownload
+        <MeasurableDownloadButton
           terria={downloadProps.terria}
           pathNotes={
             downloadProps.terria.measurableGeomList[
@@ -108,7 +108,20 @@ const MeasurableDownloadPanel = (props: Props) => {
         left: true
       }}
     >
-      {panelContent}
+      <div className={panelClassName} style={{ pointerEvents: "auto" }}>
+        {renderHeader()}
+        <div className={Styles.body} style={{ padding: "20px" }}>
+          <MeasurableDownloadButton
+            terria={downloadProps.terria}
+            pathNotes={
+              downloadProps.terria.measurableGeomList[
+                downloadProps.terria.measurableGeometryIndex
+              ].pathNotes ?? ""
+            }
+            ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
+          />
+        </div>
+      </div>
     </Rnd>
   );
 };

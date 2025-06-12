@@ -27,7 +27,7 @@ import {
 } from "../Map/MapNavigation/Items";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
-import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometryManager";
+import MeasurableGeometryManager from "../../ViewModels/Measure/MeasurableGeometryManager";
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
