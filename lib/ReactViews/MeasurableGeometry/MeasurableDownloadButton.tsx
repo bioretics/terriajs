@@ -126,7 +126,7 @@ const MeasurableDownloadButton = (props: Props) => {
           }}
           onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
           className={Styles.dropdownList}
-          disabled={isLoading}
+          disabled={isLoading || !name}
         >
           {downloadLinks.map((link) => (
             <option key={link.key} value={link.key}>
