@@ -448,15 +448,16 @@ class ViewingControls extends React.Component<
       .then((result) => result.raiseError(this.props.viewState.terria));
   }
 
-  exportDataClicked() {
+  async exportDataClicked() {
     const item = this.props.item;
-
+    let selectItemAction;
     if (MeasurableGeometryMixin.isMixedInto(item)) {
       if (item.canUseAsPath) {
-        item.computePath();
+        selectItemAction = Promise.resolve(item.computePath());
       } else {
-        this.visualizePointsClicked();
+        selectItemAction = Promise.resolve(this.visualizePointsClicked());
       }
+      await selectItemAction;
 
       runInAction(() => {
         this.props.viewState.measurableDownloadPanelIsVisible = true;
