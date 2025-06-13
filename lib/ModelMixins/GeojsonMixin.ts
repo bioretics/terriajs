@@ -110,6 +110,7 @@ import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import ViewState from "../ReactViewModels/ViewState";
 
 enum PathTypes {
   noPath = 0,
@@ -382,7 +383,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return isDefined(this.readyData);
     }
 
-    protected async _exportData(): Promise<ExportData | undefined> {
+    private async _exportDataFallback() {
       if (isDefined(this.readyData)) {
         let name = this.name || this.uniqueId || "data.geojson";
         if (!isJson(name)) {
@@ -398,6 +399,31 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         sender: this,
         message: "No data available to download."
       });
+    }
+
+    protected async _exportData(
+      viewState?: ViewState
+    ): Promise<ExportData | undefined> {
+      if (viewState) {
+        try {
+          let action;
+          if (MeasurableGeometryMixin.isMixedInto(this)) {
+            if (this.canUseAsPath) {
+              action = Promise.resolve(this.computePath());
+            } else {
+              action = this.forceLoadGeojsonData();
+            }
+            await action;
+            runInAction(() => {
+              viewState.measurableDownloadPanelIsVisible = true;
+            });
+          }
+        } catch (e) {
+          return this._exportDataFallback();
+        }
+      } else {
+        return this._exportDataFallback();
+      }
     }
 
     @override

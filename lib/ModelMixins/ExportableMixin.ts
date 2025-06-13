@@ -2,6 +2,7 @@ import { computed, makeObservable } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
 import ExportableTraits from "../Traits/TraitsClasses/ExportableTraits";
+import ViewState from "../ReactViewModels/ViewState";
 
 export type ExportData = string | { name: string; file: Blob };
 
@@ -23,14 +24,14 @@ function ExportableMixin<
       return !this.disableExport && this._canExportData;
     }
 
-    protected abstract _exportData(): Promise<ExportData | undefined>;
+    protected abstract _exportData(viewState?: ViewState): Promise<ExportData | undefined>;
 
     /**
      * @returns an async function which returns a URL (to download) or a Blob with filename
      */
-    exportData() {
+    exportData(viewState?: ViewState) {
       if (this.canExportData) {
-        return this._exportData();
+        return this._exportData(viewState);
       }
     }
   }

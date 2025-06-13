@@ -16,6 +16,7 @@ import Terria from "../../Terria";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import ViewState from "../../../ReactViewModels/ViewState";
 
 // Types of CSVs:
 // - Points - Latitude and longitude columns or address
@@ -79,7 +80,7 @@ export default class CsvCatalogItem
     return super.cacheDuration || "1d";
   }
 
-  protected async _exportData() {
+  private async _exportDataFallback() {
     if (isDefined(this._csvFile)) {
       return {
         name: (this.name || this.uniqueId)!,
@@ -101,6 +102,22 @@ export default class CsvCatalogItem
       sender: this,
       message: "No data available to download."
     });
+  }
+
+  protected async _exportData(viewState?: ViewState) {
+    if (viewState) {
+      try {
+        const action = this.sampleFromCsvData.bind(this)();
+        await action;
+        runInAction(() => {
+          viewState.measurableDownloadPanelIsVisible = true;
+        });
+      } catch (e) {
+        return this._exportDataFallback();
+      }
+    } else {
+      return this._exportDataFallback();
+    }
   }
 
   /*

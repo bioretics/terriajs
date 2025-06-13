@@ -7,14 +7,15 @@ import { observer } from "mobx-react";
 
 import isDefined from "../../Core/isDefined";
 import ExportableMixin from "../../ModelMixins/ExportableMixin";
+import ViewState from "../../ReactViewModels/ViewState";
 const FileSaver = require("file-saver");
 
 interface PropsType extends WithTranslation {
   item: ExportableMixin.Instance;
 }
 
-export async function exportData(item: ExportableMixin.Instance) {
-  const data = await item.exportData();
+export async function exportData(item: ExportableMixin.Instance, viewState?: ViewState) {
+  const data = await item.exportData(viewState);
   if (!isDefined(data)) {
     return;
   }

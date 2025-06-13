@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { computed, makeObservable, override } from "mobx";
+import { computed, makeObservable, override, runInAction } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -29,6 +29,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
+import ViewState from "../../../ReactViewModels/ViewState";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -126,8 +127,48 @@ class KmlCatalogItem
     return isDefined(this._dataSource);
   }
 
-  protected async _exportData(): Promise<ExportData | undefined> {
-    return undefined;
+  private async _exportDataFallback() {
+    if (isDefined(this._kmlFile)) {
+      let name = this._kmlFile.name || this.name || this.uniqueId || "data.kml";
+      if (
+        !name.toLowerCase().endsWith(".kml") &&
+        !name.toLowerCase().endsWith(".kmz")
+      ) {
+        name = `${name}.kml`;
+      }
+      return {
+        name,
+        file: this._kmlFile
+      };
+    }
+
+    throw new TerriaError({
+      sender: this,
+      message: "No data available to download."
+    });
+  }
+
+  protected async _exportData(
+    viewState?: ViewState,
+  ): Promise<ExportData | undefined> {
+    if (viewState) {
+      try{let action;
+      if (MeasurableGeometryMixin.isMixedInto(this)) {
+        if (this.canUseAsPath) {
+          action = Promise.resolve(this.computePath());
+        } else {
+          action = this.sampleFromKmlData.bind(this)();
+        }
+        await action;
+        runInAction(() => {
+          viewState.measurableDownloadPanelIsVisible = true;
+        });
+      }} catch (e) {
+        return this._exportDataFallback();
+      }
+    } else {
+      return this._exportDataFallback();
+    }
   }
 
   @computed
