@@ -26,14 +26,19 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import ExportableMixin, {
+  ExportData
+} from "../../../ModelMixins/ExportableMixin";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
   extends MeasurableGeometryMixin(
     MappableMixin(
-      UrlMixin(
-        CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+      ExportableMixin(
+        UrlMixin(
+          CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+        )
       )
     )
   )
@@ -114,6 +119,15 @@ class KmlCatalogItem
           })
         );
       });
+  }
+
+  @computed
+  get _canExportData() {
+    return isDefined(this._dataSource);
+  }
+
+  protected async _exportData(): Promise<ExportData | undefined> {
+    return undefined;
   }
 
   @computed
