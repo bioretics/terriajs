@@ -7,6 +7,8 @@ import Icon from "../../Styled/Icon";
 import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
+import { observer } from "mobx-react";
+import { useEffect } from "react";
 
 interface Props {
   terria: Terria;
@@ -16,9 +18,13 @@ interface Props {
   onClose?: () => void;
 }
 
-const MeasurableDownloadPanel = (props: Props) => {
+const MeasurableDownloadPanel = observer((props: Props) => {
   const { onClose, ...downloadProps } = props;
   const isMobile = downloadProps.viewState.useSmallScreenInterface;
+  const currentGeom =
+    downloadProps.terria.measurableGeomList[
+      downloadProps.terria.measurableGeometryIndex
+    ];
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: downloadProps.viewState.measurablePanelIsCollapsed,
@@ -26,6 +32,10 @@ const MeasurableDownloadPanel = (props: Props) => {
       downloadProps.viewState.measurableDownloadPanelIsVisible,
     [Styles.isTranslucent]: downloadProps.viewState.explorerPanelIsVisible
   });
+
+  if (!currentGeom) {
+    return null;
+  }
 
   const renderHeader = () => {
     return (
@@ -63,11 +73,7 @@ const MeasurableDownloadPanel = (props: Props) => {
       <div className={Styles.body} style={{ padding: "20px" }}>
         <MeasurableDownloadButton
           terria={downloadProps.terria}
-          pathNotes={
-            downloadProps.terria.measurableGeomList[
-              downloadProps.terria.measurableGeometryIndex
-            ].pathNotes ?? ""
-          }
+          pathNotes={currentGeom.pathNotes ?? ""}
           ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
         />
       </div>
@@ -113,17 +119,13 @@ const MeasurableDownloadPanel = (props: Props) => {
         <div className={Styles.body} style={{ padding: "20px" }}>
           <MeasurableDownloadButton
             terria={downloadProps.terria}
-            pathNotes={
-              downloadProps.terria.measurableGeomList[
-                downloadProps.terria.measurableGeometryIndex
-              ].pathNotes ?? ""
-            }
+            pathNotes={currentGeom.pathNotes ?? ""}
             ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
           />
         </div>
       </div>
     </Rnd>
   );
-};
+});
 
 export default MeasurableDownloadPanel;

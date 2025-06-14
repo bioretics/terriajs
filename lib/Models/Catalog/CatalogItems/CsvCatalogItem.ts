@@ -107,8 +107,7 @@ export default class CsvCatalogItem
   protected async _exportData(viewState?: ViewState) {
     if (viewState) {
       try {
-        const action = this.sampleFromCsvData.bind(this)();
-        await action;
+        await new Promise((resolve) => this.sampleFromCsvData().then(resolve));
         runInAction(() => {
           viewState.measurableDownloadPanelIsVisible = true;
         });
