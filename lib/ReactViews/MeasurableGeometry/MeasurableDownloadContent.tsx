@@ -18,7 +18,7 @@ interface Props {
   ellipsoid: Ellipsoid;
 }
 
-const MeasurableDownloadButton = (props: Props) => {
+const MeasurableDownloadContent = (props: Props) => {
   const { terria, pathNotes, ellipsoid } = props;
   const [name, setName] = useState<string>("");
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -152,4 +152,4 @@ const MeasurableDownloadButton = (props: Props) => {
   );
 };
 
-export default MeasurableDownloadButton;
+export default MeasurableDownloadContent;

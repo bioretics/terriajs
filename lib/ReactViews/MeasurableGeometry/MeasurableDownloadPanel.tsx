@@ -1,6 +1,6 @@
 import { Rnd } from "react-rnd";
 import { runInAction } from "mobx";
-import MeasurableDownloadButton from "./MeasurableDownloadButton";
+import MeasurableDownloadContent from "./MeasurableDownloadContent";
 import Terria from "../../Models/Terria";
 import Styles from "./measurable-panel.scss";
 import Icon from "../../Styled/Icon";
@@ -8,7 +8,6 @@ import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
 import { observer } from "mobx-react";
-import { useEffect } from "react";
 
 interface Props {
   terria: Terria;
@@ -71,7 +70,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
     >
       {renderHeader()}
       <div className={Styles.body} style={{ padding: "20px" }}>
-        <MeasurableDownloadButton
+        <MeasurableDownloadContent
           terria={downloadProps.terria}
           pathNotes={currentGeom.pathNotes ?? ""}
           ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
@@ -117,7 +116,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
       <div className={panelClassName} style={{ pointerEvents: "auto" }}>
         {renderHeader()}
         <div className={Styles.body} style={{ padding: "20px" }}>
-          <MeasurableDownloadButton
+          <MeasurableDownloadContent
             terria={downloadProps.terria}
             pathNotes={currentGeom.pathNotes ?? ""}
             ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
