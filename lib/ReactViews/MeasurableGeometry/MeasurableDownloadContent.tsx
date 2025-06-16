@@ -11,15 +11,17 @@ import Input from "../../Styled/Input";
 import MeasurableDownload, {
   DownloadLink
 } from "../../ViewModels/Measure/MeasurableDownload";
+import ViewState from "../../ReactViewModels/ViewState";
 
 interface Props {
   terria: Terria;
+  viewState: ViewState;
   pathNotes: string;
   ellipsoid: Ellipsoid;
 }
 
 const MeasurableDownloadContent = (props: Props) => {
-  const { terria, pathNotes, ellipsoid } = props;
+  const { terria, viewState, pathNotes, ellipsoid } = props;
   const [name, setName] = useState<string>("");
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const theme = useTheme();
@@ -29,6 +31,12 @@ const MeasurableDownloadContent = (props: Props) => {
   const [measurableDownload, setMeasurableDownload] =
     useState<MeasurableDownload | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (viewState.measurableDownloadPanelIsVisible) {
+      setName("");
+    }
+  }, [viewState.measurableDownloadPanelIsVisible]);
 
   useEffect(() => {
     if (ellipsoid) {

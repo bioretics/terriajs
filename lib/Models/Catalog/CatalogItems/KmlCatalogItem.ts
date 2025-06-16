@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { computed, makeObservable, override, runInAction } from "mobx";
+import { computed, makeObservable, override } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -29,7 +29,6 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
-import ViewState from "../../../ReactViewModels/ViewState";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -148,25 +147,16 @@ class KmlCatalogItem
     });
   }
 
-  protected async _exportData(
-    viewState?: ViewState,
-  ): Promise<ExportData | undefined> {
-    if (viewState) {
-      try{let action;
-      if (MeasurableGeometryMixin.isMixedInto(this)) {
-        if (this.canUseAsPath) {
-          action = Promise.resolve(this.computePath());
-        } else {
-          action = this.sampleFromKmlData.bind(this)();
-        }
-        await action;
-        runInAction(() => {
-          viewState.measurableDownloadPanelIsVisible = true;
-        });
-      }} catch (e) {
-        return this._exportDataFallback();
+  protected async _exportData(): Promise<ExportData | undefined> {
+    try {
+      let action;
+      if (this.canUseAsPath) {
+        action = Promise.resolve(this.computePath());
+      } else {
+        action = this.sampleFromKmlData.bind(this)();
       }
-    } else {
+      await action;
+    } catch (e) {
       return this._exportDataFallback();
     }
   }

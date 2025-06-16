@@ -72,6 +72,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
       <div className={Styles.body} style={{ padding: "20px" }}>
         <MeasurableDownloadContent
           terria={downloadProps.terria}
+          viewState={downloadProps.viewState}
           pathNotes={currentGeom.pathNotes ?? ""}
           ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
         />
@@ -118,6 +119,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
         <div className={Styles.body} style={{ padding: "20px" }}>
           <MeasurableDownloadContent
             terria={downloadProps.terria}
+            viewState={downloadProps.viewState}
             pathNotes={currentGeom.pathNotes ?? ""}
             ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
           />

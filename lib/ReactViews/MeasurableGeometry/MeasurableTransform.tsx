@@ -25,7 +25,7 @@ const MeasurableTransform = (props: Props) => {
     const baseDownloads = [
       {
         key: "jsonPolygon",
-        href: DataUri.make("json", generateGeoJsonPolygon(geom)),
+        href: DataUri.make("json", generateJsonPolygon(geom)),
         download: `${layerName}_polygon.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
       },
@@ -48,7 +48,7 @@ const MeasurableTransform = (props: Props) => {
         key: "jsonMultiPathPolygon",
         href: DataUri.make(
           "json",
-          generateMultiPathGeoJsonPolygon(terria.measurableGeomList)
+          generateMultiPathJsonPolygon(terria.measurableGeomList)
         ),
         download: `${name}_polygon_multipath.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
@@ -88,7 +88,7 @@ const MeasurableTransform = (props: Props) => {
       });
   };
 
-  const generateGeoJsonPolygon = (geom: MeasurableGeometry) => {
+  const generateJsonPolygon = (geom: MeasurableGeometry) => {
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
       CesiumMath.toDegrees(elem.latitude)
@@ -157,7 +157,7 @@ const MeasurableTransform = (props: Props) => {
     });
   };
 
-  const generateMultiPathGeoJsonPolygon = (
+  const generateMultiPathJsonPolygon = (
     geomList: MeasurableGeometry[]
   ): string => {
     return JSON.stringify({

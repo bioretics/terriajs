@@ -116,7 +116,7 @@ export default class MeasurableDownload {
       },
       {
         key: "jsonPolygon",
-        href: DataUri.make("json", this.generateGeoJsonPolygon(geom)),
+        href: DataUri.make("json", this.generateJsonPolygon(geom)),
         download: `${this.name}_polygon.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
       },
@@ -184,7 +184,7 @@ export default class MeasurableDownload {
       {
         key: "jsonMultiPathPolygon",
         href: geomList
-          ? DataUri.make("json", this.generateMultiPathGeoJsonPolygon(geomList))
+          ? DataUri.make("json", this.generateMultiPathJsonPolygon(geomList))
           : false,
         download: `${this.name}_polygon_multipath.json`,
         label: `${i18next.t("downloadData.polygon")} JSON`
@@ -263,7 +263,7 @@ export default class MeasurableDownload {
     return rows.join("\n");
   }
 
-  private generateGeoJsonPolygon(geom: MeasurableGeometry): string {
+  private generateJsonPolygon(geom: MeasurableGeometry): string {
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
       CesiumMath.toDegrees(elem.latitude)
@@ -577,7 +577,7 @@ export default class MeasurableDownload {
     return res.kml;
   }
 
-  private generateMultiPathGeoJsonPolygon(
+  private generateMultiPathJsonPolygon(
     geomList: MeasurableGeometry[]
   ): string {
     return JSON.stringify({
