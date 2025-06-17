@@ -1,0 +1,16 @@
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import { DownloadLink } from "./MeasurableDownload";
+import { MeasurableGeometry } from "./MeasurableGeometryManager";
+
+interface ExportableFormat {
+  generateDownloadLinks(
+    geom: MeasurableGeometry,
+    name: string,
+    pathNotes: string,
+    isMultiPath: boolean,
+    geomList?: MeasurableGeometry[],
+    ellipsoid?: Ellipsoid
+  ): Promise<DownloadLink[]>;
+}
+
+export default ExportableFormat;

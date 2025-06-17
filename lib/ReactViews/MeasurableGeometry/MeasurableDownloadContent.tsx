@@ -12,6 +12,7 @@ import MeasurableDownload, {
   DownloadLink
 } from "../../ViewModels/Measure/MeasurableDownload";
 import ViewState from "../../ReactViewModels/ViewState";
+import { observer } from "mobx-react";
 
 interface Props {
   terria: Terria;
@@ -20,7 +21,7 @@ interface Props {
   ellipsoid: Ellipsoid;
 }
 
-const MeasurableDownloadContent = (props: Props) => {
+const MeasurableDownloadContent = observer((props: Props) => {
   const { terria, viewState, pathNotes, ellipsoid } = props;
   const [name, setName] = useState<string>("");
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -33,42 +34,36 @@ const MeasurableDownloadContent = (props: Props) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    if (ellipsoid) {
+      const download = new MeasurableDownload(terria);
+      setMeasurableDownload(download);
+    }
+  }, [ellipsoid, terria]);
+
+  useEffect(() => {
     if (viewState.measurableDownloadPanelIsVisible) {
       setName("");
+      setSelectedFormat("");
     }
   }, [viewState.measurableDownloadPanelIsVisible]);
 
   useEffect(() => {
-    if (ellipsoid) {
-      const download = new MeasurableDownload(ellipsoid, "", "");
-      setMeasurableDownload(download);
-    }
-  }, [ellipsoid]);
-
-  useEffect(() => {
-    if (measurableDownload) {
-      measurableDownload.setName(name);
-      measurableDownload.setPathNotes(pathNotes);
-    }
-  }, [measurableDownload, name, pathNotes]);
-
-  useEffect(() => {
+    console.log("test geom", geom);
     const loadData = async () => {
-      if (measurableDownload && geom && ellipsoid) {
+      if (geom && name && measurableDownload) {
         try {
           setIsLoading(true);
 
-          await measurableDownload.initializeKmlData(
+          const allLinks = await measurableDownload.generateAllFormatLinks(
             geom,
-            downloadCurrent ? undefined : terria.measurableGeomList
+            name,
+            pathNotes,
+            !downloadCurrent,
+            downloadCurrent ? undefined : terria.measurableGeomList,
+            ellipsoid
           );
 
-          const links = measurableDownload.getDownloadLinks(
-            geom,
-            !downloadCurrent,
-            downloadCurrent ? undefined : terria.measurableGeomList
-          );
-          setDownloadLinks(links);
+          setDownloadLinks(allLinks);
         } catch (error) {
           console.error("Error loading download data:", error);
           setDownloadLinks([]);
@@ -80,23 +75,31 @@ const MeasurableDownloadContent = (props: Props) => {
 
     loadData();
   }, [
-    measurableDownload,
-    geom,
-    downloadCurrent,
-    terria.measurableGeomList,
-    ellipsoid,
     name,
-    pathNotes
+    geom,
+    pathNotes,
+    ellipsoid,
+    downloadCurrent,
+    measurableDownload,
+    terria.measurableGeomList,
+    viewState.measurableDownloadPanelIsVisible
   ]);
 
   const handleDownload = () => {
     if (measurableDownload) {
-      const linkObj = downloadLinks.find((link) => link.key === selectedFormat);
-      if (linkObj) {
-        measurableDownload.downloadFile(linkObj);
+      const success = measurableDownload.handleDownload(
+        downloadLinks,
+        selectedFormat
+      );
+      if (!success) {
+        console.error("Failed to download file");
       }
     }
   };
+
+  const isDownloadDisabled =
+    !measurableDownload ||
+    !measurableDownload.isValidForDownload(name, selectedFormat, isLoading);
 
   return (
     <>
@@ -149,15 +152,15 @@ const MeasurableDownloadContent = (props: Props) => {
             margin-left: 10px;
           `}
           onClick={handleDownload}
-          disabled={
-            !name || selectedFormat === "" || !measurableDownload || isLoading
-          }
+          disabled={isDownloadDisabled}
         >
-          {isLoading ? i18next.t("loader.loading") : i18next.t("Download")}
+          {isLoading
+            ? i18next.t("loader.loadingMessage")
+            : i18next.t("Download")}
         </Button>
       </div>
     </>
   );
-};
+});
 
 export default MeasurableDownloadContent;
