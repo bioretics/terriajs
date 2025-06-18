@@ -132,8 +132,7 @@ class KmlCatalogItem
   }
 
   private async generateMultiPathKmlPolygon(
-    geomList: MeasurableGeometry[],
-    name: string
+    geomList: MeasurableGeometry[]
   ): Promise<string | undefined> {
     if (!geomList?.length) return undefined;
 
@@ -223,8 +222,7 @@ class KmlCatalogItem
 
   private async generateKmlPolygon(
     geom: MeasurableGeometry,
-    name: string,
-    ellipsoid?: Ellipsoid
+    name: string
   ): Promise<string | undefined> {
     if (!geom?.stopPoints) return undefined;
 
@@ -350,8 +348,7 @@ class KmlCatalogItem
 
     if (isMultiPath && geomList) {
       const multiPathPolygon = await this.generateMultiPathKmlPolygon(
-        geomList,
-        name
+        geomList
       );
       const multiPathLines = await this.generateMultiPathKmlLines(
         geomList,
@@ -384,7 +381,7 @@ class KmlCatalogItem
         }
       );
     } else {
-      const kmlPolygon = await this.generateKmlPolygon(geom, name, ellipsoid);
+      const kmlPolygon = await this.generateKmlPolygon(geom, name);
       const kmlLines = await this.generateKmlLines(geom, name, ellipsoid);
       const kmlPoints = await this.generateKmlPoints(geom, name, ellipsoid);
 

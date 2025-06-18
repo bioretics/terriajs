@@ -21,7 +21,6 @@ import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeomet
 import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
 import DataUri from "../../../Core/DataUri";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 
 // Types of CSVs:
 // - Points - Latitude and longitude columns or address
@@ -108,10 +107,6 @@ export default class CsvCatalogItem
   async generateDownloadLinks(
     geom: MeasurableGeometry,
     name: string,
-    pathNotes: string,
-    isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [
       {

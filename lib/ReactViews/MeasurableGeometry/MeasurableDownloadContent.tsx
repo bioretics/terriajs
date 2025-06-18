@@ -48,7 +48,6 @@ const MeasurableDownloadContent = observer((props: Props) => {
   }, [viewState.measurableDownloadPanelIsVisible]);
 
   useEffect(() => {
-    console.log("test geom", geom);
     const loadData = async () => {
       if (geom && name && measurableDownload) {
         try {

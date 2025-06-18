@@ -29,7 +29,6 @@ import DataUri from "../../../Core/DataUri";
 import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
 import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 
 class GeoJsonCatalogItem
   extends CesiumIonMixin(GeoJsonMixin(CreateModel(GeoJsonCatalogItemTraits)))
@@ -136,7 +135,7 @@ class GeoJsonCatalogItem
     }
 
     return JSON.stringify({
-      name: this.name || "",
+      name: name || "",
       type: "Feature",
       geometry: {
         type: "Polygon",
@@ -199,7 +198,6 @@ class GeoJsonCatalogItem
     pathNotes: string,
     isMultiPath: boolean,
     geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [];
 
@@ -465,7 +463,6 @@ class GeoJsonCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, positions)
       : positions;
 
-    const name = (fc as any).name || "";
     const pathNotes = (fc as any).path_notes || "";
 
     this.terria.measurableGeometryManager[
@@ -475,7 +472,6 @@ class GeoJsonCatalogItem
       false,
       true,
       descriptions,
-      name,
       pathNotes
     );
   }

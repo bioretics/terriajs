@@ -400,13 +400,44 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       });
     }
 
+    private async tryGeoJsonOrGpxSampling(): Promise<void> {
+      try {
+        if (typeof (this as any).sampleFromGeojsonData === "function") {
+          await (this as any).sampleFromGeojsonData();
+          return;
+        }
+        throw new TerriaError({
+          sender: this,
+          message: "No data available to download."
+        });
+      } catch (geoJsonError) {
+        try {
+          if (typeof (this as any).sampleFromGpxData === "function") {
+            await (this as any).sampleFromGpxData();
+            return;
+          }
+
+          throw new TerriaError({
+            sender: this,
+            message: "No data available to download."
+          });        
+        } catch (gpxError) {
+
+          throw new TerriaError({
+            sender: this,
+            message: "No data available to download."
+          });
+        }
+      }
+    }
+
     protected async _exportData(): Promise<ExportData | undefined> {
       try {
         let action;
         if (this.canUseAsPath) {
           action = Promise.resolve(this.computePath());
         } else {
-          (this as any).sampleFromGeojsonData();
+          (this as any).tryGeoJsonOrGpxSampling();
         }
         await action;
       } catch (e) {
