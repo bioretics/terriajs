@@ -49,7 +49,10 @@ const MeasurableDownloadContent = observer((props: Props) => {
       setSelectedFormat("");
       setSelectedElementIndex(terria.measurableGeometryIndex);
     }
-  }, [viewState.measurableDownloadPanelIsVisible]);
+  }, [
+    terria.measurableGeometryIndex,
+    viewState.measurableDownloadPanelIsVisible
+  ]);
 
   useEffect(() => {
     const loadData = async () => {
