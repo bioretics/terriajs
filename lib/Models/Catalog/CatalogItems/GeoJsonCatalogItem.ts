@@ -195,7 +195,6 @@ class GeoJsonCatalogItem
   async generateDownloadLinks(
     geom: MeasurableGeometry,
     name: string,
-    pathNotes: string,
     isMultiPath: boolean,
     geomList?: MeasurableGeometry[],
   ): Promise<DownloadLink[]> {
@@ -210,7 +209,7 @@ class GeoJsonCatalogItem
             this.generateMultiPathJsonPolygon(geomList, name)
           ),
           download: `${name}_polygon_multipath.json`,
-          label: `${i18next.t("downloadData.polygon")} JSON`
+          label: `Multi ${i18next.t("downloadData.polygon")} JSON`
         },
         {
           key: "jsonMultiPathLines",
@@ -219,7 +218,7 @@ class GeoJsonCatalogItem
             this.generateMultiPathJsonLineStrings(geomList, name)
           ),
           download: `${name}_lines_multipath.json`,
-          label: `${i18next.t("downloadData.lines")} JSON`
+          label: `Multi ${i18next.t("downloadData.lines")} JSON`
         }
       );
     } else {

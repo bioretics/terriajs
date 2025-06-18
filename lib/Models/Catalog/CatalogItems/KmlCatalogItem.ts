@@ -339,7 +339,6 @@ class KmlCatalogItem
   async generateDownloadLinks(
     geom: MeasurableGeometry,
     name: string,
-    pathNotes: string,
     isMultiPath: boolean,
     geomList?: MeasurableGeometry[],
     ellipsoid?: Ellipsoid
@@ -366,7 +365,7 @@ class KmlCatalogItem
               )
             : false,
           download: `${name}_polygon_multipath.kml`,
-          label: `${i18next.t("downloadData.polygon")} KML`
+          label: `Multi ${i18next.t("downloadData.polygon")} KML`
         },
         {
           key: "kmlMultiPathLines",
@@ -377,7 +376,7 @@ class KmlCatalogItem
               )
             : false,
           download: `${name}_lines_multipath.kml`,
-          label: `${i18next.t("downloadData.lines")} KML`
+          label: `Multi ${i18next.t("downloadData.lines")} KML`
         }
       );
     } else {

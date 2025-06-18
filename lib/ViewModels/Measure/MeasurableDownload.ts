@@ -35,7 +35,6 @@ export default class MeasurableDownload {
   async generateAllFormatLinks(
     geom: MeasurableGeometry,
     name: string,
-    pathNotes: string,
     isMultiPath: boolean,
     geomList?: MeasurableGeometry[],
     ellipsoid?: Ellipsoid
@@ -53,7 +52,6 @@ export default class MeasurableDownload {
           const links = await handler.generateDownloadLinks(
             geom,
             name,
-            pathNotes,
             isMultiPath,
             geomList,
             ellipsoid

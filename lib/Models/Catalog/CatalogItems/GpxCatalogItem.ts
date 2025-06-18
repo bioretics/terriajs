@@ -105,30 +105,32 @@ class GpxCatalogItem
 
   async generateDownloadLinks(
     geom: MeasurableGeometry,
-    name: string
+    name: string,
+    isMultiPath: boolean
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [];
-
-    downloads.push(
-      {
-        key: "gpxPolygon",
-        href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
-        download: `${name}_polygon.gpx`,
-        label: `${i18next.t("downloadData.polygon")} GPX`
-      },
-      {
-        key: "gpxTracks",
-        href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
-        download: `${name}_lines.gpx`,
-        label: `${i18next.t("downloadData.lines")} GPX`
-      },
-      {
-        key: "gpxWaypoints",
-        href: DataUri.make("xml", this.generateGpxWaypoints(geom, name)),
-        download: `${name}_points.gpx`,
-        label: `${i18next.t("downloadData.points")} GPX`
-      }
-    );
+    if (!isMultiPath) {
+      downloads.push(
+        {
+          key: "gpxPolygon",
+          href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
+          download: `${name}_polygon.gpx`,
+          label: `${i18next.t("downloadData.polygon")} GPX`
+        },
+        {
+          key: "gpxTracks",
+          href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
+          download: `${name}_lines.gpx`,
+          label: `${i18next.t("downloadData.lines")} GPX`
+        },
+        {
+          key: "gpxWaypoints",
+          href: DataUri.make("xml", this.generateGpxWaypoints(geom, name)),
+          download: `${name}_points.gpx`,
+          label: `${i18next.t("downloadData.points")} GPX`
+        }
+      );
+    }
 
     return downloads.filter((download) => {
       if (geom.onlyPoints) {
@@ -222,7 +224,7 @@ class GpxCatalogItem
                 feature.properties?.name || feature.properties?.desc || ""
               );
             } else {
-              descriptions.push(""); 
+              descriptions.push("");
             }
           });
           break;
@@ -270,7 +272,7 @@ class GpxCatalogItem
       false,
       true,
       descriptions,
-      pathNotes,
+      pathNotes
     );
   }
 

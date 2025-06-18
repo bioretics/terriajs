@@ -24,7 +24,10 @@ interface Props {
 const MeasurableDownloadContent = observer((props: Props) => {
   const { terria, viewState, pathNotes, ellipsoid } = props;
   const [name, setName] = useState<string>("");
-  const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+  const [selectedElementIndex, setSelectedElementIndex] = useState<number>(
+    terria.measurableGeometryIndex
+  );
+  const geom = terria.measurableGeomList[selectedElementIndex];
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = useState<string>("");
   const [downloadCurrent, setDownloadCurrent] = useState<boolean>(true);
@@ -44,21 +47,25 @@ const MeasurableDownloadContent = observer((props: Props) => {
     if (viewState.measurableDownloadPanelIsVisible) {
       setName("");
       setSelectedFormat("");
+      setSelectedElementIndex(terria.measurableGeometryIndex);
     }
   }, [viewState.measurableDownloadPanelIsVisible]);
 
   useEffect(() => {
     const loadData = async () => {
-      if (geom && name && measurableDownload) {
+      if (geom && measurableDownload) {
         try {
           setIsLoading(true);
+          const isMultiPath = !downloadCurrent;
+          const geomListForMultiPath = !downloadCurrent
+            ? terria.measurableGeomList
+            : undefined;
 
           const allLinks = await measurableDownload.generateAllFormatLinks(
             geom,
             name,
-            pathNotes,
-            !downloadCurrent,
-            downloadCurrent ? undefined : terria.measurableGeomList,
+            isMultiPath,
+            geomListForMultiPath,
             ellipsoid
           );
 
@@ -76,6 +83,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
   }, [
     name,
     geom,
+    selectedElementIndex,
     pathNotes,
     ellipsoid,
     downloadCurrent,
@@ -102,6 +110,37 @@ const MeasurableDownloadContent = observer((props: Props) => {
 
   return (
     <>
+      {terria.measurableGeomList.length > 1 && (
+        <div style={{ marginBottom: "10px" }}>
+          <Select
+            title={i18next.t("measurableGeometry.changePath")}
+            value={selectedElementIndex}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+              const newIndex = parseInt(e.target.value, 10);
+              setSelectedElementIndex(newIndex);
+              setSelectedFormat("");
+              e.target.blur();
+            }}
+            onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              e.target.blur()
+            }
+            disabled={isLoading || !downloadCurrent}
+          >
+            {terria.measurableGeomList.map((geom, index) => {
+              const hasValidPoints =
+                geom.stopPoints && geom.stopPoints.length > 0;
+              return (
+                <option key={index} value={index} disabled={!hasValidPoints}>
+                  {`${i18next.t("measurableGeometry.elementPlaceholder")} ${
+                    index + 1
+                  }`}
+                </option>
+              );
+            })}
+          </Select>
+        </div>
+      )}
+
       <div style={{ marginBottom: "5px" }}>
         <Input
           dark
@@ -111,18 +150,20 @@ const MeasurableDownloadContent = observer((props: Props) => {
           onChange={(e) => setName(e.target.value)}
         />
       </div>
-      <div>
-        <label style={{ display: "flex", alignItems: "center" }}>
-          <Checkbox
-            isDisabled={terria.measurableGeomList.length <= 1}
-            isChecked={downloadCurrent}
-            onChange={(e) => setDownloadCurrent(e.target.checked)}
-          />
-          <span style={{ marginTop: "5px" }}>
-            {"Download " + i18next.t("downloadData.downloadCurrent")}
-          </span>
-        </label>
-      </div>
+      {terria.measurableGeomList.length > 1 && (
+        <div>
+          <label style={{ display: "flex", alignItems: "center" }}>
+            <Checkbox
+              isDisabled={terria.measurableGeomList.length <= 1}
+              isChecked={downloadCurrent}
+              onChange={(e) => setDownloadCurrent(e.target.checked)}
+            />
+            <span style={{ marginTop: "5px" }}>
+              {"Download " + i18next.t("downloadData.downloadCurrent")}
+            </span>
+          </label>
+        </div>
+      )}
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
           title={i18next.t("downloadData.formatPlaceholder")}

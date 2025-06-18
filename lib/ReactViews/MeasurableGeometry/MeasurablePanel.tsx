@@ -85,6 +85,7 @@ const MeasurablePanel = observer((props: Props) => {
   });
 
   const close = action(() => {
+    const isMultiPath = terria.measurableGeomList.length > 1;
     MeasurablePanelManager.removeAllMarkers();
     terria.measurableGeomList.splice(1, terria.measurableGeomList.length - 1);
     terria.measurableGeometryManager.splice(
@@ -107,10 +108,15 @@ const MeasurablePanel = observer((props: Props) => {
       }
       viewState.terria.mapNavigationModel.enable(id);
     });
+
+    if (isMultiPath) {
+      setTimeout(() => {
+        close();
+      }, 5);
+    }
   });
 
   const toggleCollapsed = action(() => {
-    console.log("toggleCollapsed");
     viewState.measurablePanelIsCollapsed =
       !viewState.measurablePanelIsCollapsed;
   });
