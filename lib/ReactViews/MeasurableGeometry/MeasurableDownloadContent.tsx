@@ -6,7 +6,6 @@ import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
 import Select from "../../Styled/Select";
 import Terria from "../../Models/Terria";
-import Checkbox from "../../Styled/Checkbox";
 import Input from "../../Styled/Input";
 import MeasurableDownload, {
   DownloadLink
@@ -27,10 +26,15 @@ const MeasurableDownloadContent = observer((props: Props) => {
   const [selectedElementIndex, setSelectedElementIndex] = useState<number>(
     terria.measurableGeometryIndex
   );
-  const geom = terria.measurableGeomList[selectedElementIndex];
+  const [isSelectAll, setIsSelectAll] = useState<boolean>(
+    terria.measurableGeomList.length > 1
+  );
+  const geom = isSelectAll
+    ? terria.measurableGeomList[terria.measurableGeometryIndex]
+    : terria.measurableGeomList[selectedElementIndex];
+
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = useState<string>("");
-  const [downloadCurrent, setDownloadCurrent] = useState<boolean>(true);
   const [downloadLinks, setDownloadLinks] = useState<DownloadLink[]>([]);
   const [measurableDownload, setMeasurableDownload] =
     useState<MeasurableDownload | null>(null);
@@ -48,10 +52,12 @@ const MeasurableDownloadContent = observer((props: Props) => {
       setName("");
       setSelectedFormat("");
       setSelectedElementIndex(terria.measurableGeometryIndex);
+      setIsSelectAll(terria.measurableGeomList.length > 1);
     }
   }, [
     terria.measurableGeometryIndex,
-    viewState.measurableDownloadPanelIsVisible
+    viewState.measurableDownloadPanelIsVisible,
+    terria.measurableGeomList.length
   ]);
 
   useEffect(() => {
@@ -59,8 +65,8 @@ const MeasurableDownloadContent = observer((props: Props) => {
       if (geom && measurableDownload) {
         try {
           setIsLoading(true);
-          const isMultiPath = !downloadCurrent;
-          const geomListForMultiPath = !downloadCurrent
+          const isMultiPath = isSelectAll;
+          const geomListForMultiPath = isSelectAll
             ? terria.measurableGeomList
             : undefined;
 
@@ -87,9 +93,9 @@ const MeasurableDownloadContent = observer((props: Props) => {
     name,
     geom,
     selectedElementIndex,
+    isSelectAll,
     pathNotes,
     ellipsoid,
-    downloadCurrent,
     measurableDownload,
     terria.measurableGeomList,
     viewState.measurableDownloadPanelIsVisible
@@ -111,29 +117,44 @@ const MeasurableDownloadContent = observer((props: Props) => {
     !measurableDownload ||
     !measurableDownload.isValidForDownload(name, selectedFormat, isLoading);
 
+  const handleElementChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+
+    if (value === "all") {
+      setIsSelectAll(true);
+      setSelectedElementIndex(terria.measurableGeometryIndex);
+    } else {
+      setIsSelectAll(false);
+      setSelectedElementIndex(parseInt(value, 10));
+    }
+
+    setSelectedFormat("");
+    e.target.blur();
+  };
+
   return (
     <>
       {terria.measurableGeomList.length > 1 && (
         <div style={{ marginBottom: "10px" }}>
           <Select
             title={i18next.t("measurableGeometry.changePath")}
-            value={selectedElementIndex}
-            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-              const newIndex = parseInt(e.target.value, 10);
-              setSelectedElementIndex(newIndex);
-              setSelectedFormat("");
-              e.target.blur();
-            }}
+            value={isSelectAll ? "all" : selectedElementIndex.toString()}
+            onChange={handleElementChange}
             onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
               e.target.blur()
             }
-            disabled={isLoading || !downloadCurrent}
+            disabled={isLoading}
           >
+            <option value="all">{i18next.t("downloadData.selectAll")}</option>
             {terria.measurableGeomList.map((geom, index) => {
               const hasValidPoints =
                 geom.stopPoints && geom.stopPoints.length > 0;
               return (
-                <option key={index} value={index} disabled={!hasValidPoints}>
+                <option
+                  key={index}
+                  value={index.toString()}
+                  disabled={!hasValidPoints}
+                >
                   {`${i18next.t("measurableGeometry.elementPlaceholder")} ${
                     index + 1
                   }`}
@@ -153,20 +174,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
           onChange={(e) => setName(e.target.value)}
         />
       </div>
-      {terria.measurableGeomList.length > 1 && (
-        <div>
-          <label style={{ display: "flex", alignItems: "center" }}>
-            <Checkbox
-              isDisabled={terria.measurableGeomList.length <= 1}
-              isChecked={downloadCurrent}
-              onChange={(e) => setDownloadCurrent(e.target.checked)}
-            />
-            <span style={{ marginTop: "5px" }}>
-              {"Download " + i18next.t("downloadData.downloadCurrent")}
-            </span>
-          </label>
-        </div>
-      )}
+
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
           title={i18next.t("downloadData.formatPlaceholder")}

@@ -51,6 +51,14 @@ const MeasurableDownloadPanel = observer((props: Props) => {
             runInAction(() => {
               downloadProps.viewState.measurableDownloadPanelIsVisible = false;
             });
+            downloadProps.terria.measurableGeomList.splice(
+              1,
+              downloadProps.terria.measurableGeomList.length - 1
+            );
+            downloadProps.terria.measurableGeometryManager.splice(
+              1,
+              downloadProps.terria.measurableGeometryManager.length - 1
+            );
           }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
