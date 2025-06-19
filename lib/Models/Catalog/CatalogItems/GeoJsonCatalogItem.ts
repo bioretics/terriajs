@@ -196,7 +196,7 @@ class GeoJsonCatalogItem
     geom: MeasurableGeometry,
     name: string,
     isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
+    geomList?: MeasurableGeometry[]
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [];
 

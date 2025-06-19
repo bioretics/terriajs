@@ -420,9 +420,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           throw new TerriaError({
             sender: this,
             message: "No data available to download."
-          });        
+          });
         } catch (gpxError) {
-
           throw new TerriaError({
             sender: this,
             message: "No data available to download."

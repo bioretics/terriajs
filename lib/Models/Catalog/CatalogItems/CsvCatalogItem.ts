@@ -75,10 +75,7 @@ export default class CsvCatalogItem
     return super.cacheDuration || "1d";
   }
 
-  private generateCsvData(
-    geom: MeasurableGeometry,
-    name: string
-  ): string {
+  private generateCsvData(geom: MeasurableGeometry, name: string): string {
     const headers = [
       "name",
       "path_notes",
@@ -106,7 +103,7 @@ export default class CsvCatalogItem
 
   async generateDownloadLinks(
     geom: MeasurableGeometry,
-    name: string,
+    name: string
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [
       {

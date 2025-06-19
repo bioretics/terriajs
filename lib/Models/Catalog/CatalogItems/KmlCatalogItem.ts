@@ -346,9 +346,7 @@ class KmlCatalogItem
     const downloads: DownloadLink[] = [];
 
     if (isMultiPath && geomList) {
-      const multiPathPolygon = await this.generateMultiPathKmlPolygon(
-        geomList
-      );
+      const multiPathPolygon = await this.generateMultiPathKmlPolygon(geomList);
       const multiPathLines = await this.generateMultiPathKmlLines(
         geomList,
         name,
