@@ -96,6 +96,8 @@
     "geometrySummaryAreaAir": "Air area",
     "geometrySummarySlope": "Slope %",
     "textareaPlaceholder": "Enter your notes here...",
+    "pathNotesTitle": "Provide a description of the path",
+    "pointNotesTitle": "Provide a description of the point",
     "elementPlaceholder": "Element No.",
     "changePath": "Change the current path",
     "addPath": "Add a new path",

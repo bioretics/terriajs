@@ -99,6 +99,8 @@
     "geometrySummaryAreaAir": "Area in aria",
     "geometrySummarySlope": "Pendenza %",
     "textareaPlaceholder": "Inserisci le tue note...",
+    "pathNotesTitle": "Aggiungi una descrizione del percorso",
+    "pointNotesTitle": "Aggiungi una descrizione del punto",
     "elementPlaceholder": "Elemento num.",
     "changePath": "Cambia il percorso",
     "addPath": "Aggiungi un nuovo percorso",

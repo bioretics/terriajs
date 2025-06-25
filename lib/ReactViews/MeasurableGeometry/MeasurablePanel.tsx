@@ -576,6 +576,7 @@ const MeasurablePanel = observer((props: Props) => {
       <>
         {!isMobile && (
           <StyledTextArea
+            title={i18next.t("measurableGeometry.pathNotesTitle")}
             placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
             dark
             value={currentGeom.pathNotes}
@@ -1170,6 +1171,7 @@ const MeasurablePanel = observer((props: Props) => {
           <td>
             <StyledTextArea
               placeholder="Note..."
+              title={i18next.t("measurableGeometry.pointNotesTitle")}
               value={localText}
               dark
               onChange={(e) => setLocalText(e.target.value)}
