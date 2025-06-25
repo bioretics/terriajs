@@ -509,6 +509,7 @@ const MeasurablePanel = observer((props: Props) => {
   const renderToggleDistanceLabels = () => (
     <label style={{ display: "flex", alignItems: "center", margin: "10px" }}>
       <Checkbox
+        title={i18next.t("measurableGeometry.showDistanceCheckboxTitle")}
         isChecked={showDistances}
         isDisabled={
           !terria.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints
