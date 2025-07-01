@@ -532,7 +532,14 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!currentGeom) return null;
 
-    if (currentGeom.hasArea) {
+    const activeToolIsPolygon = () => {
+      const polygonTool = terria.mapNavigationModel.findItem(
+        MeasurePolygonTool.id
+      );
+      return polygonTool?.controller?.active === true;
+    };
+
+    if (activeToolIsPolygon() || currentGeom.hasArea || currentGeom.isClosed) {
       return (
         <>
           <Text textLight style={{ marginLeft: 1 }} title="">
@@ -541,16 +548,16 @@ const MeasurablePanel = observer((props: Props) => {
           <small>
             {renderSummaryTable(
               [
-                "measurableGeometry.geometrySummaryPerimeterGeo",
-                "measurableGeometry.geometrySummaryPerimeterAir",
                 "measurableGeometry.geometrySummaryAreaGeo",
-                "measurableGeometry.geometrySummaryAreaAir"
+                "measurableGeometry.geometrySummaryAreaAir",
+                "measurableGeometry.geometrySummaryPerimeterGeo",
+                "measurableGeometry.geometrySummaryPerimeterAir"
               ],
               [
-                prettifyNumber(currentGeom.geodeticDistance ?? 0),
-                prettifyNumber(currentGeom.airDistance ?? 0),
                 prettifyNumber(currentGeom.geodeticArea ?? 0, true),
-                prettifyNumber(currentGeom.airArea ?? 0, true)
+                prettifyNumber(currentGeom.airArea ?? 0, true),
+                prettifyNumber(currentGeom.geodeticDistance ?? 0),
+                prettifyNumber(currentGeom.airDistance ?? 0)
               ]
             )}
           </small>
