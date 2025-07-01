@@ -147,7 +147,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
           const ok = await tryStep(i);
           if (!ok) break;
         }
-        setCurrentPointIndex(i + step);
+
+        const nextIndex = i + step;
+
+        if (nextIndex === end || nextIndex < 0 || nextIndex >= pts.length) {
+          const finalIndex = step > 0 ? pts.length - 1 : 0;
+          setCurrentPointIndex(finalIndex);
+          break;
+        }
+
+        setCurrentPointIndex(nextIndex);
         viewer.notifyRepaintRequired();
       }
     };
@@ -168,7 +177,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const pts = getPoints();
     const camera = terria.cesium?.scene.camera;
     if (!pts?.length || !camera) return;
-    if (currentPointIndex !== startIdxRef.current && !viewState.isPlayingPath) {
+
+    if (!viewState.isPlayingPath && !isAtEndPoint()) {
       runInAction(() => {
         viewState.isPlayingPath = true;
       });
@@ -199,6 +209,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const camera = terria.cesium?.scene.camera;
     if (!pts?.length || !camera) return;
     const targetIdx = startIdxRef.current;
+    reverseRef.current = startIdxRef.current === pts.length - 1;
     const point = pts[targetIdx];
     const dist = Cartesian3.distance(
       camera.position,
@@ -229,6 +240,21 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (viewState.isPlayingPath) playPath();
   }, [viewState.isPlayingPath, playPath]);
 
+  const isAtEndPoint = useCallback(() => {
+    const pts = getPoints();
+    if (!pts?.length) return false;
+
+    const atEnd =
+      currentPointIndex === 0 || currentPointIndex === pts.length - 1;
+    console.log("isAtEndPoint check:", {
+      currentIndex: currentPointIndex,
+      totalPoints: pts.length,
+      isAtEnd: atEnd
+    });
+
+    return atEnd;
+  }, [currentPointIndex, getPoints]);
+
   return {
     playSpeed,
     setPlaySpeed,
@@ -236,6 +262,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     isCameraMoving,
     countdown,
     currentPointIndex,
+    isAtEndPoint,
     onPlay,
     onPause,
     onStop

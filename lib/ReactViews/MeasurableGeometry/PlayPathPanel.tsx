@@ -28,6 +28,7 @@ const PlayPathPanel = observer((props: Props) => {
     isCameraMoving,
     countdown,
     currentPointIndex,
+    isAtEndPoint,
     onPlay,
     onPause,
     onStop
@@ -107,7 +108,7 @@ const PlayPathPanel = observer((props: Props) => {
               styledWidth="16px"
             />
           </Button>
-          {(playingPath || currentPointIndex !== 0) && (
+          {(playingPath || !isAtEndPoint) && (
             <Button
               onClick={onStop}
               title={i18next.t("playPath.tooltip.stop")}
