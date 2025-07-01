@@ -261,7 +261,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     playingPath: viewState.isPlayingPath,
     isCameraMoving,
     countdown,
-    currentPointIndex,
     isAtEndPoint,
     onPlay,
     onPause,

@@ -27,7 +27,6 @@ const PlayPathPanel = observer((props: Props) => {
     playingPath,
     isCameraMoving,
     countdown,
-    currentPointIndex,
     isAtEndPoint,
     onPlay,
     onPause,
