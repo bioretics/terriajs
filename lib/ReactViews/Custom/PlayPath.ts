@@ -25,6 +25,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!geom) return;
     const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
     return pts;
   }, [terria]);
@@ -178,7 +179,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const camera = terria.cesium?.scene.camera;
     if (!pts?.length || !camera) return;
 
-    if (!viewState.isPlayingPath && !isAtEndPoint()) {
+    if (
+      !viewState.isPlayingPath &&
+      !(currentPointIndex === 0 || currentPointIndex === pts.length - 1)
+    ) {
       runInAction(() => {
         viewState.isPlayingPath = true;
       });
@@ -240,28 +244,14 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (viewState.isPlayingPath) playPath();
   }, [viewState.isPlayingPath, playPath]);
 
-  const isAtEndPoint = useCallback(() => {
-    const pts = getPoints();
-    if (!pts?.length) return false;
-
-    const atEnd =
-      currentPointIndex === 0 || currentPointIndex === pts.length - 1;
-    console.log("isAtEndPoint check:", {
-      currentIndex: currentPointIndex,
-      totalPoints: pts.length,
-      isAtEnd: atEnd
-    });
-
-    return atEnd;
-  }, [currentPointIndex, getPoints]);
-
   return {
     playSpeed,
     setPlaySpeed,
     playingPath: viewState.isPlayingPath,
     isCameraMoving,
     countdown,
-    isAtEndPoint,
+    currentPointIndex,
+    pointsSize: getPoints()?.length,
     onPlay,
     onPause,
     onStop

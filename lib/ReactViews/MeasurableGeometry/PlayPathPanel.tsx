@@ -5,7 +5,6 @@ import Icon, { StyledIcon } from "../../Styled/Icon";
 import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
-import React from "react";
 import Button from "../../Styled/Button";
 import { useTheme } from "styled-components";
 import Slider from "rc-slider";
@@ -27,7 +26,8 @@ const PlayPathPanel = observer((props: Props) => {
     playingPath,
     isCameraMoving,
     countdown,
-    isAtEndPoint,
+    currentPointIndex,
+    pointsSize,
     onPlay,
     onPause,
     onStop
@@ -107,7 +107,9 @@ const PlayPathPanel = observer((props: Props) => {
               styledWidth="16px"
             />
           </Button>
-          {(playingPath || !isAtEndPoint) && (
+          {(playingPath ||
+            (currentPointIndex > 0 &&
+              currentPointIndex < pointsSize!! - 1)) && (
             <Button
               onClick={onStop}
               title={i18next.t("playPath.tooltip.stop")}
