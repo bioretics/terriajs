@@ -585,7 +585,11 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                     `}
                   >
-                    {((currentGeom.geodeticArea ?? 0) * 0.0001).toFixed(4)} ha
+                    {(currentGeom.geodeticArea ?? 0) > 0
+                      ? `${((currentGeom.geodeticArea ?? 0) * 0.0001).toFixed(
+                          4
+                        )} ha`
+                      : ""}
                   </td>
                   <td
                     css={`
@@ -599,7 +603,9 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                     `}
                   >
-                    {((currentGeom.airArea ?? 0) * 0.0001).toFixed(4)} ha
+                    {(currentGeom.airArea ?? 0) > 0
+                      ? `${((currentGeom.airArea ?? 0) * 0.0001).toFixed(4)} ha`
+                      : ""}
                   </td>
                 </tr>
               </tbody>
