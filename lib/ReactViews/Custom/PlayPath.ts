@@ -93,7 +93,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       ? Cartesian3.distance(camera.position, cartesians[initialIdx])
       : 1000;
 
-    const duration = 3 / playSpeedRef.current;
     const isResume = initialIdx !== startIdxRef.current;
 
     const waitForRender = () =>
@@ -118,6 +117,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       });
 
     const tryStep = async (i: number) => {
+      const duration = 3 / playSpeedRef.current;
       let hpr: HeadingPitchRange | undefined;
       if (
         useLookAt &&

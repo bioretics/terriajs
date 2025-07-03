@@ -141,7 +141,6 @@ const PlayPathPanel = observer((props: Props) => {
             max={3}
             step={0.1}
             value={playSpeed}
-            disabled={playingPath}
             onChange={(val) => {
               setPlaySpeed(val);
             }}
