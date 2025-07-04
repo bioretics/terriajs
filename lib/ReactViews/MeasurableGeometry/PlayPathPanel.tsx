@@ -131,21 +131,21 @@ const PlayPathPanel = observer((props: Props) => {
               styledWidth="16px"
             />
           </Button>
-          {(playingPath ||
-            (currentPointIndex > 0 &&
-              currentPointIndex < pointsSize!! - 1)) && (
-            <Button
-              onClick={onStop}
-              title={i18next.t("playPath.tooltip.stop")}
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-                min-width: 50px;
-              `}
-            >
-              <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
-            </Button>
-          )}
+          <Button
+            onClick={onStop}
+            title={i18next.t("playPath.tooltip.stop")}
+            disabled={
+              !playingPath &&
+              !(currentPointIndex > 0 && currentPointIndex < pointsSize!! - 1)
+            }
+            css={`
+              color: ${theme.textLight};
+              background: ${theme.colorPrimary};
+              min-width: 50px;
+            `}
+          >
+            <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
+          </Button>
         </div>
         <div
           className="no-drag"
