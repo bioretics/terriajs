@@ -23,6 +23,22 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
 
+  const resetPlayPath = useCallback(() => {
+    if (viewState.isPlayingPath) {
+      abortPlayingPathRef.current = false;
+      runInAction(() => {
+        viewState.isPlayingPath = false;
+      });
+    }
+
+    setCurrentPointIndex(0);
+    setCountdown(null);
+    setIsCameraMoving(false);
+    startIdxRef.current = 0;
+    reverseRef.current = false;
+    currentPointIndexRef.current = 0;
+  }, [viewState]);
+
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
@@ -254,6 +270,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     pointsSize: getPoints()?.length,
     onPlay,
     onPause,
-    onStop
+    onStop,
+    resetPlayPath
   };
 }

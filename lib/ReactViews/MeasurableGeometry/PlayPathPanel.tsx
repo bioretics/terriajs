@@ -11,6 +11,7 @@ import Slider from "rc-slider";
 import usePlayPath from "../Custom/PlayPath";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
+import { useEffect, useState } from "react";
 
 interface Props {
   terria: Terria;
@@ -20,6 +21,10 @@ interface Props {
 
 const PlayPathPanel = observer((props: Props) => {
   const theme = useTheme();
+  const [lastGeom, setLastGeom] = useState(
+    props.terria.measurableGeomList[props.terria.measurableGeometryIndex]
+  );
+
   const {
     playSpeed,
     setPlaySpeed,
@@ -30,8 +35,27 @@ const PlayPathPanel = observer((props: Props) => {
     pointsSize,
     onPlay,
     onPause,
-    onStop
+    onStop,
+    resetPlayPath
   } = usePlayPath(props.terria, props.viewState);
+
+  const currentGeom =
+    props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
+  useEffect(() => {
+    const currentGeom =
+      props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
+
+    if (currentGeom !== lastGeom) {
+      resetPlayPath();
+      setLastGeom(currentGeom);
+    }
+  }, [
+    currentGeom,
+    props.terria.measurableGeomList,
+    props.terria.measurableGeometryIndex,
+    lastGeom,
+    resetPlayPath
+  ]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: props.viewState.playPathPanelIsVisible,
@@ -81,11 +105,11 @@ const PlayPathPanel = observer((props: Props) => {
         <div
           style={{
             display: "flex",
-            flexDirection: "column",
+            flexDirection: "row",
             alignItems: "stretch",
+            justifyContent: "center",
             gap: 8,
-            width: "100%",
-            maxWidth: "100px"
+            width: "100%"
           }}
         >
           <Button
@@ -94,7 +118,7 @@ const PlayPathPanel = observer((props: Props) => {
             css={`
               color: ${theme.textLight};
               background: ${theme.colorPrimary};
-              min-width: 80px;
+              min-width: 50px;
             `}
             title={
               playingPath
@@ -116,7 +140,7 @@ const PlayPathPanel = observer((props: Props) => {
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
-                min-width: 80px;
+                min-width: 50px;
               `}
             >
               <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
