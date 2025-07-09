@@ -23,7 +23,7 @@ export default function createStubSearchProvider(
   const stub = new StubSearchProvider(idToUse, terria);
 
   stub.setTrait(CommonStrata.underride, "name", stub.uniqueId);
-  runInAction (() => {
+  runInAction(() => {
     terria.searchBarModel.addSearchProvider(stub);
   });
   return stub;
