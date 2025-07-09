@@ -59,11 +59,11 @@ export default {
   ): [number, number] | undefined {
     const source =
       sourceCode in Proj4Definitions
-        ? proj4.Proj(Proj4Definitions[sourceCode])
+        ? Proj4Definitions[sourceCode]
         : undefined;
     const dest =
       destCode in Proj4Definitions
-        ? proj4.Proj(Proj4Definitions[destCode])
+        ? Proj4Definitions[destCode]
         : undefined;
     if (!source || !dest) {
       return;
