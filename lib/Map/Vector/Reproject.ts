@@ -68,12 +68,7 @@ export default {
     if (!source || !dest) {
       return;
     }
-    const result = proj4.transform(source, dest, coordinates) ?? {};
-    if (result) {
-      const { x, y } = result;
-      return [x, y];
-    }
-    return undefined;
+    return proj4(source, dest, coordinates) ?? {};
   },
 
   /**

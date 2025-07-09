@@ -34,11 +34,11 @@ export default class BingMapsSearchProvider extends LocationSearchProviderMixin(
     makeObservable(this);
 
     runInAction(() => {
-      if (this.terria.configParameters.bingMapsKey) {
+      if (terria?.configParameters?.bingMapsKey) {
         this.setTrait(
           CommonStrata.defaults,
           "key",
-          this.terria.configParameters.bingMapsKey
+          terria.configParameters.bingMapsKey
         );
       }
     });
