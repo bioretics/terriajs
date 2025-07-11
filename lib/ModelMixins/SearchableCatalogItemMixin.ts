@@ -1,5 +1,4 @@
 import { computed } from "mobx";
-import Constructor from "../Core/Constructor";
 import Model from "../Models/Definition/Model";
 import StratumOrder from "../Models/Definition/StratumOrder";
 import SearchableCatalogItemTraits from "../Traits/TraitsClasses/SearchableCatalogItemTraits";
@@ -12,6 +11,7 @@ import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import AbstractConstructor from "../Core/AbstractConstructor";
 
 export interface SearchableData {
   searchField: string;
@@ -21,7 +21,7 @@ export interface SearchableData {
 
 type MixinModel = Model<SearchableCatalogItemTraits>;
 
-function SearchableCatalogItemMixin<T extends Constructor<MixinModel>>(
+function SearchableCatalogItemMixin<T extends AbstractConstructor<MixinModel>>(
   Base: T
 ) {
   abstract class SearchableCatalogItemMixin extends Base {
