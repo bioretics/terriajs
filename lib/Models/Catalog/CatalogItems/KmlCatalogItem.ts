@@ -39,15 +39,20 @@ import { exportKmlResultKml } from "terriajs-cesium";
 import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import SearchableCatalogItemMixin from "../../../ModelMixins/SearchableCatalogItemMixin";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
-  extends MeasurableGeometryMixin(
-    MappableMixin(
-      ExportableMixin(
-        UrlMixin(
-          CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  extends SearchableCatalogItemMixin(
+    MeasurableGeometryMixin(
+      MappableMixin(
+        ExportableMixin(
+          UrlMixin(
+            CesiumIonMixin(
+              CatalogMemberMixin(CreateModel(KmlCatalogItemTraits))
+            )
+          )
         )
       )
     )
@@ -569,6 +574,10 @@ class KmlCatalogItem
         }
       );
     }
+  }
+
+  searchWithinItemData(text: string) {
+    return this.searchInEntityCollection(text, this._dataSource?.entities);
   }
 
   @computed

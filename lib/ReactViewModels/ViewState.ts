@@ -52,7 +52,9 @@ export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
 interface ViewStateOptions {
   terria: Terria;
   catalogSearchProvider: CatalogSearchProviderMixin.Instance | undefined;
-  catalogItemsSearchProvider?: CatalogItemsSearchProviderMixin.Instance | undefined;
+  catalogItemsSearchProvider?:
+    | CatalogItemsSearchProviderMixin.Instance
+    | undefined;
   errorHandlingProvider?: any;
 }
 
