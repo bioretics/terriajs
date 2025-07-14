@@ -1,4 +1,10 @@
-import { computed, makeObservable, observable, runInAction } from "mobx";
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  runInAction
+} from "mobx";
 import {
   Category,
   SearchAction
@@ -67,6 +73,7 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
     );
   }
 
+  @action
   protected async doSearch(
     searchText: string,
     searchResults: SearchProviderResults
@@ -82,11 +89,11 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
     }
 
     try {
-      await searchInOpenedCatalogItems(
+      const res = await searchInOpenedCatalogItems(
         this.terria,
-        searchText.toLowerCase(),
-        searchResults
+        searchText.toLowerCase()
       );
+      runInAction(() => (searchResults.results = res.flat()));
 
       runInAction(() => {
         this.isSearching = false;
@@ -108,6 +115,7 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
         severity: TerriaErrorSeverity.Warning
       });
       if (searchResults.isCanceled) {
+        // A new search has superseded this one, so ignore the result.
         return;
       }
 
