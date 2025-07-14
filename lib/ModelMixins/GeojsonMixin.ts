@@ -110,6 +110,9 @@ import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import SearchableCatalogItemMixin, {
+  SearchableData
+} from "./SearchableCatalogItemMixin";
 
 enum PathTypes {
   noPath = 0,
@@ -243,8 +246,10 @@ interface FeatureCounts {
 type BaseType = Model<GeoJsonTraits>;
 
 function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
-  abstract class GeoJsonMixin extends MeasurableGeometryMixin(
-    TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+  abstract class GeoJsonMixin extends SearchableCatalogItemMixin(
+    MeasurableGeometryMixin(
+      TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+    )
   ) {
     @observable
     private _dataSource:
@@ -1791,6 +1796,42 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ) {
         return this.readyData.features[0].geometry.coordinates[0] as JsonArray;
       }
+    }
+
+    searchWithinItemData(text: string) {
+      // Search in TerriaJS Feature and Turf Geometry
+      const elements: SearchableData[] | undefined =
+        this.readyData?.features.map((feature) => {
+          const fieldContent: string =
+            feature.properties?.[this.nameOfCatalogItemSearchField] ?? "";
+
+          const type = feature.geometry.type;
+          let lat: number;
+          let lon: number;
+          if (
+            type === "Point" &&
+            (feature.geometry as Geometry).coordinates.length === 2
+          ) {
+            lon = (feature.geometry as Geometry).coordinates[0] as number;
+            lat = (feature.geometry as Geometry).coordinates[1] as number;
+          } else {
+            const geojsonBbox = bbox(feature);
+            const west = geojsonBbox[0];
+            const south = geojsonBbox[1];
+            const east = geojsonBbox[2];
+            const north = geojsonBbox[3];
+            lon = (east - west) * 0.5 + west;
+            lat = (north - south) * 0.5 + south;
+          }
+
+          return {
+            searchField: fieldContent,
+            latitude: lat,
+            longitude: lon
+          };
+        });
+
+      return this.search(text, elements);
     }
 
     @override
