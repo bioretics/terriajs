@@ -11,23 +11,21 @@ import SearchProviderResults from "./SearchProviderResults";
 import CatalogItemsSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
 import CatalogItemsSearchProviderTraits from "../../Traits/SearchProviders/CatalogItemsSearchProviderTraits";
 import SearchableCatalogItemMixin from "../../ModelMixins/SearchableCatalogItemMixin";
+import SearchResult from "./SearchResult";
 
 export function searchInOpenedCatalogItems(
   terria: Terria,
-  searchTextLowercase: string,
-  searchResults: SearchProviderResults
-): Promise<void> {
-  return new Promise((/*resolve*/) => {
-    for (let i = 0; i < terria.workbench.items.length; ++i) {
-      const item = terria.workbench.items[i];
-      if (SearchableCatalogItemMixin.isMixedInto(item)) {
-        const res = item.searchWithinItemData(searchTextLowercase);
-        if (res !== undefined) {
-          searchResults.results = res;
-        }
-      }
-    }
+  searchTextLowercase: string
+): Promise<SearchResult[][]> {
+  const searchableCatalogItems = terria.workbench.items.filter((item) =>
+    SearchableCatalogItemMixin.isMixedInto(item)
+  ) as SearchableCatalogItemMixin.Instance[];
+  const searchPromiseList = searchableCatalogItems.map((item) => {
+    return item.searchWithinItemData(searchTextLowercase);
   });
+  return Promise.all(searchPromiseList).then((results) =>
+    results.filter((result): result is SearchResult[] => result !== undefined)
+  );
 }
 
 export default class CatalogItemsSearchProvider extends CatalogItemsSearchProviderMixin(
@@ -65,7 +63,7 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
     return this.terria.workbench.items.some(
       (item) =>
         SearchableCatalogItemMixin.isMixedInto(item) &&
-        item.nameOfCatalogItemSearchField
+        (item.nameOfCatalogItemSearchField || item.catalogItemWebSearch)
     );
   }
 
