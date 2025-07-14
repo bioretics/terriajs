@@ -1,15 +1,16 @@
 import { computed, makeObservable, observable, runInAction } from "mobx";
-import { fromPromise } from "mobx-utils";
-import isDefined from "../../Core/isDefined";
+import {
+  Category,
+  SearchAction
+} from "../../Core/AnalyticEvents/analyticEvents";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
+import CommonStrata from "../Definition/CommonStrata";
+import CreateModel from "../Definition/CreateModel";
 import Terria from "../Terria";
 import SearchProviderResults from "./SearchProviderResults";
-import SearchableCatalogItemMixin from "../../ModelMixins/SearchableCatalogItemMixin";
-import CreateModel from "../Definition/CreateModel";
-import { Category } from "../../Core/AnalyticEvents/analyticEvents";
-import CatalogItemsSearchProviderTraits from "../../Traits/SearchProviders/CatalogItemsSearchProviderTraits";
 import CatalogItemsSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
-import CommonStrata from "../Definition/CommonStrata";
+import CatalogItemsSearchProviderTraits from "../../Traits/SearchProviders/CatalogItemsSearchProviderTraits";
+import SearchableCatalogItemMixin from "../../ModelMixins/SearchableCatalogItemMixin";
 
 export function searchInOpenedCatalogItems(
   terria: Terria,
@@ -55,7 +56,7 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
   protected logEvent(searchText: string) {
     this.terria.analytics?.logEvent(
       Category.search,
-      "CatalogItemsSearchProvider",
+      SearchAction.catalog,
       searchText
     );
   }
@@ -65,13 +66,6 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
       (item) =>
         SearchableCatalogItemMixin.isMixedInto(item) &&
         item.nameOfCatalogItemSearchField
-    );
-  }
-
-  @computed get resultsAreReferences() {
-    return (
-      isDefined(this.terria.catalogIndex?.loadPromise) &&
-      fromPromise(this.terria.catalogIndex!.loadPromise).state === "fulfilled"
     );
   }
 
@@ -116,7 +110,6 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
         severity: TerriaErrorSeverity.Warning
       });
       if (searchResults.isCanceled) {
-        // A new search has superseded this one, so ignore the result.
         return;
       }
 

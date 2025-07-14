@@ -15,6 +15,7 @@ import SearchProviderResults from "../Models/SearchProviders/SearchProviderResul
 import Terria from "../Models/Terria";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogItemsSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
+import CatalogItemsSearchProvider from "../Models/SearchProviders/CatalogItemsSearchProvider";
 
 interface SearchStateOptions {
   terria: Terria;
@@ -62,11 +63,11 @@ export default class SearchState {
         new CatalogSearchProvider("catalog-search-provider", options.terria);
 
       this.terria.searchBarModel.catalogItemsSearchProvider =
-        options.catalogItemsSearchProvider; /*|| 
+        options.catalogItemsSearchProvider ||
         new CatalogItemsSearchProvider(
           "catalog-items-search-provider",
           options.terria
-        );*/
+        );
     });
 
     const self = this;
