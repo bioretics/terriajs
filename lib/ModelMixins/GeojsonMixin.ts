@@ -61,7 +61,6 @@ import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphic
 import Property from "terriajs-cesium/Source/DataSources/Property";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
-import AbstractConstructor from "../Core/AbstractConstructor";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import formatPropertyValue from "../Core/formatPropertyValue";
 import hashFromString from "../Core/hashFromString";
@@ -110,7 +109,11 @@ import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import { SearchableData } from "./SearchableCatalogItemMixin";
+import SearchableCatalogItemMixin, {
+  SearchableData
+} from "./SearchableCatalogItemMixin";
+import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
+import Constructor from "../Core/Constructor";
 
 enum PathTypes {
   noPath = 0,
@@ -243,9 +246,13 @@ interface FeatureCounts {
 
 type BaseType = Model<GeoJsonTraits>;
 
-function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
-  abstract class GeoJsonMixin extends MeasurableGeometryMixin(
-    TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
+  abstract class GeoJsonMixin extends QueryableCatalogItemMixin(
+    SearchableCatalogItemMixin(
+      MeasurableGeometryMixin(
+        TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+      )
+    )
   ) {
     @observable
     private _dataSource:
