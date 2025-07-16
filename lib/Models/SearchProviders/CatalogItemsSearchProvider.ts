@@ -19,7 +19,7 @@ import CatalogItemsSearchProviderTraits from "../../Traits/SearchProviders/Catal
 import SearchableCatalogItemMixin from "../../ModelMixins/SearchableCatalogItemMixin";
 import SearchResult from "./SearchResult";
 
-export function searchInOpenedCatalogItems(
+async function searchInOpenedCatalogItems(
   terria: Terria,
   searchTextLowercase: string
 ): Promise<SearchResult[][]> {

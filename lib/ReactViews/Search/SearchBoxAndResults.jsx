@@ -12,6 +12,8 @@ import Spacing from "../../Styled/Spacing";
 import Text from "../../Styled/Text";
 import LocationSearchResults from "../Search/LocationSearchResults";
 import SearchBox from "../Search/SearchBox";
+import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import GlobeOrMap from "../../Models/GlobeOrMap";
 
 export function SearchInCatalogItems({ viewState, handleClick }) {
   const locationSearchText = viewState.searchState.locationSearchText;
@@ -142,6 +144,15 @@ export class SearchBoxAndResultsRaw extends React.Component {
 
     if (newText.length === 0) {
       removeMarker(this.props.terria);
+
+      const catalogItem = this.props.terria.getModelById(
+        GeoJsonCatalogItem,
+
+        GlobeOrMap.featureHighlightID
+      );
+
+      this.props.terria.overlays.remove(catalogItem);
+
       runInAction(() => {
         this.toggleShowLocationSearchResults(false);
       });

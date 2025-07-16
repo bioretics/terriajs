@@ -112,7 +112,6 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import SearchableCatalogItemMixin, {
   SearchableData
 } from "./SearchableCatalogItemMixin";
-import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
 import Constructor from "../Core/Constructor";
 
 enum PathTypes {
@@ -247,11 +246,9 @@ interface FeatureCounts {
 type BaseType = Model<GeoJsonTraits>;
 
 function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
-  abstract class GeoJsonMixin extends QueryableCatalogItemMixin(
-    SearchableCatalogItemMixin(
-      MeasurableGeometryMixin(
-        TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
-      )
+  abstract class GeoJsonMixin extends SearchableCatalogItemMixin(
+    MeasurableGeometryMixin(
+      TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
     )
   ) {
     @observable
