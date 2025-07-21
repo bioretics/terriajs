@@ -47,6 +47,7 @@ import {
   mustacheURLEncodeTextComponent
 } from "./mustacheExpressions";
 import TableMixin from "../../ModelMixins/TableMixin";
+import Resource from "terriajs-cesium/Source/Core/Resource";
 
 // We use Mustache templates inside React views, where React does the escaping; don't escape twice, or eg. " => &quot;
 Mustache.escape = function (string) {
@@ -67,6 +68,8 @@ interface FeatureInfoProps extends WithViewState {
 export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   private templateReactionDisposer: IDisposer | undefined;
   private removeFeatureChangedSubscription: (() => void) | undefined;
+
+  @observable private fields?: string[];
 
   /** Rendered feature info template - this is set using reaction.
    * We can't use `@computed` values for custom templates - as CustomComponents may cause side-effects.
@@ -92,11 +95,14 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   }
 
   componentDidMount() {
+    this.checkAuth();
+
     this.templateReactionDisposer = reaction(
       () => [
         this.props.feature,
         this.props.catalogItem.featureInfoTemplate.template,
         this.props.catalogItem.featureInfoTemplate.partials,
+        this.props.catalogItem.featureInfoTemplate.perProfileInfoFields,
         // Note `mustacheContextData` will trigger update when `currentTime` changes (through this.featureProperties)
         this.mustacheContextData
       ],
@@ -368,6 +374,63 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       fileName
     };
   }
+
+  checkAuth = async () => {
+    const feature = this.props.feature;
+
+    if (
+      this.props.viewState.terria.configParameters.userProfilesDefinition &&
+      MappableMixin.isMixedInto(this.props.catalogItem) &&
+      (!this.props.viewState.terria.profile ||
+        (this.props.viewState.terria.profile &&
+          !this.props.viewState.terria.profile?.isAdmin))
+    ) {
+      if (
+        this.props.viewState.terria.userAuthToken &&
+        this.props.viewState.terria.userProfile &&
+        this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+      ) {
+        const proxiedUrl = this.props.viewState.terria?.corsProxy.getURL(
+          this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+        );
+        try {
+          const result = await Resource.fetchJson({
+            url: proxiedUrl,
+            queryParameters: {
+              idIntervento:
+                feature.properties?.[feature.properties.propertyNames[0]],
+              authToken: this.props.viewState.terria.userAuthToken
+            }
+          });
+
+          if (result && result.status === 200) {
+            this.setFields(this.props.feature.properties?.propertyNames);
+          } else {
+            throw "Request failed";
+          }
+        } catch (error) {
+          this.setFields(
+            this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
+              String(this.props.viewState.terria.userProfile)
+            ] as string[]
+          );
+        }
+      } else {
+        this.setFields(
+          this.props.catalogItem.featureInfoTemplate?.perProfileInfoFields?.[
+            String(this.props.viewState.terria.userProfile)
+          ] as string[]
+        );
+      }
+    } else {
+      this.setFields(undefined);
+    }
+  };
+
+  @action
+  setFields = (newFields: string[] | undefined) => {
+    this.fields = newFields;
+  };
 
   @computed
   get generatedButtons(): FeatureInfoPanelButtonModel[] {

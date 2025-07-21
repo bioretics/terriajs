@@ -8,6 +8,7 @@ import ModelTraits from "../ModelTraits";
 import ClusteringTraits from "./ClusteringTraits";
 import FeatureInfoUrlTemplateTraits from "./FeatureInfoTraits";
 import LegendOwnerTraits from "./LegendOwnerTraits";
+import QueryableCatalogItemTraits from "./QueryableCatalogItemTraits";
 import StyleTraits from "./StyleTraits";
 import TableTraits from "./Table/TableTraits";
 import UrlTraits from "./UrlTraits";
@@ -38,6 +39,7 @@ export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
 }
 
 export class GeoJsonTraits extends mixTraits(
+  QueryableCatalogItemTraits,
   FeatureInfoUrlTemplateTraits,
   LegendOwnerTraits,
   TableTraits,

@@ -65,7 +65,8 @@ export default class ViewState {
     data: "data",
     preview: "preview",
     nowViewing: "nowViewing",
-    locationSearchResults: "locationSearchResults"
+    locationSearchResults: "locationSearchResults",
+    query: "query"
   });
   readonly searchState: SearchState;
   readonly terria: Terria;
@@ -375,6 +376,18 @@ export default class ViewState {
   @observable playPathPanelIsVisible: boolean = false;
 
   /**
+   * Gets or sets a value indicating whether the QueryPanel is visible.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the QueryPanel is collapsed.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsCollapsed: boolean = false;
+
+  /**
    * True if this is (or will be) the first time the user has added data to the map.
    * @type {Boolean}
    */
@@ -674,6 +687,22 @@ export default class ViewState {
   }
 
   @action
+  openQueryData(queryItem: BaseModel) {
+    this.terria.itemToQuery = queryItem;
+    if (this.useSmallScreenInterface) {
+      this.switchMobileView(this.mobileViewOptions.query);
+    } else {
+      this.queryPanelIsVisible = true;
+    }
+  }
+
+  @action
+  closeQuery() {
+    this.queryPanelIsVisible = false;
+    this.terria.itemToQuery = undefined;
+  }
+
+  @action
   openAddData() {
     this.explorerPanelIsVisible = true;
     this.activeTabCategory = DATA_CATALOG_NAME;
@@ -704,6 +733,24 @@ export default class ViewState {
   clearPreviewedItem() {
     this.userDataPreviewedItem = undefined;
     this._previewedItem = undefined;
+  }
+
+  @action
+  openMessageModal(header: string, message: string) {
+    this.terria.messageModal = {
+      isVisible: true,
+      header: header,
+      message: message
+    };
+  }
+
+  @action
+  closeMessageModal() {
+    this.terria.messageModal = {
+      isVisible: false,
+      header: undefined,
+      message: undefined
+    };
   }
 
   /**
