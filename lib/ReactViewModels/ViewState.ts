@@ -38,6 +38,7 @@ import {
 } from "./defaultTourPoints";
 import SearchState from "./SearchState";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
+import CatalogItemsSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
 import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
 import CzmlCatalogItem from "../Models/Catalog/CatalogItems/CzmlCatalogItem";
 
@@ -51,6 +52,9 @@ export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
 interface ViewStateOptions {
   terria: Terria;
   catalogSearchProvider: CatalogSearchProviderMixin.Instance | undefined;
+  catalogItemsSearchProvider?:
+    | CatalogItemsSearchProviderMixin.Instance
+    | undefined;
   errorHandlingProvider?: any;
 }
 
@@ -436,7 +440,8 @@ export default class ViewState {
     const terria = options.terria;
     this.searchState = new SearchState({
       terria,
-      catalogSearchProvider: options.catalogSearchProvider
+      catalogSearchProvider: options.catalogSearchProvider,
+      catalogItemsSearchProvider: options.catalogItemsSearchProvider
     });
 
     this.errorProvider = options.errorHandlingProvider

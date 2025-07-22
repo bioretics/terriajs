@@ -42,7 +42,7 @@ export default class BingMapsSearchProvider extends LocationSearchProviderMixin(
         this.setTrait(
           CommonStrata.defaults,
           "key",
-          this.terria.configParameters.bingMapsKey
+          terria.configParameters.bingMapsKey
         );
       }
     });
