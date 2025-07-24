@@ -15,6 +15,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [loadPercentage, setLoadPercentage] = useState(0);
+  const [indeterminate, setIndeterminate] = useState(false);
 
   const distRef = useRef(0);
   const startIdxRef = useRef(0);
@@ -22,6 +24,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const playSpeedRef = useRef(playSpeed);
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
+  const loadPercentageRef = useRef(loadPercentage);
 
   const resetPlayPath = useCallback(() => {
     if (viewState.isPlayingPath) {
@@ -44,6 +47,29 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (!geom) return;
     const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
     return pts;
+  }, [terria]);
+
+  useEffect(() => {
+    const onProgress = (remaining: number, max: number) => {
+      const raw = (1 - remaining / max) * 100;
+      const percentage =
+        remaining === 0 || isNaN(raw) ? 100 : Math.min(100, Math.floor(raw));
+
+      loadPercentageRef.current = percentage;
+      setLoadPercentage(percentage);
+    };
+
+    const onIndeterminate = (mode: boolean) => setIndeterminate(mode);
+
+    terria.tileLoadProgressEvent.addEventListener(onProgress);
+    terria.indeterminateTileLoadProgressEvent.addEventListener(onIndeterminate);
+
+    return () => {
+      terria.tileLoadProgressEvent.removeEventListener(onProgress);
+      terria.indeterminateTileLoadProgressEvent.removeEventListener(
+        onIndeterminate
+      );
+    };
   }, [terria]);
 
   useEffect(() => {
@@ -111,20 +137,26 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     const isResume = initialIdx !== startIdxRef.current;
 
-    const waitForRender = () =>
-      new Promise<boolean>((resolve) => {
-        const handler = () => {
-          scene?.postRender.removeEventListener(handler);
-          resolve(true);
+    const waitForProgressComplete = () =>
+      new Promise<"loaded">((resolve) => {
+        if (loadPercentageRef.current === 100 && !indeterminate) {
+          resolve("loaded");
+          return;
+        }
+        const onProg = () => {
+          if (loadPercentageRef.current === 100 && !indeterminate) {
+            terria.tileLoadProgressEvent.removeEventListener(onProg);
+            resolve("loaded");
+          }
         };
-        scene?.postRender.addEventListener(handler);
+        terria.tileLoadProgressEvent.addEventListener(onProg);
       });
 
     const waitForAbort = () =>
-      new Promise<boolean>((resolve) => {
+      new Promise<"abort">((resolve) => {
         const check = () => {
           if (!abortPlayingPathRef.current) {
-            resolve(false);
+            resolve("abort");
           } else {
             setTimeout(check, 50);
           }
@@ -154,8 +186,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
           : Rectangle.fromCartographicArray([pts[i]]),
         duration
       );
-      const rendered = await Promise.race([waitForRender(), waitForAbort()]);
-      return rendered;
+      const result = await Promise.race([
+        waitForProgressComplete(),
+        waitForAbort()
+      ]);
+
+      if (result === "abort") {
+        return false;
+      }
+
+      return true;
     };
 
     const loop = async (start: number, end: number, step: number) => {
@@ -188,7 +228,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     runInAction(() => {
       viewState.isPlayingPath = false;
     });
-  }, [getPoints, terria, viewState]);
+  }, [getPoints, terria, viewState, indeterminate]);
 
   const onPlay = () => {
     const pts = getPoints();
