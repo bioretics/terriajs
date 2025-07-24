@@ -111,6 +111,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                           }}
                         >
                           {(item.enumValues?.[propertyName] ?? [])
+                            .slice()
                             .sort()
                             .map((value) => {
                               return (
