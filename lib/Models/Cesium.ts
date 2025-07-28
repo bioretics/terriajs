@@ -1084,6 +1084,10 @@ export default class Cesium extends GlobeOrMap {
 
     const frustrum = scene.camera.frustum as PerspectiveFrustum;
 
+    if (!frustrum.fovy || !frustrum.aspectRatio) {
+      return new CameraView(this.terriaViewer.homeCamera.rectangle, camera.positionWC, camera.directionWC, camera.upWC);
+    }
+
     const fovy = frustrum.fovy * 0.5;
     const fovx = Math.atan(Math.tan(fovy) * frustrum.aspectRatio);
 
@@ -1641,6 +1645,9 @@ export default class Cesium extends GlobeOrMap {
                 const screenPosition = this._computePositionOnScreen(
                   result.pickPosition
                 );
+
+                if (!screenPosition) return;
+
                 const pickedSide =
                   this._getSplitterSideForScreenPosition(screenPosition);
 
@@ -1722,7 +1729,7 @@ export default class Cesium extends GlobeOrMap {
    * @return The screen position, or undefined if the position is not on the screen.
    */
   private _computePositionOnScreen(position: Cartesian3, result?: Cartesian2) {
-    return SceneTransforms.wgs84ToWindowCoordinates(
+    return SceneTransforms.worldToWindowCoordinates(
       this.scene,
       position,
       result

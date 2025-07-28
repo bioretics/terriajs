@@ -103,6 +103,11 @@ const PlayPathPanel = observer((props: Props) => {
           gap: 8
         }}
       >
+        {isPitchTooLow() && !playingPath && (
+          <div style={{ color: "red", marginBottom: 4 }}>
+            {i18next.t("playPath.tooltip.pitchTooLow", { max: "60°" })}
+          </div>
+        )}
         <div
           style={{
             display: "flex",
