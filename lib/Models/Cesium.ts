@@ -1729,7 +1729,7 @@ export default class Cesium extends GlobeOrMap {
    * @return The screen position, or undefined if the position is not on the screen.
    */
   private _computePositionOnScreen(position: Cartesian3, result?: Cartesian2) {
-    return SceneTransforms.worldToWindowCoordinates(
+    return SceneTransforms.wgs84ToWindowCoordinates(
       this.scene,
       position,
       result

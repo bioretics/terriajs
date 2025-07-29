@@ -218,14 +218,14 @@ export default class UserDrawing extends MappableMixin(
   ): Entity {
     return new Entity({
       name,
-      position: new CallbackProperty((time: JulianDate | undefined) => {
+      position: new CallbackProperty((time: JulianDate) => {
         const posA = entityA.position?.getValue(time);
         const posB = entityB.position?.getValue(time);
         if (!posA || !posB) return undefined;
         return Cartesian3.midpoint(posA, posB, new Cartesian3());
       }, false) as any,
       label: {
-        text: new CallbackProperty((time: JulianDate | undefined) => {
+        text: new CallbackProperty((time: JulianDate) => {
           const posA = entityA.position?.getValue(time);
           const posB = entityB.position?.getValue(time);
           if (!posA || !posB) return "";
