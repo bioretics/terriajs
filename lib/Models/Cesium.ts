@@ -1085,7 +1085,12 @@ export default class Cesium extends GlobeOrMap {
     const frustrum = scene.camera.frustum as PerspectiveFrustum;
 
     if (!frustrum.fovy || !frustrum.aspectRatio) {
-      return new CameraView(this.terriaViewer.homeCamera.rectangle, camera.positionWC, camera.directionWC, camera.upWC);
+      return new CameraView(
+        this.terriaViewer.homeCamera.rectangle,
+        camera.positionWC,
+        camera.directionWC,
+        camera.upWC
+      );
     }
 
     const fovy = frustrum.fovy * 0.5;
