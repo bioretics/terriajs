@@ -9,6 +9,8 @@ import CameraView from "../../Models/CameraView";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import { runInAction } from "mobx";
+import simplify from "@turf/simplify";
+import { lineString } from "@turf/helpers";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const MIN_PITCH = Math.PI / 4;
@@ -78,19 +80,35 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
-    const pts = geom.stopPoints;
+    const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
 
     if (!pts || pts.length === 0) return;
 
-    const interpolatedPts = interpolatePoints(pts);
+    if (pts.length <= 2) return pts;
+
+    const coords = pts.map((p) => [
+      CesiumMath.toDegrees(p.longitude),
+      CesiumMath.toDegrees(p.latitude)
+    ]);
+    const line = lineString(coords);
+
+    const simplified = simplify(line, {
+      tolerance: 0.01,
+      highQuality: true
+    });
+
+    const simplifiedPts = simplified.geometry.coordinates.map(([lon, lat], i) =>
+      Cartographic.fromDegrees(lon, lat, pts[i]?.height ?? 0)
+    );
+
+    const interpolatedPts = interpolatePoints(simplifiedPts, 5);
 
     console.log(
-      "all points length",
       geom.stopPoints.length,
-      pts.length,
+      simplifiedPts.length,
       interpolatedPts.length
     );
-    console.log("all points", geom.stopPoints, pts, interpolatedPts);
+    console.log(geom.stopPoints, simplifiedPts, interpolatedPts);
 
     return interpolatedPts;
   }, [terria]);
