@@ -105,7 +105,7 @@ const PlayPathPanel = observer((props: Props) => {
       >
         {isPitchTooLow() && !playingPath && (
           <div style={{ color: "red", marginBottom: 4 }}>
-            {i18next.t("playPath.tooltip.pitchTooLow", { max: "60°" })}
+            {i18next.t("playPath.tooltip.pitchTooLow")}
           </div>
         )}
         <div
@@ -131,7 +131,7 @@ const PlayPathPanel = observer((props: Props) => {
             `}
             title={
               isPitchTooLow() && !playingPath
-                ? i18next.t("playPath.tooltip.pitchTooLow", { max: "60°" })
+                ? i18next.t("playPath.tooltip.pitchTooLow")
                 : playingPath
                 ? i18next.t("playPath.tooltip.pause")
                 : i18next.t("playPath.tooltip.play")
