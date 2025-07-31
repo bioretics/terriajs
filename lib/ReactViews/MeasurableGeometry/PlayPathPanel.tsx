@@ -155,7 +155,7 @@ const PlayPathPanel = observer((props: Props) => {
               min-width: 50px;
             `}
           >
-            <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
+            <StyledIcon glyph={Icon.GLYPHS.revert} styledWidth="16px" />
           </Button>
         </div>
         <div
