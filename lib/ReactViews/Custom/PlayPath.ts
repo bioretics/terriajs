@@ -1,440 +1,443 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { runInAction } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Cartesian4 from "terriajs-cesium/Source/Core/Cartesian4";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
 import CatmullRomSpline from "terriajs-cesium/Source/Core/CatmullRomSpline";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import { Matrix4, Transforms } from "terriajs-cesium";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
-import { runInAction } from "mobx";
-import { Matrix4, Transforms } from "terriajs-cesium";
-import Cartesian4 from "terriajs-cesium/Source/Core/Cartesian4";
+
+// Constants
+const MIN_PITCH = Math.PI / 4;
+const INITIAL_CAMERA_OFFSET = new HeadingPitchRange(
+  0,
+  -CesiumMath.PI_OVER_FOUR,
+  1000
+);
+const PATH_SPEED = 100; // meters per second
+const COUNTDOWN_DURATION = 3;
+const CAMERA_SETUP_DELAY = 2000;
+const VELOCITY_THRESHOLD = 0.001;
+const SPLINE_TIME_STEP = 0.001;
+
+interface PathState {
+  progress: number;
+  currentIndex: number;
+  countdown: number | null;
+  isMoving: boolean;
+  speed: number;
+}
+
+interface AnimationRefs {
+  frameId: number | null;
+  startTime: JulianDate | null;
+  pausedTime: JulianDate | null;
+  pausedProgress: number;
+  isReversed: boolean;
+  isInitialized: boolean;
+  isAborting: boolean;
+  isUserInteracting: boolean;
+  lastAnchorPosition: Cartesian3 | null;
+  pathDuration: number;
+  positionSpline: CatmullRomSpline | null;
+  cameraOffset: HeadingPitchRange;
+}
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
-  const MIN_PITCH = Math.PI / 4;
+  // State
+  const [pathState, setPathState] = useState<PathState>({
+    progress: 0,
+    currentIndex: 0,
+    countdown: null,
+    isMoving: false,
+    speed: 1
+  });
 
-  const [playSpeed, setPlaySpeed] = useState(1);
-  const [isCameraMoving, setIsCameraMoving] = useState(false);
-  const [currentPointIndex, setCurrentPointIndex] = useState(0);
-  const [countdown, setCountdown] = useState<number | null>(null);
-  const [loadPercentage, setLoadPercentage] = useState(0);
-  const [pathProgress, setPathProgress] = useState(0);
+  // Refs
+  const animationRefs = useRef<AnimationRefs>({
+    frameId: null,
+    startTime: null,
+    pausedTime: null,
+    pausedProgress: 0,
+    isReversed: false,
+    isInitialized: false,
+    isAborting: false,
+    isUserInteracting: false,
+    lastAnchorPosition: null,
+    pathDuration: 0,
+    positionSpline: null,
+    cameraOffset: HeadingPitchRange.clone(INITIAL_CAMERA_OFFSET)
+  });
 
-  const reverseRef = useRef(false);
-  const playSpeedRef = useRef(playSpeed);
-  const abortPlayingPathRef = useRef(false);
-  const loadPercentageRef = useRef(loadPercentage);
-  const animationFrameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<JulianDate | null>(null);
-  const positionSplineRef = useRef<CatmullRomSpline | null>(null);
-  const pathDurationRef = useRef(0);
-  const userCameraOffsetRef = useRef<HeadingPitchRange>(
-    new HeadingPitchRange(0, -CesiumMath.PI_OVER_FOUR, 1000)
+  // Utility functions
+  const getCamera = useCallback(() => terria.cesium?.scene.camera, [terria]);
+
+  const getCameraController = useCallback(
+    () => terria.cesium?.scene.screenSpaceCameraController,
+    [terria]
   );
-  const isUserInteractingRef = useRef(false);
-  const lastAnchorPositionRef = useRef<Cartesian3 | null>(null);
-  const pausedProgressRef = useRef(0);
-  const pausedTimeRef = useRef<JulianDate | null>(null);
+
+  const getPoints = useCallback((): Cartographic[] | undefined => {
+    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    return geom?.stopPoints?.length ? geom.stopPoints : undefined;
+  }, [terria]);
 
   const isPitchTooLow = useCallback(() => {
-    const camera = terria.cesium?.scene.camera;
-    if (!camera) return false;
-    return Math.abs(camera.pitch ?? 0) < MIN_PITCH;
-  }, [terria, MIN_PITCH]);
+    const camera = getCamera();
+    return camera ? Math.abs(camera.pitch ?? 0) < MIN_PITCH : false;
+  }, [getCamera]);
 
+  // Camera control
   const releaseCamera = useCallback(() => {
-    const camera = terria.cesium?.scene.camera;
-    if (!camera) return;
+    const camera = getCamera();
+    const controller = getCameraController();
+    if (!camera || !controller) return;
 
-    const controller = terria.cesium?.scene.screenSpaceCameraController;
-    if (controller) {
-      controller.enableRotate = true;
-      controller.enableTranslate = true;
-      controller.enableZoom = true;
-      controller.enableTilt = true;
-      controller.enableLook = true;
-    }
-
+    controller.enableRotate = true;
+    controller.enableTranslate = true;
+    controller.enableZoom = true;
+    controller.enableTilt = true;
+    controller.enableLook = true;
     camera.lookAtTransform(Matrix4.IDENTITY);
-  }, [terria]);
+  }, [getCamera, getCameraController]);
 
-  const resetPlayPath = useCallback(() => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
+  // Path creation
+  const createPathSpline = useCallback(
+    (points: Cartographic[]): CatmullRomSpline | null => {
+      if (points.length < 2) return null;
 
-    if (viewState.isPlayingPath) {
-      abortPlayingPathRef.current = false;
-      runInAction(() => {
-        viewState.isPlayingPath = false;
-      });
-    }
+      const cartesians = points.map((p) => Cartographic.toCartesian(p));
 
-    releaseCamera();
+      const { times, totalDistance } = cartesians.reduce(
+        (acc, point, i) => {
+          if (i === 0) return { times: [0], totalDistance: 0 };
 
-    setCurrentPointIndex(0);
-    setCountdown(null);
-    setIsCameraMoving(false);
-    setPathProgress(0);
-    startTimeRef.current = null;
-    positionSplineRef.current = null;
-    lastAnchorPositionRef.current = null;
-    pausedProgressRef.current = 0;
-    pausedTimeRef.current = null;
-  }, [viewState, releaseCamera]);
+          const distance = Cartesian3.distance(cartesians[i - 1], point);
+          acc.totalDistance += distance;
+          acc.times.push(acc.totalDistance);
+          return acc;
+        },
+        { times: [] as number[], totalDistance: 0 }
+      );
 
-  const getPoints = useCallback(() => {
-    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-    if (!geom) return;
-    const pts = geom.stopPoints;
-    if (!pts || pts.length === 0) return;
-    return pts;
-  }, [terria]);
+      const duration = totalDistance / PATH_SPEED;
+      animationRefs.current.pathDuration = duration;
+      const normalizedTimes = times.map((t) => (t / totalDistance) * duration);
 
-  const createPathSpline = useCallback((points: Cartographic[]) => {
-    if (points.length < 2) return null;
+      let firstTangent, lastTangent;
+      if (cartesians.length > 2) {
+        firstTangent = Cartesian3.multiplyByScalar(
+          Cartesian3.subtract(cartesians[1], cartesians[0], new Cartesian3()),
+          0.5,
+          new Cartesian3()
+        );
 
-    const cartesians = points.map((p) => Cartographic.toCartesian(p));
-    const times: number[] = [];
-    let totalDistance = 0;
-
-    for (let i = 0; i < cartesians.length; i++) {
-      if (i === 0) {
-        times.push(0);
-      } else {
-        totalDistance += Cartesian3.distance(cartesians[i - 1], cartesians[i]);
-        times.push(totalDistance);
+        const lastIdx = cartesians.length - 1;
+        lastTangent = Cartesian3.multiplyByScalar(
+          Cartesian3.subtract(
+            cartesians[lastIdx],
+            cartesians[lastIdx - 1],
+            new Cartesian3()
+          ),
+          0.5,
+          new Cartesian3()
+        );
       }
-    }
 
-    const duration = totalDistance / 100;
-    pathDurationRef.current = duration;
-
-    for (let i = 0; i < times.length; i++) {
-      times[i] = (times[i] / totalDistance) * duration;
-    }
-
-    let firstTangent, lastTangent;
-
-    if (cartesians.length > 2) {
-      firstTangent = new Cartesian3();
-      Cartesian3.subtract(cartesians[1], cartesians[0], firstTangent);
-      Cartesian3.multiplyByScalar(firstTangent, 0.5, firstTangent);
-
-      lastTangent = new Cartesian3();
-      const lastIdx = cartesians.length - 1;
-      Cartesian3.subtract(
-        cartesians[lastIdx],
-        cartesians[lastIdx - 1],
+      return new CatmullRomSpline({
+        times: normalizedTimes,
+        points: cartesians,
+        firstTangent,
         lastTangent
-      );
-      Cartesian3.multiplyByScalar(lastTangent, 0.5, lastTangent);
-    }
+      });
+    },
+    []
+  );
 
-    return new CatmullRomSpline({
-      times: times,
-      points: cartesians,
-      firstTangent: firstTangent,
-      lastTangent: lastTangent
-    });
-  }, []);
-
-  useEffect(() => {
-    const camera = terria.cesium?.scene.camera;
-    if (!camera) return;
-
-    const onCameraMove = () => {
-      if (
-        !lastAnchorPositionRef.current ||
-        !isUserInteractingRef.current ||
-        !viewState.isPlayingPath
-      )
-        return;
-
-      const offset = new Cartesian3();
-      Cartesian3.subtract(
-        camera.position,
-        lastAnchorPositionRef.current,
-        offset
-      );
-
-      const enu = Transforms.eastNorthUpToFixedFrame(
-        lastAnchorPositionRef.current
-      );
-      const inverseEnu = Matrix4.inverseTransformation(enu, new Matrix4());
-      const localOffset = Matrix4.multiplyByPoint(
-        inverseEnu,
-        camera.position,
-        new Cartesian3()
-      );
-
-      const distance = Cartesian3.magnitude(localOffset);
-      const heading =
-        Math.atan2(localOffset.y, localOffset.x) - CesiumMath.PI_OVER_TWO;
-      const pitch = Math.asin(localOffset.z / distance);
-
-      userCameraOffsetRef.current = new HeadingPitchRange(
-        heading,
-        pitch,
-        distance
-      );
-    };
-
-    const onMoveStart = () => {
-      if (viewState.isPlayingPath) {
-        isUserInteractingRef.current = true;
-      }
-    };
-
-    const onMoveEnd = () => {
-      isUserInteractingRef.current = false;
-      if (viewState.isPlayingPath) {
-        onCameraMove();
-      }
-    };
-
-    camera.moveStart?.addEventListener(onMoveStart);
-    camera.moveEnd?.addEventListener(onMoveEnd);
-
-    return () => {
-      camera.moveStart?.removeEventListener(onMoveStart);
-      camera.moveEnd?.removeEventListener(onMoveEnd);
-    };
-  }, [terria, viewState.isPlayingPath]);
-
-  useEffect(() => {
-    terria.tileLoadProgressEvent.addEventListener(
-      (remaining: number, max: number) => {
-        const raw = (1 - remaining / max) * 100;
-        const percentage =
-          remaining === 0 || isNaN(raw) ? 100 : Math.min(100, Math.floor(raw));
-        loadPercentageRef.current = percentage;
-        setLoadPercentage(percentage);
-      }
-    );
-
-    return () => {
-      terria.tileLoadProgressEvent.removeEventListener(() => {});
-      terria.indeterminateTileLoadProgressEvent.removeEventListener(() => {});
-    };
-  }, [terria]);
-
-  useEffect(() => {
-    if (countdown === null) return;
-    if (countdown === 0) {
-      setCountdown(null);
-      const camera = terria.cesium?.scene.camera;
-      const pts = getPoints();
-      if (camera && pts && pts.length > 0) {
-        const firstCartesian = Cartographic.toCartesian(pts[0]);
-        const lastCartesian = Cartographic.toCartesian(pts[pts.length - 1]);
-        const camPos = camera.position;
-        const distFirst = Cartesian3.distance(camPos, firstCartesian);
-        const distLast = Cartesian3.distance(camPos, lastCartesian);
-        reverseRef.current = distLast < distFirst;
-        const startCartesian = reverseRef.current
-          ? lastCartesian
-          : firstCartesian;
-        const offset = userCameraOffsetRef.current;
-        camera.lookAt(startCartesian, offset);
-      }
-      setTimeout(() => {
-        runInAction(() => {
-          viewState.isPlayingPath = true;
-        });
-      }, 2000);
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setCountdown(countdown - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, viewState, getPoints, terria.cesium?.scene.camera]);
-
-  useEffect(() => {
-    playSpeedRef.current = playSpeed;
-  }, [playSpeed]);
-
+  // Animation frame
   const animate = useCallback(() => {
-    if (
-      !viewState.isPlayingPath ||
-      !positionSplineRef.current ||
-      !startTimeRef.current
-    ) {
+    const refs = animationRefs.current;
+    const camera = getCamera();
+
+    if (!viewState.isPlayingPath || !refs.positionSpline || !camera) {
       return;
     }
 
-    const scene = terria.cesium?.scene;
-    const camera = scene?.camera;
-    if (!camera) return;
+    const now = JulianDate.now();
+    const baseTime =
+      refs.pausedProgress > 0 ? refs.pausedTime! : refs.startTime!;
+    const elapsed =
+      refs.pausedProgress * refs.pathDuration +
+      JulianDate.secondsDifference(now, baseTime) * pathState.speed;
 
-    const currentTime = JulianDate.now();
-    let elapsed: number;
+    const progress = Math.min(elapsed / refs.pathDuration, 1);
 
-    if (pausedProgressRef.current > 0) {
-      const timeSincePause = JulianDate.secondsDifference(
-        currentTime,
-        pausedTimeRef.current || currentTime
-      );
-      elapsed =
-        pausedProgressRef.current * pathDurationRef.current +
-        timeSincePause * playSpeedRef.current;
-    } else {
-      elapsed =
-        JulianDate.secondsDifference(currentTime, startTimeRef.current) *
-        playSpeedRef.current;
-    }
+    setPathState((prev) => ({ ...prev, progress: progress * 100 }));
 
-    const progress = Math.min(elapsed / pathDurationRef.current, 1.0);
-
-    setPathProgress(progress * 100);
-
-    if (progress >= 1.0 || abortPlayingPathRef.current) {
+    if (progress >= 1 || refs.isAborting) {
       runInAction(() => {
         viewState.isPlayingPath = false;
       });
-      animationFrameRef.current = null;
+      refs.frameId = null;
       releaseCamera();
       return;
     }
 
-    const splineTime = reverseRef.current
-      ? pathDurationRef.current * (1 - progress)
-      : progress * pathDurationRef.current;
-    const anchorPosition = positionSplineRef.current.evaluate(splineTime);
-    lastAnchorPositionRef.current = anchorPosition;
+    const t = refs.isReversed
+      ? refs.pathDuration * (1 - progress)
+      : refs.pathDuration * progress;
 
-    if (!anchorPosition) {
-      animationFrameRef.current = requestAnimationFrame(animate);
+    const anchor = refs.positionSpline.evaluate(t);
+    if (!anchor) {
+      refs.frameId = requestAnimationFrame(animate);
       return;
     }
 
-    const dt = 0.001;
-    const nextTime = Math.min(splineTime + dt, pathDurationRef.current);
-    const nextPosition = positionSplineRef.current.evaluate(nextTime);
+    refs.lastAnchorPosition = anchor;
 
-    let heading = userCameraOffsetRef.current.heading;
+    if (!refs.isUserInteracting) {
+      const nextT = Math.min(t + SPLINE_TIME_STEP, refs.pathDuration);
+      const next = refs.positionSpline.evaluate(nextT);
 
-    if (nextPosition && !isUserInteractingRef.current) {
-      const velocity = new Cartesian4();
-      Cartesian3.subtract(nextPosition, anchorPosition, velocity);
-
-      if (Cartesian3.magnitude(velocity) > 0.001) {
-        const enu = Transforms.eastNorthUpToFixedFrame(anchorPosition);
-        const inverseEnu = Matrix4.inverseTransformation(enu, new Matrix4());
-        const localVelocity = Matrix4.multiplyByVector(
-          inverseEnu,
-          velocity,
+      if (next) {
+        const velocity = Cartesian4.subtract(
+          new Cartesian4(next.x, next.y, next.z, 1.0),
+          new Cartesian4(anchor.x, anchor.y, anchor.z, 1.0),
           new Cartesian4()
         );
 
-        heading = Math.atan2(localVelocity.y, localVelocity.x);
-        userCameraOffsetRef.current.heading = heading;
+        if (Cartesian3.magnitude(velocity) > VELOCITY_THRESHOLD) {
+          const enu = Transforms.eastNorthUpToFixedFrame(anchor);
+          const local = Matrix4.multiplyByVector(
+            Matrix4.inverseTransformation(enu, new Matrix4()),
+            velocity,
+            new Cartesian4()
+          );
+          refs.cameraOffset.heading = Math.atan2(local.y, local.x);
+        }
       }
     }
 
-    camera.lookAt(anchorPosition, userCameraOffsetRef.current);
+    camera.lookAt(anchor, refs.cameraOffset);
 
-    const points = getPoints();
-    if (points) {
-      const estimatedIndex = reverseRef.current
-        ? points.length - 1 - Math.floor(progress * (points.length - 1))
-        : Math.floor(progress * (points.length - 1));
-      setCurrentPointIndex(estimatedIndex);
+    const points = getPoints()!;
+    const index = refs.isReversed
+      ? points.length - 1 - Math.floor(progress * (points.length - 1))
+      : Math.floor(progress * (points.length - 1));
+
+    setPathState((prev) => ({ ...prev, currentIndex: index }));
+
+    refs.frameId = requestAnimationFrame(animate);
+  }, [viewState, pathState.speed, getCamera, getPoints, releaseCamera]);
+
+  // Reset function
+  const resetPlayPath = useCallback(() => {
+    const refs = animationRefs.current;
+
+    if (refs.frameId) {
+      cancelAnimationFrame(refs.frameId);
+      refs.frameId = null;
     }
 
-    animationFrameRef.current = requestAnimationFrame(animate);
-  }, [terria, viewState, getPoints, releaseCamera]);
+    if (viewState.isPlayingPath) {
+      runInAction(() => {
+        viewState.isPlayingPath = false;
+      });
+    }
 
-  const playPath = useCallback(async () => {
-    const pts = getPoints();
-    if (!pts?.length) return;
+    Object.assign(refs, {
+      frameId: null,
+      startTime: null,
+      pausedTime: null,
+      pausedProgress: 0,
+      isReversed: false,
+      isInitialized: false,
+      isAborting: false,
+      lastAnchorPosition: null,
+      positionSpline: null
+    });
 
-    const spline = createPathSpline(pts);
+    // Reset state
+    setPathState({
+      progress: 0,
+      currentIndex: 0,
+      countdown: null,
+      isMoving: false,
+      speed: pathState.speed
+    });
+
+    releaseCamera();
+  }, [viewState, pathState.speed, releaseCamera]);
+
+  // Start path animation
+  const startPathAnimation = useCallback(() => {
+    const points = getPoints();
+    if (!points?.length) return;
+
+    const spline = createPathSpline(points);
     if (!spline) return;
 
-    positionSplineRef.current = spline;
+    const refs = animationRefs.current;
+    refs.positionSpline = spline;
+    refs.isAborting = false;
 
-    if (pausedProgressRef.current > 0) {
-      pausedTimeRef.current = JulianDate.now();
+    if (refs.pausedProgress > 0) {
+      refs.pausedTime = JulianDate.now();
     } else {
-      startTimeRef.current = JulianDate.now();
-      pausedProgressRef.current = 0;
+      refs.startTime = JulianDate.now();
     }
 
-    abortPlayingPathRef.current = false;
-
-    animate();
+    refs.frameId = requestAnimationFrame(animate);
   }, [getPoints, createPathSpline, animate]);
 
-  const onPlay = () => {
-    const pts = getPoints();
-    if (!pts?.length) return;
+  // Initialize camera position
+  const initializeCameraPosition = useCallback(() => {
+    const points = getPoints();
+    const camera = getCamera();
+    if (!points?.length || !camera) return;
 
-    if (!viewState.isPlayingPath && pathProgress > 0 && pathProgress < 100) {
-      pausedProgressRef.current = pathProgress / 100;
+    const refs = animationRefs.current;
+    const first = Cartographic.toCartesian(points[0]);
+    const last = Cartographic.toCartesian(points[points.length - 1]);
+
+    const distFirst = Cartesian3.distance(camera.position, first);
+    const distLast = Cartesian3.distance(camera.position, last);
+    refs.isReversed = distLast < distFirst;
+
+    const startPosition = refs.isReversed ? last : first;
+    camera.lookAt(startPosition, refs.cameraOffset);
+
+    // Delay initialization for smooth camera movement
+    setTimeout(() => {
+      refs.isInitialized = true;
+      runInAction(() => {
+        viewState.isPlayingPath = true;
+      });
+    }, CAMERA_SETUP_DELAY);
+  }, [getPoints, getCamera, viewState]);
+
+  const onPlay = useCallback(() => {
+    const points = getPoints();
+    if (!points?.length) return;
+
+    const refs = animationRefs.current;
+    const { progress } = pathState;
+
+    // Resume from pause
+    if (!viewState.isPlayingPath && progress > 0 && progress < 100) {
+      refs.pausedProgress = progress / 100;
       runInAction(() => {
         viewState.isPlayingPath = true;
       });
       return;
     }
 
-    setPathProgress(0);
-    setCurrentPointIndex(0);
-    pausedProgressRef.current = 0;
-    pausedTimeRef.current = null;
-    setCountdown(3);
-  };
+    // Reset progress
+    setPathState((prev) => ({ ...prev, progress: 0, currentIndex: 0 }));
+    refs.pausedProgress = 0;
+    refs.pausedTime = null;
 
-  const onPause = () => {
-    abortPlayingPathRef.current = true;
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
+    if (!refs.isInitialized) {
+      initializeCameraPosition();
+      setPathState((prev) => ({ ...prev, countdown: COUNTDOWN_DURATION }));
+      return;
     }
 
-    pausedProgressRef.current = pathProgress / 100;
+    setPathState((prev) => ({ ...prev, countdown: COUNTDOWN_DURATION }));
+  }, [getPoints, pathState, viewState, initializeCameraPosition]);
+
+  const onPause = useCallback(() => {
+    const refs = animationRefs.current;
+    refs.isAborting = true;
+
+    if (refs.frameId) {
+      cancelAnimationFrame(refs.frameId);
+      refs.frameId = null;
+    }
 
     runInAction(() => {
       viewState.isPlayingPath = false;
     });
-
     releaseCamera();
-  };
+  }, [viewState, releaseCamera]);
 
-  const onStop = () => {
-    resetPlayPath();
-  };
+  const onChangePlaySpeed = useCallback(
+    (newSpeed: number) => {
+      const refs = animationRefs.current;
 
+      if (viewState.isPlayingPath) {
+        const now = JulianDate.now();
+        const baseTime =
+          refs.pausedProgress > 0 ? refs.pausedTime! : refs.startTime!;
+        const elapsed =
+          refs.pausedProgress * refs.pathDuration +
+          JulianDate.secondsDifference(now, baseTime) * pathState.speed;
+
+        refs.pausedProgress = Math.min(elapsed / refs.pathDuration, 1);
+        refs.pausedTime = now;
+        refs.startTime = now;
+      }
+
+      setPathState((prev) => ({ ...prev, speed: newSpeed }));
+    },
+    [viewState, pathState.speed]
+  );
+
+  // Use Effects functions
   useEffect(() => {
-    if (viewState.isPlayingPath && !animationFrameRef.current) {
-      playPath();
+    if (viewState.isPlayingPath && !animationRefs.current.frameId) {
+      startPathAnimation();
     }
-  }, [viewState.isPlayingPath, playPath]);
+  }, [viewState.isPlayingPath, startPathAnimation]);
 
   useEffect(() => {
+    const { countdown } = pathState;
+    if (countdown === null) return;
+
+    if (countdown === 0) {
+      setPathState((prev) => ({ ...prev, countdown: null }));
+      runInAction(() => {
+        viewState.isPlayingPath = true;
+      });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setPathState((prev) => ({
+        ...prev,
+        countdown: prev.countdown ? prev.countdown - 1 : null
+      }));
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [pathState.countdown, viewState, pathState]);
+
+  useEffect(() => {
+    const refs = animationRefs.current;
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (refs.frameId) {
+        cancelAnimationFrame(refs.frameId);
       }
       releaseCamera();
     };
   }, [releaseCamera]);
 
   return {
-    playSpeed,
-    setPlaySpeed,
+    playSpeed: pathState.speed,
+    onChangePlaySpeed,
     playingPath: viewState.isPlayingPath,
-    isCameraMoving,
-    countdown,
-    currentPointIndex,
+    isCameraMoving: pathState.isMoving,
+    countdown: pathState.countdown,
+    currentPointIndex: pathState.currentIndex,
     pointsSize: getPoints()?.length,
-    pathProgress,
+    pathProgress: pathState.progress,
     onPlay,
     onPause,
-    onStop,
+    onStop: resetPlayPath,
     resetPlayPath,
     isPitchTooLow
   };

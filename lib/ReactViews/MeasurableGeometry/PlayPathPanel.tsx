@@ -27,7 +27,7 @@ const PlayPathPanel = observer((props: Props) => {
 
   const {
     playSpeed,
-    setPlaySpeed,
+    onChangePlaySpeed,
     playingPath,
     isCameraMoving,
     countdown,
@@ -178,7 +178,7 @@ const PlayPathPanel = observer((props: Props) => {
             step={0.1}
             value={playSpeed}
             onChange={(val) => {
-              setPlaySpeed(val);
+              onChangePlaySpeed(val);
             }}
             aria-valuetext={`${i18next.t(
               "playPath.tooltip.speedSlider"
