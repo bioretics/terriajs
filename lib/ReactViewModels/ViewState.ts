@@ -36,6 +36,7 @@ import {
   RelativePosition,
   TourPoint
 } from "./defaultTourPoints";
+import { defaultPlayPathTourPoints } from "./defaultPlayPathTourPoints";
 import SearchState from "./SearchState";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
@@ -254,7 +255,10 @@ export default class ViewState {
    * }
    *  */
 
-  @observable tourPoints: TourPoint[] = defaultTourPoints;
+  @observable tourPoints: TourPoint[] = [
+    ...defaultTourPoints,
+    ...defaultPlayPathTourPoints
+  ];
   @observable showTour: boolean = false;
   @observable appRefs: Map<string, Ref<HTMLElement>> = new Map();
   @observable currentTourIndex: number = -1;

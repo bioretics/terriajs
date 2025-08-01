@@ -11,7 +11,9 @@ import Slider from "rc-slider";
 import usePlayPath from "../Custom/PlayPath";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import Box from "../../Styled/Box";
+import Text from "../../Styled/Text";
 
 interface Props {
   terria: Terria;
@@ -24,6 +26,12 @@ const PlayPathPanel = observer((props: Props) => {
   const [lastGeom, setLastGeom] = useState(
     props.terria.measurableGeomList[props.terria.measurableGeometryIndex]
   );
+  const [showTourPrompt, setShowTourPrompt] = useState(false);
+
+  const panelRef = useRef<HTMLDivElement>(null);
+  const playButtonRef = useRef<HTMLButtonElement>(null);
+  const stopButtonRef = useRef<HTMLButtonElement>(null);
+  const speedSliderRef = useRef<HTMLDivElement>(null);
 
   const {
     playSpeed,
@@ -41,6 +49,38 @@ const PlayPathPanel = observer((props: Props) => {
 
   const currentGeom =
     props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
+
+  useEffect(() => {
+    if (panelRef.current) {
+      props.viewState.updateAppRef("PlayPathPanel", panelRef);
+    }
+    if (playButtonRef.current) {
+      props.viewState.updateAppRef("PlayPathPlayButton", playButtonRef);
+    }
+    if (stopButtonRef.current) {
+      props.viewState.updateAppRef("PlayPathStopButton", stopButtonRef);
+    }
+    if (speedSliderRef.current) {
+      props.viewState.updateAppRef("PlayPathSpeedSlider", speedSliderRef);
+    }
+
+    return () => {
+      props.viewState.deleteAppRef("PlayPathPanel");
+      props.viewState.deleteAppRef("PlayPathPlayButton");
+      props.viewState.deleteAppRef("PlayPathStopButton");
+      props.viewState.deleteAppRef("PlayPathSpeedSlider");
+    };
+  }, [props.viewState]);
+
+  useEffect(() => {
+    if (
+      props.viewState.playPathPanelIsVisible &&
+      !localStorage.getItem("playPathTourShown")
+    ) {
+      setShowTourPrompt(true);
+    }
+  }, [props.viewState.playPathPanelIsVisible]);
+
   useEffect(() => {
     const currentGeom =
       props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
@@ -61,6 +101,20 @@ const PlayPathPanel = observer((props: Props) => {
     [Styles.isVisible]: props.viewState.playPathPanelIsVisible,
     [Styles.isTranslucent]: props.viewState.explorerPanelIsVisible
   });
+
+  const startPlayPathTour = () => {
+    setShowTourPrompt(false);
+    localStorage.setItem("playPathTourShown", "true");
+    const playPathTourStartIndex = props.viewState.tourPoints.findIndex(
+      (point) => point.appRefName === "PlayPathPanel"
+    );
+    if (playPathTourStartIndex !== -1) {
+      runInAction(() => {
+        props.viewState.setTourIndex(playPathTourStartIndex);
+        props.viewState.setShowTour(true);
+      });
+    }
+  };
 
   const renderHeader = () => {
     return (
@@ -90,6 +144,54 @@ const PlayPathPanel = observer((props: Props) => {
     );
   };
 
+  const renderTourPrompt = () => {
+    if (!showTourPrompt) return null;
+
+    return (
+      <Box
+        position="absolute"
+        style={{
+          top: -60,
+          left: 0,
+          right: 0,
+          background: theme.colorPrimary,
+          padding: "8px 12px",
+          borderRadius: "4px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+          zIndex: 1000
+        }}
+      >
+        <Text small textLight>
+          {i18next.t(
+            "playPath.tourPrompt",
+            "First time using Play Path? Take a quick tour!"
+          )}
+        </Text>
+        <Box centered gap={2} style={{ marginTop: 4 }}>
+          <Button
+            secondary
+            shortMinHeight
+            onClick={() => {
+              setShowTourPrompt(false);
+              localStorage.setItem("playPathTourShown", "true");
+            }}
+            style={{ fontSize: "0.8em", padding: "2px 8px" }}
+          >
+            {i18next.t("general.skip")}
+          </Button>
+          <Button
+            primary
+            shortMinHeight
+            onClick={startPlayPathTour}
+            style={{ fontSize: "0.8em", padding: "2px 8px" }}
+          >
+            {i18next.t("playPath.tour.start")}
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
   const renderBody = () => {
     return (
       <div
@@ -113,6 +215,7 @@ const PlayPathPanel = observer((props: Props) => {
           }}
         >
           <Button
+            ref={playButtonRef}
             onClick={playingPath ? onPause : onPlay}
             disabled={!playingPath && isCameraMoving}
             css={`
@@ -132,6 +235,7 @@ const PlayPathPanel = observer((props: Props) => {
             />
           </Button>
           <Button
+            ref={stopButtonRef}
             onClick={onStop}
             title={i18next.t("playPath.tooltip.stop")}
             disabled={
@@ -148,6 +252,7 @@ const PlayPathPanel = observer((props: Props) => {
           </Button>
         </div>
         <div
+          ref={speedSliderRef}
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
           className="no-drag"
           style={{
@@ -199,10 +304,12 @@ const PlayPathPanel = observer((props: Props) => {
       cancel=".no-drag"
     >
       <div
+        ref={panelRef}
         className={panelClassName}
-        style={{ pointerEvents: "auto" }}
+        style={{ pointerEvents: "auto", position: "relative" }}
         aria-hidden={!props.viewState.playPathPanelIsVisible}
       >
+        {renderTourPrompt()}
         {renderHeader()}
         {countdown !== null ? (
           <div
