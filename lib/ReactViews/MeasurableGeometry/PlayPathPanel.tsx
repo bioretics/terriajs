@@ -105,15 +105,9 @@ const PlayPathPanel = observer((props: Props) => {
   const startPlayPathTour = () => {
     setShowTourPrompt(false);
     localStorage.setItem("playPathTourShown", "true");
-    const playPathTourStartIndex = props.viewState.tourPoints.findIndex(
-      (point) => point.appRefName === "PlayPathPanel"
-    );
-    if (playPathTourStartIndex !== -1) {
-      runInAction(() => {
-        props.viewState.setTourIndex(playPathTourStartIndex);
-        props.viewState.setShowTour(true);
-      });
-    }
+    runInAction(() => {
+      props.viewState.startPlayPathTour();
+    });
   };
 
   const renderHeader = () => {
@@ -185,7 +179,7 @@ const PlayPathPanel = observer((props: Props) => {
             onClick={startPlayPathTour}
             style={{ fontSize: "0.8em", padding: "2px 8px" }}
           >
-            {i18next.t("playPath.tour.start")}
+            {i18next.t("playPath.tour.preface.start")}
           </Button>
         </Box>
       </Box>

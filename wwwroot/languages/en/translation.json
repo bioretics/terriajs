@@ -153,7 +153,8 @@
       "playButton": "## Play/Pause Button\n\nClick this button to start or pause the animation along the path. During playback, the camera will automatically follow the traced path.",
       "stopButton": "## Stop Button\n\nUse this button to stop the animation and return to the starting point. Useful for starting over or resetting the view.",
       "speedSlider": "## Speed Control\n\nAdjust the animation speed by dragging the slider. You can set speeds from 0.5x (slower) to 3x (faster) to match your needs.",
-      "dragPanel": "## Movable Panel\n\nYou can drag this panel to any position on the screen by holding down on the title bar. Position it wherever you prefer for better viewing."
+      "dragPanel": "## Movable Panel\n\nYou can drag this panel to any position on the screen by holding down on the title bar. Position it wherever you prefer for better viewing.",
+      "playPathPanel": "## Play Path Panel\n\nThis panel allows you to view by scrolling the camera on the map a route drawn manually or loaded from files. The panel can be moved by dragging and also closed to get a full view."
     }
   },
   "pickInfo": {
