@@ -31,7 +31,7 @@ const PlayPathPanel = observer((props: Props) => {
   const panelRef = useRef<HTMLDivElement>(null);
   const playButtonRef = useRef<HTMLButtonElement>(null);
   const stopButtonRef = useRef<HTMLButtonElement>(null);
-  const speedSliderRef = useRef<HTMLDivElement>(null);
+  const cameraPositionRef = useRef<HTMLDivElement>(null);
 
   const {
     playSpeed,
@@ -60,15 +60,15 @@ const PlayPathPanel = observer((props: Props) => {
     if (stopButtonRef.current) {
       props.viewState.updateAppRef("PlayPathStopButton", stopButtonRef);
     }
-    if (speedSliderRef.current) {
-      props.viewState.updateAppRef("PlayPathSpeedSlider", speedSliderRef);
+    if (cameraPositionRef.current) {
+      props.viewState.updateAppRef("PlayPathCameraPosition", cameraPositionRef);
     }
 
     return () => {
       props.viewState.deleteAppRef("PlayPathPanel");
       props.viewState.deleteAppRef("PlayPathPlayButton");
       props.viewState.deleteAppRef("PlayPathStopButton");
-      props.viewState.deleteAppRef("PlayPathSpeedSlider");
+      props.viewState.deleteAppRef("PlayPathCameraPosition");
     };
   }, [props.viewState]);
 
@@ -191,6 +191,7 @@ const PlayPathPanel = observer((props: Props) => {
   const renderBody = () => {
     return (
       <div
+        ref={cameraPositionRef}
         className={Styles.body}
         style={{
           padding: 10,
@@ -248,7 +249,6 @@ const PlayPathPanel = observer((props: Props) => {
           </Button>
         </div>
         <div
-          ref={speedSliderRef}
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
           className="no-drag"
           style={{

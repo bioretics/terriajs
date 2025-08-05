@@ -30,13 +30,13 @@ export const defaultPlayPathTourPoints: TourPoint[] = [
     content: "translate#playPath.tour.stopButton"
   },
   {
-    appRefName: "PlayPathSpeedSlider",
+    appRefName: "PlayPathCameraPosition",
     priority: 130,
     caretOffsetTop: 0,
     caretOffsetLeft: 0,
     offsetTop: 0,
     offsetLeft: 0,
     positionTop: RelativePosition.RECT_BOTTOM,
-    content: "translate#playPath.tour.speedSlider"
+    content: "translate#playPath.tour.cameraPosition"
   }
 ];
