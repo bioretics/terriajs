@@ -166,20 +166,22 @@ const PlayPathPanel = observer((props: Props) => {
             secondary
             shortMinHeight
             onClick={() => {
-              setShowTourPrompt(false);
-              localStorage.setItem("playPathTourShown", "true");
+              startPlayPathTour();
             }}
-            style={{ fontSize: "0.8em", padding: "2px 8px" }}
+            style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("general.skip")}
+            {i18next.t("playPath.tour.preface.start")}
           </Button>
           <Button
             primary
             shortMinHeight
-            onClick={startPlayPathTour}
-            style={{ fontSize: "0.8em", padding: "2px 8px" }}
+            onClick={() => {
+              setShowTourPrompt(false);
+              localStorage.setItem("playPathTourShown", "true");
+            }}
+            style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("playPath.tour.preface.start")}
+            {i18next.t("general.skip")}
           </Button>
         </Box>
       </Box>
