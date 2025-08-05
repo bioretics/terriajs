@@ -36,8 +36,7 @@ const PlayPathPanel = observer((props: Props) => {
     onPlay,
     onPause,
     onStop,
-    resetPlayPath,
-    isPitchTooLow
+    resetPlayPath
   } = usePlayPath(props.terria, props.viewState);
 
   const currentGeom =
@@ -103,11 +102,6 @@ const PlayPathPanel = observer((props: Props) => {
           gap: 8
         }}
       >
-        {isPitchTooLow() && !playingPath && (
-          <div style={{ color: "red", marginBottom: 4 }}>
-            {i18next.t("playPath.tooltip.pitchTooLow", { max: "60°" })}
-          </div>
-        )}
         <div
           style={{
             display: "flex",
@@ -120,19 +114,14 @@ const PlayPathPanel = observer((props: Props) => {
         >
           <Button
             onClick={playingPath ? onPause : onPlay}
-            disabled={
-              (!playingPath && isCameraMoving) ||
-              (!playingPath && isPitchTooLow())
-            }
+            disabled={!playingPath && isCameraMoving}
             css={`
               color: ${theme.textLight};
               background: ${theme.colorPrimary};
               min-width: 50px;
             `}
             title={
-              isPitchTooLow() && !playingPath
-                ? i18next.t("playPath.tooltip.pitchTooLow", { max: "60°" })
-                : playingPath
+              playingPath
                 ? i18next.t("playPath.tooltip.pause")
                 : i18next.t("playPath.tooltip.play")
             }

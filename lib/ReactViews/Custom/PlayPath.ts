@@ -9,12 +9,8 @@ import CameraView from "../../Models/CameraView";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import { runInAction } from "mobx";
-import simplify from "@turf/simplify";
-import { lineString } from "@turf/helpers";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
-  const MIN_PITCH = Math.PI / 4;
-
   const [playSpeed, setPlaySpeed] = useState(1);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -29,13 +25,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
   const loadPercentageRef = useRef(loadPercentage);
-
-  const isPitchTooLow = useCallback(() => {
-    const camera = terria.cesium?.scene.camera;
-    console.log("Camera pitch:", camera?.pitch);
-    if (!camera) return false;
-    return Math.abs(camera.pitch ?? 0) < MIN_PITCH;
-  }, [terria, MIN_PITCH]);
 
   const resetPlayPath = useCallback(() => {
     if (viewState.isPlayingPath) {
@@ -86,29 +75,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     if (pts.length <= 2) return pts;
 
-    const coords = pts.map((p) => [
-      CesiumMath.toDegrees(p.longitude),
-      CesiumMath.toDegrees(p.latitude)
-    ]);
-    const line = lineString(coords);
+    const interpolatedPts = interpolatePoints(pts, 5);
 
-    const simplified = simplify(line, {
-      tolerance: 0.01,
-      highQuality: true
-    });
-
-    const simplifiedPts = simplified.geometry.coordinates.map(([lon, lat], i) =>
-      Cartographic.fromDegrees(lon, lat, pts[i]?.height ?? 0)
-    );
-
-    const interpolatedPts = interpolatePoints(simplifiedPts, 5);
-
-    console.log(
-      geom.stopPoints.length,
-      simplifiedPts.length,
-      interpolatedPts.length
-    );
-    console.log(geom.stopPoints, simplifiedPts, interpolatedPts);
+    console.log(geom.stopPoints.length, pts.length, interpolatedPts.length);
+    console.log(geom.stopPoints, pts, interpolatedPts);
 
     return interpolatedPts;
   }, [terria]);
@@ -375,7 +345,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     onPlay,
     onPause,
     onStop,
-    resetPlayPath,
-    isPitchTooLow
+    resetPlayPath
   };
 }
