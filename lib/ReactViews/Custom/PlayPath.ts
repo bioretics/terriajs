@@ -11,12 +11,16 @@ import ViewState from "../../ReactViewModels/ViewState";
 import { runInAction } from "mobx";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
+  const MIN_PITCH = Math.PI / 4;
+
   const [playSpeed, setPlaySpeed] = useState(1);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [loadPercentage, setLoadPercentage] = useState(0);
   const [indeterminate, setIndeterminate] = useState(false);
+
+  const [isPitchTooLowState, setIsPitchTooLowState] = useState(false);
 
   const distRef = useRef(0);
   const startIdxRef = useRef(0);
@@ -25,6 +29,36 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
   const loadPercentageRef = useRef(loadPercentage);
+
+  const lastPitchCheckRef = useRef(0);
+
+  const checkAndUpdatePitch = useCallback(() => {
+    const camera = terria.cesium?.scene.camera;
+    if (!camera) return;
+
+    const currentPitch = Math.abs(camera.pitch ?? 0);
+    const isPitchLow = currentPitch < MIN_PITCH;
+    const now = Date.now();
+
+    if (now - lastPitchCheckRef.current > 50) {
+      console.log(
+        "Real-time Camera pitch:",
+        camera.pitch,
+        "radians,",
+        ((camera.pitch * 180) / Math.PI).toFixed(1),
+        "degrees,",
+        "isPitchTooLow:",
+        isPitchLow
+      );
+      lastPitchCheckRef.current = now;
+    }
+
+    setIsPitchTooLowState(isPitchLow);
+  }, [terria, MIN_PITCH]);
+
+  const isPitchTooLow = useCallback(() => {
+    return isPitchTooLowState;
+  }, [isPitchTooLowState]);
 
   const resetPlayPath = useCallback(() => {
     if (viewState.isPlayingPath) {
@@ -40,7 +74,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     startIdxRef.current = 0;
     reverseRef.current = false;
     currentPointIndexRef.current = 0;
-  }, [viewState]);
+
+    checkAndUpdatePitch();
+  }, [viewState, checkAndUpdatePitch]);
 
   const interpolatePoints = (
     pts: Cartographic[],
@@ -82,6 +118,46 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     return interpolatedPts;
   }, [terria]);
+
+  useEffect(() => {
+    const camera = terria.cesium?.scene.camera;
+    if (!camera) return;
+
+    checkAndUpdatePitch();
+
+    const onCameraChanged = () => {
+      checkAndUpdatePitch();
+    };
+
+    const onCameraMoveStart = () => {
+      setIsCameraMoving(true);
+    };
+
+    const onCameraMoveEnd = () => {
+      setIsCameraMoving(false);
+      checkAndUpdatePitch();
+    };
+
+    camera.changed.addEventListener(onCameraChanged);
+    camera.moveStart?.addEventListener(onCameraMoveStart);
+    camera.moveEnd.addEventListener(onCameraMoveEnd);
+
+    return () => {
+      camera.changed.removeEventListener(onCameraChanged);
+      camera.moveStart?.removeEventListener(onCameraMoveStart);
+      camera.moveEnd.removeEventListener(onCameraMoveEnd);
+    };
+  }, [terria, checkAndUpdatePitch]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!viewState.isPlayingPath) {
+        checkAndUpdatePitch();
+      }
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [checkAndUpdatePitch, viewState.isPlayingPath]);
 
   useEffect(() => {
     const onProgress = (remaining: number, max: number) => {
@@ -132,27 +208,21 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
     if (!camera) return;
+
     const updateDist = () => {
       const pts = getPoints();
       if (!pts?.length) return;
       const cartesians = pts.map((p) => Cartographic.toCartesian(p));
       const idx = currentPointIndexRef.current;
       distRef.current = Cartesian3.distance(camera.position, cartesians[idx]);
-      setIsCameraMoving(false);
     };
 
-    const onMoveStart = () => {
-      setIsCameraMoving(true);
-    };
-
-    camera.moveStart?.addEventListener(onMoveStart);
     camera.moveEnd.addEventListener(updateDist);
 
     return () => {
-      camera.moveStart?.removeEventListener(onMoveStart);
       camera.moveEnd.removeEventListener(updateDist);
     };
-  }, [getPoints, terria, viewState]);
+  }, [getPoints, terria]);
 
   const playPath = useCallback(async () => {
     abortPlayingPathRef.current = true;
@@ -345,6 +415,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     onPlay,
     onPause,
     onStop,
-    resetPlayPath
+    resetPlayPath,
+    isPitchTooLow
   };
 }
