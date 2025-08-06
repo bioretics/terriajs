@@ -136,6 +136,8 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "nextPoint": "Punto successivo",
+    "previousPoint": "Punto precedente",
     "tooltip": {
       "play": "Avvia percorso",
       "pause": "Pausa percorso",

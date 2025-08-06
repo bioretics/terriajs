@@ -36,11 +36,16 @@ const PlayPathPanel = observer((props: Props) => {
     onPlay,
     onPause,
     onStop,
-    resetPlayPath
+    resetPlayPath,
+    onPrevious,
+    onNext,
+    isPreviousDisabled,
+    isNextDisabled
   } = usePlayPath(props.terria, props.viewState);
 
   const currentGeom =
     props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
+
   useEffect(() => {
     const currentGeom =
       props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
@@ -55,6 +60,51 @@ const PlayPathPanel = observer((props: Props) => {
     props.terria.measurableGeometryIndex,
     lastGeom,
     resetPlayPath
+  ]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        !props.viewState.playPathPanelIsVisible ||
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement
+      ) {
+        return;
+      }
+
+      switch (event.key) {
+        case "ArrowLeft":
+          event.preventDefault();
+          if (!isPreviousDisabled()) {
+            onPrevious();
+          }
+          break;
+        case "ArrowRight":
+          event.preventDefault();
+          if (!isNextDisabled()) {
+            onNext();
+          }
+          break;
+      }
+    };
+
+    if (props.viewState.playPathPanelIsVisible) {
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    props.viewState.playPathPanelIsVisible,
+    isPreviousDisabled,
+    isNextDisabled,
+    onPrevious,
+    onNext,
+    onPlay,
+    onPause,
+    onStop,
+    playingPath
   ]);
 
   const panelClassName = classNames(Styles.panel, {
@@ -108,10 +158,26 @@ const PlayPathPanel = observer((props: Props) => {
             flexDirection: "row",
             alignItems: "stretch",
             justifyContent: "center",
-            gap: 8,
+            gap: 6,
             width: "100%"
           }}
         >
+          <Button
+            onClick={onPrevious}
+            disabled={isPreviousDisabled()}
+            css={`
+              color: ${theme.textLight};
+              background: ${isPreviousDisabled()
+                ? theme.greyLighter
+                : theme.colorSecondary};
+              min-width: 40px;
+              opacity: ${isPreviousDisabled() ? 0.5 : 1};
+            `}
+            title={i18next.t("playPath.previousPoint") + " (←)"}
+          >
+            <StyledIcon glyph={Icon.GLYPHS.left} styledWidth="14px" />
+          </Button>
+
           <Button
             onClick={playingPath ? onPause : onPlay}
             disabled={!playingPath && isCameraMoving}
@@ -122,8 +188,8 @@ const PlayPathPanel = observer((props: Props) => {
             `}
             title={
               playingPath
-                ? i18next.t("playPath.tooltip.pause")
-                : i18next.t("playPath.tooltip.play")
+                ? `${i18next.t("playPath.tooltip.pause")} (Space)`
+                : `${i18next.t("playPath.tooltip.play")} (Space)`
             }
           >
             <StyledIcon
@@ -131,9 +197,10 @@ const PlayPathPanel = observer((props: Props) => {
               styledWidth="16px"
             />
           </Button>
+
           <Button
             onClick={onStop}
-            title={i18next.t("playPath.tooltip.stop")}
+            title={`${i18next.t("playPath.tooltip.stop")} (Esc)`}
             disabled={
               !playingPath &&
               !(currentPointIndex > 0 && currentPointIndex < pointsSize!! - 1)
@@ -146,7 +213,24 @@ const PlayPathPanel = observer((props: Props) => {
           >
             <StyledIcon glyph={Icon.GLYPHS.refresh} styledWidth="16px" />
           </Button>
+
+          <Button
+            onClick={onNext}
+            disabled={isNextDisabled()}
+            css={`
+              color: ${theme.textLight};
+              background: ${isNextDisabled()
+                ? theme.greyLighter
+                : theme.colorSecondary};
+              min-width: 40px;
+              opacity: ${isNextDisabled() ? 0.5 : 1};
+            `}
+            title={i18next.t("playPath.nextPoint") + " (→)"}
+          >
+            <StyledIcon glyph={Icon.GLYPHS.right} styledWidth="14px" />
+          </Button>
         </div>
+
         <div
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
           className="no-drag"
@@ -191,10 +275,10 @@ const PlayPathPanel = observer((props: Props) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.1,
+        width: Math.max(window.innerWidth * 0.2, 400),
         height: "auto"
       }}
-      maxWidth={window.innerWidth * 0.4}
+      maxWidth={Math.max(window.innerWidth * 0.6, 600)}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
