@@ -11,8 +11,6 @@ import ViewState from "../../ReactViewModels/ViewState";
 import { runInAction } from "mobx";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
-  const MIN_PITCH = Math.PI / 4;
-
   const [playSpeed, setPlaySpeed] = useState(1);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -37,24 +35,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (!camera) return;
 
     const currentPitch = Math.abs(camera.pitch ?? 0);
-    const isPitchLow = currentPitch < MIN_PITCH;
+    const isPitchLow =
+      currentPitch < terria.configParameters.playPathPitchThreshold!;
     const now = Date.now();
 
     if (now - lastPitchCheckRef.current > 50) {
-      console.log(
-        "Real-time Camera pitch:",
-        camera.pitch,
-        "radians,",
-        ((camera.pitch * 180) / Math.PI).toFixed(1),
-        "degrees,",
-        "isPitchTooLow:",
-        isPitchLow
-      );
       lastPitchCheckRef.current = now;
     }
 
     setIsPitchTooLowState(isPitchLow);
-  }, [terria, MIN_PITCH]);
+  }, [terria]);
 
   const isPitchTooLow = useCallback(() => {
     return isPitchTooLowState;
