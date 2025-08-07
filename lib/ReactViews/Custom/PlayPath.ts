@@ -78,29 +78,110 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     checkAndUpdatePitch();
   }, [viewState, checkAndUpdatePitch]);
 
-  const interpolatePoints = (
-    pts: Cartographic[],
-    stepsPerSegment = 3
-  ): Cartographic[] => {
-    if (pts.length < 2) return pts;
-    const result: Cartographic[] = [];
-    for (let i = 0; i < pts.length - 1; i++) {
-      const start = pts[i];
-      const end = pts[i + 1];
-      for (let s = 0; s < stepsPerSegment; s++) {
-        const t = s / stepsPerSegment;
-        result.push(
-          new Cartographic(
-            CesiumMath.lerp(start.longitude, end.longitude, t),
-            CesiumMath.lerp(start.latitude, end.latitude, t),
-            CesiumMath.lerp(start.height, end.height, t)
-          )
-        );
+  const interpolatePointsLagrange = useCallback(
+    (
+      pts: Cartographic[],
+      stepsPerSegment = 3,
+      windowSize = 4
+    ): Cartographic[] => {
+      const lagrangeBasis = (
+        j: number,
+        t: number,
+        points: number[]
+      ): number => {
+        let result = 1;
+        for (let k = 0; k < points.length; k++) {
+          if (k !== j) {
+            result *= (t - points[k]) / (points[j] - points[k]);
+          }
+        }
+        return result;
+      };
+
+      const lagrangeInterpolate = (
+        t: number,
+        xPoints: number[],
+        yValues: number[]
+      ): number => {
+        let result = 0;
+        for (let j = 0; j < xPoints.length; j++) {
+          result += yValues[j] * lagrangeBasis(j, t, xPoints);
+        }
+        return result;
+      };
+
+      if (pts.length < 2) return pts;
+      if (pts.length === 2) {
+        const result: Cartographic[] = [];
+        for (let s = 0; s < stepsPerSegment; s++) {
+          const t = s / stepsPerSegment;
+          result.push(
+            new Cartographic(
+              CesiumMath.lerp(pts[0].longitude, pts[1].longitude, t),
+              CesiumMath.lerp(pts[0].latitude, pts[1].latitude, t),
+              CesiumMath.lerp(pts[0].height, pts[1].height, t)
+            )
+          );
+        }
+        result.push(pts[1]);
+        return result;
       }
-    }
-    result.push(pts[pts.length - 1]);
-    return result;
-  };
+
+      const result: Cartographic[] = [];
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const windowStart = Math.max(0, i - Math.floor(windowSize / 2));
+        const windowEnd = Math.min(
+          pts.length - 1,
+          windowStart + windowSize - 1
+        );
+
+        const adjustedWindowStart = Math.max(0, windowEnd - windowSize + 1);
+
+        const windowPoints = pts.slice(adjustedWindowStart, windowEnd + 1);
+        const windowIndices = Array.from(
+          { length: windowPoints.length },
+          (_, idx) => adjustedWindowStart + idx
+        );
+
+        for (let s = 0; s < stepsPerSegment; s++) {
+          const t = s / stepsPerSegment;
+          const actualT = i + t;
+
+          const longitudes = windowPoints.map((p) => p.longitude);
+          const latitudes = windowPoints.map((p) => p.latitude);
+          const heights = windowPoints.map((p) => p.height);
+
+          const interpolatedLon = lagrangeInterpolate(
+            actualT,
+            windowIndices,
+            longitudes
+          );
+          const interpolatedLat = lagrangeInterpolate(
+            actualT,
+            windowIndices,
+            latitudes
+          );
+          const interpolatedHeight = lagrangeInterpolate(
+            actualT,
+            windowIndices,
+            heights
+          );
+
+          result.push(
+            new Cartographic(
+              interpolatedLon,
+              interpolatedLat,
+              interpolatedHeight
+            )
+          );
+        }
+      }
+      result.push(pts[pts.length - 1]);
+      return result;
+    },
+    []
+  );
 
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -111,13 +192,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     if (pts.length <= 2) return pts;
 
-    const interpolatedPts = interpolatePoints(pts, 5);
-
-    console.log(geom.stopPoints.length, pts.length, interpolatedPts.length);
-    console.log(geom.stopPoints, pts, interpolatedPts);
+    const interpolatedPts = interpolatePointsLagrange(pts, 5);
 
     return interpolatedPts;
-  }, [terria]);
+  }, [terria, interpolatePointsLagrange]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
