@@ -27,6 +27,9 @@ const PlayPathPanel = observer((props: Props) => {
     props.terria.measurableGeomList[props.terria.measurableGeometryIndex]
   );
   const [showTourPrompt, setShowTourPrompt] = useState(false);
+  const [hasSeenTour, setHasSeenTour] = useState<boolean>(
+    !!localStorage.getItem("playPathTourShown")
+  );
 
   const panelRef = useRef<HTMLDivElement>(null);
   const playButtonRef = useRef<HTMLButtonElement>(null);
@@ -73,11 +76,10 @@ const PlayPathPanel = observer((props: Props) => {
   }, [props.viewState]);
 
   useEffect(() => {
-    if (
-      props.viewState.playPathPanelIsVisible &&
-      !localStorage.getItem("playPathTourShown")
-    ) {
-      setShowTourPrompt(true);
+    if (props.viewState.playPathPanelIsVisible) {
+      const seen = !!localStorage.getItem("playPathTourShown");
+      setHasSeenTour(seen);
+      if (!seen) setShowTourPrompt(true);
     }
   }, [props.viewState.playPathPanelIsVisible]);
 
@@ -105,9 +107,11 @@ const PlayPathPanel = observer((props: Props) => {
   const startPlayPathTour = () => {
     setShowTourPrompt(false);
     localStorage.setItem("playPathTourShown", "true");
-    runInAction(() => {
-      props.viewState.startPlayPathTour();
-    });
+    setHasSeenTour(true);
+    const anyVs: any = props.viewState as any;
+    if (typeof anyVs.startPlayPathTour === "function") {
+      runInAction(() => anyVs.startPlayPathTour());
+    }
   };
 
   const renderHeader = () => {
@@ -116,11 +120,13 @@ const PlayPathPanel = observer((props: Props) => {
         <span
           style={{
             justifyContent: "center",
-            display: "flex"
+            display: "flex",
+            flex: 1
           }}
         >
           <b>{i18next.t("playPath.title")}</b>
         </span>
+        {renderCompactHelp()}
         <button
           type="button"
           onClick={() => {
@@ -178,13 +184,28 @@ const PlayPathPanel = observer((props: Props) => {
             onClick={() => {
               setShowTourPrompt(false);
               localStorage.setItem("playPathTourShown", "true");
+              setHasSeenTour(true);
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("general.skip")}
+            {i18next.t("general.skip", "Skip")}
           </Button>
         </Box>
       </Box>
+    );
+  };
+
+  const renderCompactHelp = () => {
+    if (!hasSeenTour || showTourPrompt) return null;
+    return (
+      <button
+        onClick={startPlayPathTour}
+        className={Styles.btnCloseFeature}
+        title={i18next.t("playPath.tour.helpButton", "Open Play Path tour")}
+        style={{ marginRight: 25 }}
+      >
+        <Icon glyph={Icon.GLYPHS.helpThick} />
+      </button>
     );
   };
 
