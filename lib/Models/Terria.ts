@@ -432,7 +432,7 @@ export interface ConfigParameters {
   /**
    * Maximum camera pitch (in radians) for the play path tool.
    */
-  playPathPitchThreshold?: number;
+  playPathCameraPitchThreshold?: number;
 }
 
 interface StartOptions {
@@ -677,7 +677,7 @@ export default class Terria {
     pickSize: undefined,
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
-    playPathPitchThreshold: Math.PI / 6
+    playPathCameraPitchThreshold: 30
   };
 
   @observable

@@ -35,8 +35,11 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (!camera) return;
 
     const currentPitch = Math.abs(camera.pitch ?? 0);
-    const isPitchLow =
-      currentPitch < terria.configParameters.playPathPitchThreshold!;
+    const thresholdRadians = CesiumMath.toRadians(
+      terria.configParameters.playPathCameraPitchThreshold!
+    );
+
+    const isPitchLow = currentPitch < thresholdRadians;
     const now = Date.now();
 
     if (now - lastPitchCheckRef.current > 50) {
