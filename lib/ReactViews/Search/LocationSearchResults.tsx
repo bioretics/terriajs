@@ -53,6 +53,7 @@ interface PropsType extends WithTranslation {
 @observer
 class LocationSearchResults extends React.Component<PropsType> {
   @observable isExpanded = false;
+  @observable nonLocationIsOpen = true;
 
   constructor(props: PropsType) {
     super(props);
@@ -113,13 +114,23 @@ class LocationSearchResults extends React.Component<PropsType> {
           ? validResults
           : validResults.slice(0, maxResults)
         : validResults;
-    const isOpen = isLocationProvider ? searchProvider.isOpen : true;
+
+    const isOpen = isLocationProvider
+      ? (searchProvider as any).isOpen
+      : this.nonLocationIsOpen;
+
     return (
       <Box column>
         <RawButtonAndHighlight
           type="button"
           fullWidth
-          onClick={() => searchProvider.toggleOpen()}
+          onClick={() => {
+            if (isLocationProvider) {
+              (searchProvider as any).toggleOpen();
+            } else {
+              this.nonLocationIsOpen = !this.nonLocationIsOpen;
+            }
+          }}
         >
           <BoxSpan
             paddedRatio={2}
@@ -159,7 +170,7 @@ class LocationSearchResults extends React.Component<PropsType> {
                   />
                 ))}
               </Ul>
-              {validResults.length > maxResults && isLocationProvider && (
+              {validResults.length > maxResults && (
                 <BoxSpan
                   paddedRatio={2}
                   paddedVertically={3}
