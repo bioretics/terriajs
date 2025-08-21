@@ -101,6 +101,10 @@ class LocationSearchResults extends React.Component<PropsType> {
     const searchProvider: LocationSearchProviderMixin.Instance =
       search.searchProvider as unknown as LocationSearchProviderMixin.Instance;
 
+    const isLocationProvider = LocationSearchProviderMixin.isMixedInto(
+      search.searchProvider
+    );
+
     const maxResults = searchProvider.recommendedListLength || 5;
     const validResults = this.validResults;
     const results =
@@ -109,7 +113,7 @@ class LocationSearchResults extends React.Component<PropsType> {
           ? validResults
           : validResults.slice(0, maxResults)
         : validResults;
-    const isOpen = searchProvider.isOpen;
+    const isOpen = isLocationProvider ? searchProvider.isOpen : true;
     return (
       <Box column>
         <RawButtonAndHighlight
@@ -155,7 +159,7 @@ class LocationSearchResults extends React.Component<PropsType> {
                   />
                 ))}
               </Ul>
-              {validResults.length > maxResults && (
+              {validResults.length > maxResults && isLocationProvider && (
                 <BoxSpan
                   paddedRatio={2}
                   paddedVertically={3}
