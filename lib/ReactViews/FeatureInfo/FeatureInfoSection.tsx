@@ -366,8 +366,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
 
     return {
       data:
-        this.featureProperties &&
-        Object.keys(this.featureProperties).length > 0
+        this.featureProperties && Object.keys(this.featureProperties).length > 0
           ? this.featureProperties
           : undefined,
       fileName
@@ -488,9 +487,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
           {titleElement}
           {this.props.isOpen ? (
             <section className={Styles.content}>
-              <div key="no-info">
-                {t("featureInfo.noInfoAvailable")}
-              </div>
+              <div key="no-info">{t("featureInfo.noInfoAvailable")}</div>
             </section>
           ) : null}
         </li>
@@ -521,9 +518,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 this.rawFeatureInfoReactNode ? (
                   this.rawFeatureInfoReactNode
                 ) : (
-                  <div key="no-info">
-                    {t("featureInfo.noInfoAvailable")}
-                  </div>
+                  <div key="no-info">{t("featureInfo.noInfoAvailable")}</div>
                 )
               ) : (
                 // Show templated feature info

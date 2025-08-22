@@ -6,7 +6,7 @@ import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
 import Styles from "./feature-info-catalog-item.scss";
 import FeatureInfoSection from "./FeatureInfoSection";
-import { autorun } from "mobx";
+import { observer } from "mobx-react";
 
 interface Props {
   features: TerriaFeature[];
@@ -16,29 +16,15 @@ interface Props {
   printView?: boolean;
 }
 
-export default (props: Props) => {
+const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
   const { t } = useTranslation();
   const features = props.features;
   const catalogItem = props.catalogItem;
   const terria = props.viewState.terria;
 
-  /*const maximumShownFeatureInfos =
+  const maximumShownFeatureInfos =
     catalogItem.maximumShownFeatureInfos ??
-    terria.configParameters.defaultMaximumShownFeatureInfos;*/
-
-  const [maximumShownFeatureInfos, setMaximumShownFeatureInfos] =
-    React.useState(terria.configParameters.defaultMaximumShownFeatureInfos);
-
-  React.useEffect(
-    () =>
-      autorun(() => {
-        setMaximumShownFeatureInfos(
-          catalogItem.maximumShownFeatureInfos ??
-            terria.configParameters.defaultMaximumShownFeatureInfos
-        );
-      }),
-    []
-  );
+    terria.configParameters.defaultMaximumShownFeatureInfos;
 
   const hiddenNumber = features.length - maximumShownFeatureInfos; // A positive hiddenNumber => some are hidden; negative means none are.
 
@@ -92,4 +78,6 @@ export default (props: Props) => {
       </ul>
     </li>
   );
-};
+});
+
+export default FeatureInfoCatalogItem;
