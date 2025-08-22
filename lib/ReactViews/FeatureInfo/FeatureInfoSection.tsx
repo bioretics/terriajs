@@ -1,26 +1,16 @@
 import classNames from "classnames";
 import { TFunction } from "i18next";
-import { isEmpty, merge } from "lodash-es";
-import {
-  action,
-  computed,
-  makeObservable,
-  observable,
-  reaction,
-  runInAction
-} from "mobx";
+import { merge } from "lodash-es";
+import { action, computed, observable, reaction, runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { IDisposer } from "mobx-utils";
 import Mustache from "mustache";
 import React from "react";
 import { withTranslation } from "react-i18next";
-import styled from "styled-components";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import TerriaError from "../../Core/TerriaError";
-import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import DiscretelyTimeVaryingMixin from "../../ModelMixins/DiscretelyTimeVaryingMixin";
@@ -29,25 +19,24 @@ import TimeVarying from "../../ModelMixins/TimeVarying";
 import TerriaFeature from "../../Models/Feature/Feature";
 import FeatureInfoContext from "../../Models/Feature/FeatureInfoContext";
 import Icon from "../../Styled/Icon";
-import { TimeSeriesContext } from "../../Table/tableFeatureInfoContext";
-import { FeatureInfoPanelButton as FeatureInfoPanelButtonModel } from "../../ViewModels/FeatureInfoPanel";
-import { WithViewState, withViewState } from "../Context";
 import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
-import FeatureInfoDownload from "./FeatureInfoDownload";
-import FeatureInfoPanelButton from "./FeatureInfoPanelButton";
+import { WithViewState, withViewState } from "../Context";
 import Styles from "./feature-info-section.scss";
+import FeatureInfoDownload from "./FeatureInfoDownload";
 import { generateCesiumInfoHTMLFromProperties } from "./generateCesiumInfoHTMLFromProperties";
 import getFeatureProperties from "./getFeatureProperties";
 import {
-  MustacheFunction,
   mustacheFormatDateTime,
   mustacheFormatNumberFunction,
+  MustacheFunction,
   mustacheRenderPartialByName,
   mustacheURLEncodeText,
   mustacheURLEncodeTextComponent
 } from "./mustacheExpressions";
-import TableMixin from "../../ModelMixins/TableMixin";
-import Resource from "terriajs-cesium/Source/Core/Resource";
+import ExportableMixin from "../../ModelMixins/ExportableMixin";
+import Terria from "../../Models/Terria";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
+import { TimeSeriesContext } from "../../Table/tableFeatureInfoContext";
 
 // We use Mustache templates inside React views, where React does the escaping; don't escape twice, or eg. " => &quot;
 Mustache.escape = function (string) {
@@ -62,6 +51,7 @@ interface FeatureInfoProps extends WithViewState {
   onClickHeader?: (feature: TerriaFeature) => void;
   printView?: boolean;
   t: TFunction;
+  terria?: Terria;
 }
 
 @observer
@@ -77,22 +67,15 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
    * - A CsvChartCustomComponent will create a new CsvCatalogItem and set traits
    * See `rawDataReactNode` for rendered raw data
    */
-  @observable.ref private templatedFeatureInfoReactNode:
+  @observable private templatedFeatureInfoReactNode:
     | React.ReactNode
     | undefined = undefined;
-
-  noInfoRef: HTMLDivElement | null = null;
 
   @observable
   private showRawData: boolean = false;
 
   /** See `setFeatureChangedCounter` */
   @observable featureChangedCounter = 0;
-
-  constructor(props: FeatureInfoProps) {
-    super(props);
-    makeObservable(this);
-  }
 
   componentDidMount() {
     this.checkAuth();
@@ -107,13 +90,11 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         this.mustacheContextData
       ],
       () => {
-        if (
-          this.props.catalogItem.featureInfoTemplate.template &&
-          this.mustacheContextData
-        ) {
+        if (this.template && this.mustacheContextData) {
           this.templatedFeatureInfoReactNode = parseCustomMarkdownToReact(
             Mustache.render(
-              this.props.catalogItem.featureInfoTemplate.template,
+              //this.props.catalogItem.featureInfoTemplate.template,
+              this.template,
               this.mustacheContextData,
               this.props.catalogItem.featureInfoTemplate.partials
             ),
@@ -174,8 +155,23 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       MappableMixin.isMixedInto(this.props.catalogItem) &&
         this.props.catalogItem.featureInfoTemplate.formats
         ? this.props.catalogItem.featureInfoTemplate.formats
-        : undefined
+        : undefined,
+      this.fields
     );
+  }
+
+  @computed get template() {
+    if (this.fields && this.fields.length > 0) {
+      return `<table><tbody><tr><td>
+        ${this.fields
+          .map((fieldName) => {
+            return `{{#terria.partialByName}}${fieldName}{{/terria.partialByName}}</td><td>{{${fieldName}}}`;
+          })
+          .join("</td></tr><tr><td>")}
+      </td></tr></tbody></table>`;
+    } else {
+      return this.props.catalogItem.featureInfoTemplate.template;
+    }
   }
 
   /** This monstrosity contains properties which can be used by Mustache templates:
@@ -223,7 +219,6 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       currentTime?: Date;
       timeSeries?: TimeSeriesContext;
       rawDataTable?: string;
-      activeStyle?: { id: string | undefined } | undefined;
     } = {
       partialByName: mustacheRenderPartialByName(
         this.props.catalogItem.featureInfoTemplate?.partials ?? {},
@@ -263,11 +258,6 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       terria.currentTime = JulianDate.toDate(
         this.props.catalogItem.currentTimeAsJulianDate
       );
-    }
-
-    // Add activeStyle property
-    if (TableMixin.isMixedInto(this.props.catalogItem)) {
-      terria.activeStyle = { id: this.props.catalogItem.activeStyle };
     }
 
     // If catalog item has featureInfoContext function
@@ -310,6 +300,14 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     const currentTime = this.currentTimeIfAvailable ?? JulianDate.now();
     const description: string | undefined =
       feature.description?.getValue(currentTime);
+
+    if (this.fields && this.fields.length > 0) {
+      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><td>${this.fields
+        .map((fieldName) => {
+          return `${fieldName}</td><td>${feature.properties?.[fieldName]}`;
+        })
+        .join("</td></tr><tr><td>")}</td></tr></tbody></table>`;
+    }
 
     if (isDefined(description)) return description;
 
@@ -368,7 +366,8 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
 
     return {
       data:
-        this.featureProperties && !isEmpty(this.featureProperties)
+        this.featureProperties &&
+        Object.keys(this.featureProperties).length > 0
           ? this.featureProperties
           : undefined,
       fileName
@@ -379,27 +378,26 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     const feature = this.props.feature;
 
     if (
-      this.props.viewState.terria.configParameters.userProfilesDefinition &&
+      this.props.terria?.configParameters.userProfilesDefinition &&
       MappableMixin.isMixedInto(this.props.catalogItem) &&
-      (!this.props.viewState.terria.profile ||
-        (this.props.viewState.terria.profile &&
-          !this.props.viewState.terria.profile?.isAdmin))
+      (!this.props.terria.profile ||
+        (this.props.terria.profile && !this.props.terria.profile?.isAdmin))
     ) {
       if (
-        this.props.viewState.terria.userAuthToken &&
-        this.props.viewState.terria.userProfile &&
+        this.props.terria.userAuthToken &&
+        this.props.terria.userProfile &&
         this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
       ) {
-        const proxiedUrl = this.props.viewState.terria?.corsProxy.getURL(
+        const proxiedUrl = this.props.terria?.corsProxy.getURL(
           this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
         );
         try {
-          const result = await Resource.fetchJson({
+          const result = await CesiumResource.fetchJson({
             url: proxiedUrl,
             queryParameters: {
               idIntervento:
                 feature.properties?.[feature.properties.propertyNames[0]],
-              authToken: this.props.viewState.terria.userAuthToken
+              authToken: this.props.terria.userAuthToken
             }
           });
 
@@ -411,14 +409,14 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         } catch (error) {
           this.setFields(
             this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
-              String(this.props.viewState.terria.userProfile)
+              String(this.props.terria?.userProfile)
             ] as string[]
           );
         }
       } else {
         this.setFields(
           this.props.catalogItem.featureInfoTemplate?.perProfileInfoFields?.[
-            String(this.props.viewState.terria.userProfile)
+            String(this.props.terria?.userProfile)
           ] as string[]
         );
       }
@@ -432,44 +430,6 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     this.fields = newFields;
   };
 
-  @computed
-  get generatedButtons(): FeatureInfoPanelButtonModel[] {
-    const { feature, catalogItem } = this.props;
-    const buttons = filterOutUndefined(
-      this.props.viewState.featureInfoPanelButtonGenerators.map((generator) => {
-        try {
-          const dim = generator({ feature, item: catalogItem });
-          return dim;
-        } catch (error) {
-          TerriaError.from(error).log();
-        }
-      })
-    );
-    return buttons;
-  }
-
-  renderButtons() {
-    const { t } = this.props;
-    return (
-      <ButtonsContainer>
-        {/* If we have templated feature info (and not in print mode) - render "show raw data" button */}
-        {!this.props.printView && this.templatedFeatureInfoReactNode && (
-          <FeatureInfoPanelButton
-            onClick={this.toggleRawData.bind(this)}
-            text={
-              this.showRawData
-                ? t("featureInfo.showCuratedData")
-                : t("featureInfo.showRawData")
-            }
-          />
-        )}
-        {this.generatedButtons.map((button, i) => (
-          <FeatureInfoPanelButton key={i} {...button} />
-        ))}
-      </ButtonsContainer>
-    );
-  }
-
   render() {
     const { t } = this.props;
 
@@ -478,8 +438,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     if (this.props.catalogItem.featureInfoTemplate.name) {
       title = Mustache.render(
         this.props.catalogItem.featureInfoTemplate.name,
-        this.mustacheContextData,
-        this.props.catalogItem.featureInfoTemplate.partials
+        this.featureProperties
       );
     } else
       title =
@@ -489,12 +448,16 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
 
     /** Show feature info download if showing raw data - or showing template and `showFeatureInfoDownloadWithTemplate` is true
      */
+    const canExport = ExportableMixin.isMixedInto(this.props.catalogItem)
+      ? !(this.props.catalogItem as ExportableMixin.Instance).disableExport
+      : true;
     const showFeatureInfoDownload =
-      this.showRawData ||
-      !this.templatedFeatureInfoReactNode ||
-      (this.templatedFeatureInfoReactNode &&
-        this.props.catalogItem.featureInfoTemplate
-          .showFeatureInfoDownloadWithTemplate);
+      (this.showRawData ||
+        !this.templatedFeatureInfoReactNode ||
+        (this.templatedFeatureInfoReactNode &&
+          this.props.catalogItem.featureInfoTemplate
+            .showFeatureInfoDownloadWithTemplate)) &&
+      canExport;
 
     const titleElement = this.props.printView ? (
       <h2>{title}</h2>
@@ -525,12 +488,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
           {titleElement}
           {this.props.isOpen ? (
             <section className={Styles.content}>
-              <div
-                ref={(r) => {
-                  this.noInfoRef = r;
-                }}
-                key="no-info"
-              >
+              <div key="no-info">
                 {t("featureInfo.noInfoAvailable")}
               </div>
             </section>
@@ -544,7 +502,18 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         {titleElement}
         {this.props.isOpen ? (
           <section className={Styles.content}>
-            {this.renderButtons()}
+            {/* If we have templated feature info (and not in print mode) - render "show raw data" button */}
+            {!this.props.printView && this.templatedFeatureInfoReactNode ? (
+              <button
+                type="button"
+                className={Styles.rawDataButton}
+                onClick={this.toggleRawData.bind(this)}
+              >
+                {this.showRawData
+                  ? t("featureInfo.showCuratedData")
+                  : t("featureInfo.showRawData")}
+              </button>
+            ) : null}
             <div>
               {this.props.feature.loadingFeatureInfoUrl ? (
                 "Loading"
@@ -552,12 +521,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 this.rawFeatureInfoReactNode ? (
                   this.rawFeatureInfoReactNode
                 ) : (
-                  <div
-                    ref={(r) => {
-                      this.noInfoRef = r;
-                    }}
-                    key="no-info"
-                  >
+                  <div key="no-info">
                     {t("featureInfo.noInfoAvailable")}
                   </div>
                 )
@@ -565,16 +529,45 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                 // Show templated feature info
                 this.templatedFeatureInfoReactNode
               )}
+              {this.props.feature.properties &&
+                this.props.feature.properties.hasProperty(
+                  "percentuale_avanzamento"
+                ) &&
+                this.props.feature.properties[
+                  "percentuale_avanzamento"
+                ].getValue() > 0 &&
+                this.props.feature.properties[
+                  "tipo_stato_avanzamento"
+                ].getValue() === "Lavori in corso" && (
+                  <span>
+                    <img
+                      style={{ marginTop: "10px" }}
+                      src={`https://progress-bar.xyz/${Math.round(
+                        this.props.feature.properties[
+                          "percentuale_avanzamento"
+                        ].getValue()
+                      )}?width=${280}&title=${"Avanzamento &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}`}
+                    />
+                  </span>
+                )}
               {
                 // Show FeatureInfoDownload
                 !this.props.printView &&
                 showFeatureInfoDownload &&
                 isDefined(this.downloadableData.data) ? (
-                  <FeatureInfoDownload
-                    key="download"
-                    data={this.downloadableData.data}
-                    name={this.downloadableData.fileName}
-                  />
+                  <>
+                    <FeatureInfoDownload
+                      key="download"
+                      data={this.downloadableData.data}
+                      name={this.downloadableData.fileName}
+                    />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                    <br />
+                  </>
                 ) : null
               }
             </div>
@@ -597,11 +590,5 @@ function contains(text: string, number: number, precision: number) {
     text.indexOf(fixed(Math.ceil, number)) !== -1
   );
 }
-
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  padding: 7px 0 10px 0;
-`;
 
 export default withTranslation()(withViewState(FeatureInfoSection));

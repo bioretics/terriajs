@@ -226,7 +226,11 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                 `}
                 onClick={() => runInAction(() => item.cleanQueryValues())}
               >
-                <StyledIcon light glyph={GLYPHS.cancel} styledWidth="18px" />
+                <StyledIcon
+                  light
+                  glyph={GLYPHS.cancel}
+                  styledWidth="18px"
+                />
               </Button>
             </Box>
           </>

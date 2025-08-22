@@ -2365,7 +2365,16 @@ async function interpretHash(
 
   runInAction(() => {
     Object.keys(hashProperties).forEach(function (property) {
-      if (["clean", "hideWelcomeMessage", "start", "share"].includes(property))
+      if (
+        [
+          "clean",
+          "hideWelcomeMessage",
+          "start",
+          "share",
+          "profile",
+          "authToken"
+        ].includes(property)
+      )
         return;
       const propertyValue = hashProperties[property];
       if (defined(propertyValue) && propertyValue.length > 0) {
