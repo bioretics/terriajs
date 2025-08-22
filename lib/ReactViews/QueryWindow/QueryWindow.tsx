@@ -1,7 +1,7 @@
 import { action } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
-import { useViewState } from "../../ReactViews/Context/ViewStateContext";
+import { useViewState } from "../../ReactViews/Context";
 import ModalPopup from "../ExplorerWindow/ModalPopup";
 import Styles from "./query-window.scss";
 import classNames from "classnames";
@@ -20,10 +20,14 @@ export interface TabPropsType {
 const Tabs: {
   [key: string]: { title: string; component: React.FC<TabPropsType> };
 } = {
+  /*
   chartView: {
     title: "Charts",
     component: QueryTabAggregation
   },
+  
+  Errore ENAMETOOLONG
+  */
   tableView: {
     title: "Table",
     component: QueryTabTable
@@ -35,7 +39,9 @@ export const QueryWindowElementName = "QueryData";
 export default observer<React.FC>(function QueryWindow() {
   const viewState = useViewState();
 
-  const [currentTab, setCurrentTab] = React.useState<string>("chartView");
+  const [currentTab, setCurrentTab] = React.useState<string>(
+    "tableView" /* chartView Errore ENAMETOOLONG */
+  );
 
   const onClose = action(() => {
     viewState.closeQuery();
