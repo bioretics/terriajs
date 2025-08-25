@@ -247,9 +247,13 @@ interface FeatureCounts {
 type BaseType = Model<GeoJsonTraits>;
 
 function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
-  abstract class GeoJsonMixin extends QueryableCatalogItemMixin(SearchableCatalogItemMixin(MeasurableGeometryMixin(
-    TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
-  ))) {
+  abstract class GeoJsonMixin extends QueryableCatalogItemMixin(
+    SearchableCatalogItemMixin(
+      MeasurableGeometryMixin(
+        TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+      )
+    )
+  ) {
     @observable
     private _dataSource:
       | CustomDataSource
