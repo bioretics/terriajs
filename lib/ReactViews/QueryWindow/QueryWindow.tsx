@@ -5,7 +5,7 @@ import { useViewState } from "../../ReactViews/Context";
 import ModalPopup from "../ExplorerWindow/ModalPopup";
 import Styles from "./query-window.scss";
 import classNames from "classnames";
-import QueryTabAggregation from "./QueryTabAggregation";
+// import QueryTabAggregation from "./QueryTabAggregation";
 import QueryTabTable from "./QueryTabTable";
 import styled from "styled-components";
 import { Button } from "../../Styled/Button";
