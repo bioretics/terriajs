@@ -5,7 +5,7 @@ import { useViewState } from "../../ReactViews/Context";
 import ModalPopup from "../ExplorerWindow/ModalPopup";
 import Styles from "./query-window.scss";
 import classNames from "classnames";
-// import QueryTabAggregation from "./QueryTabAggregation";
+import QueryTabAggregation from "./QueryTabAggregation";
 import QueryTabTable from "./QueryTabTable";
 import styled from "styled-components";
 import { Button } from "../../Styled/Button";
@@ -20,14 +20,11 @@ export interface TabPropsType {
 const Tabs: {
   [key: string]: { title: string; component: React.FC<TabPropsType> };
 } = {
-  /*
   chartView: {
     title: "Charts",
     component: QueryTabAggregation
   },
-  
-  Errore ENAMETOOLONG
-  */
+
   tableView: {
     title: "Table",
     component: QueryTabTable
@@ -39,9 +36,7 @@ export const QueryWindowElementName = "QueryData";
 export default observer<React.FC>(function QueryWindow() {
   const viewState = useViewState();
 
-  const [currentTab, setCurrentTab] = React.useState<string>(
-    "tableView" /* chartView Errore ENAMETOOLONG */
-  );
+  const [currentTab, setCurrentTab] = React.useState<string>("chartView");
 
   const onClose = action(() => {
     viewState.closeQuery();
