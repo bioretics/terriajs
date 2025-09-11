@@ -11,6 +11,7 @@ import styled from "styled-components";
 import { Button } from "../../Styled/Button";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
 import Terria from "../../Models/Terria";
+import { useTranslation } from "react-i18next";
 
 export interface TabPropsType {
   item: QueryableCatalogItemMixin.Instance;
@@ -21,12 +22,12 @@ const Tabs: {
   [key: string]: { title: string; component: React.FC<TabPropsType> };
 } = {
   chartView: {
-    title: "Charts",
+    title: "queryTab.charts",
     component: QueryTabAggregation
   },
 
   tableView: {
-    title: "Table",
+    title: "queryTab.table",
     component: QueryTabTable
   }
 };
@@ -34,6 +35,7 @@ const Tabs: {
 export const QueryWindowElementName = "QueryData";
 
 export default observer<React.FC>(function QueryWindow() {
+  const { t } = useTranslation();
   const viewState = useViewState();
 
   const [currentTab, setCurrentTab] = React.useState<string>("chartView");
@@ -88,7 +90,7 @@ export default observer<React.FC>(function QueryWindow() {
                   }}
                   isCurrent={currentTab === keyTab}
                 >
-                  {Tabs[keyTab].title}
+                  {t(Tabs[keyTab].title)}
                 </ButtonTab>
               </div>
             </li>
