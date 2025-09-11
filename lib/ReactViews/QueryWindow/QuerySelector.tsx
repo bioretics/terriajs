@@ -39,7 +39,9 @@ const QuerySelector = observer(
                     color: ${(p: any) => p.theme.textLight};
                   `}
                 >
-                  {t(opt.label)}
+                  {opt.label.startsWith("sum-")
+                    ? `${t("queryTab.sum")} "${opt.label.slice(4)}"`
+                    : t(opt.label)}
                 </option>
               );
             })}

@@ -12,7 +12,7 @@ import { downloadImg } from "../Map/Panels/SharePanel/Print/PrintView";
 import { SpacingSpan } from "../../Styled/Spacing";
 import DataTable, { TableColumn } from "react-data-table-component";
 import { TabPropsType } from "./QueryWindow";
-import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
 export enum ChartType {
   Pie = "queryTab.pie",
@@ -35,6 +35,7 @@ const currencyFormatter = new Intl.NumberFormat("it-IT", {
 
 const QueryTabPanel: React.FC<TabPropsType> = observer(
   ({ item, terria }: TabPropsType) => {
+    const { t } = useTranslation();
     const [aggregationProperty, setAggregationProperty] = useState<string>();
     const [aggregationFunction, setAggregationFunction] = useState<string>();
     const [distributionProperty, setDistributionProperty] = useState<string>();
@@ -97,7 +98,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             .map(([key, elem]) => {
               return {
                 key: key,
-                label: `Somma "${elem.label}"`,
+                label: `sum-${elem.label}`,
                 measureUnit: elem.measureUnit,
                 decimalPlaces: elem.decimalPlaces
               };
@@ -286,12 +287,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         !aggregationProperty ||
         !aggregationFunction
       ) {
-        return (
-          <h3>
-            La combinazione di filtri non permette di generare grafici di
-            aggregazione
-          </h3>
-        );
+        return <h3>{t("queryTab.aggregationNotPossible")}</h3>;
       }
 
       return (
@@ -358,7 +354,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                 `}
                 onClick={changeColors}
               >
-                {i18next.t("queryTab.changeColors")}
+                {t("queryTab.changeColors")}
               </Button>
               {terria?.isFeatureAllowedByProfile("DownloadQueryData") && (
                 <Button
@@ -370,7 +366,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                   `}
                   onClick={downloadScreenshot}
                 >
-                  Download screenshot
+                  Download Screenshot
                 </Button>
               )}
             </Box>

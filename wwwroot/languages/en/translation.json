@@ -598,7 +598,8 @@
     "horizontalBars": "Horizontal bars",
     "verticalBars": "Vertical bars",
     "pie": "Pie",
-    "changeColors": "Change colors"
+    "changeColors": "Change colors",
+    "aggregationNotPossible": "The filter combination does not allow generating aggregation charts"
   },
   "mobile": {
     "toggleNavigation": "toggle navigation",

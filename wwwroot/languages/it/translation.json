@@ -1494,7 +1494,8 @@
     "horizontalBars": "Barre orizzontali",
     "verticalBars": "Barre verticali",
     "pie": "Torta",
-    "changeColors": "Cambia colori"
+    "changeColors": "Cambia colori",
+    "aggregationNotPossible": "La combinazione di filtri non permette di generare grafici di aggregazione"
   },
   "addData": {
     "back": "Indietro",
