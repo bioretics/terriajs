@@ -12,17 +12,18 @@ import { downloadImg } from "../Map/Panels/SharePanel/Print/PrintView";
 import { SpacingSpan } from "../../Styled/Spacing";
 import DataTable, { TableColumn } from "react-data-table-component";
 import { TabPropsType } from "./QueryWindow";
+import i18next from "i18next";
 
 export enum ChartType {
-  Pie = "torta",
-  BarV = "barre verticali",
-  BarH = "barre orizzontali",
-  Pivot = "tabella pivot"
+  Pie = "queryTab.pie",
+  BarV = "queryTab.verticalBars",
+  BarH = "queryTab.horizontalBars",
+  Pivot = "queryTab.pivotTable"
 }
 
 const defaultAggregationFunction = {
   key: "count",
-  label: "Conta",
+  label: "queryTab.count",
   measureUnit: undefined,
   decimalPlaces: 0
 };
@@ -296,7 +297,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
       return (
         <>
           <QuerySelector
-            label="Aggrega per"
+            label="queryTab.aggregateBy"
             value={aggregationProperty}
             onSelect={(newValue) => {
               setAggregationProperty(newValue);
@@ -304,7 +305,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             options={aggregateFieldOptions.current}
           />
           <QuerySelector
-            label="Rappresenta"
+            label="queryTab.represent"
             value={aggregationFunction}
             onSelect={(newValue) => {
               setAggregationFunction(newValue);
@@ -312,7 +313,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
             options={aggregateFunctionOptions.current}
           />
           <QuerySelector
-            label="Modello di grafo"
+            label="queryTab.graphModel"
             value={chartType}
             onSelect={(newValue) => {
               setChartType(newValue as ChartType);
@@ -357,7 +358,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                 `}
                 onClick={changeColors}
               >
-                Cambia colori
+                {i18next.t("queryTab.changeColors")}
               </Button>
               {terria?.isFeatureAllowedByProfile("DownloadQueryData") && (
                 <Button

@@ -1481,7 +1481,20 @@
   },
   "queryTab": {
     "charts": "Grafici",
-    "table": "Tabella"
+    "table": "Tabella",
+    "aggregateBy": "Aggrega per",
+    "represent": "Rappresenta",
+    "graphModel": "Modello di grafo",
+    "percentage": "Percentuale",
+    "value": "Valore",
+    "category": "Categoria",
+    "sum": "Somma",
+    "count": "Conta",
+    "pivotTable": "Tabella pivot",
+    "horizontalBars": "Barre orizzontali",
+    "verticalBars": "Barre verticali",
+    "pie": "Torta",
+    "changeColors": "Cambia colori"
   },
   "addData": {
     "back": "Indietro",
