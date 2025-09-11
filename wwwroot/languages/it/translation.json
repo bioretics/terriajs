@@ -1476,7 +1476,8 @@
     "viewMore": "Visualizza più risultati {{name}}",
     "viewLess": "Visualizza meno risultati {{name}}",
     "search": "Cerca '{{searchText}}' nel catalogo dei dati",
-    "searchInDataCatalog": "Cerca '{{locationSearchText}}' nel catalogo dei dati"
+    "searchInDataCatalog": "Cerca '{{locationSearchText}}' nel catalogo dei dati",
+    "searchInCatalogItems": "Cerca '{{locationSearchText}}' nei layer aperti"
   },
   "addData": {
     "back": "Indietro",

@@ -580,7 +580,8 @@
     "viewLess": "View less {{name}} results",
     "viewMore": "View more {{name}} results",
     "placeholder": "Search for locations",
-    "searchCatalogue": "Search the catalogue"
+    "searchCatalogue": "Search the catalogue",
+    "searchInCatalogItems": "Search '{{locationSearchText}}' in the Catalog Items"
   },
   "mobile": {
     "toggleNavigation": "toggle navigation",

@@ -355,7 +355,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             data={dataPurged}
             fill="#8884d8"
             labelLine={false}
-            label={(elem) => {
+            label={(elem: any) => {
               const val = elem[valuePercKey];
               return val > 1 ? `${val}%` : "";
             }}
