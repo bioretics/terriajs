@@ -23,8 +23,8 @@ import {
 } from "mobx";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
-const MenuPanel =
-  require("../../../StandardUserInterface/customizable/MenuPanel").default;
+import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
+const CustomMenuPanel = MenuPanel as any;
 
 interface ICoordsTextProps {
   name: string;
@@ -531,9 +531,8 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
       //outer: classNames(Styles.sharePanel),
       inner: classNames(Styles.dropdownInner)
     };
-
     return (
-      <MenuPanel
+      <CustomMenuPanel
         theme={dropdownTheme}
         btnText={t("coordsPanel.header")}
         viewState={this.props.viewState}
@@ -588,7 +587,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           message={t("coordsPanel.coordsInputMessage")}
           tooltip=""
         />
-      </MenuPanel>
+      </CustomMenuPanel>
     );
   }
 }

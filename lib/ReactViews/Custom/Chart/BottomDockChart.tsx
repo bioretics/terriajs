@@ -116,9 +116,6 @@ export const Chart: React.FC<ChartProps> = observer(
     const [mouseCoords, setMouseCoords] = useState<
       { x: number; y: number } | undefined
     >(undefined);
-    const [disposeReaction, setDisposeReaction] = useState<(() => void) | null>(
-      null
-    );
 
     const processedChartItems: ChartItem[] = useMemo(() => {
       return sortChartItemsByType(propsChartItems)
@@ -206,10 +203,8 @@ export const Chart: React.FC<ChartProps> = observer(
         if (pointsNearMouse.length > 0 && onPointMouseNear) {
           const pointNearMouse = pointsNearMouse.find(
             (elem) =>
-              elem.chartItem.key ===
-                chartItemKeyForPointMouseNear?.AirChart ||
-              elem.chartItem.key ===
-                chartItemKeyForPointMouseNear?.GroundChart
+              elem.chartItem.key === chartItemKeyForPointMouseNear?.AirChart ||
+              elem.chartItem.key === chartItemKeyForPointMouseNear?.GroundChart
           );
           if (pointNearMouse) {
             onPointMouseNear(pointNearMouse.point);
@@ -218,12 +213,7 @@ export const Chart: React.FC<ChartProps> = observer(
       });
 
       return () => disposer();
-    }, [
-      pointsNearMouse,
-      onPointMouseNear,
-      chartItemKeyForPointMouseNear
-    ]);
-
+    }, [pointsNearMouse, onPointMouseNear, chartItemKeyForPointMouseNear]);
 
     const cursorX =
       pointsNearMouse.length > 0
@@ -282,7 +272,7 @@ export const Chart: React.FC<ChartProps> = observer(
         () => selectedStopPointIdx ?? selectedSampledPointIdx,
         (idx) => {
           if (typeof idx === "number" && propsChartItems) {
-            const isStopPointSelected = selectedStopPointIdx != null;
+            const isStopPointSelected = selectedStopPointIdx !== null;
 
             const points = isStopPointSelected
               ? terria.measurableGeom?.stopPoints
@@ -336,23 +326,31 @@ export const Chart: React.FC<ChartProps> = observer(
             };
 
             // Trasforma in coordinate chart
-            const xCoord = xScale(selectedPoint?.x!);
-            const yCoord = yAxes[0].scale(selectedPoint?.y!);
-
-            setMouseCoords({ x: xCoord, y: yCoord });
+            if (
+              selectedPoint?.x !== undefined &&
+              selectedPoint?.y !== undefined
+            ) {
+              const xCoord = xScale(selectedPoint.x);
+              const yCoord = yAxes[0].scale(selectedPoint.y);
+              setMouseCoords({ x: xCoord, y: yCoord });
+            }
           } else {
             setMouseCoords(undefined);
           }
         }
       );
 
-      setDisposeReaction(() => reactionDisposer);
-
       return () => {
         reactionDisposer();
-        setDisposeReaction(null);
       };
-    }, [selectedStopPointIdx, selectedSampledPointIdx, terria, xScale, yAxes]);
+    }, [
+      selectedStopPointIdx,
+      selectedSampledPointIdx,
+      terria,
+      xScale,
+      yAxes,
+      propsChartItems
+    ]);
 
     if (processedChartItems.length === 0)
       return <div className={Styles.empty}>No data available</div>;

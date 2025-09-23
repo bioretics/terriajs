@@ -229,7 +229,9 @@ const MeasurablePanel = observer((props: Props) => {
               background: ${theme.colorPrimary};
               margin-left: 5px;
             `}
-            title={String(i18next.t("measurableGeometry.samplingStepButtonTitle"))}
+            title={String(
+              i18next.t("measurableGeometry.samplingStepButtonTitle")
+            )}
             onClick={() => {
               if (isValidSamplingPathStep) {
                 changeSamplingPathStep(samplingPathStep);
@@ -309,16 +311,24 @@ const MeasurablePanel = observer((props: Props) => {
             <thead>
               <tr>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevationMin"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevationMin")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevationMax"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevationMax")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevationBear"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevationBear")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevationDiff"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevationDiff")
+                  )}
                 </th>
               </tr>
             </thead>
@@ -335,13 +345,19 @@ const MeasurablePanel = observer((props: Props) => {
             <thead>
               <tr>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistGeo"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistGeo")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistAir"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistAir")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistGround"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistGround")
+                  )}
                 </th>
               </tr>
             </thead>
@@ -375,16 +391,24 @@ const MeasurablePanel = observer((props: Props) => {
             <thead>
               <tr>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryPerimeterGeo"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryPerimeterGeo")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryPerimeterAir"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryPerimeterAir")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryAreaGeo"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryAreaGeo")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryAreaAir"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryAreaAir")
+                  )}
                 </th>
               </tr>
             </thead>
@@ -510,21 +534,33 @@ const MeasurablePanel = observer((props: Props) => {
               <tr>
                 <th>#</th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevation"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevation")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryElevationDiff"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryElevationDiff")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistGeo"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistGeo")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistAir"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistAir")
+                  )}
                 </th>
                 <th>
-                  {String(i18next.t("measurableGeometry.geometrySummaryDistGround"))}
+                  {String(
+                    i18next.t("measurableGeometry.geometrySummaryDistGround")
+                  )}
                 </th>
-                <th>{String(i18next.t("measurableGeometry.geometrySummarySlope"))}</th>
+                <th>
+                  {String(i18next.t("measurableGeometry.geometrySummarySlope"))}
+                </th>
               </tr>
             </thead>
             <tbody>

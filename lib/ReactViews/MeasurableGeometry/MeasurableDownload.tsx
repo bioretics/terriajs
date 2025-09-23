@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";

@@ -6,6 +6,7 @@ import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import EarthGravityModel1996 from "../Map/Vector/EarthGravityModel1996";
+import gravityModelData from "../../wwwroot/data/WW15MGH.DAC";
 
 export interface MeasurableGeometry {
   isClosed: boolean;
@@ -32,9 +33,7 @@ export default class MeasurableGeometryManager {
     makeObservable(this);
     this.terria = terria;
 
-    this.geoidModel = new EarthGravityModel1996(
-      require("../../wwwroot/data/WW15MGH.DAC")
-    );
+    this.geoidModel = new EarthGravityModel1996(gravityModelData);
   }
 
   resample() {

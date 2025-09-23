@@ -401,9 +401,9 @@ export interface ConfigParameters {
    * Keep catalog open when adding / removing items
    */
   keepCatalogOpen: boolean;
-  
-  /** 
-  * Url to coordinates converter service.
+
+  /**
+   * Url to coordinates converter service.
    */
   coordsConverterUrl?: string;
 

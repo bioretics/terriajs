@@ -1,7 +1,7 @@
 //"use strict";
 
 import { observer } from "mobx-react";
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Icon from "../../../Styled/Icon";
 import { Chart } from "./BottomDockChart";
 import Styles from "./chart-panel.scss";
@@ -80,14 +80,14 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
       const airPointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.AirChart)
-        ?.points.findIndex(
-          (elem: ChartPoint) => {
-            const elemX = typeof elem.x === 'number' ? elem.x : elem.x.getTime();
-            const newPointX = typeof newPoint.x === 'number' ? newPoint.x : newPoint.x.getTime();
-            return Math.abs(elemX - newPointX) <=
-              terria.measurableGeomSamplingStep + 5;
-          }
-        );
+        ?.points.findIndex((elem: ChartPoint) => {
+          const elemX = typeof elem.x === "number" ? elem.x : elem.x.getTime();
+          const newPointX =
+            typeof newPoint.x === "number" ? newPoint.x : newPoint.x.getTime();
+          return (
+            Math.abs(elemX - newPointX) <= terria.measurableGeomSamplingStep + 5
+          );
+        });
       viewState.setSelectedStopPointIdx(
         airPointIndex && airPointIndex !== -1 ? airPointIndex : null
       );
@@ -130,7 +130,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           showInChartPanel: true,
           isSelectedInWorkbench: false,
           xAxis: { name: "p", scale: "linear", units: "m" },
-          updateIsSelectedInWorkbench: action((selected: boolean) => {})
+          updateIsSelectedInWorkbench: action(() => {})
         });
       }
       if (airData?.chartPoints && airData.chartDomain) {
@@ -149,7 +149,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           showInChartPanel: true,
           isSelectedInWorkbench: false,
           xAxis: { name: "p", scale: "linear", units: "m" },
-          updateIsSelectedInWorkbench: action((selected: boolean) => {})
+          updateIsSelectedInWorkbench: action(() => {})
         });
       }
 
