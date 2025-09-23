@@ -76,9 +76,14 @@ const ChartPanel: FC<ChartPanelProps> = observer(({ onHeightChange }) => {
 
     return (
       <BottomDockChart
+        terria={viewState.terria}
         chartItems={chartItems}
         xAxis={xAxis}
         height={CHART_PANEL_HEIGHT - CHART_LEGEND_HEIGHT}
+        chartItemKeyForPointMouseNear={{}}
+        onPointMouseNear={() => {}}
+        selectedStopPointIdx={null}
+        selectedSampledPointIdx={null}
       />
     );
   }, [chartItems, xAxis, viewState.terria]);

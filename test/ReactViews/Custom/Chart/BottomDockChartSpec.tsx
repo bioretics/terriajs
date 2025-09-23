@@ -62,11 +62,16 @@ describe("BottomDockChart", function () {
       createWithContexts(
         viewState,
         <BottomDockChart
+          terria={terria}
           height={100}
           initialHeight={100}
           initialWidth={100}
           xAxis={{ scale: "time" } as never}
           chartItems={chartItems}
+          chartItemKeyForPointMouseNear={{}}
+          onPointMouseNear={() => {}}
+          selectedStopPointIdx={null}
+          selectedSampledPointIdx={null}
         />
       );
     });

@@ -33,6 +33,18 @@
   vertical-align: top;
 }
 
+.btn-view-mode {
+  composes: btn;
+
+  position: relative;
+  margin: 0 variables.$padding-small;
+  padding: variables.$padding variables.$padding variables.$padding variables.$padding;
+  width: auto;
+  text-align: center;
+  font-size: 0.95rem;
+  border-radius: 4px;
+}
+
 .btn-add {
   composes: btn;
 
@@ -41,7 +53,7 @@
   padding: variables.$padding variables.$padding variables.$padding
     variables.$padding * 3;
   width: auto;
-  text-align: right;
+  text-align: center;
   font-size: 0.95rem;
   border-radius: 4px;
 

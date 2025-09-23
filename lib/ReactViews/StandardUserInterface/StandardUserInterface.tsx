@@ -41,6 +41,7 @@ import processCustomElements from "./processCustomElements";
 import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
+import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
 
 export const animationDuration = 250;
 
@@ -277,6 +278,10 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
               })}
             >
               <FeatureInfoPanel />
+              <MeasurablePanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
             </div>
             <DragDropFile />
             {showStoryPanel && <StoryPanel />}

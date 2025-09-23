@@ -7,7 +7,8 @@ export {
 } from "./AugmentedVirtualityTool";
 export * from "./Compass";
 export { Control, MapNavigationItem } from "./MapNavigationItem";
-export { MeasureTool } from "./MeasureTool";
+export { MeasureLineTool } from "./MeasureLineTool";
+export { MeasurePolygonTool } from "./MeasurePolygonTool";
 export { MyLocation } from "./MyLocation";
 export { ToggleSplitterController } from "./ToggleSplitterTool";
 export { ZoomControl, ZOOM_CONTROL_ID } from "./ZoomControl";

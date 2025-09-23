@@ -16,6 +16,9 @@ import Tooltip from "./Tooltip";
 import type { XScale } from "./types";
 import { Cursor, Plot, PointsOnMap, XAxis, YAxis } from "./utils";
 import { ZoomX } from "./ZoomX";
+import { reaction, autorun } from "mobx";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import Terria from "../../../Models/Terria";
 
 const CHART_MIN_WIDTH = 110;
 const DEFAULT_GRID_COLOR = "#efefef";
@@ -30,16 +33,35 @@ interface Margin {
 }
 
 interface BottomDockChartProps extends WithParentSizeProvidedProps {
-  chartItems: readonly ChartItem[];
+  chartItems: ChartItem[];
   xAxis: ChartAxis;
   height: number;
 
   width?: number;
   margin?: Margin;
+
+  terria: Terria;
+  parentWidth: number;
+  chartItemKeyForPointMouseNear: object;
+  onPointMouseNear: (param: any) => void;
+  selectedStopPointIdx: number | null;
+  selectedSampledPointIdx: number | null;
 }
 
 const _BottomDockChart: React.FC<BottomDockChartProps> = observer(
-  ({ chartItems, xAxis, parentWidth = 0, width, height, margin }) => {
+  ({
+    chartItems,
+    xAxis,
+    parentWidth = 0,
+    width,
+    height,
+    margin,
+    terria,
+    chartItemKeyForPointMouseNear,
+    onPointMouseNear,
+    selectedStopPointIdx,
+    selectedSampledPointIdx
+  }) => {
     return (
       <Chart
         chartItems={chartItems}
@@ -47,6 +69,11 @@ const _BottomDockChart: React.FC<BottomDockChartProps> = observer(
         height={height}
         margin={margin}
         width={Math.max(CHART_MIN_WIDTH, width || parentWidth)}
+        terria={terria}
+        chartItemKeyForPointMouseNear={chartItemKeyForPointMouseNear}
+        onPointMouseNear={onPointMouseNear}
+        selectedStopPointIdx={selectedStopPointIdx}
+        selectedSampledPointIdx={selectedSampledPointIdx}
       />
     );
   }
@@ -58,20 +85,30 @@ BottomDockChart.displayName = "BottomDockChart";
 const DEFAULT_MARGIN: Margin = { left: 20, right: 30, top: 10, bottom: 50 };
 
 interface ChartProps {
-  chartItems: readonly ChartItem[];
+  chartItems: ChartItem[];
   xAxis: ChartAxis;
   width: number;
   height: number;
   margin?: Margin;
+  terria: Terria;
+  chartItemKeyForPointMouseNear: any;
+  onPointMouseNear: (param: any) => void;
+  selectedStopPointIdx: number | null;
+  selectedSampledPointIdx: number | null;
 }
 
-const Chart: React.FC<ChartProps> = observer(
+export const Chart: React.FC<ChartProps> = observer(
   ({
     chartItems: propsChartItems,
     xAxis,
     width,
     height,
-    margin = DEFAULT_MARGIN
+    margin = DEFAULT_MARGIN,
+    terria,
+    chartItemKeyForPointMouseNear,
+    onPointMouseNear,
+    selectedStopPointIdx,
+    selectedSampledPointIdx
   }) => {
     const [zoomedXScale, setZoomedXScale] = useState<XScale | undefined>(
       undefined
@@ -79,6 +116,9 @@ const Chart: React.FC<ChartProps> = observer(
     const [mouseCoords, setMouseCoords] = useState<
       { x: number; y: number } | undefined
     >(undefined);
+    const [disposeReaction, setDisposeReaction] = useState<(() => void) | null>(
+      null
+    );
 
     const processedChartItems: ChartItem[] = useMemo(() => {
       return sortChartItemsByType(propsChartItems)
@@ -161,6 +201,30 @@ const Chart: React.FC<ChartProps> = observer(
         .filter(pointNotUndefined);
     }, [processedChartItems, mouseCoords, xScale]);
 
+    useEffect(() => {
+      const disposer = autorun(() => {
+        if (pointsNearMouse.length > 0 && onPointMouseNear) {
+          const pointNearMouse = pointsNearMouse.find(
+            (elem) =>
+              elem.chartItem.key ===
+                chartItemKeyForPointMouseNear?.AirChart ||
+              elem.chartItem.key ===
+                chartItemKeyForPointMouseNear?.GroundChart
+          );
+          if (pointNearMouse) {
+            onPointMouseNear(pointNearMouse.point);
+          }
+        }
+      });
+
+      return () => disposer();
+    }, [
+      pointsNearMouse,
+      onPointMouseNear,
+      chartItemKeyForPointMouseNear
+    ]);
+
+
     const cursorX =
       pointsNearMouse.length > 0
         ? xScale(pointsNearMouse[0].point.x)
@@ -210,6 +274,85 @@ const Chart: React.FC<ChartProps> = observer(
     useEffect(() => {
       setZoomedXScale(undefined);
     }, [processedChartItems]);
+
+    useEffect(() => {
+      if (!terria) return;
+
+      const reactionDisposer = reaction(
+        () => selectedStopPointIdx ?? selectedSampledPointIdx,
+        (idx) => {
+          if (typeof idx === "number" && propsChartItems) {
+            const isStopPointSelected = selectedStopPointIdx != null;
+
+            const points = isStopPointSelected
+              ? terria.measurableGeom?.stopPoints
+              : terria.measurableGeom?.sampledPoints;
+
+            const cartesianDistance = (
+              x1: any,
+              y1: any,
+              z1: any,
+              x2: any,
+              y2: any,
+              z2: any
+            ) =>
+              Math.sqrt(
+                Math.pow(x2 - x1, 2) +
+                  Math.pow(y2 - y1, 2) +
+                  Math.pow(z2 - z1, 2)
+              );
+
+            const calculateTotalCartesianDistance = (pts: any) => {
+              let totalDistance = 0;
+              for (let i = 1; i < pts.length; i++) {
+                const prevCartesian = Cartographic.toCartesian(pts[i - 1]);
+                const currCartesian = Cartographic.toCartesian(pts[i]);
+                if (prevCartesian && currCartesian) {
+                  totalDistance += cartesianDistance(
+                    prevCartesian.x,
+                    prevCartesian.y,
+                    prevCartesian.z,
+                    currCartesian.x,
+                    currCartesian.y,
+                    currCartesian.z
+                  );
+                }
+              }
+              return totalDistance;
+            };
+
+            const sumDistances = isStopPointSelected
+              ? terria.measurableGeom?.stopAirDistances
+                  ?.slice(0, idx + 1)
+                  .reverse()
+                  .reduce((acc, d) => acc + d, 0)
+              : calculateTotalCartesianDistance(
+                  points?.slice(0, idx + 1).reverse()
+                );
+
+            const selectedPoint = {
+              x: sumDistances,
+              y: points?.[idx]?.height
+            };
+
+            // Trasforma in coordinate chart
+            const xCoord = xScale(selectedPoint?.x!);
+            const yCoord = yAxes[0].scale(selectedPoint?.y!);
+
+            setMouseCoords({ x: xCoord, y: yCoord });
+          } else {
+            setMouseCoords(undefined);
+          }
+        }
+      );
+
+      setDisposeReaction(() => reactionDisposer);
+
+      return () => {
+        reactionDisposer();
+        setDisposeReaction(null);
+      };
+    }, [selectedStopPointIdx, selectedSampledPointIdx, terria, xScale, yAxes]);
 
     if (processedChartItems.length === 0)
       return <div className={Styles.empty}>No data available</div>;

@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import uniqWith from "lodash-es/uniqWith";
+//import uniqWith from "lodash-es/uniqWith";
 import { computed, makeObservable, override, runInAction } from "mobx";
 import { IPromiseBasedObservable, fromPromise } from "mobx-utils";
 import moment from "moment";
@@ -42,6 +42,7 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import MinMaxLevelMixin from "./../../../ModelMixins/MinMaxLevelMixin";
 import { Extent, Layer, Legends, MapServer } from "./ArcGisInterfaces";
 import proj4 from "proj4";
+import CommonStrata from "../../Definition/CommonStrata";
 
 class MapServerStratum extends LoadableStratum(
   ArcGisMapServerCatalogItemTraits
@@ -276,7 +277,7 @@ class MapServerStratum extends LoadableStratum(
     const noDataRegex = /^No[\s_-]?Data$/i;
     const labelsRegex = /_Labels$/;
 
-    let items: StratumFromTraits<LegendItemTraits>[] = [];
+    const items: StratumFromTraits<LegendItemTraits>[] = [];
 
     (this._legends?.layers || []).forEach((l) => {
       if (noDataRegex.test(l.layerName) || labelsRegex.test(l.layerName)) {
@@ -307,7 +308,8 @@ class MapServerStratum extends LoadableStratum(
       });
     });
 
-    items = uniqWith(items, (a, b) => a.imageUrl === b.imageUrl);
+    // Comment, otherwise the legend may be truncated when the same symbol is used multiple times
+    //items = uniqWith(items, (a, b) => a.imageUrl === b.imageUrl);
 
     return [createStratumInstance(LegendTraits, { items })];
   }
@@ -369,6 +371,17 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
     const stratum = await MapServerStratum.load(this);
     runInAction(() => {
       this.strata.set(MapServerStratum.stratumName, stratum);
+
+      if (
+        isDefined(this.maximumScale) &&
+        !isDefined(this.minScaleDenominator)
+      ) {
+        this.setTrait(
+          CommonStrata.user,
+          "minScaleDenominator",
+          this.maximumScale
+        );
+      }
     });
   }
 
@@ -580,7 +593,10 @@ export default class ArcGisMapServerCatalogItem extends UrlMixin(
         {
           layers: this.layersArray.map((l) => l.id).join(","),
           tilingScheme: new WebMercatorTilingScheme(),
-          maximumLevel: maximumLevel,
+          maximumLevel:
+            !!maximumLevel && this.hideLayerAfterMinScaleDenominator
+              ? maximumLevel + 1
+              : maximumLevel,
           tileHeight: this.tileHeight,
           tileWidth: this.tileWidth,
           parameters: params,

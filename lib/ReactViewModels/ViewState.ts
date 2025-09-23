@@ -61,6 +61,7 @@ interface ViewStateOptions {
 
 export default class ViewState {
   readonly mobileViewOptions = Object.freeze({
+    addData: "addData",
     data: "data",
     preview: "preview",
     nowViewing: "nowViewing",
@@ -344,6 +345,23 @@ export default class ViewState {
   @observable featureInfoPanelIsCollapsed: boolean = false;
 
   /**
+   * Gets or sets a value indicating whether the ElevationPanel is visible.
+   * @type {Boolean}
+   */
+  @observable measurablePanelIsVisible: boolean = false;
+  /**
+   * Gets or sets a value indicating whether the ElevationPanel is collapsed.
+   * @type {Boolean}
+   */
+  @observable measurablePanelIsCollapsed: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the ElevationChart is visible.
+   * @type {Boolean}
+   */
+  @observable measurableChartIsVisible: boolean = false;
+
+  /**
    * True if this is (or will be) the first time the user has added data to the map.
    * @type {Boolean}
    */
@@ -384,6 +402,8 @@ export default class ViewState {
   private _locationMarkerSubscription: IReactionDisposer;
   private _workbenchHasTimeWMSSubscription: IReactionDisposer;
   private _storyBeforeUnloadSubscription: IReactionDisposer;
+  private _measurablePanelIsVisibleSubscription: IReactionDisposer;
+  private _disposeSamplingPathStep: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -402,11 +422,13 @@ export default class ViewState {
     this._pickedFeaturesSubscription = reaction(
       () => this.terria.pickedFeatures,
       (pickedFeatures: PickedFeatures | undefined) => {
-        if (defined(pickedFeatures)) {
-          this.featureInfoPanelIsVisible = true;
-          this.featureInfoPanelIsCollapsed = false;
-        } else {
-          this.featureInfoPanelIsVisible = false;
+        if (this.terria.isPickInfoEnabled) {
+          if (defined(pickedFeatures)) {
+            this.featureInfoPanelIsVisible = true;
+            this.featureInfoPanelIsCollapsed = false;
+          } else {
+            this.featureInfoPanelIsVisible = false;
+          }
         }
       }
     );
@@ -519,6 +541,21 @@ export default class ViewState {
       }
     );
 
+    this._measurablePanelIsVisibleSubscription = reaction(
+      () => this.terria.measurableGeom,
+      (geom) => {
+        this.measurablePanelIsVisible =
+          !!geom && geom.stopPoints && geom.stopPoints.length > 0;
+      }
+    );
+
+    this._disposeSamplingPathStep = reaction(
+      () => this.terria.measurableGeomSamplingStep,
+      () => {
+        this.terria.measurableGeometryManager.resample();
+      }
+    );
+
     const handleWindowClose = (e: BeforeUnloadEvent) => {
       // Cancel the event
       e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
@@ -549,6 +586,9 @@ export default class ViewState {
     this._workbenchHasTimeWMSSubscription();
     this._locationMarkerSubscription();
     this._storyBeforeUnloadSubscription();
+    this._measurablePanelIsVisibleSubscription();
+    this._disposeSamplingPathStep();
+
     this.searchState.dispose();
   }
 
@@ -878,6 +918,20 @@ export default class ViewState {
   @computed
   get isMapInteractionActive() {
     return this.terria.mapInteractionModeStack.length > 0;
+  }
+
+  @observable selectedSampledPointIdx: number | null = null;
+
+  @action
+  setSelectedSampledPointIdx(index: number | null) {
+    this.selectedSampledPointIdx = index;
+  }
+
+  @observable selectedStopPointIdx: number | null = null;
+
+  @action
+  setSelectedStopPointIdx(index: number | null) {
+    this.selectedStopPointIdx = index;
   }
 }
 

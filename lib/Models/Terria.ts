@@ -127,6 +127,10 @@ import TimelineStack from "./TimelineStack";
 import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import MeasurableGeometryManager, {
+  MeasurableGeometry
+} from "../ViewModels/MeasurableGeometryManager";
 
 export interface ConfigParameters {
   /**
@@ -360,11 +364,32 @@ export interface ConfigParameters {
   relatedMaps?: RelatedMap[];
 
   /**
+   * Parameters to whereAmI service.
+   */
+  whereAmIParams?: {
+    urlFast: string;
+    urlSlowButAccurate?: string;
+    fieldId?: string;
+    fieldResult: string;
+    fieldResultDetailed?: string;
+  };
+
+  /**
    * Optional plugin configuration
    */
   plugins?: Record<string, any>;
 
+  /**
+   * If true start with Info enabled
+   */
+  isPickInfoEnabledDefaultValue: boolean;
+
   aboutButtonHrefUrl?: string | null;
+
+  /**
+   * If true search also in info of catalog layers.
+   */
+  searchInCatalogItemInfo: boolean;
 
   /**
    * The search bar allows requesting information from various search services at once.
@@ -376,6 +401,21 @@ export interface ConfigParameters {
    * Keep catalog open when adding / removing items
    */
   keepCatalogOpen: boolean;
+  
+  /** 
+  * Url to coordinates converter service.
+   */
+  coordsConverterUrl?: string;
+
+  /**
+   * If true elevation is intended MSL, otherwise WGS84
+   */
+  useElevationMeanSeaLevel: boolean;
+
+  /**
+   * List of the enabled MapViewers: 3d, 3dsmooth, 2d, cesium2d
+   */
+  mapViewers: string[];
 }
 
 interface StartOptions {
@@ -498,6 +538,13 @@ export default class Terria {
     )
   );
 
+  @observable
+  readonly measurableGeometryManager = new MeasurableGeometryManager(this);
+
+  @observable measurableGeom?: MeasurableGeometry;
+
+  @observable measurableGeomSamplingStep: number = 500;
+
   appName: string = "TerriaJS App";
   supportEmail: string = "info@terria.io";
 
@@ -599,10 +646,16 @@ export default class Terria {
     enableConsoleAnalytics: undefined,
     googleAnalyticsOptions: undefined,
     relatedMaps: [],
+    whereAmIParams: undefined,
     aboutButtonHrefUrl: "about.html",
     plugins: undefined,
+    isPickInfoEnabledDefaultValue: false,
+    searchInCatalogItemInfo: false,
     searchBarConfig: undefined,
-    searchProviders: []
+    searchProviders: [],
+    coordsConverterUrl: undefined,
+    useElevationMeanSeaLevel: false,
+    mapViewers: ["3d", "3dsmooth", "2d"]
   };
 
   @observable
@@ -613,6 +666,18 @@ export default class Terria {
 
   @observable
   allowFeatureInfoRequests: boolean = true;
+
+  /**
+   * Gets or sets the last position picked by FeatureInfo.
+   * @type {Cartographic}
+   */
+  @observable pickedPosition: Cartographic | undefined;
+
+  /**
+   * Gets or sets a value indicating whether the path line drawn by MeasureTool is clamped to ground.
+   * @type {Boolean}
+   */
+  @observable clampMeasureLineToGround: boolean = true;
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
@@ -670,6 +735,9 @@ export default class Terria {
 
   @observable stories: StoryData[] = [];
   @observable storyPromptShown: number = 0; // Story Prompt modal will be rendered when this property changes. See StandardUserInterface, section regarding sui.notifications. Ideally move this to ViewState.
+
+  /* Custom Info Tool */
+  @observable isPickInfoEnabled: boolean = false;
 
   /**
    * Gets or sets the ID of the catalog member that is currently being
@@ -1118,6 +1186,9 @@ export default class Terria {
         console.log(error);
       }
     }
+
+    this.isPickInfoEnabled =
+      this.configParameters.isPickInfoEnabledDefaultValue;
 
     await this.restoreAppState(options);
   }
@@ -2126,16 +2197,18 @@ export default class Terria {
         featureIndex[hash] = (featureIndex[hash] || []).concat([feature]);
       });
 
-      // Find picked feature by matching feature hash
-      // Also try to match name if defined
-      const current = pickedFeatures.current;
-      if (isJsonObject(current) && typeof current.hash === "number") {
-        const selectedFeature =
-          (featureIndex[current.hash] || []).find(
-            (feature) => feature.name === current.name
-          ) ?? featureIndex[current.hash]?.[0];
-        if (selectedFeature) {
-          this.selectedFeature = selectedFeature;
+      if (this.isPickInfoEnabled) {
+        // Find picked feature by matching feature hash
+        // Also try to match name if defined
+        const current = pickedFeatures.current;
+        if (isJsonObject(current) && typeof current.hash === "number") {
+          const selectedFeature =
+            (featureIndex[current.hash] || []).find(
+              (feature) => feature.name === current.name
+            ) ?? featureIndex[current.hash]?.[0];
+          if (selectedFeature) {
+            this.selectedFeature = selectedFeature;
+          }
         }
       }
     });

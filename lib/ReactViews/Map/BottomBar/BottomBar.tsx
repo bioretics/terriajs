@@ -26,7 +26,11 @@ export const BottomBar: VFC = () => {
         searchBarModel={viewState.terria.searchBarModel}
       />
       <Box paddedHorizontally={4} gap={2}>
-        <LocationBar mouseCoords={viewState.terria.currentViewer.mouseCoords} />
+        {!viewState.useSmallScreenInterface && (
+          <LocationBar
+            mouseCoords={viewState.terria.currentViewer.mouseCoords}
+          />
+        )}
         <DistanceLegend />
       </Box>
     </Box>

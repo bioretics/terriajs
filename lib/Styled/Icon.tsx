@@ -55,6 +55,7 @@ import lock from "../../wwwroot/images/icons/lock.svg";
 import loop from "../../wwwroot/images/icons/loop.svg";
 import menu from "../../wwwroot/images/icons/menu.svg";
 import measure from "../../wwwroot/images/icons/measure.svg";
+import measurePolygon from "../../wwwroot/images/icons/measure_polygon.svg";
 import opened from "../../wwwroot/images/icons/opened.svg";
 import pause from "../../wwwroot/images/icons/pause.svg";
 import play from "../../wwwroot/images/icons/play.svg";
@@ -132,6 +133,7 @@ import pedestrian from "../../wwwroot/images/icons/pedestrian.svg";
 import minimize from "../../wwwroot/images/icons/minimize.svg";
 import maximize from "../../wwwroot/images/icons/maximize.svg";
 import closeTool from "../../wwwroot/images/icons/close-tool.svg";
+import copy from "../../wwwroot/images/icons/copy.svg";
 import moreItems from "../../wwwroot/images/icons/more-items.svg";
 import info from "../../wwwroot/images/icons/info.svg";
 import leftSmall from "../../wwwroot/images/icons/left-small.svg";
@@ -200,6 +202,7 @@ export const GLYPHS = {
   loop,
   menu,
   measure,
+  measurePolygon,
   opened,
   pause,
   play,
@@ -277,6 +280,7 @@ export const GLYPHS = {
   minimize,
   maximize,
   closeTool,
+  copy,
   moreItems,
   info,
   leftSmall,

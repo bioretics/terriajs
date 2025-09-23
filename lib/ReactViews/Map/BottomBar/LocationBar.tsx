@@ -71,6 +71,11 @@ export const LocationBar: FC<ILocationBarProps> = observer(
           `}
           onClick={mouseCoords.toggleUseProjection}
         >
+          {mouseCoords.whereAmI && (
+            <Section centered>
+              <StyledText>{mouseCoords.whereAmI}</StyledText>
+            </Section>
+          )}
           {!mouseCoords.useProjection ? (
             <>
               <Section centered>

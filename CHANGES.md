@@ -203,6 +203,7 @@
 - Add support for Cloud Optimised Geotiff (cog) in Cesium mode. Currently supports EPSG 4326 and 3857. There is experimental support for other projections but performance might suffer and there could be other issues.
 - Fix `Workbench.collapseAll()` and `Workbench.expandAll()` for References.
 - Add to the "doZoomTo" function the case of an imagery layer with imageryProvider.rectangle
+- Fix basemaps order
 - Add "leafletMaxZoom" to configParameters so that the maxZoom of the Leaflet viewer can be changed.
 - Restrict `sass` version to `< 1.80`- to avoid deprecations.
 
@@ -217,6 +218,10 @@
 - Augment cesium types and start using import instead of require in ts files
 - Update to sass 1.79.1
 - Add option to import assets from Cesium ion through the Add data panel. Use map config parameter "cesiumIonOAuth2ApplicationID" to enable the feature.
+- Splitting the measurement tool into lines and polygons. It is now possible to add a point to an existing segment.
+- Allow to use Cesium in `SCENE2D` mode (and WebMercator projection) as map viewer.
+- Add a new configuration parameter `mapViewers` to specify which map viewers to show in `SettingPanel`.
+- [The next improvement]
 
 #### 8.7.6 - 2024-08-22
 
