@@ -34,7 +34,18 @@ const MeasurablePanel = observer((props: Props) => {
     null
   );
 
-  MeasurablePanelManager.initialize(terria);
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [isVisible, setIsVisible] = React.useState(false);
+
+  React.useEffect(() => {
+    MeasurablePanelManager.initialize(terria);
+  }, [terria]);
+
+  React.useEffect(() => {
+    const hasEnoughPoints =
+      (terria.measurableGeom?.stopPoints?.length ?? 0) > 0;
+    setIsVisible(hasEnoughPoints);
+  }, [terria.measurableGeom?.stopPoints]);
 
   const [samplingPathStep, setSamplingPathStep] = React.useState(
     terria.measurableGeomSamplingStep
@@ -43,20 +54,19 @@ const MeasurablePanel = observer((props: Props) => {
     React.useState(true);
 
   const panelClassName = classNames(Styles.panel, {
-    [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
-    [Styles.isVisible]: viewState.measurablePanelIsVisible,
+    [Styles.isCollapsed]: isCollapsed,
+    [Styles.isVisible]: isVisible,
     [Styles.isTranslucent]: viewState.explorerPanelIsVisible
   });
 
-  const close = action(() => {
+  const close = React.useCallback(() => {
     MeasurablePanelManager.removeAllMarkers();
-    viewState.measurablePanelIsVisible = false;
-  });
+    setIsVisible(false);
+  }, []);
 
-  const toggleCollapsed = action(() => {
-    viewState.measurablePanelIsCollapsed =
-      !viewState.measurablePanelIsCollapsed;
-  });
+  const toggleCollapsed = React.useCallback(() => {
+    setIsCollapsed((prev) => !prev);
+  }, []);
 
   const toggleChart = action(() => {
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
@@ -167,7 +177,7 @@ const MeasurablePanel = observer((props: Props) => {
             className={Styles.btnToggleFeature}
             title="collapse"
           >
-            {props.viewState.measurablePanelIsCollapsed ? (
+            {isCollapsed ? (
               <Icon glyph={Icon.GLYPHS.closed} />
             ) : (
               <Icon glyph={Icon.GLYPHS.opened} />
@@ -637,13 +647,12 @@ const MeasurablePanel = observer((props: Props) => {
 
   return (
     <DragWrapper>
-      <div
-        className={panelClassName}
-        aria-hidden={!viewState.measurablePanelIsVisible}
-      >
-        {renderHeader()}
-        {renderBody()}
-      </div>
+      {isVisible && (
+        <div className={panelClassName}>
+          {renderHeader()}
+          {!isCollapsed && renderBody()}
+        </div>
+      )}
     </DragWrapper>
   );
 });
