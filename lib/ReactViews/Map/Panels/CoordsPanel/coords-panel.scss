@@ -1,11 +1,11 @@
-@import "~terriajs-variables";
-@import "../../../../Sass/common/mixins";
+@use "../../../../Sass/common/_variables" as variables;
+@use "../../../../Sass/common/_mixins" as mixins;
 
 .dropdown-inner {
-  width: $share-panel-width;
+  width: variables.$share-panel-width;
   padding: 10px;
-  font-size: $font-size-mid-small;
-  @include transform-origin(50%, top);
+  font-size: variables.$font-size-mid-small;
+  @include mixins.transform-origin(50%, top);
 }
 
 .format-button {
@@ -18,8 +18,8 @@
 
 .crs--item {
   composes: field from "../../../../Sass/common/_form.scss";
-  background-color: $overlay;
-  color: $color-primary;
+  background-color: variables.$overlay;
+  color: variables.$color-primary;
 }
 
 .shareUrlfield {
@@ -32,5 +32,5 @@
 .explanation {
   font-size: smaller;
   font-weight: lighter;
-  color: $text-light-dimmed;
+  color: variables.$text-light-dimmed;
 }

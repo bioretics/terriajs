@@ -1,5 +1,5 @@
-@import "~terriajs-variables";
-@import "~terriajs-mixins";
+@use "../../Sass/common/_variables";
+@use "../../Sass/common/mixins";
 @import url("https://wwwservizitest.regione.emilia-romagna.it/includes/TemplatesER/-cdn/fonts/fonts.googleapis.titillium.css?family=Titillium:600,600i&display=swap");
 
 .WelcomeModalWrapper {
