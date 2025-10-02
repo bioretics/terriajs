@@ -7,6 +7,7 @@
 .holder {
   left: 0;
   right: 0;
+  width: 100%;
   background: variables.$transparent-dark;
   backdrop-filter: variables.$blur;
   padding-bottom: 40px; //hack to allow timeline visible
@@ -25,6 +26,7 @@
 }
 
 .chart {
+  width: 100%;
   color: variables.$text-light;
 
   :global {

@@ -3,7 +3,7 @@
 import { observer } from "mobx-react";
 import { useState, useEffect, useRef } from "react";
 import Icon from "../../../Styled/Icon";
-import { Chart } from "./BottomDockChart";
+import { BottomDockChart as Chart } from "./BottomDockChart";
 import Styles from "./chart-panel.scss";
 import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -183,7 +183,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                   scale: "linear",
                   units: "m"
                 }}
-                width={300}
                 height={CHART_HEIGHT}
                 chartItemKeyForPointMouseNear={ChartKeys}
                 onPointMouseNear={updateChartPointNearMouse}

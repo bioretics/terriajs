@@ -41,7 +41,6 @@ interface BottomDockChartProps extends WithParentSizeProvidedProps {
   margin?: Margin;
 
   terria: Terria;
-  parentWidth: number;
   chartItemKeyForPointMouseNear: object;
   onPointMouseNear: (param: any) => void;
   selectedStopPointIdx: number | null;
@@ -87,14 +86,14 @@ const DEFAULT_MARGIN: Margin = { left: 20, right: 30, top: 10, bottom: 50 };
 interface ChartProps {
   chartItems: ChartItem[];
   xAxis: ChartAxis;
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   margin?: Margin;
   terria: Terria;
-  chartItemKeyForPointMouseNear: any;
-  onPointMouseNear: (param: any) => void;
-  selectedStopPointIdx: number | null;
-  selectedSampledPointIdx: number | null;
+  chartItemKeyForPointMouseNear?: any;
+  onPointMouseNear?: (param: any) => void;
+  selectedStopPointIdx?: number | null;
+  selectedSampledPointIdx?: number | null;
 }
 
 export const Chart: React.FC<ChartProps> = observer(
@@ -129,7 +128,7 @@ export const Chart: React.FC<ChartProps> = observer(
     }, [propsChartItems]);
 
     const plotHeight =
-      height - margin.top - margin.bottom - Legends.maxHeightPx;
+      (height || 0) - margin.top - margin.bottom - Legends.maxHeightPx;
 
     const yAxes = useMemo(() => {
       const range = [plotHeight, 0];
@@ -157,7 +156,8 @@ export const Chart: React.FC<ChartProps> = observer(
       return maxLabelDigits * Y_AXIS_TICK_LABEL_FONT_SIZE;
     }, [yAxes]);
 
-    const plotWidth = width - margin.left - margin.right - estimatedYAxesWidth;
+    const plotWidth =
+      (width || 0) - margin.left - margin.right - estimatedYAxesWidth;
 
     const adjustedMargin = useMemo(
       () => ({
@@ -232,12 +232,12 @@ export const Chart: React.FC<ChartProps> = observer(
       };
 
       if (!mouseCoords || mouseCoords.x < plotWidth * 0.5) {
-        tooltip.right = width - (plotWidth + margin.right);
+        tooltip.right = (width || 0) - (plotWidth + margin.right);
       } else {
         tooltip.left = margin.left;
       }
 
-      tooltip.bottom = height - (margin.top + plotHeight);
+      tooltip.bottom = (height || 0) - (margin.top + plotHeight);
       return tooltip;
     }, [
       adjustedMargin,
