@@ -670,6 +670,24 @@ export default class Terria {
   @observable userAuthToken?: string;
 
   /**
+   * Gets or sets height of viewshed observer point.
+   * @type {string}
+   */
+  @observable viewshedObserverHeight: number = 0;
+
+  /**
+   * Gets or sets height of viewshed target point.
+   * @type {string}
+   */
+  @observable viewshedTargetHeight: number = 0;
+
+  /**
+   * Gets or sets viewshed computed distances
+   * @type {string}
+   */
+  @observable viewshedDistances?: (number | undefined)[];
+
+  /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
    * (highest index) handles click interactions with the map
    */
@@ -737,9 +755,11 @@ export default class Terria {
   }
 
   @computed
-  get viewer2DMode () {
+  get viewer2DMode() {
     //TODO: tmp!
-    return this.configParameters.useCesiumAs2DViewer ? ViewerMode.Leaflet : ViewerMode.Preview;
+    return this.configParameters.useCesiumAs2DViewer
+      ? ViewerMode.Leaflet
+      : ViewerMode.Preview;
   }
 
   /**

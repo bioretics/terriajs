@@ -28,6 +28,7 @@ import { ToggleInfoController } from "./Items/ToggleInfoTool";
 import MyLocation from "./Items/MyLocation";
 import { ToggleSplitterController } from "./Items/ToggleSplitterTool";
 import ZoomControl, { ZOOM_CONTROL_ID } from "./Items/ZoomControl";
+import ViewshedTool from "./Items/ViewshedTool";
 
 export const CLOSE_TOOL_ID = "close-tool";
 
@@ -99,7 +100,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: toggleSplitterController,
     screenSize: undefined,
-    order: 6
+    order: 7
   });
 
   const measureTool = new MeasureTool({
@@ -171,6 +172,36 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 5
   });
 
+  const viewshedTool = new ViewshedTool({
+    terria,
+    onClose: () => {
+      runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(ViewshedTool.id);
+        viewState.panel = undefined;
+      });
+    },
+    onOpen: () => {
+      runInAction(() => {
+        const item = viewState.terria.mapNavigationModel.findItem(
+          ViewshedTool.id
+        )?.controller;
+        if (item && item.active) {
+          item.deactivate();
+        }
+        viewState.terria.mapNavigationModel.disable(ViewshedTool.id);
+      });
+    }
+  });
+  mapNavigationModel.addItem({
+    id: ViewshedTool.id,
+    name: "Linea di vista",
+    title: `:`,
+    location: "TOP",
+    controller: viewshedTool,
+    screenSize: undefined,
+    order: 6
+  });
+
   const toggleInfoController = new ToggleInfoController(viewState);
   mapNavigationModel.addItem({
     id: ToggleInfoController.id,
@@ -211,7 +242,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     screenSize: undefined,
     controller: closeToolButtonController,
     render: <CloseToolButton viewState={viewState} />,
-    order: 7
+    order: 8
   });
   closeToolButtonController.setVisible(false);
 
@@ -274,6 +305,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "BOTTOM",
     screenSize: "medium",
     controller: feedbackController,
-    order: 8
+    order: 9
   });
 };

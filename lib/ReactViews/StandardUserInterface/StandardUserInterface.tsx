@@ -45,6 +45,7 @@ import Styles from "./standard-user-interface.scss";
 import { terriaTheme } from "./StandardTheme";
 import WorkflowPanelContainer from "./WorkflowPanelContainer";
 import ElevationPanel from "../Elevation/ElevationPanel";
+import ViewshedPanel from "../Elevation/ViewshedPanel";
 import { MessageModal } from "../MessageModal/MessageModal";
 
 export const animationDuration = 250;
@@ -300,6 +301,10 @@ const StandardUserInterface: React.FC<StandardUserInterfaceProps> = observer(
             >
               <FeatureInfoPanel />
               <ElevationPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
+              <ViewshedPanel
                 terria={props.terria}
                 viewState={props.viewState}
               />

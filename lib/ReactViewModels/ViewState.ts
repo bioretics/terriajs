@@ -303,6 +303,12 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable elevationPanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the ViewshedPanel is visible.
+   * @type {Boolean}
+   */
+  @observable viewshedPanelIsVisible: boolean = false;
   /**
    * Gets or sets a value indicating whether the ElevationPanel is collapsed.
    * @type {Boolean}
@@ -366,6 +372,7 @@ export default class ViewState {
   private _workbenchHasTimeWMSSubscription: IReactionDisposer;
   private _storyBeforeUnloadSubscription: IReactionDisposer;
   private _elevationPanelIsVisibleSubscription: IReactionDisposer;
+  private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _disclaimerHandler: DisclaimerHandler;
 
   constructor(options: ViewStateOptions) {
@@ -496,6 +503,14 @@ export default class ViewState {
       }
     );
 
+    this._viewshedPanelIsVisibleSubscription = reaction(
+      () => this.terria.viewshedDistances,
+      (viewshedDistances?: (number | undefined)[]) => {
+        this.viewshedPanelIsVisible =
+          viewshedDistances !== undefined && viewshedDistances.length > 0;
+      }
+    );
+
     this._elevationPanelIsVisibleSubscription = reaction(
       () => this.terria.pathManager.path,
       (path: PathCustom | undefined) => {
@@ -536,6 +551,7 @@ export default class ViewState {
     this._previewedItemIdSubscription();
     this._workbenchHasTimeWMSSubscription();
     this._elevationPanelIsVisibleSubscription();
+    this._viewshedPanelIsVisibleSubscription();
     this._disclaimerHandler.dispose();
     this.searchState.dispose();
   }
