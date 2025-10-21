@@ -14,7 +14,6 @@ import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
-import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import isDefined from "../Core/isDefined";
@@ -28,19 +27,12 @@ import Terria from "./Terria";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import Ray from "terriajs-cesium/Source/Core/Ray";
 
-interface OnDrawingCompleteParams {
-  points: Cartesian3[];
-}
-
 interface Options {
   terria: Terria;
   messageHeader?: string | (() => string);
   numMaxPoints?: number;
   onMakeDialogMessage?: () => string;
   buttonText?: string;
-  onPointClicked?: (dataSource: DataSource) => void;
-  onPointMoved?: (dataSource: DataSource) => void;
-  onDrawingComplete?: (params: OnDrawingCompleteParams) => void;
   onCleanUp?: () => void;
   invisible?: boolean;
 }
@@ -52,11 +44,6 @@ export default class UserDrawingViewshed extends MappableMixin(
   private readonly numMaxPoints?: number;
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
-  private readonly onPointClicked?: (dataSource: CustomDataSource) => void;
-  private readonly onPointMoved?: (dataSource: CustomDataSource) => void;
-  private readonly onDrawingComplete?: (
-    params: OnDrawingCompleteParams
-  ) => void;
   private readonly onCleanUp?: () => void;
   private readonly invisible?: boolean;
   private readonly dragHelper: DragPoints;
@@ -70,8 +57,8 @@ export default class UserDrawingViewshed extends MappableMixin(
   @observable
   private inDrawMode: boolean;
   private disposePickedFeatureSubscription?: () => void;
+  private disposeViewshedHeight?: () => void;
 
-  private mousePointEntity?: Entity;
   private mouseMoveDispose?: IReactionDisposer;
 
   constructor(options: Options) {
@@ -98,25 +85,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.buttonText = options.buttonText;
 
     /**
-     * Callback that occurs when point is clicked (may be added or removed). Function takes a CustomDataSource which is
-     * a list of PointEntities.
-     */
-    this.onPointClicked = options.onPointClicked;
-
-    /**
-     * Callback that occurs when point is moved. Function takes a CustomDataSource which is a list of PointEntities.
-     */
-    this.onPointMoved = options.onPointMoved;
-
-    /**
-     * Callback that occurs when a drawing is complete. This is called when the
-     * user has clicked done button and the shape has at least 1 point.
-     * The callback function will receive the points in the shape and a rectangle
-     * if `drawRectangle` was set to `true`.
-     */
-    this.onDrawingComplete = options.onDrawingComplete;
-
-    /**
      * Callback that occurs on clean up, i.e. when drawing is done or cancelled.
      */
     this.onCleanUp = options.onCleanUp;
@@ -139,13 +107,17 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.invisible = options.invisible;
 
     // helper for dragging points around
-    this.dragHelper = new DragPoints(options.terria, (customDataSource) => {
-      if (typeof this.onPointMoved === "function") {
-        this.getVisiblePointsForShape();
-        this.onPointMoved(customDataSource);
-      }
+    this.dragHelper = new DragPoints(options.terria, () => {
+      this.computeLineOfSight();
       this.prepareToAddNewPoint();
     });
+
+    this.disposeViewshedHeight = reaction(
+      () => this.terria.viewshedDistances?.[1],
+      () => {
+        this.addMapInteractionMode();
+      }
+    );
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -226,7 +198,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       name: "Line visible",
       polyline: <any>{
         positions: new CallbackProperty(function () {
-          that.getVisiblePointsForShape();
+          that.computeLineOfSight();
           return that.visibleLinePoints;
         }, false),
 
@@ -265,7 +237,7 @@ export default class UserDrawingViewshed extends MappableMixin(
           }
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
-            this.addPointToPointEntities("First Point", pickedPoint, true);
+            this.addPointToPointEntities("Observer", pickedPoint, true);
 
             reaction.dispose();
             this.prepareToAddNewPoint();
@@ -295,19 +267,17 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.pointEntities.entities.add(pointEntity);
     this.dragHelper.updateDraggableObjects(this.pointEntities);
 
-    this.getVisiblePointsForShape();
-
-    if (isDefined(this.onPointClicked)) {
-      this.onPointClicked(this.pointEntities);
-    }
+    this.computeLineOfSight();
   }
 
   endDrawing() {
     if (this.disposePickedFeatureSubscription) {
       this.disposePickedFeatureSubscription();
     }
+    if (this.disposeViewshedHeight) this.disposeViewshedHeight();
+
     runInAction(() => {
-      this.terria.mapInteractionModeStack.pop();
+      this.terria.mapInteractionModeStack.length = 0;
       this.cleanUp();
     });
   }
@@ -320,19 +290,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       message: this.getDialogMessage(),
       buttonText: this.getButtonText(),
       onCancel: () => {
-        runInAction(() => {
-          if (this.onDrawingComplete) {
-            const isDrawingComplete =
-              this.pointEntities.entities.values.length >= 2;
-            const points = this.getPointsForShape();
-
-            if (isDrawingComplete && points) {
-              this.onDrawingComplete({
-                points
-              });
-            }
-          }
-        });
         this.endDrawing();
       },
       onEnable: (viewState: ViewState) => {
@@ -375,7 +332,7 @@ export default class UserDrawingViewshed extends MappableMixin(
                 this.pointEntities.entities.values.length !== this.numMaxPoints)
             ) {
               // No existing point was picked, so add a new point
-              this.addPointToPointEntities("Another Point", pickedPoint, false);
+              this.addPointToPointEntities("Target", pickedPoint, false);
             } else {
               this.dragHelper.resetDragCount();
             }
@@ -416,25 +373,16 @@ export default class UserDrawingViewshed extends MappableMixin(
         // Probably a layer or feature that has nothing to do with what we're drawing.
         return;
       } else if (index === 0) {
-        // Also let client of UserDrawing know if a point has been removed.
-        if (typeof that.onPointClicked === "function") {
-          that.onPointClicked(that.pointEntities);
-        }
         userClickedExistingPoint = true;
       } else {
         // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
-
-        // Also let client of UserDrawing know if a point has been removed.
-        if (typeof that.onPointClicked === "function") {
-          that.onPointClicked(that.pointEntities);
-        }
         userClickedExistingPoint = true;
         return;
       }
     });
 
-    this.getVisiblePointsForShape();
+    this.computeLineOfSight();
 
     return userClickedExistingPoint;
   }
@@ -444,8 +392,6 @@ export default class UserDrawingViewshed extends MappableMixin(
    */
   cleanUp() {
     this.terria.overlays.remove(this);
-    //this.pointEntities = new CustomDataSource("Points");
-    //this.otherEntities = new CustomDataSource("Lines and polygons");
     this.pointEntities.entities.removeAll();
     this.otherEntities.entities.removeAll();
 
@@ -511,26 +457,7 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
   }
 
-  /**
-   * Return a list of the coords for the user drawing
-   */
-  getPointsForShape() {
-    if (isDefined(this.pointEntities.entities)) {
-      const pos = [];
-      for (var i = 0; i < this.pointEntities.entities.values.length; i++) {
-        const obj = this.pointEntities.entities.values[i];
-        if (isDefined(obj.position)) {
-          const position = obj.position.getValue(
-            this.terria.timelineClock.currentTime
-          );
-          pos.push(position);
-        }
-      }
-      return pos;
-    }
-  }
-
-  getVisiblePointsForShape() {
+  computeLineOfSight() {
     const pos = this.pointEntities.entities.values
       .filter((elem) => isDefined(elem.position))
       .map((elem) =>
@@ -559,10 +486,19 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.terria.cesium?.scene
     );
 
-    const newPos = [pos0Updated];
+    const oldViewshedDistances = this.terria.viewshedDistances;
+
     const distOrig = Cartesian3.distance(pos0Updated, pos1Updated);
     const distInter =
       intersection && Cartesian3.distance(pos0Updated, intersection);
+
+    if (
+      oldViewshedDistances &&
+      distOrig === oldViewshedDistances[0] &&
+      distInter === oldViewshedDistances[1]
+    ) {
+      return;
+    }
 
     const useInter: boolean =
       intersection !== undefined &&
