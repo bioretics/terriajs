@@ -1,7 +1,5 @@
 "use strict";
-import { observable, runInAction } from "mobx";
 import React from "react";
-import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -21,9 +19,6 @@ export default class ViewshedTool extends MapNavigationItemController {
   private readonly terria: Terria;
   private userDrawing: UserDrawingViewshed;
 
-  @observable private distOrig?: number;
-  @observable private distInter?: number;
-
   onClose: () => void;
   onOpen: () => void;
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -36,8 +31,6 @@ export default class ViewshedTool extends MapNavigationItemController {
       messageHeader: "Linea di vista",
       numMaxPoints: 2,
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
-      onPointClicked: this.onPointClicked.bind(this),
-      onPointMoved: this.onPointMoved.bind(this),
       onCleanUp: this.onCleanUp.bind(this)
     });
     this.onClose = props.onClose;
@@ -54,23 +47,7 @@ export default class ViewshedTool extends MapNavigationItemController {
 
   onCleanUp() {
     this.terria.viewshedDistances = undefined;
-    this.distOrig = undefined;
-    this.distInter = undefined;
     this.deactivate();
-  }
-
-  onPointClicked(_: CustomDataSource) {
-    runInAction(() => {
-      this.distOrig =
-        this.terria.viewshedDistances && this.terria.viewshedDistances[0];
-      this.distInter =
-        this.terria.viewshedDistances && this.terria.viewshedDistances[1];
-    });
-  }
-
-  onPointMoved(pointEntities: CustomDataSource) {
-    // This is no different to clicking a point.
-    this.onPointClicked(pointEntities);
   }
 
   /**
@@ -107,14 +84,19 @@ export default class ViewshedTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = () => {
+    const distOrig =
+      this.terria.viewshedDistances && this.terria.viewshedDistances[0];
+    const distInter =
+      this.terria.viewshedDistances && this.terria.viewshedDistances[1];
+
     return `
       <br/>
       <table>
         <tbody>
         <tr>
             <td>${
-              this.distOrig && this.distInter
-                ? Math.abs(this.distOrig - this.distInter) < 0.01
+              distOrig && distInter
+                ? Math.abs(distOrig - distInter) < 0.01
                   ? "VISIBILE"
                   : "COPERTO"
                 : ""
@@ -123,14 +105,12 @@ export default class ViewshedTool extends MapNavigationItemController {
           <tr/>
           <tr>
             <td>Distanza:</td>
-            <td>${this.distOrig ? this.prettifyNumber(this.distOrig) : ""}</td>
+            <td>${distOrig ? this.prettifyNumber(distOrig) : ""}</td>
           </tr>
           <tr/>
           <tr>
             <td>Distanza visibile:</td>
-            <td>${
-              this.distInter ? this.prettifyNumber(this.distInter) : ""
-            }</td>
+            <td>${distInter ? this.prettifyNumber(distInter) : ""}</td>
           </tr>
         </tbody>
       </table>
