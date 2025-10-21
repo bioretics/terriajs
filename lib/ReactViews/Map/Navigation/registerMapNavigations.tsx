@@ -182,13 +182,15 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
-        const item = viewState.terria.mapNavigationModel.findItem(
-          ViewshedTool.id
-        )?.controller;
-        if (item && item.active) {
-          item.deactivate();
+        if (viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium) {
+          const item = viewState.terria.mapNavigationModel.findItem(
+            ViewshedTool.id
+          )?.controller;
+          if (item && item.active) {
+            item.deactivate();
+          }
+          viewState.terria.mapNavigationModel.disable(ViewshedTool.id);
         }
-        viewState.terria.mapNavigationModel.disable(ViewshedTool.id);
       });
     }
   });
