@@ -10,6 +10,8 @@ type PropsType = {
   children?: React.ReactNode;
 };
 
+const MIN_PANEL_HEIGHT = 370;
+
 const StyledPanel = styled.div<PropsType>`
   display: flex;
   flex-direction: column;
@@ -27,16 +29,20 @@ const StyledPanel = styled.div<PropsType>`
 const SidePanelContainer: React.FC<PropsType> = (props) => {
   if (!props.show) return null;
 
+  const defaultPanelHeight =
+    props.viewState.terria.configParameters.workbenchPanelDefaultHeight ?? 600;
+  const initialHeight = Math.max(defaultPanelHeight, MIN_PANEL_HEIGHT);
+
   return (
     <Rnd
       default={{
         x: 15,
         y: 5,
         width: 355,
-        height: 500
+        height: initialHeight
       }}
       minWidth={300}
-      minHeight={370}
+      minHeight={MIN_PANEL_HEIGHT}
       bounds="parent"
       disableDragging={!props.show}
       dragHandleClassName="drag-handle"
