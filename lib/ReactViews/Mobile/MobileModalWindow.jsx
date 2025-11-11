@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import Box from "../../Styled/Box";
 import Icon from "../../Styled/Icon";
@@ -15,7 +15,7 @@ import MappableMixin from "../../ModelMixins/MappableMixin";
 import MyDataTab from "../ExplorerWindow/Tabs/MyDataTab/MyDataTab.jsx";
 
 @observer
-class MobileModalWindow extends React.Component {
+class MobileModalWindow extends Component {
   static propTypes = {
     terria: PropTypes.object,
     viewState: PropTypes.object.isRequired,
@@ -113,7 +113,6 @@ class MobileModalWindow extends React.Component {
     });
   }
 
-  /* eslint-disable-next-line camelcase */
   UNSAFE_componentWillReceiveProps() {
     const numItems = this.props.terria.workbench.items.length;
     if (
@@ -177,4 +176,5 @@ class MobileModalWindow extends React.Component {
     );
   }
 }
-module.exports = withTranslation()(MobileModalWindow);
+
+export default withTranslation()(MobileModalWindow);

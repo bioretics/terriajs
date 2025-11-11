@@ -2,7 +2,6 @@ import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
 import styled from "styled-components";
 import withControlledVisibility from "../../HOCs/withControlledVisibility";
 import { useViewState } from "../../Context";
@@ -69,7 +68,7 @@ const MenuBar = observer((props) => {
       <section className={classNames(Styles.flex)}>
         <ul className={classNames(Styles.menu)}>
           <li className={Styles.menuItem}>
-            <SettingPanel terria={terria} viewState={viewState} />
+            <SettingPanel />
           </li>
           {terria.configParameters.coordsConverterUrl && (
             <li className={Styles.menuItem}>

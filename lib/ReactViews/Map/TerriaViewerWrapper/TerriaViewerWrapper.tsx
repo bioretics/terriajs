@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useRef } from "react";
+import { FC, useEffect, useRef } from "react";
 
 import { Splitter } from "./Splitter/Splitter";
 import { useViewState } from "../../Context";
@@ -36,22 +36,6 @@ export const TerriaViewerWrapper: FC = () => {
           left: 0;
           bottom: 0;
           right: 0;
-          :global {
-            .selection-indicator {
-              pointer-events: none;
-              position: absolute;
-              width: 50px;
-              height: 50px;
-            }
-
-            .cesium-widget,
-            .cesium-widget canvas {
-              position: absolute;
-              width: 100%;
-              height: 100%;
-              touch-action: none;
-            }
-          }
         `}
         ref={containerRef}
       />
