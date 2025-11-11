@@ -11,6 +11,7 @@ type PropsType = {
 };
 
 const MIN_PANEL_HEIGHT = 370;
+const DEFAULT_PANEL_HEIGHT = 600;
 
 const StyledPanel = styled.div<PropsType>`
   display: flex;
@@ -30,7 +31,8 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
   if (!props.show) return null;
 
   const defaultPanelHeight =
-    props.viewState.terria.configParameters.workbenchPanelDefaultHeight ?? 600;
+    props.viewState.terria.configParameters.workbenchPanelDefaultHeight ??
+    DEFAULT_PANEL_HEIGHT;
   const initialHeight = Math.max(defaultPanelHeight, MIN_PANEL_HEIGHT);
 
   return (
