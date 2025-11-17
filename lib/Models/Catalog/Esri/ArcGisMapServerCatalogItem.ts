@@ -41,17 +41,7 @@ import getToken from "../../getToken";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import MinMaxLevelMixin from "./../../../ModelMixins/MinMaxLevelMixin";
 import { Extent, Layer, Legends, MapServer } from "./ArcGisInterfaces";
-import CommonStrata from "../../Definition/CommonStrata";
-import GeographicProjection from "terriajs-cesium/Source/Core/GeographicProjection";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
-import WebMercatorProjection from "terriajs-cesium/Source/Core/WebMercatorProjection";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
-import Resource from "terriajs-cesium/Source/Core/Resource";
-import defined from "terriajs-cesium/Source/Core/defined";
-
-const proj4 = require("proj4").default;
+import proj4 from "proj4";
 
 class MapServerStratum extends LoadableStratum(
   ArcGisMapServerCatalogItemTraits
@@ -833,8 +823,8 @@ export function getRectangleFromLayer(
       return;
     }
 
-    const source = new proj4.Proj(Proj4Definitions[wkid]);
-    const dest = new proj4.Proj("EPSG:4326");
+    const source = Proj4Definitions[wkid];
+    const dest = "EPSG:4326";
 
     let p = proj4(source, dest, [extent.xmin, extent.ymin]);
 
@@ -858,7 +848,9 @@ function getRectangleFromLayers(
   layers: Layer[]
 ) {
   layers.forEach(function (item) {
-    item.extent && getRectangleFromLayer(item.extent, rectangle);
+    if (item.extent) {
+      getRectangleFromLayer(item.extent, rectangle);
+    }
   });
 }
 

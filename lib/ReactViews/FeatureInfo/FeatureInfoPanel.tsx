@@ -1,15 +1,14 @@
 import classNames from "classnames";
-import { TFunction } from "i18next";
 import {
   action,
   reaction,
   runInAction,
   makeObservable,
-  observable
+  type IReactionDisposer
 } from "mobx";
-import { disposeOnUnmount, observer } from "mobx-react";
-import React from "react";
-import { withTranslation } from "react-i18next";
+import { observer } from "mobx-react";
+import { Component } from "react";
+import { withTranslation, TFunction } from "react-i18next";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
@@ -36,14 +35,7 @@ import Loader from "../Loader";
 import { withViewState } from "../Context";
 import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import DataUri from "../../Core/DataUri";
-import Button from "../../Styled/Button";
-import { StyledHr } from "../Map/Panels/SharePanel/StyledHr";
-import { TextSpan } from "../../Styled/Text";
-import clipboard from "clipboard";
-
-const DragWrapper = require("../DragWrapper");
+import DragWrapper from "../Drag/DragWrapper";
 
 interface Props {
   viewState: ViewState;
@@ -52,10 +44,8 @@ interface Props {
 }
 
 @observer
-class FeatureInfoPanel extends React.Component<Props> {
-  @observable whereAmI?: string = "";
-  @observable whereAmIDetailed?: string = "";
-
+class FeatureInfoPanel extends Component<Props> {
+  pickedFeaturesReactionDisposer?: IReactionDisposer = undefined;
   constructor(props: Props) {
     super(props);
     makeObservable(this);
@@ -65,67 +55,66 @@ class FeatureInfoPanel extends React.Component<Props> {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const clipboardBtn = new clipboard(`.btn-copy-featureinfopanel`);
+    this.pickedFeaturesReactionDisposer = reaction(
+      () => terria.pickedFeatures,
+      (pickedFeatures) => {
+        if (!isDefined(pickedFeatures)) {
+          terria.selectedFeature = undefined;
+        } else {
+          terria.selectedFeature = TerriaFeature.fromEntity(
+            new Entity({
+              id: t("featureInfo.pickLocation"),
+              position: pickedFeatures.pickPosition
+            })
+          );
+          if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
+            pickedFeatures.allFeaturesAvailablePromise.then(() => {
+              if (this.props.viewState.featureInfoPanelIsVisible === false) {
+                // Panel is closed, refrain from setting selectedFeature
+                return;
+              }
 
-    disposeOnUnmount(
-      this,
-      reaction(
-        () => terria.pickedFeatures,
-        (pickedFeatures) => {
-          if (!isDefined(pickedFeatures)) {
-            terria.selectedFeature = undefined;
-          } else {
-            terria.selectedFeature = TerriaFeature.fromEntity(
-              new Entity({
-                id: t("featureInfo.pickLocation"),
-                position: pickedFeatures.pickPosition
-              })
-            );
-            this.setPicked(terria, pickedFeatures.pickPosition);
-            if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
-              pickedFeatures.allFeaturesAvailablePromise.then(() => {
-                if (this.props.viewState.featureInfoPanelIsVisible === false) {
-                  // Panel is closed, refrain from setting selectedFeature
-                  return;
-                }
+              // We only show features that are associated with a catalog item, so make sure the one we select to be
+              // open initially is one we're actually going to show.
+              const featuresShownAtAll = pickedFeatures.features.filter((x) =>
+                isDefined(determineCatalogItem(terria.workbench, x))
+              );
 
-                // We only show features that are associated with a catalog item, so make sure the one we select to be
-                // open initially is one we're actually going to show.
-                const featuresShownAtAll = pickedFeatures.features.filter((x) =>
-                  isDefined(determineCatalogItem(terria.workbench, x))
-                );
-
-                // Return if `terria.selectedFeatures` already showing a valid feature?
-                if (
-                  featuresShownAtAll.some(
-                    (feature) => feature === terria.selectedFeature
-                  )
+              // Return if `terria.selectedFeatures` already showing a valid feature?
+              if (
+                featuresShownAtAll.some(
+                  (feature) => feature === terria.selectedFeature
                 )
-                  return;
+              )
+                return;
 
-                // Otherwise find first feature with data to show
-                let selectedFeature = featuresShownAtAll.filter(
-                  (feature) =>
-                    isDefined(feature.properties) ||
-                    isDefined(feature.description)
-                )[0];
-                if (
-                  !isDefined(selectedFeature) &&
-                  featuresShownAtAll.length > 0
-                ) {
-                  // Handles the case when no features have info - still want something to be open.
-                  selectedFeature = featuresShownAtAll[0];
-                }
-                runInAction(() => {
-                  terria.selectedFeature = selectedFeature;
-                });
+              // Otherwise find first feature with data to show
+              let selectedFeature = featuresShownAtAll.filter(
+                (feature) =>
+                  isDefined(feature.properties) ||
+                  isDefined(feature.description)
+              )[0];
+              if (
+                !isDefined(selectedFeature) &&
+                featuresShownAtAll.length > 0
+              ) {
+                // Handles the case when no features have info - still want something to be open.
+                selectedFeature = featuresShownAtAll[0];
+              }
+              runInAction(() => {
+                terria.selectedFeature = selectedFeature;
               });
-            }
+            });
           }
         }
-      )
+      }
     );
+  }
+
+  componentWillUnmount(): void {
+    if (isDefined(this.pickedFeaturesReactionDisposer)) {
+      this.pickedFeaturesReactionDisposer();
+    }
   }
 
   renderFeatureInfoCatalogItems(
@@ -489,7 +478,7 @@ class FeatureInfoPanel extends React.Component<Props> {
     ) : null;
 
     return (
-      <DragWrapper>
+      <DragWrapper handleSelector=".drag-handle">
         <div
           className={panelClassName}
           aria-hidden={!viewState.featureInfoPanelIsVisible}
@@ -531,13 +520,11 @@ class FeatureInfoPanel extends React.Component<Props> {
               viewState.featureInfoPanelIsVisible ? (
                 // Are picked features loading -> show Loader
                 isDefined(terria.pickedFeatures) &&
-                terria.pickedFeatures.isLoading ? (
+                terria.pickedFeatures.isLoading ? ( // Do we have no features/catalog items to show?
                   <li>
                     <Loader light />
                   </li>
-                ) : // Do we have no features/catalog items to show?
-
-                featureInfoCatalogItems.length === 0 ? (
+                ) : featureInfoCatalogItems.length === 0 ? (
                   <li className={Styles.noResults}>
                     {this.getMessageForNoResults()}
                   </li>
