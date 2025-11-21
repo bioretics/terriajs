@@ -141,6 +141,14 @@ class CatalogMemberTraits extends ModelTraits {
   })
   info: InfoSectionTraits[] = [];
 
+  @primitiveTrait({
+    type: "boolean",
+    name: "Search info sections",
+    description:
+      "If true, the catalog search includes this item's info sections when matching text. Overrides the global `searchInCatalogItemInfo` setting."
+  })
+  searchInCatalogItemInfo?: boolean;
+
   @primitiveArrayTrait({
     type: "string",
     name: "InfoSectionOrder",

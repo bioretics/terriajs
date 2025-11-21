@@ -4,19 +4,33 @@ import {
   SearchAction
 } from "../../Core/AnalyticEvents/analyticEvents";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
+import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../../ModelMixins/GroupMixin";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
 import CatalogSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogSearchProviderTraits from "../../Traits/SearchProviders/CatalogSearchProviderTraits";
+import CatalogMemberTraits from "../../Traits/TraitsClasses/CatalogMemberTraits";
 import CommonStrata from "../Definition/CommonStrata";
 import CreateModel from "../Definition/CreateModel";
 import { BaseModel } from "../Definition/Model";
+import hasTraits from "../Definition/hasTraits";
 import Terria from "../Terria";
 import SearchProviderResults from "./SearchProviderResults";
 import SearchResult from "./SearchResult";
 
 type UniqueIdString = string;
 type ResultMap = Map<UniqueIdString, boolean>;
+
+function shouldSearchInCatalogInfo(model: BaseModel): boolean {
+  if (
+    hasTraits(model, CatalogMemberTraits, "searchInCatalogItemInfo") &&
+    model.searchInCatalogItemInfo !== undefined
+  ) {
+    return model.searchInCatalogItemInfo;
+  }
+
+  return Boolean(model.terria.configParameters.searchInCatalogItemInfo);
+}
 
 export function loadAndSearchCatalogRecursively(
   models: BaseModel[],
@@ -40,13 +54,14 @@ export function loadAndSearchCatalogRecursively(
       // saveModelToJson(modelToSave, {
       //   includeStrata: [CommonStrata.definition]
       // });
-      const searchInCatalogItemInfo =
-        models[0].terria.configParameters.searchInCatalogItemInfo;
       autorun((reaction) => {
+        const includeInfoSections =
+          CatalogMemberMixin.isMixedInto(modelToSave) &&
+          shouldSearchInCatalogInfo(modelToSave);
         const searchString = `${modelToSave.name} ${modelToSave.uniqueId} ${
           modelToSave.description
         }${
-          searchInCatalogItemInfo
+          includeInfoSections
             ? " " + JSON.stringify(modelToSave.infoAsObject)
             : ""
         }`;
