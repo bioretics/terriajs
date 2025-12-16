@@ -76,6 +76,17 @@ export default class CsvCatalogItem
   }
 
   private generateCsvData(geom: MeasurableGeometry, name: string): string {
+    if (!geom.stopPoints || geom.stopPoints.length === 0) {
+      return [
+        "name",
+        "path_notes",
+        "longitude",
+        "latitude",
+        "height",
+        "description"
+      ].join(",");
+    }
+
     const headers = [
       "name",
       "path_notes",
@@ -88,8 +99,8 @@ export default class CsvCatalogItem
     rows.push(
       ...geom.stopPoints.map((elem, index) =>
         [
-          name,
-          geom.pathNotes,
+          index === 0 ? name : "",
+          index === 0 ? geom.pathNotes : "",
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
           Math.round(elem.height),
