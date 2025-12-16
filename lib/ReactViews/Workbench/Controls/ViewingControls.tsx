@@ -265,11 +265,23 @@ class ViewingControls extends React.Component<
 
         let pathNotes = "";
         if (fc.features.length > 0 && fc.features[0].properties) {
-          pathNotes = fc.features[0].properties.desc || "";
-          fc.features.shift();
+          const first = fc.features[0] as any;
+          const firstName = first?.properties?.name;
+          const firstDesc =
+            first?.properties?.desc || first?.properties?.description || "";
+
+          const isInfoFileWaypoint =
+            first?.geometry?.type === "Point" &&
+            typeof firstName === "string" &&
+            firstName.toLowerCase().includes("info");
+
+          if (isInfoFileWaypoint) {
+            pathNotes = firstDesc;
+            fc.features.shift();
+          }
         }
 
-        fc.features.forEach((feature) => {
+        fc.features.forEach((feature: any) => {
           if (!feature.geometry) return;
           switch (feature.geometry.type) {
             case "Point": {

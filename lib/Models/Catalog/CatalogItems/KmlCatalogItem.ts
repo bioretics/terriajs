@@ -428,15 +428,9 @@ class KmlCatalogItem
             !download.download?.includes("_polygon")
           );
         } else if (geom.isClosed) {
-          return (
-            !download.download?.includes("_points") &&
-            !download.download?.includes("_lines")
-          );
+          return true;
         } else {
-          return (
-            !download.download?.includes("_points") &&
-            !download.download?.includes("_polygon")
-          );
+          return !download.download?.includes("_polygon");
         }
       });
   }
@@ -594,18 +588,7 @@ class KmlCatalogItem
 
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private isPolygonValid(polygons: Entity[]): boolean {
-    const pointOccurrences: { point: Cartesian3; count: number }[] = [];
-    polygons.forEach((polygon) => {
-      const points = this.getPositions(polygon);
-      points.forEach((point) =>
-        this.updatePointOccurrences(pointOccurrences, point)
-      );
-    });
-
-    const validPoints = pointOccurrences.filter(
-      ({ count }) => count === 2
-    ).length;
-    return validPoints >= 1;
+    return polygons.every((polygon) => this.getPositions(polygon).length >= 3);
   }
 
   // Checks if the provided polylines are valid by ensuring exactly two points are connected only once.
@@ -622,7 +605,13 @@ class KmlCatalogItem
       ({ count }) => count === 1
     ).length;
 
-    return validPoints === 2;
+    if (validPoints === 2) return true;
+
+    if (validPoints === 0) {
+      return pointOccurrences.every(({ count }) => count === 2);
+    }
+
+    return false;
   }
 
   // Updates the occurrences of a given point in the pointOccurrences array.
@@ -643,7 +632,6 @@ class KmlCatalogItem
   computePath() {
     const entities = this._dataSource?.entities?.values ?? [];
     const items = entities.filter((e) => e && (e.polygon || e.polyline));
-    const closeLoop = entities.filter((e) => e?.polygon) !== undefined;
     if (items.length === 0) return;
 
     items.forEach((element, i) => {
@@ -655,14 +643,27 @@ class KmlCatalogItem
         pathNotes = doc.body.textContent || "";
       }
       const allCoordinates = this.getPositions(element);
+      if (allCoordinates.length === 0) return;
+
       const allCartographics = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
       const positions = allCartographics;
 
-      console.log("test entities", entities);
-      console.log("test data source", this._dataSource);
-      console.log("test closed loop", closeLoop);
+      const uniqueId = this.uniqueId;
+      const modelName = this.name;
+      const fileLooksPolygon =
+        (typeof uniqueId === "string" && uniqueId.includes("_polygon")) ||
+        (typeof modelName === "string" && modelName.includes("_polygon"));
+
+      const closeLoop =
+        !!element.polygon ||
+        (fileLooksPolygon &&
+          allCoordinates.length > 1 &&
+          Cartesian3.equals(
+            allCoordinates[0],
+            allCoordinates[allCoordinates.length - 1]
+          ));
 
       this.asPath(positions, pathNotes, i, closeLoop);
     });
@@ -736,6 +737,8 @@ class KmlCatalogItem
     const cartographicPositions = cartesianPositions.map((pos) =>
       Cartographic.fromCartesian(pos)
     );
+
+    if (cartographicPositions.length === 0) return;
 
     if (!this.terria?.cesium?.scene) return;
     const terrainProvider = this.terria.cesium.scene.terrainProvider;

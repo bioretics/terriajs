@@ -1473,13 +1473,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     @computed
     get canUseAsPath() {
       let pathType: PathTypes = PathTypes.noPath;
-      if (
-        this.readyData &&
-        isJsonObject(this.readyData.crs) &&
-        this.readyData.crs.type === "EPSG" &&
-        isJsonObject(this.readyData.crs.properties) &&
-        this.readyData.crs.properties.code === "4326"
-      ) {
+      const crs = this.readyData ? (this.readyData as any).crs : undefined;
+      const isCrsOk =
+        !isJsonObject(crs) ||
+        (crs.type === "EPSG" &&
+          isJsonObject(crs.properties) &&
+          crs.properties.code === "4326");
+
+      if (this.readyData && isCrsOk) {
         if (
           this.readyData.type === "FeatureCollection" &&
           isJsonArray(this.readyData.features) &&
@@ -1566,7 +1567,13 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       const validPoints = pointOccurrences.filter(
         ({ count }) => count === 1
       ).length;
-      return validPoints === 2;
+      if (validPoints === 2) return true;
+
+      if (validPoints === 0) {
+        return pointOccurrences.every(({ count }) => count === 2);
+      }
+
+      return false;
     }
 
     // Validates if the coordinates of the polygon are correct by ensuring the first and last points are the same.
@@ -1647,6 +1654,30 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             break;
         }
         if (!jsonCoords || jsonCoords.length === 0) return;
+
+        const uniqueId = (this as any)?.uniqueId as string | undefined;
+        const modelName = (this as any)?.name as string | undefined;
+        const fileLooksPolygon =
+          (typeof uniqueId === "string" && uniqueId.includes("_polygon")) ||
+          (typeof modelName === "string" && modelName.includes("_polygon"));
+
+        if (!closeLoop && fileLooksPolygon && jsonCoords.length > 1) {
+          const first = jsonCoords[0];
+          const last = jsonCoords[jsonCoords.length - 1];
+          if (
+            isJsonArray(first) &&
+            isJsonArray(last) &&
+            isJsonNumber(first[0]) &&
+            isJsonNumber(first[1]) &&
+            isJsonNumber(last[0]) &&
+            isJsonNumber(last[1])
+          ) {
+            closeLoop = this.arePointsEqual(
+              [first[0], first[1]] as any,
+              [last[0], last[1]] as any
+            );
+          }
+        }
 
         const properties = feature.properties ?? {};
         const pathNotes = properties.desc || properties.path_notes || "";

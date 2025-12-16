@@ -103,8 +103,11 @@ export default class CsvCatalogItem
 
   async generateDownloadLinks(
     geom: MeasurableGeometry,
-    name: string
+    name: string,
+    isMultiPath: boolean
   ): Promise<DownloadLink[]> {
+    if (isMultiPath) return [];
+
     const downloads: DownloadLink[] = [
       {
         key: "csv",
@@ -114,24 +117,7 @@ export default class CsvCatalogItem
       }
     ];
 
-    return downloads.filter((download) => {
-      if (geom.onlyPoints) {
-        return (
-          !download.download?.includes("_lines") &&
-          !download.download?.includes("_polygon")
-        );
-      } else if (geom.isClosed) {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_lines")
-        );
-      } else {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_polygon")
-        );
-      }
-    });
+    return downloads;
   }
 
   @override
