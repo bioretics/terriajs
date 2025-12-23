@@ -607,10 +607,6 @@ class KmlCatalogItem
 
     if (validPoints === 2) return true;
 
-    if (validPoints === 0) {
-      return pointOccurrences.every(({ count }) => count === 2);
-    }
-
     return false;
   }
 

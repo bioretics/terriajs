@@ -1881,6 +1881,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     // Find the starting segment index by locating the segment that has no other segment ending at its starting point
     private findStartingSegmentIndex(segments: JsonArray[]): number {
+      if (segments.length === 0) {
+        throw new Error("No segments to order");
+      }
+
       const endPoints = new Set<string>(
         segments.map((segment) =>
           JSON.stringify((segment as any)[(segment as any).length - 1])
@@ -1894,7 +1898,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         }
       }
 
-      throw new Error("No valid starting segment found");
+      return 0;
     }
 
     // Order the segments based on the matching points
@@ -1914,9 +1918,8 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       });
 
       while (segmentMap.size > 0) {
-        const lastPoint = JSON.stringify(
-          orderedSegments[orderedSegments.length - 1][1]
-        );
+        const lastSegment = orderedSegments[orderedSegments.length - 1] as any;
+        const lastPoint = JSON.stringify(lastSegment[lastSegment.length - 1]);
         const nextSegment = segmentMap.get(lastPoint);
 
         if (nextSegment) {

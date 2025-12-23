@@ -71,11 +71,8 @@ export default class CsvCatalogItem
   }
 
   @override
-  get cacheDuration(): string {
-    if (isDefined(super.cacheDuration)) {
-      return super.cacheDuration;
-    }
-    return "1d";
+  get cacheDuration() {
+    return super.cacheDuration || "1d";
   }
 
   private formatNumber(value: number | undefined, digits: number): string {
