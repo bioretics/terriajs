@@ -650,16 +650,9 @@ class KmlCatalogItem
       );
       const positions = allCartographics;
 
-      const uniqueId = this.uniqueId;
-      const modelName = this.name;
-      const fileLooksPolygon =
-        (typeof uniqueId === "string" && uniqueId.includes("_polygon")) ||
-        (typeof modelName === "string" && modelName.includes("_polygon"));
-
       const closeLoop =
         !!element.polygon ||
-        (fileLooksPolygon &&
-          allCoordinates.length > 1 &&
+        (allCoordinates.length > 1 &&
           Cartesian3.equals(
             allCoordinates[0],
             allCoordinates[allCoordinates.length - 1]

@@ -1507,7 +1507,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     private isCrsOkForPath(fc: any): boolean {
       const crs = fc ? (fc as any).crs : undefined;
       return (
-        !isJsonObject(crs) ||
+        isJsonObject(crs) ||
         (crs.type === "EPSG" &&
           isJsonObject(crs.properties) &&
           crs.properties.code === "4326")
@@ -1576,14 +1576,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     private isValidMultiLineStringCoords(coords: any): boolean {
       if (!Array.isArray(coords) || coords.length < 1) return false;
 
-      const looksLikeSegments = coords.every(
+      const isTwoPointSegments = coords.every(
         (line: any) =>
           Array.isArray(line) &&
           line.length === 2 &&
           this.isPosition(line[0]) &&
           this.isPosition(line[1])
       );
-      if (looksLikeSegments) return this.arePolylinesValid(coords);
+      if (isTwoPointSegments) return this.arePolylinesValid(coords);
 
       return coords.some((line: any) => this.isValidLineStringCoords(line));
     }
@@ -1747,24 +1747,14 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       if (!jsonCoords) return undefined;
 
-      // Extra safeguard: infer closed loop from naming convention.
-      if (!closeLoop && this.fileLooksPolygon() && jsonCoords.length > 1) {
-        closeLoop = this.coordsLookClosed(jsonCoords);
+      if (!closeLoop && jsonCoords.length > 1) {
+        closeLoop = this.areCoordsClosed(jsonCoords);
       }
 
       return { jsonCoords, closeLoop };
     }
 
-    private fileLooksPolygon(): boolean {
-      const uniqueId = (this as any)?.uniqueId as string | undefined;
-      const modelName = (this as any)?.name as string | undefined;
-      return (
-        (typeof uniqueId === "string" && uniqueId.includes("_polygon")) ||
-        (typeof modelName === "string" && modelName.includes("_polygon"))
-      );
-    }
-
-    private coordsLookClosed(jsonCoords: JsonArray): boolean {
+    private areCoordsClosed(jsonCoords: JsonArray): boolean {
       const first = jsonCoords[0];
       const last = jsonCoords[jsonCoords.length - 1];
       if (
@@ -1800,12 +1790,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           this.readyData.features[index].geometry as any
         ).coordinates;
 
-        // `MultiLineString` may be represented as:
-        // - A list of 2-point segments: Position[2][]
-        // - A list of full LineStrings: Position[][]
-        // This function returns a single ordered list of positions.
-
-        const looksLikeSegments = coordinates.every(
+        const isTwoPointSegments = coordinates.every(
           (line) =>
             Array.isArray(line) &&
             line.length === 2 &&
@@ -1813,7 +1798,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             this.isPosition(line[1])
         );
 
-        if (looksLikeSegments) {
+        if (isTwoPointSegments) {
           const localSegments = coordinates.slice();
           const startingSegmentIndex = this.findStartingSegmentIndex(
             localSegments as JsonArray[]
@@ -1830,7 +1815,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           ).map((coord) => JSON.parse(coord));
         }
 
-        // Full LineStrings mode
         const lines: any[] = coordinates.filter(
           (line) =>
             Array.isArray(line) &&
@@ -1842,7 +1826,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         if (lines.length === 0) return undefined;
         if (lines.length === 1) return lines[0] as JsonArray;
 
-        // Try to chain LineStrings by matching end->start.
         const startKey = (pos: any) =>
           this.isPosition(pos) ? `${pos[0]},${pos[1]}` : "";
         const endKey = (line: any[]) => startKey(line[line.length - 1]);
@@ -1850,12 +1833,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         const remaining = new Map<string, any[]>();
         for (const line of lines) remaining.set(startKey(line[0]), line);
 
-        // Find a start line whose start doesn't appear as an end.
         const endKeys = new Set(lines.map((l) => endKey(l)));
         let current = lines.find((l) => !endKeys.has(startKey(l[0])));
 
         if (!current) {
-          // Closed loop or ambiguous ordering: pick the longest line as a safe fallback.
           current = lines.reduce(
             (best, l) => (l.length > best.length ? l : best),
             lines[0]
@@ -1869,7 +1850,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           const next = remaining.get(endKey(result));
           if (!next) break;
 
-          // Avoid duplicating join point.
           if (
             result.length > 0 &&
             this.isPosition(result[result.length - 1]) &&
@@ -1887,7 +1867,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           remaining.delete(startKey(next[0]));
         }
 
-        // If we couldn't chain all parts (disjoint MultiLineString), pick the longest single line.
         if (remaining.size > 0) {
           const longest = lines.reduce(
             (best, l) => (l.length > best.length ? l : best),
