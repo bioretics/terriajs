@@ -269,7 +269,7 @@ class ViewingControls extends React.Component<
           fc.features.shift();
         }
 
-        fc.features.forEach((feature: any) => {
+        fc.features.forEach((feature) => {
           if (!feature.geometry) return;
           switch (feature.geometry.type) {
             case "Point": {

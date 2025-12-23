@@ -36,7 +36,7 @@ import DataUri from "../../Core/DataUri";
 import {
   generatePathSummaryCsvData,
   getSummaryKind
-} from "../../Models/Catalog/CatalogItems/CsvCatalogItem";
+} from "../../ViewModels/Measure/MeasurableSummaryCsv";
 
 interface Props {
   viewState: ViewState;
