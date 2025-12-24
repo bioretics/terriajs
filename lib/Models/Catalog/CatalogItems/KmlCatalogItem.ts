@@ -572,11 +572,9 @@ class KmlCatalogItem
     const polylines = entities.filter((e) => e?.polyline);
 
     if (polygons.length === 1) {
-      return this.isPolygonValid(polygons) || this.arePolylinesValid(polygons);
+      return this.isPolygonValid(polygons);
     } else if (polylines.length === 1) {
-      return (
-        this.isPolygonValid(polylines) || this.arePolylinesValid(polylines)
-      );
+      return this.arePolylinesValid(polylines);
     } else if (polylines.length > 1) {
       return polylines.every((polyline) => this.arePolylinesValid([polyline]));
     } else if (polygons.length > 1) {
@@ -588,7 +586,18 @@ class KmlCatalogItem
 
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private isPolygonValid(polygons: Entity[]): boolean {
-    return polygons.every((polygon) => this.getPositions(polygon).length >= 3);
+    const pointOccurrences: { point: Cartesian3; count: number }[] = [];
+    polygons.forEach((polygon) => {
+      const points = this.getPositions(polygon);
+      points.forEach((point) =>
+        this.updatePointOccurrences(pointOccurrences, point)
+      );
+    });
+
+    const validPoints = pointOccurrences.filter(
+      ({ count }) => count === 2
+    ).length;
+    return validPoints >= 1;
   }
 
   // Checks if the provided polylines are valid by ensuring exactly two points are connected only once.
@@ -606,6 +615,10 @@ class KmlCatalogItem
     ).length;
 
     if (validPoints === 2) return true;
+
+    if (validPoints === 0) {
+      return pointOccurrences.every(({ count }) => count === 2);
+    }
 
     return false;
   }
