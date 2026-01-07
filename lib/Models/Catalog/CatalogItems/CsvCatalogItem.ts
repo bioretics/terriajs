@@ -85,15 +85,8 @@ export default class CsvCatalogItem
     name: string
   ): string {
     const isPointsOnly = geom.onlyPoints === true;
-    const headers = isPointsOnly
-      ? [
-          "name",
-          "path_notes",
-          "longitude",
-          "latitude",
-          "height",
-          "description"
-        ].join(",")
+    const headerColumns = isPointsOnly
+      ? ["name", "path_notes", "longitude", "latitude", "height", "description"]
       : [
           "name",
           "path_notes",
@@ -105,13 +98,20 @@ export default class CsvCatalogItem
           "air_distance",
           "ground_distance",
           "slope"
-        ].join(",");
+        ];
+
+    const unitColumns = isPointsOnly
+      ? ["", "", "deg", "deg", "m", ""]
+      : ["", "", "deg", "deg", "m", "m", "m", "m", "m", "percent"];
+
+    const headers = headerColumns.join(",");
+    const units = unitColumns.join(",");
 
     if (!geom.stopPoints || geom.stopPoints.length === 0) {
-      return headers;
+      return [headers, units].join("\n");
     }
 
-    const rows = [headers];
+    const rows = [headers, units];
 
     const stopGeodeticDistances = geom.stopGeodeticDistances ?? [];
     const stopAirDistances = geom.stopAirDistances ?? [];
@@ -122,9 +122,9 @@ export default class CsvCatalogItem
         const baseColumns: (string | number)[] = [
           index === 0 ? name : "",
           index === 0 ? geom.pathNotes ?? "" : "",
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
+          this.formatNumber(CesiumMath.toDegrees(elem.longitude), 6),
+          this.formatNumber(CesiumMath.toDegrees(elem.latitude), 6),
+          this.formatNumber(elem.height, 2)
         ];
 
         if (isPointsOnly) {
@@ -137,7 +137,7 @@ export default class CsvCatalogItem
 
         const altDiff =
           index > 0 && prev
-            ? this.formatNumber(elem.height - prev.height, 0)
+            ? this.formatNumber(elem.height - prev.height, 2)
             : "";
 
         const geodeticDistance =
@@ -302,11 +302,29 @@ export default class CsvCatalogItem
       return acc;
     }, {} as { [key: string]: any[] });
 
-    const path_notes = columns["path_notes"]?.[0] || "";
-    const longitudes = columns["longitude"] || [];
-    const latitudes = columns["latitude"] || [];
-    const heights = columns["height"] || [];
-    const descriptions = columns["description"] || [];
+    const rawPathNotes = (columns["path_notes"] as any[]) || [];
+    const rawLongitudes = (columns["longitude"] as any[]) || [];
+    const rawLatitudes = (columns["latitude"] as any[]) || [];
+    const rawHeights = (columns["height"] as any[]) || [];
+    const rawDescriptions = (columns["description"] as any[]) || [];
+
+    const maybeUnit = rawLongitudes[0];
+    const hasUnitsRow =
+      typeof maybeUnit === "string" &&
+      maybeUnit.length > 0 &&
+      !isFinite(Number(maybeUnit));
+
+    const path_notes =
+      (hasUnitsRow ? rawPathNotes.slice(1) : rawPathNotes).find(
+        (v) => typeof v === "string" && v.trim().length > 0
+      ) || "";
+
+    const longitudes = hasUnitsRow ? rawLongitudes.slice(1) : rawLongitudes;
+    const latitudes = hasUnitsRow ? rawLatitudes.slice(1) : rawLatitudes;
+    const heights = hasUnitsRow ? rawHeights.slice(1) : rawHeights;
+    const descriptions = hasUnitsRow
+      ? rawDescriptions.slice(1)
+      : rawDescriptions;
 
     const positions = longitudes.map((longitude: number, i: number) =>
       Cartographic.fromDegrees(longitude, latitudes[i], heights[i])
