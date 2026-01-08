@@ -290,28 +290,13 @@ export default class CsvCatalogItem
     }, {} as { [key: string]: any[] });
 
     const rawPathNotes = (columns["path_notes"] as any[]) || [];
-    const rawLongitudes = (columns["longitude"] as any[]) || [];
-    const rawLatitudes = (columns["latitude"] as any[]) || [];
-    const rawHeights = (columns["height"] as any[]) || [];
-    const rawDescriptions = (columns["description"] as any[]) || [];
-
-    const maybeUnit = rawLongitudes[0];
-    const hasUnitsRow =
-      typeof maybeUnit === "string" &&
-      maybeUnit.length > 0 &&
-      !isFinite(Number(maybeUnit));
-
+    const longitudes = (columns["longitude"] as any[]) || [];
+    const latitudes = (columns["latitude"] as any[]) || [];
+    const heights = (columns["height"] as any[]) || [];
+    const descriptions = (columns["description"] as any[]) || [];
     const path_notes =
-      (hasUnitsRow ? rawPathNotes.slice(1) : rawPathNotes).find(
-        (v) => typeof v === "string" && v.trim().length > 0
-      ) || "";
-
-    const longitudes = hasUnitsRow ? rawLongitudes.slice(1) : rawLongitudes;
-    const latitudes = hasUnitsRow ? rawLatitudes.slice(1) : rawLatitudes;
-    const heights = hasUnitsRow ? rawHeights.slice(1) : rawHeights;
-    const descriptions = hasUnitsRow
-      ? rawDescriptions.slice(1)
-      : rawDescriptions;
+      rawPathNotes.find((v) => typeof v === "string" && v.trim().length > 0) ||
+      "";
 
     const positions = longitudes.map((longitude: number, i: number) =>
       Cartographic.fromDegrees(longitude, latitudes[i], heights[i])
