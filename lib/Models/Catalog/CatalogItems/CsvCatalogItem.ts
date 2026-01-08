@@ -75,11 +75,6 @@ export default class CsvCatalogItem
     return super.cacheDuration || "1d";
   }
 
-  private formatNumber(value: number | undefined, digits: number): string {
-    if (typeof value !== "number" || !isFinite(value)) return "";
-    return value.toFixed(digits);
-  }
-
   private generatePointsCsvData(
     geom: MeasurableGeometry,
     name: string
@@ -100,18 +95,13 @@ export default class CsvCatalogItem
           "slope"
         ];
 
-    const unitColumns = isPointsOnly
-      ? ["", "", "deg", "deg", "m", ""]
-      : ["", "", "deg", "deg", "m", "m", "m", "m", "m", "percent"];
-
     const headers = headerColumns.join(",");
-    const units = unitColumns.join(",");
 
     if (!geom.stopPoints || geom.stopPoints.length === 0) {
-      return [headers, units].join("\n");
+      return [headers].join("\n");
     }
 
-    const rows = [headers, units];
+    const rows = [headers];
 
     const stopGeodeticDistances = geom.stopGeodeticDistances ?? [];
     const stopAirDistances = geom.stopAirDistances ?? [];
@@ -122,9 +112,9 @@ export default class CsvCatalogItem
         const baseColumns: (string | number)[] = [
           index === 0 ? name : "",
           index === 0 ? geom.pathNotes ?? "" : "",
-          this.formatNumber(CesiumMath.toDegrees(elem.longitude), 6),
-          this.formatNumber(CesiumMath.toDegrees(elem.latitude), 6),
-          this.formatNumber(elem.height, 2)
+          CesiumMath.toDegrees(elem.longitude).toFixed(6),
+          CesiumMath.toDegrees(elem.latitude).toFixed(6),
+          elem.height.toFixed(2)
         ];
 
         if (isPointsOnly) {
@@ -136,16 +126,13 @@ export default class CsvCatalogItem
         const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
 
         const altDiff =
-          index > 0 && prev
-            ? this.formatNumber(elem.height - prev.height, 2)
-            : "";
+          index > 0 && prev ? (elem.height - prev.height).toFixed(2) : "";
 
         const geodeticDistance =
-          index > 0 ? this.formatNumber(stopGeodeticDistances[index], 2) : "";
-        const airDistance =
-          index > 0 ? this.formatNumber(stopAirDistances[index], 2) : "";
+          index > 0 ? stopGeodeticDistances[index].toFixed(2) : "";
+        const airDistance = index > 0 ? stopAirDistances[index].toFixed(2) : "";
         const groundDistance =
-          index > 0 ? this.formatNumber(stopGroundDistances[index], 2) : "";
+          index > 0 ? stopGroundDistances[index].toFixed(2) : "";
 
         let slope = "";
         const airDistNum = stopAirDistances[index];
