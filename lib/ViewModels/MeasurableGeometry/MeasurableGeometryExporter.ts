@@ -395,9 +395,9 @@ export default class MeasurableGeometryExporter {
         const baseColumns: (string | number)[] = [
           index === 0 ? name : "",
           index === 0 ? geom.pathNotes ?? "" : "",
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
+          CesiumMath.toDegrees(elem.longitude).toFixed(6),
+          CesiumMath.toDegrees(elem.latitude).toFixed(6),
+          elem.height.toFixed(2)
         ];
 
         if (isPointsOnly) {
@@ -409,16 +409,13 @@ export default class MeasurableGeometryExporter {
         const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
 
         const altDiff =
-          index > 0 && prev
-            ? this.formatNumber(elem.height - prev.height, 0)
-            : "";
+          index > 0 && prev ? (elem.height - prev.height).toFixed(2) : "";
 
         const geodeticDistance =
-          index > 0 ? this.formatNumber(stopGeodeticDistances[index], 2) : "";
-        const airDistance =
-          index > 0 ? this.formatNumber(stopAirDistances[index], 2) : "";
+          index > 0 ? stopGeodeticDistances[index].toFixed(2) : "";
+        const airDistance = index > 0 ? stopAirDistances[index].toFixed(2) : "";
         const groundDistance =
-          index > 0 ? this.formatNumber(stopGroundDistances[index], 2) : "";
+          index > 0 ? stopGroundDistances[index].toFixed(2) : "";
 
         let slope = "";
         const airDistNum = stopAirDistances[index];
@@ -440,14 +437,6 @@ export default class MeasurableGeometryExporter {
     );
 
     return rows.join("\n");
-  }
-
-  private static formatNumber(
-    value: number | undefined,
-    digits: number
-  ): string {
-    if (typeof value !== "number" || !isFinite(value)) return "";
-    return value.toFixed(digits);
   }
 
   private static generateGpxLinks(
