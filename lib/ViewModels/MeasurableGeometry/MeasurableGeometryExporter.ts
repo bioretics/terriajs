@@ -346,30 +346,18 @@ export default class MeasurableGeometryExporter {
     return [
       {
         key: "csv",
-        href: DataUri.make("csv", this.generateCsvData(geom, name)),
+        href: DataUri.make("csv", this.generateCsvData(geom)),
         download: `${name}_points.csv`,
         label: "CSV"
       }
     ];
   }
 
-  private static generateCsvData(
-    geom: MeasurableGeometry,
-    name: string
-  ): string {
+  private static generateCsvData(geom: MeasurableGeometry): string {
     const isPointsOnly = geom.onlyPoints === true;
     const headers = isPointsOnly
-      ? [
-          "name",
-          "path_notes",
-          "longitude",
-          "latitude",
-          "height",
-          "description"
-        ].join(",")
+      ? ["longitude", "latitude", "height", "description"].join(",")
       : [
-          "name",
-          "path_notes",
           "longitude",
           "latitude",
           "height",
@@ -393,8 +381,6 @@ export default class MeasurableGeometryExporter {
     rows.push(
       ...geom.stopPoints.map((elem, index) => {
         const baseColumns: (string | number)[] = [
-          index === 0 ? name : "",
-          index === 0 ? geom.pathNotes ?? "" : "",
           CesiumMath.toDegrees(elem.longitude).toFixed(6),
           CesiumMath.toDegrees(elem.latitude).toFixed(6),
           elem.height.toFixed(2)
@@ -444,12 +430,6 @@ export default class MeasurableGeometryExporter {
     name: string
   ): DownloadLink[] {
     return [
-      {
-        key: "gpxPolygon",
-        href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
-        download: `${name}_polygon.gpx`,
-        label: `${i18next.t("downloadData.polygon")} GPX`
-      },
       {
         key: "gpxTracks",
         href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
