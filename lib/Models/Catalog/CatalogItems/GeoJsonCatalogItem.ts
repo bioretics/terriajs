@@ -67,6 +67,13 @@ class GeoJsonCatalogItem
       type: "FeatureCollection",
       name: name || "",
       features: geomList.map((geom) => {
+        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+        if (
+          geom.pathNotes !== undefined &&
+          featureProps.path_notes === undefined
+        ) {
+          featureProps.path_notes = geom.pathNotes;
+        }
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude)
@@ -86,9 +93,7 @@ class GeoJsonCatalogItem
             type: "MultiPolygon",
             coordinates: [[coordinates]]
           },
-          properties: {
-            path_notes: geom.pathNotes || ""
-          }
+          properties: featureProps
         };
       })
     });
@@ -101,26 +106,37 @@ class GeoJsonCatalogItem
     return JSON.stringify({
       type: "FeatureCollection",
       name: name || "",
-      features: geomList.map((geom) => ({
-        type: "Feature",
-        geometry: {
-          type: "MultiLineString",
-          coordinates: [
-            geom.stopPoints.map((elem) => [
-              CesiumMath.toDegrees(elem.longitude),
-              CesiumMath.toDegrees(elem.latitude),
-              Math.round(elem.height)
-            ])
-          ]
-        },
-        properties: {
-          path_notes: geom.pathNotes
+      features: geomList.map((geom) => {
+        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+        if (
+          geom.pathNotes !== undefined &&
+          featureProps.path_notes === undefined
+        ) {
+          featureProps.path_notes = geom.pathNotes;
         }
-      }))
+        return {
+          type: "Feature",
+          geometry: {
+            type: "MultiLineString",
+            coordinates: [
+              geom.stopPoints.map((elem) => [
+                CesiumMath.toDegrees(elem.longitude),
+                CesiumMath.toDegrees(elem.latitude),
+                Math.round(elem.height)
+              ])
+            ]
+          },
+          properties: featureProps
+        };
+      })
     });
   }
 
   private generateJsonPolygon(geom: MeasurableGeometry, name: string): string {
+    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
+      featureProps.path_notes = geom.pathNotes;
+    }
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
       CesiumMath.toDegrees(elem.latitude)
@@ -141,9 +157,7 @@ class GeoJsonCatalogItem
         type: "Polygon",
         coordinates: [coordinates]
       },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
+      properties: featureProps
     });
   }
 
@@ -151,6 +165,10 @@ class GeoJsonCatalogItem
     geom: MeasurableGeometry,
     name: string
   ): string {
+    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
+      featureProps.path_notes = geom.pathNotes;
+    }
     return JSON.stringify({
       name: name || "",
       type: "Feature",
@@ -162,9 +180,7 @@ class GeoJsonCatalogItem
           Math.round(elem.height)
         ])
       },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
+      properties: featureProps
     });
   }
 
@@ -174,10 +190,17 @@ class GeoJsonCatalogItem
       path_notes: geom.pathNotes || "",
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
+        const pointProps = { ...(geom.pointProperties?.[index] ?? {}) } as any;
+        if (
+          geom.pointDescriptions?.[index] !== undefined &&
+          pointProps.description === undefined
+        ) {
+          pointProps.description = geom.pointDescriptions?.[index] || "";
+        }
         return {
           type: "Feature",
           properties: {
-            description: geom.pointDescriptions?.[index] || ""
+            ...pointProps
           },
           geometry: {
             coordinates: [
@@ -413,6 +436,8 @@ class GeoJsonCatalogItem
 
     const positions: Cartographic[] = [];
     const descriptions: string[] = [];
+    const pointProperties: any[] = [];
+    let featureProperties: any | undefined;
 
     fc.features.forEach((feature) => {
       if (!feature.geometry) return;
@@ -430,6 +455,7 @@ class GeoJsonCatalogItem
             )
           );
           descriptions.push(feature.properties?.description || "");
+          pointProperties.push(feature.properties ?? {});
           break;
         }
         case "LineString": {
@@ -441,6 +467,9 @@ class GeoJsonCatalogItem
             positions.push(Cartographic.fromDegrees(lon, lat, alt));
           });
           descriptions.push(feature.properties?.description || "");
+          if (!featureProperties && feature.properties) {
+            featureProperties = feature.properties as any;
+          }
           break;
         }
         default:
@@ -465,7 +494,11 @@ class GeoJsonCatalogItem
       false,
       true,
       descriptions,
-      pathNotes
+      pathNotes,
+      true,
+      undefined,
+      featureProperties,
+      pointProperties.length ? pointProperties : undefined
     );
   }
 }
