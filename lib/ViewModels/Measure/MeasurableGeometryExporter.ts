@@ -9,7 +9,7 @@ import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
 import { exportKml, exportKmlResultKml } from "terriajs-cesium";
 import DataUri from "../../Core/DataUri";
 import { MeasurableGeometry } from "./MeasurableGeometryManager";
-import { DownloadLink } from "./MeasurableGeometryDownload";
+import { DownloadLink } from "./MeasurableDownload";
 
 export default class MeasurableGeometryExporter {
   static async generateAllDownloadLinks(

@@ -9,7 +9,7 @@ import Terria from "../../Models/Terria";
 import Input from "../../Styled/Input";
 import MeasurableDownload, {
   DownloadLink
-} from "../../ViewModels/MeasurableGeometry/MeasurableGeometryDownload";
+} from "../../ViewModels/Measure/MeasurableDownload";
 import ViewState from "../../ReactViewModels/ViewState";
 import { observer } from "mobx-react";
 

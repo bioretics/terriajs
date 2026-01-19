@@ -27,7 +27,7 @@ import {
 } from "../Map/MapNavigation/Items";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
-import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import MeasurableGeometryManager from "../../ViewModels/Measure/MeasurableGeometryManager";
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
@@ -36,7 +36,7 @@ import DataUri from "../../Core/DataUri";
 import {
   generatePathSummaryCsvData,
   getSummaryKind
-} from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummaryCsv";
+} from "../../ViewModels/Measure/MeasurableSummaryCsv";
 
 interface Props {
   viewState: ViewState;
