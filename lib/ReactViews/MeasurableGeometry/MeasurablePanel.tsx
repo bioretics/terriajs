@@ -489,14 +489,31 @@ const MeasurablePanel = observer((props: Props) => {
   const renderSamplingStep = () => {
     return (
       !isMobile && (
-        <>
-          <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.samplingStepHeader")}:
-            <br />
+        <Box
+          css={`
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          `}
+          styledMargin="5px"
+        >
+          <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
+            {i18next.t("measurableGeometry.samplingStepHeader")}
+            {":"}
+          </Text>
+          <Text textLight style={{ whiteSpace: "nowrap" }} title="">
             [min {rangeSamplingPathStep.get()[0]}, max{" "}
             {rangeSamplingPathStep.get()[1]}]
           </Text>
-          <Box styledMargin="5px">
+          <Box
+            css={`
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: nowrap;
+            `}
+          >
             <Box styledWidth="120px">
               <Input
                 css={`
@@ -528,7 +545,6 @@ const MeasurablePanel = observer((props: Props) => {
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
-                margin-left: 5px;
               `}
               disabled={
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -544,7 +560,7 @@ const MeasurablePanel = observer((props: Props) => {
               {i18next.t("measurableGeometry.samplingStepButtonText")}
             </Button>
           </Box>
-        </>
+        </Box>
       )
     );
   };
