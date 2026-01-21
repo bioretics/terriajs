@@ -184,7 +184,7 @@ class GeoJsonCatalogItem
     return JSON.stringify({
       name: name || "",
       path_notes: geom.pathNotes || "",
-      ...this.getSummaryProperties(geom),
+      ...this.getSummaryProperties(geom, false),
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
         return {
@@ -258,7 +258,10 @@ class GeoJsonCatalogItem
     });
   }
 
-  private getSummaryProperties(geom: MeasurableGeometry) {
+  private getSummaryProperties(
+    geom: MeasurableGeometry,
+    includeDistances: boolean = true
+  ) {
     const heights = geom.stopPoints
       .map((p) => p.height)
       .filter((h) => isFinite(h));
@@ -288,7 +291,7 @@ class GeoJsonCatalogItem
       alt_diff: this.formatWithUnit(altDiff, "m")
     };
 
-    if (!geom.onlyPoints) {
+    if (includeDistances) {
       summary.geodetic_distance = this.formatWithUnit(
         geom.geodeticDistance,
         "m"
