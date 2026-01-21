@@ -187,10 +187,11 @@ class GeoJsonCatalogItem
       ...this.getSummaryProperties(geom, false),
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
+        const description = geom.pointDescriptions?.[index] || "";
         return {
           type: "Feature",
           properties: {
-            description: geom.pointDescriptions?.[index] || "",
+            ...(description ? { description } : {}),
             ...metrics[index]
           },
           geometry: {
@@ -215,8 +216,8 @@ class GeoJsonCatalogItem
       const altDiff =
         index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
           ? elem.height - prev.height
-          : undefined;
-      const airDistance = index > 0 ? stopAirDistances[index] : undefined;
+          : 0;
+      const airDistance = index > 0 ? stopAirDistances[index] : 0;
       const slope =
         index > 0 &&
         prev &&
@@ -225,18 +226,18 @@ class GeoJsonCatalogItem
         isFinite(elem.height) &&
         isFinite(prev.height)
           ? Math.abs((100 * (elem.height - prev.height)) / airDistance)
-          : undefined;
+          : 0;
 
       return {
         index,
         alt_diff: this.formatWithUnit(altDiff, "m"),
         geodetic_distance: this.formatWithUnit(
-          index > 0 ? stopGeodeticDistances[index] : undefined,
+          index > 0 ? stopGeodeticDistances[index] : 0,
           "m"
         ),
         air_distance: this.formatWithUnit(airDistance, "m"),
         ground_distance: this.formatWithUnit(
-          index > 0 ? stopGroundDistances[index] : undefined,
+          index > 0 ? stopGroundDistances[index] : 0,
           "m"
         ),
         slope: this.formatWithUnit(slope, "%")
@@ -250,7 +251,7 @@ class GeoJsonCatalogItem
       const altDiff =
         index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
           ? elem.height - prev.height
-          : undefined;
+          : 0;
       return {
         index,
         alt_diff: this.formatWithUnit(altDiff, "m")
@@ -265,14 +266,14 @@ class GeoJsonCatalogItem
     const heights = geom.stopPoints
       .map((p) => p.height)
       .filter((h) => isFinite(h));
-    const altMin = heights.length > 0 ? Math.min(...heights) : undefined;
-    const altMax = heights.length > 0 ? Math.max(...heights) : undefined;
+    const altMin = heights.length > 0 ? Math.min(...heights) : 0;
+    const altMax = heights.length > 0 ? Math.max(...heights) : 0;
     const start = geom.stopPoints[0];
     const end = geom.stopPoints.at(-1);
     const altDiff =
       start && end && isFinite(start.height) && isFinite(end.height)
         ? end.height - start.height
-        : undefined;
+        : 0;
 
     const ellipsoid = this.terria?.cesium?.scene?.globe?.ellipsoid;
     const bearing =

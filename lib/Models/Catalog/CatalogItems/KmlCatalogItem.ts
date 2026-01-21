@@ -452,8 +452,8 @@ class KmlCatalogItem
       const altDiff =
         index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
           ? elem.height - prev.height
-          : undefined;
-      const airDistance = index > 0 ? stopAirDistances[index] : undefined;
+          : 0;
+      const airDistance = index > 0 ? stopAirDistances[index] : 0;
       const slope =
         index > 0 &&
         prev &&
@@ -462,14 +462,14 @@ class KmlCatalogItem
         isFinite(elem.height) &&
         isFinite(prev.height)
           ? Math.abs((100 * (elem.height - prev.height)) / airDistance)
-          : undefined;
+          : 0;
 
       return {
         index,
         alt_diff: altDiff,
-        geodetic_distance: index > 0 ? stopGeodeticDistances[index] : undefined,
+        geodetic_distance: index > 0 ? stopGeodeticDistances[index] : 0,
         air_distance: airDistance,
-        ground_distance: index > 0 ? stopGroundDistances[index] : undefined,
+        ground_distance: index > 0 ? stopGroundDistances[index] : 0,
         slope
       };
     });
@@ -482,14 +482,14 @@ class KmlCatalogItem
     const heights = geom.stopPoints
       .map((p) => p.height)
       .filter((h) => isFinite(h));
-    const altMin = heights.length > 0 ? Math.min(...heights) : undefined;
-    const altMax = heights.length > 0 ? Math.max(...heights) : undefined;
+    const altMin = heights.length > 0 ? Math.min(...heights) : 0;
+    const altMax = heights.length > 0 ? Math.max(...heights) : 0;
     const start = geom.stopPoints[0];
     const end = geom.stopPoints.at(-1);
     const altDiff =
       start && end && isFinite(start.height) && isFinite(end.height)
         ? end.height - start.height
-        : undefined;
+        : 0;
 
     const effectiveEllipsoid =
       ellipsoid ?? this.terria?.cesium?.scene?.globe?.ellipsoid;
@@ -521,33 +521,38 @@ class KmlCatalogItem
     const metrics = this.buildPointMetrics(geom);
     const lines = [
       `path_notes: ${geom.pathNotes ?? ""}`,
-      `alt_min: ${this.formatWithUnit(summary.alt_min, "m")}`,
-      `alt_max: ${this.formatWithUnit(summary.alt_max, "m")}`,
-      `bearing: ${this.formatWithUnit(summary.bearing, "deg")}`,
-      `alt_diff: ${this.formatWithUnit(summary.alt_diff, "m")}`,
+      `alt_min: ${this.formatWithUnit(summary.alt_min ?? 0, "m")}`,
+      `alt_max: ${this.formatWithUnit(summary.alt_max ?? 0, "m")}`,
+      `bearing: ${this.formatWithUnit(summary.bearing ?? 0, "deg")}`,
+      `alt_diff: ${this.formatWithUnit(summary.alt_diff ?? 0, "m")}`,
       `geodetic_distance: ${this.formatWithUnit(
-        summary.geodetic_distance,
+        summary.geodetic_distance ?? 0,
         "m"
       )}`,
-      `air_distance: ${this.formatWithUnit(summary.air_distance, "m")}`,
-      `ground_distance: ${this.formatWithUnit(summary.ground_distance, "m")}`,
-      "",
-      "index,alt_diff,geodetic_distance,air_distance,ground_distance,slope"
+      `air_distance: ${this.formatWithUnit(summary.air_distance ?? 0, "m")}`,
+      `ground_distance: ${this.formatWithUnit(
+        summary.ground_distance ?? 0,
+        "m"
+      )}`,
+      ""
     ];
 
     lines.push(
       ...metrics.map(
         (m) =>
-          `${m.index},${this.formatWithUnit(
+          `index: ${m.index}, alt_diff: ${this.formatWithUnit(
             m.alt_diff,
             "m"
-          )},${this.formatWithUnit(
+          )}, geodetic_distance: ${this.formatWithUnit(
             m.geodetic_distance,
             "m"
-          )},${this.formatWithUnit(m.air_distance, "m")},${this.formatWithUnit(
+          )}, air_distance: ${this.formatWithUnit(
+            m.air_distance,
+            "m"
+          )}, ground_distance: ${this.formatWithUnit(
             m.ground_distance,
             "m"
-          )},${this.formatWithUnit(m.slope, "%")}`
+          )}, slope: ${this.formatWithUnit(m.slope, "%")}`
       )
     );
 
@@ -556,9 +561,11 @@ class KmlCatalogItem
 
   private buildPointDescription(geom: MeasurableGeometry, index: number) {
     const metrics = this.buildPointMetrics(geom)[index];
-    const pointDesc = geom.pointDescriptions?.[index] ?? "";
+    const pointDesc = geom.pointDescriptions?.[index]
+      ? `description: ${geom.pointDescriptions[index]}`
+      : "";
     return [
-      `description: ${pointDesc}`,
+      pointDesc,
       `index: ${metrics.index}`,
       `alt_diff: ${this.formatWithUnit(metrics.alt_diff, "m")}`
     ]
@@ -594,8 +601,11 @@ class KmlCatalogItem
     return lines.join("\n");
   }
 
-  private formatWithUnit(value: number | undefined, unit: string): string {
-    if (typeof value !== "number" || !isFinite(value)) return "";
+  private formatWithUnit(
+    value: number | string | undefined,
+    unit: string
+  ): string | undefined {
+    if (typeof value !== "number" || !isFinite(value)) return undefined;
     return `${value} ${unit}`;
   }
 
@@ -947,11 +957,7 @@ class KmlCatalogItem
     if (pointLine) {
       return pointLine.slice("description:".length).trim();
     }
-
-    const [firstLine] = lines;
-    if (!firstLine) return "";
-    if (!firstLine.toLowerCase().startsWith("path_notes:")) return firstLine;
-    return this.extractPathNotes(description);
+    return "";
   }
 }
 
