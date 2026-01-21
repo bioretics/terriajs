@@ -29,6 +29,7 @@ import DataUri from "../../../Core/DataUri";
 import { DownloadLink } from "../../../ViewModels/MeasurableGeometry/MeasurableGeometryDownload";
 import { MeasurableGeometry } from "../../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 
 class GeoJsonCatalogItem
   extends CesiumIonMixin(GeoJsonMixin(CreateModel(GeoJsonCatalogItemTraits)))
@@ -69,7 +70,8 @@ class GeoJsonCatalogItem
       features: geomList.map((geom) => {
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude)
+          CesiumMath.toDegrees(elem.latitude),
+          elem.height
         ]);
 
         if (
@@ -87,7 +89,9 @@ class GeoJsonCatalogItem
             coordinates: [[coordinates]]
           },
           properties: {
-            path_notes: geom.pathNotes || ""
+            path_notes: geom.pathNotes || "",
+            ...this.getSummaryProperties(geom),
+            point_metrics: this.getLinePointMetrics(geom)
           }
         };
       })
@@ -114,7 +118,9 @@ class GeoJsonCatalogItem
           ]
         },
         properties: {
-          path_notes: geom.pathNotes
+          path_notes: geom.pathNotes,
+          ...this.getSummaryProperties(geom),
+          point_metrics: this.getLinePointMetrics(geom)
         }
       }))
     });
@@ -123,7 +129,8 @@ class GeoJsonCatalogItem
   private generateJsonPolygon(geom: MeasurableGeometry, name: string): string {
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
-      CesiumMath.toDegrees(elem.latitude)
+      CesiumMath.toDegrees(elem.latitude),
+      elem.height
     ]);
 
     if (
@@ -142,7 +149,9 @@ class GeoJsonCatalogItem
         coordinates: [coordinates]
       },
       properties: {
-        path_notes: geom.pathNotes || ""
+        path_notes: geom.pathNotes || "",
+        ...this.getSummaryProperties(geom),
+        point_metrics: this.getLinePointMetrics(geom)
       }
     });
   }
@@ -163,21 +172,26 @@ class GeoJsonCatalogItem
         ])
       },
       properties: {
-        path_notes: geom.pathNotes || ""
+        path_notes: geom.pathNotes || "",
+        ...this.getSummaryProperties(geom),
+        point_metrics: this.getLinePointMetrics(geom)
       }
     });
   }
 
   private generateJsonPoints(geom: MeasurableGeometry, name: string): string {
+    const metrics = this.getPointMetricsForPoints(geom);
     return JSON.stringify({
       name: name || "",
       path_notes: geom.pathNotes || "",
+      ...this.getSummaryProperties(geom),
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
         return {
           type: "Feature",
           properties: {
-            description: geom.pointDescriptions?.[index] || ""
+            description: geom.pointDescriptions?.[index] || "",
+            ...metrics[index]
           },
           geometry: {
             coordinates: [
@@ -190,6 +204,108 @@ class GeoJsonCatalogItem
         };
       })
     });
+  }
+
+  private getLinePointMetrics(geom: MeasurableGeometry) {
+    const stopGeodeticDistances = geom.stopGeodeticDistances ?? [];
+    const stopAirDistances = geom.stopAirDistances ?? [];
+    const stopGroundDistances = geom.stopGroundDistances ?? [];
+    return geom.stopPoints.map((elem, index) => {
+      const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
+      const altDiff =
+        index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
+          ? elem.height - prev.height
+          : undefined;
+      const airDistance = index > 0 ? stopAirDistances[index] : undefined;
+      const slope =
+        index > 0 &&
+        prev &&
+        typeof airDistance === "number" &&
+        airDistance !== 0 &&
+        isFinite(elem.height) &&
+        isFinite(prev.height)
+          ? Math.abs((100 * (elem.height - prev.height)) / airDistance)
+          : undefined;
+
+      return {
+        index,
+        alt_diff: this.formatWithUnit(altDiff, "m"),
+        geodetic_distance: this.formatWithUnit(
+          index > 0 ? stopGeodeticDistances[index] : undefined,
+          "m"
+        ),
+        air_distance: this.formatWithUnit(airDistance, "m"),
+        ground_distance: this.formatWithUnit(
+          index > 0 ? stopGroundDistances[index] : undefined,
+          "m"
+        ),
+        slope: this.formatWithUnit(slope, "%")
+      };
+    });
+  }
+
+  private getPointMetricsForPoints(geom: MeasurableGeometry) {
+    return geom.stopPoints.map((elem, index) => {
+      const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
+      const altDiff =
+        index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
+          ? elem.height - prev.height
+          : undefined;
+      return {
+        index,
+        alt_diff: this.formatWithUnit(altDiff, "m")
+      };
+    });
+  }
+
+  private getSummaryProperties(geom: MeasurableGeometry) {
+    const heights = geom.stopPoints
+      .map((p) => p.height)
+      .filter((h) => isFinite(h));
+    const altMin = heights.length > 0 ? Math.min(...heights) : undefined;
+    const altMax = heights.length > 0 ? Math.max(...heights) : undefined;
+    const start = geom.stopPoints[0];
+    const end = geom.stopPoints.at(-1);
+    const altDiff =
+      start && end && isFinite(start.height) && isFinite(end.height)
+        ? end.height - start.height
+        : undefined;
+
+    const ellipsoid = this.terria?.cesium?.scene?.globe?.ellipsoid;
+    const bearing =
+      ellipsoid && start && end
+        ? (CesiumMath.toDegrees(
+            new EllipsoidGeodesic(start, end, ellipsoid).startHeading
+          ) +
+            360) %
+          360
+        : undefined;
+
+    const summary: Record<string, string | undefined> = {
+      alt_min: this.formatWithUnit(altMin, "m"),
+      alt_max: this.formatWithUnit(altMax, "m"),
+      bearing: this.formatWithUnit(bearing, "deg"),
+      alt_diff: this.formatWithUnit(altDiff, "m")
+    };
+
+    if (!geom.onlyPoints) {
+      summary.geodetic_distance = this.formatWithUnit(
+        geom.geodeticDistance,
+        "m"
+      );
+      summary.air_distance = this.formatWithUnit(geom.airDistance, "m");
+      summary.ground_distance = this.formatWithUnit(geom.groundDistance, "m");
+    }
+
+    return summary;
+  }
+
+  private formatWithUnit(
+    value: number | string | undefined,
+    unit: string
+  ): string | undefined {
+    if (typeof value !== "number" || !isFinite(value)) return undefined;
+    return `${value} ${unit}`;
   }
 
   async generateDownloadLinks(
@@ -456,7 +572,17 @@ class GeoJsonCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, positions)
       : positions;
 
-    const pathNotes = (fc as any).path_notes || "";
+    const rawPathNotes = (fc as any).path_notes;
+    let pathNotes = typeof rawPathNotes === "string" ? rawPathNotes : "";
+
+    if (!pathNotes && fc.features.length > 0) {
+      const firstProps = fc.features[0].properties as any;
+      if (typeof firstProps?.path_notes === "string") {
+        pathNotes = firstProps.path_notes;
+      } else if (typeof firstProps?.description === "string") {
+        pathNotes = this.extractPathNotes(firstProps.description);
+      }
+    }
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex
@@ -467,6 +593,15 @@ class GeoJsonCatalogItem
       descriptions,
       pathNotes
     );
+  }
+
+  private extractPathNotes(description: string): string {
+    const line = description
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.toLowerCase().startsWith("path_notes:"));
+    if (!line) return description;
+    return line.slice("path_notes:".length).trim();
   }
 }
 
