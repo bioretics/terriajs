@@ -39,7 +39,6 @@ import { exportKmlResultKml } from "terriajs-cesium";
 import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -139,7 +138,6 @@ class KmlCatalogItem
 
     let polygonsContent = "";
     geomList.forEach((geom, idx) => {
-      const description = this.buildPolygonDescription(geom);
       const coords = geom.stopPoints.map((pt) => {
         const lon = CesiumMath.toDegrees(pt.longitude);
         const lat = CesiumMath.toDegrees(pt.latitude);
@@ -153,7 +151,7 @@ class KmlCatalogItem
       const coordsString = coords.join(" ");
 
       polygonsContent += `<Placemark id="${idx}">
-          <description>${description}</description>
+          <description>${geom.pathNotes ?? ""}</description>
           <Style>
             <LineStyle>
               <color>ff0000ff</color>
@@ -207,7 +205,7 @@ class KmlCatalogItem
               Cartographic.toCartesian(elem, ellipsoid)
             )
           }),
-          description: this.buildPathDescription(geom, ellipsoid)
+          description: geom.pathNotes
         })
       );
     });
@@ -228,7 +226,6 @@ class KmlCatalogItem
   ): Promise<string | undefined> {
     if (!geom?.stopPoints) return undefined;
 
-    const description = this.buildPolygonDescription(geom);
     const coords = geom.stopPoints.map((point) => {
       const lon = CesiumMath.toDegrees(point.longitude);
       const lat = CesiumMath.toDegrees(point.latitude);
@@ -247,7 +244,7 @@ class KmlCatalogItem
             <Folder>
             <Placemark id="0">
                 <name>${name}</name>
-                <description>${description}</description>
+                <description>${geom.pathNotes}</description>
                 <Style>
                   <LineStyle>
                     <color>ff0000ff</color>
@@ -295,7 +292,7 @@ class KmlCatalogItem
           )
         }),
         name: name,
-        description: this.buildPathDescription(geom, ellipsoid)
+        description: geom.pathNotes
       })
     );
 
@@ -317,13 +314,12 @@ class KmlCatalogItem
     };
 
     geom.stopPoints.forEach((elem, index) => {
-      const description = this.buildPointDescription(geom, index);
       output.entities.add(
         new Entity({
           id: index.toString(),
           point: new PointGraphics({}),
           position: Cartographic.toCartesian(elem, ellipsoid),
-          description
+          description: geom.pointDescriptions?.[index]
         })
       );
     });
@@ -332,13 +328,9 @@ class KmlCatalogItem
     res.kml = res.kml
       .replace(
         /<Document\s+xmlns="">/,
-        `<Document xmlns=""><Folder><name>${
-          name || ""
-        }</name><description>${this.buildFolderSummaryDescription(
-          geom,
-          ellipsoid,
-          false
-        )}</description>`
+        `<Document xmlns=""><Folder><name>${name || ""}</name><description>${
+          geom.pathNotes || ""
+        }</description>`
       )
       .replace(/<\/Document>/, "</Folder></Document>");
     return res.kml;
@@ -441,213 +433,6 @@ class KmlCatalogItem
           return !download.download?.includes("_polygon");
         }
       });
-  }
-
-  private buildPointMetrics(geom: MeasurableGeometry) {
-    const stopGeodeticDistances = geom.stopGeodeticDistances ?? [];
-    const stopAirDistances = geom.stopAirDistances ?? [];
-    const stopGroundDistances = geom.stopGroundDistances ?? [];
-    return geom.stopPoints.map((elem, index) => {
-      const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
-      const altDiff =
-        index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
-          ? elem.height - prev.height
-          : 0;
-      const airDistance = index > 0 ? stopAirDistances[index] : 0;
-      const slope =
-        index > 0 &&
-        prev &&
-        typeof airDistance === "number" &&
-        airDistance !== 0 &&
-        isFinite(elem.height) &&
-        isFinite(prev.height)
-          ? Math.abs((100 * (elem.height - prev.height)) / airDistance)
-          : 0;
-
-      return {
-        index,
-        alt_diff: altDiff,
-        geodetic_distance: index > 0 ? stopGeodeticDistances[index] : 0,
-        air_distance: airDistance,
-        ground_distance: index > 0 ? stopGroundDistances[index] : 0,
-        slope
-      };
-    });
-  }
-
-  private buildSummaryProperties(
-    geom: MeasurableGeometry,
-    ellipsoid?: Ellipsoid
-  ) {
-    const heights = geom.stopPoints
-      .map((p) => p.height)
-      .filter((h) => isFinite(h));
-    const altMin = heights.length > 0 ? Math.min(...heights) : 0;
-    const altMax = heights.length > 0 ? Math.max(...heights) : 0;
-    const start = geom.stopPoints[0];
-    const end = geom.stopPoints.at(-1);
-    const altDiff =
-      start && end && isFinite(start.height) && isFinite(end.height)
-        ? end.height - start.height
-        : 0;
-
-    const effectiveEllipsoid =
-      ellipsoid ?? this.terria?.cesium?.scene?.globe?.ellipsoid;
-    const bearing =
-      effectiveEllipsoid && start && end
-        ? (CesiumMath.toDegrees(
-            new EllipsoidGeodesic(start, end, effectiveEllipsoid).startHeading
-          ) +
-            360) %
-          360
-        : undefined;
-
-    return {
-      alt_min: altMin,
-      alt_max: altMax,
-      bearing,
-      alt_diff: altDiff,
-      geodetic_distance: geom.geodeticDistance,
-      air_distance: geom.airDistance,
-      ground_distance: geom.groundDistance
-    };
-  }
-
-  private buildPathDescription(
-    geom: MeasurableGeometry,
-    ellipsoid?: Ellipsoid
-  ) {
-    const summary = this.buildSummaryProperties(geom, ellipsoid);
-    const metrics = this.buildPointMetrics(geom);
-    const lines = [
-      `path_notes: ${geom.pathNotes ?? ""}`,
-      `alt_min: ${this.formatWithUnit(summary.alt_min ?? 0, "m")}`,
-      `alt_max: ${this.formatWithUnit(summary.alt_max ?? 0, "m")}`,
-      `bearing: ${this.formatWithUnit(summary.bearing ?? 0, "deg")}`,
-      `alt_diff: ${this.formatWithUnit(summary.alt_diff ?? 0, "m")}`,
-      `geodetic_distance: ${this.formatWithUnit(
-        summary.geodetic_distance ?? 0,
-        "m"
-      )}`,
-      `air_distance: ${this.formatWithUnit(summary.air_distance ?? 0, "m")}`,
-      `ground_distance: ${this.formatWithUnit(
-        summary.ground_distance ?? 0,
-        "m"
-      )}`,
-      ""
-    ];
-
-    lines.push(
-      ...metrics.map(
-        (m) =>
-          `index: ${m.index}, alt_diff: ${this.formatWithUnit(
-            m.alt_diff,
-            "m"
-          )}, geodetic_distance: ${this.formatWithUnit(
-            m.geodetic_distance,
-            "m"
-          )}, air_distance: ${this.formatWithUnit(
-            m.air_distance,
-            "m"
-          )}, ground_distance: ${this.formatWithUnit(
-            m.ground_distance,
-            "m"
-          )}, slope: ${this.formatWithUnit(m.slope, "%")}`
-      )
-    );
-
-    return lines.join("\n");
-  }
-
-  private buildPolygonDescription(geom: MeasurableGeometry) {
-    const geodeticAreaM2 = geom.geodeticArea ?? 0;
-    const airAreaM2 = geom.airArea ?? 0;
-    const metrics = this.buildPointMetrics(geom);
-    const lines = [
-      `path_notes: ${geom.pathNotes ?? ""}`,
-      `geodetic_area_m^2: ${this.formatWithUnit(geodeticAreaM2, "m^2")}`,
-      `geodetic_area_ha: ${this.formatWithUnit(geodeticAreaM2 * 0.0001, "ha")}`,
-      `air_area_m^2: ${this.formatWithUnit(airAreaM2, "m^2")}`,
-      `air_area_ha: ${this.formatWithUnit(airAreaM2 * 0.0001, "ha")}`,
-      `geodetic_perimeter: ${this.formatWithUnit(
-        geom.geodeticDistance ?? 0,
-        "m"
-      )}`,
-      `air_perimeter: ${this.formatWithUnit(geom.airDistance ?? 0, "m")}`,
-      `ground_perimeter: ${this.formatWithUnit(geom.groundDistance ?? 0, "m")}`,
-      ""
-    ];
-
-    lines.push(
-      ...metrics.map(
-        (m) =>
-          `index: ${m.index}, alt_diff: ${this.formatWithUnit(
-            m.alt_diff,
-            "m"
-          )}, geodetic_distance: ${this.formatWithUnit(
-            m.geodetic_distance,
-            "m"
-          )}, air_distance: ${this.formatWithUnit(
-            m.air_distance,
-            "m"
-          )}, ground_distance: ${this.formatWithUnit(
-            m.ground_distance,
-            "m"
-          )}, slope: ${this.formatWithUnit(m.slope, "%")}`
-      )
-    );
-
-    return lines.join("\n");
-  }
-
-  private buildPointDescription(geom: MeasurableGeometry, index: number) {
-    const metrics = this.buildPointMetrics(geom)[index];
-    const pointDesc = geom.pointDescriptions?.[index]
-      ? `description: ${geom.pointDescriptions[index]}`
-      : "";
-    return [
-      pointDesc,
-      `index: ${metrics.index}`,
-      `alt_diff: ${this.formatWithUnit(metrics.alt_diff, "m")}`
-    ]
-      .filter((line) => line !== "")
-      .join("\n");
-  }
-
-  private buildFolderSummaryDescription(
-    geom: MeasurableGeometry,
-    ellipsoid?: Ellipsoid,
-    includeDistances: boolean = true
-  ) {
-    const summary = this.buildSummaryProperties(geom, ellipsoid);
-    const lines = [
-      `path_notes: ${geom.pathNotes ?? ""}`,
-      `alt_min: ${this.formatWithUnit(summary.alt_min, "m")}`,
-      `alt_max: ${this.formatWithUnit(summary.alt_max, "m")}`,
-      `bearing: ${this.formatWithUnit(summary.bearing, "deg")}`,
-      `alt_diff: ${this.formatWithUnit(summary.alt_diff, "m")}`
-    ];
-
-    if (includeDistances) {
-      lines.push(
-        `geodetic_distance: ${this.formatWithUnit(
-          summary.geodetic_distance,
-          "m"
-        )}`,
-        `air_distance: ${this.formatWithUnit(summary.air_distance, "m")}`,
-        `ground_distance: ${this.formatWithUnit(summary.ground_distance, "m")}`
-      );
-    }
-
-    return lines.join("\n");
-  }
-
-  private formatWithUnit(
-    value: number | string | undefined,
-    unit: string
-  ): string | undefined {
-    if (typeof value !== "number" || !isFinite(value)) return undefined;
-    return `${value} ${unit}`;
   }
 
   @computed
@@ -864,7 +649,7 @@ class KmlCatalogItem
       if (description) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(description, "text/html");
-        pathNotes = this.extractPathNotes(doc.body.textContent || "");
+        pathNotes = doc.body.textContent || "";
       }
       const allCoordinates = this.getPositions(element);
       if (allCoordinates.length === 0) return;
@@ -939,7 +724,7 @@ class KmlCatalogItem
     if (descriptionValue) {
       const parser = new DOMParser();
       const doc = parser.parseFromString(descriptionValue, "text/html");
-      pathNotes = this.extractPathNotes(doc.body.textContent || "");
+      pathNotes = doc.body.textContent || "";
     }
 
     pointDescriptions = (folder as any)._children.map((entity: any) => {
@@ -947,7 +732,7 @@ class KmlCatalogItem
       if (descriptionValue) {
         const parser = new DOMParser();
         const doc = parser.parseFromString(descriptionValue, "text/html");
-        return this.extractPointDescription(doc.body.textContent || "");
+        return doc.body.textContent || "";
       }
       return "";
     });
@@ -979,26 +764,6 @@ class KmlCatalogItem
       pointDescriptions,
       pathNotes
     );
-  }
-
-  private extractPathNotes(description: string): string {
-    const line = description
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .find((l) => l.toLowerCase().startsWith("path_notes:"));
-    if (!line) return description;
-    return line.slice("path_notes:".length).trim();
-  }
-
-  private extractPointDescription(description: string): string {
-    const lines = description.split(/\r?\n/).map((l) => l.trim());
-    const pointLine = lines.find((l) =>
-      l.toLowerCase().startsWith("description:")
-    );
-    if (pointLine) {
-      return pointLine.slice("description:".length).trim();
-    }
-    return "";
   }
 }
 
