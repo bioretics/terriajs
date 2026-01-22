@@ -139,7 +139,7 @@ class KmlCatalogItem
 
     let polygonsContent = "";
     geomList.forEach((geom, idx) => {
-      const description = this.buildPathDescription(geom);
+      const description = this.buildPolygonDescription(geom);
       const coords = geom.stopPoints.map((pt) => {
         const lon = CesiumMath.toDegrees(pt.longitude);
         const lat = CesiumMath.toDegrees(pt.latitude);
@@ -228,7 +228,7 @@ class KmlCatalogItem
   ): Promise<string | undefined> {
     if (!geom?.stopPoints) return undefined;
 
-    const description = this.buildPathDescription(geom);
+    const description = this.buildPolygonDescription(geom);
     const coords = geom.stopPoints.map((point) => {
       const lon = CesiumMath.toDegrees(point.longitude);
       const lat = CesiumMath.toDegrees(point.latitude);
@@ -534,6 +534,47 @@ class KmlCatalogItem
         summary.ground_distance ?? 0,
         "m"
       )}`,
+      ""
+    ];
+
+    lines.push(
+      ...metrics.map(
+        (m) =>
+          `index: ${m.index}, alt_diff: ${this.formatWithUnit(
+            m.alt_diff,
+            "m"
+          )}, geodetic_distance: ${this.formatWithUnit(
+            m.geodetic_distance,
+            "m"
+          )}, air_distance: ${this.formatWithUnit(
+            m.air_distance,
+            "m"
+          )}, ground_distance: ${this.formatWithUnit(
+            m.ground_distance,
+            "m"
+          )}, slope: ${this.formatWithUnit(m.slope, "%")}`
+      )
+    );
+
+    return lines.join("\n");
+  }
+
+  private buildPolygonDescription(geom: MeasurableGeometry) {
+    const geodeticAreaM2 = geom.geodeticArea ?? 0;
+    const airAreaM2 = geom.airArea ?? 0;
+    const metrics = this.buildPointMetrics(geom);
+    const lines = [
+      `path_notes: ${geom.pathNotes ?? ""}`,
+      `geodetic_area_m^2: ${this.formatWithUnit(geodeticAreaM2, "m^2")}`,
+      `geodetic_area_ha: ${this.formatWithUnit(geodeticAreaM2 * 0.0001, "ha")}`,
+      `air_area_m^2: ${this.formatWithUnit(airAreaM2, "m^2")}`,
+      `air_area_ha: ${this.formatWithUnit(airAreaM2 * 0.0001, "ha")}`,
+      `geodetic_perimeter: ${this.formatWithUnit(
+        geom.geodeticDistance ?? 0,
+        "m"
+      )}`,
+      `air_perimeter: ${this.formatWithUnit(geom.airDistance ?? 0, "m")}`,
+      `ground_perimeter: ${this.formatWithUnit(geom.groundDistance ?? 0, "m")}`,
       ""
     ];
 

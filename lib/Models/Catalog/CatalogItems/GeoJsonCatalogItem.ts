@@ -89,8 +89,7 @@ class GeoJsonCatalogItem
             coordinates: [[coordinates]]
           },
           properties: {
-            path_notes: geom.pathNotes || "",
-            ...this.getSummaryProperties(geom),
+            ...this.getPolygonSummaryProperties(geom),
             point_metrics: this.getLinePointMetrics(geom)
           }
         };
@@ -149,8 +148,7 @@ class GeoJsonCatalogItem
         coordinates: [coordinates]
       },
       properties: {
-        path_notes: geom.pathNotes || "",
-        ...this.getSummaryProperties(geom),
+        ...this.getPolygonSummaryProperties(geom),
         point_metrics: this.getLinePointMetrics(geom)
       }
     });
@@ -302,6 +300,22 @@ class GeoJsonCatalogItem
     }
 
     return summary;
+  }
+
+  private getPolygonSummaryProperties(geom: MeasurableGeometry) {
+    const geodeticAreaM2 = geom.geodeticArea ?? 0;
+    const airAreaM2 = geom.airArea ?? 0;
+
+    return {
+      path_notes: geom.pathNotes || "",
+      geodetic_area_m2: this.formatWithUnit(geodeticAreaM2, "m^2"),
+      geodetic_area_ha: this.formatWithUnit(geodeticAreaM2 * 0.0001, "ha"),
+      air_area_m2: this.formatWithUnit(airAreaM2, "m^2"),
+      air_area_ha: this.formatWithUnit(airAreaM2 * 0.0001, "ha"),
+      geodetic_perimeter: this.formatWithUnit(geom.geodeticDistance, "m"),
+      air_perimeter: this.formatWithUnit(geom.airDistance, "m"),
+      ground_perimeter: this.formatWithUnit(geom.groundDistance, "m")
+    };
   }
 
   private formatWithUnit(
