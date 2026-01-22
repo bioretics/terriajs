@@ -89,8 +89,7 @@ class GeoJsonCatalogItem
             coordinates: [[coordinates]]
           },
           properties: {
-            ...this.getPolygonSummaryProperties(geom),
-            point_metrics: this.getLinePolyMetrics(geom)
+            ...this.getPolygonSummaryProperties(geom)
           }
         };
       })
@@ -118,8 +117,7 @@ class GeoJsonCatalogItem
         },
         properties: {
           path_notes: geom.pathNotes,
-          ...this.getPointLineSummaryProperties(geom),
-          point_metrics: this.getLinePolyMetrics(geom)
+          ...this.getPointLineSummaryProperties(geom)
         }
       }))
     });
@@ -148,8 +146,7 @@ class GeoJsonCatalogItem
         coordinates: [coordinates]
       },
       properties: {
-        ...this.getPolygonSummaryProperties(geom),
-        point_metrics: this.getLinePolyMetrics(geom)
+        ...this.getPolygonSummaryProperties(geom)
       }
     });
   }
@@ -171,14 +168,12 @@ class GeoJsonCatalogItem
       },
       properties: {
         path_notes: geom.pathNotes || "",
-        ...this.getPointLineSummaryProperties(geom),
-        point_metrics: this.getLinePolyMetrics(geom)
+        ...this.getPointLineSummaryProperties(geom)
       }
     });
   }
 
   private generateJsonPoints(geom: MeasurableGeometry, name: string): string {
-    const metrics = this.getPointMetrics(geom);
     return JSON.stringify({
       name: name || "",
       path_notes: geom.pathNotes || "",
@@ -189,8 +184,7 @@ class GeoJsonCatalogItem
         return {
           type: "Feature",
           properties: {
-            ...(description ? { description } : {}),
-            ...metrics[index]
+            ...(description ? { description } : {})
           },
           geometry: {
             coordinates: [
@@ -202,58 +196,6 @@ class GeoJsonCatalogItem
           }
         };
       })
-    });
-  }
-
-  private getLinePolyMetrics(geom: MeasurableGeometry) {
-    const stopGeodeticDistances = geom.stopGeodeticDistances ?? [];
-    const stopAirDistances = geom.stopAirDistances ?? [];
-    const stopGroundDistances = geom.stopGroundDistances ?? [];
-    return geom.stopPoints.map((elem, index) => {
-      const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
-      const altDiff =
-        index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
-          ? elem.height - prev.height
-          : 0;
-      const airDistance = index > 0 ? stopAirDistances[index] : 0;
-      const slope =
-        index > 0 &&
-        prev &&
-        typeof airDistance === "number" &&
-        airDistance !== 0 &&
-        isFinite(elem.height) &&
-        isFinite(prev.height)
-          ? Math.abs((100 * (elem.height - prev.height)) / airDistance)
-          : 0;
-
-      return {
-        index,
-        alt_diff: this.formatWithUnit(altDiff, "m"),
-        geodetic_distance: this.formatWithUnit(
-          index > 0 ? stopGeodeticDistances[index] : 0,
-          "m"
-        ),
-        air_distance: this.formatWithUnit(airDistance, "m"),
-        ground_distance: this.formatWithUnit(
-          index > 0 ? stopGroundDistances[index] : 0,
-          "m"
-        ),
-        slope: this.formatWithUnit(slope, "%")
-      };
-    });
-  }
-
-  private getPointMetrics(geom: MeasurableGeometry) {
-    return geom.stopPoints.map((elem, index) => {
-      const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
-      const altDiff =
-        index > 0 && prev && isFinite(elem.height) && isFinite(prev.height)
-          ? elem.height - prev.height
-          : 0;
-      return {
-        index,
-        alt_diff: this.formatWithUnit(altDiff, "m")
-      };
     });
   }
 
