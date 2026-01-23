@@ -217,7 +217,7 @@ class KmlCatalogItem
         `<Document xmlns=""><Folder><name>${name || ""}</name>`
       )
       .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
   }
 
   private async generateKmlPolygon(
@@ -297,7 +297,7 @@ class KmlCatalogItem
     );
 
     const res = (await exportKml(output)) as exportKmlResultKml;
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
   }
 
   private async generateKmlPoints(
@@ -333,7 +333,31 @@ class KmlCatalogItem
         }</description>`
       )
       .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
+  }
+
+  private normalizeKmlOutput(kml: string): string {
+    if (!kml) return kml;
+    let normalized = kml.trimStart();
+    if (!normalized.startsWith("<?xml")) {
+      normalized = `<?xml version="1.0" encoding="utf-8"?>\n${normalized}`;
+    }
+
+    const ensureClamp = (tag: "LineString" | "Point") => {
+      const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "g");
+      normalized = normalized.replace(regex, (full, inner) => {
+        const withoutAltitudeMode = inner.replace(
+          /<altitudeMode>[\s\S]*?<\/altitudeMode>/gi,
+          ""
+        );
+        return `<${tag}>\n  <altitudeMode>clampToGround</altitudeMode>\n${withoutAltitudeMode}</${tag}>`;
+      });
+    };
+
+    ensureClamp("LineString");
+    ensureClamp("Point");
+
+    return normalized;
   }
 
   async generateDownloadLinks(
