@@ -979,6 +979,13 @@ const MeasurablePanel = observer((props: Props) => {
               />
             </div>
           )}
+        {!!terria?.cesium?.scene?.globe?.ellipsoid &&
+          terria.measurableGeomList &&
+          terria.measurableGeomList[terria.measurableGeometryIndex] && (
+            <Text textLight style={{ marginLeft: 1, marginBottom: 10 }}>
+              {i18next.t("measurableGeometry.tempLayerInfo")}
+            </Text>
+          )}
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
           !terria?.measurableGeomList[terria.measurableGeometryIndex]
             ?.onlyPoints &&

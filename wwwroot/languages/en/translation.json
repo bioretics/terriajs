@@ -107,7 +107,8 @@
     "showDistanceCheckboxTitle": "Toggle distance labels",
     "tempLayerName": "Insert the temporary layer name",
     "downloadSummaryInfo": "Download info",
-    "downloadSummaryInfoTitle": "Download summary info"
+    "downloadSummaryInfoTitle": "Download summary info",
+    "tempLayerInfo": "A temporary layer lets you turn points or a path into map data you can use right away: export it, play the route (PlayPath), edit its style, and compare it with other layers."
   },
   "elevationChart": {
     "header": "Elevation profile",
@@ -117,7 +118,7 @@
   },
   "transformLayer": {
     "transform": "Transform into a temporary layer",
-    "transformation": "Transformation to a temporary layer"
+    "transformation": "Transform into a temporary layer, a local layer created from your measurements so it is not saved unless you export it with one of the supported formats."
   },
   "downloadData": {
     "downloadPanel": "Export",
