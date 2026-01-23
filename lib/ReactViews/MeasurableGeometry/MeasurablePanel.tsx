@@ -697,18 +697,28 @@ const MeasurablePanel = observer((props: Props) => {
       );
     }
 
-    const tableHeaders = [
-      "measurableGeometry.geometrySummaryElevationMin",
-      "measurableGeometry.geometrySummaryElevationMax",
-      "measurableGeometry.geometrySummaryElevationBear",
-      "measurableGeometry.geometrySummaryElevationDiff"
-    ];
-    const tableData = [
-      prettifyNumber(Math.min(...heights.get())),
-      prettifyNumber(Math.max(...heights.get())),
-      getBearing.get(),
-      getHeightDifference.get()
-    ];
+    const tableHeaders = currentGeom.onlyPoints
+      ? [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax"
+        ]
+      : [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax",
+          "measurableGeometry.geometrySummaryElevationBear",
+          "measurableGeometry.geometrySummaryElevationDiff"
+        ];
+    const tableData = currentGeom.onlyPoints
+      ? [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get()))
+        ]
+      : [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get())),
+          getBearing.get(),
+          getHeightDifference.get()
+        ];
 
     return (
       <>
