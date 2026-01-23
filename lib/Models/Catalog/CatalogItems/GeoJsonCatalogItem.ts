@@ -180,11 +180,11 @@ class GeoJsonCatalogItem
       ...this.getPointLineSummaryProperties(geom, false),
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
-        const description = geom.pointDescriptions?.[index] || "";
         return {
           type: "Feature",
           properties: {
-            ...(description ? { description } : {})
+            description: geom.pointDescriptions?.[index] || "",
+            altitude: `${elem.height}`
           },
           geometry: {
             coordinates: [
@@ -226,19 +226,16 @@ class GeoJsonCatalogItem
         : undefined;
 
     const summary: Record<string, string | undefined> = {
-      alt_min: this.formatWithUnit(altMin, "m"),
-      alt_max: this.formatWithUnit(altMax, "m"),
-      bearing: this.formatWithUnit(bearing, "deg"),
-      alt_diff: this.formatWithUnit(altDiff, "m")
+      alt_min: altMin.toFixed(2),
+      alt_max: altMax.toFixed(2)
     };
 
     if (includeDistances) {
-      summary.geodetic_distance = this.formatWithUnit(
-        geom.geodeticDistance,
-        "m"
-      );
-      summary.air_distance = this.formatWithUnit(geom.airDistance, "m");
-      summary.ground_distance = this.formatWithUnit(geom.groundDistance, "m");
+      summary.bearing = bearing?.toFixed(2);
+      summary.alt_diff = altDiff.toFixed(2);
+      summary.geodetic_distance = geom.geodeticDistance?.toFixed(2);
+      summary.air_distance = geom.airDistance?.toFixed(2);
+      summary.ground_distance = geom.groundDistance?.toFixed(2);
     }
 
     return summary;
@@ -250,22 +247,12 @@ class GeoJsonCatalogItem
 
     return {
       path_notes: geom.pathNotes || "",
-      geodetic_area_m2: this.formatWithUnit(geodeticAreaM2, "m^2"),
-      geodetic_area_ha: this.formatWithUnit(geodeticAreaM2 * 0.0001, "ha"),
-      air_area_m2: this.formatWithUnit(airAreaM2, "m^2"),
-      air_area_ha: this.formatWithUnit(airAreaM2 * 0.0001, "ha"),
-      geodetic_perimeter: this.formatWithUnit(geom.geodeticDistance, "m"),
-      air_perimeter: this.formatWithUnit(geom.airDistance, "m"),
-      ground_perimeter: this.formatWithUnit(geom.groundDistance, "m")
+      geodetic_area: geodeticAreaM2.toFixed(2),
+      air_area: airAreaM2.toFixed(2),
+      geodetic_perimeter: geom.geodeticDistance?.toFixed(2),
+      air_perimeter: geom.airDistance?.toFixed(2),
+      ground_perimeter: geom.groundDistance?.toFixed(2)
     };
-  }
-
-  private formatWithUnit(
-    value: number | string | undefined,
-    unit: string
-  ): string | undefined {
-    if (typeof value !== "number" || !isFinite(value)) return undefined;
-    return `${value} ${unit}`;
   }
 
   async generateDownloadLinks(
