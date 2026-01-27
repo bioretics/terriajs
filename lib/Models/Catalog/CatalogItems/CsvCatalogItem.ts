@@ -186,11 +186,14 @@ export default class CsvCatalogItem
       return acc;
     }, {} as { [key: string]: any[] });
 
-    const path_notes = columns["path_notes"]?.[0] || "";
-    const longitudes = columns["longitude"] || [];
-    const latitudes = columns["latitude"] || [];
-    const heights = columns["height"] || [];
-    const descriptions = columns["description"] || [];
+    const rawPathNotes = (columns["path_notes"] as any[]) || [];
+    const longitudes = (columns["longitude"] as any[]) || [];
+    const latitudes = (columns["latitude"] as any[]) || [];
+    const heights = (columns["height"] as any[]) || [];
+    const descriptions = (columns["description"] as any[]) || [];
+    const path_notes =
+      rawPathNotes.find((v) => typeof v === "string" && v.trim().length > 0) ||
+      "";
 
     const positions = longitudes.map((longitude: number, i: number) =>
       Cartographic.fromDegrees(longitude, latitudes[i], heights[i])

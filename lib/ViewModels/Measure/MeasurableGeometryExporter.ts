@@ -562,6 +562,13 @@ export default class MeasurableGeometryExporter {
       type: "FeatureCollection",
       name: name || "",
       features: geomList.map((geom) => {
+        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+        if (
+          geom.pathNotes !== undefined &&
+          featureProps.path_notes === undefined
+        ) {
+          featureProps.path_notes = geom.pathNotes;
+        }
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude)
@@ -581,9 +588,7 @@ export default class MeasurableGeometryExporter {
             type: "MultiPolygon",
             coordinates: [[coordinates]]
           },
-          properties: {
-            path_notes: geom.pathNotes || ""
-          }
+          properties: featureProps
         };
       })
     });
@@ -596,22 +601,29 @@ export default class MeasurableGeometryExporter {
     return JSON.stringify({
       type: "FeatureCollection",
       name: name || "",
-      features: geomList.map((geom) => ({
-        type: "Feature",
-        geometry: {
-          type: "MultiLineString",
-          coordinates: [
-            geom.stopPoints.map((elem) => [
-              CesiumMath.toDegrees(elem.longitude),
-              CesiumMath.toDegrees(elem.latitude),
-              Math.round(elem.height)
-            ])
-          ]
-        },
-        properties: {
-          path_notes: geom.pathNotes
+      features: geomList.map((geom) => {
+        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+        if (
+          geom.pathNotes !== undefined &&
+          featureProps.path_notes === undefined
+        ) {
+          featureProps.path_notes = geom.pathNotes;
         }
-      }))
+        return {
+          type: "Feature",
+          geometry: {
+            type: "MultiLineString",
+            coordinates: [
+              geom.stopPoints.map((elem) => [
+                CesiumMath.toDegrees(elem.longitude),
+                CesiumMath.toDegrees(elem.latitude),
+                Math.round(elem.height)
+              ])
+            ]
+          },
+          properties: featureProps
+        };
+      })
     });
   }
 
@@ -619,6 +631,10 @@ export default class MeasurableGeometryExporter {
     geom: MeasurableGeometry,
     name: string
   ): string {
+    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
+      featureProps.path_notes = geom.pathNotes;
+    }
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
       CesiumMath.toDegrees(elem.latitude)
@@ -639,9 +655,7 @@ export default class MeasurableGeometryExporter {
         type: "Polygon",
         coordinates: [coordinates]
       },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
+      properties: featureProps
     });
   }
 
@@ -649,6 +663,10 @@ export default class MeasurableGeometryExporter {
     geom: MeasurableGeometry,
     name: string
   ): string {
+    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
+    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
+      featureProps.path_notes = geom.pathNotes;
+    }
     return JSON.stringify({
       name: name || "",
       type: "Feature",
@@ -660,9 +678,7 @@ export default class MeasurableGeometryExporter {
           Math.round(elem.height)
         ])
       },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
+      properties: featureProps
     });
   }
 
@@ -675,10 +691,17 @@ export default class MeasurableGeometryExporter {
       path_notes: geom.pathNotes || "",
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
+        const pointProps = { ...(geom.pointProperties?.[index] ?? {}) } as any;
+        if (
+          geom.pointDescriptions?.[index] !== undefined &&
+          pointProps.description === undefined
+        ) {
+          pointProps.description = geom.pointDescriptions?.[index] || "";
+        }
         return {
           type: "Feature",
           properties: {
-            description: geom.pointDescriptions?.[index] || ""
+            ...pointProps
           },
           geometry: {
             coordinates: [

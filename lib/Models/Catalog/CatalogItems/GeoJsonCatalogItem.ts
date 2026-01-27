@@ -209,6 +209,8 @@ class GeoJsonCatalogItem
 
     const positions: Cartographic[] = [];
     const descriptions: string[] = [];
+    const pointProperties: any[] = [];
+    let featureProperties: any | undefined;
 
     fc.features.forEach((feature) => {
       if (!feature.geometry) return;
@@ -226,6 +228,7 @@ class GeoJsonCatalogItem
             )
           );
           descriptions.push(feature.properties?.description || "");
+          pointProperties.push(feature.properties ?? {});
           break;
         }
         case "LineString": {
@@ -237,6 +240,9 @@ class GeoJsonCatalogItem
             positions.push(Cartographic.fromDegrees(lon, lat, alt));
           });
           descriptions.push(feature.properties?.description || "");
+          if (!featureProperties && feature.properties) {
+            featureProperties = feature.properties as any;
+          }
           break;
         }
         default:
@@ -261,7 +267,11 @@ class GeoJsonCatalogItem
       false,
       true,
       descriptions,
-      pathNotes
+      pathNotes,
+      true,
+      undefined,
+      featureProperties,
+      pointProperties.length ? pointProperties : undefined
     );
   }
 }
