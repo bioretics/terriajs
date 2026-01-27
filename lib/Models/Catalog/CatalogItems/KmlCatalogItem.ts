@@ -29,6 +29,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
+
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
@@ -338,6 +339,10 @@ class KmlCatalogItem
       }
       const allCoordinates = this.getPositions(element);
       if (allCoordinates.length === 0) return;
+
+      console.log("dataSource:", this._dataSource);
+      console.log("entities:", entities);
+      console.log("items", items);
 
       const allCartographics = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)

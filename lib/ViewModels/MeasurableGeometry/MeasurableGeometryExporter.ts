@@ -6,32 +6,36 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
 import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
-import { exportKml, exportKmlResultKml } from "terriajs-cesium";
+import {
+  EllipsoidGeodesic,
+  exportKml,
+  exportKmlResultKml
+} from "terriajs-cesium";
 import DataUri from "../../Core/DataUri";
 import { MeasurableGeometry } from "./MeasurableGeometryManager";
-import { DownloadLink } from "./MeasurableDownload";
+import { DownloadLink } from "./MeasurableGeometryDownload";
 
 export default class MeasurableGeometryExporter {
   static async generateAllDownloadLinks(
     geom: MeasurableGeometry,
     name: string,
     isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
+    ellipsoid: Ellipsoid,
+    geomList?: MeasurableGeometry[]
   ): Promise<DownloadLink[]> {
     const downloads: DownloadLink[] = [];
 
     if (isMultiPath && geomList) {
       downloads.push(
         ...(await this.generateMultiPathKmlLinks(geomList, name, ellipsoid)),
-        ...(await this.generateMultiPathGeoJsonLinks(geomList, name))
+        ...(await this.generateMultiPathGeoJsonLinks(geomList, name, ellipsoid))
       );
     } else {
       downloads.push(
         ...(await this.generateKmlLinks(geom, name, ellipsoid)),
         ...(await this.generateCsvLinks(geom, name)),
         ...(await this.generateGpxLinks(geom, name)),
-        ...(await this.generateGeoJsonLinks(geom, name))
+        ...(await this.generateGeoJsonLinks(geom, name, ellipsoid))
       );
     }
 
@@ -222,7 +226,7 @@ export default class MeasurableGeometryExporter {
         `<Document xmlns=""><Folder><name>${name || ""}</name>`
       )
       .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
   }
 
   private static async generateKmlPolygon(
@@ -300,7 +304,7 @@ export default class MeasurableGeometryExporter {
     );
 
     const res = (await exportKml(output)) as exportKmlResultKml;
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
   }
 
   private static async generateKmlPoints(
@@ -336,7 +340,31 @@ export default class MeasurableGeometryExporter {
         }</description>`
       )
       .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
+    return this.normalizeKmlOutput(res.kml);
+  }
+
+  private static normalizeKmlOutput(kml: string): string {
+    if (!kml) return kml;
+    let normalized = kml.trimStart();
+    if (!normalized.startsWith("<?xml")) {
+      normalized = `<?xml version="1.0" encoding="utf-8"?>\n${normalized}`;
+    }
+
+    const ensureClamp = (tag: "LineString" | "Point") => {
+      const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "g");
+      normalized = normalized.replace(regex, (full, inner) => {
+        const withoutAltitudeMode = inner.replace(
+          /<altitudeMode>[\s\S]*?<\/altitudeMode>/gi,
+          ""
+        );
+        return `<${tag}>\n  <altitudeMode>clampToGround</altitudeMode>\n${withoutAltitudeMode}</${tag}>`;
+      });
+    };
+
+    ensureClamp("LineString");
+    ensureClamp("Point");
+
+    return normalized;
   }
 
   private static generateCsvLinks(
@@ -504,7 +532,8 @@ export default class MeasurableGeometryExporter {
 
   private static generateMultiPathGeoJsonLinks(
     geomList: MeasurableGeometry[],
-    name: string
+    name: string,
+    ellipsoid: Ellipsoid
   ): DownloadLink[] {
     return [
       {
@@ -520,7 +549,7 @@ export default class MeasurableGeometryExporter {
         key: "jsonMultiPathLines",
         href: DataUri.make(
           "json",
-          this.generateMultiPathJsonLineStrings(geomList, name)
+          this.generateMultiPathJsonLineStrings(geomList, name, ellipsoid)
         ),
         download: `${name}_lines_multipath.geojson`,
         label: `Multi ${i18next.t("downloadData.lines")} GEOJSON`
@@ -530,7 +559,8 @@ export default class MeasurableGeometryExporter {
 
   private static generateGeoJsonLinks(
     geom: MeasurableGeometry,
-    name: string
+    name: string,
+    ellipsoid: Ellipsoid
   ): DownloadLink[] {
     return [
       {
@@ -541,13 +571,19 @@ export default class MeasurableGeometryExporter {
       },
       {
         key: "jsonLines",
-        href: DataUri.make("json", this.generateJsonLineStrings(geom, name)),
+        href: DataUri.make(
+          "json",
+          this.generateJsonLineStrings(geom, name, ellipsoid)
+        ),
         download: `${name}_lines.geojson`,
         label: `${i18next.t("downloadData.lines")} GEOJSON`
       },
       {
         key: "jsonPoints",
-        href: DataUri.make("json", this.generateJsonPoints(geom, name)),
+        href: DataUri.make(
+          "json",
+          this.generateJsonPoints(geom, name, ellipsoid)
+        ),
         download: `${name}_points.geojson`,
         label: `${i18next.t("downloadData.points")} GEOJSON`
       }
@@ -562,16 +598,10 @@ export default class MeasurableGeometryExporter {
       type: "FeatureCollection",
       name: name || "",
       features: geomList.map((geom) => {
-        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
-        if (
-          geom.pathNotes !== undefined &&
-          featureProps.path_notes === undefined
-        ) {
-          featureProps.path_notes = geom.pathNotes;
-        }
         const coordinates = geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude)
+          CesiumMath.toDegrees(elem.latitude),
+          elem.height
         ]);
 
         if (
@@ -588,7 +618,10 @@ export default class MeasurableGeometryExporter {
             type: "MultiPolygon",
             coordinates: [[coordinates]]
           },
-          properties: featureProps
+          properties: {
+            ...(geom.featureProperties ?? {}),
+            ...this.getPolygonSummaryProperties(geom)
+          }
         };
       })
     });
@@ -596,19 +629,13 @@ export default class MeasurableGeometryExporter {
 
   private static generateMultiPathJsonLineStrings(
     geomList: MeasurableGeometry[],
-    name: string
+    name: string,
+    ellipsoid: Ellipsoid
   ): string {
     return JSON.stringify({
       type: "FeatureCollection",
       name: name || "",
       features: geomList.map((geom) => {
-        const featureProps = { ...(geom.featureProperties ?? {}) } as any;
-        if (
-          geom.pathNotes !== undefined &&
-          featureProps.path_notes === undefined
-        ) {
-          featureProps.path_notes = geom.pathNotes;
-        }
         return {
           type: "Feature",
           geometry: {
@@ -617,11 +644,15 @@ export default class MeasurableGeometryExporter {
               geom.stopPoints.map((elem) => [
                 CesiumMath.toDegrees(elem.longitude),
                 CesiumMath.toDegrees(elem.latitude),
-                Math.round(elem.height)
+                elem.height
               ])
             ]
           },
-          properties: featureProps
+          properties: {
+            ...(geom.featureProperties ?? {}),
+            path_notes: geom.pathNotes || "",
+            ...this.getPointLineSummaryProperties(geom, true, ellipsoid)
+          }
         };
       })
     });
@@ -631,13 +662,10 @@ export default class MeasurableGeometryExporter {
     geom: MeasurableGeometry,
     name: string
   ): string {
-    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
-    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
-      featureProps.path_notes = geom.pathNotes;
-    }
     const coordinates = geom.stopPoints.map((elem) => [
       CesiumMath.toDegrees(elem.longitude),
-      CesiumMath.toDegrees(elem.latitude)
+      CesiumMath.toDegrees(elem.latitude),
+      elem.height
     ]);
 
     if (
@@ -655,18 +683,18 @@ export default class MeasurableGeometryExporter {
         type: "Polygon",
         coordinates: [coordinates]
       },
-      properties: featureProps
+      properties: {
+        ...(geom.featureProperties ?? {}),
+        ...this.getPolygonSummaryProperties(geom)
+      }
     });
   }
 
   private static generateJsonLineStrings(
     geom: MeasurableGeometry,
-    name: string
+    name: string,
+    ellipsoid: Ellipsoid
   ): string {
-    const featureProps = { ...(geom.featureProperties ?? {}) } as any;
-    if (geom.pathNotes !== undefined && featureProps.path_notes === undefined) {
-      featureProps.path_notes = geom.pathNotes;
-    }
     return JSON.stringify({
       name: name || "",
       type: "Feature",
@@ -675,20 +703,26 @@ export default class MeasurableGeometryExporter {
         coordinates: geom.stopPoints.map((elem) => [
           CesiumMath.toDegrees(elem.longitude),
           CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
+          elem.height
         ])
       },
-      properties: featureProps
+      properties: {
+        ...(geom.featureProperties ?? {}),
+        path_notes: geom.pathNotes || "",
+        ...this.getPointLineSummaryProperties(geom, true, ellipsoid)
+      }
     });
   }
 
   private static generateJsonPoints(
     geom: MeasurableGeometry,
-    name: string
+    name: string,
+    ellipsoid: Ellipsoid
   ): string {
     return JSON.stringify({
       name: name || "",
       path_notes: geom.pathNotes || "",
+      ...this.getPointLineSummaryProperties(geom, false, ellipsoid),
       type: "FeatureCollection",
       features: geom.stopPoints.map((elem, index) => {
         const pointProps = { ...(geom.pointProperties?.[index] ?? {}) } as any;
@@ -701,7 +735,8 @@ export default class MeasurableGeometryExporter {
         return {
           type: "Feature",
           properties: {
-            ...pointProps
+            ...pointProps,
+            altitude: elem.height
           },
           geometry: {
             coordinates: [
@@ -714,5 +749,61 @@ export default class MeasurableGeometryExporter {
         };
       })
     });
+  }
+
+  private static getPointLineSummaryProperties(
+    geom: MeasurableGeometry,
+    includeDistances: boolean = true,
+    ellipsoid: Ellipsoid
+  ) {
+    const heights = geom.stopPoints
+      .map((p) => p.height)
+      .filter((h) => isFinite(h));
+    const altMin = heights.length > 0 ? Math.min(...heights) : 0;
+    const altMax = heights.length > 0 ? Math.max(...heights) : 0;
+    const start = geom.stopPoints[0];
+    const end = geom.stopPoints.at(-1);
+    const altDiff =
+      start && end && isFinite(start.height) && isFinite(end.height)
+        ? end.height - start.height
+        : 0;
+
+    const bearing =
+      ellipsoid && start && end
+        ? (CesiumMath.toDegrees(
+            new EllipsoidGeodesic(start, end, ellipsoid).startHeading
+          ) +
+            360) %
+          360
+        : undefined;
+
+    const summary: Record<string, string | undefined> = {
+      alt_min: altMin.toFixed(2),
+      alt_max: altMax.toFixed(2)
+    };
+
+    if (includeDistances) {
+      summary.bearing = bearing?.toFixed(2);
+      summary.alt_diff = altDiff.toFixed(2);
+      summary.geodetic_distance = geom.geodeticDistance?.toFixed(2);
+      summary.air_distance = geom.airDistance?.toFixed(2);
+      summary.ground_distance = geom.groundDistance?.toFixed(2);
+    }
+
+    return summary;
+  }
+
+  private static getPolygonSummaryProperties(geom: MeasurableGeometry) {
+    const geodeticAreaM2 = geom.geodeticArea ?? 0;
+    const airAreaM2 = geom.airArea ?? 0;
+
+    return {
+      path_notes: geom.pathNotes || "",
+      geodetic_area: geodeticAreaM2.toFixed(2),
+      air_area: airAreaM2.toFixed(2),
+      geodetic_perimeter: geom.geodeticDistance?.toFixed(2),
+      air_perimeter: geom.airDistance?.toFixed(2),
+      ground_perimeter: geom.groundDistance?.toFixed(2)
+    };
   }
 }

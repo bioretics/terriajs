@@ -22,8 +22,8 @@ export default class MeasurableDownload {
     geom: MeasurableGeometry,
     name: string,
     isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
+    ellipsoid: Ellipsoid,
+    geomList?: MeasurableGeometry[]
   ): Promise<DownloadLink[]> {
     const allLinks: DownloadLink[] = [];
 
@@ -37,8 +37,8 @@ export default class MeasurableDownload {
         geom,
         name,
         isMultiPath,
-        geomList,
-        ellipsoid
+        ellipsoid,
+        geomList
       );
       allLinks.push(...links);
     } catch (error) {

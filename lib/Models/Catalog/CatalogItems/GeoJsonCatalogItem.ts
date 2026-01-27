@@ -258,7 +258,17 @@ class GeoJsonCatalogItem
       ? await sampleTerrainMostDetailed(terrainProvider, positions)
       : positions;
 
-    const pathNotes = (fc as any).path_notes || "";
+    const rawPathNotes = (fc as any).path_notes;
+    let pathNotes = typeof rawPathNotes === "string" ? rawPathNotes : "";
+
+    if (!pathNotes && fc.features.length > 0) {
+      const firstProps = fc.features[0].properties as any;
+      if (typeof firstProps?.path_notes === "string") {
+        pathNotes = firstProps.path_notes;
+      } else if (typeof firstProps?.description === "string") {
+        pathNotes = this.extractPathNotes(firstProps.description);
+      }
+    }
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex
@@ -273,6 +283,15 @@ class GeoJsonCatalogItem
       featureProperties,
       pointProperties.length ? pointProperties : undefined
     );
+  }
+
+  private extractPathNotes(description: string): string {
+    const line = description
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.toLowerCase().startsWith("path_notes:"));
+    if (!line) return description;
+    return line.slice("path_notes:".length).trim();
   }
 }
 
