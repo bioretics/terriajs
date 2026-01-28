@@ -619,14 +619,32 @@ const MeasurablePanel = observer((props: Props) => {
   const renderSamplingStep = () => {
     return (
       !isMobile && (
-        <div ref={samplingStepRef}>
-          <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.samplingStepHeader")}:
-            <br />
+        <Box
+          ref={samplingStepRef}
+          css={`
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          `}
+          styledMargin="5px"
+        >
+          <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
+            {i18next.t("measurableGeometry.samplingStepHeader")}
+            {":"}
+          </Text>
+          <Text textLight style={{ whiteSpace: "nowrap" }} title="">
             [min {rangeSamplingPathStep.get()[0]}, max{" "}
             {rangeSamplingPathStep.get()[1]}]
           </Text>
-          <Box styledMargin="5px">
+          <Box
+            css={`
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: nowrap;
+            `}
+          >
             <Box styledWidth="120px">
               <Input
                 css={`
@@ -658,7 +676,6 @@ const MeasurablePanel = observer((props: Props) => {
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
-                margin-left: 5px;
               `}
               disabled={
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -674,7 +691,7 @@ const MeasurablePanel = observer((props: Props) => {
               {i18next.t("measurableGeometry.samplingStepButtonText")}
             </Button>
           </Box>
-        </div>
+        </Box>
       )
     );
   };
@@ -709,6 +726,21 @@ const MeasurablePanel = observer((props: Props) => {
     if (activeToolIsPolygon() || currentGeom.hasArea || currentGeom.isClosed) {
       return (
         <>
+          {!isMobile && (
+            <StyledTextArea
+              title={i18next.t("measurableGeometry.pathNotesTitle")}
+              placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+              dark
+              value={currentGeom.pathNotes}
+              onChange={(e) => {
+                runInAction(() => {
+                  if (terria.measurableGeomList && currentGeom) {
+                    currentGeom.pathNotes = e.target.value;
+                  }
+                });
+              }}
+            />
+          )}
           <Text textLight style={{ marginLeft: 1 }} title="">
             {i18next.t("measurableGeometry.geometrySummaryHeader")}
           </Text>
@@ -811,18 +843,28 @@ const MeasurablePanel = observer((props: Props) => {
       );
     }
 
-    const tableHeaders = [
-      "measurableGeometry.geometrySummaryElevationMin",
-      "measurableGeometry.geometrySummaryElevationMax",
-      "measurableGeometry.geometrySummaryElevationBear",
-      "measurableGeometry.geometrySummaryElevationDiff"
-    ];
-    const tableData = [
-      prettifyNumber(Math.min(...heights.get())),
-      prettifyNumber(Math.max(...heights.get())),
-      getBearing.get(),
-      getHeightDifference.get()
-    ];
+    const tableHeaders = currentGeom.onlyPoints
+      ? [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax"
+        ]
+      : [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax",
+          "measurableGeometry.geometrySummaryElevationBear",
+          "measurableGeometry.geometrySummaryElevationDiff"
+        ];
+    const tableData = currentGeom.onlyPoints
+      ? [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get()))
+        ]
+      : [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get())),
+          getBearing.get(),
+          getHeightDifference.get()
+        ];
 
     return (
       <>
