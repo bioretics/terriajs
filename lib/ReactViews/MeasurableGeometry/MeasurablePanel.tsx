@@ -786,7 +786,11 @@ const MeasurablePanel = observer((props: Props) => {
                 width: 24px;
                 height: 24px;
                 min-width: 24px;
+                min-height: 24px;
                 padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
                 border-radius: 2px;
               `}
             >
@@ -945,7 +949,11 @@ const MeasurablePanel = observer((props: Props) => {
               width: 24px;
               height: 24px;
               min-width: 24px;
+              min-height: 24px;
               padding: 0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
               border-radius: 2px;
             `}
           >
@@ -1359,7 +1367,11 @@ const MeasurablePanel = observer((props: Props) => {
               width: 24px;
               height: 24px;
               min-width: 24px;
+              min-height: 24px;
               padding: 0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
               border-radius: 2px;
             `}
           >
