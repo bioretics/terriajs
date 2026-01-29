@@ -766,9 +766,38 @@ const MeasurablePanel = observer((props: Props) => {
               }}
             />
           )}
-          <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.geometrySummaryHeader")}
-          </Text>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8
+            }}
+          >
+            <Text textLight style={{ marginLeft: 1 }} title="">
+              {i18next.t("measurableGeometry.geometrySummaryHeader")}
+            </Text>
+            <Button
+              primary
+              title={i18next.t("measurableGeometry.downloadLayerTitle")}
+              onClick={downloadPathSummaryTxt}
+              disabled={!currentGeom.stopPoints?.length}
+              css={`
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                padding: 0;
+                border-radius: 2px;
+              `}
+            >
+              <StyledIcon
+                light
+                realDark={false}
+                glyph={Icon.GLYPHS.downloadNew}
+                styledWidth="16px"
+              />
+            </Button>
+          </div>
           <small>
             <table className={Styles.elevation}>
               <thead>
@@ -850,38 +879,7 @@ const MeasurablePanel = observer((props: Props) => {
               ]
             )}
 
-            <div
-              style={{
-                marginTop: "10px",
-                marginBottom: "10px",
-                display: "flex",
-                gap: "8px",
-                flexWrap: "wrap"
-              }}
-            >
-              <Button
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                `}
-                disabled={!currentGeom.stopPoints?.length}
-                onClick={downloadPathSummaryTxt}
-                title={i18next.t("measurableGeometry.downloadLayerTitle")}
-              >
-                {i18next.t("measurableGeometry.downloadLayer")}
-              </Button>
-              <Button
-                css={`
-                  color: ${theme.textLight};
-                  background: ${theme.colorPrimary};
-                `}
-                disabled={!currentGeom.stopPoints?.length}
-                onClick={downloadStopPointsCsv}
-                title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
-              >
-                {i18next.t("measurableGeometry.downloadStopPoints")}
-              </Button>
-            </div>
+            <div style={{ marginTop: "10px", marginBottom: "10px" }} />
           </small>
         </>
       );
@@ -927,9 +925,38 @@ const MeasurablePanel = observer((props: Props) => {
             }}
           />
         )}
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryHeader")}
-        </Text>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8
+          }}
+        >
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+          </Text>
+          <Button
+            primary
+            title={i18next.t("measurableGeometry.downloadLayerTitle")}
+            onClick={downloadPathSummaryTxt}
+            disabled={!currentGeom.stopPoints?.length}
+            css={`
+              width: 24px;
+              height: 24px;
+              min-width: 24px;
+              padding: 0;
+              border-radius: 2px;
+            `}
+          >
+            <StyledIcon
+              light
+              realDark={false}
+              glyph={Icon.GLYPHS.downloadNew}
+              styledWidth="16px"
+            />
+          </Button>
+        </div>
         <small>
           {renderSummaryTable(tableHeaders, tableData)}
           {!currentGeom.onlyPoints &&
@@ -946,38 +973,7 @@ const MeasurablePanel = observer((props: Props) => {
               ]
             )}
 
-          <div
-            style={{
-              marginTop: "10px",
-              marginBottom: "10px",
-              display: "flex",
-              gap: "8px",
-              flexWrap: "wrap"
-            }}
-          >
-            <Button
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-              `}
-              disabled={!currentGeom.stopPoints?.length}
-              onClick={downloadPathSummaryTxt}
-              title={i18next.t("measurableGeometry.downloadLayerTitle")}
-            >
-              {i18next.t("measurableGeometry.downloadLayer")}
-            </Button>
-            <Button
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-              `}
-              disabled={!currentGeom.stopPoints?.length}
-              onClick={downloadStopPointsCsv}
-              title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
-            >
-              {i18next.t("measurableGeometry.downloadStopPoints")}
-            </Button>
-          </div>
+          <div style={{ marginTop: "10px", marginBottom: "10px" }} />
         </small>
       </>
     );
@@ -1343,9 +1339,38 @@ const MeasurablePanel = observer((props: Props) => {
 
     return (
       <div ref={stopSummaryRef}>
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
-        </Text>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8
+          }}
+        >
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
+          </Text>
+          <Button
+            primary
+            title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
+            onClick={downloadStopPointsCsv}
+            disabled={!stopPoints.length}
+            css={`
+              width: 24px;
+              height: 24px;
+              min-width: 24px;
+              padding: 0;
+              border-radius: 2px;
+            `}
+          >
+            <StyledIcon
+              light
+              realDark={false}
+              glyph={Icon.GLYPHS.downloadNew}
+              styledWidth="16px"
+            />
+          </Button>
+        </div>
         <small>
           <table className={Styles.elevation}>
             <thead>
