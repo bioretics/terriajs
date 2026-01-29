@@ -37,6 +37,7 @@ import {
   generatePathSummaryTxtData,
   getSummaryKind
 } from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummary";
+import MeasurableGeometryExporter from "../../ViewModels/MeasurableGeometry/MeasurableGeometryExporter";
 
 interface Props {
   viewState: ViewState;
@@ -276,6 +277,30 @@ const MeasurablePanel = observer((props: Props) => {
     a.click();
     document.body.removeChild(a);
   }, [activeToolIsPolygon, layerName, terria]);
+
+  const downloadStopPointsCsv = React.useCallback(async () => {
+    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!geom) return;
+
+    const ellipsoid = terria?.cesium?.scene?.globe?.ellipsoid;
+    if (!ellipsoid) return;
+
+    const links = await MeasurableGeometryExporter.generateAllDownloadLinks(
+      geom,
+      layerName,
+      false,
+      ellipsoid
+    );
+    const csvLink = links.find((link) => link.key === "csv");
+    if (!csvLink?.href || !csvLink.download) return;
+
+    const a = document.createElement("a");
+    a.href = csvLink.href;
+    a.download = csvLink.download;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [layerName, terria]);
 
   // UseEffects Methods
   function useWindowSize() {
@@ -825,7 +850,15 @@ const MeasurablePanel = observer((props: Props) => {
               ]
             )}
 
-            <div style={{ marginTop: "10px", marginBottom: "10px" }}>
+            <div
+              style={{
+                marginTop: "10px",
+                marginBottom: "10px",
+                display: "flex",
+                gap: "8px",
+                flexWrap: "wrap"
+              }}
+            >
               <Button
                 css={`
                   color: ${theme.textLight};
@@ -833,9 +866,20 @@ const MeasurablePanel = observer((props: Props) => {
                 `}
                 disabled={!currentGeom.stopPoints?.length}
                 onClick={downloadPathSummaryTxt}
-                title={i18next.t("measurableGeometry.downloadSummaryInfoTitle")}
+                title={i18next.t("measurableGeometry.downloadLayerTitle")}
               >
-                {i18next.t("measurableGeometry.downloadSummaryInfo")}
+                {i18next.t("measurableGeometry.downloadLayer")}
+              </Button>
+              <Button
+                css={`
+                  color: ${theme.textLight};
+                  background: ${theme.colorPrimary};
+                `}
+                disabled={!currentGeom.stopPoints?.length}
+                onClick={downloadStopPointsCsv}
+                title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
+              >
+                {i18next.t("measurableGeometry.downloadStopPoints")}
               </Button>
             </div>
           </small>
@@ -902,7 +946,15 @@ const MeasurablePanel = observer((props: Props) => {
               ]
             )}
 
-          <div style={{ marginTop: "10px", marginBottom: "10px" }}>
+          <div
+            style={{
+              marginTop: "10px",
+              marginBottom: "10px",
+              display: "flex",
+              gap: "8px",
+              flexWrap: "wrap"
+            }}
+          >
             <Button
               css={`
                 color: ${theme.textLight};
@@ -910,9 +962,20 @@ const MeasurablePanel = observer((props: Props) => {
               `}
               disabled={!currentGeom.stopPoints?.length}
               onClick={downloadPathSummaryTxt}
-              title={i18next.t("measurableGeometry.downloadSummaryInfoTitle")}
+              title={i18next.t("measurableGeometry.downloadLayerTitle")}
             >
-              {i18next.t("measurableGeometry.downloadSummaryInfo")}
+              {i18next.t("measurableGeometry.downloadLayer")}
+            </Button>
+            <Button
+              css={`
+                color: ${theme.textLight};
+                background: ${theme.colorPrimary};
+              `}
+              disabled={!currentGeom.stopPoints?.length}
+              onClick={downloadStopPointsCsv}
+              title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
+            >
+              {i18next.t("measurableGeometry.downloadStopPoints")}
             </Button>
           </div>
         </small>

@@ -108,6 +108,10 @@
     "tempLayerName": "Insert the temporary layer name",
     "downloadSummaryInfo": "Download info",
     "downloadSummaryInfoTitle": "Download summary info",
+    "downloadLayer": "Download layer",
+    "downloadLayerTitle": "Download the layer summary as TXT",
+    "downloadStopPoints": "Download stop data",
+    "downloadStopPointsTitle": "Download stop points data as CSV",
     "tempLayerInfo": "A temporary layer lets you turn points or a path into map data you can use right away: export it, play the route (PlayPath), edit its style, and compare it with other layers.",
     "tourPrompt": "First time using Measures? Take a quick tour!",
     "tour": {
