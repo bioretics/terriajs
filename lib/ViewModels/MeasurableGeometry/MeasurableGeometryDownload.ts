@@ -16,7 +16,6 @@ export default class MeasurableDownload {
 
   constructor(terria: Terria) {
     this.terria = terria;
-    this.initializeFormatHandlers();
   }
 
   static normalizeDefaultFilename(rawName: string): string {
@@ -24,15 +23,6 @@ export default class MeasurableDownload {
 
     const withoutExtension = rawName.replace(/\.[^/.]+$/, "");
     return withoutExtension.replace(/_[^_]*$/, "");
-  }
-
-  private initializeFormatHandlers(): void {
-    this.formatHandlers = [
-      new CsvCatalogItem("format-csv", this.terria, undefined),
-      new GeoJsonCatalogItem("format-geojson", this.terria),
-      new KmlCatalogItem("format-kml", this.terria),
-      new GpxCatalogItem("format-gpx", this.terria)
-    ];
   }
 
   async generateAllFormatLinks(
