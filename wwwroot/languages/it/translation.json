@@ -115,7 +115,7 @@
     "downloadLayerTitle": "Scarica il riepilogo del layer in formato TXT",
     "downloadStopPoints": "Scarica dati tappe",
     "downloadStopPointsTitle": "Scarica i dati delle tappe in formato CSV",
-    "tempLayerInfo": "Un layer temporaneo ti permette di trasformare punti o un percorso in dati subito utilizzabili: puoi esportarli, presentare il percorso (PlayPath), modificarne lo stile e confrontarlo con altri layer.",
+    "tempLayerInfo": "Trasforma in \"layer temporaneo\" per spostare questi dati nel workbench ed usarli come layer (trasparenza, esporta, confronta, cambia stile, volo, ...).",
     "tourPrompt": "Prima volta con le Misure? Fai un tour veloce!",
     "tour": {
       "helpButton": "Apri tour Misure",
