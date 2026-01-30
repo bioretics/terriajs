@@ -12,7 +12,7 @@ interface ViewshedToolOptions {
   onOpen(): void;
 }
 
-export default class ViewshedTool extends MapNavigationItemController {
+export class ViewshedTool extends MapNavigationItemController {
   static id = "viewshed-tool";
   static displayName = "ViewshedTool";
 

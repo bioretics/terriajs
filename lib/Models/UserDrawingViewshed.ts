@@ -230,7 +230,7 @@ export default class UserDrawingViewshed extends MappableMixin(
     const pickPointMode = this.addMapInteractionMode();
     this.disposePickedFeatureSubscription = reaction(
       () => pickPointMode.pickedFeatures,
-      async (pickedFeatures, reaction) => {
+      async (pickedFeatures, _previousValue, reaction) => {
         if (isDefined(pickedFeatures)) {
           if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
             await pickedFeatures.allFeaturesAvailablePromise;
@@ -314,7 +314,7 @@ export default class UserDrawingViewshed extends MappableMixin(
     const pickPointMode = this.addMapInteractionMode();
     this.disposePickedFeatureSubscription = reaction(
       () => pickPointMode.pickedFeatures,
-      async (pickedFeatures, reaction) => {
+      async (pickedFeatures, _previousValue, reaction) => {
         if (isDefined(pickedFeatures)) {
           if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
             await pickedFeatures.allFeaturesAvailablePromise;
@@ -458,11 +458,22 @@ export default class UserDrawingViewshed extends MappableMixin(
   }
 
   computeLineOfSight() {
-    const pos = this.pointEntities.entities.values
+    /*const pos = this.pointEntities.entities.values
       .filter((elem) => isDefined(elem.position))
-      .map((elem) =>
-        elem.position!.getValue(this.terria.timelineClock.currentTime)
-      );
+      .map((elem: Entity): Cartesian3 =>
+        elem.position.getValue(this.terria.timelineClock.currentTime)
+      );*/
+    const pos = this.pointEntities.entities.values.flatMap(
+      (elem): Cartesian3[] => {
+        if (elem.position) {
+          const val = elem.position.getValue(
+            this.terria.timelineClock.currentTime
+          );
+          if (val) return [val];
+        }
+        return [];
+      }
+    );
 
     if (pos.length !== 2) return [];
 
