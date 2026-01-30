@@ -1,16 +1,16 @@
 //"use strict";
 
-import Styles from "./viewshed-panel.scss";
 import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
+import { useTheme } from "styled-components";
+import { useTranslation } from "react-i18next";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
 import Input from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
-import { useTheme } from "styled-components";
-import { useTranslation } from "react-i18next";
+import Styles from "./viewshed-panel.scss";
 
 const DragWrapper = require("../DragWrapper");
 

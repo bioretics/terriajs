@@ -45,7 +45,7 @@ import { terriaTheme } from "./StandardTheme";
 import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
 import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPanel";
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
-import ViewshedPanel from "../MeasurableGeometry/ViewshedPanel";
+import ViewshedPanel from "../Viewshed/ViewshedPanel";
 
 export const animationDuration = 250;
 
