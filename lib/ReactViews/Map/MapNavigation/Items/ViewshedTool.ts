@@ -1,5 +1,6 @@
 "use strict";
 import React from "react";
+import { reaction } from "mobx";
 import Terria from "../../../../Models/Terria";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -35,6 +36,13 @@ export class ViewshedTool extends MapNavigationItemController {
     });
     this.onClose = props.onClose;
     this.onOpen = props.onOpen;
+
+    reaction(
+      () => this.terria.mainViewer,
+      (viewer) => {
+        this.setVisible(viewer.viewerMode === ViewerMode.Cesium);
+      }
+    );
   }
 
   get glyph(): any {
