@@ -47,7 +47,7 @@ const ViewshedPanel = observer((props: Props) => {
       return (
         <div className={Styles.body}>
           <Text textLight style={{ textAlign: "center" }} title="">
-            Altezza dell'osservatore
+            {"Altezza dell'osservatore"}
             <br />
             rispetto al suolo in metri
             <br />
@@ -64,12 +64,12 @@ const ViewshedPanel = observer((props: Props) => {
               `}
               title="Altezza dell'osservatore rispetto al suolo (m)"
               light={false}
-              dark={true}
-              required={true}
+              dark
+              required
               type="number"
               value={terria.viewshedObserverHeight}
               onChange={(e) => {
-                const val = parseInt(e.target.value);
+                const val = parseInt(e.target.value, 10);
                 runInAction(() => {
                   terria.viewshedObserverHeight = isNaN(val) ? 0 : val;
                 });
@@ -95,12 +95,12 @@ const ViewshedPanel = observer((props: Props) => {
               `}
               title="Altezza del bersaglio rispetto al suolo (m)"
               light={false}
-              dark={true}
-              required={true}
+              dark
+              required
               type="number"
               value={terria.viewshedTargetHeight}
               onChange={(e) => {
-                const val = parseInt(e.target.value);
+                const val = parseInt(e.target.value, 10);
                 runInAction(() => {
                   terria.viewshedTargetHeight = isNaN(val) ? 0 : val;
                 });

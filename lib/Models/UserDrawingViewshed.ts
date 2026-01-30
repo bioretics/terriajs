@@ -133,13 +133,13 @@ export default class UserDrawingViewshed extends MappableMixin(
      * SVG element for point drawn when user clicks.
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
      */
-    var svgDataDeclare = "data:image/svg+xml,";
-    var svgPrefix =
+    const svgDataDeclare = "data:image/svg+xml,";
+    const svgPrefix =
       '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
-    var svgCircle =
+    const svgCircle =
       '<circle cx="10" cy="10" r="5" stroke="orange" stroke-width="4" fill="white" /> ';
-    var svgSuffix = "</svg>";
-    var svgString = svgPrefix + svgCircle + svgSuffix;
+    const svgSuffix = "</svg>";
+    const svgString = svgPrefix + svgCircle + svgSuffix;
 
     // create the cesium entity
     return svgDataDeclare + svgString;
@@ -150,13 +150,13 @@ export default class UserDrawingViewshed extends MappableMixin(
      * SVG element for point drawn when user clicks.
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
      */
-    var svgDataDeclare = "data:image/svg+xml,";
-    var svgPrefix =
+    const svgDataDeclare = "data:image/svg+xml,";
+    const svgPrefix =
       '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
-    var svgCircle =
+    const svgCircle =
       '<circle cx="10" cy="10" r="5" stroke="purple" stroke-width="4" fill="white" /> ';
-    var svgSuffix = "</svg>";
-    var svgString = svgPrefix + svgCircle + svgSuffix;
+    const svgSuffix = "</svg>";
+    const svgString = svgPrefix + svgCircle + svgSuffix;
 
     // create the cesium entity
     return svgDataDeclare + svgString;
@@ -194,29 +194,29 @@ export default class UserDrawingViewshed extends MappableMixin(
     const that = this;
 
     // Line will show up once user has drawn some points. Vertices of line are user points.
-    this.otherEntities.entities.add(<any>{
+    this.otherEntities.entities.add({
       name: "Line visible",
-      polyline: <any>{
+      polyline: {
         positions: new CallbackProperty(function () {
           that.computeLineOfSight();
           return that.visibleLinePoints;
         }, false),
 
-        material: new PolylineGlowMaterialProperty(<any>{
+        material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 1.0, 0.0, 0.3),
           glowPower: 0.25
         }),
         width: 20
       }
     });
-    this.otherEntities.entities.add(<any>{
+    this.otherEntities.entities.add({
       name: "Line Invisible",
-      polyline: <any>{
+      polyline: {
         positions: new CallbackProperty(function () {
           return that.hiddenLinePoints;
         }, false),
 
-        material: new PolylineGlowMaterialProperty(<any>{
+        material: new PolylineGlowMaterialProperty({
           color: new Color(1.0, 0.0, 0.0, 0.3),
           glowPower: 0.25
         }),
@@ -255,10 +255,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     position: Cartesian3,
     isFirst: boolean
   ) {
-    var pointEntity = new Entity({
+    const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
-      billboard: <any>{
+      billboard: {
         image: isFirst ? this.svgObserverPoint : this.svgTargetPoint,
         heightReference: HeightReference.CLAMP_TO_GROUND,
         eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
@@ -357,8 +357,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       return userClickedExistingPoint;
     }
 
-    const that = this;
-
     features.forEach((feature) => {
       let index = -1;
       for (let i = 0; i < this.pointEntities.entities.values.length; i++) {
@@ -434,7 +432,7 @@ export default class UserDrawingViewshed extends MappableMixin(
         : this.messageHeader) +
       "</strong></br>";
 
-    let innerMessage = isDefined(this.onMakeDialogMessage)
+    const innerMessage = isDefined(this.onMakeDialogMessage)
       ? this.onMakeDialogMessage()
       : "";
 
