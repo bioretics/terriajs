@@ -6,6 +6,7 @@ import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import UserDrawingViewshed from "../../../../Models/UserDrawingViewshed";
+import i18next from "i18next";
 
 interface ViewshedToolOptions {
   terria: Terria;
@@ -29,7 +30,7 @@ export class ViewshedTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawingViewshed({
       terria: props.terria,
-      messageHeader: "Linea di vista",
+      messageHeader: i18next.t("viewshed.messageHeader"),
       numMaxPoints: 2,
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
       onCleanUp: this.onCleanUp.bind(this)
@@ -80,7 +81,7 @@ export class ViewshedTool extends MapNavigationItemController {
     // Given a number representing a number in metres, make it human readable
     let label = "m";
     if (number > 999) {
-      label = "km";
+      label = "Km";
       number = number / 1000.0;
     }
     let numberStr = number.toFixed(2);
@@ -105,19 +106,19 @@ export class ViewshedTool extends MapNavigationItemController {
             <td>${
               distOrig && distInter
                 ? Math.abs(distOrig - distInter) < 0.01
-                  ? "VISIBILE"
-                  : "COPERTO"
+                  ? i18next.t("viewshed.resultOk")
+                  : i18next.t("viewshed.resultKo")
                 : ""
             }</td>
           </tr>
           <tr/>
           <tr>
-            <td>Distanza:</td>
+            <td>${i18next.t("viewshed.distance")}</td>
             <td>${distOrig ? this.prettifyNumber(distOrig) : ""}</td>
           </tr>
           <tr/>
           <tr>
-            <td>Distanza visibile:</td>
+            <td>${i18next.t("viewshed.distanceVisible")}</td>
             <td>${distInter ? this.prettifyNumber(distInter) : ""}</td>
           </tr>
         </tbody>

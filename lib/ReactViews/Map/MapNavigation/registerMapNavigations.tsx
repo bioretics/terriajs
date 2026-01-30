@@ -542,8 +542,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
   });
   mapNavigationModel.addItem({
     id: ViewshedTool.id,
-    name: "Linea di vista",
-    title: `:`,
+    name: "translate#viewshed.toolButton",
+    title: "translate#viewshed.toolButtonTitle",
     location: "TOP",
     controller: viewshedTool,
     screenSize: undefined,

@@ -1,6 +1,5 @@
 //"use strict";
 
-import React from "react";
 import Styles from "./viewshed-panel.scss";
 import classNames from "classnames";
 import { runInAction } from "mobx";
@@ -11,6 +10,7 @@ import Input from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import { useTheme } from "styled-components";
+import { useTranslation } from "react-i18next";
 
 const DragWrapper = require("../DragWrapper");
 
@@ -24,6 +24,8 @@ const ViewshedPanel = observer((props: Props) => {
 
   const theme = useTheme();
 
+  const { t } = useTranslation();
+
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: false,
     [Styles.isVisible]: viewState.viewshedPanelIsVisible,
@@ -35,7 +37,7 @@ const ViewshedPanel = observer((props: Props) => {
       <div className={Styles.header}>
         <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
           <span style={{ display: "flex", justifyContent: "center" }}>
-            <b>Parametri Linea di vista</b>
+            <b>{t("viewshed.parameters")}</b>
           </span>
         </div>
       </div>
@@ -46,12 +48,12 @@ const ViewshedPanel = observer((props: Props) => {
     if (terria.viewshedDistances) {
       return (
         <div className={Styles.body}>
-          <Text textLight style={{ textAlign: "center" }} title="">
-            {"Altezza dell'osservatore"}
-            <br />
-            rispetto al suolo in metri
-            <br />
-            (punto arancione):
+          <Text
+            textLight
+            style={{ textAlign: "center" }}
+            title={t("viewshed.observerHeightInputTitle")}
+          >
+            {t("viewshed.observerHeightInput")}
           </Text>
           <Box>
             <Input
@@ -62,7 +64,7 @@ const ViewshedPanel = observer((props: Props) => {
                 border-width: 1px;
                 border-color: ${theme.textLight};
               `}
-              title="Altezza dell'osservatore rispetto al suolo (m)"
+              title={t("viewshed.observerHeightInputTitle")}
               light={false}
               dark
               required
@@ -77,12 +79,12 @@ const ViewshedPanel = observer((props: Props) => {
             />
           </Box>
           <br />
-          <Text textLight style={{ textAlign: "center" }} title="">
-            Altezza del bersaglio
-            <br />
-            rispetto al suolo in metri
-            <br />
-            (punto viola):
+          <Text
+            textLight
+            style={{ textAlign: "center" }}
+            title={t("viewshed.targetHeightInputTitle")}
+          >
+            {t("viewshed.observerHeightInput")}
           </Text>
           <Box>
             <Input
@@ -93,7 +95,7 @@ const ViewshedPanel = observer((props: Props) => {
                 border-width: 1px;
                 border-color: ${theme.textLight};
               `}
-              title="Altezza del bersaglio rispetto al suolo (m)"
+              title={t("viewshed.targetHeightInputTitle")}
               light={false}
               dark
               required
