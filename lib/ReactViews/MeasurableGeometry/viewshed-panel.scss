@@ -23,7 +23,9 @@
 }
 
 .is-visible {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .is-translucent {
@@ -32,14 +34,13 @@
 
 .header {
   background: $feature-info-header-bg;
-  padding-right: $input-height;
   line-height: $modal-header-height;
 }
 
 .btnPanelHeading {
   padding: 0px 8px;
   color: $feature-info-btn-color;
-  width: 100%;
+  width: 10vw;
 }
 
 .body {
@@ -48,6 +49,7 @@
 
   overflow-y: auto;
   overflow-x: auto;
-  max-height: calc(50vh - #{$padding * 2 + $btn-default-line-height});
+  width: 8vw;
   font-size: $font-size-feature-info;
+  margin-top: 5px;
 }
