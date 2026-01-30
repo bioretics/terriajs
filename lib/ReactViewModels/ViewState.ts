@@ -94,6 +94,7 @@ export default class ViewState {
   @observable portals: Map<string, HTMLElement | null> = new Map();
   @observable lastUploadedFiles: any[] = [];
   @observable storyBuilderShown: boolean = false;
+  @observable microzonationPanelShown: boolean = false;
 
   // Flesh out later
   @observable showHelpMenu: boolean = false;
@@ -726,6 +727,11 @@ export default class ViewState {
   @action
   toggleStoryBuilder() {
     this.storyBuilderShown = !this.storyBuilderShown;
+  }
+
+  @action
+  toggleMicrozonationPanel() {
+    this.microzonationPanelShown = !this.microzonationPanelShown;
   }
 
   @action

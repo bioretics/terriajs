@@ -1,0 +1,125 @@
+@import "~terriajs-variables";
+
+.sectionTitle {
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-size: $font-size-mid-mini;
+  font-weight: $font-weight-bold;
+  text-transform: uppercase;
+  color: $text-light-dimmed;
+  letter-spacing: 0.6px;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: $font-size-mid-mini;
+  color: $text-light;
+}
+
+.actionsRow {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+
+.notice {
+  margin-top: 8px;
+  font-size: $font-size-mid-mini;
+  color: $text-light-dimmed;
+}
+
+.error {
+  margin-top: 8px;
+  font-size: $font-size-mid-mini;
+  color: $warning;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  margin-bottom: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-mid-mini;
+  color: $text-light;
+
+  th,
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid $overlay;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    color: $text-light-dimmed;
+    font-weight: $font-weight-bold;
+  }
+}
+
+.rowClickable {
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.rowSelected {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.emptyState {
+  text-align: center;
+  color: $text-light-dimmed;
+  padding: 12px;
+}
+
+.detailWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.detailSection {
+  padding-top: 8px;
+  border-top: 1px solid $overlay;
+}
+
+.detailHeading {
+  font-size: $font-size-mid-mini;
+  font-weight: $font-weight-bold;
+  color: $text-light;
+  margin-bottom: 6px;
+}
+
+.detailTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $font-size-mid-mini;
+
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid $overlay;
+  }
+
+  td:first-child {
+    width: 45%;
+    color: $text-light-dimmed;
+  }
+}

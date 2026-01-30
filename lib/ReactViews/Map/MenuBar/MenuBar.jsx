@@ -16,6 +16,7 @@ import HelpButton from "./HelpButton/HelpButton";
 import Styles from "./menu-bar.scss";
 import CoordsPanel from "../Panels/CoordsPanel/CoordsPanel";
 import ColorPanel from "../Panels/ColorPanel/ColorPanel";
+import MicrozonationButton from "./MicrozonationButton/MicrozonationButton";
 
 const StyledMenuBar = styled.div`
   pointer-events: none;
@@ -37,6 +38,7 @@ const MenuBar = observer((props) => {
   };
 
   const storyEnabled = terria.configParameters.storyEnabled;
+  const microzonationEnabled = terria.configParameters?.microzonationEnabled;
   const enableTools = terria.userProperties.get("tools") === "1";
 
   return (
@@ -96,6 +98,17 @@ const MenuBar = observer((props) => {
           <ul className={classNames(Styles.menu)}>
             <li className={Styles.menuItem}>
               <StoryButton
+                terria={terria}
+                viewState={viewState}
+                theme={props.theme}
+              />
+            </li>
+          </ul>
+        )}
+        {microzonationEnabled && (
+          <ul className={classNames(Styles.menu)}>
+            <li className={Styles.menuItem}>
+              <MicrozonationButton
                 terria={terria}
                 viewState={viewState}
                 theme={props.theme}
