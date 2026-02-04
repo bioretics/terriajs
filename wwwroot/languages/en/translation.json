@@ -468,6 +468,10 @@
     "toPlaceholder": "To",
     "applyButton": "Apply"
   },
+  "login": {
+    "loginTitle": "Login",
+    "logoutTitle": "Logout"
+  },
   "helpPanel": {
     "btnText": "Help",
     "menuPaneTitle": "We're here to help",

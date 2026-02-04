@@ -273,6 +273,10 @@
     "toPlaceholder": "A",
     "applyButton": "Applica"
   },
+  "login": {
+    "loginTitle": "Login",
+    "logoutTitle": "Logout"
+  },
   "settingPanel": {
     "performanceLabel": "Prestazioni",
     "qualityLabel": "Qualità",
