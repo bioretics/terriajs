@@ -29,16 +29,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
-import ExportableFormat from "../../../ViewModels/Measure/ExportableFormat";
-import DataUri from "../../../Core/DataUri";
-import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
-import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
-import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
-import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
-import { exportKmlResultKml } from "terriajs-cesium";
-import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
 import SearchableCatalogItemMixin, {
   SearchableData
 } from "../../../ModelMixins/SearchableCatalogItemMixin";
