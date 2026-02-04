@@ -29,15 +29,33 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
+import ExportableFormat from "../../../ViewModels/Measure/ExportableFormat";
+import DataUri from "../../../Core/DataUri";
+import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
+import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
+import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
+import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
+import { exportKmlResultKml } from "terriajs-cesium";
+import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import SearchableCatalogItemMixin, {
+  SearchableData
+} from "../../../ModelMixins/SearchableCatalogItemMixin";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
-  extends MeasurableGeometryMixin(
-    MappableMixin(
-      ExportableMixin(
-        UrlMixin(
-          CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  extends SearchableCatalogItemMixin(
+    MeasurableGeometryMixin(
+      MappableMixin(
+        ExportableMixin(
+          UrlMixin(
+            CesiumIonMixin(
+              CatalogMemberMixin(CreateModel(KmlCatalogItemTraits))
+            )
+          )
         )
       )
     )
@@ -249,6 +267,64 @@ class KmlCatalogItem
         }
       );
     }
+  }
+
+  doSearch(text: string): Promise<SearchableData[]> {
+    if (!this.nameOfCatalogItemSearchField || !this._dataSource?.entities)
+      return Promise.resolve([]);
+    const nameOfCatalogItemSearchField = this.nameOfCatalogItemSearchField;
+
+    const filteredElements = this._dataSource.entities.values.filter(
+      (entity) => {
+        return (
+          (entity.billboard ||
+            entity.point ||
+            entity.polyline ||
+            entity.polygon) &&
+          (entity.properties?.[nameOfCatalogItemSearchField]
+            .valueOf()
+            .toLowerCase()
+            .includes(text) ||
+            entity.name?.toLowerCase().includes(text))
+        );
+      }
+    );
+    const searchableData = filteredElements.map((entity) => {
+      let cartoPosition: Cartographic;
+
+      if (entity.polyline) {
+        cartoPosition = Rectangle.center(
+          Rectangle.fromCartesianArray(
+            entity.polyline?.positions?.getValue(JulianDate.now()) ?? []
+          )
+        );
+      } else if (entity.polygon) {
+        cartoPosition = Rectangle.center(
+          Rectangle.fromCartesianArray(
+            (
+              entity.polygon?.hierarchy?.getValue(JulianDate.now()) as
+                | PolygonHierarchy
+                | undefined
+            )?.positions ?? []
+          )
+        );
+      } else {
+        const cartesianPosition = entity.position!.getValue(JulianDate.now());
+        cartoPosition = Cartographic.fromCartesian(cartesianPosition!!);
+      }
+
+      return {
+        searchField:
+          entity.name ??
+          (entity.properties![
+            nameOfCatalogItemSearchField
+          ].valueOf() as string),
+        latitude: CesiumMath.toDegrees(cartoPosition.latitude),
+        longitude: CesiumMath.toDegrees(cartoPosition.longitude)
+      };
+    });
+
+    return Promise.resolve(searchableData);
   }
 
   @computed
