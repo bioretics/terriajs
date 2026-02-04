@@ -16,6 +16,7 @@ import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalog
 import GlobeOrMap from "../../Models/GlobeOrMap";
 
 export function SearchInCatalogItems({ viewState, handleClick }) {
+  const { t } = useTranslation();
   const locationSearchText = viewState.searchState.locationSearchText;
   return (
     <RawButton
@@ -30,7 +31,9 @@ export function SearchInCatalogItems({ viewState, handleClick }) {
         <StyledIcon styledWidth={"14px"} glyph={Icon.GLYPHS["dataCatalog"]} />
         <Spacing right={2} />
         <Text textAlignLeft textLight large fullWidth>
-          Cerca <strong>{locationSearchText}</strong> nei layers aperti
+          {t("search.searchInCatalogItems", {
+            locationSearchText: locationSearchText
+          })}
         </Text>
         <StyledIcon glyph={Icon.GLYPHS.right2} styledWidth={"14px"} light />
       </Box>
