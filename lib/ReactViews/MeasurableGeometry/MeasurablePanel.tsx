@@ -27,11 +27,17 @@ import {
 } from "../Map/MapNavigation/Items";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
-import MeasurableGeometryManager from "../../ViewModels/Measure/MeasurableGeometryManager";
+import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 import MeasurableTransform from "./MeasurableTransform";
+import DataUri from "../../Core/DataUri";
+import {
+  generatePathSummaryTxtData,
+  getSummaryKind
+} from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummary";
+import MeasurableGeometryExporter from "../../ViewModels/MeasurableGeometry/MeasurableGeometryExporter";
 
 interface Props {
   viewState: ViewState;
@@ -52,6 +58,7 @@ const MeasurablePanel = observer((props: Props) => {
   const [layerName, setLayerName] = React.useState("temp_layer");
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
+  const [showTourPrompt, setShowTourPrompt] = React.useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = props.viewState.useSmallScreenInterface;
 
@@ -63,6 +70,15 @@ const MeasurablePanel = observer((props: Props) => {
   const defaultY = (windowHeight - initialHeight) / 2;
 
   const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
+
+  const panelRef = React.useRef<HTMLDivElement>(null);
+  const summaryTableRef = React.useRef<HTMLDivElement>(null);
+  const stopSummaryRef = React.useRef<HTMLDivElement>(null);
+  const samplingStepRef = React.useRef<HTMLDivElement>(null);
+  const chartButtonRef = React.useRef<HTMLButtonElement>(null);
+  const clampButtonRef = React.useRef<HTMLButtonElement>(null);
+  const transformButtonRef = React.useRef<HTMLDivElement>(null);
+  const multiPathControlsRef = React.useRef<HTMLDivElement>(null);
 
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
@@ -228,6 +244,64 @@ const MeasurablePanel = observer((props: Props) => {
     return numberStr;
   };
 
+  const activeToolIsPolygon = React.useCallback(() => {
+    const polygonTool = terria.mapNavigationModel.findItem(
+      MeasurePolygonTool.id
+    );
+    return polygonTool?.controller?.active === true;
+  }, [terria.mapNavigationModel]);
+
+  const downloadPathSummaryTxt = React.useCallback(() => {
+    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!geom) return;
+
+    const kind = getSummaryKind({
+      geom,
+      activeToolIsPolygon: activeToolIsPolygon()
+    });
+
+    const { text, filename } = generatePathSummaryTxtData({
+      geom,
+      name: layerName,
+      kind,
+      ellipsoid: terria?.cesium?.scene?.globe?.ellipsoid
+    });
+
+    const href = DataUri.make("txt", text);
+    if (!href) return;
+
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [activeToolIsPolygon, layerName, terria]);
+
+  const downloadStopPointsCsv = React.useCallback(async () => {
+    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!geom) return;
+
+    const ellipsoid = terria?.cesium?.scene?.globe?.ellipsoid;
+    if (!ellipsoid) return;
+
+    const links = await MeasurableGeometryExporter.generateAllDownloadLinks(
+      geom,
+      layerName,
+      false,
+      ellipsoid
+    );
+    const csvLink = links.find((link) => link.key === "csv");
+    if (!csvLink?.href || !csvLink.download) return;
+
+    const a = document.createElement("a");
+    a.href = csvLink.href;
+    a.download = csvLink.download;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }, [layerName, terria]);
+
   // UseEffects Methods
   function useWindowSize() {
     const [windowSize, setWindowSize] = React.useState({
@@ -249,6 +323,125 @@ const MeasurablePanel = observer((props: Props) => {
 
     return windowSize;
   }
+
+  useEffect(() => {
+    const updateOrDelete = (
+      refName: string,
+      ref: React.RefObject<HTMLElement>
+    ) => {
+      if (ref.current) {
+        viewState.updateAppRef(refName, ref);
+      } else {
+        viewState.deleteAppRef(refName);
+      }
+    };
+
+    updateOrDelete("MeasurablePanel", panelRef);
+    updateOrDelete("MeasurableSummaryTable", summaryTableRef);
+    updateOrDelete("MeasurableStopSummaryTable", stopSummaryRef);
+    updateOrDelete("MeasurableSamplingStep", samplingStepRef);
+    updateOrDelete("MeasurableChartButton", chartButtonRef);
+    updateOrDelete("MeasurableClampButton", clampButtonRef);
+    updateOrDelete("MeasurableTransformButton", transformButtonRef);
+    updateOrDelete("MeasurableMultiPathControls", multiPathControlsRef);
+
+    return () => {
+      viewState.deleteAppRef("MeasurablePanel");
+      viewState.deleteAppRef("MeasurableSummaryTable");
+      viewState.deleteAppRef("MeasurableStopSummaryTable");
+      viewState.deleteAppRef("MeasurableSamplingStep");
+      viewState.deleteAppRef("MeasurableChartButton");
+      viewState.deleteAppRef("MeasurableClampButton");
+      viewState.deleteAppRef("MeasurableTransformButton");
+      viewState.deleteAppRef("MeasurableMultiPathControls");
+    };
+  }, [
+    viewState,
+    measurablePanelIsVisible,
+    terria.measurableGeometryIndex,
+    terria.measurableGeomList,
+    isMobile
+  ]);
+
+  useEffect(() => {
+    if (measurablePanelIsVisible) {
+      const seen = !!localStorage.getItem("measurableTourShown");
+      if (!seen) setShowTourPrompt(true);
+    }
+  }, [measurablePanelIsVisible]);
+
+  const startMeasurableTour = () => {
+    setShowTourPrompt(false);
+    localStorage.setItem("measurableTourShown", "true");
+    const anyVs: any = viewState as any;
+    if (typeof anyVs.startMeasurableTour === "function") {
+      runInAction(() => anyVs.startMeasurableTour());
+    }
+  };
+
+  const renderTourPrompt = () => {
+    if (!showTourPrompt) return null;
+
+    return (
+      <Box
+        position="relative"
+        style={{
+          background: theme.colorPrimary,
+          padding: "8px 12px",
+          borderRadius: "4px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+          zIndex: 1000,
+          marginBottom: 8
+        }}
+      >
+        <Text small textLight>
+          {i18next.t(
+            "measurableGeometry.tourPrompt",
+            "First time using Measures? Take a quick tour!"
+          )}
+        </Text>
+        <Box centered gap={2} style={{ marginTop: 4 }}>
+          <Button
+            secondary
+            shortMinHeight
+            onClick={() => {
+              startMeasurableTour();
+            }}
+            style={{ fontSize: "0.8em", padding: "2px 10px" }}
+          >
+            {i18next.t("measurableGeometry.tour.preface.start")}
+          </Button>
+          <Button
+            primary
+            shortMinHeight
+            onClick={() => {
+              setShowTourPrompt(false);
+              localStorage.setItem("measurableTourShown", "true");
+            }}
+            style={{ fontSize: "0.8em", padding: "2px 10px" }}
+          >
+            {i18next.t("general.skip", "Skip")}
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
+  const renderCompactHelp = () => {
+    return (
+      <button
+        onClick={startMeasurableTour}
+        className={Styles.btnCloseFeature}
+        title={i18next.t(
+          "measurableGeometry.tour.helpButton",
+          "Open Measures tour"
+        )}
+        style={{ marginRight: 25 }}
+      >
+        <Icon glyph={Icon.GLYPHS.helpThick} />
+      </button>
+    );
+  };
 
   useEffect(() => {
     if (selectedStopPointIdx !== null) {
@@ -401,7 +594,11 @@ const MeasurablePanel = observer((props: Props) => {
         <div className={classNames(Styles.btnPanelHeading)}>
           <span
             className="drag-handle"
-            style={{ display: "flex", justifyContent: "center" }}
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              cursor: "move"
+            }}
           >
             <b>{i18next.t("measurableGeometry.header")}</b>
           </span>
@@ -424,6 +621,7 @@ const MeasurablePanel = observer((props: Props) => {
             </button>
           )}
         </div>
+        {renderCompactHelp()}
         <button
           type="button"
           onClick={action(() => {
@@ -446,14 +644,32 @@ const MeasurablePanel = observer((props: Props) => {
   const renderSamplingStep = () => {
     return (
       !isMobile && (
-        <>
-          <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.samplingStepHeader")}:
-            <br />
+        <Box
+          ref={samplingStepRef}
+          css={`
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+          `}
+          styledMargin="5px"
+        >
+          <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
+            {i18next.t("measurableGeometry.samplingStepHeader")}
+            {":"}
+          </Text>
+          <Text textLight style={{ whiteSpace: "nowrap" }} title="">
             [min {rangeSamplingPathStep.get()[0]}, max{" "}
             {rangeSamplingPathStep.get()[1]}]
           </Text>
-          <Box styledMargin="5px">
+          <Box
+            css={`
+              display: inline-flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: nowrap;
+            `}
+          >
             <Box styledWidth="120px">
               <Input
                 css={`
@@ -485,7 +701,6 @@ const MeasurablePanel = observer((props: Props) => {
               css={`
                 color: ${theme.textLight};
                 background: ${theme.colorPrimary};
-                margin-left: 5px;
               `}
               disabled={
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -501,7 +716,7 @@ const MeasurablePanel = observer((props: Props) => {
               {i18next.t("measurableGeometry.samplingStepButtonText")}
             </Button>
           </Box>
-        </>
+        </Box>
       )
     );
   };
@@ -533,19 +748,60 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!currentGeom) return null;
 
-    const activeToolIsPolygon = () => {
-      const polygonTool = terria.mapNavigationModel.findItem(
-        MeasurePolygonTool.id
-      );
-      return polygonTool?.controller?.active === true;
-    };
-
     if (activeToolIsPolygon() || currentGeom.hasArea || currentGeom.isClosed) {
       return (
         <>
-          <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.geometrySummaryHeader")}
-          </Text>
+          {!isMobile && (
+            <StyledTextArea
+              title={i18next.t("measurableGeometry.pathNotesTitle")}
+              placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+              dark
+              value={currentGeom.pathNotes}
+              onChange={(e) => {
+                runInAction(() => {
+                  if (terria.measurableGeomList && currentGeom) {
+                    currentGeom.pathNotes = e.target.value;
+                  }
+                });
+              }}
+            />
+          )}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 8
+            }}
+          >
+            <Text textLight style={{ marginLeft: 1 }} title="">
+              {i18next.t("measurableGeometry.geometrySummaryHeader")}
+            </Text>
+            <Button
+              primary
+              title={i18next.t("measurableGeometry.downloadLayerTitle")}
+              onClick={downloadPathSummaryTxt}
+              disabled={!currentGeom.stopPoints?.length}
+              css={`
+                width: 24px;
+                height: 24px;
+                min-width: 24px;
+                min-height: 24px;
+                padding: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 2px;
+              `}
+            >
+              <StyledIcon
+                light
+                realDark={false}
+                glyph={Icon.GLYPHS.downloadNew}
+                styledWidth="16px"
+              />
+            </Button>
+          </div>
           <small>
             <table className={Styles.elevation}>
               <thead>
@@ -626,23 +882,35 @@ const MeasurablePanel = observer((props: Props) => {
                 prettifyNumber(currentGeom.groundDistance ?? 0)
               ]
             )}
+
+            <div style={{ marginTop: "10px", marginBottom: "10px" }} />
           </small>
         </>
       );
     }
 
-    const tableHeaders = [
-      "measurableGeometry.geometrySummaryElevationMin",
-      "measurableGeometry.geometrySummaryElevationMax",
-      "measurableGeometry.geometrySummaryElevationBear",
-      "measurableGeometry.geometrySummaryElevationDiff"
-    ];
-    const tableData = [
-      prettifyNumber(Math.min(...heights.get())),
-      prettifyNumber(Math.max(...heights.get())),
-      getBearing.get(),
-      getHeightDifference.get()
-    ];
+    const tableHeaders = currentGeom.onlyPoints
+      ? [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax"
+        ]
+      : [
+          "measurableGeometry.geometrySummaryElevationMin",
+          "measurableGeometry.geometrySummaryElevationMax",
+          "measurableGeometry.geometrySummaryElevationBear",
+          "measurableGeometry.geometrySummaryElevationDiff"
+        ];
+    const tableData = currentGeom.onlyPoints
+      ? [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get()))
+        ]
+      : [
+          prettifyNumber(Math.min(...heights.get())),
+          prettifyNumber(Math.max(...heights.get())),
+          getBearing.get(),
+          getHeightDifference.get()
+        ];
 
     return (
       <>
@@ -661,9 +929,42 @@ const MeasurablePanel = observer((props: Props) => {
             }}
           />
         )}
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryHeader")}
-        </Text>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8
+          }}
+        >
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+          </Text>
+          <Button
+            primary
+            title={i18next.t("measurableGeometry.downloadLayerTitle")}
+            onClick={downloadPathSummaryTxt}
+            disabled={!currentGeom.stopPoints?.length}
+            css={`
+              width: 24px;
+              height: 24px;
+              min-width: 24px;
+              min-height: 24px;
+              padding: 0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 2px;
+            `}
+          >
+            <StyledIcon
+              light
+              realDark={false}
+              glyph={Icon.GLYPHS.downloadNew}
+              styledWidth="16px"
+            />
+          </Button>
+        </div>
         <small>
           {renderSummaryTable(tableHeaders, tableData)}
           {!currentGeom.onlyPoints &&
@@ -679,6 +980,8 @@ const MeasurablePanel = observer((props: Props) => {
                 prettifyNumber(currentGeom.groundDistance ?? 0)
               ]
             )}
+
+          <div style={{ marginTop: "10px", marginBottom: "10px" }} />
         </small>
       </>
     );
@@ -695,7 +998,10 @@ const MeasurablePanel = observer((props: Props) => {
                 .isFileUploaded &&
                 isMobile) ||
                 !isMobile) && (
-                <div style={{ display: "flex", alignItems: "center" }}>
+                <div
+                  ref={multiPathControlsRef}
+                  style={{ display: "flex", alignItems: "center" }}
+                >
                   <Select
                     title={i18next.t("measurableGeometry.changePath")}
                     value={terria.measurableGeometryIndex}
@@ -837,6 +1143,7 @@ const MeasurablePanel = observer((props: Props) => {
               {!terria?.measurableGeomList[terria.measurableGeometryIndex]
                 ?.hasArea && (
                 <Button
+                  ref={chartButtonRef}
                   css={`
                     background: ${theme.colorPrimary};
                     margin-left: 5px;
@@ -859,6 +1166,7 @@ const MeasurablePanel = observer((props: Props) => {
               )}
               {!isMobile && (
                 <Button
+                  ref={clampButtonRef}
                   css={`
                     color: ${theme.textLight};
                     background: ${theme.colorPrimary};
@@ -906,21 +1214,30 @@ const MeasurablePanel = observer((props: Props) => {
                 }}
                 placeholder={i18next.t("measurableGeometry.tempLayerName")}
               />
-              <MeasurableTransform
-                terria={terria}
-                viewState={viewState}
-                pathNotes={currentGeom.pathNotes ?? ""}
-                layerName={layerName}
-                onClick={close}
-              />
+              <div ref={transformButtonRef}>
+                <MeasurableTransform
+                  terria={terria}
+                  viewState={viewState}
+                  pathNotes={currentGeom.pathNotes ?? ""}
+                  layerName={layerName}
+                  onClick={close}
+                />
+              </div>
             </div>
+          )}
+        {!!terria?.cesium?.scene?.globe?.ellipsoid &&
+          terria.measurableGeomList &&
+          terria.measurableGeomList[terria.measurableGeometryIndex] && (
+            <Text textLight style={{ marginLeft: 1, marginBottom: 10 }}>
+              {i18next.t("measurableGeometry.tempLayerInfo")}
+            </Text>
           )}
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
           !terria?.measurableGeomList[terria.measurableGeometryIndex]
             ?.onlyPoints &&
           renderSamplingStep()}
         <br />
-        {renderGeometrySummary()}
+        <div ref={summaryTableRef}>{renderGeometrySummary()}</div>
         <br />
         {terria.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledDistances && renderStepDetails()}
@@ -1029,10 +1346,43 @@ const MeasurablePanel = observer((props: Props) => {
     );
 
     return (
-      <>
-        <Text textLight style={{ marginLeft: 1 }} title="">
-          {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
-        </Text>
+      <div ref={stopSummaryRef}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8
+          }}
+        >
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
+          </Text>
+          <Button
+            primary
+            title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
+            onClick={downloadStopPointsCsv}
+            disabled={!stopPoints.length}
+            css={`
+              width: 24px;
+              height: 24px;
+              min-width: 24px;
+              min-height: 24px;
+              padding: 0;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 2px;
+            `}
+          >
+            <StyledIcon
+              light
+              realDark={false}
+              glyph={Icon.GLYPHS.downloadNew}
+              styledWidth="16px"
+            />
+          </Button>
+        </div>
         <small>
           <table className={Styles.elevation}>
             <thead>
@@ -1107,7 +1457,7 @@ const MeasurablePanel = observer((props: Props) => {
             )}
           </table>
         </small>
-      </>
+      </div>
     );
   };
 
@@ -1309,6 +1659,7 @@ const MeasurablePanel = observer((props: Props) => {
 
   const panelContent = (
     <div
+      ref={panelRef}
       css={`
         background: ${theme.darkTranslucent};
         width: ${isMobile ? "100%" : "auto"};
@@ -1316,9 +1667,10 @@ const MeasurablePanel = observer((props: Props) => {
         overflow-y: auto;
       `}
       className={panelClassName}
-      style={{ pointerEvents: "auto" }}
+      style={{ pointerEvents: "auto", position: "relative" }}
       aria-hidden={!measurablePanelIsVisible}
     >
+      {renderTourPrompt()}
       {renderHeader()}
       {renderBody()}
     </div>

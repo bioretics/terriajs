@@ -1,6 +1,6 @@
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import DataUri from "../../Core/DataUri";
-import { MeasurableGeometry } from "../../ViewModels/Measure/MeasurableGeometryManager";
+import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import i18next from "i18next";
 import { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
@@ -286,7 +286,12 @@ const MeasurableTransform = observer((props: Props) => {
         onClick={() => {
           handleTransform();
         }}
-        disabled={!layerName}
+        disabled={
+          !layerName ||
+          terria.measurableGeomList[terria.measurableGeometryIndex]
+            ?.isPointAdding ||
+          viewState.measurableDownloadPanelIsVisible === true
+        }
       >
         {i18next.t("transformLayer.transform")}
       </Button>

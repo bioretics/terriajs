@@ -263,13 +263,24 @@ class ViewingControls extends React.Component<
         const positions: Cartographic[] = [];
         const descriptions: string[] = [];
 
-        let pathNotes = "";
-        if (fc.features.length > 0 && fc.features[0].properties) {
-          pathNotes = fc.features[0].properties.desc || "";
-          fc.features.shift();
-        }
+        const features = fc.features ?? [];
+        const firstFeature = features[0];
 
-        fc.features.forEach((feature) => {
+        const hasMetadataOnlyFirstFeature =
+          firstFeature && (firstFeature?.properties as any)?.name;
+
+        const pathNotes =
+          (fc as any).path_notes ||
+          (fc as any).properties?.path_notes ||
+          (firstFeature?.properties as any)?.path_notes ||
+          (firstFeature?.properties as any)?.desc ||
+          "";
+
+        const featuresToProcess = hasMetadataOnlyFirstFeature
+          ? features.slice(1)
+          : features;
+
+        featuresToProcess.forEach((feature) => {
           if (!feature.geometry) return;
           switch (feature.geometry.type) {
             case "Point": {
@@ -284,7 +295,11 @@ class ViewingControls extends React.Component<
                   alt as number
                 )
               );
-              descriptions.push(feature.properties?.desc || "");
+              descriptions.push(
+                (feature.properties as any)?.description ||
+                  (feature.properties as any)?.desc ||
+                  ""
+              );
               break;
             }
             case "LineString": {
@@ -295,7 +310,11 @@ class ViewingControls extends React.Component<
                 const alt = coords.length > 2 ? coords[2] : 0;
                 positions.push(Cartographic.fromDegrees(lon, lat, alt));
               });
-              descriptions.push(feature.properties?.desc || "");
+              descriptions.push(
+                (feature.properties as any)?.description ||
+                  (feature.properties as any)?.desc ||
+                  ""
+              );
               break;
             }
             default:
@@ -346,11 +365,9 @@ class ViewingControls extends React.Component<
   }
 
   splitItem() {
-    const { t } = this.props;
     const item = this.props.item;
     const terria = item.terria;
 
-    const splitRef = new SplitItemReference(createGuid(), terria);
     runInAction(async () => {
       if (!hasTraits(item, SplitterTraits, "splitDirection")) return;
 
@@ -362,9 +379,20 @@ class ViewingControls extends React.Component<
         );
       }
 
+      terria.showSplitter = true;
+    });
+  }
+
+  copyItem() {
+    const { t } = this.props;
+    const item = this.props.item;
+    const terria = item.terria;
+
+    const splitRef = new SplitItemReference(createGuid(), terria);
+
+    runInAction(async () => {
       splitRef.setTrait(CommonStrata.user, "splitSourceItemId", item.uniqueId);
       terria.addModel(splitRef);
-      terria.showSplitter = true;
 
       await splitRef.loadReference();
       runInAction(() => {
@@ -376,15 +404,6 @@ class ViewingControls extends React.Component<
             t("splitterTool.workbench.copyName", {
               name: getName(item)
             })
-          );
-
-          // Set a direction opposite to the original item
-          target.setTrait(
-            CommonStrata.user,
-            "splitDirection",
-            item.splitDirection === SplitDirection.LEFT
-              ? SplitDirection.RIGHT
-              : SplitDirection.LEFT
           );
         }
       });
@@ -454,6 +473,8 @@ class ViewingControls extends React.Component<
 
     if (MeasurableGeometryMixin.isMixedInto(item)) {
       runInAction(() => {
+        this.props.viewState.measurableDownloadPanelDefaultName =
+          getName(item) || "";
         this.props.viewState.measurableDownloadPanelIsVisible = true;
       });
     }
@@ -544,6 +565,19 @@ class ViewingControls extends React.Component<
             </ViewingControlMenuButton>
           </li>
         ) : null}
+        {canSplit ? (
+          <li key={"workbench.copyItem"}>
+            <ViewingControlMenuButton
+              onClick={this.copyItem.bind(this)}
+              title={t("workbench.copyItemTitle")}
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.copy} />
+                <span>{t("workbench.copyItem")}</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        ) : null}
         {viewState.useSmallScreenInterface === false &&
         DiffableMixin.isMixedInto(item) &&
         !item.isShowingDiff &&
@@ -602,6 +636,12 @@ class ViewingControls extends React.Component<
                 }
                 onClick={() =>
                   runInAction(() => {
+                    if (
+                      this.props.viewState.playPathPanelIsVisible ||
+                      this.props.viewState.measurableDownloadPanelIsVisible
+                    ) {
+                      this.props.viewState.measurablePanelIsVisible = true;
+                    }
                     item.computePath();
                     [
                       MeasureToolsController.id,

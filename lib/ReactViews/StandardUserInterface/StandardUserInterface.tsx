@@ -47,6 +47,8 @@ import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPan
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
 import QueryWindow from "../QueryWindow/QueryWindow";
 import { MessageModal } from "../MessageModal/MessageModal";
+import ViewshedPanel from "../Viewshed/ViewshedPanel";
+
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
@@ -296,6 +298,10 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 viewState={props.viewState}
               />
               <PlayPathPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
+              <ViewshedPanel
                 terria={props.terria}
                 viewState={props.viewState}
               />

@@ -13,6 +13,7 @@ import PedestrianMode, {
 } from "../../Tools/PedestrianMode/PedestrianMode";
 import { ToolButtonController } from "../../Tools/Tool";
 import {
+  ViewshedTool,
   AR_TOOL_ID,
   AugmentedVirtualityController,
   AugmentedVirtualityHoverController,
@@ -83,7 +84,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: myLocation,
     screenSize: undefined,
-    order: 3
+    order: 6
   });
 
   const toggleSplitterController = new ToggleSplitterController(viewState);
@@ -98,7 +99,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: toggleSplitterController,
     screenSize: undefined,
-    order: 4
+    order: 6
   });
 
   const measureTools = new MeasureTools(terria);
@@ -145,7 +146,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureToolsController,
-    order: 5,
+    order: 4,
     noExpand: window.innerWidth < 1100
   });
 
@@ -176,6 +177,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
+        viewState.measurableDownloadPanelIsVisible = false;
+        viewState.playPathPanelIsVisible = false;
         [
           MeasureLineTool.id,
           MeasurePolygonTool.id,
@@ -198,7 +201,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureAngleToolController,
-    order: 6,
+    order: 5,
     noExpand: window.innerWidth < 1100
   });
 
@@ -229,6 +232,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
+        viewState.measurableDownloadPanelIsVisible = false;
+        viewState.playPathPanelIsVisible = false;
         [MeasureLineTool.id, MeasureAngleTool.id, MeasurePointTool.id].forEach(
           (id) => {
             const item =
@@ -262,7 +267,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measurePolygonToolController,
-    order: 6,
+    order: 5,
     noExpand: window.innerWidth < 1100
   });
 
@@ -294,6 +299,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
+        viewState.measurableDownloadPanelIsVisible = false;
+        viewState.playPathPanelIsVisible = false;
         [
           MeasurePolygonTool.id,
           MeasureAngleTool.id,
@@ -329,7 +336,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureLineToolController,
-    order: 6,
+    order: 5,
     noExpand: window.innerWidth < 1100
   });
 
@@ -359,6 +366,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     },
     onOpen: () => {
       runInAction(() => {
+        viewState.measurableDownloadPanelIsVisible = false;
+        viewState.playPathPanelIsVisible = false;
         [
           MeasureLineTool.id,
           MeasureAngleTool.id,
@@ -394,7 +403,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: measurePointTool,
     screenSize: undefined,
-    order: 6,
+    order: 5,
     noExpand: window.innerWidth < 1100
   });
 
@@ -406,7 +415,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: toggleInfoController,
     screenSize: undefined,
-    order: 7
+    order: 3
   });
 
   const pedestrianModeToolController = new ToolButtonController({
@@ -422,7 +431,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: "medium",
     controller: pedestrianModeToolController,
-    order: 5
+    order: 7
   });
 
   const closeToolButtonController = new GenericMapNavigationItemController({
@@ -509,6 +518,38 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 9
   });
 
+  const viewshedTool = new ViewshedTool({
+    terria,
+    onClose: () => {
+      runInAction(() => {
+        viewState.terria.mapNavigationModel.enable(ViewshedTool.id);
+        viewState.panel = undefined;
+      });
+    },
+    onOpen: () => {
+      runInAction(() => {
+        if (viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium) {
+          const item = viewState.terria.mapNavigationModel.findItem(
+            ViewshedTool.id
+          )?.controller;
+          if (item && item.active) {
+            item.deactivate();
+          }
+          viewState.terria.mapNavigationModel.disable(ViewshedTool.id);
+        }
+      });
+    }
+  });
+  mapNavigationModel.addItem({
+    id: ViewshedTool.id,
+    name: "translate#viewshed.toolButton",
+    title: "translate#viewshed.toolButtonTitle",
+    location: "TOP",
+    controller: viewshedTool,
+    screenSize: undefined,
+    order: 8
+  });
+
   const feedbackController = new FeedbackButtonController(viewState);
   mapNavigationModel.addItem({
     id: FEEDBACK_TOOL_ID,
@@ -517,6 +558,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "BOTTOM",
     screenSize: "medium",
     controller: feedbackController,
-    order: 8
+    order: 9
   });
 };

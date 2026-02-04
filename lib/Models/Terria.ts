@@ -130,7 +130,7 @@ import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import MeasurableGeometryManager, {
   MeasurableGeometry
-} from "../ViewModels/Measure/MeasurableGeometryManager";
+} from "../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 
 // import overrides from "../Overrides/defaults.jsx";
 
@@ -410,6 +410,12 @@ export interface ConfigParameters {
   useElevationMeanSeaLevel: boolean;
 
   /**
+   * If useElevationMeanSeaLevel is true, set an approximate elevation difference the models in your area.
+   * It is used when it is not possible to use a more precise (point) calculation.
+   */
+  wgs84vsMeanSeaLevelRoughDiff?: number;
+
+  /**
    * List of the enabled MapViewers: 3d, 3dsmooth, 2d, cesium2d
    */
   mapViewers: string[];
@@ -440,6 +446,16 @@ export interface ConfigParameters {
    * Polyline width for KML and GeoJson (and derived)
    */
   polylineWidth?: number;
+
+  /**
+   * Maximum camera pitch (in radians) for the play path tool.
+   */
+  playPathCameraPitchThreshold?: number;
+
+  /**
+   * Default height in pixels for the workbench.
+   */
+  workbenchPanelDefaultHeight?: number;
 }
 
 interface StartOptions {
@@ -686,12 +702,15 @@ export default class Terria {
     searchProviders: [],
     coordsConverterUrl: undefined,
     useElevationMeanSeaLevel: false,
+    wgs84vsMeanSeaLevelRoughDiff: undefined,
     mapViewers: ["3d", "3dsmooth", "2d"],
     userProfilesDefinition: undefined,
     userProfileLoginServiceUrl: undefined,
     pickSize: undefined,
     cesiumGlobeColor: undefined,
-    polylineWidth: undefined
+    polylineWidth: undefined,
+    playPathCameraPitchThreshold: 30,
+    workbenchPanelDefaultHeight: 600
   };
 
   @observable
@@ -738,6 +757,24 @@ export default class Terria {
    * @type {string}
    */
   @observable userAuthToken?: string;
+  
+  /**
+   * Gets or sets height of viewshed observer point.
+   * @type {string}
+   */
+  @observable viewshedObserverHeight: number = 0;
+
+  /**
+   * Gets or sets height of viewshed target point.
+   * @type {string}
+   */
+  @observable viewshedTargetHeight: number = 0;
+
+  /**
+   * Gets or sets viewshed computed distances
+   * @type {string}
+   */
+  @observable viewshedDistances?: (number | undefined)[];
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack

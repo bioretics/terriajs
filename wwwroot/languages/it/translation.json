@@ -55,6 +55,20 @@
     "resetAlignmentMessage": "Ripristino dell'allineamento della bussola. Se l'allineamento non corrisponde al mondo reale, prova a muovere il dispositivo con un movimento a 8 per ricalibrarlo. Questo può essere fatto in qualsiasi momento.<br /> <br />Evitare luoghi con campi magnetici o oggetti metallici, poiché questi possono disorientare la bussola del dispositivo.",
     "experimentalFeatureMessage": "La modalità Realtà Aumentata è attualmente in beta. Questa modalità è progettata solo per l'uso sui più recenti dispositivi mobili di fascia alta. <br /><br />ATTENZIONE: Questa modalità può consumare molti dati, fai attenzione ai costi di utilizzo dei dati da parte del tuo provider di rete. <br /><br />La precisione di questa modalità dipende dalla precisione della bussola interna del tuo dispositivo mobile."
   },
+  "viewshed": {
+    "toolButton": "Linea di vista",
+    "toolButtonTitle": "Linea di vista",
+    "messageHeader": "Linea di vista",
+    "distance": "Distanza:",
+    "distanceVisible": "Distanza visibile:",
+    "resultOk": "VISIBILE",
+    "resultKo": "COPERTO",
+    "parameters": "Parametri Linea di vista",
+    "observerHeightInput": "Altezza dell'osservatore rispetto al suolo in metri (punto arancione)",
+    "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
+    "targetHeightInput": "Altezza del bersaglio<br/>rispetto al suolo in metri<br/>(punto viola)",
+    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)"
+  },
   "measure": {
     "measureTool": "Apri strumento di misura",
     "measurePointTool": "Strumento di misura di punti",
@@ -108,7 +122,29 @@
     "removePath": "Rimuovi il percorso attuale",
     "showDistanceCheckbox": "Mostra etichette distanze",
     "showDistanceCheckboxTitle": "Attiva/disattiva etichette distanze nella mappa",
-    "tempLayerName": "Inserisci il nome del layer temporaneo"
+    "tempLayerName": "Inserisci il nome del layer temporaneo",
+    "downloadSummaryInfo": "Scarica info",
+    "downloadSummaryInfoTitle": "Scarica informazioni di riepilogo",
+    "downloadLayer": "Scarica il layer",
+    "downloadLayerTitle": "Scarica il riepilogo del layer in formato TXT",
+    "downloadStopPoints": "Scarica dati tappe",
+    "downloadStopPointsTitle": "Scarica i dati delle tappe in formato CSV",
+    "tempLayerInfo": "Trasforma in \"layer temporaneo\" per spostare questi dati nel workbench ed usarli come layer (trasparenza, esporta, confronta, cambia stile, volo, ...).",
+    "tourPrompt": "Prima volta con le Misure? Fai un tour veloce!",
+    "tour": {
+      "helpButton": "Apri tour Misure",
+      "preface": {
+        "start": "Avvia tour"
+      },
+      "panel": "## Pannello Misure\n\nQui trovi tutti gli strumenti e i risultati delle misure. Segui i passaggi per capire ogni sezione.",
+      "summaryTable": "## Tabella di dettaglio\n\nMostra i valori riepilogativi (altitudine min/max, rotta, distanze o aree totali) della misura corrente.",
+      "stopSummaryTable": "## Tabella dettaglio tappe\n\nElenca ogni tappa/vertice con altitudine, distanze, pendenza e note. Se consentito puoi riordinare i punti trascinandoli.",
+      "samplingStep": "## Passo di campionamento\n\nImposta ogni quanto campionare il terreno lungo il percorso. Passi più piccoli danno più dettaglio ma richiedono più calcoli.",
+      "chartButton": "## Grafico altimetrico\n\nApre il profilo altimetrico del percorso (se disponibile).",
+      "clampButton": "## Ancoraggio al terreno\n\nPassa tra distanze ancorate al terreno e distanze libere (in aria).",
+      "transformButton": "## Trasforma\n\nTrasforma la misura in un layer temporaneo che puoi stilizzare, esportare o presentare in modalità volo.",
+      "multiPathControls": "## Gestione multipercorsi\n\nCambia percorso, aggiungine uno nuovo o rimuovi quello corrente per creare misure multi-tratta."
+    }
   },
   "elevationChart": {
     "header": "Profilo altimetrico",
@@ -118,7 +154,7 @@
   },
   "transformLayer": {
     "transform": "Trasforma in un layer temporaneo",
-    "transformation": "Trasformazione a un layer temporaneo"
+    "transformation": "Trasformazione a un layer temporaneo, un layer locale creato dalle tue misurazioni quindi non viene salvato nel dispositivo finché non lo si esporta con uno dei formati supportati."
   },
   "downloadData": {
     "downloadPanel": "Esporta",
@@ -143,7 +179,22 @@
       "speedLabel": "Etichetta velocità",
       "speedSlider": "Regola velocità di riproduzione",
       "speedSliderTitle": "Modifica la velocità di riproduzione del percorso",
-      "currentSpeed": "Velocità corrente"
+      "currentSpeed": "Velocità corrente",
+      "pitchTooLow": "L'inclinazione della camera è troppo bassa"
+    },
+    "tour": {
+      "helpButton": "Guida",
+      "preface": {
+        "title": "Guida PlayPath",
+        "content": "Scopri come utilizzare lo strumento PlayPath per creare animazioni fluide lungo i percorsi misurati. Questa guida ti mostrerà le funzionalità principali.",
+        "start": "Inizia la guida",
+        "skip": "Salta"
+      },
+      "playButton": "## Pulsante Play/Pausa\n\nClicca questo pulsante per avviare o mettere in pausa l'animazione lungo il percorso. Durante la riproduzione, la camera seguirà automaticamente il percorso tracciato.",
+      "stopButton": "## Pulsante Stop\n\nUtilizza questo pulsante per fermare l'animazione e tornare al punto di partenza. Utile per ricominciare dall'inizio e resettare la vista.",
+      "speedSlider": "## Controllo Velocità\n\nRegola la velocità dell'animazione trascinando il cursore. Puoi impostare velocità da 0.5x (più lenta) fino a 3x (più veloce).",
+      "playPathPanel": "## Pannello Play Path\n\nQuesto pannello permette di visualizzare mediante lo scorrimento della camera sulla mappa un percorso disegnato manualmente o caricato da file. Il pannello può essere spostato trascinandolo e anche chiuso per avere una visuale completa.",
+      "cameraPosition": "## Posizione della Camera\n\nLa camera seguirà il percorso prestabilito. All'inizio sarà necessario posizionarla in prossimità del punto di partenza (che può coincidere con l’inizio effettivo del percorso o con il punto finale). È inoltre importante impostare lo zoom e l'inclinazione della camera in modo coerente con le caratteristiche del tracciato: ad esempio, in presenza di zone montuose è preferibile evitare un’inclinazione troppo bassa."
     }
   },
   "pickInfo": {
@@ -1439,9 +1490,9 @@
     "colorScaleRangeMin": "Il valore minimo deve essere un numero.",
     "searchItemTitle": "Cerca",
     "searchItem": "Cerca",
-    "pathItem": "Percorso",
+    "pathItem": "Misure",
     "pointsItem": "Punti",
-    "playPath": "Avvia percorso",
+    "playPath": "Volo",
     "dimensionsSelector": {
       "undefinedLabel": "Non specificato"
     },
@@ -1455,6 +1506,8 @@
     "previewItem": "Informazioni",
     "zoomTo": "Zoom ideale",
     "splitItemTitle": "Duplicare e mostrare lo splitter",
+    "copyItem": "Copia",
+    "copyItemTitle": "Copia",
     "colorScaleRangeTitle": "Gamma di scala di colore non valida",
     "addItemErrorMessage": "Si è verificato un errore durante il caricamento dell'elemento del catalogo.",
     "addItemErrorTitle": "L'articolo del catalogo non può essere aggiunto alla workbench.",
@@ -1827,7 +1880,7 @@
     "mapUserGuide": "Guida all'uso della mappa",
     "takeTour": "Fai il tour",
     "promptMessage": "Trova il Tour, i video come fare e altri contenuti di aiuto qui",
-    "menuPaneBody": "Trova consigli utili su come usare TerriaJS controllando le guide qui sotto o contattando il team a [{{supportEmail}}]({{supportEmail}})"
+    "menuPaneBody": "Trova consigli utili su come usare TerriaJS controllando le guide qui sotto o contattando il team a [{{supportEmail}}](mailto:{{supportEmail}})"
   },
   "term": {
     "missingContent": "contenuto mancante"

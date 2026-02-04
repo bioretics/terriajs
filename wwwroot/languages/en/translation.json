@@ -52,6 +52,20 @@
       "content": "## Compare\n\nA powerful feature of Terria is the ability to compare datasets using a split screen view. For datasets with a time-series component, such as satellite images, you can compare dates backwards and forwards in time by clicking on the date picker/selector."
     }
   },
+  "viewshed": {
+    "toolButton": "Viewshed",
+    "toolButtonTitle": "Viewshed",
+    "messageHeader": "Viewshed",
+    "distance": "Distance:",
+    "distanceVisible": "Visible distance:",
+    "resultOk": "VISIBLE",
+    "resultKo": "HIDDEN",
+    "parameters": "Viewshed parameters",
+    "observerHeightInput": "Observer height above ground in meters (the orange point)",
+    "observerHeightInputTitle": "Height of observer above ground (m)",
+    "targetHeightInput": "Target height above ground in meters (the purple point)",
+    "targetHeightInputTitle": "Height of target above ground (m)"
+  },
   "measure": {
     "measurePointTool": "Measure Point Tool",
     "measureTool": "Open Measure Tool",
@@ -105,7 +119,29 @@
     "removePath": "Delete the current path",
     "showDistanceCheckbox": "Show distances labels",
     "showDistanceCheckboxTitle": "Toggle distance labels",
-    "tempLayerName": "Insert the temporary layer name"
+    "tempLayerName": "Insert the temporary layer name",
+    "downloadSummaryInfo": "Download info",
+    "downloadSummaryInfoTitle": "Download summary info",
+    "downloadLayer": "Download layer",
+    "downloadLayerTitle": "Download the layer summary as TXT",
+    "downloadStopPoints": "Download stop data",
+    "downloadStopPointsTitle": "Download stop points data as CSV",
+    "tempLayerInfo": "Transform into a \"temporary layer\" to move this data into the workbench and use it as a layer (transparency, export, compare, change style, fly, ...).",
+    "tourPrompt": "First time using Measures? Take a quick tour!",
+    "tour": {
+      "helpButton": "Open Measures tour",
+      "preface": {
+        "start": "Start tour"
+      },
+      "panel": "## Measures panel\n\nThis panel collects all measurement tools and results in one place. Use the steps below to understand each section.",
+      "summaryTable": "## Summary table\n\nShows overall stats like altitude min/max, bearing, and total distances or areas for the current measurement.",
+      "stopSummaryTable": "## Stop summary table\n\nLists each stop/vertex with elevation, step distances, slope and optional notes. You can reorder points by dragging (when allowed).",
+      "samplingStep": "## Terrain sampling step\n\nControls how often terrain is sampled along the path. Smaller steps give more detail but are heavier to compute.",
+      "chartButton": "## Elevation chart\n\nOpens the elevation profile for the path (if available).",
+      "clampButton": "## Clamp to ground\n\nToggle between clamped-to-terrain distances and free (air) distances.",
+      "transformButton": "## Transform\n\nTurns your measurement into a temporary layer you can style, export, or present it in flight mode.",
+      "multiPathControls": "## Multi-path management\n\nSwitch between paths, add new paths, or remove the current one to build multi-segment measurements."
+    }
   },
   "elevationChart": {
     "header": "Elevation profile",
@@ -115,7 +151,7 @@
   },
   "transformLayer": {
     "transform": "Transform into a temporary layer",
-    "transformation": "Transformation to a temporary layer"
+    "transformation": "Transform into a temporary layer, a local layer created from your measurements so it is not saved unless you export it with one of the supported formats."
   },
   "downloadData": {
     "downloadPanel": "Export",
@@ -140,7 +176,23 @@
       "speedLabel": "Speed label",
       "speedSlider": "Adjust playback speed",
       "speedSliderTitle": "Modify playback speed",
-      "currentSpeed": "Current speed"
+      "currentSpeed": "Current speed",
+      "pitchTooLow": "Camera pitch is too low"
+    },
+    "tour": {
+      "helpButton": "Help",
+      "preface": {
+        "title": "PlayPath Guide",
+        "content": "Learn how to use the PlayPath tool to create smooth animations along measured paths. This guide will show you the main features.",
+        "start": "Start guide",
+        "skip": "Skip"
+      },
+      "playButton": "## Play/Pause Button\n\nClick this button to start or pause the animation along the path. During playback, the camera will automatically follow the traced path.",
+      "stopButton": "## Stop Button\n\nUse this button to stop the animation and return to the starting point. Useful for starting over or resetting the view.",
+      "speedSlider": "## Speed Control\n\nAdjust the animation speed by dragging the slider. You can set speeds from 0.5x (slower) to 3x (faster) to match your needs.",
+      "dragPanel": "## Movable Panel\n\nYou can drag this panel to any position on the screen by holding down on the title bar. Position it wherever you prefer for better viewing.",
+      "playPathPanel": "## Play Path Panel\n\nThis panel allows you to view by scrolling the camera on the map a route drawn manually or loaded from files. The panel can be moved by dragging and also closed to get a full view.",
+      "cameraPosition": "## Camera Position\n\nThe camera will follow the predefined path. At the beginning, it is necessary to place the camera near the starting point (which can either be the actual beginning of the route or the endpoint). It is also important to setting the camera's zoom and pitch according to the characteristics of the path: for example, in mountainous areas, it is advisable to avoid a very low pitch angle."
     }
   },
   "pickInfo": {
@@ -419,7 +471,7 @@
   "helpPanel": {
     "btnText": "Help",
     "menuPaneTitle": "We're here to help",
-    "menuPaneBody": "Find useful tips on how to use TerriaJS by either checking the guides below or by contacting the team at [{{supportEmail}}]({{supportEmail}})",
+    "menuPaneBody": "Find useful tips on how to use TerriaJS by either checking the guides below or by contacting the team at [{{supportEmail}}](mailto:{{supportEmail}})",
     "promptMessage": "Find the Tour, how-to videos & other help content here",
     "dismissText": "Got it, thanks!",
     "takeTour": "Take the tour",
@@ -677,6 +729,8 @@
     "previewItem": "About Data",
     "splitItemTitle": "Duplicate and show splitter",
     "splitItem": "Compare",
+    "copyItem": "Copy",
+    "copyItemTitle": "Copy",
     "diffImageTitle": "View image differences between two dates",
     "diffImage": "Difference",
     "exportDataTitle": "Export map data",
@@ -693,9 +747,9 @@
     "searchItem": "Search",
     "searchItemTitle": "Search",
     "splitScreenMode": "SPLIT SCREEN MODE",
-    "pathItem": "Path",
+    "pathItem": "Measurements",
     "pointsItem": "Points",
-    "playPath": "Play Path"
+    "playPath": "Flight"
   },
   "dateTime": {
     "selectorLabel": "Time:",

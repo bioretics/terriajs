@@ -84,6 +84,7 @@ SearchInDataCatalog.propTypes = {
 const PresentationBox = styled(Box).attrs({
   fullWidth: true
 })`
+  z-index: 2;
   ${(props) =>
     props.highlightBottom &&
     `
@@ -213,6 +214,7 @@ export class SearchBoxAndResultsRaw extends React.Component {
               fullWidth
               column
               css={`
+                z-index: 1;
                 top: 100%;
                 background-color: ${(props) => props.theme.greyLightest};
                 max-height: calc(100vh - 120px);

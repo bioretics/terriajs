@@ -259,7 +259,7 @@ export default class MouseCoords {
     });
     this.latitude = prettyCoordinate.latitude;
     this.longitude = prettyCoordinate.longitude;
-    this.elevation = prettyCoordinate.elevation;
+    this.elevation = errorBar ? "..." : prettyCoordinate.elevation;
     this.updateEvent.raiseEvent();
   }
 
@@ -275,9 +275,7 @@ export default class MouseCoords {
     ) {
       return;
     }
-    const urlFast = terria?.corsProxy.getURL(
-      terria.configParameters.whereAmIParams.urlFast
-    );
+    const urlFast = terria.configParameters.whereAmIParams.urlFast;
     if (!urlFast) {
       return;
     }

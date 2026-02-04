@@ -231,12 +231,14 @@ export default class UserDrawing extends MappableMixin(
           if (!posA || !posB) return "";
           return (Cartesian3.distance(posA, posB) / 1000).toFixed(2) + " km";
         }, false),
-        font: "16px sans-serif",
+        font: "18px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.BLACK,
+        fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
-        outlineWidth: 2,
-        pixelOffset: new Cartesian2(0, -10),
+        outlineWidth: 4,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        pixelOffset: new Cartesian2(0, -16),
         verticalOrigin: VerticalOrigin.BOTTOM
       }
     });
@@ -424,15 +426,34 @@ export default class UserDrawing extends MappableMixin(
     this.terria.currentViewer.notifyRepaintRequired();
   }
 
+  private getStopPointsForDrawing(stopPoints: Cartographic[]): Cartographic[] {
+    if (!this.closeLoop || stopPoints.length < 2) {
+      return stopPoints;
+    }
+
+    const first = stopPoints[0];
+    const last = stopPoints[stopPoints.length - 1];
+
+    const epsilon = 1e-12;
+    const heightEpsilon = 1e-2;
+    const isDuplicateClosingPoint =
+      Math.abs(first.longitude - last.longitude) < epsilon &&
+      Math.abs(first.latitude - last.latitude) < epsilon &&
+      Math.abs((first.height ?? 0) - (last.height ?? 0)) < heightEpsilon;
+
+    return isDuplicateClosingPoint ? stopPoints.slice(0, -1) : stopPoints;
+  }
+
   private refreshPoints() {
     this.pointEntities.entities.removeAll();
     const idx = this.terria.measurableGeometryIndex;
     const stopPoints = this.terria.measurableGeomList[idx]?.stopPoints;
     if (stopPoints) {
-      for (let i = 0; i < stopPoints.length; ++i) {
+      const drawStopPoints = this.getStopPointsForDrawing(stopPoints);
+      for (let i = 0; i < drawStopPoints.length; ++i) {
         const pointEntity = new Entity({
           position: new ConstantPositionProperty(
-            Cartographic.toCartesian(stopPoints[i])
+            Cartographic.toCartesian(drawStopPoints[i])
           ),
           billboard: {
             image: this.svgPoint,

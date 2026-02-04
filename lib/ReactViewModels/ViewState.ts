@@ -36,6 +36,8 @@ import {
   RelativePosition,
   TourPoint
 } from "./defaultTourPoints";
+import { defaultPlayPathTourPoints } from "./defaultPlayPathTourPoints";
+import { defaultMeasurableTourPoints } from "./defaultMeasurableTourPoints";
 import SearchState from "./SearchState";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogItemsSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
@@ -259,7 +261,11 @@ export default class ViewState {
    * }
    *  */
 
-  @observable tourPoints: TourPoint[] = defaultTourPoints;
+  @observable tourPoints: TourPoint[] = [...defaultTourPoints];
+
+  @observable isPlayPathTour: boolean = false;
+  @observable isMeasurableTour: boolean = false;
+
   @observable showTour: boolean = false;
   @observable appRefs: Map<string, Ref<HTMLElement>> = new Map();
   @observable currentTourIndex: number = -1;
@@ -272,7 +278,7 @@ export default class ViewState {
     // update: well it turns out you can be smarter about it and actually
     // properly clean up your refs - so we'll leave that up to the UI to
     // provide valid refs
-    return this.tourPoints
+    return this.activeTourPoints
       .slice()
       .sort((a, b) => {
         return a.priority - b.priority;
@@ -281,6 +287,51 @@ export default class ViewState {
         (tourPoint) => (this.appRefs as any).get(tourPoint.appRefName)?.current
       );
   }
+
+  @action
+  setIsPlayPathTour(value: boolean) {
+    this.isPlayPathTour = value;
+  }
+
+  @action
+  setIsMeasurableTour(value: boolean) {
+    this.isMeasurableTour = value;
+  }
+
+  @computed
+  get activeTourPoints() {
+    if (this.isMeasurableTour) return defaultMeasurableTourPoints;
+    return this.isPlayPathTour ? defaultPlayPathTourPoints : defaultTourPoints;
+  }
+
+  @action
+  startPlayPathTour() {
+    this.setIsPlayPathTour(true);
+    this.setIsMeasurableTour(false);
+    this.tourPoints = [...defaultPlayPathTourPoints];
+    const playPathTourStartIndex = this.tourPoints.findIndex(
+      (point) => point.appRefName === "PlayPathPanel"
+    );
+    if (playPathTourStartIndex !== -1) {
+      this.setTourIndex(playPathTourStartIndex);
+      this.setShowTour(true);
+    }
+  }
+
+  @action
+  startMeasurableTour() {
+    this.setIsMeasurableTour(true);
+    this.setIsPlayPathTour(false);
+    this.tourPoints = [...defaultMeasurableTourPoints];
+    const measurableTourStartIndex = this.tourPoints.findIndex(
+      (point) => point.appRefName === "MeasurablePanel"
+    );
+    if (measurableTourStartIndex !== -1) {
+      this.setTourIndex(measurableTourStartIndex);
+      this.setShowTour(true);
+    }
+  }
+
   @action
   setTourIndex(index: number) {
     this.currentTourIndex = index;
@@ -297,6 +348,9 @@ export default class ViewState {
   closeTour() {
     this.currentTourIndex = -1;
     this.showTour = false;
+    this.setIsPlayPathTour(false);
+    this.setIsMeasurableTour(false);
+    this.tourPoints = [...defaultTourPoints];
   }
   @action
   previousTourPoint() {
@@ -355,6 +409,12 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable measurablePanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the ViewshedPanel is visible.
+   * @type {Boolean}
+   */
+  @observable viewshedPanelIsVisible: boolean = false;
   /**
    * Gets or sets a value indicating whether the ElevationPanel is collapsed.
    * @type {Boolean}
@@ -368,10 +428,16 @@ export default class ViewState {
   @observable measurableChartIsVisible: boolean = false;
 
   /**
-   * Gets or sets a value indicating whether the ElevationDownloadPanel is visible.
+   * Gets or sets a value indicating whether the DownloadPanel is visible.
    * @type {Boolean}
    */
   @observable measurableDownloadPanelIsVisible: boolean = false;
+
+  /**
+   * Default filename used in the DownloadPanel.
+   * @type {String}
+   */
+  @observable measurableDownloadPanelDefaultName: string = "";
 
   /**
    * Gets or sets a value indicating whether the PlayPathPanel is visible.
@@ -434,6 +500,7 @@ export default class ViewState {
   private _storyBeforeUnloadSubscription: IReactionDisposer;
   private _measurablePanelIsVisibleSubscription: IReactionDisposer;
   private _disposeSamplingPathStep: IReactionDisposer;
+  private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -612,6 +679,14 @@ export default class ViewState {
       }
     );
 
+    this._viewshedPanelIsVisibleSubscription = reaction(
+      () => this.terria.viewshedDistances,
+      (viewshedDistances?: (number | undefined)[]) => {
+        this.viewshedPanelIsVisible =
+          viewshedDistances !== undefined && viewshedDistances.length > 0;
+      }
+    );
+
     this._disposeSamplingPathStep = reaction(
       () => this.terria.measurableGeomSamplingStep,
       () => {
@@ -653,7 +728,7 @@ export default class ViewState {
     this._storyBeforeUnloadSubscription();
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
-
+    this._viewshedPanelIsVisibleSubscription();
     this.searchState.dispose();
   }
 

@@ -1,10 +1,7 @@
 import { MeasurableGeometry } from "./MeasurableGeometryManager";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Terria from "../../Models/Terria";
-import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
-import KmlCatalogItem from "../../Models/Catalog/CatalogItems/KmlCatalogItem";
-import GpxCatalogItem from "../../Models/Catalog/CatalogItems/GpxCatalogItem";
-import CsvCatalogItem from "../../Models/Catalog/CatalogItems/CsvCatalogItem";
+import MeasurableGeometryExporter from "./MeasurableGeometryExporter";
 import i18next from "i18next";
 
 export interface DownloadLink {
@@ -16,28 +13,24 @@ export interface DownloadLink {
 
 export default class MeasurableDownload {
   private terria: Terria;
-  private formatHandlers: any[] = [];
 
   constructor(terria: Terria) {
     this.terria = terria;
-    this.initializeFormatHandlers();
   }
 
-  private initializeFormatHandlers(): void {
-    this.formatHandlers = [
-      new CsvCatalogItem("format-csv", this.terria, undefined),
-      new GeoJsonCatalogItem("format-geojson", this.terria),
-      new KmlCatalogItem("format-kml", this.terria),
-      new GpxCatalogItem("format-gpx", this.terria)
-    ];
+  static normalizeDefaultFilename(rawName: string): string {
+    if (!rawName) return "";
+
+    const withoutExtension = rawName.replace(/\.[^/.]+$/, "");
+    return withoutExtension.replace(/_[^_]*$/, "");
   }
 
   async generateAllFormatLinks(
     geom: MeasurableGeometry,
     name: string,
     isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
+    ellipsoid: Ellipsoid,
+    geomList?: MeasurableGeometry[]
   ): Promise<DownloadLink[]> {
     const allLinks: DownloadLink[] = [];
 
@@ -47,20 +40,14 @@ export default class MeasurableDownload {
     });
 
     try {
-      for (const handler of this.formatHandlers) {
-        try {
-          const links = await handler.generateDownloadLinks(
-            geom,
-            name,
-            isMultiPath,
-            geomList,
-            ellipsoid
-          );
-          allLinks.push(...links);
-        } catch (error) {
-          console.warn(`Error generating links for ${handler.type}:`, error);
-        }
-      }
+      const links = await MeasurableGeometryExporter.generateAllDownloadLinks(
+        geom,
+        name,
+        isMultiPath,
+        ellipsoid,
+        geomList
+      );
+      allLinks.push(...links);
     } catch (error) {
       console.error("Error generating format links:", error);
     }
