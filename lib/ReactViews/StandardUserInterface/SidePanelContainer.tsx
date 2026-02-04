@@ -34,16 +34,12 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
     props.viewState.terria.configParameters.workbenchPanelDefaultHeight ??
     DEFAULT_PANEL_HEIGHT;
   const initialHeight = Math.max(defaultPanelHeight, MIN_PANEL_HEIGHT);
-  const relatedMapsOffset =
-    (props.viewState.terria.configParameters.relatedMaps ?? []).length > 0
-      ? 60
-      : 0;
 
   return (
     <Rnd
       default={{
         x: 15,
-        y: 5 + relatedMapsOffset,
+        y: 5,
         width: 355,
         height: initialHeight
       }}
