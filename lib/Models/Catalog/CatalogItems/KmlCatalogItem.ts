@@ -21,7 +21,7 @@ import UrlMixin from "../../../ModelMixins/UrlMixin";
 import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
 import HasLocalData from "../../HasLocalData";
-import { ModelConstructorParameters } from "../../Definition/Model";
+import { BaseModel, ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
@@ -29,6 +29,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
+import { ModelId } from "../../../Traits/ModelReference";
 
 const kmzRegex = /\.kmz$/i;
 
@@ -61,6 +62,14 @@ class KmlCatalogItem
 
   setFileInput(file: File) {
     this._kmlFile = file;
+  }
+
+  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
+    const newModel = super.duplicateModel(newId, sourceReference);
+    if (this._kmlFile) {
+      newModel.setFileInput(this._kmlFile);
+    }
+    return newModel;
   }
 
   @computed

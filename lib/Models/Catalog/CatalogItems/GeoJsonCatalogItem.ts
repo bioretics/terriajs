@@ -16,7 +16,10 @@ import GeoJsonCatalogItemTraits from "../../../Traits/TraitsClasses/GeoJsonCatal
 import CreateModel from "../../Definition/CreateModel";
 import HasLocalData from "../../HasLocalData";
 import Terria from "../../Terria";
-import Model, { ModelConstructorParameters } from "../../Definition/Model";
+import Model, {
+  BaseModel,
+  ModelConstructorParameters
+} from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import ApiRequestTraits from "../../../Traits/TraitsClasses/ApiRequestTraits";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
@@ -24,6 +27,7 @@ import { featureCollection, FeatureCollection } from "@turf/helpers";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import { ModelId } from "../../../Traits/ModelReference";
 
 class GeoJsonCatalogItem
   extends CesiumIonMixin(GeoJsonMixin(CreateModel(GeoJsonCatalogItemTraits)))
@@ -48,6 +52,14 @@ class GeoJsonCatalogItem
 
   setFileInput(file: File) {
     this._file = file;
+  }
+
+  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
+    const newModel = super.duplicateModel(newId, sourceReference);
+    if (this._file) {
+      newModel.setFileInput(this._file);
+    }
+    return newModel;
   }
 
   @computed get hasLocalData(): boolean {
