@@ -8,6 +8,8 @@ import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import KmlDataSource from "terriajs-cesium/Source/DataSources/KmlDataSource";
+import Color from "terriajs-cesium/Source/Core/Color";
+import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 import Property from "terriajs-cesium/Source/DataSources/Property";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
@@ -59,6 +61,8 @@ class KmlCatalogItem
   private _dataSource: KmlDataSource | undefined;
 
   private _kmlFile?: File;
+
+  private _kmlColor?: string;
 
   setFileInput(file: File) {
     this._kmlFile = file;
@@ -176,6 +180,8 @@ class KmlCatalogItem
       return [];
     }
     this._dataSource.show = this.show;
+    void this.opacity;
+    this.applyKmlColorOverride(this._dataSource);
     return [this._dataSource];
   }
 
@@ -257,6 +263,41 @@ class KmlCatalogItem
           }
         }
       );
+    }
+
+    this.applyKmlColorOverride(kmlDataSource);
+  }
+
+  private applyKmlColorOverride(kmlDataSource: KmlDataSource) {
+    const colorString =
+      this.kmlColor ??
+      (this._kmlColor ??= `hsl(${Math.floor(Math.random() * 360)}, 80%, 45%)`);
+
+    const color = Color.fromCssColorString(colorString);
+    if (!color) return;
+    color.alpha = this.opacity;
+
+    const entities = kmlDataSource.entities.values;
+    for (let i = 0; i < entities.length; ++i) {
+      const entity = entities[i];
+
+      if (isDefined(entity.polyline)) {
+        entity.polyline.material = new ColorMaterialProperty(color);
+      }
+
+      if (isDefined(entity.polygon)) {
+        entity.polygon.material = new ColorMaterialProperty(color);
+        entity.polygon.outlineColor = new ConstantProperty(color);
+      }
+
+      if (isDefined(entity.point)) {
+        entity.point.color = new ConstantProperty(color);
+        entity.point.outlineColor = new ConstantProperty(color);
+      }
+
+      if (isDefined(entity.billboard)) {
+        entity.billboard.color = new ConstantProperty(color);
+      }
     }
   }
 

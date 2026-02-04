@@ -21,4 +21,12 @@ export default class KmlCatalogItemTraits extends mixTraits(
     description: "A kml string"
   })
   kmlString?: string;
+
+  @primitiveTrait({
+    type: "string",
+    name: "KML color override",
+    description:
+      "Overrides KML feature colors (polylines, polygons, points, and billboards)."
+  })
+  kmlColor?: string;
 }

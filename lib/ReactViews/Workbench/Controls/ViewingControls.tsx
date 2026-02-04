@@ -405,6 +405,14 @@ class ViewingControls extends React.Component<
               ? SplitDirection.RIGHT
               : SplitDirection.LEFT
           );
+
+          if (target instanceof KmlCatalogItem) {
+            target.setTrait(
+              CommonStrata.user,
+              "kmlColor",
+              `hsl(${Math.floor(Math.random() * 360)}, 80%, 45%)`
+            );
+          }
         }
       });
 
