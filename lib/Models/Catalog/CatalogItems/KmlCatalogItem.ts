@@ -1,7 +1,6 @@
 import i18next from "i18next";
 import { computed, makeObservable, override } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
-import Color from "terriajs-cesium/Source/Core/Color";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
@@ -376,30 +375,15 @@ class KmlCatalogItem
     const entities = this._dataSource?.entities.values ?? [];
     const now = JulianDate.now();
 
-    for (let i = 0; i < entities.length; i++) {
-      const entity = entities[i];
-      const polygonColor = entity.polygon?.outlineColor?.getValue(now);
-      const polylineColor = (entity.polyline?.material as any)?.color.getValue(
-        now
-      );
-      const color = polygonColor ?? polylineColor;
+    for (const entity of entities) {
+      const color =
+        entity.polygon?.outlineColor?.getValue(now) ??
+        (entity.polyline?.material as any)?.color?.getValue(now);
 
-      if (color) {
-        return this.colorToCssFromAbgr(color);
-      }
+      if (color) return color.toCssColorString();
     }
 
     return undefined;
-  }
-
-  private colorToCssFromAbgr(color: Color): string {
-    const abgr = color.toRgba();
-    const a = (abgr >>> 24) & 0xff;
-    const b = (abgr >>> 16) & 0xff;
-    const g = (abgr >>> 8) & 0xff;
-    const r = abgr & 0xff;
-    const alpha = +(a / 255).toFixed(3);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   @computed
