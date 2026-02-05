@@ -1,6 +1,7 @@
 import i18next from "i18next";
 import { computed, makeObservable, override } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Color from "terriajs-cesium/Source/Core/Color";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
@@ -12,7 +13,10 @@ import Property from "terriajs-cesium/Source/DataSources/Property";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
+import { GeomType, LineSymbolizer, PolygonSymbolizer } from "protomaps";
 import isDefined from "../../../Core/isDefined";
+import loadText from "../../../Core/loadText";
 import readXml from "../../../Core/readXml";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
@@ -30,8 +34,13 @@ import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
 import { ModelId } from "../../../Traits/ModelReference";
+import ProtomapsImageryProvider, {
+  GEOJSON_SOURCE_LAYER_NAME
+} from "../../../Map/ImageryProvider/ProtomapsImageryProvider";
+import { FeatureCollectionWithCrs } from "../../../ModelMixins/GeojsonMixin";
 
 const kmzRegex = /\.kmz$/i;
+const toGeoJSON = require("@mapbox/togeojson");
 
 class KmlCatalogItem
   extends MeasurableGeometryMixin(
@@ -59,6 +68,10 @@ class KmlCatalogItem
   private _dataSource: KmlDataSource | undefined;
 
   private _kmlFile?: File;
+
+  private _kmlGeoJson: FeatureCollectionWithCrs | undefined;
+
+  private _splitImageryProvider: ProtomapsImageryProvider | undefined;
 
   setFileInput(file: File) {
     this._kmlFile = file;
@@ -110,7 +123,8 @@ class KmlCatalogItem
         }
       }
     )
-      .then((kmlLoadInput) => {
+      .then(async (kmlLoadInput) => {
+        await this.tryLoadKmlGeoJson(kmlLoadInput);
         return KmlDataSource.load(kmlLoadInput!);
       })
       .then((dataSource) => {
@@ -176,6 +190,23 @@ class KmlCatalogItem
       return [];
     }
     this._dataSource.show = this.show;
+
+    const useSplit =
+      this.terria.showSplitter && this.splitDirection !== SplitDirection.NONE;
+
+    if (useSplit) {
+      const provider = this.getSplitImageryProvider();
+      if (provider) {
+        return [
+          {
+            imageryProvider: provider,
+            show: this.show,
+            alpha: this.opacity,
+            clippingRectangle: undefined
+          }
+        ];
+      }
+    }
     return [this._dataSource];
   }
 
@@ -258,6 +289,117 @@ class KmlCatalogItem
         }
       );
     }
+  }
+
+  private getSplitImageryProvider(): ProtomapsImageryProvider | undefined {
+    if (!this._kmlGeoJson) return undefined;
+
+    if (!this._splitImageryProvider) {
+      const lineWidth = this.terria.configParameters.polylineWidth ?? 2;
+      const outlineColor = this.getOutlineColorValue() ?? "#ffffff";
+
+      this._splitImageryProvider = new ProtomapsImageryProvider({
+        terria: this.terria,
+        data: this._kmlGeoJson,
+        id: `${this.uniqueId}-kml-split`,
+        paintRules: [
+          {
+            dataLayer: GEOJSON_SOURCE_LAYER_NAME,
+            symbolizer: new PolygonSymbolizer({
+              fill: "transparent",
+              stroke: outlineColor,
+              width: () => lineWidth
+            }),
+            minzoom: 0,
+            maxzoom: Infinity,
+            filter: (zoom, feature) => feature?.geomType === GeomType.Polygon
+          },
+          {
+            dataLayer: GEOJSON_SOURCE_LAYER_NAME,
+            symbolizer: new LineSymbolizer({
+              color: outlineColor,
+              width: () => lineWidth
+            }),
+            minzoom: 0,
+            maxzoom: Infinity,
+            filter: (zoom, feature) => feature?.geomType === GeomType.Line
+          }
+        ],
+        labelRules: []
+      });
+    }
+
+    return this._splitImageryProvider;
+  }
+
+  private async tryLoadKmlGeoJson(
+    kmlLoadInput: string | Resource | Document | Blob | undefined
+  ) {
+    if (!kmlLoadInput || this._kmlGeoJson) return;
+
+    const shouldSkip = (() => {
+      if (this._kmlFile?.name && this._kmlFile.name.match(kmzRegex))
+        return true;
+      if (typeof kmlLoadInput === "string" && kmlLoadInput.match(kmzRegex))
+        return true;
+      if (kmlLoadInput instanceof Resource) {
+        const url = kmlLoadInput.url || "";
+        return kmzRegex.test(url);
+      }
+      return false;
+    })();
+
+    if (shouldSkip) return;
+
+    try {
+      let doc: Document | undefined;
+
+      if (kmlLoadInput instanceof Document) {
+        doc = kmlLoadInput;
+      } else if (kmlLoadInput instanceof Blob) {
+        const text = await kmlLoadInput.text();
+        doc = new DOMParser().parseFromString(text, "text/xml");
+      } else {
+        const text = await loadText(kmlLoadInput as any);
+        doc = new DOMParser().parseFromString(text, "text/xml");
+      }
+
+      if (!doc) return;
+      this._kmlGeoJson = toGeoJSON.kml(doc) as FeatureCollectionWithCrs;
+      this._splitImageryProvider = undefined;
+    } catch (error) {
+      console.warn("Error converting KML to GeoJSON:", error);
+    }
+  }
+
+  private getOutlineColorValue(): string | undefined {
+    const entities = this._dataSource?.entities.values ?? [];
+    const now = JulianDate.now();
+
+    for (let i = 0; i < entities.length; i++) {
+      const entity = entities[i];
+      const polygonColor = entity.polygon?.outlineColor?.getValue(now);
+      const polylineColor = (entity.polyline?.material as any)?.color.getValue(
+        now
+      );
+      const color = polygonColor ?? polylineColor;
+
+      if (color) {
+        return this.colorToCssFromAbgr(color);
+      }
+    }
+
+    return undefined;
+  }
+
+  private colorToCssFromAbgr(color: Color): string {
+    const abgr = color.toRgba();
+    const a = (abgr >>> 24) & 0xff;
+    const b = (abgr >>> 16) & 0xff;
+    const g = (abgr >>> 8) & 0xff;
+    const r = abgr & 0xff;
+    const alpha = +(a / 255).toFixed(3);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   @computed
