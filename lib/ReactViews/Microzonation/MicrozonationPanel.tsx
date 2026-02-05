@@ -1,8 +1,13 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
-
 import triggerResize from "../../Core/triggerResize";
 import Box from "../../Styled/Box";
 import Button, { RawButton } from "../../Styled/Button";
@@ -16,9 +21,10 @@ import {
   Filters,
   MicrozonationDetail,
   MicrozonationRecord,
+  DEFAULT_WFS_CONFIG,
   emptyFilters,
-  fetchMicrozonationDetail,
-  fetchMicrozonationList,
+  fetchWfsFeatures,
+  getDetailFromProperties,
   filterRecords,
   formatValue,
   uniqueSorted
@@ -29,11 +35,15 @@ interface Props {
   animationDuration?: number;
 }
 
-const Panel = styled(Box)<{ isVisible?: boolean; isHidden?: boolean }>`
+const Panel = styled(Box)<{
+  isVisible?: boolean;
+  isHidden?: boolean;
+  $panelWidth: number;
+}>`
   transition: all 0.25s;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  width: 420px;
-  min-width: 420px;
+  width: ${(props) => props.$panelWidth}px;
+  min-width: ${(props) => props.$panelWidth}px;
   height: 100vh;
   ${(props) =>
     props.isVisible &&
@@ -55,11 +65,19 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const theme = useTheme();
   const { t } = useTranslation();
 
-  const apiConfig = terria.configParameters?.microzonationApi;
-  const listUrl = apiConfig?.listUrl;
-  const detailUrl = apiConfig?.detailUrl;
+  const minPanelWidth = 360;
+  const maxPanelWidth = 720;
+  const [panelWidth, setPanelWidth] = useState(420);
+  const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(
+    null
+  );
+
+  const wfsConfig = DEFAULT_WFS_CONFIG;
 
   const [records, setRecords] = useState<MicrozonationRecord[]>([]);
+  const [propertiesById, setPropertiesById] = useState<
+    Map<string | number, any>
+  >(new Map());
   const [filteredRecords, setFilteredRecords] = useState<MicrozonationRecord[]>(
     []
   );
@@ -72,46 +90,22 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     undefined
   );
   const [loadingList, setLoadingList] = useState(false);
-  const [loadingDetail, setLoadingDetail] = useState(false);
   const [listError, setListError] = useState<string | undefined>(undefined);
-  const [detailError, setDetailError] = useState<string | undefined>(undefined);
   const [hasLoaded, setHasLoaded] = useState(false);
-
-  const resolveApiErrorMessage = useCallback(
-    (error: unknown, fallbackKey: string) => {
-      if (error instanceof Error) {
-        if (error.message === "resolve") {
-          return t("microzonation.errorCannotResolveDetailUrl");
-        }
-        const status = Number(error.message);
-        if (!Number.isNaN(status)) {
-          return t("microzonation.errorApiStatus", { status });
-        }
-        return error.message || t(fallbackKey);
-      }
-      return t(fallbackKey);
-    },
-    [t]
-  );
 
   useEffect(() => {
     setHasLoaded(false);
     setRecords([]);
+    setPropertiesById(new Map());
     setFilteredRecords([]);
     setHasSearched(false);
     setSelectedRecord(undefined);
     setDetail(undefined);
     setListError(undefined);
-    setDetailError(undefined);
-  }, [listUrl]);
+  }, [wfsConfig.url, wfsConfig.typeName]);
 
   useEffect(() => {
     if (!props.isVisible || hasLoaded) {
-      return;
-    }
-
-    if (!listUrl) {
-      setListError(t("microzonation.errorMissingListUrl"));
       return;
     }
 
@@ -122,19 +116,19 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
       try {
         setLoadingList(true);
         setListError(undefined);
-        const normalized = await fetchMicrozonationList(
-          listUrl,
-          controller.signal
-        );
+        const result = await fetchWfsFeatures(wfsConfig, controller.signal);
         if (isMounted) {
-          setRecords(normalized);
+          setRecords(result.records);
+          setPropertiesById(result.propertiesById);
           setHasLoaded(true);
         }
       } catch (error: any) {
         if (isMounted && error?.name !== "AbortError") {
-          setListError(
-            resolveApiErrorMessage(error, "microzonation.errorLoadingList")
-          );
+          const status = Number(error?.message);
+          const msg = !Number.isNaN(status)
+            ? t("microzonation.errorApiStatus", { status })
+            : error?.message || t("microzonation.errorLoadingList");
+          setListError(msg);
         }
       } finally {
         if (isMounted) {
@@ -149,7 +143,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
       isMounted = false;
       controller.abort();
     };
-  }, [props.isVisible, listUrl, hasLoaded, resolveApiErrorMessage, t]);
+  }, [props.isVisible, hasLoaded, wfsConfig, t]);
 
   const provinceOptions = useMemo(
     () => uniqueSorted(records.map((r) => r.province)),
@@ -159,14 +153,17 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     () => uniqueSorted(records.map((r) => r.municipality)),
     [records]
   );
-  const microzonationOptions = useMemo(
-    () => uniqueSorted(records.map((r) => r.microzonation)),
-    [records]
-  );
-  const cleOptions = useMemo(
-    () => uniqueSorted(records.map((r) => r.cle)),
-    [records]
-  );
+  const microzonationLabels: Record<string, string> = {
+    "1": t("microzonation.level1"),
+    "2": t("microzonation.level2"),
+    "3": t("microzonation.level3"),
+    no: t("microzonation.levelNo")
+  };
+
+  const cleLabels: Record<string, string> = {
+    done: t("microzonation.cleDone"),
+    no: t("microzonation.cleNo")
+  };
 
   const applyFilters = () => {
     const next = filterRecords(records, filters);
@@ -174,7 +171,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setHasSearched(true);
     setSelectedRecord(undefined);
     setDetail(undefined);
-    setDetailError(undefined);
   };
 
   const clearFilters = () => {
@@ -183,35 +179,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setHasSearched(false);
     setSelectedRecord(undefined);
     setDetail(undefined);
-    setDetailError(undefined);
   };
 
-  const loadDetail = async (record: MicrozonationRecord) => {
-    if (!detailUrl) {
-      setDetailError(t("microzonation.errorMissingDetailUrl"));
-      return;
-    }
-
-    const controller = new AbortController();
-
-    try {
-      setLoadingDetail(true);
-      setDetailError(undefined);
-      const normalizedDetail = await fetchMicrozonationDetail(
-        detailUrl,
-        record,
-        controller.signal
-      );
-      setDetail(normalizedDetail);
-    } catch (error: any) {
-      if (error?.name !== "AbortError") {
-        setDetailError(
-          resolveApiErrorMessage(error, "microzonation.errorLoadingDetail")
-        );
-      }
-    } finally {
-      setLoadingDetail(false);
-    }
+  const loadDetail = (record: MicrozonationRecord) => {
+    const resolved = getDetailFromProperties(propertiesById, record);
+    setDetail(resolved);
   };
 
   const closePanel = () => {
@@ -222,13 +194,52 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     }, props.animationDuration || 1);
   };
 
+  const onResizeStart = useCallback(
+    (event: React.MouseEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      resizeStateRef.current = {
+        startX: event.clientX,
+        startWidth: panelWidth
+      };
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!resizeStateRef.current) {
+          return;
+        }
+        const delta = resizeStateRef.current.startX - moveEvent.clientX;
+        const nextWidth = Math.min(
+          maxPanelWidth,
+          Math.max(minPanelWidth, resizeStateRef.current.startWidth + delta)
+        );
+        setPanelWidth(nextWidth);
+      };
+
+      const handleMouseUp = () => {
+        resizeStateRef.current = null;
+        window.removeEventListener("mousemove", handleMouseMove);
+        window.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    },
+    [panelWidth]
+  );
+
   return (
     <Panel
       isVisible={props.isVisible}
       isHidden={!props.isVisible}
       charcoalGreyBg
       column
+      $panelWidth={panelWidth}
     >
+      <div
+        className={Styles.resizeHandle}
+        role="separator"
+        aria-orientation="vertical"
+        onMouseDown={onResizeStart}
+      />
       <Box right>
         <RawButton
           css={`
@@ -269,12 +280,10 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             </label>
             <Select
               value={filters.province}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  province: event.target.value
-                }))
-              }
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const value = event.target.value;
+                setFilters((prev) => ({ ...prev, province: value }));
+              }}
               light
             >
               <option value="">{t("microzonation.allFeminine")}</option>
@@ -291,12 +300,10 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             </label>
             <Select
               value={filters.municipality}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  municipality: event.target.value
-                }))
-              }
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const value = event.target.value;
+                setFilters((prev) => ({ ...prev, municipality: value }));
+              }}
               light
             >
               <option value="">{t("microzonation.allMasculine")}</option>
@@ -313,18 +320,16 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             </label>
             <Select
               value={filters.microzonation}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  microzonation: event.target.value
-                }))
-              }
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const value = event.target.value;
+                setFilters((prev) => ({ ...prev, microzonation: value }));
+              }}
               light
             >
               <option value="">{t("microzonation.allFeminine")}</option>
-              {microzonationOptions.map((value) => (
+              {Object.entries(microzonationLabels).map(([value, label]) => (
                 <option key={value} value={value}>
-                  {value}
+                  {label}
                 </option>
               ))}
             </Select>
@@ -335,18 +340,16 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             </label>
             <Select
               value={filters.cle}
-              onChange={(event: React.ChangeEvent<HTMLSelectElement>) =>
-                setFilters((prev) => ({
-                  ...prev,
-                  cle: event.target.value
-                }))
-              }
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const value = event.target.value;
+                setFilters((prev) => ({ ...prev, cle: value }));
+              }}
               light
             >
               <option value="">{t("microzonation.allFeminine")}</option>
-              {cleOptions.map((value) => (
+              {Object.entries(cleLabels).map(([value, label]) => (
                 <option key={value} value={value}>
-                  {value}
+                  {label}
                 </option>
               ))}
             </Select>
@@ -412,9 +415,15 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                       >
                         <td>{formatValue(record.province)}</td>
                         <td>{formatValue(record.municipality)}</td>
-                        <td>{formatValue(record.microzonation)}</td>
+                        <td>
+                          {microzonationLabels[record.microzonation ?? ""] ??
+                            formatValue(record.microzonation)}
+                        </td>
                         <td>{formatValue(record.msOrdinance)}</td>
-                        <td>{formatValue(record.cle)}</td>
+                        <td>
+                          {cleLabels[record.cle ?? ""] ??
+                            formatValue(record.cle)}
+                        </td>
                         <td>{formatValue(record.cleOrdinance)}</td>
                         <td>{formatValue(record.municipalPlan)}</td>
                       </tr>
@@ -426,17 +435,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           </>
         )}
 
-        {(loadingDetail || detailError || detail) && (
+        {detail && (
           <div className={Styles.sectionTitle}>
             {t("microzonation.detailTitle")}
           </div>
         )}
-        {loadingDetail && (
-          <div className={Styles.notice}>
-            {t("microzonation.loadingDetail")}
-          </div>
-        )}
-        {detailError && <div className={Styles.error}>{detailError}</div>}
 
         {detail && (
           <div className={Styles.detailWrapper}>
@@ -456,7 +459,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                   </tr>
                   <tr>
                     <td>{t("microzonation.notes")}</td>
-                    <td>{formatValue(detail.generalInfo.notes)}</td>
+                    <td>
+                      <span style={{ whiteSpace: "pre-line" }}>
+                        {formatValue(detail.generalInfo.notes)}
+                      </span>
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -470,7 +477,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 <tbody>
                   <tr>
                     <td>{t("microzonation.microzonation")}</td>
-                    <td>{formatValue(detail.microzonation.microzonation)}</td>
+                    <td>
+                      {microzonationLabels[
+                        detail.microzonation.microzonation ?? ""
+                      ] ?? formatValue(detail.microzonation.microzonation)}
+                    </td>
                   </tr>
                   <tr>
                     <td>{t("microzonation.msOrdinance")}</td>
@@ -496,7 +507,10 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 <tbody>
                   <tr>
                     <td>{t("microzonation.cle")}</td>
-                    <td>{formatValue(detail.cle.cle)}</td>
+                    <td>
+                      {cleLabels[detail.cle.cle ?? ""] ??
+                        formatValue(detail.cle.cle)}
+                    </td>
                   </tr>
                   <tr>
                     <td>{t("microzonation.cleOrdinance")}</td>
@@ -544,55 +558,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                   </tr>
                 </tbody>
               </table>
-            </div>
-
-            <div className={Styles.detailSection}>
-              <div className={Styles.detailHeading}>
-                {t("microzonation.documents")}
-              </div>
-              <div className={Styles.tableWrapper}>
-                <table className={Styles.table}>
-                  <thead>
-                    <tr>
-                      <th>{t("microzonation.docType")}</th>
-                      <th>{t("microzonation.docDescription")}</th>
-                      <th>{t("microzonation.docStart")}</th>
-                      <th>{t("microzonation.docEnd")}</th>
-                      <th>{t("microzonation.docDownload")}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {detail.documents.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className={Styles.emptyState}>
-                          {t("microzonation.noDocuments")}
-                        </td>
-                      </tr>
-                    )}
-                    {detail.documents.map((doc, index) => (
-                      <tr key={`${doc.type ?? "doc"}-${index}`}>
-                        <td>{formatValue(doc.type)}</td>
-                        <td>{formatValue(doc.description)}</td>
-                        <td>{formatValue(doc.start)}</td>
-                        <td>{formatValue(doc.end)}</td>
-                        <td>
-                          {doc.attachmentUrl ? (
-                            <a
-                              href={doc.attachmentUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {t("microzonation.download")}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
             </div>
           </div>
         )}

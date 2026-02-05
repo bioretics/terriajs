@@ -12,6 +12,7 @@ interface CssExports {
   'fieldLabel': string;
   'filterGrid': string;
   'notice': string;
+  'resizeHandle': string;
   'rowClickable': string;
   'rowSelected': string;
   'sectionTitle': string;

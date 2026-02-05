@@ -192,13 +192,6 @@ export interface ConfigParameters {
   microzonationEnabled?: boolean;
 
   /**
-   * Microzonation API configuration.
-   */
-  microzonationApi?: {
-    listUrl?: string;
-    detailUrl?: string;
-  };
-  /**
    * True (the default) to intercept the browser's print feature and use a custom one accessible through the Share panel.
    */
   interceptBrowserPrint?: boolean;
@@ -629,10 +622,6 @@ export default class Terria {
     initFragmentPaths: ["init/"],
     storyEnabled: true,
     microzonationEnabled: true,
-    microzonationApi: {
-      listUrl: undefined,
-      detailUrl: undefined
-    },
     interceptBrowserPrint: true,
     tabbedCatalog: false,
     useCesiumIonTerrain: true,

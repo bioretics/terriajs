@@ -14,6 +14,7 @@ export type MicrozonationDetail = {
   generalInfo: {
     province?: string;
     municipality?: string;
+    istatCode?: string;
     notes?: string;
   };
   microzonation: {
@@ -21,6 +22,7 @@ export type MicrozonationDetail = {
     msOrdinance?: string;
     msValidation?: string;
     msStandard?: string;
+    microzonationInfo?: string;
   };
   cle: {
     cle?: string;
@@ -32,13 +34,6 @@ export type MicrozonationDetail = {
     municipalPlan?: string;
     link?: string;
   };
-  documents: Array<{
-    type?: string;
-    description?: string;
-    start?: string;
-    end?: string;
-    attachmentUrl?: string;
-  }>;
 };
 
 export type Filters = {
@@ -47,6 +42,39 @@ export type Filters = {
   microzonation: string;
   cle: string;
 };
+
+export type WfsConfig = {
+  url: string;
+  typeName: string;
+  maxFeatures?: number;
+  outputFormat?: string;
+};
+
+export const DEFAULT_WFS_CONFIG: WfsConfig = {
+  url: "https://geosrv-protciv.regione.marche.it/geoserver/qmap_mzs_rm/ows",
+  typeName: "qmap_mzs_rm:qmp_mzs_stato_progetto_view",
+  outputFormat: "application/json"
+};
+
+const WFS_PROPERTY_NAMES = [
+  "id_stato_progetto",
+  "gid",
+  "cod_istat",
+  "prov",
+  "ordinanza",
+  "microzonazione",
+  "cle",
+  "convalidato",
+  "piano_prot_civile",
+  "note",
+  "mzs_standard",
+  "cle_standard",
+  "cle_ordinanza",
+  "cle_convalida",
+  "link_ppc_comune",
+  "microzonazione_info",
+  "comune"
+].join(",");
 
 export const emptyFilters: Filters = {
   province: "",
@@ -67,148 +95,24 @@ export const formatValue = (value: unknown) => {
   return String(value);
 };
 
-export const normalizeRecord = (raw: any): MicrozonationRecord => ({
-  id:
-    raw?.id ??
-    raw?.ID ??
-    raw?.codice ??
-    raw?.codice_comune ??
-    raw?.codiceComune ??
-    raw?.uuid,
-  province: raw?.province ?? raw?.Province ?? raw?.provincia ?? raw?.Provincia,
-  municipality:
-    raw?.municipality ?? raw?.Municipality ?? raw?.comune ?? raw?.Comune,
-  microzonation:
-    raw?.microzonation ??
-    raw?.Microzonation ??
-    raw?.microzonazione ??
-    raw?.Microzonazione ??
-    raw?.ms ??
-    raw?.livelloMs,
-  msOrdinance:
-    raw?.msOrdinance ??
-    raw?.ms_ordinance ??
-    raw?.ordinanzaMs ??
-    raw?.ordinanza_ms ??
-    raw?.ordinanzaMS ??
-    raw?.ordinanza,
-  cle: raw?.cle ?? raw?.CLE ?? raw?.cleLevel ?? raw?.cle_level,
-  cleOrdinance:
-    raw?.cleOrdinance ??
-    raw?.cle_ordinance ??
-    raw?.ordinanzaCle ??
-    raw?.ordinanza_cle ??
-    raw?.ordinanzaCLE,
-  municipalPlan:
-    raw?.municipalPlan ??
-    raw?.pianoComunale ??
-    raw?.piano_comunale ??
-    raw?.pianoProtezioneCivile ??
-    raw?.piano_protezione_civile
-});
-
-export const normalizeDetail = (
-  raw: any,
-  fallback?: MicrozonationRecord
-): MicrozonationDetail => {
-  const info =
-    raw?.generalInfo ??
-    raw?.infoGenerali ??
-    raw?.info_generali ??
-    raw?.info ??
-    {};
-  const micro =
-    raw?.microzonation ??
-    raw?.microzonationInfo ??
-    raw?.microzonazione ??
-    raw?.microzonazioneInfo ??
-    raw?.microzonazione_info ??
-    {};
-  const cle = raw?.cle ?? raw?.cleInfo ?? raw?.cle_info ?? {};
-  const plan =
-    raw?.civilProtectionPlan ??
-    raw?.pianoProtezioneCivile ??
-    raw?.piano_protezione_civile ??
-    raw?.piano ??
-    {};
-  const documents = raw?.documents ?? raw?.documenti ?? raw?.allegati ?? [];
-
-  return {
-    generalInfo: {
-      province:
-        info?.province ??
-        info?.Province ??
-        info?.provincia ??
-        info?.Provincia ??
-        fallback?.province ??
-        "",
-      municipality:
-        info?.municipality ??
-        info?.Municipality ??
-        info?.comune ??
-        info?.Comune ??
-        fallback?.municipality ??
-        "",
-      notes: info?.notes ?? info?.note ?? info?.Note ?? raw?.note ?? ""
-    },
-    microzonation: {
-      microzonation:
-        micro?.microzonation ??
-        micro?.Microzonation ??
-        micro?.microzonazione ??
-        micro?.Microzonazione ??
-        fallback?.microzonation ??
-        "",
-      msOrdinance:
-        micro?.msOrdinance ??
-        micro?.ms_ordinance ??
-        micro?.ordinanzaMs ??
-        micro?.ordinanza_ms ??
-        micro?.ordinanzaMS ??
-        fallback?.msOrdinance ??
-        "",
-      msValidation:
-        micro?.msValidation ?? micro?.ms_validation ?? micro?.convalidaMs ?? "",
-      msStandard:
-        micro?.msStandard ?? micro?.ms_standard ?? micro?.standardMs ?? ""
-    },
-    cle: {
-      cle: cle?.cle ?? cle?.CLE ?? fallback?.cle ?? "",
-      cleOrdinance:
-        cle?.cleOrdinance ??
-        cle?.cle_ordinance ??
-        cle?.ordinanzaCle ??
-        cle?.ordinanza_cle ??
-        fallback?.cleOrdinance ??
-        "",
-      cleValidation:
-        cle?.cleValidation ?? cle?.cle_validation ?? cle?.convalidaCle ?? "",
-      cleStandard:
-        cle?.cleStandard ?? cle?.cle_standard ?? cle?.standardCle ?? ""
-    },
-    civilProtectionPlan: {
-      municipalPlan:
-        plan?.municipalPlan ??
-        plan?.pianoComunale ??
-        plan?.piano_comunale ??
-        fallback?.municipalPlan ??
-        "",
-      link: plan?.link ?? plan?.url ?? ""
-    },
-    documents: (Array.isArray(documents) ? documents : []).map((doc) => ({
-      type: doc?.type ?? doc?.tipo ?? doc?.Tipo,
-      description: doc?.description ?? doc?.descrizione ?? doc?.Descrizione,
-      start: doc?.start ?? doc?.inizio ?? doc?.Inizio,
-      end: doc?.end ?? doc?.fine ?? doc?.Fine,
-      attachmentUrl:
-        doc?.attachmentUrl ??
-        doc?.allegatoUrl ??
-        doc?.allegato_url ??
-        doc?.url ??
-        doc?.link
-    }))
-  };
+export const normalizeMicrozonationLevel = (value: unknown): string => {
+  const s = String(value ?? "").trim();
+  if (s === "1" || s === "2" || s === "3") return s;
+  return "no";
 };
+
+export const normalizeCleStatus = (value: unknown): string => {
+  const s = String(value ?? "")
+    .trim()
+    .toUpperCase();
+  return s === "S" ? "done" : "no";
+};
+
+export const getRecordId = (record: MicrozonationRecord) =>
+  record.id ??
+  `${record.province ?? ""}-${record.municipality ?? ""}-${
+    record.microzonation ?? ""
+  }-${record.cle ?? ""}`;
 
 export const filterRecords = (
   records: MicrozonationRecord[],
@@ -233,51 +137,100 @@ export const filterRecords = (
     return true;
   });
 
-export const getRecordId = (record: MicrozonationRecord) =>
-  record.id ??
-  `${record.province ?? ""}-${record.municipality ?? ""}-${
-    record.microzonation ?? ""
-  }-${record.cle ?? ""}`;
+export const normalizeRecord = (properties: any): MicrozonationRecord => ({
+  id: properties?.id_stato_progetto ?? properties?.gid,
+  province: properties?.prov ?? "",
+  municipality: properties?.comune ?? "",
+  microzonation: normalizeMicrozonationLevel(properties?.microzonazione),
+  msOrdinance: properties?.ordinanza ?? "",
+  cle: normalizeCleStatus(properties?.cle_convalida),
+  cleOrdinance: properties?.cle_ordinanza ?? "",
+  municipalPlan: properties?.piano_prot_civile ?? ""
+});
 
-export const buildDetailUrl = (detailUrl: string, id: string) => {
-  if (!detailUrl) {
-    return undefined;
+export const normalizeDetail = (properties: any): MicrozonationDetail => ({
+  generalInfo: {
+    province: properties?.prov ?? "",
+    municipality: properties?.comune ?? "",
+    istatCode:
+      properties?.cod_istat !== null && properties?.cod_istat !== undefined
+        ? String(properties.cod_istat)
+        : "",
+    notes: properties?.note ?? ""
+  },
+  microzonation: {
+    microzonation: normalizeMicrozonationLevel(properties?.microzonazione),
+    msOrdinance: properties?.ordinanza ?? "",
+    msValidation: properties?.convalidato ?? "",
+    msStandard: properties?.mzs_standard ?? "",
+    microzonationInfo: properties?.microzonazione_info ?? ""
+  },
+  cle: {
+    cle: normalizeCleStatus(properties?.cle_convalida),
+    cleOrdinance: properties?.cle_ordinanza ?? "",
+    cleValidation: properties?.cle_convalida ?? "",
+    cleStandard: properties?.cle_standard ?? ""
+  },
+  civilProtectionPlan: {
+    municipalPlan: properties?.piano_prot_civile ?? "",
+    link: properties?.link_ppc_comune ?? ""
   }
-  if (detailUrl.includes("{id}")) {
-    return detailUrl.replace("{id}", encodeURIComponent(id));
+});
+
+const buildWfsUrl = (config: WfsConfig): string => {
+  const url = new URL(config.url);
+  url.searchParams.set("service", "WFS");
+  url.searchParams.set("version", "1.0.0");
+  url.searchParams.set("request", "GetFeature");
+  url.searchParams.set("typeName", config.typeName);
+  url.searchParams.set(
+    "outputFormat",
+    config.outputFormat ?? "application/json"
+  );
+  url.searchParams.set("propertyName", WFS_PROPERTY_NAMES);
+  if (config.maxFeatures) {
+    url.searchParams.set("maxFeatures", String(config.maxFeatures));
   }
-  return `${detailUrl}/${encodeURIComponent(id)}`;
+  return url.toString();
 };
 
-export const fetchMicrozonationList = async (
-  listUrl: string,
+export const fetchWfsFeatures = async (
+  config: WfsConfig = DEFAULT_WFS_CONFIG,
   signal?: AbortSignal
-) => {
-  const response = await fetch(listUrl, { signal });
+): Promise<{
+  records: MicrozonationRecord[];
+  propertiesById: Map<string | number, any>;
+}> => {
+  const url = buildWfsUrl(config);
+  const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new Error(String(response.status));
   }
   const json = await response.json();
-  const rawList = Array.isArray(json)
-    ? json
-    : json?.results ?? json?.items ?? [];
-  return rawList.map(normalizeRecord);
+  const features: any[] = json?.features ?? [];
+
+  const records: MicrozonationRecord[] = [];
+  const propertiesById = new Map<string | number, any>();
+
+  for (const feature of features) {
+    const props = feature?.properties ?? {};
+    const record = normalizeRecord(props);
+    records.push(record);
+    if (record.id !== null && record.id !== undefined) {
+      propertiesById.set(record.id, props);
+    }
+  }
+
+  return { records, propertiesById };
 };
 
-export const fetchMicrozonationDetail = async (
-  detailUrl: string,
-  record: MicrozonationRecord,
-  signal?: AbortSignal
-) => {
-  const id = getRecordId(record);
-  const resolvedUrl = buildDetailUrl(detailUrl, String(id));
-  if (!resolvedUrl) {
-    throw new Error("resolve");
-  }
-  const response = await fetch(resolvedUrl, { signal });
-  if (!response.ok) {
-    throw new Error(String(response.status));
-  }
-  const json = await response.json();
-  return normalizeDetail(json, record);
+export const getDetailFromProperties = (
+  propertiesById: Map<string | number, any>,
+  record: MicrozonationRecord
+): MicrozonationDetail => {
+  const props =
+    (record.id !== null && record.id !== undefined
+      ? propertiesById.get(record.id)
+      : undefined) ?? {};
+  return normalizeDetail(props);
 };

@@ -10,6 +10,21 @@
   letter-spacing: 0.6px;
 }
 
+.resizeHandle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: ew-resize;
+  background: transparent;
+  z-index: 2;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
 .filterGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -54,7 +69,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
-  font-size: $font-size-mid-mini;
+  font-size: 14px;
   color: $text-light;
 
   th,
@@ -63,6 +78,7 @@
     border-bottom: 1px solid $overlay;
     text-align: left;
     white-space: nowrap;
+    color: $text-light;
   }
 
   th {
@@ -111,11 +127,12 @@
 .detailTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: $font-size-mid-mini;
+  font-size: 14px;
 
   td {
     padding: 6px 8px;
     border-bottom: 1px solid $overlay;
+    color: $text-light;
   }
 
   td:first-child {
