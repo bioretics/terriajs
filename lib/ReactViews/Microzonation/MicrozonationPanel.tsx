@@ -45,6 +45,7 @@ const Panel = styled(Box)<{
   width: ${(props) => props.$panelWidth}px;
   min-width: ${(props) => props.$panelWidth}px;
   height: 100vh;
+  will-change: width, min-width;
   ${(props) =>
     props.isVisible &&
     `
@@ -68,9 +69,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const minPanelWidth = 360;
   const maxPanelWidth = 720;
   const [panelWidth, setPanelWidth] = useState(420);
+  const panelRef = useRef<HTMLDivElement>(null);
   const resizeStateRef = useRef<{ startX: number; startWidth: number } | null>(
     null
   );
+  const rafRef = useRef<number | null>(null);
 
   const wfsConfig = DEFAULT_WFS_CONFIG;
 
@@ -202,19 +205,44 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         startWidth: panelWidth
       };
 
+      const panel = panelRef.current;
+      if (panel) {
+        panel.style.transition = "none";
+      }
+
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!resizeStateRef.current) {
           return;
         }
-        const delta = resizeStateRef.current.startX - moveEvent.clientX;
-        const nextWidth = Math.min(
-          maxPanelWidth,
-          Math.max(minPanelWidth, resizeStateRef.current.startWidth + delta)
-        );
-        setPanelWidth(nextWidth);
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+        }
+        rafRef.current = requestAnimationFrame(() => {
+          if (!resizeStateRef.current || !panel) {
+            return;
+          }
+          const delta = resizeStateRef.current.startX - moveEvent.clientX;
+          const nextWidth = Math.min(
+            maxPanelWidth,
+            Math.max(minPanelWidth, resizeStateRef.current.startWidth + delta)
+          );
+          panel.style.width = `${nextWidth}px`;
+          panel.style.minWidth = `${nextWidth}px`;
+        });
       };
 
       const handleMouseUp = () => {
+        if (rafRef.current !== null) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+        if (panel) {
+          const finalWidth = parseInt(panel.style.width, 10);
+          panel.style.transition = "";
+          if (!Number.isNaN(finalWidth)) {
+            setPanelWidth(finalWidth);
+          }
+        }
         resizeStateRef.current = null;
         window.removeEventListener("mousemove", handleMouseMove);
         window.removeEventListener("mouseup", handleMouseUp);
@@ -228,6 +256,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
   return (
     <Panel
+      ref={panelRef}
       isVisible={props.isVisible}
       isHidden={!props.isVisible}
       charcoalGreyBg
