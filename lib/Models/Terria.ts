@@ -757,7 +757,7 @@ export default class Terria {
    * @type {string}
    */
   @observable userAuthToken?: string;
-  
+
   /**
    * Gets or sets height of viewshed observer point.
    * @type {string}

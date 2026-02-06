@@ -78,7 +78,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   @observable featureChangedCounter = 0;
 
   componentDidMount() {
-    this.checkAuth();
+    this.checkAuth;
 
     this.templateReactionDisposer = reaction(
       () => [
@@ -373,7 +373,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     };
   }
 
-  checkAuth = async () => {
+  checkAuth = runInAction(async () => {
     const feature = this.props.feature;
 
     if (
@@ -422,7 +422,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     } else {
       this.setFields(undefined);
     }
-  };
+  });
 
   @action
   setFields = (newFields: string[] | undefined) => {

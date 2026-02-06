@@ -195,8 +195,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
             </StyledLabel>
             <Spacing bottom={3} />
             <Box style={{ display: "flex", flexDirection: "row-reverse" }}>
-              {
-                /* viewState.terria.isFeatureAllowedByProfile("QueryData") && */ //Bypass per l'autenticazione
+              {viewState.terria.isFeatureAllowedByProfile("QueryData") &&
                 !viewState.useSmallScreenInterface && (
                   <Button
                     primary
@@ -216,8 +215,7 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                       styledWidth="30px"
                     />
                   </Button>
-                )
-              }
+                )}
               <Button
                 primary
                 title="Cancella i filtri"

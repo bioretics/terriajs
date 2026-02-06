@@ -23,7 +23,7 @@ const QuerySelector = observer(
               background-color: ${(p: any) => p.theme.dark};
               color: ${(p: any) => p.theme.textLight};
             `}
-            value={t(value!!)}
+            value={value}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
               const value = e.target.value;
               onSelect(value);
