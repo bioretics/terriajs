@@ -145,16 +145,19 @@
   margin-top: 24px;
   margin-bottom: 24px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(73, 151, 230, 0.15);
+  border: 1px solid rgba(73, 151, 230, 0.4);
   border-radius: 4px;
   text-align: center;
 
   a {
     font-size: $font-size-mid-mini;
     font-weight: $font-weight-bold;
+    color: #64b5f6;
     text-decoration: none;
 
     &:hover {
+      color: #90caf9;
       text-decoration: underline;
     }
   }
