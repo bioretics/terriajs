@@ -6,6 +6,7 @@ interface CssExports {
   'detailSection': string;
   'detailTable': string;
   'detailWrapper': string;
+  'emergencyPlansLink': string;
   'emptyState': string;
   'error': string;
   'field': string;

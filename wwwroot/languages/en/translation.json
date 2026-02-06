@@ -614,7 +614,8 @@
     "docDescription": "Description",
     "docStart": "Start",
     "docEnd": "End",
-    "docDownload": "Download attachment"
+    "docDownload": "Download attachment",
+    "municipalEmergencyPlans": "Municipal Emergency Plans"
   },
   "satelliteGuidance": {
     "menuTitle": "You can access map guides at any time by looking in the <2>help menu</2>.",

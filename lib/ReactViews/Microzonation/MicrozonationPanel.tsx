@@ -561,6 +561,15 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             </div>
           </div>
         )}
+        <div className={Styles.emergencyPlansLink}>
+          <a
+            href="help/municipal-emergency-plans.html"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {t("microzonation.municipalEmergencyPlans")}
+          </a>
+        </div>
       </Box>
     </Panel>
   );

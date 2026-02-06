@@ -1659,7 +1659,8 @@
     "docDescription": "Descrizione",
     "docStart": "Inizio",
     "docEnd": "Fine",
-    "docDownload": "Scarica allegato"
+    "docDownload": "Scarica allegato",
+    "municipalEmergencyPlans": "Piani Emergenza Comunali"
   },
   "dragDrop": {
     "not": "<0>bbbb</0>",
