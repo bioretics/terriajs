@@ -192,6 +192,15 @@ export interface ConfigParameters {
   microzonationEnabled?: boolean;
 
   /**
+   * WFS configuration for the seismic microzonation service.
+   */
+  microzonationConfig?: {
+    url: string;
+    typeName: string;
+    outputFormat?: string;
+  };
+
+  /**
    * True (the default) to intercept the browser's print feature and use a custom one accessible through the Share panel.
    */
   interceptBrowserPrint?: boolean;
@@ -622,6 +631,7 @@ export default class Terria {
     initFragmentPaths: ["init/"],
     storyEnabled: true,
     microzonationEnabled: true,
+    microzonationConfig: undefined,
     interceptBrowserPrint: true,
     tabbedCatalog: false,
     useCesiumIonTerrain: true,

@@ -21,7 +21,6 @@ import {
   Filters,
   MicrozonationDetail,
   MicrozonationRecord,
-  DEFAULT_WFS_CONFIG,
   emptyFilters,
   fetchWfsFeatures,
   getDetailFromProperties,
@@ -77,7 +76,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   );
   const rafRef = useRef<number | null>(null);
 
-  const wfsConfig = DEFAULT_WFS_CONFIG;
+  const wfsConfig = terria.configParameters.microzonationConfig;
 
   const [records, setRecords] = useState<MicrozonationRecord[]>([]);
   const [propertiesById, setPropertiesById] = useState<
@@ -111,7 +110,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setSelectedRecord(undefined);
     setDetail(undefined);
     setListError(undefined);
-  }, [wfsConfig.url, wfsConfig.typeName]);
+  }, [wfsConfig?.url, wfsConfig?.typeName]);
 
   useEffect(() => {
     if (!props.isVisible || hasLoaded) {

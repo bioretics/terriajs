@@ -54,12 +54,6 @@ export type WfsConfig = {
   outputFormat?: string;
 };
 
-export const DEFAULT_WFS_CONFIG: WfsConfig = {
-  url: "https://geosrv-protciv.regione.marche.it/geoserver/qmap_mzs_rm/ows",
-  typeName: "qmap_mzs_rm:qmp_mzs_stato_progetto_view",
-  outputFormat: "application/json"
-};
-
 const flattenCoordinates = (coords: any): number[][] => {
   if (typeof coords[0] === "number") {
     return [coords as number[]];
@@ -217,13 +211,20 @@ const buildWfsUrl = (config: WfsConfig, terria?: Terria): string => {
 };
 
 export const fetchWfsFeatures = async (
-  config: WfsConfig = DEFAULT_WFS_CONFIG,
+  config: WfsConfig | undefined,
   terria?: Terria
 ): Promise<{
   records: MicrozonationRecord[];
   propertiesById: Map<string | number, any>;
   geometryById: Map<string | number, any>;
 }> => {
+  if (!config) {
+    return {
+      records: [],
+      propertiesById: new Map(),
+      geometryById: new Map()
+    };
+  }
   const url = buildWfsUrl(config, terria);
   const json = await loadJson(url);
   const features: any[] = json?.features ?? [];
