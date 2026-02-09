@@ -1,4 +1,6 @@
 import { RectangleCoordinates } from "../../Models/FunctionParameters/RectangleParameter";
+import loadJson from "../../Core/loadJson";
+import Terria from "../../Models/Terria";
 
 export type MicrozonationRecord = {
   id?: string | number;
@@ -189,37 +191,41 @@ export const normalizeDetail = (properties: any): MicrozonationDetail => ({
   }
 });
 
-const buildWfsUrl = (config: WfsConfig): string => {
-  const url = new URL(config.url);
-  url.searchParams.set("service", "WFS");
-  url.searchParams.set("version", "1.0.0");
-  url.searchParams.set("request", "GetFeature");
-  url.searchParams.set("typeName", config.typeName);
-  url.searchParams.set(
-    "outputFormat",
-    config.outputFormat ?? "application/json"
-  );
-  url.searchParams.set("srsName", "EPSG:4326");
+const buildWfsUrl = (config: WfsConfig, terria?: Terria): string => {
+  const baseUrl = config.url;
+  const params: Record<string, string> = {
+    service: "WFS",
+    version: "1.0.0",
+    request: "GetFeature",
+    typeName: config.typeName,
+    outputFormat: config.outputFormat ?? "application/json",
+    srsName: "EPSG:4326"
+  };
   if (config.maxFeatures) {
-    url.searchParams.set("maxFeatures", String(config.maxFeatures));
+    params.maxFeatures = String(config.maxFeatures);
   }
-  return url.toString();
+  const queryString = Object.entries(params)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    .join("&");
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  const fullUrl = `${baseUrl}${separator}${queryString}`;
+
+  if (terria?.corsProxy?.shouldUseProxy(fullUrl)) {
+    return terria.corsProxy.getURL(fullUrl);
+  }
+  return fullUrl;
 };
 
 export const fetchWfsFeatures = async (
   config: WfsConfig = DEFAULT_WFS_CONFIG,
-  signal?: AbortSignal
+  terria?: Terria
 ): Promise<{
   records: MicrozonationRecord[];
   propertiesById: Map<string | number, any>;
   geometryById: Map<string | number, any>;
 }> => {
-  const url = buildWfsUrl(config);
-  const response = await fetch(url, { signal });
-  if (!response.ok) {
-    throw new Error(String(response.status));
-  }
-  const json = await response.json();
+  const url = buildWfsUrl(config, terria);
+  const json = await loadJson(url);
   const features: any[] = json?.features ?? [];
 
   const records: MicrozonationRecord[] = [];

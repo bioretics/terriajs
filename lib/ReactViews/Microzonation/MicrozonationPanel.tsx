@@ -119,13 +119,12 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     }
 
     let isMounted = true;
-    const controller = new AbortController();
 
     const load = async () => {
       try {
         setLoadingList(true);
         setListError(undefined);
-        const result = await fetchWfsFeatures(wfsConfig, controller.signal);
+        const result = await fetchWfsFeatures(wfsConfig, terria);
         if (isMounted) {
           setRecords(result.records);
           setPropertiesById(result.propertiesById);
@@ -133,7 +132,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           setHasLoaded(true);
         }
       } catch (error: any) {
-        if (isMounted && error?.name !== "AbortError") {
+        if (isMounted) {
           const status = Number(error?.message);
           const msg = !Number.isNaN(status)
             ? t("microzonation.errorApiStatus", { status })
@@ -151,9 +150,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
     return () => {
       isMounted = false;
-      controller.abort();
     };
-  }, [props.isVisible, hasLoaded, wfsConfig, t]);
+  }, [props.isVisible, hasLoaded, wfsConfig, terria, t]);
 
   const provinceOptions = useMemo(
     () => uniqueSorted(records.map((r) => r.province)),
