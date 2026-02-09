@@ -27,8 +27,10 @@ import {
   getDetailFromProperties,
   filterRecords,
   formatValue,
-  uniqueSorted
+  uniqueSorted,
+  computeGeometryBBox
 } from "./Microzonation";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
 interface Props {
   isVisible?: boolean;
@@ -81,6 +83,9 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const [propertiesById, setPropertiesById] = useState<
     Map<string | number, any>
   >(new Map());
+  const [geometryById, setGeometryById] = useState<Map<string | number, any>>(
+    new Map()
+  );
   const [filteredRecords, setFilteredRecords] = useState<MicrozonationRecord[]>(
     []
   );
@@ -100,6 +105,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setHasLoaded(false);
     setRecords([]);
     setPropertiesById(new Map());
+    setGeometryById(new Map());
     setFilteredRecords([]);
     setHasSearched(false);
     setSelectedRecord(undefined);
@@ -123,6 +129,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         if (isMounted) {
           setRecords(result.records);
           setPropertiesById(result.propertiesById);
+          setGeometryById(result.geometryById);
           setHasLoaded(true);
         }
       } catch (error: any) {
@@ -187,6 +194,21 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const loadDetail = (record: MicrozonationRecord) => {
     const resolved = getDetailFromProperties(propertiesById, record);
     setDetail(resolved);
+  };
+
+  const zoomToRecord = (record: MicrozonationRecord) => {
+    if (record.id === null || record.id === undefined) return;
+    const geometry = geometryById.get(record.id);
+    if (!geometry) return;
+    const bbox = computeGeometryBBox(geometry);
+    if (!bbox) return;
+    const rectangle = Rectangle.fromDegrees(
+      bbox.west,
+      bbox.south,
+      bbox.east,
+      bbox.north
+    );
+    terria.currentViewer.zoomTo(rectangle, 1.5);
   };
 
   const closePanel = () => {
@@ -440,6 +462,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                         onClick={() => {
                           setSelectedRecord(record);
                           loadDetail(record);
+                          zoomToRecord(record);
                         }}
                       >
                         <td>{formatValue(record.province)}</td>

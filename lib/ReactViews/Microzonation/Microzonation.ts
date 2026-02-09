@@ -1,3 +1,5 @@
+import { RectangleCoordinates } from "../../Models/FunctionParameters/RectangleParameter";
+
 export type MicrozonationRecord = {
   id?: string | number;
   province?: string;
@@ -56,25 +58,35 @@ export const DEFAULT_WFS_CONFIG: WfsConfig = {
   outputFormat: "application/json"
 };
 
-const WFS_PROPERTY_NAMES = [
-  "id_stato_progetto",
-  "gid",
-  "cod_istat",
-  "prov",
-  "ordinanza",
-  "microzonazione",
-  "cle",
-  "convalidato",
-  "piano_prot_civile",
-  "note",
-  "mzs_standard",
-  "cle_standard",
-  "cle_ordinanza",
-  "cle_convalida",
-  "link_ppc_comune",
-  "microzonazione_info",
-  "comune"
-].join(",");
+const flattenCoordinates = (coords: any): number[][] => {
+  if (typeof coords[0] === "number") {
+    return [coords as number[]];
+  }
+  const result: number[][] = [];
+  for (const item of coords) {
+    result.push(...flattenCoordinates(item));
+  }
+  return result;
+};
+
+export const computeGeometryBBox = (
+  geometry: any
+): RectangleCoordinates | undefined => {
+  if (!geometry || !geometry.coordinates) return undefined;
+  const coords = flattenCoordinates(geometry.coordinates);
+  if (coords.length === 0) return undefined;
+  let west = Infinity;
+  let south = Infinity;
+  let east = -Infinity;
+  let north = -Infinity;
+  for (const [lon, lat] of coords) {
+    if (lon < west) west = lon;
+    if (lon > east) east = lon;
+    if (lat < south) south = lat;
+    if (lat > north) north = lat;
+  }
+  return { west, south, east, north };
+};
 
 export const emptyFilters: Filters = {
   province: "",
@@ -187,7 +199,7 @@ const buildWfsUrl = (config: WfsConfig): string => {
     "outputFormat",
     config.outputFormat ?? "application/json"
   );
-  url.searchParams.set("propertyName", WFS_PROPERTY_NAMES);
+  url.searchParams.set("srsName", "EPSG:4326");
   if (config.maxFeatures) {
     url.searchParams.set("maxFeatures", String(config.maxFeatures));
   }
@@ -200,6 +212,7 @@ export const fetchWfsFeatures = async (
 ): Promise<{
   records: MicrozonationRecord[];
   propertiesById: Map<string | number, any>;
+  geometryById: Map<string | number, any>;
 }> => {
   const url = buildWfsUrl(config);
   const response = await fetch(url, { signal });
@@ -211,6 +224,7 @@ export const fetchWfsFeatures = async (
 
   const records: MicrozonationRecord[] = [];
   const propertiesById = new Map<string | number, any>();
+  const geometryById = new Map<string | number, any>();
 
   for (const feature of features) {
     const props = feature?.properties ?? {};
@@ -218,10 +232,13 @@ export const fetchWfsFeatures = async (
     records.push(record);
     if (record.id !== null && record.id !== undefined) {
       propertiesById.set(record.id, props);
+      if (feature?.geometry) {
+        geometryById.set(record.id, feature.geometry);
+      }
     }
   }
 
-  return { records, propertiesById };
+  return { records, propertiesById, geometryById };
 };
 
 export const getDetailFromProperties = (
