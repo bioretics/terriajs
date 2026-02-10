@@ -23,7 +23,8 @@ import {
   MeasureLineTool,
   MeasurePolygonTool,
   MeasureAngleTool,
-  MeasurePointTool
+  MeasurePointTool,
+  MeasureCircleTool
 } from "../Map/MapNavigation/Items";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
@@ -99,7 +100,8 @@ const MeasurablePanel = observer((props: Props) => {
       MeasureLineTool.id,
       MeasurePolygonTool.id,
       MeasurePointTool.id,
-      MeasureAngleTool.id
+      MeasureAngleTool.id,
+      MeasureCircleTool.id
     ].forEach((id) => {
       const item = viewState.terria.mapNavigationModel.findItem(id)?.controller;
       if (item && item.active) {
