@@ -84,6 +84,26 @@ export interface InitSourceData {
      */
     shortenShareUrls?: boolean;
   };
+  theme?: {
+    colorPrimary?: string;
+    colorSecondary?: string;
+    textLight?: string;
+    textLightTranslucent?: string;
+    textLightDimmed?: string;
+    textDark?: string;
+    textDarker?: string;
+    textBlack?: string;
+    turquoiseBlue?: string;
+    dark?: string;
+    darkTranslucent?: string;
+    darkWithOverlay?: string;
+    darkLighter?: string;
+    grey?: string;
+    greyLighter?: string;
+    greyLighter2?: string;
+    greyLightest?: string;
+    charcoalGrey?: string;
+  };
 }
 
 /**
