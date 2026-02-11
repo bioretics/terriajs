@@ -12,6 +12,7 @@ import SharePanel from "../Panels/SharePanel/SharePanel";
 import ToolsPanel from "../Panels/ToolsPanel/ToolsPanel";
 import StoryButton from "./StoryButton/StoryButton";
 import HelpButton from "./HelpButton/HelpButton";
+import EmergencyPlansButton from "./EmergencyPlansButton/EmergencyPlansButton";
 
 import Styles from "./menu-bar.scss";
 import CoordsPanel from "../Panels/CoordsPanel/CoordsPanel";
@@ -109,6 +110,13 @@ const MenuBar = observer((props) => {
           <ul className={classNames(Styles.menu)}>
             <li className={Styles.menuItem}>
               <MicrozonationButton
+                terria={terria}
+                viewState={viewState}
+                theme={props.theme}
+              />
+            </li>
+            <li className={Styles.menuItem}>
+              <EmergencyPlansButton
                 terria={terria}
                 viewState={viewState}
                 theme={props.theme}
