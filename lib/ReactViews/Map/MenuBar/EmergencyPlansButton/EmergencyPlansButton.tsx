@@ -42,7 +42,6 @@ const EmergencyPlansButton = (props: Props) => {
         className={Styles.emergencyPlansBtn}
         type="button"
         onClick={onEmergencyPlansButtonClick}
-        aria-expanded={props.viewState.microzonationPanelShown}
         css={`
           ${(p: ButtonProps) =>
             p["aria-expanded"] &&
