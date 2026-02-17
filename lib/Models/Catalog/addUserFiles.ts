@@ -26,15 +26,20 @@ export default async function addUserFiles(
   const tempCatalogItemList: ResultPendingCatalogItem[] = [];
   const promises = [];
 
-  function loadCatalogItemFromFile(file: File) {
+  function loadCatalogItemFromFile(file: File, tiff: boolean = false) {
     try {
       const item = createCatalogItemFromFileOrUrl(
         terria,
         viewState,
-        file,
-        dataType.value
+        tiff ? URL.createObjectURL(file) : file,
+        tiff ? "cog" : dataType.value
       );
-      return addUserCatalogMember(terria, item);
+      return addUserCatalogMember(terria, item).then((addedItem) => {
+        if (addedItem && tiff) {
+          (addedItem as any).setTrait(CommonStrata.user, "name", file.name);
+        }
+        return addedItem;
+      });
     } catch (e) {
       return Promise.reject(e);
     }
@@ -58,7 +63,13 @@ export default async function addUserFiles(
     terria.catalog.userAddedDataGroup.add(CommonStrata.user, tempCatalogItem);
 
     let loadPromise: Promise<BaseModel | undefined>;
-    if (file.name.toUpperCase().indexOf(".JSON") !== -1) {
+    if (
+      file.name.toUpperCase().indexOf(".TIF") !== -1 ||
+      file.name.toUpperCase().indexOf(".TIFF") !== -1
+    ) {
+      loadPromise = loadCatalogItemFromFile(file, true);
+      promises.push(loadPromise);
+    } else if (file.name.toUpperCase().indexOf(".JSON") !== -1) {
       const promise = readJson(file).then((json: any) => {
         if (isDefined(json.catalog) || isDefined(json.stories)) {
           // This is an init file.
