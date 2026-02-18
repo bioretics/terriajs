@@ -28,8 +28,10 @@ export default async function addUserCatalogMember(
       ? newCatalogMemberOrPromise
       : Promise.resolve(newCatalogMemberOrPromise);
 
+  let newCatalogItem: BaseModel | undefined;
+
   try {
-    const newCatalogItem = await promise;
+    newCatalogItem = await promise;
     if (!isDefined(newCatalogItem)) {
       return;
     }
@@ -58,10 +60,19 @@ export default async function addUserCatalogMember(
     }
     return newCatalogItem;
   } catch (e: any) {
+    if (isDefined(newCatalogItem)) {
+      terria.catalog.userAddedDataGroup.remove(
+        CommonStrata.user,
+        newCatalogItem
+      );
+      const dereferenced = getDereferencedIfExists(newCatalogItem);
+      terria.workbench.remove(dereferenced);
+    }
+
     terria.raiseErrorToUser(e, {
       title: i18next.t("models.userData.addingDataErrorTitle"),
-      message: i18next.t("models.userData.addingDataErrorTitle")
+      message: i18next.t("models.userData.addingDataErrorMessage")
     });
-    return e;
+    return undefined;
   }
 }
