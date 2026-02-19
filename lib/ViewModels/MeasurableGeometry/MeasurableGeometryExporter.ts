@@ -382,9 +382,15 @@ export default class MeasurableGeometryExporter {
   }
 
   private static generateCsvData(geom: MeasurableGeometry): string {
+    const locale = i18next.language ?? "en";
+    const separator = locale.startsWith("it") ? ";" : ",";
+    const decimalSeparator = separator === ";" ? "," : ".";
+    const formatNum = (n: number, decimals: number) =>
+      n.toFixed(decimals).replace(".", decimalSeparator);
+
     const isPointsOnly = geom.onlyPoints === true;
     const headers = isPointsOnly
-      ? ["longitude", "latitude", "height", "description"].join(",")
+      ? ["longitude", "latitude", "height", "description"].join(separator)
       : [
           "longitude",
           "latitude",
@@ -394,7 +400,7 @@ export default class MeasurableGeometryExporter {
           "air_distance",
           "ground_distance",
           "slope"
-        ].join(",");
+        ].join(separator);
 
     if (!geom.stopPoints || geom.stopPoints.length === 0) {
       return headers;
@@ -409,34 +415,36 @@ export default class MeasurableGeometryExporter {
     rows.push(
       ...geom.stopPoints.map((elem, index) => {
         const baseColumns: (string | number)[] = [
-          CesiumMath.toDegrees(elem.longitude).toFixed(6),
-          CesiumMath.toDegrees(elem.latitude).toFixed(6),
-          elem.height.toFixed(2)
+          formatNum(CesiumMath.toDegrees(elem.longitude), 6),
+          formatNum(CesiumMath.toDegrees(elem.latitude), 6),
+          formatNum(elem.height, 2)
         ];
 
         if (isPointsOnly) {
           return [...baseColumns, geom.pointDescriptions?.[index] || ""].join(
-            ","
+            separator
           );
         }
 
         const prev = index > 0 ? geom.stopPoints[index - 1] : undefined;
 
         const altDiff =
-          index > 0 && prev ? (elem.height - prev.height).toFixed(2) : "";
+          index > 0 && prev ? formatNum(elem.height - prev.height, 2) : "";
 
         const geodeticDistance =
-          index > 0 ? stopGeodeticDistances[index].toFixed(2) : "";
-        const airDistance = index > 0 ? stopAirDistances[index].toFixed(2) : "";
+          index > 0 ? formatNum(stopGeodeticDistances[index], 2) : "";
+        const airDistance =
+          index > 0 ? formatNum(stopAirDistances[index], 2) : "";
         const groundDistance =
-          index > 0 ? stopGroundDistances[index].toFixed(2) : "";
+          index > 0 ? formatNum(stopGroundDistances[index], 2) : "";
 
         let slope = "";
         const airDistNum = stopAirDistances[index];
         if (index > 0 && prev && typeof airDistNum === "number" && airDistNum) {
-          slope = Math.abs(
-            (100 * (elem.height - prev.height)) / airDistNum
-          ).toFixed(1);
+          slope = formatNum(
+            Math.abs((100 * (elem.height - prev.height)) / airDistNum),
+            1
+          );
         }
 
         return [
@@ -446,7 +454,7 @@ export default class MeasurableGeometryExporter {
           airDistance,
           groundDistance,
           slope
-        ].join(",");
+        ].join(separator);
       })
     );
 
