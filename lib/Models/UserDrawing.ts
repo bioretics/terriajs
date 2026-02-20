@@ -383,8 +383,7 @@ export default class UserDrawing extends MappableMixin(
         (c.latitude * 180) / Math.PI
       ]);
       coords.push(coords[0]);
-      const poly = turf.polygon([coords]);
-      const centroid = turf.centroid(poly);
+      const centroid = turf.centroid(turf.polygon([coords]));
       const [lon, lat] = centroid.geometry.coordinates;
       return Cartographic.toCartesian(Cartographic.fromDegrees(lon, lat));
     }, false) as any;
@@ -392,21 +391,19 @@ export default class UserDrawing extends MappableMixin(
     const labelText = new CallbackProperty(() => {
       const pts = this.getPointsForShape();
       if (!pts || pts.length < 3) return "";
-      const cartographics = pts.map((p) => Cartographic.fromCartesian(p));
-      const coords = cartographics.map((c) => [
-        (c.longitude * 180) / Math.PI,
-        (c.latitude * 180) / Math.PI
-      ]);
-      coords.push(coords[0]);
-      const poly = turf.polygon([coords]);
-      const areaSqM = turf.area(poly);
-      if (areaSqM >= 1_000_000) {
+
+      const stopPoints = pts.map((p) => Cartographic.fromCartesian(p));
+
+      const areaSqM =
+        this.terria.measurableGeometryManager[
+          this.terria.measurableGeometryIndex
+        ]?.calculateGeodeticArea(stopPoints) ?? 0;
+
+      if (areaSqM <= 0) return "";
+      if (areaSqM >= 1_000_000)
         return `${(areaSqM / 1_000_000).toFixed(2)} km²`;
-      } else if (areaSqM >= 10_000) {
-        return `${(areaSqM / 10_000).toFixed(2)} ha`;
-      } else {
-        return `${areaSqM.toFixed(1)} m²`;
-      }
+      if (areaSqM >= 10_000) return `${(areaSqM / 10_000).toFixed(2)} ha`;
+      return `${areaSqM.toFixed(1)} m²`;
     }, false);
 
     this.otherEntities.entities.add({
