@@ -832,6 +832,8 @@ export default class Terria {
 
   @observable globeTranslucencyEnabled = false;
 
+  @observable enableCollisionDetection = true;
+
   @observable stories: StoryData[] = [];
   @observable storyPromptShown: number = 0; // Story Prompt modal will be rendered when this property changes. See StandardUserInterface, section regarding sui.notifications. Ideally move this to ViewState.
 

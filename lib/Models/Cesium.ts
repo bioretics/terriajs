@@ -271,8 +271,16 @@ export default class Cesium extends GlobeOrMap {
     }
 
     this.scene.globe.depthTestAgainstTerrain = false;
+
+    this.scene.screenSpaceCameraController.enableCollisionDetection = true;
+
     this.scene.globe.translucency.enabled = false;
-    this.scene.globe.translucency.frontFaceAlphaByDistance = new NearFarScalar(50, 0.2, 1000, 1);
+    this.scene.globe.translucency.frontFaceAlphaByDistance = new NearFarScalar(
+      50,
+      0.2,
+      1000,
+      1
+    );
 
     this.scene.renderError.addEventListener(this.onRenderError.bind(this));
 
@@ -440,6 +448,9 @@ export default class Cesium extends GlobeOrMap {
         this.terria.depthTestAgainstTerrainEnabled;
       this.scene.globe.translucency.enabled =
         this.terria.globeTranslucencyEnabled;
+      this.scene.screenSpaceCameraController.enableCollisionDetection =
+        this.terria.enableCollisionDetection;
+
       if (this.scene.skyAtmosphere) {
         this.scene.skyAtmosphere.splitDirection =
           this.scene.globe.splitDirection;
