@@ -423,6 +423,8 @@
       "hideUnderground": "Terrain hides underground features",
       "showUndergroundFeatures": "Press to start showing features that are underneath the terrain surface",
       "hideUndergroundFeatures": "Press to start hiding features that are underneath the terrain surface",
+      "globeTranslucencyEnabled": "Terrain became translucent approaching the surface",
+      "globeTranslucencyEnabledTitle": "Check to start making the terrain become translucent when the camera is close to the surface",
       "sideLabel": "Show Terrain on the",
       "left": "Left",
       "both": "Both",

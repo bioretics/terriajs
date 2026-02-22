@@ -312,6 +312,8 @@
       "both": "Entrambi",
       "left": "Sinistra",
       "sideLabel": "Mostra il terreno sul",
+      "globeTranslucencyEnabled": "Da vicino il terreno è trasparente",
+      "globeTranslucencyEnabledTitle": "Se attivo, il terreno diventa trasparente man mano che la camera gli si avvicina, permettendo di vedere le caratteristiche sottostanti",
       "hideUnderground": "Il terreno nasconde caratteristiche sotterranee",
       "hideUndergroundFeatures": "Premere per iniziare a nascondere le caratteristiche che si trovano sotto la superficie del terreno",
       "showUndergroundFeatures": "Premere per iniziare a mostrare le caratteristiche che si trovano sotto la superficie del terreno"
