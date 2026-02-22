@@ -1,7 +1,8 @@
 import { Ref } from "react";
 import { useTranslation } from "react-i18next";
+import { runInAction } from "mobx";
 import { DefaultTheme } from "styled-components";
-import Terria from "../../../../Models/Terria";
+import Terria, { LoginProfileServiceType } from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import Icon from "../../../../Styled/Icon";
 import { useRefForTerria } from "../../../Hooks/useRefForTerria";
@@ -27,12 +28,24 @@ const LoginButton = (props: Props) => {
   );
 
   const onLoginButtonClick = (viewState: ViewState) => () => {
-    const a = document.createElement("a");
-    a.href = !viewState.terria.userProfile
-      ? viewState.terria.configParameters.userProfileLoginServiceUrl +
-        document.baseURI
-      : document.baseURI;
-    a.click();
+    if (
+      props.terria.configParameters.userProfileLoginServiceType ===
+      LoginProfileServiceType.Cohesion
+    ) {
+      const a = document.createElement("a");
+      a.href = !viewState.terria.userProfile
+        ? viewState.terria.configParameters.userProfileLoginServiceUrl +
+          document.baseURI
+        : document.baseURI;
+      a.click();
+    } else if (
+      props.terria.configParameters.userProfileLoginServiceType ===
+      LoginProfileServiceType.Geoserver
+    ) {
+      runInAction(() => {
+        viewState.isLoginPanelVisible = true;
+      });
+    }
   };
 
   const { t } = useTranslation();
