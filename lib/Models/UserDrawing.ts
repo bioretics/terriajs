@@ -533,6 +533,11 @@ export default class UserDrawing extends MappableMixin(
   enterDrawMode(sender?: any) {
     this.isAngleMeasuring = sender === MeasureAngleTool.id;
     this.isPointMeasuring = sender === MeasurePointTool.id;
+
+    const isEditMode = this.terria.measurableEditMode ?? false;
+    runInAction(() => {
+      this.terria.measurableEditMode = false;
+    });
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -723,6 +728,35 @@ export default class UserDrawing extends MappableMixin(
           width: 20
         } as any
       } as any);
+    }
+
+    if (isEditMode) {
+      const existingGeom =
+        this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
+      const existingStopPoints = existingGeom?.stopPoints;
+      if (existingStopPoints && existingStopPoints.length > 0) {
+        if (existingGeom.isClosed) {
+          this.closeLoop = true;
+          this.polygon = this.otherEntities.entities.add({
+            name: "User polygon",
+            polygon: {
+              hierarchy: new CallbackProperty(() => {
+                return new PolygonHierarchy(this.getPointsForShape());
+              }, false),
+              material: new Color(0.0, 0.666, 0.843, 0.25),
+              outlineColor: new Color(1.0, 1.0, 1.0, 1.0),
+              heightReference: new ConstantProperty(
+                HeightReference.CLAMP_TO_GROUND
+              ),
+              perPositionHeight: false as any
+            } as any
+          } as any) as Entity;
+        }
+        runInAction(() => {
+          this.refreshPoints();
+        });
+        this.updateAreaLabel();
+      }
     }
 
     this.terria.overlays.add(this);

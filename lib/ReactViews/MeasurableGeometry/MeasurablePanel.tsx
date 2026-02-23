@@ -118,16 +118,53 @@ const MeasurablePanel = observer((props: Props) => {
       MeasureAngleTool.id
     ].forEach((id) => {
       const item = viewState.terria.mapNavigationModel.findItem(id)?.controller;
+      viewState.terria.mapNavigationModel.enable(id);
       if (item && item.active) {
         item.deactivate();
       }
-      viewState.terria.mapNavigationModel.enable(id);
     });
 
     if (isMultiPath) {
       setTimeout(() => {
         close();
       }, 5);
+    }
+  });
+
+  const handleEditUploadedPath = action(() => {
+    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+    if (!geom) return;
+
+    geom.isFileUploaded = false;
+
+    const isClosed = geom.isClosed || geom.hasArea;
+    const targetToolId = isClosed ? MeasurePolygonTool.id : MeasureLineTool.id;
+
+    viewState.measurableDownloadPanelIsVisible = false;
+    [
+      MeasureLineTool.id,
+      MeasurePolygonTool.id,
+      MeasureAngleTool.id,
+      MeasurePointTool.id
+    ]
+      .filter((id) => id !== targetToolId)
+      .forEach((id) => {
+        const item = terria.mapNavigationModel.findItem(id)?.controller;
+        if (item && item.active) item.deactivate();
+        terria.mapNavigationModel.disable(id);
+      });
+
+    terria.measurableEditMode = true;
+
+    const toolController =
+      terria.mapNavigationModel.findItem(targetToolId)?.controller;
+    if (toolController && !toolController.active) {
+      toolController.activate();
+    } else if (toolController && toolController.active) {
+      terria.measurableEditMode = false;
+      runInAction(() => {
+        terria.currentViewer.notifyRepaintRequired();
+      });
     }
   });
 
@@ -1133,6 +1170,25 @@ const MeasurablePanel = observer((props: Props) => {
                         </Button>
                       </div>
                     )}
+                  {terria.measurableGeomList[terria.measurableGeometryIndex]
+                    .isFileUploaded && (
+                    <Button
+                      disabled={
+                        terria.measurableGeomList[
+                          terria.measurableGeometryIndex
+                        ]?.isPointAdding
+                      }
+                      css={`
+                        color: ${theme.textLight};
+                        background: ${theme.colorPrimary};
+                        margin-left: 10px;
+                      `}
+                      onClick={handleEditUploadedPath}
+                      title={i18next.t("measurableGeometry.editPath")}
+                    >
+                      {i18next.t("measurableGeometry.edit")}
+                    </Button>
+                  )}
                 </div>
               )}
             <Box

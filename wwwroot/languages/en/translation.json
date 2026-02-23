@@ -141,7 +141,9 @@
       "clampButton": "## Clamp to ground\n\nToggle between clamped-to-terrain distances and free (air) distances.",
       "transformButton": "## Transform\n\nTurns your measurement into a temporary layer you can style, export, or present it in flight mode.",
       "multiPathControls": "## Multi-path management\n\nSwitch between paths, add new paths, or remove the current one to build multi-segment measurements."
-    }
+    },
+    "edit": "Edit",
+    "editPath": "Edit path"
   },
   "elevationChart": {
     "header": "Elevation profile",

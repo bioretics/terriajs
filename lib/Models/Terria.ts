@@ -596,6 +596,8 @@ export default class Terria {
 
   @observable measurableGeomSamplingStep: number = 500;
 
+  @observable measurableEditMode: boolean = false;
+
   appName: string = "TerriaJS App";
   supportEmail: string = "info@terria.io";
 

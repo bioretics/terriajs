@@ -144,7 +144,9 @@
       "clampButton": "## Ancoraggio al terreno\n\nPassa tra distanze ancorate al terreno e distanze libere (in aria).",
       "transformButton": "## Trasforma\n\nTrasforma la misura in un layer temporaneo che puoi stilizzare, esportare o presentare in modalità volo.",
       "multiPathControls": "## Gestione multipercorsi\n\nCambia percorso, aggiungine uno nuovo o rimuovi quello corrente per creare misure multi-tratta."
-    }
+    },
+    "edit": "Modifica",
+    "editPath": "Modifica percorso"
   },
   "elevationChart": {
     "header": "Profilo altimetrico",
