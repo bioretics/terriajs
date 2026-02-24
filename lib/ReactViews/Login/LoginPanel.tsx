@@ -70,7 +70,7 @@ const LoginPanel = observer((props: Props) => {
         <div className={Styles.header}>
           <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
             <span style={{ display: "flex", justifyContent: "center" }}>
-              <b>{t("viewshed.parameters")}</b>
+              <b>{t("login.loginPanelHeader")}</b>
             </span>
           </div>
         </div>
@@ -78,9 +78,9 @@ const LoginPanel = observer((props: Props) => {
           <Text
             textLight
             style={{ textAlign: "center" }}
-            title={t("viewshed.observerHeightInputTitle")}
+            title={t("login.loginPanelUsernameTitle")}
           >
-            {t("viewshed.observerHeightInput")}
+            {t("login.loginPanelUsername")}
           </Text>
           <Input
             title=""
@@ -94,13 +94,14 @@ const LoginPanel = observer((props: Props) => {
           <Text
             textLight
             style={{ textAlign: "center" }}
-            title={t("viewshed.observerHeightInputTitle")}
+            title={t("login.loginPanelPasswordTitle")}
           >
-            {t("viewshed.observerHeightInput")}
+            {t("login.loginPanelPassword")}
           </Text>
           <Input
             title=""
             required
+            type="password"
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
@@ -113,7 +114,7 @@ const LoginPanel = observer((props: Props) => {
               onClick={doLogin}
               style={{ fontSize: "0.8em", padding: "2px 10px", margin: "7px" }}
             >
-              Salva
+              {t("login.loginPanelOk")}
             </Button>
             <Button
               secondary
@@ -121,7 +122,7 @@ const LoginPanel = observer((props: Props) => {
               onClick={cancel}
               style={{ fontSize: "0.8em", padding: "2px 10px", margin: "7px" }}
             >
-              Cancella
+              {t("login.loginPanelCancel")}
             </Button>
           </Box>
         </div>

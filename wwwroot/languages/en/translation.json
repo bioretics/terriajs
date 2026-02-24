@@ -470,7 +470,14 @@
   },
   "login": {
     "loginTitle": "Login",
-    "logoutTitle": "Logout"
+    "logoutTitle": "Logout",
+    "loginPanelHeader": "Login",
+    "loginPanelUsername": "Username",
+    "loginPanelUsernameTitle": "Username",
+    "loginPanelPassword": "Password",
+    "loginPanelPasswordTitle": "Password",
+    "loginPanelOk": "Ok",
+    "loginPanelCancel": "Cancel"
   },
   "helpPanel": {
     "btnText": "Help",

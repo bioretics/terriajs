@@ -275,7 +275,14 @@
   },
   "login": {
     "loginTitle": "Login",
-    "logoutTitle": "Logout"
+    "logoutTitle": "Logout",
+    "loginPanelHeader": "Autenticazione",
+    "loginPanelUsername": "Username",
+    "loginPanelUsernameTitle": "Inserisci il nome utente",
+    "loginPanelPassword": "Password",
+    "loginPanelPasswordTitle": "Inserisci la password",
+    "loginPanelOk": "Ok",
+    "loginPanelCancel": "Cancella"
   },
   "settingPanel": {
     "performanceLabel": "Prestazioni",
