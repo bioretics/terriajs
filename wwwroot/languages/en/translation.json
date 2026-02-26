@@ -477,7 +477,9 @@
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Password",
     "loginPanelOk": "Login",
-    "loginPanelCancel": "Cancel"
+    "loginPanelCancel": "Cancel",
+    "loginPanelInvalidCredentials": "Invalid credentials, retry.",
+    "loginPanelConnectionProblem": "Connection problem."
   },
   "helpPanel": {
     "btnText": "Help",

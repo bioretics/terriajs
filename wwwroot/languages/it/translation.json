@@ -282,7 +282,9 @@
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Inserisci la password",
     "loginPanelOk": "Login",
-    "loginPanelCancel": "Cancella"
+    "loginPanelCancel": "Cancella",
+    "loginPanelInvalidCredentials": "Credenziali non valide, riprova.",
+    "loginPanelConnectionProblem": "Problema di connessione al servizio di autenticazione."
   },
   "settingPanel": {
     "performanceLabel": "Prestazioni",

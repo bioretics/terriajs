@@ -4,9 +4,9 @@ import { observer } from "mobx-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 //import { useTheme } from "styled-components";
+import Resource from "terriajs-cesium/Source/Core/Resource";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
-import loadJson from "../../Core/loadJson";
 import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import Input from "../../Styled/Input";
@@ -26,6 +26,7 @@ const LoginPanel = observer((props: Props) => {
 
   const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
+  const [message, setMessage] = useState<string>();
 
   //const theme = useTheme();
 
@@ -46,18 +47,29 @@ const LoginPanel = observer((props: Props) => {
       const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
         "base64"
       )}`;
-      const res = await loadJson(
-        terria.corsProxy.getURLProxyIfNecessary(
+      const resource = new Resource({
+        url: terria.corsProxy.getURL(
           terria.configParameters.userProfileLoginServiceUrl
         ),
-        { headers: { Authorization: header } }
-      );
-
-      if (res) {
-        terria.userAuthToken = header;
-      }
+        headers: { Authorization: header }
+      });
+      resource
+        .fetch()
+        ?.then((res) => {
+          if (res) {
+            terria.userAuthToken = header;
+            viewState.isLoginPanelVisible = false;
+          }
+        })
+        .catch((e) => {
+          console.log(e);
+          if (e.statusCode === 401) {
+            setMessage(t("login.loginPanelInvalidCredentials"));
+          } else {
+            setMessage(t("login.loginPanelConnectionProblem"));
+          }
+        });
     }
-    viewState.isLoginPanelVisible = false;
   });
 
   const cancel = () => {
@@ -112,6 +124,7 @@ const LoginPanel = observer((props: Props) => {
               setPassword(e.target.value);
             }}
           />
+          <Text style={{ textAlign: "center", margin: "5px" }}>{message}</Text>
           <Box>
             <Button
               primary
