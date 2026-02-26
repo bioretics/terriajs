@@ -1,11 +1,12 @@
 import classNames from "classnames";
-import { runInAction } from "mobx";
+import { action, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useTheme } from "styled-components";
+//import { useTheme } from "styled-components";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
+import loadJson from "../../Core/loadJson";
 import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import Input from "../../Styled/Input";
@@ -26,10 +27,7 @@ const LoginPanel = observer((props: Props) => {
   const [username, setUsername] = useState<string>();
   const [password, setPassword] = useState<string>();
 
-  const USERNAME_KEY = "usrnm";
-  const PASSWORD_KEY = "psswrd";
-
-  const theme = useTheme();
+  //const theme = useTheme();
 
   const { t } = useTranslation();
 
@@ -37,29 +35,36 @@ const LoginPanel = observer((props: Props) => {
     [Styles.isVisible]: viewState.isLoginPanelVisible
   });
 
-  const doLogin = () => {
-    if (username) {
-      localStorage.setItem(USERNAME_KEY, username);
-    } else {
-      localStorage.removeItem(USERNAME_KEY);
+  const doLogin = action(async () => {
+    if (terria.userAuthToken) {
+      terria.userAuthToken = undefined;
+    } else if (
+      terria.configParameters.userProfileLoginServiceUrl &&
+      username &&
+      password
+    ) {
+      const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
+        "base64"
+      )}`;
+      const res = await loadJson(
+        terria.corsProxy.getURLProxyIfNecessary(
+          terria.configParameters.userProfileLoginServiceUrl
+        ),
+        { headers: { Authorization: header } }
+      );
+
+      if (res) {
+        terria.userAuthToken = header;
+      }
     }
-    if (password) {
-      localStorage.setItem(PASSWORD_KEY, password);
-    } else {
-      localStorage.removeItem(PASSWORD_KEY);
-    }
-  };
+    viewState.isLoginPanelVisible = false;
+  });
 
   const cancel = () => {
     runInAction(() => {
       viewState.isLoginPanelVisible = false;
     });
   };
-
-  useEffect(() => {
-    setUsername(localStorage.getItem(USERNAME_KEY) ?? undefined);
-    setPassword(localStorage.getItem(PASSWORD_KEY) ?? undefined);
-  }, []);
 
   return (
     <DragWrapper>
@@ -85,7 +90,7 @@ const LoginPanel = observer((props: Props) => {
           <Input
             title=""
             required
-            value={username}
+            //value={username}
             onChange={(e) => {
               setUsername(e.target.value);
             }}
@@ -102,7 +107,7 @@ const LoginPanel = observer((props: Props) => {
             title=""
             required
             type="password"
-            value={password}
+            //value={password}
             onChange={(e) => {
               setPassword(e.target.value);
             }}

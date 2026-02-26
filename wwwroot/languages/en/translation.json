@@ -471,12 +471,12 @@
   "login": {
     "loginTitle": "Login",
     "logoutTitle": "Logout",
-    "loginPanelHeader": "Login",
+    "loginPanelHeader": "User authentication",
     "loginPanelUsername": "Username",
     "loginPanelUsernameTitle": "Username",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Password",
-    "loginPanelOk": "Ok",
+    "loginPanelOk": "Login",
     "loginPanelCancel": "Cancel"
   },
   "helpPanel": {

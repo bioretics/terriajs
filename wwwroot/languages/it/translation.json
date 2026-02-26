@@ -276,12 +276,12 @@
   "login": {
     "loginTitle": "Login",
     "logoutTitle": "Logout",
-    "loginPanelHeader": "Autenticazione",
+    "loginPanelHeader": "Autenticazione utente",
     "loginPanelUsername": "Username",
     "loginPanelUsernameTitle": "Inserisci il nome utente",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Inserisci la password",
-    "loginPanelOk": "Ok",
+    "loginPanelOk": "Login",
     "loginPanelCancel": "Cancella"
   },
   "settingPanel": {

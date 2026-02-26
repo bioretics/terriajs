@@ -43,7 +43,11 @@ const LoginButton = (props: Props) => {
       LoginProfileServiceType.Geoserver
     ) {
       runInAction(() => {
-        viewState.isLoginPanelVisible = true;
+        if (props.terria.userAuthToken) {
+          props.terria.userAuthToken = undefined;
+        } else {
+          viewState.isLoginPanelVisible = true;
+        }
       });
     }
   };
@@ -57,7 +61,7 @@ const LoginButton = (props: Props) => {
         className={Styles.loginBtn}
         type="button"
         onClick={onLoginButtonClick(props.viewState)}
-        aria-expanded={!!props.viewState.terria.userProfile}
+        aria-expanded={!!props.terria.userProfile}
         css={`
           ${(p: ButtonProps) =>
             p["aria-expanded"] &&
@@ -69,7 +73,7 @@ const LoginButton = (props: Props) => {
             }`}
         `}
         title={
-          !props.viewState.terria.userProfile
+          !props.terria.userAuthToken
             ? t("login.loginTitle")
             : t("login.logoutTitle")
         }
