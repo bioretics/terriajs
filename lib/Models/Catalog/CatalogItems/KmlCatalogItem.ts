@@ -12,6 +12,7 @@ import Property from "terriajs-cesium/Source/DataSources/Property";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import { cesiumColorToKmlAbgr } from "../../../Core/KmlColorUtils";
 import isDefined from "../../../Core/isDefined";
 import readXml from "../../../Core/readXml";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
@@ -540,16 +541,6 @@ function getPropertyValue<T>(property: Property | undefined): T | undefined {
     return undefined;
   }
   return property.getValue(JulianDate.now());
-}
-
-function cesiumColorToKmlAbgr(color: Color): string {
-  const toHex = (val: number) =>
-    Math.round(val * 255)
-      .toString(16)
-      .padStart(2, "0");
-  return `${toHex(color.alpha)}${toHex(color.blue)}${toHex(color.green)}${toHex(
-    color.red
-  )}`;
 }
 
 function extractEntityColors(

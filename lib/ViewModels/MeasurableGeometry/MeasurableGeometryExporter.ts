@@ -2,7 +2,6 @@ import i18next from "i18next";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Color from "terriajs-cesium/Source/Core/Color";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
 import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
@@ -14,6 +13,7 @@ import {
   exportKmlResultKml
 } from "terriajs-cesium";
 import DataUri from "../../Core/DataUri";
+import { kmlAbgrToCesiumColor } from "../../Core/KmlColorUtils";
 import { MeasurableGeometry } from "./MeasurableGeometryManager";
 import { DownloadLink } from "./MeasurableGeometryDownload";
 
@@ -141,14 +141,6 @@ export default class MeasurableGeometryExporter {
     ];
   }
 
-  private static kmlAbgrToCesiumColor(abgr: string): Color {
-    const a = parseInt(abgr.substring(0, 2), 16) / 255;
-    const b = parseInt(abgr.substring(2, 4), 16) / 255;
-    const g = parseInt(abgr.substring(4, 6), 16) / 255;
-    const r = parseInt(abgr.substring(6, 8), 16) / 255;
-    return new Color(r, g, b, a);
-  }
-
   private static async generateMultiPathKmlPolygon(
     geomList: MeasurableGeometry[],
     name: string
@@ -218,7 +210,7 @@ export default class MeasurableGeometryExporter {
 
     geomList.forEach((geom, idx) => {
       const lineMaterial = geom.lineColor
-        ? new ColorMaterialProperty(this.kmlAbgrToCesiumColor(geom.lineColor))
+        ? new ColorMaterialProperty(kmlAbgrToCesiumColor(geom.lineColor))
         : undefined;
       output.entities.add(
         new Entity({
@@ -307,7 +299,7 @@ export default class MeasurableGeometryExporter {
     };
 
     const lineMaterial = geom.lineColor
-      ? new ColorMaterialProperty(this.kmlAbgrToCesiumColor(geom.lineColor))
+      ? new ColorMaterialProperty(kmlAbgrToCesiumColor(geom.lineColor))
       : undefined;
 
     output.entities.add(
@@ -342,7 +334,7 @@ export default class MeasurableGeometryExporter {
     };
 
     const pointColor = geom.lineColor
-      ? this.kmlAbgrToCesiumColor(geom.lineColor)
+      ? kmlAbgrToCesiumColor(geom.lineColor)
       : undefined;
 
     geom.stopPoints.forEach((elem, index) => {
