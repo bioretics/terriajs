@@ -2,10 +2,12 @@ import i18next from "i18next";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import Color from "terriajs-cesium/Source/Core/Color";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
 import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 import {
   EllipsoidGeodesic,
   exportKml,
@@ -139,6 +141,14 @@ export default class MeasurableGeometryExporter {
     ];
   }
 
+  private static kmlAbgrToCesiumColor(abgr: string): Color {
+    const a = parseInt(abgr.substring(0, 2), 16) / 255;
+    const b = parseInt(abgr.substring(2, 4), 16) / 255;
+    const g = parseInt(abgr.substring(4, 6), 16) / 255;
+    const r = parseInt(abgr.substring(6, 8), 16) / 255;
+    return new Color(r, g, b, a);
+  }
+
   private static async generateMultiPathKmlPolygon(
     geomList: MeasurableGeometry[],
     name: string
@@ -163,10 +173,11 @@ export default class MeasurableGeometryExporter {
           <description>${geom.pathNotes ?? ""}</description>
           <Style>
             <LineStyle>
-              <color>ff0000ff</color>
+              <color>${geom.lineColor ?? "ff0000ff"}</color>
             </LineStyle>
             <PolyStyle>
-              <fill>0</fill>
+              <fill>${geom.polyFill ?? false ? 1 : 0}</fill>
+              ${geom.polyColor ? `<color>${geom.polyColor}</color>` : ""}
             </PolyStyle>
           </Style>
           <Polygon>
@@ -206,13 +217,17 @@ export default class MeasurableGeometryExporter {
     };
 
     geomList.forEach((geom, idx) => {
+      const lineMaterial = geom.lineColor
+        ? new ColorMaterialProperty(this.kmlAbgrToCesiumColor(geom.lineColor))
+        : undefined;
       output.entities.add(
         new Entity({
           id: idx.toString(),
           polyline: new PolylineGraphics({
             positions: geom.stopPoints.map((elem) =>
               Cartographic.toCartesian(elem, ellipsoid)
-            )
+            ),
+            ...(lineMaterial ? { material: lineMaterial } : {})
           }),
           description: geom.pathNotes
         })
@@ -256,10 +271,11 @@ export default class MeasurableGeometryExporter {
                 <description>${geom.pathNotes}</description>
                 <Style>
                   <LineStyle>
-                    <color>ff0000ff</color>
+                    <color>${geom.lineColor ?? "ff0000ff"}</color>
                   </LineStyle>
                   <PolyStyle>
-                    <fill>0</fill>
+                    <fill>${geom.polyFill ?? false ? 1 : 0}</fill>
+                    ${geom.polyColor ? `<color>${geom.polyColor}</color>` : ""}
                   </PolyStyle>
                 </Style>
                 <Polygon>
@@ -290,13 +306,18 @@ export default class MeasurableGeometryExporter {
       ellipsoid: ellipsoid
     };
 
+    const lineMaterial = geom.lineColor
+      ? new ColorMaterialProperty(this.kmlAbgrToCesiumColor(geom.lineColor))
+      : undefined;
+
     output.entities.add(
       new Entity({
         id: "0",
         polyline: new PolylineGraphics({
           positions: geom.stopPoints.map((elem) =>
             Cartographic.toCartesian(elem, ellipsoid)
-          )
+          ),
+          ...(lineMaterial ? { material: lineMaterial } : {})
         }),
         name: name,
         description: geom.pathNotes
@@ -320,11 +341,17 @@ export default class MeasurableGeometryExporter {
       ellipsoid: ellipsoid
     };
 
+    const pointColor = geom.lineColor
+      ? this.kmlAbgrToCesiumColor(geom.lineColor)
+      : undefined;
+
     geom.stopPoints.forEach((elem, index) => {
       output.entities.add(
         new Entity({
           id: index.toString(),
-          point: new PointGraphics({}),
+          point: new PointGraphics({
+            ...(pointColor ? { color: pointColor } : {})
+          }),
           position: Cartographic.toCartesian(elem, ellipsoid),
           description: geom.pointDescriptions?.[index]
         })

@@ -31,6 +31,9 @@ export interface MeasurableGeometry {
   indexPath?: number;
   featureProperties?: JsonObject;
   pointProperties?: JsonObject[];
+  lineColor?: string;
+  polyColor?: string;
+  polyFill?: boolean;
 }
 
 export default class MeasurableGeometryManager {
@@ -47,25 +50,21 @@ export default class MeasurableGeometryManager {
   }
 
   resample() {
+    const geom =
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
     this.sampleFromCartographics(
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.stopPoints ?? [],
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isClosed,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.onlyPoints,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pointDescriptions,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pathNotes,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isFileUploaded,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.indexPath,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.featureProperties,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pointProperties
+      geom?.stopPoints ?? [],
+      geom?.isClosed,
+      geom?.onlyPoints,
+      geom?.pointDescriptions,
+      geom?.pathNotes,
+      geom?.isFileUploaded,
+      geom?.indexPath,
+      geom?.featureProperties,
+      geom?.pointProperties,
+      geom?.lineColor,
+      geom?.polyColor,
+      geom?.polyFill
     );
   }
 
@@ -126,7 +125,10 @@ export default class MeasurableGeometryManager {
     isFileUploaded?: boolean,
     indexPath?: number,
     featureProperties?: JsonObject,
-    pointProperties?: JsonObject[]
+    pointProperties?: JsonObject[],
+    lineColor?: string,
+    polyColor?: string,
+    polyFill?: boolean
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -234,7 +236,10 @@ export default class MeasurableGeometryManager {
             isFileUploaded,
             indexPath,
             featureProperties,
-            pointProperties
+            pointProperties,
+            lineColor,
+            polyColor,
+            polyFill
           ]
         : [
             cartoPositions,
@@ -250,7 +255,10 @@ export default class MeasurableGeometryManager {
             isFileUploaded,
             indexPath,
             featureProperties,
-            pointProperties
+            pointProperties,
+            lineColor,
+            polyColor,
+            polyFill
           ];
 
       this.updatePath(...updatePathParams);
@@ -272,7 +280,10 @@ export default class MeasurableGeometryManager {
     isFileUploaded?: boolean,
     indexPath?: number,
     featureProperties?: JsonObject,
-    pointProperties?: JsonObject[]
+    pointProperties?: JsonObject[],
+    lineColor?: string,
+    polyColor?: string,
+    polyFill?: boolean
   ) {
     let geodeticArea = 0;
     let airArea = 0;
@@ -308,7 +319,10 @@ export default class MeasurableGeometryManager {
       isFileUploaded: isFileUploaded,
       indexPath: indexPath,
       featureProperties: featureProperties,
-      pointProperties: pointProperties
+      pointProperties: pointProperties,
+      lineColor: lineColor,
+      polyColor: polyColor,
+      polyFill: polyFill
     };
 
     if (indexPath !== undefined) {
