@@ -231,7 +231,8 @@ class WebMapServiceCatalogItem
   protected async forceLoadMetadata(): Promise<void> {
     if (
       this.strata.get(GetCapabilitiesMixin.getCapabilitiesStratumName) !==
-      undefined
+        undefined &&
+      (!this.useAuthentication || !this.terria.userAuthToken)
     )
       return;
     const stratum = await WebMapServiceCapabilitiesStratum.load(this);

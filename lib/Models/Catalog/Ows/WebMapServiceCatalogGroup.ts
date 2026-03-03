@@ -389,7 +389,10 @@ export default class WebMapServiceCatalogGroup extends GetCapabilitiesMixin(
     let getCapabilitiesStratum = this.strata.get(
       GetCapabilitiesMixin.getCapabilitiesStratumName
     ) as GetCapabilitiesStratum | undefined;
-    if (getCapabilitiesStratum === undefined) {
+    if (
+      getCapabilitiesStratum === undefined ||
+      (this.useAuthentication && this.terria.userAuthToken)
+    ) {
       getCapabilitiesStratum = await GetCapabilitiesStratum.load(this);
       runInAction(() => {
         this.strata.set(
