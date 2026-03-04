@@ -11,6 +11,7 @@ import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import Input from "../../Styled/Input";
 import Text from "../../Styled/Text";
+import Icon from "../../Styled/Icon";
 import Styles from "./login-panel.scss";
 
 const DragWrapper = require("../DragWrapper");
@@ -24,26 +25,38 @@ interface Props {
 const LoginPanel = observer((props: Props) => {
   const { terria, viewState } = props;
 
-  const [username, setUsername] = useState<string>();
-  const [password, setPassword] = useState<string>();
-  const [message, setMessage] = useState<string>();
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [messageKey, setMessageKey] = useState<string>();
+  const [messageType, setMessageType] = useState<"error" | "info">("error");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   //const theme = useTheme();
 
   const { t } = useTranslation();
 
   const panelClassName = classNames(Styles.panel, {
-    [Styles.isVisible]: viewState.isLoginPanelVisible
+    [Styles.isVisible]: viewState.isLoginPanelVisible,
+    [Styles.isLoading]: isLoading
   });
 
   const doLogin = action(async () => {
     if (terria.userAuthToken) {
       terria.userAuthToken = undefined;
-    } else if (
-      terria.configParameters.userProfileLoginServiceUrl &&
-      username &&
-      password
-    ) {
+      return;
+    }
+
+    if (!username?.trim() || !password?.trim()) {
+      setMessageType("error");
+      setMessageKey("login.loginPanelMissingFields");
+      return;
+    }
+
+    if (terria.configParameters.userProfileLoginServiceUrl) {
+      setIsLoading(true);
+      setMessageKey(undefined);
+      document.body.style.cursor = "wait";
+
       const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
         "base64"
       )}`;
@@ -63,19 +76,33 @@ const LoginPanel = observer((props: Props) => {
         })
         .catch((e) => {
           console.log(e);
+          setMessageType("error");
           if (e.statusCode === 401) {
-            setMessage(t("login.loginPanelInvalidCredentials"));
+            setMessageKey("login.loginPanelInvalidCredentials");
+          } else if (e.statusCode === 0 || !e.statusCode) {
+            setMessageKey("login.loginPanelConnectionProblem");
           } else {
-            setMessage(t("login.loginPanelConnectionProblem"));
+            setMessageKey("login.loginPanelGenericError");
           }
+        })
+        .finally(() => {
+          setIsLoading(false);
+          document.body.style.cursor = "default";
         });
     }
   });
 
   const cancel = () => {
     runInAction(() => {
+      setMessageKey(undefined);
       viewState.isLoginPanelVisible = false;
     });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isLoading) {
+      doLogin();
+    }
   };
 
   return (
@@ -86,51 +113,98 @@ const LoginPanel = observer((props: Props) => {
       >
         <div className={Styles.header}>
           <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
-            <span style={{ display: "flex", justifyContent: "center" }}>
+            <span className={Styles.headerContent}>
+              <Icon glyph={Icon.GLYPHS.lock} className={Styles.headerIcon} />
               <b>{t("login.loginPanelHeader")}</b>
             </span>
           </div>
         </div>
         <div className={Styles.body}>
-          <Text
-            textLight
-            style={{ textAlign: "center" }}
-            title={t("login.loginPanelUsernameTitle")}
-          >
-            {t("login.loginPanelUsername")}
-          </Text>
-          <Input
-            title=""
-            required
-            //value={username}
-            onChange={(e) => {
-              setUsername(e.target.value);
-            }}
-          />
-          <br />
-          <Text
-            textLight
-            style={{ textAlign: "center" }}
-            title={t("login.loginPanelPasswordTitle")}
-          >
-            {t("login.loginPanelPassword")}
-          </Text>
-          <Input
-            title=""
-            required
-            type="password"
-            //value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-            }}
-          />
-          <Text style={{ textAlign: "center", margin: "5px" }}>{message}</Text>
-          <Box>
+          <div className={Styles.fieldGroup}>
+            <Text
+              textLight
+              style={{
+                textAlign: "left",
+                marginBottom: "4px",
+                fontSize: "0.85em"
+              }}
+              title={t("login.loginPanelUsernameTitle")}
+            >
+              {t("login.loginPanelUsername")}
+            </Text>
+            <Input
+              title={t("login.loginPanelUsernameTitle")}
+              required
+              dark
+              disabled={isLoading}
+              value={username}
+              onKeyDown={handleKeyDown}
+              onChange={(e) => {
+                setUsername(e.target.value);
+                setMessageKey(undefined);
+              }}
+            />
+          </div>
+          <div className={Styles.fieldGroup}>
+            <Text
+              textLight
+              style={{
+                textAlign: "left",
+                marginBottom: "4px",
+                fontSize: "0.85em"
+              }}
+              title={t("login.loginPanelPasswordTitle")}
+            >
+              {t("login.loginPanelPassword")}
+            </Text>
+            <Input
+              title={t("login.loginPanelPasswordTitle")}
+              required
+              dark
+              type="password"
+              disabled={isLoading}
+              value={password}
+              onKeyDown={handleKeyDown}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setMessageKey(undefined);
+              }}
+            />
+          </div>
+          {messageKey && (
+            <div
+              className={classNames(Styles.messageBox, {
+                [Styles.messageError]: messageType === "error",
+                [Styles.messageInfo]: messageType === "info"
+              })}
+            >
+              <Text style={{ textAlign: "center", fontSize: "0.8em" }}>
+                {t(messageKey)}
+              </Text>
+            </div>
+          )}
+          {isLoading && (
+            <div className={Styles.loadingIndicator}>
+              <Text
+                textLight
+                style={{ textAlign: "center", fontSize: "0.8em" }}
+              >
+                {t("login.loginPanelLoading")}
+              </Text>
+            </div>
+          )}
+          <Box justifySpaceBetween className={Styles.buttonRow}>
             <Button
               primary
               shortMinHeight
               onClick={doLogin}
-              style={{ fontSize: "0.8em", padding: "2px 10px", margin: "7px" }}
+              disabled={isLoading}
+              style={{
+                fontSize: "0.85em",
+                padding: "6px 20px",
+                flex: 1,
+                margin: "0 4px 0 0"
+              }}
             >
               {t("login.loginPanelOk")}
             </Button>
@@ -138,7 +212,13 @@ const LoginPanel = observer((props: Props) => {
               secondary
               shortMinHeight
               onClick={cancel}
-              style={{ fontSize: "0.8em", padding: "2px 10px", margin: "7px" }}
+              disabled={isLoading}
+              style={{
+                fontSize: "0.85em",
+                padding: "6px 20px",
+                flex: 1,
+                margin: "0 0 0 4px"
+              }}
             >
               {t("login.loginPanelCancel")}
             </Button>
