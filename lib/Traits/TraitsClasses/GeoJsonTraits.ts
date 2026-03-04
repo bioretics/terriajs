@@ -14,7 +14,7 @@ import QueryableCatalogItemTraits from "./QueryableCatalogItemTraits";
 import StyleTraits from "./StyleTraits";
 import TableTraits from "./Table/TableTraits";
 import UrlTraits from "./UrlTraits";
-import AutoComputeClippingPlanes from "./AutoComputeClippingPlanes";
+import GlobeClippingTraits from "./GlobeClippingTraits";
 
 export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
   @anyTrait({
@@ -42,7 +42,7 @@ export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
 }
 
 export class GeoJsonTraits extends mixTraits(
-  AutoComputeClippingPlanes,
+  GlobeClippingTraits,
   ClusterizableCatalogItemTraits,
   QueryableCatalogItemTraits,
   SearchableCatalogItemTraits,

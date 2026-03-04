@@ -105,6 +105,7 @@ import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { isDataSource } from "./MappableMixin";
 import TableMixin from "./TableMixin";
+import GlobeClippingMixin from "./GlobeClippingMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import MeasurableGeometryMixin from "./MeasurableGeometryMixin";
@@ -114,10 +115,6 @@ import SearchableCatalogItemMixin, {
 } from "./SearchableCatalogItemMixin";
 import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
 import Constructor from "../Core/Constructor";
-import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
-import ClippingPlaneCollection from "terriajs-cesium/Source/Scene/ClippingPlaneCollection";
-import ClippingPlane from "terriajs-cesium/Source/Scene/ClippingPlane";
-import Transforms from "terriajs-cesium/Source/Core/Transforms";
 
 enum PathTypes {
   noPath = 0,
@@ -254,7 +251,9 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
   abstract class GeoJsonMixin extends QueryableCatalogItemMixin(
     SearchableCatalogItemMixin(
       MeasurableGeometryMixin(
-        TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+        GlobeClippingMixin(
+          TableMixin(FeatureInfoUrlTemplateMixin(UrlMixin(Base)))
+        )
       )
     )
   ) {
@@ -459,6 +458,10 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       } catch (e) {
         return this._exportDataFallback();
       }
+    }
+
+    get data(): DataSource | undefined {
+      return this._dataSource;
     }
 
     @override
@@ -1245,40 +1248,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       this.terria.cesium.notifyRepaintRequired();
     }
 
-    autoComputeClippingPlanes(entities: Entity[]) {
-      if (!this.terria.cesium) {
-        return;
-      }
-
-      const points: Cartesian3[] = entities
-        .map((elem) => {
-          return elem.position?.getValue(JulianDate.now());
-        })
-        .filter((elem): elem is Cartesian3 => !!elem);
-      const sphere = BoundingSphere.fromPoints(points);
-      const position = sphere.center;
-      const distance = sphere.radius;
-
-      const globe = this.terria.cesium.scene.globe;
-
-      globe.clippingPlanes = new ClippingPlaneCollection({
-        modelMatrix: Transforms.eastNorthUpToFixedFrame(position),
-        planes: [
-          new ClippingPlane(new Cartesian3(1.0, 0.0, 0.0), distance),
-          new ClippingPlane(new Cartesian3(-1.0, 0.0, 0.0), distance),
-          new ClippingPlane(new Cartesian3(0.0, 1.0, 0.0), distance),
-          new ClippingPlane(new Cartesian3(0.0, -1.0, 0.0), distance)
-        ],
-        unionClippingRegions: true,
-        edgeWidth: 1.0,
-        edgeColor: Color.WHITE,
-        enabled: true
-      });
-      globe.backFaceCulling = false;
-      globe.showSkirts = false;
-      globe.clippingPlanes.enabled = true;
-    }
-
     protected async loadGeoJsonDataSource(
       geoJson: FeatureCollectionWithCrs
     ): Promise<GeoJsonDataSource> {
@@ -1450,10 +1419,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       }
 
       this.applyMixedStyle(dataSource);
-
-      if (this.autoComputeFromContent) {
-        this.autoComputeClippingPlanes(entities.values);
-      }
 
       return dataSource;
     }
