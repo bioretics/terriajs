@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import { action, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 //import { useTheme } from "styled-components";
 import Resource from "terriajs-cesium/Source/Core/Resource";
@@ -35,6 +35,15 @@ const LoginPanel = observer((props: Props) => {
 
   const { t } = useTranslation();
 
+  useEffect(() => {
+    setUsername("");
+    setPassword("");
+    setMessageKey(undefined);
+    setMessageType("error");
+    setIsLoading(false);
+    document.body.style.cursor = "default";
+  }, [viewState.isLoginPanelVisible]);
+
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: viewState.isLoginPanelVisible,
     [Styles.isLoading]: isLoading
@@ -64,7 +73,10 @@ const LoginPanel = observer((props: Props) => {
         url: terria.corsProxy.getURL(
           terria.configParameters.userProfileLoginServiceUrl
         ),
-        headers: { Authorization: header }
+        headers: {
+          Authorization: header,
+          "Cache-Control": "no-cache, no-store, must-revalidate"
+        }
       });
       resource
         .fetch()
@@ -94,7 +106,6 @@ const LoginPanel = observer((props: Props) => {
 
   const cancel = () => {
     runInAction(() => {
-      setMessageKey(undefined);
       viewState.isLoginPanelVisible = false;
     });
   };
