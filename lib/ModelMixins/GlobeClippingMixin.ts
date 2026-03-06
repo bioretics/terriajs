@@ -39,29 +39,36 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @override
     get selectableDimensions() {
-      if (this.globeClippingControlShowed) {
-        const asd: SelectableDimensionCheckbox = {
-          type: "checkbox",
-          id: "globe-clipping-box",
-          selectedId: this.globeClippingEnabled ? "true" : "false",
-          options: [
-            {
-              id: "true",
-              name: `${i18next.t("models.globeClipping.enableMessage")}`
-            },
-            {
-              id: "false",
-              name: i18next.t("models.globeClipping.enableMessage")
+      const globeClippingCheckbox: SelectableDimensionCheckbox | undefined =
+        this.globeClippingControlShowed
+          ? {
+              type: "checkbox",
+              id: "globe-clipping-box",
+              selectedId: this.globeClippingEnabled ? "true" : "false",
+              options: [
+                {
+                  id: "true",
+                  name: `${i18next.t("models.globeClipping.enableMessage")}`
+                },
+                {
+                  id: "false",
+                  name: i18next.t("models.globeClipping.enableMessage")
+                }
+              ],
+              setDimensionValue: action((stratumId, value) => {
+                this.setTrait(
+                  stratumId,
+                  "globeClippingEnabled",
+                  value === "true"
+                );
+              })
             }
-          ],
-          setDimensionValue: action((stratumId, value) => {
-            this.setTrait(stratumId, "globeClippingEnabled", value === "true");
-          })
-        };
+          : undefined;
 
-        return filterOutUndefined([...super.selectableDimensions, asd]);
-      }
-      return filterOutUndefined([...super.selectableDimensions]);
+      return filterOutUndefined([
+        ...super.selectableDimensions,
+        globeClippingCheckbox
+      ]);
     }
 
     abstract get data(): DataSource | undefined;
@@ -76,7 +83,9 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       if (dataSource === undefined) {
         globe.backFaceCulling = true;
         globe.showSkirts = true;
-        globe.clippingPlanes.enabled = false;
+        if (globe.clippingPlanes) {
+          globe.clippingPlanes.enabled = false;
+        }
         return;
       }
 
