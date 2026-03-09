@@ -1949,8 +1949,8 @@ export default class Terria {
     }
 
     // Add theme settings
-    if (isJsonObject(initData.theme)) {
-      Object.assign(this.configParameters.theme, initData.theme);
+    if (isJsonObject(initData.parameters?.theme)) {
+      Object.assign(this.configParameters.theme, initData.parameters?.theme);
     }
 
     // Add map settings

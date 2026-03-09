@@ -53,6 +53,26 @@ export interface InitSourceData {
     brandBarElements?: string[];
     brandBarSmallElements?: string[];
     displayOneBrand?: number;
+    theme?: {
+      colorPrimary?: string;
+      colorSecondary?: string;
+      textLight?: string;
+      textLightTranslucent?: string;
+      textLightDimmed?: string;
+      textDark?: string;
+      textDarker?: string;
+      textBlack?: string;
+      turquoiseBlue?: string;
+      dark?: string;
+      darkTranslucent?: string;
+      darkWithOverlay?: string;
+      darkLighter?: string;
+      grey?: string;
+      greyLighter?: string;
+      greyLighter2?: string;
+      greyLightest?: string;
+      charcoalGrey?: string;
+    };
   };
   catalog?: JsonObject[];
   elements?: Map<string, IElementConfig>;
@@ -83,26 +103,6 @@ export interface InitSourceData {
      * To disable the shortening url service, set it to false.
      */
     shortenShareUrls?: boolean;
-  };
-  theme?: {
-    colorPrimary?: string;
-    colorSecondary?: string;
-    textLight?: string;
-    textLightTranslucent?: string;
-    textLightDimmed?: string;
-    textDark?: string;
-    textDarker?: string;
-    textBlack?: string;
-    turquoiseBlue?: string;
-    dark?: string;
-    darkTranslucent?: string;
-    darkWithOverlay?: string;
-    darkLighter?: string;
-    grey?: string;
-    greyLighter?: string;
-    greyLighter2?: string;
-    greyLightest?: string;
-    charcoalGrey?: string;
   };
 }
 
