@@ -91,7 +91,11 @@ const LoginPanel = observer((props: Props) => {
           setMessageType("error");
           if (e.statusCode === 401) {
             setMessageKey("login.loginPanelInvalidCredentials");
-          } else if (e.statusCode === 0 || !e.statusCode) {
+          } else if (
+            e.statusCode === 0 ||
+            !e.statusCode ||
+            e.response === "Proxy error"
+          ) {
             setMessageKey("login.loginPanelConnectionProblem");
           } else {
             setMessageKey("login.loginPanelGenericError");
