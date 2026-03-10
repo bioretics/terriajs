@@ -1,4 +1,5 @@
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import DataUri from "../../Core/DataUri";
 import { MeasurableGeometry } from "../../ViewModels/Measure/MeasurableGeometryManager";
 import i18next from "i18next";
@@ -240,11 +241,81 @@ const MeasurableTransform = observer((props: Props) => {
     return new File([blob], filename, { type: mime });
   };
 
+  const generateCircleGeoJson = (geom: MeasurableGeometry) => {
+    const center = geom.circleCenter;
+    const radius = geom.circleRadius ?? 0;
+    if (!center || radius <= 0) return "";
+
+    const numPoints = 64;
+    const earthRadius = Ellipsoid.WGS84.maximumRadius;
+    const angularDistance = radius / earthRadius;
+    const coordinates: number[][] = [];
+
+    for (let i = 0; i <= numPoints; i++) {
+      const bearing = (2 * Math.PI * (i % numPoints)) / numPoints;
+      const lat1 = center.latitude;
+      const lon1 = center.longitude;
+      const sinLat1 = Math.sin(lat1);
+      const cosLat1 = Math.cos(lat1);
+      const sinAd = Math.sin(angularDistance);
+      const cosAd = Math.cos(angularDistance);
+      const lat2 = Math.asin(
+        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
+      );
+      const lon2 =
+        lon1 +
+        Math.atan2(
+          Math.sin(bearing) * sinAd * cosLat1,
+          cosAd - sinLat1 * Math.sin(lat2)
+        );
+      coordinates.push([
+        CesiumMath.toDegrees(lon2),
+        CesiumMath.toDegrees(lat2)
+      ]);
+    }
+
+    return JSON.stringify({
+      name: layerName || "",
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [coordinates]
+      },
+      properties: {
+        path_notes: pathNotes || "",
+        isCircle: true,
+        radius: radius,
+        diameter: geom.circleDiameter ?? 0,
+        perimeter: geom.circlePerimeter ?? 0,
+        area: geom.circleArea ?? 0,
+        center_lat: CesiumMath.toDegrees(center.latitude),
+        center_lon: CesiumMath.toDegrees(center.longitude)
+      }
+    });
+  };
+
   const handleUploadFile = (e: any) => {
     addUserFiles(e.target.files, terria, viewState, undefined, true);
   };
 
   const handleTransform = () => {
+    if (geom.isCircle) {
+      const circleJson = generateCircleGeoJson(geom);
+      if (!circleJson) return;
+      const href = DataUri.make("json", circleJson);
+      try {
+        const file = dataURItoFile(
+          href as string,
+          `${layerName}_circle.geojson`
+        );
+        handleUploadFile({ target: { files: [file] } });
+        onClick?.();
+      } catch (e) {
+        console.error("Unable to create File from Data URI:", e);
+      }
+      return;
+    }
+
     const validPaths = terria.measurableGeomList.filter(
       (geom) => geom.stopPoints && geom.stopPoints.length > 0
     );

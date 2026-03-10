@@ -1624,6 +1624,67 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       });
     }
 
+    private getCloseGeomProperties(properties: JsonObject) {
+      const radius = getPropertyValue(properties.radius, { parseNumber: true });
+      const diameter = getPropertyValue(properties.diameter, {
+        parseNumber: true
+      });
+      const perimeter = getPropertyValue(properties.perimeter, {
+        parseNumber: true
+      });
+      const area = getPropertyValue(properties.area, { parseNumber: true });
+      const centerLat = getPropertyValue(properties.center_lat, {
+        parseNumber: true
+      });
+      const centerLon = getPropertyValue(properties.center_lon, {
+        parseNumber: true
+      });
+      const isCircleFeature =
+        properties.isCircle === true ||
+        properties.isCircle === "true" ||
+        (radius !== undefined &&
+          centerLat !== undefined &&
+          centerLon !== undefined);
+
+      if (
+        !isCircleFeature ||
+        centerLat === undefined ||
+        centerLon === undefined
+      ) {
+        return undefined;
+      }
+
+      const resolvedRadius =
+        radius ??
+        (diameter !== undefined
+          ? diameter / 2
+          : perimeter !== undefined
+          ? perimeter / (2 * Math.PI)
+          : area !== undefined
+          ? Math.sqrt(area / Math.PI)
+          : undefined);
+
+      if (resolvedRadius === undefined) {
+        return undefined;
+      }
+
+      const resolvedDiameter = diameter ?? resolvedRadius * 2;
+      const resolvedPerimeter = perimeter ?? 2 * Math.PI * resolvedRadius;
+      const resolvedArea = area ?? Math.PI * resolvedRadius * resolvedRadius;
+
+      return {
+        hasArea: true,
+        isCircle: true,
+        circleRadius: resolvedRadius,
+        circleDiameter: resolvedDiameter,
+        circlePerimeter: resolvedPerimeter,
+        circleArea: resolvedArea,
+        circleCenter: Cartographic.fromDegrees(centerLon, centerLat, 0),
+        geodeticDistance: resolvedPerimeter,
+        geodeticArea: resolvedArea
+      };
+    }
+
     computePath() {
       if (!this.readyData || !isJsonArray(this.readyData.features)) return;
 
@@ -1648,10 +1709,22 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         }
         if (!jsonCoords || jsonCoords.length === 0) return;
 
-        const properties = feature.properties ?? {};
+        const properties = isJsonObject(feature.properties)
+          ? feature.properties
+          : {};
         const pathNotes = properties.desc || properties.path_notes || "";
         const coordinates = this.convertJsonCoords(jsonCoords);
-        this.asPath(coordinates, pathNotes, index, closeLoop);
+        const closeGeomProperties = closeLoop
+          ? this.getCloseGeomProperties(properties)
+          : undefined;
+
+        this.asPath(
+          coordinates,
+          pathNotes,
+          index,
+          closeLoop,
+          closeGeomProperties
+        );
       };
 
       if (this.readyData.features.length === 1) {
@@ -2230,11 +2303,37 @@ function createEntityFromHole(
   createEntitiesFromHoles(entityCollection, hole.holes, mainEntity);
 }
 
-function getPropertyValue<T>(property: Property | undefined): T | undefined {
-  if (property === undefined) {
+function getPropertyValue<T>(property: Property | undefined): T | undefined;
+function getPropertyValue(
+  property: unknown,
+  options: { parseNumber: true }
+): number | undefined;
+function getPropertyValue<T>(
+  property: Property | unknown,
+  options?: { parseNumber?: boolean }
+): T | number | undefined {
+  if (property === undefined || property === null) {
     return undefined;
   }
-  return property.getValue(JulianDate.now());
+
+  if (options?.parseNumber) {
+    if (isJsonNumber(property)) {
+      return property;
+    }
+
+    if (isJsonString(property)) {
+      const parsedValue = Number(property);
+      return Number.isFinite(parsedValue) ? parsedValue : undefined;
+    }
+
+    return undefined;
+  }
+
+  if (typeof (property as Property).getValue === "function") {
+    return (property as Property).getValue(JulianDate.now());
+  }
+
+  return undefined;
 }
 
 function isPolygonOnTerrain(polygon: PolygonGraphics, now: JulianDate) {

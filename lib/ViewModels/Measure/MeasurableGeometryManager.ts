@@ -27,6 +27,12 @@ export interface MeasurableGeometry {
   pathNotes?: string;
   isFileUploaded?: boolean;
   isPointAdding?: boolean;
+  isCircle?: boolean;
+  circleRadius?: number;
+  circleDiameter?: number;
+  circlePerimeter?: number;
+  circleArea?: number;
+  circleCenter?: Cartographic;
 }
 
 export default class MeasurableGeometryManager {
@@ -43,19 +49,34 @@ export default class MeasurableGeometryManager {
   }
 
   resample() {
+    const currentGeometry =
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
+    const closeGeomProperties = currentGeometry?.isCircle
+      ? {
+          hasArea: true,
+          isCircle: true,
+          circleRadius: currentGeometry.circleRadius,
+          circleDiameter: currentGeometry.circleDiameter,
+          circlePerimeter: currentGeometry.circlePerimeter,
+          circleArea: currentGeometry.circleArea,
+          circleCenter: currentGeometry.circleCenter,
+          geodeticDistance:
+            currentGeometry.circlePerimeter ?? currentGeometry.geodeticDistance,
+          geodeticArea:
+            currentGeometry.circleArea ?? currentGeometry.geodeticArea,
+          airArea: currentGeometry.airArea
+        }
+      : undefined;
+
     this.sampleFromCartographics(
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.stopPoints ?? [],
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isClosed,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.onlyPoints,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pointDescriptions,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pathNotes,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isFileUploaded
+      currentGeometry?.stopPoints ?? [],
+      currentGeometry?.isClosed,
+      currentGeometry?.onlyPoints,
+      currentGeometry?.pointDescriptions,
+      currentGeometry?.pathNotes,
+      currentGeometry?.isFileUploaded,
+      undefined,
+      closeGeomProperties
     );
   }
 
@@ -114,7 +135,8 @@ export default class MeasurableGeometryManager {
     pointDescriptions: string[] = [],
     pathNotes?: string,
     isFileUploaded?: boolean,
-    indexPath?: number
+    indexPath?: number,
+    closeGeomProperties?: Partial<MeasurableGeometry>
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
@@ -220,7 +242,8 @@ export default class MeasurableGeometryManager {
             pointDescriptions,
             pathNotes,
             isFileUploaded,
-            indexPath
+            indexPath,
+            closeGeomProperties
           ]
         : [
             cartoPositions,
@@ -234,7 +257,8 @@ export default class MeasurableGeometryManager {
             [],
             pathNotes,
             isFileUploaded,
-            indexPath
+            indexPath,
+            closeGeomProperties
           ];
 
       this.updatePath(...updatePathParams);
@@ -254,7 +278,8 @@ export default class MeasurableGeometryManager {
     pointDescriptions: string[] = [],
     pathNotes?: string,
     isFileUploaded?: boolean,
-    indexPath?: number
+    indexPath?: number,
+    closeGeomProperties?: Partial<MeasurableGeometry>
   ) {
     let geodeticArea = 0;
     let airArea = 0;
@@ -264,7 +289,7 @@ export default class MeasurableGeometryManager {
       airArea = this.calculateAirArea(stopPoints);
     }
 
-    const newGeometry = {
+    const newGeometry: MeasurableGeometry = {
       isClosed: isClosed,
       hasArea: false,
       stopPoints: stopPoints,
@@ -288,7 +313,7 @@ export default class MeasurableGeometryManager {
       pointDescriptions: pointDescriptions,
       pathNotes: pathNotes,
       isFileUploaded: isFileUploaded,
-      indexPath: indexPath
+      ...(closeGeomProperties ?? {})
     };
 
     if (indexPath !== undefined) {

@@ -14,6 +14,7 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -42,6 +43,7 @@ import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
 import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
+import { MeasureCircleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -98,6 +100,8 @@ export default class UserDrawing extends MappableMixin(
 
   private isAngleMeasuring: boolean = false;
   private isPointMeasuring: boolean = false;
+  private isCircleMeasuring: boolean = false;
+  private readonly circleBearings: number[];
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -176,6 +180,10 @@ export default class UserDrawing extends MappableMixin(
     this.drawRectangle = defaultValue(options.drawRectangle, false);
 
     this.invisible = options.invisible;
+
+    this.circleBearings = new Array(65)
+      .fill(0)
+      .map((_, i) => (2 * Math.PI * i) / 64);
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -242,31 +250,258 @@ export default class UserDrawing extends MappableMixin(
     });
   }
 
-  private updateSegmentLabels() {
-    if (
-      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.showDistanceLabels
-    ) {
-      const toRemove: Entity[] = [];
-      for (const entity of this.otherEntities.entities.values) {
-        if (entity.name && entity.name.startsWith("SegmentLabel-")) {
-          toRemove.push(entity);
-        }
+  private clearSegmentLabels() {
+    const toRemove: Entity[] = [];
+    for (const entity of this.otherEntities.entities.values) {
+      if (entity.name && entity.name.startsWith("SegmentLabel-")) {
+        toRemove.push(entity);
       }
-      toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+    }
+    toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+  }
+
+  private getCurrentMouseCartesianPosition() {
+    const cartographicMouseCoords =
+      this.terria.currentViewer.mouseCoords.cartographic;
+    if (!cartographicMouseCoords) {
+      return undefined;
+    }
+
+    return Ellipsoid.WGS84.cartographicToCartesian(cartographicMouseCoords);
+  }
+
+  private getCircleDisplayPoints(time?: JulianDate) {
+    const currentTime = time ?? this.terria.timelineClock.currentTime;
+    const center =
+      this.pointEntities.entities.values[0]?.position?.getValue(currentTime);
+
+    if (!center) {
+      return [];
+    }
+
+    const edge =
+      this.pointEntities.entities.values[1]?.position?.getValue(currentTime) ??
+      this.getCurrentMouseCartesianPosition();
+
+    if (!edge) {
+      return [center];
+    }
+
+    return [center, edge];
+  }
+
+  private getCircleGeodesicDistance(center: Cartesian3, edge: Cartesian3) {
+    const centerCartographic = Ellipsoid.WGS84.cartesianToCartographic(center);
+    const edgeCartographic = Ellipsoid.WGS84.cartesianToCartographic(edge);
+    const geodesic = new EllipsoidGeodesic(
+      centerCartographic,
+      edgeCartographic
+    );
+    return geodesic.surfaceDistance;
+  }
+
+  private buildCirclePolylinePositions(center: Cartesian3, radius: number) {
+    const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
+    const earthRadius = Ellipsoid.WGS84.maximumRadius;
+    const angularDistance = radius / earthRadius;
+    const positions: Cartesian3[] = [];
+
+    for (let i = 0; i < this.circleBearings.length; i++) {
+      const bearing = this.circleBearings[i];
+      const lat1 = centerCarto.latitude;
+      const lon1 = centerCarto.longitude;
+
+      const sinLat1 = Math.sin(lat1);
+      const cosLat1 = Math.cos(lat1);
+      const sinAd = Math.sin(angularDistance);
+      const cosAd = Math.cos(angularDistance);
+      const sinBearing = Math.sin(bearing);
+      const cosBearing = Math.cos(bearing);
+
+      const lat2 = Math.asin(sinLat1 * cosAd + cosLat1 * sinAd * cosBearing);
+      const lon2 =
+        lon1 +
+        Math.atan2(
+          sinBearing * sinAd * cosLat1,
+          cosAd - sinLat1 * Math.sin(lat2)
+        );
+
+      positions.push(
+        Cartographic.toCartesian(
+          new Cartographic(lon2, lat2, centerCarto.height),
+          Ellipsoid.WGS84
+        )
+      );
+    }
+
+    return positions;
+  }
+
+  private prettifyCircleArea(areaMetresSquared: number) {
+    if (areaMetresSquared <= 0) {
+      return "";
+    }
+
+    if (areaMetresSquared >= 1_000_000) {
+      const km2 = areaMetresSquared / 1_000_000;
+      const kmStr = km2 >= 10 ? km2.toFixed(1) : km2.toFixed(2);
+      const mStr = areaMetresSquared.toFixed(0);
+      return `${kmStr} km\u00B2 (${mStr} m\u00B2)`;
+    }
+
+    const decimals = areaMetresSquared >= 10_000 ? 0 : 2;
+    return `${areaMetresSquared.toFixed(decimals)} m\u00B2`;
+  }
+
+  private prettifyCircleDistance(distanceMetres: number) {
+    if (distanceMetres <= 0) {
+      return "";
+    }
+
+    const label = distanceMetres > 999 ? "km" : "m";
+    const value = label === "km" ? distanceMetres / 1000.0 : distanceMetres;
+    const precision = label === "km" ? 2 : 1;
+    return `${value.toFixed(precision)} ${label}`;
+  }
+
+  private createCircleEntities() {
+    this.otherEntities.entities.add({
+      id: "Circle Line",
+      name: "Circle Line",
+      polyline: {
+        positions: new CallbackProperty((time: JulianDate) => {
+          const [center, edge] = this.getCircleDisplayPoints(time);
+          if (!center || !edge) {
+            return [];
+          }
+
+          const radius = this.getCircleGeodesicDistance(center, edge);
+          if (radius <= 0) {
+            return [];
+          }
+
+          return this.buildCirclePolylinePositions(center, radius);
+        }, false),
+        clampToGround: true,
+        width: 20,
+        material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 0.0, 0.0, 0.1),
+          glowPower: 0.25
+        } as any)
+      }
+    } as any);
+
+    this.otherEntities.entities.add({
+      id: "Circle Label",
+      name: "Circle Label",
+      position: new CallbackProperty((time: JulianDate) => {
+        return this.getCircleDisplayPoints(time)[0];
+      }, false) as any,
+      label: {
+        text: new CallbackProperty((time: JulianDate) => {
+          const [center, edge] = this.getCircleDisplayPoints(time);
+          if (!center || !edge) {
+            return "";
+          }
+
+          const radius = this.getCircleGeodesicDistance(center, edge);
+          return this.prettifyCircleArea(Math.PI * radius * radius);
+        }, false),
+        font: "16px sans-serif",
+        style: LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Color.BLACK,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        pixelOffset: new Cartesian2(0, -20),
+        verticalOrigin: VerticalOrigin.BOTTOM
+      }
+    } as any);
+
+    this.otherEntities.entities.add({
+      id: "Circle Radius Line",
+      name: "Circle Radius Line",
+      polyline: {
+        positions: new CallbackProperty((time: JulianDate) => {
+          const [center, edge] = this.getCircleDisplayPoints(time);
+          if (!center || !edge) {
+            return [];
+          }
+          return [center, edge];
+        }, false),
+        clampToGround: true,
+        width: 20,
+        material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 0.0, 0.0, 0.35),
+          glowPower: 0.15
+        } as any)
+      }
+    } as any);
+
+    this.otherEntities.entities.add({
+      id: "Circle Radius Label",
+      name: "Circle Radius Label",
+      position: new CallbackProperty((time: JulianDate) => {
+        const [center, edge] = this.getCircleDisplayPoints(time);
+        if (!center || !edge) {
+          return undefined;
+        }
+        return Cartesian3.midpoint(center, edge, new Cartesian3());
+      }, false) as any,
+      label: {
+        text: new CallbackProperty((time: JulianDate) => {
+          const [center, edge] = this.getCircleDisplayPoints(time);
+          if (!center || !edge) {
+            return "";
+          }
+
+          const radius = this.getCircleGeodesicDistance(center, edge);
+          return this.prettifyCircleDistance(radius);
+        }, false),
+        font: "14px sans-serif",
+        style: LabelStyle.FILL_AND_OUTLINE,
+        fillColor: Color.BLACK,
+        outlineColor: Color.WHITE,
+        outlineWidth: 2,
+        pixelOffset: new Cartesian2(0, -12),
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        horizontalOrigin: HorizontalOrigin.CENTER
+      }
+    } as any);
+
+    this.otherEntities.entities.add({
+      id: "Circle Preview Point",
+      name: "Circle Preview Point",
+      position: new CallbackProperty((time: JulianDate) => {
+        if (this.pointEntities.entities.values.length !== 1) {
+          return undefined;
+        }
+
+        return this.getCircleDisplayPoints(time)[1];
+      }, false) as any,
+      billboard: {
+        image: this.svgPoint,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
+      } as any
+    } as any);
+  }
+
+  private updateSegmentLabels() {
+    const currentGeom =
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
+
+    if (this.isCircleMeasuring || currentGeom?.isCircle) {
+      this.clearSegmentLabels();
       return;
     }
-    if (
-      !this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        .onlyPoints
-    ) {
-      const toRemove: Entity[] = [];
-      for (const entity of this.otherEntities.entities.values) {
-        if (entity.name && entity.name.startsWith("SegmentLabel-")) {
-          toRemove.push(entity);
-        }
-      }
-      toRemove.forEach((e) => this.otherEntities.entities.remove(e));
+
+    if (!currentGeom?.showDistanceLabels) {
+      this.clearSegmentLabels();
+      return;
+    }
+
+    if (!currentGeom.onlyPoints) {
+      this.clearSegmentLabels();
 
       const numPoints = this.pointEntities.entities.values.length;
       for (let i = 0; i < numPoints - 1; i++) {
@@ -450,6 +685,7 @@ export default class UserDrawing extends MappableMixin(
   enterDrawMode(sender?: any) {
     this.isAngleMeasuring = sender === MeasureAngleTool.id;
     this.isPointMeasuring = sender === MeasurePointTool.id;
+    this.isCircleMeasuring = sender === MeasureCircleTool.id;
     // Create and setup a new dragHelper
     this.dragHelper = new DragPoints(this.terria, (customDataSource) => {
       if (typeof this.onPointMoved === "function") {
@@ -537,12 +773,17 @@ export default class UserDrawing extends MappableMixin(
     this.disposeClampMeasureLineToGround = reaction(
       () => this.terria?.clampMeasureLineToGround,
       (clampMeasureLineToGround) => {
-        if (
-          this.otherEntities.entities.values.length > 0 &&
-          this.otherEntities.entities.values[0]?.polyline
-        ) {
-          this.otherEntities.entities.values[0].polyline.clampToGround =
-            new ConstantProperty(clampMeasureLineToGround);
+        let hasPolylines = false;
+        for (const entity of this.otherEntities.entities.values) {
+          if (entity.polyline) {
+            entity.polyline.clampToGround = new ConstantProperty(
+              clampMeasureLineToGround
+            );
+            hasPolylines = true;
+          }
+        }
+
+        if (hasPolylines) {
           this.terria.currentViewer.notifyRepaintRequired();
         }
       }
@@ -617,6 +858,8 @@ export default class UserDrawing extends MappableMixin(
       };
 
       this.otherEntities.entities.add(rectangle as any);
+    } else if (this.isCircleMeasuring) {
+      this.createCircleEntities();
     } else if (sender !== MeasurePointTool.id) {
       // Line will show up once user has drawn some points. Vertices of line are user points.
       this.otherEntities.entities.add({
@@ -813,14 +1056,20 @@ export default class UserDrawing extends MappableMixin(
    * Called after a point has been added, prepares to add and draw another point, as well as updating the dialog.
    */
   private prepareToAddNewPoint() {
+    const circleIsLocked =
+      this.isCircleMeasuring && this.pointEntities.entities.values.length >= 2;
+
     if (this.terria.measurableGeomList[this.terria.measurableGeometryIndex]) {
-      this.terria.measurableGeomList[
-        this.terria.measurableGeometryIndex
-      ].pointDescriptions?.push("");
       runInAction(() => {
+        if (!circleIsLocked) {
+          this.terria.measurableGeomList[
+            this.terria.measurableGeometryIndex
+          ].pointDescriptions?.push("");
+        }
+
         this.terria.measurableGeomList[
           this.terria.measurableGeometryIndex
-        ].isPointAdding = true;
+        ].isPointAdding = !circleIsLocked;
       });
     }
     runInAction(() => {

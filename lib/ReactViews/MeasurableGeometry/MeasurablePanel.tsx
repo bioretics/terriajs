@@ -263,15 +263,31 @@ const MeasurablePanel = observer((props: Props) => {
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
   useEffect(() => {
-    if (!measurablePanelIsVisible) return;
+    const clearHoveredMarkers = () => {
+      MeasurablePanelManager.removeAllMarkers();
+      setHighlightedRow(null);
+      viewState.setSelectedStopPointIdx(null);
+      viewState.setSelectedSampledPointIdx(null);
+    };
+
+    if (!measurablePanelIsVisible) {
+      clearHoveredMarkers();
+      return;
+    }
+
     const handleMouseProximity = () => {
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
       if (
         !mouseCoords ||
         !terria.measurableGeomList ||
         !terria.measurableGeomList[terria.measurableGeometryIndex]
-      )
+      ) {
+        clearHoveredMarkers();
         return;
+      }
+
+      const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+      const hasSampledPoints = !!geom?.sampledPoints?.length;
 
       const getDynamicRangeThreshold = (): number => {
         const fallback = 0.000025;
@@ -325,51 +341,34 @@ const MeasurablePanel = observer((props: Props) => {
         }
       };
 
-      if (
-        terria?.measurableGeomList[terria.measurableGeometryIndex]
-          ?.onlyPoints === false
-      ) {
-        if (
-          terria.measurableGeomList[terria.measurableGeometryIndex]
-            .sampledPoints
-        ) {
-          findNearbyPoint(
-            terria.measurableGeomList[terria.measurableGeometryIndex]
-              .sampledPoints ?? [],
-            (point, idx) => {
-              if (point) {
-                MeasurablePanelManager.addMarker(point);
-                viewState.setSelectedSampledPointIdx(idx);
-              } else {
-                MeasurablePanelManager.removeAllMarkers();
-                viewState.setSelectedSampledPointIdx(null);
-              }
+      if (geom?.onlyPoints === false) {
+        if (geom.sampledPoints) {
+          findNearbyPoint(geom.sampledPoints ?? [], (point, idx) => {
+            if (point) {
+              MeasurablePanelManager.addMarker(point);
+              viewState.setSelectedSampledPointIdx(idx);
+            } else {
+              MeasurablePanelManager.removeAllMarkers();
+              viewState.setSelectedSampledPointIdx(null);
             }
-          );
+          });
         }
       }
 
-      if (
-        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
-      ) {
-        findNearbyPoint(
-          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
-          (point, idx) => {
-            if (point) {
-              MeasurablePanelManager.addMarker(point);
-              setHighlightedRow(idx);
-              viewState.setSelectedStopPointIdx(idx);
-            } else {
-              if (
-                terria?.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.onlyPoints
-              )
-                MeasurablePanelManager.removeAllMarkers();
-              setHighlightedRow(null);
-              viewState.setSelectedStopPointIdx(null);
+      if (geom.stopPoints) {
+        findNearbyPoint(geom.stopPoints, (point, idx) => {
+          if (point) {
+            MeasurablePanelManager.addMarker(point);
+            setHighlightedRow(idx);
+            viewState.setSelectedStopPointIdx(idx);
+          } else {
+            if (geom?.onlyPoints || geom?.isCircle || !hasSampledPoints) {
+              MeasurablePanelManager.removeAllMarkers();
             }
+            setHighlightedRow(null);
+            viewState.setSelectedStopPointIdx(null);
           }
-        );
+        });
       }
 
       terria.currentViewer.notifyRepaintRequired();
@@ -380,7 +379,10 @@ const MeasurablePanel = observer((props: Props) => {
         handleMouseProximity
       );
 
-    return () => disposer();
+    return () => {
+      disposer();
+      clearHoveredMarkers();
+    };
   }, [
     viewState,
     terria.cesium,
@@ -535,6 +537,132 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!currentGeom) return null;
 
+    const activeToolIsCircle = () => {
+      const circleTool = terria.mapNavigationModel.findItem(
+        MeasureCircleTool.id
+      );
+      return circleTool?.controller?.active === true;
+    };
+
+    const isCircleGeometry =
+      activeToolIsCircle() || currentGeom.isCircle === true;
+
+    if (isCircleGeometry) {
+      const radius = currentGeom.circleRadius ?? 0;
+      const diameter = currentGeom.circleDiameter ?? 0;
+      const perimeter = currentGeom.circlePerimeter ?? 0;
+      const area = currentGeom.circleArea ?? 0;
+      const areaHa = area > 0 ? (area * 0.0001).toFixed(4) : "";
+
+      return (
+        <>
+          <Text textLight style={{ marginLeft: 1 }} title="">
+            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+          </Text>
+          <small>
+            <table className={Styles.elevation}>
+              <thead>
+                <tr>
+                  <th
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.circleRadius")}
+                  </th>
+                  <th
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.circleDiameter")}
+                  </th>
+                  <th
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.circlePerimeter")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(radius)}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(diameter)}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(perimeter)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style={{ marginTop: "15px", marginBottom: "10px" }} />
+
+            <table className={Styles.elevation}>
+              <thead>
+                <tr>
+                  <th
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.circleAreaM2")}
+                  </th>
+                  <th
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.circleAreaHa")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(area, true)}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {areaHa ? `${areaHa} ha` : ""}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </small>
+        </>
+      );
+    }
+
     const activeToolIsPolygon = () => {
       const polygonTool = terria.mapNavigationModel.findItem(
         MeasurePolygonTool.id
@@ -687,10 +815,18 @@ const MeasurablePanel = observer((props: Props) => {
   };
 
   const renderBody = () => {
+    const isPointGeometry = currentGeom?.onlyPoints === true;
+    const isCircleGeometry = currentGeom?.isCircle === true;
+    const showPathControls = !isPointGeometry && !isCircleGeometry;
+    const showSamplingStep =
+      !currentGeom?.hasArea && !isPointGeometry && !isCircleGeometry;
+    const showStepDetails = isCircleGeometry
+      ? !!currentGeom?.stopPoints?.length
+      : !!currentGeom?.sampledDistances;
+
     return (
       <div className={Styles.body} style={{ padding: "1rem" }}>
-        {!terria?.measurableGeomList[terria.measurableGeometryIndex]
-          ?.onlyPoints && (
+        {showPathControls && (
           <div>
             {terria.measurableGeomList[terria.measurableGeometryIndex] &&
               ((terria.measurableGeomList[terria.measurableGeometryIndex]
@@ -917,15 +1053,11 @@ const MeasurablePanel = observer((props: Props) => {
               />
             </div>
           )}
-        {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
-          !terria?.measurableGeomList[terria.measurableGeometryIndex]
-            ?.onlyPoints &&
-          renderSamplingStep()}
+        {showSamplingStep && renderSamplingStep()}
         <br />
         {renderGeometrySummary()}
         <br />
-        {terria.measurableGeomList[terria.measurableGeometryIndex]
-          ?.sampledDistances && renderStepDetails()}
+        {showStepDetails && renderStepDetails()}
       </div>
     );
   };
@@ -970,6 +1102,9 @@ const MeasurablePanel = observer((props: Props) => {
       [];
     const onlyPoints =
       terria?.measurableGeomList[terria.measurableGeometryIndex]?.onlyPoints;
+    const isCircle =
+      terria?.measurableGeomList[terria.measurableGeometryIndex]?.isCircle ===
+      true;
 
     const handleDescriptionChange = action((index: number, value: string) => {
       const newDescriptions = [
@@ -989,6 +1124,8 @@ const MeasurablePanel = observer((props: Props) => {
 
     const onSortEnd = action(
       ({ oldIndex, newIndex }: { oldIndex: number; newIndex: number }) => {
+        if (isCircle || oldIndex === newIndex) return;
+
         function reorder<T>(
           list: T[],
           startIndex: number,
@@ -1000,7 +1137,6 @@ const MeasurablePanel = observer((props: Props) => {
           return result;
         }
 
-        if (oldIndex === newIndex) return;
         const newStopPoints = reorder(stopPoints, oldIndex, newIndex);
         if (
           terria.measurableGeomList &&
@@ -1092,7 +1228,7 @@ const MeasurablePanel = observer((props: Props) => {
               <SortableList
                 shouldCancelStart={() =>
                   terria.measurableGeomList[terria.measurableGeometryIndex]
-                    ?.isFileUploaded === true
+                    ?.isFileUploaded === true || isCircle
                 }
                 items={stopPoints}
                 onlyPoints={onlyPoints}
@@ -1198,10 +1334,12 @@ const MeasurablePanel = observer((props: Props) => {
           handleMouseOver();
         }}
         style={{
-          cursor: terria.measurableGeomList[terria.measurableGeometryIndex]
-            ?.isFileUploaded
-            ? "auto"
-            : "row-resize",
+          cursor:
+            terria.measurableGeomList[terria.measurableGeometryIndex]
+              ?.isFileUploaded ||
+            terria.measurableGeomList[terria.measurableGeometryIndex]?.isCircle
+              ? "auto"
+              : "row-resize",
           outline: isHighlighted ? `2px solid ${theme.colorPrimary}` : "none",
           outlineOffset: "-2px",
           backgroundColor: isHighlighted

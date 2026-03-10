@@ -1,6 +1,6 @@
 "use strict";
 
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, runInAction } from "mobx";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -12,7 +12,6 @@ import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Terria from "../../../../Models/Terria";
 import UserDrawing from "../../../../Models/UserDrawing";
-import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
 import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
@@ -22,12 +21,6 @@ import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import MeasureTools from "../../../../Models/MeasureTools";
 import ViewState from "../../../../ReactViewModels/ViewState";
-import Color from "terriajs-cesium/Source/Core/Color";
-import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
-import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
-import Entity from "terriajs-cesium/Source/DataSources/Entity";
-import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
-import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 
 interface IProps {
   terria: Terria;
@@ -652,13 +645,8 @@ export class MeasureCircleTool extends MapNavigationItemController {
   private userDrawing: UserDrawing;
   private radiusMetres: number = 0;
   private areaMetresSquared: number = 0;
-  private mouseMoveHandler?: (e: MouseEvent) => void;
   private circleLocked: boolean = false;
-  private circleBearings: number[];
-  private circleLineEntity?: Entity;
-  private circleLabelEntity?: Entity;
-  private circleRadiusLineEntity?: Entity;
-  private circleRadiusLabelEntity?: Entity;
+  private isDrawingRadius: boolean = false;
 
   onOpen: () => void;
   onClose: () => void;
@@ -684,10 +672,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
 
     this.onOpen = props.onOpen || (() => {});
     this.onClose = props.onClose || (() => {});
-
-    this.circleBearings = new Array(65)
-      .fill(0)
-      .map((_, i) => (2 * Math.PI * i) / 64);
   }
 
   get glyph(): any {
@@ -723,254 +707,124 @@ export class MeasureCircleTool extends MapNavigationItemController {
     return `${areaMetresSquared.toFixed(decimals)} m\u00B2`;
   }
 
-  private prettifyDistance(distanceMetres: number) {
-    if (distanceMetres <= 0) return "";
-    const label = distanceMetres > 999 ? "km" : "m";
-    const value = label === "km" ? distanceMetres / 1000.0 : distanceMetres;
-    const precision = label === "km" ? 2 : 1;
-    return `${value.toFixed(precision)} ${label}`;
+  private resetCircleState() {
+    this.radiusMetres = 0;
+    this.areaMetresSquared = 0;
+    this.circleLocked = false;
+    this.isDrawingRadius = false;
   }
 
-  private clearCircleGraphics() {
-    if (this.circleLineEntity?.polyline) {
-      (this.circleLineEntity.polyline as any).positions = [];
-    }
-    if (this.circleLabelEntity?.label) {
-      (this.circleLabelEntity.label as any).text = "";
-    }
-    if (this.circleRadiusLineEntity?.polyline) {
-      (this.circleRadiusLineEntity.polyline as any).positions = [];
-    }
-    if (this.circleRadiusLabelEntity?.label) {
-      (this.circleRadiusLabelEntity.label as any).text = "";
-    }
-  }
-
-  private buildCirclePolylinePositions(center: Cartesian3, radius: number) {
-    const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
-    const earthRadius = Ellipsoid.WGS84.maximumRadius;
-    const angularDistance = radius / earthRadius;
-    const positions: Cartesian3[] = [];
-
-    for (let i = 0; i < this.circleBearings.length; i++) {
-      const bearing = this.circleBearings[i];
-      const lat1 = centerCarto.latitude;
-      const lon1 = centerCarto.longitude;
-
-      const sinLat1 = Math.sin(lat1);
-      const cosLat1 = Math.cos(lat1);
-      const sinAd = Math.sin(angularDistance);
-      const cosAd = Math.cos(angularDistance);
-      const sinBearing = Math.sin(bearing);
-      const cosBearing = Math.cos(bearing);
-
-      const lat2 = Math.asin(sinLat1 * cosAd + cosLat1 * sinAd * cosBearing);
-      const lon2 =
-        lon1 +
-        Math.atan2(
-          sinBearing * sinAd * cosLat1,
-          cosAd - sinLat1 * Math.sin(lat2)
-        );
-
-      positions.push(
-        Cartographic.toCartesian(
-          new Cartographic(lon2, lat2, centerCarto.height),
-          Ellipsoid.WGS84
-        )
-      );
-    }
-
-    return positions;
-  }
-
-  private updateCircleGraphics(
-    center: Cartesian3,
-    edge: Cartesian3,
-    radius: number
-  ) {
+  private updateMeasurableGeomList(center: Cartesian3, edge: Cartesian3) {
+    const radius = this.getGeodesicDistance(center, edge);
     const area = Math.PI * radius * radius;
+    const perimeter = 2 * Math.PI * radius;
+    const diameter = 2 * radius;
+    const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
+    const edgeCarto = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
+
+    this.radiusMetres = radius;
     this.areaMetresSquared = area;
-    this.clearCircleGraphics();
 
-    const positions = this.buildCirclePolylinePositions(center, radius);
+    runInAction(() => {
+      const geomIndex = this.terria.measurableGeometryIndex;
+      const existingGeom = this.terria.measurableGeomList[geomIndex];
 
-    if (!this.circleLineEntity) {
-      this.circleLineEntity = this.userDrawing.otherEntities.entities.add({
-        id: "measure-circle-line",
-        name: "measure-circle-line",
-        polyline: {
-          positions,
-          clampToGround: true,
-          width: 20,
-          material: new PolylineGlowMaterialProperty({
-            color: new Color(0.0, 0.0, 0.0, 0.1),
-            glowPower: 0.25
-          } as any)
-        }
-      }) as Entity;
-    } else if (this.circleLineEntity.polyline) {
-      (this.circleLineEntity.polyline as any).positions = positions;
-    }
-
-    if (!this.circleLabelEntity) {
-      this.circleLabelEntity = this.userDrawing.otherEntities.entities.add({
-        id: "measure-circle-label",
-        name: "measure-circle-label",
-        position: new ConstantPositionProperty(center),
-        label: {
-          text: this.prettifyArea(area),
-          font: "16px sans-serif",
-          style: LabelStyle.FILL_AND_OUTLINE,
-          fillColor: Color.BLACK,
-          outlineColor: Color.WHITE,
-          outlineWidth: 2,
-          pixelOffset: new Cartesian2(0, -20),
-          verticalOrigin: VerticalOrigin.BOTTOM
-        }
-      }) as Entity;
-    } else {
-      (this.circleLabelEntity.position as ConstantPositionProperty)?.setValue(
-        center
-      );
-      if (this.circleLabelEntity.label) {
-        (this.circleLabelEntity.label as any).text = this.prettifyArea(area);
-      }
-    }
-
-    const radiusPositions = [center, edge];
-    if (!this.circleRadiusLineEntity) {
-      this.circleRadiusLineEntity = this.userDrawing.otherEntities.entities.add(
-        {
-          id: "measure-circle-radius-line",
-          name: "measure-circle-radius-line",
-          polyline: {
-            positions: radiusPositions,
-            clampToGround: true,
-            width: 20,
-            material: new PolylineGlowMaterialProperty({
-              color: new Color(0.0, 0.0, 0.0, 0.35),
-              glowPower: 0.15
-            } as any)
-          }
-        }
-      ) as Entity;
-    } else if (this.circleRadiusLineEntity.polyline) {
-      (this.circleRadiusLineEntity.polyline as any).positions = radiusPositions;
-    }
-
-    const midpoint = Cartesian3.midpoint(center, edge, new Cartesian3());
-    const radiusLabelText = this.prettifyDistance(radius);
-
-    if (!this.circleRadiusLabelEntity) {
-      this.circleRadiusLabelEntity =
-        this.userDrawing.otherEntities.entities.add({
-          id: "measure-circle-radius-label",
-          name: "measure-circle-radius-label",
-          position: new ConstantPositionProperty(midpoint),
-          label: {
-            text: radiusLabelText,
-            font: "14px sans-serif",
-            style: LabelStyle.FILL_AND_OUTLINE,
-            fillColor: Color.BLACK,
-            outlineColor: Color.WHITE,
-            outlineWidth: 2,
-            pixelOffset: new Cartesian2(0, -12),
-            verticalOrigin: VerticalOrigin.BOTTOM
-          }
-        }) as Entity;
-    } else {
-      (
-        this.circleRadiusLabelEntity.position as ConstantPositionProperty
-      )?.setValue(midpoint);
-      if (this.circleRadiusLabelEntity.label) {
-        (this.circleRadiusLabelEntity.label as any).text = radiusLabelText;
-      }
-    }
-
-    this.terria.currentViewer.notifyRepaintRequired();
+      this.terria.measurableGeomList[geomIndex] = {
+        isClosed: true,
+        hasArea: true,
+        stopPoints: [centerCarto, edgeCarto],
+        stopGeodeticDistances: [0, radius],
+        stopAirDistances: [],
+        stopGroundDistances: [],
+        pointDescriptions: existingGeom?.pointDescriptions ?? [],
+        showDistanceLabels: false,
+        pathNotes: existingGeom?.pathNotes ?? "",
+        isFileUploaded: existingGeom?.isFileUploaded,
+        isPointAdding: false,
+        isCircle: true,
+        circleRadius: radius,
+        circleDiameter: diameter,
+        circlePerimeter: perimeter,
+        circleArea: area,
+        circleCenter: centerCarto,
+        geodeticArea: area,
+        geodeticDistance: perimeter
+      };
+    });
   }
 
   private onPointUpdated(
     pointEntities: CustomDataSource,
     isMove: boolean = false
   ) {
-    if (
-      !isMove &&
-      this.circleLocked &&
-      pointEntities.entities.values.length >= 1
-    ) {
-      const lastEntity =
-        pointEntities.entities.values[pointEntities.entities.values.length - 1];
-      pointEntities.entities.removeAll();
-      pointEntities.entities.add(lastEntity);
-      this.clearCircleGraphics();
-      this.circleLocked = false;
-      this.radiusMetres = 0;
-      this.areaMetresSquared = 0;
-    }
-
-    while (pointEntities.entities.values.length > 2) {
-      pointEntities.entities.remove(pointEntities.entities.values[0]);
-    }
-
     const points = pointEntities.entities.values
       .map((entity) =>
         entity.position?.getValue(this.terria.timelineClock.currentTime)
       )
       .filter((pos): pos is Cartesian3 => pos !== undefined);
 
-    this.radiusMetres = 0;
-    this.areaMetresSquared = 0;
-    this.circleLocked = points.length >= 2;
+    if (!isMove && this.circleLocked && points.length >= 1) {
+      const lastEntity =
+        pointEntities.entities.values[pointEntities.entities.values.length - 1];
+      pointEntities.entities.removeAll();
+      pointEntities.entities.add(lastEntity);
 
-    if (points.length >= 2) {
-      const center = points[0];
-      const edge = points[1];
-      this.radiusMetres = this.getGeodesicDistance(center, edge);
-      this.updateCircleGraphics(center, edge, this.radiusMetres);
-    } else {
-      this.clearCircleGraphics();
-    }
-  }
+      this.circleLocked = false;
+      this.isDrawingRadius = false;
+      this.radiusMetres = 0;
+      this.areaMetresSquared = 0;
 
-  private attachMouseMovePreview(pointEntities: CustomDataSource) {
-    const scene = this.terria.cesium?.scene;
-    const canvas = this.terria.cesium?.cesiumWidget?.canvas;
-    if (!scene || !canvas) return;
-
-    this.detachMouseMovePreview();
-
-    this.mouseMoveHandler = (evt: MouseEvent) => {
-      if (this.circleLocked) return;
-      const centerEntity = pointEntities.entities.values[0];
-      if (!centerEntity) return;
-      const center = centerEntity.position?.getValue(
+      const newCenter = lastEntity.position?.getValue(
         this.terria.timelineClock.currentTime
       );
-      if (!center) return;
-      const rect = canvas.getBoundingClientRect();
-      const pos = new Cartesian2(
-        evt.clientX - rect.left,
-        evt.clientY - rect.top
-      );
-      const pickRay = scene.camera.getPickRay(pos);
-      if (!pickRay) return;
-      const globe = scene.globe;
-      const picked = globe.pick(pickRay, scene);
-      if (!picked) return;
-      const radius = this.getGeodesicDistance(center, picked);
-      this.updateCircleGraphics(center, picked, radius);
-    };
+      if (newCenter) {
+        this.isDrawingRadius = true;
+      }
 
-    canvas.addEventListener("mousemove", this.mouseMoveHandler);
-  }
-
-  private detachMouseMovePreview() {
-    const canvas = this.terria.cesium?.cesiumWidget?.canvas;
-    if (canvas && this.mouseMoveHandler) {
-      canvas.removeEventListener("mousemove", this.mouseMoveHandler);
+      this.terria.currentViewer.notifyRepaintRequired();
+      return;
     }
-    this.mouseMoveHandler = undefined;
+
+    if (
+      !isMove &&
+      points.length === 1 &&
+      !this.isDrawingRadius &&
+      !this.circleLocked
+    ) {
+      this.isDrawingRadius = true;
+      this.terria.currentViewer.notifyRepaintRequired();
+      return;
+    }
+
+    if (!isMove && this.isDrawingRadius && points.length >= 2) {
+      this.isDrawingRadius = false;
+      this.circleLocked = true;
+
+      const center = points[0];
+      const lastPoint = points[points.length - 1];
+
+      const radius = this.getGeodesicDistance(center, lastPoint);
+      this.radiusMetres = radius;
+      this.areaMetresSquared = Math.PI * radius * radius;
+
+      this.updateMeasurableGeomList(center, lastPoint);
+
+      this.terria.currentViewer.notifyRepaintRequired();
+      return;
+    }
+
+    if (isMove && points.length >= 2) {
+      const radius = this.getGeodesicDistance(points[0], points[1]);
+      this.radiusMetres = radius;
+      this.areaMetresSquared = Math.PI * radius * radius;
+
+      if (this.circleLocked) {
+        this.updateMeasurableGeomList(points[0], points[1]);
+      }
+
+      this.terria.currentViewer.notifyRepaintRequired();
+      return;
+    }
   }
 
   private getGeodesicDistance(pointOne: Cartesian3, pointTwo: Cartesian3) {
@@ -993,29 +847,23 @@ export class MeasureCircleTool extends MapNavigationItemController {
   };
 
   onCleanUp() {
-    this.radiusMetres = 0;
-    this.areaMetresSquared = 0;
-    this.clearCircleGraphics();
+    this.resetCircleState();
     this.onClose();
     super.deactivate();
   }
 
   activate() {
     this.onOpen();
+    this.resetCircleState();
     this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode(MeasureCircleTool.id);
-    this.clearCircleGraphics();
-    this.circleLocked = false;
-    this.attachMouseMovePreview(this.userDrawing.pointEntities);
     super.activate();
   }
 
   deactivate() {
     this.onClose();
-    this.clearCircleGraphics();
+    this.resetCircleState();
     this.userDrawing.endDrawing();
-    this.detachMouseMovePreview();
-    this.circleLocked = false;
     super.deactivate();
   }
 }

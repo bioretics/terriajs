@@ -108,7 +108,12 @@
     "removePath": "Delete the current path",
     "showDistanceCheckbox": "Show distances labels",
     "showDistanceCheckboxTitle": "Toggle distance labels",
-    "tempLayerName": "Insert the temporary layer name"
+    "tempLayerName": "Insert the temporary layer name",
+    "circleRadius": "Radius",
+    "circleDiameter": "Diameter",
+    "circlePerimeter": "Circumference",
+    "circleAreaM2": "Area (m\u00B2)",
+    "circleAreaHa": "Area (ha)"
   },
   "elevationChart": {
     "header": "Elevation profile",
