@@ -172,11 +172,19 @@ class GeoJsonStratum extends LoadableStratum(GeoJsonTraits) {
     // If more than 50% of features have simple style properties - disable table styling
     if (
       this._item.featureCounts.multiPoint > 0 ||
+      this._item.featureCounts.point > 500 ||
       this._item.featureCounts.simpleStyle / this._item.featureCounts.total >=
         0.5
     ) {
       return true;
     }
+  }
+
+  @computed get clusterize() {
+    if (this._item.featureCounts.point > 500) {
+      return true;
+    }
+    return undefined;
   }
 }
 
@@ -564,7 +572,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         } else {
           const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
 
-          if (this.clustering.enabled) {
+          if (this.clustering.enabled || this.clusterize) {
             const pinBackgroundColor = this.clustering.pinBackgroundColor;
             const pinSize = this.clustering.pinSize;
 

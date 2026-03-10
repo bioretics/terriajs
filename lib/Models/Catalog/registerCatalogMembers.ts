@@ -322,6 +322,11 @@ export default function registerCatalogMembers() {
   );
   UrlToCatalogMemberMapping.register(
     matchesUrl(/\/arcgis\/rest\/.*\/MapServer\/\d+\b/i),
+    ArcGisFeatureServerCatalogItem.type,
+    true
+  );
+  UrlToCatalogMemberMapping.register(
+    matchesUrl(/\/arcgis\/rest\/.*\/MapServer\/\d+\b/i),
     ArcGisMapServerCatalogItem.type,
     true
   );
@@ -353,6 +358,11 @@ export default function registerCatalogMembers() {
   UrlToCatalogMemberMapping.register(
     matchesUrl(/\/arcgis\/rest\//i),
     ArcGisCatalogGroup.type,
+    true
+  );
+  UrlToCatalogMemberMapping.register(
+    matchesUrl(/\/rest\/.*\/MapServer\/\d+\b/i),
+    ArcGisFeatureServerCatalogItem.type,
     true
   );
   UrlToCatalogMemberMapping.register(

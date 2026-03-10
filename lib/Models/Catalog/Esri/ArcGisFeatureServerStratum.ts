@@ -625,6 +625,7 @@ export class ArcGisFeatureServerStratum extends LoadableStratum(
   /** Enable tileRequests by default if supported and no unsupported point/label styles are used */
   @computed get tileRequests() {
     if (this._item.forceCesiumPrimitives) return false;
+    if (this._item.url && /\/MapServer\b/i.test(this._item.url)) return false;
 
     const supportsPbfTiles =
       this._featureServer?.supportsTilesAndBasicQueriesMode &&
