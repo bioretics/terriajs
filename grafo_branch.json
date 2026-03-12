@@ -1,0 +1,3666 @@
+{
+  "timestamp": "2026-03-12T10:13:10.225930",
+  "total_branches": 368,
+  "relationships": {
+    "main": [
+      "1052_childGroupProperties_B",
+      "1171-show-raw-data-of-feature",
+      "1778_time_interval_performance",
+      "1904-no-colour-scale-on-first-thredds-add",
+      "2113",
+      "2119-add-shareurl-to-feedback",
+      "2127_crush_terrain",
+      "2355",
+      "2386_markdown",
+      "2608_date_picker",
+      "2608_timeline_picker",
+      "2608_timeline_picker-add-on",
+      "2609_2608",
+      "2609_2608-kring",
+      "2609_split",
+      "2639",
+      "5.4.0-upgrade",
+      "987_customXmlFeatureInfoFormats",
+      "abs-itt-url",
+      "add-IO-map-project",
+      "add-area-measurement",
+      "add-cesiumGlobeColor-parameter",
+      "add-color-panel",
+      "add-configParameters-leafletMaxZoom",
+      "add-geojson-clustering",
+      "add-geojson-mixedStyle",
+      "add-login-panel",
+      "add-measure-area-tool",
+      "add-pickSize-parameter",
+      "add-polylineWidth-param",
+      "add-settings-globeTranslucency-and-collisionDetection",
+      "add-timeline",
+      "add-tooltips",
+      "add-viewshed",
+      "align-tool-buttons-order",
+      "all_css",
+      "analytics",
+      "analyticsWithCharts",
+      "angle-measure-tool",
+      "aristotle_metadata",
+      "as_2640",
+      "as_2697_2706",
+      "as_2700",
+      "as_2706",
+      "as_aremi-natmap_136",
+      "as_geoglam-nm_5",
+      "augmented_virtuality",
+      "bug-fix-kml-layers",
+      "catalog",
+      "catalog-member-info-search",
+      "cesium-lighting",
+      "cesium2d-viewer",
+      "change-copy-layer",
+      "change-export-format",
+      "change-font",
+      "change-width-threshold-mobile",
+      "chunks_test",
+      "circle-measure-tool",
+      "clip-planes-layer",
+      "colorMapUi",
+      "configurable-branding-via-init-file",
+      "configurable-theme-colors-via-init-file",
+      "configurable-workbench-length",
+      "csv-report-formatting",
+      "czml_test_files",
+      "date-picker-css",
+      "disable_location",
+      "disclaimerOnShare",
+      "doco",
+      "downloadButton",
+      "enhance-play-path",
+      "enhance_charts",
+      "expand-path-handling-kml-geojson",
+      "explorerPanelTweaks",
+      "explorer_done",
+      "export-csv-locale-separator",
+      "export-default-filename",
+      "export-measure-properties",
+      "export-summary-txt",
+      "export_improvements",
+      "export_improvements_multipath",
+      "feature-enhanced-download-and-ui",
+      "feature-measurable-download-panel",
+      "feature-microzonation-panel",
+      "feature-multipath-management",
+      "featureinfo-and-coordinate-panel",
+      "featureinfo-improvements",
+      "feedbackUrl-mailto",
+      "fix-adddata-button-width",
+      "fix-basemaps-order",
+      "fix-compare-vector-data",
+      "fix-drag-side-panel-bug",
+      "fix-elevation-with-useElevationMeanSeaLevel",
+      "fix-feedback-shareurl",
+      "fix-graphic-layout",
+      "fix-help-supportEmail",
+      "fix-login-btn-scss-types",
+      "fix-maximumScale-ArcGisMapServer",
+      "fix-measurable-panel-interactions",
+      "fix-min-scale-arcgis",
+      "fix-mylocation-visibility",
+      "fix-offset-sidepanel-relatedmaps",
+      "fix-search-box-ui-bug",
+      "fix-sharing-using-initfile",
+      "fix-sharing-with-initfile",
+      "fix-split-local-file-copy",
+      "fix-viewshed-scss-types",
+      "fix-visibility-measure-tools",
+      "fix-welcomeMessage-video-visibility",
+      "fix-zoomControl-typo",
+      "formats-export-extended-data",
+      "geotiff-format-support",
+      "greenkeeper-babel-core-6.20.0",
+      "greenkeeper-babel-loader-6.2.7",
+      "greenkeeper-d3-array-1.0.2",
+      "greenkeeper-d3-axis-1.0.4",
+      "greenkeeper-d3-scale-1.0.4",
+      "greenkeeper-eslint-3.1.1",
+      "greenkeeper-eslint-3.9.0",
+      "greenkeeper-eslint-3.9.1",
+      "greenkeeper-fs-extra-2.0.0",
+      "greenkeeper-inobounce-0.1.4",
+      "greenkeeper-leaflet-1.0.0",
+      "greenkeeper-leaflet-1.0.2",
+      "greenkeeper-sass-loader-4.0.2",
+      "greenkeeper-vector-tile-1.3.0",
+      "greenkeeper/babel-core-6.25.0",
+      "greenkeeper/babel-core-6.26.0",
+      "greenkeeper/babel-core-pin-6.24.1",
+      "greenkeeper/babel-core-pin-6.25.0",
+      "greenkeeper/babel-eslint-8.0.0",
+      "greenkeeper/babel-eslint-8.0.1",
+      "greenkeeper/babel-eslint-8.0.2",
+      "greenkeeper/babel-loader-7.1.1",
+      "greenkeeper/babel-loader-pin-7.1.0",
+      "greenkeeper/css-loader-0.28.4",
+      "greenkeeper/css-loader-0.28.6",
+      "greenkeeper/css-loader-0.28.7",
+      "greenkeeper/css-loader-pin-0.28.3",
+      "greenkeeper/css-loader-pin-0.28.5",
+      "greenkeeper/d3-array-1.1.0",
+      "greenkeeper/d3-array-1.1.1",
+      "greenkeeper/d3-array-1.2.1",
+      "greenkeeper/d3-array-pin-1.0.3",
+      "greenkeeper/d3-axis-1.0.7",
+      "greenkeeper/d3-axis-1.0.8",
+      "greenkeeper/d3-axis-pin-1.0.6",
+      "greenkeeper/d3-selection-1.1.0",
+      "greenkeeper/d3-shape-1.1.1",
+      "greenkeeper/d3-shape-1.2.0",
+      "greenkeeper/d3-shape-pin-1.1.1",
+      "greenkeeper/d3-transition-1.1.0",
+      "greenkeeper/d3-transition-pin-1.0.4",
+      "greenkeeper/dateformat-3.0.0",
+      "greenkeeper/dateformat-3.0.1",
+      "greenkeeper/dateformat-3.0.2",
+      "greenkeeper/electron-1.6.10",
+      "greenkeeper/electron-1.6.5",
+      "greenkeeper/electron-1.6.6",
+      "greenkeeper/electron-1.6.9",
+      "greenkeeper/electron-1.7.5",
+      "greenkeeper/electron-1.7.8",
+      "greenkeeper/electron-1.7.9",
+      "greenkeeper/electron-pin-1.6.6",
+      "greenkeeper/electron-pin-1.7.1",
+      "greenkeeper/electron-pin-1.7.4",
+      "greenkeeper/electron-pin-1.8.0",
+      "greenkeeper/electron-pin-1.8.1",
+      "greenkeeper/enzyme-2.8.1",
+      "greenkeeper/enzyme-2.9.1",
+      "greenkeeper/enzyme-3.0.0",
+      "greenkeeper/enzyme-3.1.0",
+      "greenkeeper/enzyme-3.1.1",
+      "greenkeeper/enzyme-pin-2.8.0",
+      "greenkeeper/eslint-plugin-react-7.4.0",
+      "greenkeeper/eslint-plugin-react-pin-7.3.0",
+      "greenkeeper/extract-text-webpack-plugin-pin-2.1.0",
+      "greenkeeper/file-loader-1.0.0",
+      "greenkeeper/file-loader-1.0.0-rc.0",
+      "greenkeeper/file-loader-1.1.0",
+      "greenkeeper/file-loader-1.1.1",
+      "greenkeeper/file-loader-1.1.2",
+      "greenkeeper/file-loader-1.1.3",
+      "greenkeeper/file-loader-1.1.4",
+      "greenkeeper/file-loader-1.1.5",
+      "greenkeeper/fs-extra-pin-2.1.0",
+      "greenkeeper/html-to-react-pin-1.2.8",
+      "greenkeeper/jasmine-core-pin-2.6.2",
+      "greenkeeper/jasmine-enzyme-4.0.0",
+      "greenkeeper/jasmine-enzyme-4.0.1",
+      "greenkeeper/jsdoc-3.5.0",
+      "greenkeeper/jsdoc-3.5.1",
+      "greenkeeper/jsdoc-3.5.2",
+      "greenkeeper/jsdoc-3.5.3",
+      "greenkeeper/jsdoc-pin-3.4.3",
+      "greenkeeper/json-loader-0.5.5",
+      "greenkeeper/json-loader-0.5.6",
+      "greenkeeper/json-loader-0.5.7",
+      "greenkeeper/json-loader-pin-0.5.4",
+      "greenkeeper/karma-1.7.1",
+      "greenkeeper/karma-chrome-launcher-2.2.0",
+      "greenkeeper/karma-detect-browsers-2.2.5",
+      "greenkeeper/karma-detect-browsers-pin-2.2.4",
+      "greenkeeper/karma-pin-1.7.0",
+      "greenkeeper/klaw-sync-3.0.2",
+      "greenkeeper/klaw-sync-pin-3.0.1",
+      "greenkeeper/leaflet-1.1.0",
+      "greenkeeper/leaflet-1.2.0",
+      "greenkeeper/markdown-it-8.4.0",
+      "greenkeeper/markdown-it-pin-8.3.2",
+      "greenkeeper/moment-2.19.0",
+      "greenkeeper/moment-2.19.1",
+      "greenkeeper/proj4-2.4.0",
+      "greenkeeper/proj4-2.4.1",
+      "greenkeeper/proj4-2.4.3",
+      "greenkeeper/proj4-2.4.4",
+      "greenkeeper/proj4-pin-2.3.17",
+      "greenkeeper/raw-loader-1.0.0-beta.0",
+      "greenkeeper/react-16.0.0",
+      "greenkeeper/react-anything-sortable-1.7.1",
+      "greenkeeper/react-anything-sortable-1.7.3",
+      "greenkeeper/react-anything-sortable-pin-1.7.2",
+      "greenkeeper/react-datepicker-0.57.0",
+      "greenkeeper/react-datepicker-0.58.0",
+      "greenkeeper/react-datepicker-0.59.0",
+      "greenkeeper/react-datepicker-0.60.0",
+      "greenkeeper/react-datepicker-0.60.2",
+      "greenkeeper/react-dom-15.6.0",
+      "greenkeeper/react-dom-15.6.1",
+      "greenkeeper/react-dom-16.0.0",
+      "greenkeeper/react-dom-pin-15.5.4",
+      "greenkeeper/react-test-renderer-16.0.0",
+      "greenkeeper/sass-loader-6.0.4",
+      "greenkeeper/simple-statistics-4.2.0",
+      "greenkeeper/simple-statistics-5.0.0",
+      "greenkeeper/simple-statistics-5.0.1",
+      "greenkeeper/simple-statistics-5.1.0",
+      "greenkeeper/simple-statistics-pin-4.1.1",
+      "greenkeeper/style-loader-0.18.1",
+      "greenkeeper/style-loader-0.18.2",
+      "greenkeeper/style-loader-0.19.0",
+      "greenkeeper/terriajs-server-2.7.0",
+      "greenkeeper/terriajs-server-pin-2.6.7",
+      "greenkeeper/url-loader-0.6.1",
+      "greenkeeper/url-loader-0.6.2",
+      "greenkeeper/webpack-dev-server-2.9.4",
+      "greenkeeper/webpack-dev-server-pin-2.4.2",
+      "greenkeeper/webpack-pin-2.5.1",
+      "htmlCatalog",
+      "ie11_test",
+      "import-csv-locale-separator",
+      "improve-mobile-ui",
+      "increase-adddata-button-width",
+      "initial-topojson-support",
+      "italian-improvements",
+      "jsdoc",
+      "jsonTreeview",
+      "kml-clamp-to-ground",
+      "kml-color-preservation",
+      "ko_component",
+      "linking-elevation-chart-to-map",
+      "map-navigation-with-keyboard",
+      "measurable-geom",
+      "measurable-panel-edit-mode",
+      "measurable-panel-polygon-path-notes",
+      "measurable-panel-transform-feature",
+      "measurable-panel-ui-fixes",
+      "measurable-panel-ui-improvements",
+      "measure-area-ui-labels",
+      "measure-panel-temporary-layer-help",
+      "measure-temp-layer",
+      "merging-all-measure-tools",
+      "merging-path-enhancements",
+      "migrate-marche-catalog-item-filter-to-new-version",
+      "migrate-marche-features-to-new-version",
+      "minimise-f-info",
+      "missing_featureinfo",
+      "mobile-measurable-panel-adjustments",
+      "modalPopup",
+      "modify-path-points",
+      "more-colormap-merged",
+      "multipath-management",
+      "multiselect_var",
+      "mvt_dev_geojson_vt",
+      "mvt_dev_overzooming",
+      "namepath-filename-severance",
+      "neii92",
+      "new-error-msg",
+      "newui",
+      "newui-newcesium",
+      "newui-vt",
+      "no_concept",
+      "nominatim-search-provider",
+      "normalize-download-filenames",
+      "oldui",
+      "origin_8.7.7",
+      "patch-5.1.1",
+      "pazzaglia-play-path",
+      "play-path",
+      "play-path-adjustments",
+      "play-path-feature",
+      "play-path-future-draft",
+      "play-path-help-tooltip",
+      "play-path-poly-interpolation",
+      "play-path-prev-next-feature",
+      "point-measure-tool",
+      "polygon-measure-fix-drag-points",
+      "pre-borgification",
+      "prepare-marche-features-merge",
+      "protari",
+      "rd_additional_catalog",
+      "rd_addresses_csv_pelias",
+      "rd_aristotle_metadata",
+      "rd_cesium_3d_tiles",
+      "rd_elevation",
+      "rd_wps_param_overrides",
+      "reduce-zoom-amount",
+      "reduxSandbox",
+      "refactor-centralize-export-logic",
+      "refactor-csv-files-upload",
+      "refactor-measure-tool",
+      "refactor-play-path-feature",
+      "remove-whereAmI-proxy",
+      "rename-measurable-geometry-components",
+      "rename-workbench-italian-labels",
+      "reprojectToWebMercator",
+      "rer-search-provider",
+      "rer-search-provider-fix-nan",
+      "rer3d_from_8.7.7",
+      "rer3d_from_8.7.8",
+      "rer3d_from_8.7.9",
+      "restore-and-improve-measurable-export",
+      "sdmx_hier",
+      "search-catalog-info",
+      "searchable-catalog-item",
+      "share-url",
+      "sppigot-wpsgetfeatureinfo",
+      "statusbar-wait-precise-elevation",
+      "story-panel-ui-menu",
+      "summary_concept",
+      "suppress-uniqe-image-legend",
+      "terria_view_ckan_extension",
+      "terriajs-8.11.0",
+      "timeline",
+      "toStringForMarkdown",
+      "toggle_map_pick",
+      "tool",
+      "ui-improvements",
+      "underground-poc",
+      "upgrade_leaflet-1.0.0",
+      "upgrades",
+      "upstream-main",
+      "upstream-main-merge-linking-elevation-chart-to-map",
+      "upstream-main-poi-support",
+      "urijs",
+      "vt_feature_info",
+      "vt_no_flicker",
+      "watercolor",
+      "webpack-typescript",
+      "wmsNamespaces"
+    ],
+    "v8": [
+      "GoogleTileMapsCatalogItem",
+      "pazzaglia-marche-hbar-charts",
+      "pazzaglia-rer-search-area",
+      "pazzaglia-searchbox-constraint"
+    ]
+  },
+  "graph": {
+    "nodes": [
+      {
+        "id": "greenkeeper/d3-shape-pin-1.1.1",
+        "label": "greenkeeper/d3-shape-pin-1.1.1",
+        "group": 2
+      },
+      {
+        "id": "2609_2608-kring",
+        "label": "2609_2608-kring",
+        "group": 2
+      },
+      {
+        "id": "main",
+        "label": "main",
+        "group": 1
+      },
+      {
+        "id": "multipath-management",
+        "label": "multipath-management",
+        "group": 2
+      },
+      {
+        "id": "measurable-panel-transform-feature",
+        "label": "measurable-panel-transform-feature",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-array-1.2.1",
+        "label": "greenkeeper/d3-array-1.2.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/karma-pin-1.7.0",
+        "label": "greenkeeper/karma-pin-1.7.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-transition-1.1.0",
+        "label": "greenkeeper/d3-transition-1.1.0",
+        "group": 2
+      },
+      {
+        "id": "export-csv-locale-separator",
+        "label": "export-csv-locale-separator",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-d3-scale-1.0.4",
+        "label": "greenkeeper-d3-scale-1.0.4",
+        "group": 2
+      },
+      {
+        "id": "2608_timeline_picker-add-on",
+        "label": "2608_timeline_picker-add-on",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-16.0.0",
+        "label": "greenkeeper/react-16.0.0",
+        "group": 2
+      },
+      {
+        "id": "share-url",
+        "label": "share-url",
+        "group": 2
+      },
+      {
+        "id": "fix-offset-sidepanel-relatedmaps",
+        "label": "fix-offset-sidepanel-relatedmaps",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.4",
+        "label": "greenkeeper/file-loader-1.1.4",
+        "group": 2
+      },
+      {
+        "id": "catalog-member-info-search",
+        "label": "catalog-member-info-search",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.2",
+        "label": "greenkeeper/file-loader-1.1.2",
+        "group": 2
+      },
+      {
+        "id": "change-width-threshold-mobile",
+        "label": "change-width-threshold-mobile",
+        "group": 2
+      },
+      {
+        "id": "merging-path-enhancements",
+        "label": "merging-path-enhancements",
+        "group": 2
+      },
+      {
+        "id": "summary_concept",
+        "label": "summary_concept",
+        "group": 2
+      },
+      {
+        "id": "sppigot-wpsgetfeatureinfo",
+        "label": "sppigot-wpsgetfeatureinfo",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/klaw-sync-3.0.2",
+        "label": "greenkeeper/klaw-sync-3.0.2",
+        "group": 2
+      },
+      {
+        "id": "new-error-msg",
+        "label": "new-error-msg",
+        "group": 2
+      },
+      {
+        "id": "987_customXmlFeatureInfoFormats",
+        "label": "987_customXmlFeatureInfoFormats",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.6.9",
+        "label": "greenkeeper/electron-1.6.9",
+        "group": 2
+      },
+      {
+        "id": "rer3d_from_8.7.7",
+        "label": "rer3d_from_8.7.7",
+        "group": 2
+      },
+      {
+        "id": "wmsNamespaces",
+        "label": "wmsNamespaces",
+        "group": 2
+      },
+      {
+        "id": "configurable-workbench-length",
+        "label": "configurable-workbench-length",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-2.9.1",
+        "label": "greenkeeper/enzyme-2.9.1",
+        "group": 2
+      },
+      {
+        "id": "fix-measurable-panel-interactions",
+        "label": "fix-measurable-panel-interactions",
+        "group": 2
+      },
+      {
+        "id": "czml_test_files",
+        "label": "czml_test_files",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-3.0.0",
+        "label": "greenkeeper/enzyme-3.0.0",
+        "group": 2
+      },
+      {
+        "id": "2355",
+        "label": "2355",
+        "group": 2
+      },
+      {
+        "id": "fix-feedback-shareurl",
+        "label": "fix-feedback-shareurl",
+        "group": 2
+      },
+      {
+        "id": "2639",
+        "label": "2639",
+        "group": 2
+      },
+      {
+        "id": "polygon-measure-fix-drag-points",
+        "label": "polygon-measure-fix-drag-points",
+        "group": 2
+      },
+      {
+        "id": "remove-whereAmI-proxy",
+        "label": "remove-whereAmI-proxy",
+        "group": 2
+      },
+      {
+        "id": "rer3d_from_8.7.8",
+        "label": "rer3d_from_8.7.8",
+        "group": 2
+      },
+      {
+        "id": "fix-split-local-file-copy",
+        "label": "fix-split-local-file-copy",
+        "group": 2
+      },
+      {
+        "id": "2608_date_picker",
+        "label": "2608_date_picker",
+        "group": 2
+      },
+      {
+        "id": "play-path-help-tooltip",
+        "label": "play-path-help-tooltip",
+        "group": 2
+      },
+      {
+        "id": "add-color-panel",
+        "label": "add-color-panel",
+        "group": 2
+      },
+      {
+        "id": "mvt_dev_overzooming",
+        "label": "mvt_dev_overzooming",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/sass-loader-6.0.4",
+        "label": "greenkeeper/sass-loader-6.0.4",
+        "group": 2
+      },
+      {
+        "id": "add-timeline",
+        "label": "add-timeline",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/leaflet-1.2.0",
+        "label": "greenkeeper/leaflet-1.2.0",
+        "group": 2
+      },
+      {
+        "id": "as_geoglam-nm_5",
+        "label": "as_geoglam-nm_5",
+        "group": 2
+      },
+      {
+        "id": "underground-poc",
+        "label": "underground-poc",
+        "group": 2
+      },
+      {
+        "id": "play-path-adjustments",
+        "label": "play-path-adjustments",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/style-loader-0.18.2",
+        "label": "greenkeeper/style-loader-0.18.2",
+        "group": 2
+      },
+      {
+        "id": "fix-login-btn-scss-types",
+        "label": "fix-login-btn-scss-types",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/url-loader-0.6.1",
+        "label": "greenkeeper/url-loader-0.6.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-pin-1.8.1",
+        "label": "greenkeeper/electron-pin-1.8.1",
+        "group": 2
+      },
+      {
+        "id": "play-path-prev-next-feature",
+        "label": "play-path-prev-next-feature",
+        "group": 2
+      },
+      {
+        "id": "missing_featureinfo",
+        "label": "missing_featureinfo",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/simple-statistics-5.0.0",
+        "label": "greenkeeper/simple-statistics-5.0.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/proj4-2.4.4",
+        "label": "greenkeeper/proj4-2.4.4",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-leaflet-1.0.2",
+        "label": "greenkeeper-leaflet-1.0.2",
+        "group": 2
+      },
+      {
+        "id": "refactor-play-path-feature",
+        "label": "refactor-play-path-feature",
+        "group": 2
+      },
+      {
+        "id": "GoogleTileMapsCatalogItem",
+        "label": "GoogleTileMapsCatalogItem",
+        "group": 2
+      },
+      {
+        "id": "disclaimerOnShare",
+        "label": "disclaimerOnShare",
+        "group": 2
+      },
+      {
+        "id": "increase-adddata-button-width",
+        "label": "increase-adddata-button-width",
+        "group": 2
+      },
+      {
+        "id": "search-catalog-info",
+        "label": "search-catalog-info",
+        "group": 2
+      },
+      {
+        "id": "augmented_virtuality",
+        "label": "augmented_virtuality",
+        "group": 2
+      },
+      {
+        "id": "change-font",
+        "label": "change-font",
+        "group": 2
+      },
+      {
+        "id": "2127_crush_terrain",
+        "label": "2127_crush_terrain",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-axis-1.0.7",
+        "label": "greenkeeper/d3-axis-1.0.7",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.1",
+        "label": "greenkeeper/file-loader-1.1.1",
+        "group": 2
+      },
+      {
+        "id": "neii92",
+        "label": "neii92",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-babel-core-6.20.0",
+        "label": "greenkeeper-babel-core-6.20.0",
+        "group": 2
+      },
+      {
+        "id": "upstream-main",
+        "label": "upstream-main",
+        "group": 2
+      },
+      {
+        "id": "oldui",
+        "label": "oldui",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-eslint-3.1.1",
+        "label": "greenkeeper-eslint-3.1.1",
+        "group": 2
+      },
+      {
+        "id": "measure-temp-layer",
+        "label": "measure-temp-layer",
+        "group": 2
+      },
+      {
+        "id": "upgrade_leaflet-1.0.0",
+        "label": "upgrade_leaflet-1.0.0",
+        "group": 2
+      },
+      {
+        "id": "bug-fix-kml-layers",
+        "label": "bug-fix-kml-layers",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jasmine-enzyme-4.0.1",
+        "label": "greenkeeper/jasmine-enzyme-4.0.1",
+        "group": 2
+      },
+      {
+        "id": "pazzaglia-marche-hbar-charts",
+        "label": "pazzaglia-marche-hbar-charts",
+        "group": 2
+      },
+      {
+        "id": "add-login-panel",
+        "label": "add-login-panel",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-pin-1.7.4",
+        "label": "greenkeeper/electron-pin-1.7.4",
+        "group": 2
+      },
+      {
+        "id": "merging-all-measure-tools",
+        "label": "merging-all-measure-tools",
+        "group": 2
+      },
+      {
+        "id": "upstream-main-merge-linking-elevation-chart-to-map",
+        "label": "upstream-main-merge-linking-elevation-chart-to-map",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-3.1.0",
+        "label": "greenkeeper/enzyme-3.1.0",
+        "group": 2
+      },
+      {
+        "id": "enhance-play-path",
+        "label": "enhance-play-path",
+        "group": 2
+      },
+      {
+        "id": "featureinfo-and-coordinate-panel",
+        "label": "featureinfo-and-coordinate-panel",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.7.8",
+        "label": "greenkeeper/electron-1.7.8",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/terriajs-server-pin-2.6.7",
+        "label": "greenkeeper/terriajs-server-pin-2.6.7",
+        "group": 2
+      },
+      {
+        "id": "kml-color-preservation",
+        "label": "kml-color-preservation",
+        "group": 2
+      },
+      {
+        "id": "suppress-uniqe-image-legend",
+        "label": "suppress-uniqe-image-legend",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/style-loader-0.18.1",
+        "label": "greenkeeper/style-loader-0.18.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/webpack-dev-server-2.9.4",
+        "label": "greenkeeper/webpack-dev-server-2.9.4",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-selection-1.1.0",
+        "label": "greenkeeper/d3-selection-1.1.0",
+        "group": 2
+      },
+      {
+        "id": "export-measure-properties",
+        "label": "export-measure-properties",
+        "group": 2
+      },
+      {
+        "id": "feedbackUrl-mailto",
+        "label": "feedbackUrl-mailto",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/eslint-plugin-react-7.4.0",
+        "label": "greenkeeper/eslint-plugin-react-7.4.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-loader-pin-7.1.0",
+        "label": "greenkeeper/babel-loader-pin-7.1.0",
+        "group": 2
+      },
+      {
+        "id": "story-panel-ui-menu",
+        "label": "story-panel-ui-menu",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/proj4-pin-2.3.17",
+        "label": "greenkeeper/proj4-pin-2.3.17",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/karma-detect-browsers-2.2.5",
+        "label": "greenkeeper/karma-detect-browsers-2.2.5",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-fs-extra-2.0.0",
+        "label": "greenkeeper-fs-extra-2.0.0",
+        "group": 2
+      },
+      {
+        "id": "add-viewshed",
+        "label": "add-viewshed",
+        "group": 2
+      },
+      {
+        "id": "prepare-marche-features-merge",
+        "label": "prepare-marche-features-merge",
+        "group": 2
+      },
+      {
+        "id": "fix-sharing-with-initfile",
+        "label": "fix-sharing-with-initfile",
+        "group": 2
+      },
+      {
+        "id": "fix-zoomControl-typo",
+        "label": "fix-zoomControl-typo",
+        "group": 2
+      },
+      {
+        "id": "map-navigation-with-keyboard",
+        "label": "map-navigation-with-keyboard",
+        "group": 2
+      },
+      {
+        "id": "mobile-measurable-panel-adjustments",
+        "label": "mobile-measurable-panel-adjustments",
+        "group": 2
+      },
+      {
+        "id": "angle-measure-tool",
+        "label": "angle-measure-tool",
+        "group": 2
+      },
+      {
+        "id": "rename-measurable-geometry-components",
+        "label": "rename-measurable-geometry-components",
+        "group": 2
+      },
+      {
+        "id": "configurable-branding-via-init-file",
+        "label": "configurable-branding-via-init-file",
+        "group": 2
+      },
+      {
+        "id": "add-tooltips",
+        "label": "add-tooltips",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-eslint-8.0.1",
+        "label": "greenkeeper/babel-eslint-8.0.1",
+        "group": 2
+      },
+      {
+        "id": "v8",
+        "label": "v8",
+        "group": 1
+      },
+      {
+        "id": "add-cesiumGlobeColor-parameter",
+        "label": "add-cesiumGlobeColor-parameter",
+        "group": 2
+      },
+      {
+        "id": "origin_8.7.7",
+        "label": "origin_8.7.7",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/moment-2.19.1",
+        "label": "greenkeeper/moment-2.19.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/proj4-2.4.1",
+        "label": "greenkeeper/proj4-2.4.1",
+        "group": 2
+      },
+      {
+        "id": "1052_childGroupProperties_B",
+        "label": "1052_childGroupProperties_B",
+        "group": 2
+      },
+      {
+        "id": "2609_split",
+        "label": "2609_split",
+        "group": 2
+      },
+      {
+        "id": "ko_component",
+        "label": "ko_component",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/css-loader-0.28.4",
+        "label": "greenkeeper/css-loader-0.28.4",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-datepicker-0.60.0",
+        "label": "greenkeeper/react-datepicker-0.60.0",
+        "group": 2
+      },
+      {
+        "id": "colorMapUi",
+        "label": "colorMapUi",
+        "group": 2
+      },
+      {
+        "id": "play-path",
+        "label": "play-path",
+        "group": 2
+      },
+      {
+        "id": "fix-search-box-ui-bug",
+        "label": "fix-search-box-ui-bug",
+        "group": 2
+      },
+      {
+        "id": "as_2697_2706",
+        "label": "as_2697_2706",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-pin-1.8.0",
+        "label": "greenkeeper/electron-pin-1.8.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.6.6",
+        "label": "greenkeeper/electron-1.6.6",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/markdown-it-8.4.0",
+        "label": "greenkeeper/markdown-it-8.4.0",
+        "group": 2
+      },
+      {
+        "id": "upgrades",
+        "label": "upgrades",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-transition-pin-1.0.4",
+        "label": "greenkeeper/d3-transition-pin-1.0.4",
+        "group": 2
+      },
+      {
+        "id": "import-csv-locale-separator",
+        "label": "import-csv-locale-separator",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-core-pin-6.25.0",
+        "label": "greenkeeper/babel-core-pin-6.25.0",
+        "group": 2
+      },
+      {
+        "id": "circle-measure-tool",
+        "label": "circle-measure-tool",
+        "group": 2
+      },
+      {
+        "id": "analyticsWithCharts",
+        "label": "analyticsWithCharts",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/eslint-plugin-react-pin-7.3.0",
+        "label": "greenkeeper/eslint-plugin-react-pin-7.3.0",
+        "group": 2
+      },
+      {
+        "id": "fix-drag-side-panel-bug",
+        "label": "fix-drag-side-panel-bug",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-core-6.25.0",
+        "label": "greenkeeper/babel-core-6.25.0",
+        "group": 2
+      },
+      {
+        "id": "add-geojson-clustering",
+        "label": "add-geojson-clustering",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/css-loader-pin-0.28.5",
+        "label": "greenkeeper/css-loader-pin-0.28.5",
+        "group": 2
+      },
+      {
+        "id": "aristotle_metadata",
+        "label": "aristotle_metadata",
+        "group": 2
+      },
+      {
+        "id": "explorer_done",
+        "label": "explorer_done",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-vector-tile-1.3.0",
+        "label": "greenkeeper-vector-tile-1.3.0",
+        "group": 2
+      },
+      {
+        "id": "terria_view_ckan_extension",
+        "label": "terria_view_ckan_extension",
+        "group": 2
+      },
+      {
+        "id": "minimise-f-info",
+        "label": "minimise-f-info",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/simple-statistics-pin-4.1.1",
+        "label": "greenkeeper/simple-statistics-pin-4.1.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/proj4-2.4.3",
+        "label": "greenkeeper/proj4-2.4.3",
+        "group": 2
+      },
+      {
+        "id": "measure-panel-temporary-layer-help",
+        "label": "measure-panel-temporary-layer-help",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-shape-1.2.0",
+        "label": "greenkeeper/d3-shape-1.2.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.6.10",
+        "label": "greenkeeper/electron-1.6.10",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/json-loader-0.5.5",
+        "label": "greenkeeper/json-loader-0.5.5",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-array-1.1.0",
+        "label": "greenkeeper/d3-array-1.1.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/moment-2.19.0",
+        "label": "greenkeeper/moment-2.19.0",
+        "group": 2
+      },
+      {
+        "id": "2113",
+        "label": "2113",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jsdoc-3.5.2",
+        "label": "greenkeeper/jsdoc-3.5.2",
+        "group": 2
+      },
+      {
+        "id": "rename-workbench-italian-labels",
+        "label": "rename-workbench-italian-labels",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-pin-1.7.1",
+        "label": "greenkeeper/electron-pin-1.7.1",
+        "group": 2
+      },
+      {
+        "id": "play-path-feature",
+        "label": "play-path-feature",
+        "group": 2
+      },
+      {
+        "id": "mvt_dev_geojson_vt",
+        "label": "mvt_dev_geojson_vt",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/json-loader-pin-0.5.4",
+        "label": "greenkeeper/json-loader-pin-0.5.4",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jasmine-enzyme-4.0.0",
+        "label": "greenkeeper/jasmine-enzyme-4.0.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-array-pin-1.0.3",
+        "label": "greenkeeper/d3-array-pin-1.0.3",
+        "group": 2
+      },
+      {
+        "id": "reduxSandbox",
+        "label": "reduxSandbox",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-core-6.26.0",
+        "label": "greenkeeper/babel-core-6.26.0",
+        "group": 2
+      },
+      {
+        "id": "vt_no_flicker",
+        "label": "vt_no_flicker",
+        "group": 2
+      },
+      {
+        "id": "2386_markdown",
+        "label": "2386_markdown",
+        "group": 2
+      },
+      {
+        "id": "play-path-future-draft",
+        "label": "play-path-future-draft",
+        "group": 2
+      },
+      {
+        "id": "measurable-panel-ui-improvements",
+        "label": "measurable-panel-ui-improvements",
+        "group": 2
+      },
+      {
+        "id": "featureinfo-improvements",
+        "label": "featureinfo-improvements",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/dateformat-3.0.0",
+        "label": "greenkeeper/dateformat-3.0.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/karma-1.7.1",
+        "label": "greenkeeper/karma-1.7.1",
+        "group": 2
+      },
+      {
+        "id": "add-IO-map-project",
+        "label": "add-IO-map-project",
+        "group": 2
+      },
+      {
+        "id": "feature-enhanced-download-and-ui",
+        "label": "feature-enhanced-download-and-ui",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-babel-loader-6.2.7",
+        "label": "greenkeeper-babel-loader-6.2.7",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-eslint-3.9.0",
+        "label": "greenkeeper-eslint-3.9.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/proj4-2.4.0",
+        "label": "greenkeeper/proj4-2.4.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/html-to-react-pin-1.2.8",
+        "label": "greenkeeper/html-to-react-pin-1.2.8",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.0.0",
+        "label": "greenkeeper/file-loader-1.0.0",
+        "group": 2
+      },
+      {
+        "id": "rer3d_from_8.7.9",
+        "label": "rer3d_from_8.7.9",
+        "group": 2
+      },
+      {
+        "id": "restore-and-improve-measurable-export",
+        "label": "restore-and-improve-measurable-export",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-shape-1.1.1",
+        "label": "greenkeeper/d3-shape-1.1.1",
+        "group": 2
+      },
+      {
+        "id": "expand-path-handling-kml-geojson",
+        "label": "expand-path-handling-kml-geojson",
+        "group": 2
+      },
+      {
+        "id": "configurable-theme-colors-via-init-file",
+        "label": "configurable-theme-colors-via-init-file",
+        "group": 2
+      },
+      {
+        "id": "upstream-main-poi-support",
+        "label": "upstream-main-poi-support",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jsdoc-3.5.1",
+        "label": "greenkeeper/jsdoc-3.5.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-datepicker-0.57.0",
+        "label": "greenkeeper/react-datepicker-0.57.0",
+        "group": 2
+      },
+      {
+        "id": "export_improvements",
+        "label": "export_improvements",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-anything-sortable-pin-1.7.2",
+        "label": "greenkeeper/react-anything-sortable-pin-1.7.2",
+        "group": 2
+      },
+      {
+        "id": "more-colormap-merged",
+        "label": "more-colormap-merged",
+        "group": 2
+      },
+      {
+        "id": "pre-borgification",
+        "label": "pre-borgification",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-datepicker-0.60.2",
+        "label": "greenkeeper/react-datepicker-0.60.2",
+        "group": 2
+      },
+      {
+        "id": "pazzaglia-rer-search-area",
+        "label": "pazzaglia-rer-search-area",
+        "group": 2
+      },
+      {
+        "id": "2609_2608",
+        "label": "2609_2608",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-axis-1.0.8",
+        "label": "greenkeeper/d3-axis-1.0.8",
+        "group": 2
+      },
+      {
+        "id": "ui-improvements",
+        "label": "ui-improvements",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/karma-detect-browsers-pin-2.2.4",
+        "label": "greenkeeper/karma-detect-browsers-pin-2.2.4",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.7.9",
+        "label": "greenkeeper/electron-1.7.9",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/extract-text-webpack-plugin-pin-2.1.0",
+        "label": "greenkeeper/extract-text-webpack-plugin-pin-2.1.0",
+        "group": 2
+      },
+      {
+        "id": "all_css",
+        "label": "all_css",
+        "group": 2
+      },
+      {
+        "id": "2119-add-shareurl-to-feedback",
+        "label": "2119-add-shareurl-to-feedback",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-inobounce-0.1.4",
+        "label": "greenkeeper-inobounce-0.1.4",
+        "group": 2
+      },
+      {
+        "id": "rd_cesium_3d_tiles",
+        "label": "rd_cesium_3d_tiles",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-anything-sortable-1.7.1",
+        "label": "greenkeeper/react-anything-sortable-1.7.1",
+        "group": 2
+      },
+      {
+        "id": "refactor-csv-files-upload",
+        "label": "refactor-csv-files-upload",
+        "group": 2
+      },
+      {
+        "id": "as_2700",
+        "label": "as_2700",
+        "group": 2
+      },
+      {
+        "id": "reprojectToWebMercator",
+        "label": "reprojectToWebMercator",
+        "group": 2
+      },
+      {
+        "id": "fix-compare-vector-data",
+        "label": "fix-compare-vector-data",
+        "group": 2
+      },
+      {
+        "id": "add-polylineWidth-param",
+        "label": "add-polylineWidth-param",
+        "group": 2
+      },
+      {
+        "id": "add-pickSize-parameter",
+        "label": "add-pickSize-parameter",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/css-loader-0.28.7",
+        "label": "greenkeeper/css-loader-0.28.7",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/json-loader-0.5.7",
+        "label": "greenkeeper/json-loader-0.5.7",
+        "group": 2
+      },
+      {
+        "id": "clip-planes-layer",
+        "label": "clip-planes-layer",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-core-pin-6.24.1",
+        "label": "greenkeeper/babel-core-pin-6.24.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/klaw-sync-pin-3.0.1",
+        "label": "greenkeeper/klaw-sync-pin-3.0.1",
+        "group": 2
+      },
+      {
+        "id": "newui",
+        "label": "newui",
+        "group": 2
+      },
+      {
+        "id": "migrate-marche-features-to-new-version",
+        "label": "migrate-marche-features-to-new-version",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-2.8.1",
+        "label": "greenkeeper/enzyme-2.8.1",
+        "group": 2
+      },
+      {
+        "id": "explorerPanelTweaks",
+        "label": "explorerPanelTweaks",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/css-loader-pin-0.28.3",
+        "label": "greenkeeper/css-loader-pin-0.28.3",
+        "group": 2
+      },
+      {
+        "id": "export-default-filename",
+        "label": "export-default-filename",
+        "group": 2
+      },
+      {
+        "id": "downloadButton",
+        "label": "downloadButton",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/webpack-pin-2.5.1",
+        "label": "greenkeeper/webpack-pin-2.5.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/dateformat-3.0.2",
+        "label": "greenkeeper/dateformat-3.0.2",
+        "group": 2
+      },
+      {
+        "id": "fix-adddata-button-width",
+        "label": "fix-adddata-button-width",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jasmine-core-pin-2.6.2",
+        "label": "greenkeeper/jasmine-core-pin-2.6.2",
+        "group": 2
+      },
+      {
+        "id": "feature-measurable-download-panel",
+        "label": "feature-measurable-download-panel",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.6.5",
+        "label": "greenkeeper/electron-1.6.5",
+        "group": 2
+      },
+      {
+        "id": "statusbar-wait-precise-elevation",
+        "label": "statusbar-wait-precise-elevation",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/url-loader-0.6.2",
+        "label": "greenkeeper/url-loader-0.6.2",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-d3-array-1.0.2",
+        "label": "greenkeeper-d3-array-1.0.2",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/raw-loader-1.0.0-beta.0",
+        "label": "greenkeeper/raw-loader-1.0.0-beta.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-datepicker-0.59.0",
+        "label": "greenkeeper/react-datepicker-0.59.0",
+        "group": 2
+      },
+      {
+        "id": "add-geojson-mixedStyle",
+        "label": "add-geojson-mixedStyle",
+        "group": 2
+      },
+      {
+        "id": "as_2640",
+        "label": "as_2640",
+        "group": 2
+      },
+      {
+        "id": "pazzaglia-play-path",
+        "label": "pazzaglia-play-path",
+        "group": 2
+      },
+      {
+        "id": "watercolor",
+        "label": "watercolor",
+        "group": 2
+      },
+      {
+        "id": "align-tool-buttons-order",
+        "label": "align-tool-buttons-order",
+        "group": 2
+      },
+      {
+        "id": "nominatim-search-provider",
+        "label": "nominatim-search-provider",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/simple-statistics-5.1.0",
+        "label": "greenkeeper/simple-statistics-5.1.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/webpack-dev-server-pin-2.4.2",
+        "label": "greenkeeper/webpack-dev-server-pin-2.4.2",
+        "group": 2
+      },
+      {
+        "id": "fix-maximumScale-ArcGisMapServer",
+        "label": "fix-maximumScale-ArcGisMapServer",
+        "group": 2
+      },
+      {
+        "id": "vt_feature_info",
+        "label": "vt_feature_info",
+        "group": 2
+      },
+      {
+        "id": "fix-graphic-layout",
+        "label": "fix-graphic-layout",
+        "group": 2
+      },
+      {
+        "id": "rer-search-provider-fix-nan",
+        "label": "rer-search-provider-fix-nan",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.0.0-rc.0",
+        "label": "greenkeeper/file-loader-1.0.0-rc.0",
+        "group": 2
+      },
+      {
+        "id": "geotiff-format-support",
+        "label": "geotiff-format-support",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-eslint-3.9.1",
+        "label": "greenkeeper-eslint-3.9.1",
+        "group": 2
+      },
+      {
+        "id": "htmlCatalog",
+        "label": "htmlCatalog",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-test-renderer-16.0.0",
+        "label": "greenkeeper/react-test-renderer-16.0.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.0",
+        "label": "greenkeeper/file-loader-1.1.0",
+        "group": 2
+      },
+      {
+        "id": "pazzaglia-searchbox-constraint",
+        "label": "pazzaglia-searchbox-constraint",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-eslint-8.0.2",
+        "label": "greenkeeper/babel-eslint-8.0.2",
+        "group": 2
+      },
+      {
+        "id": "cesium2d-viewer",
+        "label": "cesium2d-viewer",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/simple-statistics-4.2.0",
+        "label": "greenkeeper/simple-statistics-4.2.0",
+        "group": 2
+      },
+      {
+        "id": "rer-search-provider",
+        "label": "rer-search-provider",
+        "group": 2
+      },
+      {
+        "id": "play-path-poly-interpolation",
+        "label": "play-path-poly-interpolation",
+        "group": 2
+      },
+      {
+        "id": "add-area-measurement",
+        "label": "add-area-measurement",
+        "group": 2
+      },
+      {
+        "id": "5.4.0-upgrade",
+        "label": "5.4.0-upgrade",
+        "group": 2
+      },
+      {
+        "id": "doco",
+        "label": "doco",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-leaflet-1.0.0",
+        "label": "greenkeeper-leaflet-1.0.0",
+        "group": 2
+      },
+      {
+        "id": "formats-export-extended-data",
+        "label": "formats-export-extended-data",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-dom-16.0.0",
+        "label": "greenkeeper/react-dom-16.0.0",
+        "group": 2
+      },
+      {
+        "id": "1171-show-raw-data-of-feature",
+        "label": "1171-show-raw-data-of-feature",
+        "group": 2
+      },
+      {
+        "id": "1778_time_interval_performance",
+        "label": "1778_time_interval_performance",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.3",
+        "label": "greenkeeper/file-loader-1.1.3",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jsdoc-3.5.0",
+        "label": "greenkeeper/jsdoc-3.5.0",
+        "group": 2
+      },
+      {
+        "id": "as_2706",
+        "label": "as_2706",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-sass-loader-4.0.2",
+        "label": "greenkeeper-sass-loader-4.0.2",
+        "group": 2
+      },
+      {
+        "id": "namepath-filename-severance",
+        "label": "namepath-filename-severance",
+        "group": 2
+      },
+      {
+        "id": "rd_addresses_csv_pelias",
+        "label": "rd_addresses_csv_pelias",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-anything-sortable-1.7.3",
+        "label": "greenkeeper/react-anything-sortable-1.7.3",
+        "group": 2
+      },
+      {
+        "id": "date-picker-css",
+        "label": "date-picker-css",
+        "group": 2
+      },
+      {
+        "id": "fix-basemaps-order",
+        "label": "fix-basemaps-order",
+        "group": 2
+      },
+      {
+        "id": "jsdoc",
+        "label": "jsdoc",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-dom-15.6.0",
+        "label": "greenkeeper/react-dom-15.6.0",
+        "group": 2
+      },
+      {
+        "id": "cesium-lighting",
+        "label": "cesium-lighting",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/style-loader-0.19.0",
+        "label": "greenkeeper/style-loader-0.19.0",
+        "group": 2
+      },
+      {
+        "id": "add-settings-globeTranslucency-and-collisionDetection",
+        "label": "add-settings-globeTranslucency-and-collisionDetection",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-pin-1.6.6",
+        "label": "greenkeeper/electron-pin-1.6.6",
+        "group": 2
+      },
+      {
+        "id": "normalize-download-filenames",
+        "label": "normalize-download-filenames",
+        "group": 2
+      },
+      {
+        "id": "feature-microzonation-panel",
+        "label": "feature-microzonation-panel",
+        "group": 2
+      },
+      {
+        "id": "as_aremi-natmap_136",
+        "label": "as_aremi-natmap_136",
+        "group": 2
+      },
+      {
+        "id": "measurable-panel-ui-fixes",
+        "label": "measurable-panel-ui-fixes",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/leaflet-1.1.0",
+        "label": "greenkeeper/leaflet-1.1.0",
+        "group": 2
+      },
+      {
+        "id": "rd_elevation",
+        "label": "rd_elevation",
+        "group": 2
+      },
+      {
+        "id": "searchable-catalog-item",
+        "label": "searchable-catalog-item",
+        "group": 2
+      },
+      {
+        "id": "change-export-format",
+        "label": "change-export-format",
+        "group": 2
+      },
+      {
+        "id": "rd_aristotle_metadata",
+        "label": "rd_aristotle_metadata",
+        "group": 2
+      },
+      {
+        "id": "refactor-centralize-export-logic",
+        "label": "refactor-centralize-export-logic",
+        "group": 2
+      },
+      {
+        "id": "newui-newcesium",
+        "label": "newui-newcesium",
+        "group": 2
+      },
+      {
+        "id": "fix-sharing-using-initfile",
+        "label": "fix-sharing-using-initfile",
+        "group": 2
+      },
+      {
+        "id": "ie11_test",
+        "label": "ie11_test",
+        "group": 2
+      },
+      {
+        "id": "linking-elevation-chart-to-map",
+        "label": "linking-elevation-chart-to-map",
+        "group": 2
+      },
+      {
+        "id": "terriajs-8.11.0",
+        "label": "terriajs-8.11.0",
+        "group": 2
+      },
+      {
+        "id": "toggle_map_pick",
+        "label": "toggle_map_pick",
+        "group": 2
+      },
+      {
+        "id": "no_concept",
+        "label": "no_concept",
+        "group": 2
+      },
+      {
+        "id": "catalog",
+        "label": "catalog",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-loader-7.1.1",
+        "label": "greenkeeper/babel-loader-7.1.1",
+        "group": 2
+      },
+      {
+        "id": "fix-visibility-measure-tools",
+        "label": "fix-visibility-measure-tools",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/dateformat-3.0.1",
+        "label": "greenkeeper/dateformat-3.0.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/file-loader-1.1.5",
+        "label": "greenkeeper/file-loader-1.1.5",
+        "group": 2
+      },
+      {
+        "id": "fix-viewshed-scss-types",
+        "label": "fix-viewshed-scss-types",
+        "group": 2
+      },
+      {
+        "id": "webpack-typescript",
+        "label": "webpack-typescript",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-datepicker-0.58.0",
+        "label": "greenkeeper/react-datepicker-0.58.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-dom-15.6.1",
+        "label": "greenkeeper/react-dom-15.6.1",
+        "group": 2
+      },
+      {
+        "id": "analytics",
+        "label": "analytics",
+        "group": 2
+      },
+      {
+        "id": "csv-report-formatting",
+        "label": "csv-report-formatting",
+        "group": 2
+      },
+      {
+        "id": "newui-vt",
+        "label": "newui-vt",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jsdoc-pin-3.4.3",
+        "label": "greenkeeper/jsdoc-pin-3.4.3",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/babel-eslint-8.0.0",
+        "label": "greenkeeper/babel-eslint-8.0.0",
+        "group": 2
+      },
+      {
+        "id": "chunks_test",
+        "label": "chunks_test",
+        "group": 2
+      },
+      {
+        "id": "tool",
+        "label": "tool",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/jsdoc-3.5.3",
+        "label": "greenkeeper/jsdoc-3.5.3",
+        "group": 2
+      },
+      {
+        "id": "point-measure-tool",
+        "label": "point-measure-tool",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/markdown-it-pin-8.3.2",
+        "label": "greenkeeper/markdown-it-pin-8.3.2",
+        "group": 2
+      },
+      {
+        "id": "measure-area-ui-labels",
+        "label": "measure-area-ui-labels",
+        "group": 2
+      },
+      {
+        "id": "1904-no-colour-scale-on-first-thredds-add",
+        "label": "1904-no-colour-scale-on-first-thredds-add",
+        "group": 2
+      },
+      {
+        "id": "patch-5.1.1",
+        "label": "patch-5.1.1",
+        "group": 2
+      },
+      {
+        "id": "enhance_charts",
+        "label": "enhance_charts",
+        "group": 2
+      },
+      {
+        "id": "modalPopup",
+        "label": "modalPopup",
+        "group": 2
+      },
+      {
+        "id": "jsonTreeview",
+        "label": "jsonTreeview",
+        "group": 2
+      },
+      {
+        "id": "add-configParameters-leafletMaxZoom",
+        "label": "add-configParameters-leafletMaxZoom",
+        "group": 2
+      },
+      {
+        "id": "fix-elevation-with-useElevationMeanSeaLevel",
+        "label": "fix-elevation-with-useElevationMeanSeaLevel",
+        "group": 2
+      },
+      {
+        "id": "disable_location",
+        "label": "disable_location",
+        "group": 2
+      },
+      {
+        "id": "abs-itt-url",
+        "label": "abs-itt-url",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/css-loader-0.28.6",
+        "label": "greenkeeper/css-loader-0.28.6",
+        "group": 2
+      },
+      {
+        "id": "italian-improvements",
+        "label": "italian-improvements",
+        "group": 2
+      },
+      {
+        "id": "reduce-zoom-amount",
+        "label": "reduce-zoom-amount",
+        "group": 2
+      },
+      {
+        "id": "refactor-measure-tool",
+        "label": "refactor-measure-tool",
+        "group": 2
+      },
+      {
+        "id": "migrate-marche-catalog-item-filter-to-new-version",
+        "label": "migrate-marche-catalog-item-filter-to-new-version",
+        "group": 2
+      },
+      {
+        "id": "change-copy-layer",
+        "label": "change-copy-layer",
+        "group": 2
+      },
+      {
+        "id": "urijs",
+        "label": "urijs",
+        "group": 2
+      },
+      {
+        "id": "rd_additional_catalog",
+        "label": "rd_additional_catalog",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/terriajs-server-2.7.0",
+        "label": "greenkeeper/terriajs-server-2.7.0",
+        "group": 2
+      },
+      {
+        "id": "export-summary-txt",
+        "label": "export-summary-txt",
+        "group": 2
+      },
+      {
+        "id": "toStringForMarkdown",
+        "label": "toStringForMarkdown",
+        "group": 2
+      },
+      {
+        "id": "improve-mobile-ui",
+        "label": "improve-mobile-ui",
+        "group": 2
+      },
+      {
+        "id": "feature-multipath-management",
+        "label": "feature-multipath-management",
+        "group": 2
+      },
+      {
+        "id": "protari",
+        "label": "protari",
+        "group": 2
+      },
+      {
+        "id": "initial-topojson-support",
+        "label": "initial-topojson-support",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper-d3-axis-1.0.4",
+        "label": "greenkeeper-d3-axis-1.0.4",
+        "group": 2
+      },
+      {
+        "id": "fix-help-supportEmail",
+        "label": "fix-help-supportEmail",
+        "group": 2
+      },
+      {
+        "id": "fix-welcomeMessage-video-visibility",
+        "label": "fix-welcomeMessage-video-visibility",
+        "group": 2
+      },
+      {
+        "id": "measurable-geom",
+        "label": "measurable-geom",
+        "group": 2
+      },
+      {
+        "id": "export_improvements_multipath",
+        "label": "export_improvements_multipath",
+        "group": 2
+      },
+      {
+        "id": "sdmx_hier",
+        "label": "sdmx_hier",
+        "group": 2
+      },
+      {
+        "id": "2608_timeline_picker",
+        "label": "2608_timeline_picker",
+        "group": 2
+      },
+      {
+        "id": "fix-min-scale-arcgis",
+        "label": "fix-min-scale-arcgis",
+        "group": 2
+      },
+      {
+        "id": "measurable-panel-edit-mode",
+        "label": "measurable-panel-edit-mode",
+        "group": 2
+      },
+      {
+        "id": "timeline",
+        "label": "timeline",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/karma-chrome-launcher-2.2.0",
+        "label": "greenkeeper/karma-chrome-launcher-2.2.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-3.1.1",
+        "label": "greenkeeper/enzyme-3.1.1",
+        "group": 2
+      },
+      {
+        "id": "measurable-panel-polygon-path-notes",
+        "label": "measurable-panel-polygon-path-notes",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/json-loader-0.5.6",
+        "label": "greenkeeper/json-loader-0.5.6",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/simple-statistics-5.0.1",
+        "label": "greenkeeper/simple-statistics-5.0.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-axis-pin-1.0.6",
+        "label": "greenkeeper/d3-axis-pin-1.0.6",
+        "group": 2
+      },
+      {
+        "id": "modify-path-points",
+        "label": "modify-path-points",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/d3-array-1.1.1",
+        "label": "greenkeeper/d3-array-1.1.1",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/react-dom-pin-15.5.4",
+        "label": "greenkeeper/react-dom-pin-15.5.4",
+        "group": 2
+      },
+      {
+        "id": "rd_wps_param_overrides",
+        "label": "rd_wps_param_overrides",
+        "group": 2
+      },
+      {
+        "id": "add-measure-area-tool",
+        "label": "add-measure-area-tool",
+        "group": 2
+      },
+      {
+        "id": "fix-mylocation-visibility",
+        "label": "fix-mylocation-visibility",
+        "group": 2
+      },
+      {
+        "id": "multiselect_var",
+        "label": "multiselect_var",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/enzyme-pin-2.8.0",
+        "label": "greenkeeper/enzyme-pin-2.8.0",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/electron-1.7.5",
+        "label": "greenkeeper/electron-1.7.5",
+        "group": 2
+      },
+      {
+        "id": "greenkeeper/fs-extra-pin-2.1.0",
+        "label": "greenkeeper/fs-extra-pin-2.1.0",
+        "group": 2
+      },
+      {
+        "id": "kml-clamp-to-ground",
+        "label": "kml-clamp-to-ground",
+        "group": 2
+      }
+    ],
+    "edges": [
+      {
+        "from": "main",
+        "to": "1052_childGroupProperties_B"
+      },
+      {
+        "from": "main",
+        "to": "1171-show-raw-data-of-feature"
+      },
+      {
+        "from": "main",
+        "to": "1778_time_interval_performance"
+      },
+      {
+        "from": "main",
+        "to": "1904-no-colour-scale-on-first-thredds-add"
+      },
+      {
+        "from": "main",
+        "to": "2113"
+      },
+      {
+        "from": "main",
+        "to": "2119-add-shareurl-to-feedback"
+      },
+      {
+        "from": "main",
+        "to": "2127_crush_terrain"
+      },
+      {
+        "from": "main",
+        "to": "2355"
+      },
+      {
+        "from": "main",
+        "to": "2386_markdown"
+      },
+      {
+        "from": "main",
+        "to": "2608_date_picker"
+      },
+      {
+        "from": "main",
+        "to": "2608_timeline_picker"
+      },
+      {
+        "from": "main",
+        "to": "2608_timeline_picker-add-on"
+      },
+      {
+        "from": "main",
+        "to": "2609_2608"
+      },
+      {
+        "from": "main",
+        "to": "2609_2608-kring"
+      },
+      {
+        "from": "main",
+        "to": "2609_split"
+      },
+      {
+        "from": "main",
+        "to": "2639"
+      },
+      {
+        "from": "main",
+        "to": "5.4.0-upgrade"
+      },
+      {
+        "from": "main",
+        "to": "987_customXmlFeatureInfoFormats"
+      },
+      {
+        "from": "main",
+        "to": "abs-itt-url"
+      },
+      {
+        "from": "main",
+        "to": "add-IO-map-project"
+      },
+      {
+        "from": "main",
+        "to": "add-area-measurement"
+      },
+      {
+        "from": "main",
+        "to": "add-cesiumGlobeColor-parameter"
+      },
+      {
+        "from": "main",
+        "to": "add-color-panel"
+      },
+      {
+        "from": "main",
+        "to": "add-configParameters-leafletMaxZoom"
+      },
+      {
+        "from": "main",
+        "to": "add-geojson-clustering"
+      },
+      {
+        "from": "main",
+        "to": "add-geojson-mixedStyle"
+      },
+      {
+        "from": "main",
+        "to": "add-login-panel"
+      },
+      {
+        "from": "main",
+        "to": "add-measure-area-tool"
+      },
+      {
+        "from": "main",
+        "to": "add-pickSize-parameter"
+      },
+      {
+        "from": "main",
+        "to": "add-polylineWidth-param"
+      },
+      {
+        "from": "main",
+        "to": "add-settings-globeTranslucency-and-collisionDetection"
+      },
+      {
+        "from": "main",
+        "to": "add-timeline"
+      },
+      {
+        "from": "main",
+        "to": "add-tooltips"
+      },
+      {
+        "from": "main",
+        "to": "add-viewshed"
+      },
+      {
+        "from": "main",
+        "to": "align-tool-buttons-order"
+      },
+      {
+        "from": "main",
+        "to": "all_css"
+      },
+      {
+        "from": "main",
+        "to": "analytics"
+      },
+      {
+        "from": "main",
+        "to": "analyticsWithCharts"
+      },
+      {
+        "from": "main",
+        "to": "angle-measure-tool"
+      },
+      {
+        "from": "main",
+        "to": "aristotle_metadata"
+      },
+      {
+        "from": "main",
+        "to": "as_2640"
+      },
+      {
+        "from": "main",
+        "to": "as_2697_2706"
+      },
+      {
+        "from": "main",
+        "to": "as_2700"
+      },
+      {
+        "from": "main",
+        "to": "as_2706"
+      },
+      {
+        "from": "main",
+        "to": "as_aremi-natmap_136"
+      },
+      {
+        "from": "main",
+        "to": "as_geoglam-nm_5"
+      },
+      {
+        "from": "main",
+        "to": "augmented_virtuality"
+      },
+      {
+        "from": "main",
+        "to": "bug-fix-kml-layers"
+      },
+      {
+        "from": "main",
+        "to": "catalog"
+      },
+      {
+        "from": "main",
+        "to": "catalog-member-info-search"
+      },
+      {
+        "from": "main",
+        "to": "cesium-lighting"
+      },
+      {
+        "from": "main",
+        "to": "cesium2d-viewer"
+      },
+      {
+        "from": "main",
+        "to": "change-copy-layer"
+      },
+      {
+        "from": "main",
+        "to": "change-export-format"
+      },
+      {
+        "from": "main",
+        "to": "change-font"
+      },
+      {
+        "from": "main",
+        "to": "change-width-threshold-mobile"
+      },
+      {
+        "from": "main",
+        "to": "chunks_test"
+      },
+      {
+        "from": "main",
+        "to": "circle-measure-tool"
+      },
+      {
+        "from": "main",
+        "to": "clip-planes-layer"
+      },
+      {
+        "from": "main",
+        "to": "colorMapUi"
+      },
+      {
+        "from": "main",
+        "to": "configurable-branding-via-init-file"
+      },
+      {
+        "from": "main",
+        "to": "configurable-theme-colors-via-init-file"
+      },
+      {
+        "from": "main",
+        "to": "configurable-workbench-length"
+      },
+      {
+        "from": "main",
+        "to": "csv-report-formatting"
+      },
+      {
+        "from": "main",
+        "to": "czml_test_files"
+      },
+      {
+        "from": "main",
+        "to": "date-picker-css"
+      },
+      {
+        "from": "main",
+        "to": "disable_location"
+      },
+      {
+        "from": "main",
+        "to": "disclaimerOnShare"
+      },
+      {
+        "from": "main",
+        "to": "doco"
+      },
+      {
+        "from": "main",
+        "to": "downloadButton"
+      },
+      {
+        "from": "main",
+        "to": "enhance-play-path"
+      },
+      {
+        "from": "main",
+        "to": "enhance_charts"
+      },
+      {
+        "from": "main",
+        "to": "expand-path-handling-kml-geojson"
+      },
+      {
+        "from": "main",
+        "to": "explorerPanelTweaks"
+      },
+      {
+        "from": "main",
+        "to": "explorer_done"
+      },
+      {
+        "from": "main",
+        "to": "export-csv-locale-separator"
+      },
+      {
+        "from": "main",
+        "to": "export-default-filename"
+      },
+      {
+        "from": "main",
+        "to": "export-measure-properties"
+      },
+      {
+        "from": "main",
+        "to": "export-summary-txt"
+      },
+      {
+        "from": "main",
+        "to": "export_improvements"
+      },
+      {
+        "from": "main",
+        "to": "export_improvements_multipath"
+      },
+      {
+        "from": "main",
+        "to": "feature-enhanced-download-and-ui"
+      },
+      {
+        "from": "main",
+        "to": "feature-measurable-download-panel"
+      },
+      {
+        "from": "main",
+        "to": "feature-microzonation-panel"
+      },
+      {
+        "from": "main",
+        "to": "feature-multipath-management"
+      },
+      {
+        "from": "main",
+        "to": "featureinfo-and-coordinate-panel"
+      },
+      {
+        "from": "main",
+        "to": "featureinfo-improvements"
+      },
+      {
+        "from": "main",
+        "to": "feedbackUrl-mailto"
+      },
+      {
+        "from": "main",
+        "to": "fix-adddata-button-width"
+      },
+      {
+        "from": "main",
+        "to": "fix-basemaps-order"
+      },
+      {
+        "from": "main",
+        "to": "fix-compare-vector-data"
+      },
+      {
+        "from": "main",
+        "to": "fix-drag-side-panel-bug"
+      },
+      {
+        "from": "main",
+        "to": "fix-elevation-with-useElevationMeanSeaLevel"
+      },
+      {
+        "from": "main",
+        "to": "fix-feedback-shareurl"
+      },
+      {
+        "from": "main",
+        "to": "fix-graphic-layout"
+      },
+      {
+        "from": "main",
+        "to": "fix-help-supportEmail"
+      },
+      {
+        "from": "main",
+        "to": "fix-login-btn-scss-types"
+      },
+      {
+        "from": "main",
+        "to": "fix-maximumScale-ArcGisMapServer"
+      },
+      {
+        "from": "main",
+        "to": "fix-measurable-panel-interactions"
+      },
+      {
+        "from": "main",
+        "to": "fix-min-scale-arcgis"
+      },
+      {
+        "from": "main",
+        "to": "fix-mylocation-visibility"
+      },
+      {
+        "from": "main",
+        "to": "fix-offset-sidepanel-relatedmaps"
+      },
+      {
+        "from": "main",
+        "to": "fix-search-box-ui-bug"
+      },
+      {
+        "from": "main",
+        "to": "fix-sharing-using-initfile"
+      },
+      {
+        "from": "main",
+        "to": "fix-sharing-with-initfile"
+      },
+      {
+        "from": "main",
+        "to": "fix-split-local-file-copy"
+      },
+      {
+        "from": "main",
+        "to": "fix-viewshed-scss-types"
+      },
+      {
+        "from": "main",
+        "to": "fix-visibility-measure-tools"
+      },
+      {
+        "from": "main",
+        "to": "fix-welcomeMessage-video-visibility"
+      },
+      {
+        "from": "main",
+        "to": "fix-zoomControl-typo"
+      },
+      {
+        "from": "main",
+        "to": "formats-export-extended-data"
+      },
+      {
+        "from": "main",
+        "to": "geotiff-format-support"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-babel-core-6.20.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-babel-loader-6.2.7"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-d3-array-1.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-d3-axis-1.0.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-d3-scale-1.0.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-eslint-3.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-eslint-3.9.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-eslint-3.9.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-fs-extra-2.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-inobounce-0.1.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-leaflet-1.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-leaflet-1.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-sass-loader-4.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper-vector-tile-1.3.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-core-6.25.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-core-6.26.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-core-pin-6.24.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-core-pin-6.25.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-eslint-8.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-eslint-8.0.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-eslint-8.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-loader-7.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/babel-loader-pin-7.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/css-loader-0.28.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/css-loader-0.28.6"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/css-loader-0.28.7"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/css-loader-pin-0.28.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/css-loader-pin-0.28.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-array-1.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-array-1.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-array-1.2.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-array-pin-1.0.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-axis-1.0.7"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-axis-1.0.8"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-axis-pin-1.0.6"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-selection-1.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-shape-1.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-shape-1.2.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-shape-pin-1.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-transition-1.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/d3-transition-pin-1.0.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/dateformat-3.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/dateformat-3.0.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/dateformat-3.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.6.10"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.6.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.6.6"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.6.9"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.7.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.7.8"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-1.7.9"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-pin-1.6.6"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-pin-1.7.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-pin-1.7.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-pin-1.8.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/electron-pin-1.8.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-2.8.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-2.9.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-3.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-3.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-3.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/enzyme-pin-2.8.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/eslint-plugin-react-7.4.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/eslint-plugin-react-pin-7.3.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/extract-text-webpack-plugin-pin-2.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.0.0-rc.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/file-loader-1.1.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/fs-extra-pin-2.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/html-to-react-pin-1.2.8"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jasmine-core-pin-2.6.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jasmine-enzyme-4.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jasmine-enzyme-4.0.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jsdoc-3.5.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jsdoc-3.5.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jsdoc-3.5.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jsdoc-3.5.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/jsdoc-pin-3.4.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/json-loader-0.5.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/json-loader-0.5.6"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/json-loader-0.5.7"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/json-loader-pin-0.5.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/karma-1.7.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/karma-chrome-launcher-2.2.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/karma-detect-browsers-2.2.5"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/karma-detect-browsers-pin-2.2.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/karma-pin-1.7.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/klaw-sync-3.0.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/klaw-sync-pin-3.0.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/leaflet-1.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/leaflet-1.2.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/markdown-it-8.4.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/markdown-it-pin-8.3.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/moment-2.19.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/moment-2.19.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/proj4-2.4.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/proj4-2.4.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/proj4-2.4.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/proj4-2.4.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/proj4-pin-2.3.17"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/raw-loader-1.0.0-beta.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-16.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-anything-sortable-1.7.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-anything-sortable-1.7.3"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-anything-sortable-pin-1.7.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-datepicker-0.57.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-datepicker-0.58.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-datepicker-0.59.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-datepicker-0.60.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-datepicker-0.60.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-dom-15.6.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-dom-15.6.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-dom-16.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-dom-pin-15.5.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/react-test-renderer-16.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/sass-loader-6.0.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/simple-statistics-4.2.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/simple-statistics-5.0.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/simple-statistics-5.0.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/simple-statistics-5.1.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/simple-statistics-pin-4.1.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/style-loader-0.18.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/style-loader-0.18.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/style-loader-0.19.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/terriajs-server-2.7.0"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/terriajs-server-pin-2.6.7"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/url-loader-0.6.1"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/url-loader-0.6.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/webpack-dev-server-2.9.4"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/webpack-dev-server-pin-2.4.2"
+      },
+      {
+        "from": "main",
+        "to": "greenkeeper/webpack-pin-2.5.1"
+      },
+      {
+        "from": "main",
+        "to": "htmlCatalog"
+      },
+      {
+        "from": "main",
+        "to": "ie11_test"
+      },
+      {
+        "from": "main",
+        "to": "import-csv-locale-separator"
+      },
+      {
+        "from": "main",
+        "to": "improve-mobile-ui"
+      },
+      {
+        "from": "main",
+        "to": "increase-adddata-button-width"
+      },
+      {
+        "from": "main",
+        "to": "initial-topojson-support"
+      },
+      {
+        "from": "main",
+        "to": "italian-improvements"
+      },
+      {
+        "from": "main",
+        "to": "jsdoc"
+      },
+      {
+        "from": "main",
+        "to": "jsonTreeview"
+      },
+      {
+        "from": "main",
+        "to": "kml-clamp-to-ground"
+      },
+      {
+        "from": "main",
+        "to": "kml-color-preservation"
+      },
+      {
+        "from": "main",
+        "to": "ko_component"
+      },
+      {
+        "from": "main",
+        "to": "linking-elevation-chart-to-map"
+      },
+      {
+        "from": "main",
+        "to": "map-navigation-with-keyboard"
+      },
+      {
+        "from": "main",
+        "to": "measurable-geom"
+      },
+      {
+        "from": "main",
+        "to": "measurable-panel-edit-mode"
+      },
+      {
+        "from": "main",
+        "to": "measurable-panel-polygon-path-notes"
+      },
+      {
+        "from": "main",
+        "to": "measurable-panel-transform-feature"
+      },
+      {
+        "from": "main",
+        "to": "measurable-panel-ui-fixes"
+      },
+      {
+        "from": "main",
+        "to": "measurable-panel-ui-improvements"
+      },
+      {
+        "from": "main",
+        "to": "measure-area-ui-labels"
+      },
+      {
+        "from": "main",
+        "to": "measure-panel-temporary-layer-help"
+      },
+      {
+        "from": "main",
+        "to": "measure-temp-layer"
+      },
+      {
+        "from": "main",
+        "to": "merging-all-measure-tools"
+      },
+      {
+        "from": "main",
+        "to": "merging-path-enhancements"
+      },
+      {
+        "from": "main",
+        "to": "migrate-marche-catalog-item-filter-to-new-version"
+      },
+      {
+        "from": "main",
+        "to": "migrate-marche-features-to-new-version"
+      },
+      {
+        "from": "main",
+        "to": "minimise-f-info"
+      },
+      {
+        "from": "main",
+        "to": "missing_featureinfo"
+      },
+      {
+        "from": "main",
+        "to": "mobile-measurable-panel-adjustments"
+      },
+      {
+        "from": "main",
+        "to": "modalPopup"
+      },
+      {
+        "from": "main",
+        "to": "modify-path-points"
+      },
+      {
+        "from": "main",
+        "to": "more-colormap-merged"
+      },
+      {
+        "from": "main",
+        "to": "multipath-management"
+      },
+      {
+        "from": "main",
+        "to": "multiselect_var"
+      },
+      {
+        "from": "main",
+        "to": "mvt_dev_geojson_vt"
+      },
+      {
+        "from": "main",
+        "to": "mvt_dev_overzooming"
+      },
+      {
+        "from": "main",
+        "to": "namepath-filename-severance"
+      },
+      {
+        "from": "main",
+        "to": "neii92"
+      },
+      {
+        "from": "main",
+        "to": "new-error-msg"
+      },
+      {
+        "from": "main",
+        "to": "newui"
+      },
+      {
+        "from": "main",
+        "to": "newui-newcesium"
+      },
+      {
+        "from": "main",
+        "to": "newui-vt"
+      },
+      {
+        "from": "main",
+        "to": "no_concept"
+      },
+      {
+        "from": "main",
+        "to": "nominatim-search-provider"
+      },
+      {
+        "from": "main",
+        "to": "normalize-download-filenames"
+      },
+      {
+        "from": "main",
+        "to": "oldui"
+      },
+      {
+        "from": "main",
+        "to": "origin_8.7.7"
+      },
+      {
+        "from": "main",
+        "to": "patch-5.1.1"
+      },
+      {
+        "from": "main",
+        "to": "pazzaglia-play-path"
+      },
+      {
+        "from": "main",
+        "to": "play-path"
+      },
+      {
+        "from": "main",
+        "to": "play-path-adjustments"
+      },
+      {
+        "from": "main",
+        "to": "play-path-feature"
+      },
+      {
+        "from": "main",
+        "to": "play-path-future-draft"
+      },
+      {
+        "from": "main",
+        "to": "play-path-help-tooltip"
+      },
+      {
+        "from": "main",
+        "to": "play-path-poly-interpolation"
+      },
+      {
+        "from": "main",
+        "to": "play-path-prev-next-feature"
+      },
+      {
+        "from": "main",
+        "to": "point-measure-tool"
+      },
+      {
+        "from": "main",
+        "to": "polygon-measure-fix-drag-points"
+      },
+      {
+        "from": "main",
+        "to": "pre-borgification"
+      },
+      {
+        "from": "main",
+        "to": "prepare-marche-features-merge"
+      },
+      {
+        "from": "main",
+        "to": "protari"
+      },
+      {
+        "from": "main",
+        "to": "rd_additional_catalog"
+      },
+      {
+        "from": "main",
+        "to": "rd_addresses_csv_pelias"
+      },
+      {
+        "from": "main",
+        "to": "rd_aristotle_metadata"
+      },
+      {
+        "from": "main",
+        "to": "rd_cesium_3d_tiles"
+      },
+      {
+        "from": "main",
+        "to": "rd_elevation"
+      },
+      {
+        "from": "main",
+        "to": "rd_wps_param_overrides"
+      },
+      {
+        "from": "main",
+        "to": "reduce-zoom-amount"
+      },
+      {
+        "from": "main",
+        "to": "reduxSandbox"
+      },
+      {
+        "from": "main",
+        "to": "refactor-centralize-export-logic"
+      },
+      {
+        "from": "main",
+        "to": "refactor-csv-files-upload"
+      },
+      {
+        "from": "main",
+        "to": "refactor-measure-tool"
+      },
+      {
+        "from": "main",
+        "to": "refactor-play-path-feature"
+      },
+      {
+        "from": "main",
+        "to": "remove-whereAmI-proxy"
+      },
+      {
+        "from": "main",
+        "to": "rename-measurable-geometry-components"
+      },
+      {
+        "from": "main",
+        "to": "rename-workbench-italian-labels"
+      },
+      {
+        "from": "main",
+        "to": "reprojectToWebMercator"
+      },
+      {
+        "from": "main",
+        "to": "rer-search-provider"
+      },
+      {
+        "from": "main",
+        "to": "rer-search-provider-fix-nan"
+      },
+      {
+        "from": "main",
+        "to": "rer3d_from_8.7.7"
+      },
+      {
+        "from": "main",
+        "to": "rer3d_from_8.7.8"
+      },
+      {
+        "from": "main",
+        "to": "rer3d_from_8.7.9"
+      },
+      {
+        "from": "main",
+        "to": "restore-and-improve-measurable-export"
+      },
+      {
+        "from": "main",
+        "to": "sdmx_hier"
+      },
+      {
+        "from": "main",
+        "to": "search-catalog-info"
+      },
+      {
+        "from": "main",
+        "to": "searchable-catalog-item"
+      },
+      {
+        "from": "main",
+        "to": "share-url"
+      },
+      {
+        "from": "main",
+        "to": "sppigot-wpsgetfeatureinfo"
+      },
+      {
+        "from": "main",
+        "to": "statusbar-wait-precise-elevation"
+      },
+      {
+        "from": "main",
+        "to": "story-panel-ui-menu"
+      },
+      {
+        "from": "main",
+        "to": "summary_concept"
+      },
+      {
+        "from": "main",
+        "to": "suppress-uniqe-image-legend"
+      },
+      {
+        "from": "main",
+        "to": "terria_view_ckan_extension"
+      },
+      {
+        "from": "main",
+        "to": "terriajs-8.11.0"
+      },
+      {
+        "from": "main",
+        "to": "timeline"
+      },
+      {
+        "from": "main",
+        "to": "toStringForMarkdown"
+      },
+      {
+        "from": "main",
+        "to": "toggle_map_pick"
+      },
+      {
+        "from": "main",
+        "to": "tool"
+      },
+      {
+        "from": "main",
+        "to": "ui-improvements"
+      },
+      {
+        "from": "main",
+        "to": "underground-poc"
+      },
+      {
+        "from": "main",
+        "to": "upgrade_leaflet-1.0.0"
+      },
+      {
+        "from": "main",
+        "to": "upgrades"
+      },
+      {
+        "from": "main",
+        "to": "upstream-main"
+      },
+      {
+        "from": "main",
+        "to": "upstream-main-merge-linking-elevation-chart-to-map"
+      },
+      {
+        "from": "main",
+        "to": "upstream-main-poi-support"
+      },
+      {
+        "from": "main",
+        "to": "urijs"
+      },
+      {
+        "from": "main",
+        "to": "vt_feature_info"
+      },
+      {
+        "from": "main",
+        "to": "vt_no_flicker"
+      },
+      {
+        "from": "main",
+        "to": "watercolor"
+      },
+      {
+        "from": "main",
+        "to": "webpack-typescript"
+      },
+      {
+        "from": "main",
+        "to": "wmsNamespaces"
+      },
+      {
+        "from": "v8",
+        "to": "GoogleTileMapsCatalogItem"
+      },
+      {
+        "from": "v8",
+        "to": "pazzaglia-marche-hbar-charts"
+      },
+      {
+        "from": "v8",
+        "to": "pazzaglia-rer-search-area"
+      },
+      {
+        "from": "v8",
+        "to": "pazzaglia-searchbox-constraint"
+      }
+    ]
+  }
+}
