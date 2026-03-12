@@ -821,7 +821,7 @@ const MeasurablePanel = observer((props: Props) => {
     const showSamplingStep =
       !currentGeom?.hasArea && !isPointGeometry && !isCircleGeometry;
     const showStepDetails = isCircleGeometry
-      ? !!currentGeom?.stopPoints?.length
+      ? false
       : !!currentGeom?.sampledDistances;
 
     return (

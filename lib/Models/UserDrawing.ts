@@ -345,8 +345,7 @@ export default class UserDrawing extends MappableMixin(
     if (areaMetresSquared >= 1_000_000) {
       const km2 = areaMetresSquared / 1_000_000;
       const kmStr = km2 >= 10 ? km2.toFixed(1) : km2.toFixed(2);
-      const mStr = areaMetresSquared.toFixed(0);
-      return `${kmStr} km\u00B2 (${mStr} m\u00B2)`;
+      return `${kmStr} km\u00B2`;
     }
 
     const decimals = areaMetresSquared >= 10_000 ? 0 : 2;
@@ -413,7 +412,8 @@ export default class UserDrawing extends MappableMixin(
         outlineColor: Color.WHITE,
         outlineWidth: 2,
         pixelOffset: new Cartesian2(0, -20),
-        verticalOrigin: VerticalOrigin.BOTTOM
+        verticalOrigin: VerticalOrigin.BOTTOM,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     } as any);
 
@@ -464,7 +464,8 @@ export default class UserDrawing extends MappableMixin(
         outlineWidth: 2,
         pixelOffset: new Cartesian2(0, -12),
         verticalOrigin: VerticalOrigin.BOTTOM,
-        horizontalOrigin: HorizontalOrigin.CENTER
+        horizontalOrigin: HorizontalOrigin.CENTER,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
     } as any);
 
