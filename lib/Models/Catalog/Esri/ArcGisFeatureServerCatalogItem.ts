@@ -1,15 +1,8 @@
 import { featureCollection } from "@turf/helpers";
 import { GeoJsonProperties, Geometry, GeometryCollection } from "geojson";
 import i18next from "i18next";
-import {
-  computed,
-  makeObservable,
-  observable,
-  override,
-  runInAction
-} from "mobx";
+import { computed, makeObservable, override, runInAction } from "mobx";
 import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
-import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import URI from "urijs";
 import { FeatureCollectionWithCrs } from "../../../Core/GeoJson";
 import isDefined from "../../../Core/isDefined";
@@ -27,16 +20,11 @@ import CreateModel from "../../Definition/CreateModel";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
-import buildMapServerPinDataSource from "./buildMapServerPinDataSource";
 
 export default class ArcGisFeatureServerCatalogItem extends MinMaxLevelMixin(
   GeoJsonMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
 ) {
   static readonly type = "esri-featureServer";
-
-  @observable
-  private _mapServerPinDataSource: CustomDataSource | undefined = undefined;
-
   constructor(...args: ModelConstructorParameters) {
     super(...args);
     makeObservable(this);
@@ -141,34 +129,6 @@ export default class ArcGisFeatureServerCatalogItem extends MinMaxLevelMixin(
     );
   }
 
-  protected async forceLoadMapItems(): Promise<void> {
-    await super.forceLoadMapItems();
-
-    if (this.readyData) {
-      const clusteringOpts =
-        this.clustering.enabled || this.clusterize
-          ? {
-              enabled: true,
-              pixelRange: this.clustering.pixelRange,
-              minimumClusterSize: this.clustering.minimumClusterSize,
-              pinSize: this.clustering.pinSize,
-              pinBackgroundColor: this.clustering.pinBackgroundColor
-            }
-          : undefined;
-
-      const dataSource = await buildMapServerPinDataSource(
-        this.readyData,
-        this.name,
-        clusteringOpts
-      );
-      if (dataSource) {
-        runInAction(() => {
-          this._mapServerPinDataSource = dataSource;
-        });
-      }
-    }
-  }
-
   @computed get imageryProvider() {
     // Don't return an imagery provider if we haven't loaded metadata yet
     if (!this.strata.has(ArcGisFeatureServerStratum.stratumName)) {
@@ -215,10 +175,6 @@ export default class ArcGisFeatureServerCatalogItem extends MinMaxLevelMixin(
   get mapItems() {
     // If we aren't tiling requests, then we use GeoJsonMixin forceLoadGeojsonData
     if (!this.tileRequests) {
-      if (this._mapServerPinDataSource) {
-        this._mapServerPinDataSource.show = this.show;
-        return [this._mapServerPinDataSource];
-      }
       return super.mapItems;
     }
 

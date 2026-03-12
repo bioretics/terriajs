@@ -85,6 +85,7 @@ import TableStylingWorkflow from "../Models/Workflows/TableStylingWorkflow";
 import createLongitudeLatitudeFeaturePerRow from "../Table/createLongitudeLatitudeFeaturePerRow";
 import TableAutomaticStylesStratum from "../Table/TableAutomaticStylesStratum";
 import TableStyle, { createRowGroupId } from "../Table/TableStyle";
+import { GLYPHS } from "../Styled/Icon";
 import { GeoJsonTraits } from "../Traits/TraitsClasses/GeoJsonTraits";
 import { RectangleTraits } from "../Traits/TraitsClasses/MappableTraits";
 import StyleTraits from "../Traits/TraitsClasses/StyleTraits";
@@ -95,6 +96,10 @@ import { ImageryParts, isDataSource } from "./MappableMixin";
 import TableMixin from "./TableMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
+import LabelGraphics from "terriajs-cesium/Source/DataSources/LabelGraphics";
+import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
+import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 
 export const FEATURE_ID_PROP = "_id_";
 
@@ -219,6 +224,12 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     private _imageryProvider: ProtomapsImageryProvider | undefined;
 
     private tableStyleReactionDisposer: IReactionDisposer | undefined;
+    private _labelReactionDisposer: IReactionDisposer | undefined;
+    private _labeledDataSource:
+      | CustomDataSource
+      | CzmlDataSource
+      | GeoJsonDataSource
+      | undefined;
 
     /** Geojson FeatureCollection in WGS84 */
     @observable.ref _readyData?: FeatureCollectionWithCrs;
@@ -268,6 +279,9 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         "mapItems",
         this.stopTableStyleReaction.bind(this)
       );
+
+      onBecomeObserved(this, "mapItems", this.startLabelReaction.bind(this));
+      onBecomeUnobserved(this, "mapItems", this.stopLabelReaction.bind(this));
     }
 
     private startTableStyleReaction() {
@@ -298,6 +312,32 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       if (this.tableStyleReactionDisposer) {
         this.tableStyleReactionDisposer();
         this.tableStyleReactionDisposer = undefined;
+      }
+    }
+
+    private startLabelReaction() {
+      if (this._labelReactionDisposer) return;
+      this._labelReactionDisposer = reaction(
+        () => ({
+          metersPerPixel: this.terria.mainViewer.scale,
+          dataSource: this._dataSource
+        }),
+        ({ metersPerPixel, dataSource }) => {
+          if (!dataSource) return;
+          if (this._labeledDataSource === dataSource) return;
+          const maxDist = 100000;
+          const triggerScale = maxDist / 500;
+          if (metersPerPixel > triggerScale) return;
+          this.applyLabelsToEntities(dataSource, maxDist);
+        },
+        { fireImmediately: true }
+      );
+    }
+
+    private stopLabelReaction() {
+      if (this._labelReactionDisposer) {
+        this._labelReactionDisposer();
+        this._labelReactionDisposer = undefined;
       }
     }
 
@@ -614,6 +654,130 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           })
         );
       }
+    }
+
+    @action
+    private applyLabelsToEntities(
+      dataSource: CustomDataSource | CzmlDataSource | GeoJsonDataSource,
+      maxDistance: number
+    ) {
+      if (!dataSource?.entities) return;
+
+      const visibilityRange = new DistanceDisplayCondition(0, maxDistance);
+      const fillColor = Color.BLACK.clone();
+      const outlineColor = Color.WHITE.clone();
+      const pixelOffset = new Cartesian2(0, -40);
+      const now = JulianDate.now();
+
+      const entities = dataSource.entities.values;
+      dataSource.entities.suspendEvents();
+
+      for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+        if (!entity.point && !entity.billboard) continue;
+
+        const prop = entity.properties?.["NOME"];
+        if (!prop) continue;
+        const rawValue = prop.getValue(now);
+        if (!rawValue) continue;
+        const styles = runInAction(() => this.stylesWithDefaults);
+        entity.label = new LabelGraphics({
+          text: String(rawValue),
+          font: "12px sans-serif",
+          fillColor,
+          outlineColor,
+          outlineWidth: 2,
+          style: LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: VerticalOrigin.BOTTOM,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          heightReference: styles.clampToGround
+            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
+            : undefined,
+          pixelOffset,
+          distanceDisplayCondition: visibilityRange,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
+        });
+      }
+
+      dataSource.entities.resumeEvents();
+      this._labeledDataSource = dataSource;
+    }
+
+    private async applyRandomPinBillboards(
+      dataSource: GeoJsonDataSource
+    ): Promise<void> {
+      const pinBuilder = new PinBuilder();
+      const PIN_VARIETY = 20;
+
+      const glyphIds: string[] =
+        typeof document !== "undefined"
+          ? Object.values(GLYPHS)
+              .filter(
+                (g): g is { id: string } => typeof (g as any)?.id === "string"
+              )
+              .map((g) => g.id)
+          : [];
+
+      const pinImages: string[] = [];
+      for (let i = 0; i < PIN_VARIETY; i++) {
+        const pinColor = new Color(
+          Math.random(),
+          Math.random(),
+          Math.random(),
+          1.0
+        );
+        let pinImage: string;
+        const glyphId =
+          glyphIds.length > 0
+            ? glyphIds[Math.floor(Math.random() * glyphIds.length)]
+            : undefined;
+        if (glyphId && typeof document !== "undefined") {
+          const symbol = document.getElementById(glyphId);
+          if (symbol) {
+            const viewBox = symbol.getAttribute("viewBox") ?? "0 0 100 100";
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${symbol.innerHTML}</svg>`;
+            const iconUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+              svg
+            )}`;
+            try {
+              const canvas = await pinBuilder.fromUrl(iconUrl, pinColor, 48);
+              pinImage = canvas.toDataURL();
+            } catch {
+              pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
+            }
+          } else {
+            pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
+          }
+        } else {
+          pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
+        }
+        pinImages.push(pinImage);
+      }
+
+      const entities = dataSource.entities.values;
+      dataSource.entities.suspendEvents();
+      for (let i = 0; i < entities.length; i++) {
+        const entity = entities[i];
+        if (!entity.point && !entity.billboard) continue;
+
+        const styles = runInAction(() => this.stylesWithDefaults);
+        const pinImage =
+          pinImages[Math.floor(Math.random() * pinImages.length)];
+        entity.billboard = new BillboardGraphics({
+          image: new ConstantProperty(pinImage),
+          verticalOrigin: new ConstantProperty(VerticalOrigin.BOTTOM),
+          heightReference: styles.clampToGround
+            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
+            : undefined,
+          width: new ConstantProperty(32),
+          height: new ConstantProperty(32),
+          disableDepthTestDistance: new ConstantProperty(
+            Number.POSITIVE_INFINITY
+          )
+        });
+        entity.point = undefined;
+      }
+      dataSource.entities.resumeEvents();
     }
 
     @action
@@ -1029,156 +1193,166 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       const styles = runInAction(() => this.stylesWithDefaults);
 
       const dataSource = await GeoJsonDataSource.load(geoJson, styles);
-      const entities = dataSource.entities;
-      for (let i = 0; i < entities.values.length; ++i) {
-        const entity = entities.values[i];
 
-        const properties = entity.properties;
+      if (this.name === "rer3d poi") {
+        await this.applyRandomPinBillboards(dataSource);
+      } else {
+        const entities = dataSource.entities;
+        for (let i = 0; i < entities.values.length; ++i) {
+          const entity = entities.values[i];
 
-        // Time
-        if (
-          isDefined(properties) &&
-          isDefined(this.timeProperty) &&
-          isDefined(this.discreteTimesAsSortedJulianDates)
-        ) {
-          const startTimeDiscreteTime = properties[this.timeProperty];
-          const startTimeIdx = this.discreteTimesAsSortedJulianDates?.findIndex(
-            (t) => t.tag === startTimeDiscreteTime.getValue()
-          );
-          const startTime = this.discreteTimesAsSortedJulianDates[startTimeIdx];
+          const properties = entity.properties;
 
-          if (isDefined(startTime)) {
-            const endTimeIdx = startTimeIdx + 1;
-            const endTime = this.discreteTimesAsSortedJulianDates[endTimeIdx];
+          // Time
+          if (
+            isDefined(properties) &&
+            isDefined(this.timeProperty) &&
+            isDefined(this.discreteTimesAsSortedJulianDates)
+          ) {
+            const startTimeDiscreteTime = properties[this.timeProperty];
+            const startTimeIdx =
+              this.discreteTimesAsSortedJulianDates?.findIndex(
+                (t) => t.tag === startTimeDiscreteTime.getValue()
+              );
+            const startTime =
+              this.discreteTimesAsSortedJulianDates[startTimeIdx];
 
-            entity.availability = new TimeIntervalCollection([
-              new TimeInterval({
-                start: startTime.time,
-                stop: endTime?.time ?? Iso8601.MAXIMUM_VALUE,
-                isStopIncluded: false
-              })
-            ]);
+            if (isDefined(startTime)) {
+              const endTimeIdx = startTimeIdx + 1;
+              const endTime = this.discreteTimesAsSortedJulianDates[endTimeIdx];
+
+              entity.availability = new TimeIntervalCollection([
+                new TimeInterval({
+                  start: startTime.time,
+                  stop: endTime?.time ?? Iso8601.MAXIMUM_VALUE,
+                  isStopIncluded: false
+                })
+              ]);
+            }
           }
-        }
 
-        // Billboard
-        if (isDefined(entity.billboard) && isDefined(styles.markerUrl)) {
-          entity.billboard = new BillboardGraphics({
-            image: new ConstantProperty(styles.markerUrl),
-            width:
-              properties && properties["marker-width"]
-                ? new ConstantProperty(properties["marker-width"])
-                : undefined,
-            height:
-              properties && properties["marker-height"]
-                ? new ConstantProperty(properties["marker-height"])
-                : undefined,
-            rotation:
-              properties && properties["marker-angle"]
-                ? new ConstantProperty(properties["marker-angle"])
-                : undefined,
-            heightReference: styles.clampToGround
-              ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
-              : undefined
-          });
-
-          /* If no marker symbol was provided but Cesium has generated one for a point, then turn it into
-               a filled circle instead of the default marker. */
-        } else if (
-          isDefined(entity.billboard) &&
-          (!properties || !isDefined(properties["marker-symbol"])) &&
-          !isDefined(styles.markerSymbol)
-        ) {
-          entity.point = new PointGraphics({
-            color: new ConstantProperty(
-              getColor(
-                properties?.["marker-color"]?.getValue() ?? styles.markerColor
-              )
-            ),
-            pixelSize: new ConstantProperty(
-              parseMarkerSize(
-                properties && properties["marker-size"]?.getValue()
-              ) ?? styles.markerSize / 2
-            ),
-            outlineWidth: new ConstantProperty(
-              properties?.["stroke-width"]?.getValue() ??
-                styles.markerStrokeWidth
-            ),
-            outlineColor: new ConstantProperty(
-              getColor(properties?.stroke?.getValue() ?? styles.polygonStroke)
-            ),
-            heightReference: new ConstantProperty(
-              styles.clampToGround
-                ? HeightReference.RELATIVE_TO_GROUND
+          // Billboard
+          if (isDefined(entity.billboard) && isDefined(styles.markerUrl)) {
+            entity.billboard = new BillboardGraphics({
+              image: new ConstantProperty(styles.markerUrl),
+              width:
+                properties && properties["marker-width"]
+                  ? new ConstantProperty(properties["marker-width"])
+                  : undefined,
+              height:
+                properties && properties["marker-height"]
+                  ? new ConstantProperty(properties["marker-height"])
+                  : undefined,
+              rotation:
+                properties && properties["marker-angle"]
+                  ? new ConstantProperty(properties["marker-angle"])
+                  : undefined,
+              heightReference: styles.clampToGround
+                ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
                 : undefined
-            ),
-            disableDepthTestDistance: this.disableDepthTest
-              ? new ConstantProperty(Number.POSITIVE_INFINITY)
-              : undefined
-          });
-          if (
-            properties &&
-            isDefined(properties["marker-opacity"]) &&
-            entity.point.color
-          ) {
-            // not part of SimpleStyle spec, but why not?
-            const color: Color = entity.point.color.getValue(now);
-            color.alpha = parseFloat(properties["marker-opacity"]?.getValue());
-          }
+            });
 
-          entity.billboard = undefined;
-        }
-        if (
-          isDefined(entity.billboard) &&
-          properties &&
-          isDefined(properties["marker-opacity"]?.getValue())
-        ) {
-          entity.billboard.color = new ConstantProperty(
-            new Color(
-              1,
-              1,
-              1,
-              parseFloat(properties["marker-opacity"]?.getValue())
-            )
-          );
-        }
-
-        if (isDefined(entity.polygon)) {
-          // Extrude polygons if heightProperty is set
-          if (
-            this.heightProperty &&
-            properties &&
-            isDefined(properties[this.heightProperty])
-          ) {
-            entity.polygon.closeTop = new ConstantProperty(true);
-            entity.polygon.extrudedHeight = properties[this.heightProperty];
-
-            entity.polygon.heightReference = new ConstantProperty(
-              HeightReference.CLAMP_TO_GROUND
-            );
-            entity.polygon.extrudedHeightReference = new ConstantProperty(
-              HeightReference.RELATIVE_TO_GROUND
-            );
-          }
-          // Cesium on Windows can't render polygons with a stroke-width > 1.0.  And even on other platforms it
-          // looks bad because WebGL doesn't mitre the lines together nicely.
-          // As a workaround for the special case where the polygon is unfilled anyway, change it to a polyline.
-          else if (
-            polygonHasWideOutline(entity.polygon, now) &&
-            !polygonIsFilled(entity.polygon)
-          ) {
-            createPolylineFromPolygon(entities, entity, now);
-            entity.polygon = undefined;
+            /* If no marker symbol was provided but Cesium has generated one for a point, then turn it into
+               a filled circle instead of the default marker. */
           } else if (
-            polygonHasOutline(entity.polygon, now) &&
-            isPolygonOnTerrain(entity.polygon, now)
+            isDefined(entity.billboard) &&
+            (!properties || !isDefined(properties["marker-symbol"])) &&
+            !isDefined(styles.markerSymbol)
           ) {
-            // Polygons don't directly support outlines when they're on terrain.
-            // So create a manual outline.
-            createPolylineFromPolygon(entities, entity, now);
+            entity.point = new PointGraphics({
+              color: new ConstantProperty(
+                getColor(
+                  properties?.["marker-color"]?.getValue() ?? styles.markerColor
+                )
+              ),
+              pixelSize: new ConstantProperty(
+                parseMarkerSize(
+                  properties && properties["marker-size"]?.getValue()
+                ) ?? styles.markerSize / 2
+              ),
+              outlineWidth: new ConstantProperty(
+                properties?.["stroke-width"]?.getValue() ??
+                  styles.markerStrokeWidth
+              ),
+              outlineColor: new ConstantProperty(
+                getColor(properties?.stroke?.getValue() ?? styles.polygonStroke)
+              ),
+              heightReference: new ConstantProperty(
+                styles.clampToGround
+                  ? HeightReference.RELATIVE_TO_GROUND
+                  : undefined
+              ),
+              disableDepthTestDistance: this.disableDepthTest
+                ? new ConstantProperty(Number.POSITIVE_INFINITY)
+                : undefined
+            });
+            if (
+              properties &&
+              isDefined(properties["marker-opacity"]) &&
+              entity.point.color
+            ) {
+              // not part of SimpleStyle spec, but why not?
+              const color: Color = entity.point.color.getValue(now);
+              color.alpha = parseFloat(
+                properties["marker-opacity"]?.getValue()
+              );
+            }
+
+            entity.billboard = undefined;
+          }
+          if (
+            isDefined(entity.billboard) &&
+            properties &&
+            isDefined(properties["marker-opacity"]?.getValue())
+          ) {
+            entity.billboard.color = new ConstantProperty(
+              new Color(
+                1,
+                1,
+                1,
+                parseFloat(properties["marker-opacity"]?.getValue())
+              )
+            );
+          }
+
+          if (isDefined(entity.polygon)) {
+            // Extrude polygons if heightProperty is set
+            if (
+              this.heightProperty &&
+              properties &&
+              isDefined(properties[this.heightProperty])
+            ) {
+              entity.polygon.closeTop = new ConstantProperty(true);
+              entity.polygon.extrudedHeight = properties[this.heightProperty];
+
+              entity.polygon.heightReference = new ConstantProperty(
+                HeightReference.CLAMP_TO_GROUND
+              );
+              entity.polygon.extrudedHeightReference = new ConstantProperty(
+                HeightReference.RELATIVE_TO_GROUND
+              );
+            }
+            // Cesium on Windows can't render polygons with a stroke-width > 1.0.  And even on other platforms it
+            // looks bad because WebGL doesn't mitre the lines together nicely.
+            // As a workaround for the special case where the polygon is unfilled anyway, change it to a polyline.
+            else if (
+              polygonHasWideOutline(entity.polygon, now) &&
+              !polygonIsFilled(entity.polygon)
+            ) {
+              createPolylineFromPolygon(entities, entity, now);
+              entity.polygon = undefined;
+            } else if (
+              polygonHasOutline(entity.polygon, now) &&
+              isPolygonOnTerrain(entity.polygon, now)
+            ) {
+              // Polygons don't directly support outlines when they're on terrain.
+              // So create a manual outline.
+              createPolylineFromPolygon(entities, entity, now);
+            }
           }
         }
       }
+
       return dataSource;
     }
 
