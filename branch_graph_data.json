@@ -1,0 +1,938 @@
+{
+  "main_branch": "rer3d_from_8.7.9",
+  "branches": {
+    "GoogleTileMapsCatalogItem": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-IO-map-project": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-area-measurement": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "add-cesiumGlobeColor-parameter": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-color-panel": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-configParameters-leafletMaxZoom": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-geojson-clustering": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-geojson-mixedStyle": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-login-panel": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "add-measure-area-tool": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "add-pickSize-parameter": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-polylineWidth-param": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-settings-globeTranslucency-and-collisionDetection": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "add-tooltips": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "add-viewshed": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "align-tool-buttons-order": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "angle-measure-tool": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "bug-fix-kml-layers": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "catalog-member-info-search": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "cesium2d-viewer": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "change-copy-layer": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "change-export-format": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "change-font": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "change-width-threshold-mobile": {
+      "author": "lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "circle-measure-tool": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "clip-planes-layer": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "configurable-branding-via-init-file": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "configurable-theme-colors-via-init-file": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "configurable-workbench-length": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "csv-report-formatting": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "enhance-play-path": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "expand-path-handling-kml-geojson": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export-csv-locale-separator": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export-default-filename": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export-measure-properties": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export-summary-txt": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export_improvements": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "export_improvements_multipath": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "feature-enhanced-download-and-ui": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "feature-measurable-download-panel": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "feature-microzonation-panel": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "feature-multipath-management": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "featureinfo-and-coordinate-panel": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "featureinfo-improvements": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "feedbackUrl-mailto": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-adddata-button-width": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "fix-basemaps-order": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "fix-compare-vector-data": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-drag-side-panel-bug": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-elevation-with-useElevationMeanSeaLevel": {
+      "author": "lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-graphic-layout": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-help-supportEmail": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-login-btn-scss-types": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-maximumScale-ArcGisMapServer": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-measurable-panel-interactions": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-min-scale-arcgis": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-mylocation-visibility": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "fix-offset-sidepanel-relatedmaps": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-search-box-ui-bug": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-sharing-using-initfile": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "fix-sharing-with-initfile": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "fix-split-local-file-copy": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-viewshed-scss-types": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-visibility-measure-tools": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "fix-welcomeMessage-video-visibility": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "fix-zoomControl-typo": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "formats-export-extended-data": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "geotiff-format-support": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "import-csv-locale-separator": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "improve-mobile-ui": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "increase-adddata-button-width": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "italian-improvements": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "kml-clamp-to-ground": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "kml-color-preservation": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "linking-elevation-chart-to-map": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "main": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "map-navigation-with-keyboard": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "measurable-geom": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "measurable-panel-edit-mode": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measurable-panel-polygon-path-notes": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measurable-panel-transform-feature": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measurable-panel-ui-fixes": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measurable-panel-ui-improvements": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measure-area-ui-labels": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "measure-panel-temporary-layer-help": {
+      "author": "Francesco Pazzaglia",
+      "email": "78076026+FrancescoPazz@users.noreply.github.com"
+    },
+    "measure-temp-layer": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "merging-all-measure-tools": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "merging-path-enhancements": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "migrate-marche-catalog-item-filter-to-new-version": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "migrate-marche-features-to-new-version": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "mobile-measurable-panel-adjustments": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "modify-path-points": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "multipath-management": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "namepath-filename-severance": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "nominatim-search-provider": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "normalize-download-filenames": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "pazzaglia-marche-hbar-charts": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "pazzaglia-play-path": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "pazzaglia-rer-search-area": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "pazzaglia-searchbox-constraint": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "play-path": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "play-path-adjustments": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "play-path-feature": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "play-path-future-draft": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "play-path-help-tooltip": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "play-path-poly-interpolation": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "play-path-prev-next-feature": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "point-measure-tool": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "polygon-measure-fix-drag-points": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "prepare-marche-features-merge": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "reduce-zoom-amount": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "refactor-centralize-export-logic": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "refactor-csv-files-upload": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "refactor-measure-tool": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "refactor-play-path-feature": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "remove-whereAmI-proxy": {
+      "author": "lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "rename-measurable-geometry-components": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "rename-workbench-italian-labels": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "rer-search-provider": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "rer-search-provider-fix-nan": {
+      "author": "lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "rer3d_from_8.7.7": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "rer3d_from_8.7.8": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "restore-and-improve-measurable-export": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "search-catalog-info": {
+      "author": "Giovanni Lughi",
+      "email": "17862087+glughi@users.noreply.github.com"
+    },
+    "searchable-catalog-item": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "statusbar-wait-precise-elevation": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "story-panel-ui-menu": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "suppress-uniqe-image-legend": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "toggle_map_pick": {
+      "author": "Giovanni Lughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "ui-improvements": {
+      "author": "glughi",
+      "email": "giovanni.lughi@gmail.com"
+    },
+    "upstream-main-merge-linking-elevation-chart-to-map": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "upstream-main-poi-support": {
+      "author": "Francesco Pazzaglia",
+      "email": "francesco.pazzaglia2@gmail.com"
+    },
+    "v8": {
+      "author": "lughi",
+      "email": "giovanni.lughi@gmail.com"
+    }
+  },
+  "connections": {
+    "GoogleTileMapsCatalogItem": [
+      "main"
+    ],
+    "add-IO-map-project": [
+      "add-cesiumGlobeColor-parameter"
+    ],
+    "add-area-measurement": [
+      "main"
+    ],
+    "add-cesiumGlobeColor-parameter": [
+      "improve-mobile-ui"
+    ],
+    "add-color-panel": [
+      "main"
+    ],
+    "add-configParameters-leafletMaxZoom": [
+      "main"
+    ],
+    "add-geojson-clustering": [
+      "main"
+    ],
+    "add-geojson-mixedStyle": [
+      "main"
+    ],
+    "add-login-panel": [
+      "rer3d_from_8.7.9"
+    ],
+    "add-measure-area-tool": [
+      "main"
+    ],
+    "add-pickSize-parameter": [
+      "improve-mobile-ui"
+    ],
+    "add-polylineWidth-param": [
+      "add-cesiumGlobeColor-parameter"
+    ],
+    "add-settings-globeTranslucency-and-collisionDetection": [
+      "main"
+    ],
+    "add-tooltips": [
+      "main"
+    ],
+    "add-viewshed": [
+      "rer3d_from_8.7.9"
+    ],
+    "align-tool-buttons-order": [
+      "main"
+    ],
+    "angle-measure-tool": [
+      "main"
+    ],
+    "bug-fix-kml-layers": [
+      "main"
+    ],
+    "catalog-member-info-search": [
+      "main"
+    ],
+    "cesium2d-viewer": [
+      "main"
+    ],
+    "change-copy-layer": [
+      "main"
+    ],
+    "change-export-format": [
+      "main"
+    ],
+    "change-font": [
+      "rer3d_from_8.7.7"
+    ],
+    "change-width-threshold-mobile": [
+      "main"
+    ],
+    "circle-measure-tool": [
+      "main"
+    ],
+    "clip-planes-layer": [
+      "rer3d_from_8.7.9"
+    ],
+    "configurable-branding-via-init-file": [
+      "main"
+    ],
+    "configurable-theme-colors-via-init-file": [
+      "main"
+    ],
+    "configurable-workbench-length": [
+      "main"
+    ],
+    "csv-report-formatting": [
+      "main"
+    ],
+    "enhance-play-path": [
+      "main"
+    ],
+    "expand-path-handling-kml-geojson": [
+      "main"
+    ],
+    "export-csv-locale-separator": [
+      "main"
+    ],
+    "export-default-filename": [
+      "main"
+    ],
+    "export-measure-properties": [
+      "main"
+    ],
+    "export-summary-txt": [
+      "main"
+    ],
+    "export_improvements": [
+      "main"
+    ],
+    "export_improvements_multipath": [
+      "main"
+    ],
+    "feature-enhanced-download-and-ui": [
+      "main"
+    ],
+    "feature-measurable-download-panel": [
+      "feature-multipath-management"
+    ],
+    "feature-microzonation-panel": [
+      "main"
+    ],
+    "feature-multipath-management": [
+      "merging-path-enhancements"
+    ],
+    "featureinfo-and-coordinate-panel": [
+      "featureinfo-improvements"
+    ],
+    "featureinfo-improvements": [
+      "main"
+    ],
+    "feedbackUrl-mailto": [
+      "main"
+    ],
+    "fix-adddata-button-width": [
+      "main"
+    ],
+    "fix-basemaps-order": [
+      "main"
+    ],
+    "fix-compare-vector-data": [
+      "main"
+    ],
+    "fix-drag-side-panel-bug": [
+      "main"
+    ],
+    "fix-elevation-with-useElevationMeanSeaLevel": [
+      "main"
+    ],
+    "fix-graphic-layout": [
+      "main"
+    ],
+    "fix-help-supportEmail": [
+      "main"
+    ],
+    "fix-login-btn-scss-types": [
+      "main"
+    ],
+    "fix-maximumScale-ArcGisMapServer": [
+      "main"
+    ],
+    "fix-measurable-panel-interactions": [
+      "main"
+    ],
+    "fix-min-scale-arcgis": [
+      "main"
+    ],
+    "fix-mylocation-visibility": [
+      "main"
+    ],
+    "fix-offset-sidepanel-relatedmaps": [
+      "main"
+    ],
+    "fix-search-box-ui-bug": [
+      "main"
+    ],
+    "fix-sharing-using-initfile": [
+      "main"
+    ],
+    "fix-sharing-with-initfile": [
+      "main"
+    ],
+    "fix-split-local-file-copy": [
+      "main"
+    ],
+    "fix-viewshed-scss-types": [
+      "main"
+    ],
+    "fix-visibility-measure-tools": [
+      "main"
+    ],
+    "fix-welcomeMessage-video-visibility": [
+      "main"
+    ],
+    "fix-zoomControl-typo": [
+      "main"
+    ],
+    "formats-export-extended-data": [
+      "main"
+    ],
+    "geotiff-format-support": [
+      "main"
+    ],
+    "import-csv-locale-separator": [
+      "main"
+    ],
+    "improve-mobile-ui": [
+      "main"
+    ],
+    "increase-adddata-button-width": [
+      "main"
+    ],
+    "italian-improvements": [
+      "main"
+    ],
+    "kml-clamp-to-ground": [
+      "main"
+    ],
+    "kml-color-preservation": [
+      "rer3d_from_8.7.9"
+    ],
+    "linking-elevation-chart-to-map": [
+      "improve-mobile-ui"
+    ],
+    "main": [
+      "rer3d_from_8.7.9"
+    ],
+    "map-navigation-with-keyboard": [
+      "main"
+    ],
+    "measurable-geom": [
+      "add-measure-area-tool"
+    ],
+    "measurable-panel-edit-mode": [
+      "rer3d_from_8.7.9"
+    ],
+    "measurable-panel-polygon-path-notes": [
+      "main"
+    ],
+    "measurable-panel-transform-feature": [
+      "main"
+    ],
+    "measurable-panel-ui-fixes": [
+      "main"
+    ],
+    "measurable-panel-ui-improvements": [
+      "main"
+    ],
+    "measure-area-ui-labels": [
+      "main"
+    ],
+    "measure-panel-temporary-layer-help": [
+      "main"
+    ],
+    "measure-temp-layer": [
+      "main"
+    ],
+    "merging-all-measure-tools": [
+      "point-measure-tool"
+    ],
+    "merging-path-enhancements": [
+      "feature-enhanced-download-and-ui"
+    ],
+    "migrate-marche-catalog-item-filter-to-new-version": [
+      "migrate-marche-features-to-new-version"
+    ],
+    "migrate-marche-features-to-new-version": [
+      "prepare-marche-features-merge"
+    ],
+    "mobile-measurable-panel-adjustments": [
+      "main"
+    ],
+    "modify-path-points": [
+      "point-measure-tool"
+    ],
+    "multipath-management": [
+      "feature-multipath-management"
+    ],
+    "namepath-filename-severance": [
+      "multipath-management"
+    ],
+    "nominatim-search-provider": [
+      "main"
+    ],
+    "normalize-download-filenames": [
+      "rer3d_from_8.7.9"
+    ],
+    "pazzaglia-marche-hbar-charts": [
+      "main"
+    ],
+    "pazzaglia-play-path": [
+      "main"
+    ],
+    "pazzaglia-rer-search-area": [
+      "main"
+    ],
+    "pazzaglia-searchbox-constraint": [
+      "main"
+    ],
+    "play-path": [
+      "main"
+    ],
+    "play-path-adjustments": [
+      "main"
+    ],
+    "play-path-feature": [
+      "main"
+    ],
+    "play-path-future-draft": [
+      "main"
+    ],
+    "play-path-help-tooltip": [
+      "main"
+    ],
+    "play-path-poly-interpolation": [
+      "main"
+    ],
+    "play-path-prev-next-feature": [
+      "main"
+    ],
+    "point-measure-tool": [
+      "main"
+    ],
+    "polygon-measure-fix-drag-points": [
+      "main"
+    ],
+    "prepare-marche-features-merge": [
+      "migrate-marche-features-to-new-version"
+    ],
+    "reduce-zoom-amount": [
+      "main"
+    ],
+    "refactor-centralize-export-logic": [
+      "formats-export-extended-data"
+    ],
+    "refactor-csv-files-upload": [
+      "point-measure-tool"
+    ],
+    "refactor-measure-tool": [
+      "expand-path-handling-kml-geojson"
+    ],
+    "refactor-play-path-feature": [
+      "main"
+    ],
+    "remove-whereAmI-proxy": [
+      "main"
+    ],
+    "rename-measurable-geometry-components": [
+      "main"
+    ],
+    "rename-workbench-italian-labels": [
+      "main"
+    ],
+    "rer-search-provider": [
+      "main"
+    ],
+    "rer-search-provider-fix-nan": [
+      "main"
+    ],
+    "rer3d_from_8.7.7": [
+      "cesium2d-viewer"
+    ],
+    "rer3d_from_8.7.8": [
+      "add-cesiumGlobeColor-parameter"
+    ],
+    "restore-and-improve-measurable-export": [
+      "main"
+    ],
+    "search-catalog-info": [
+      "main"
+    ],
+    "searchable-catalog-item": [
+      "main"
+    ],
+    "statusbar-wait-precise-elevation": [
+      "main"
+    ],
+    "story-panel-ui-menu": [
+      "main"
+    ],
+    "suppress-uniqe-image-legend": [
+      "main"
+    ],
+    "toggle_map_pick": [
+      "main"
+    ],
+    "ui-improvements": [
+      "main"
+    ],
+    "upstream-main-merge-linking-elevation-chart-to-map": [
+      "linking-elevation-chart-to-map"
+    ],
+    "upstream-main-poi-support": [
+      "main"
+    ],
+    "v8": [
+      "main"
+    ]
+  }
+}
