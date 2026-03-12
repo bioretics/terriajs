@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
 Script per analizzare i branch del repository e creare un grafo delle connessioni
-tra i branch creati da glughi o FrancescoPazz.
+tra i branch creati da glughi o FrancescoPazz dopo il 10 ottobre 2024.
 """
 
 import subprocess
 import re
 import json
+from datetime import datetime
 from collections import defaultdict
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Optional
 
 def run_git_command(cmd: List[str]) -> str:
     """Esegue un comando git e ritorna l'output."""
@@ -37,6 +38,20 @@ def get_all_remote_branches() -> List[str]:
             branches.append(branch_name)
     return branches
 
+def get_branch_creation_date(branch: str) -> Optional[datetime]:
+    """Ottiene la data di creazione del branch (primo commit unico)."""
+    try:
+        # Trova il primo commit che non è nel branch principale
+        # Usa --reverse per ottenere il commit più vecchio
+        cmd = ['log', f'origin/{branch}', '--format=%ct', '--reverse', '-1']
+        output = run_git_command(cmd)
+        if output:
+            timestamp = int(output.strip())
+            return datetime.fromtimestamp(timestamp)
+    except:
+        pass
+    return None
+
 def get_branch_author(branch: str) -> Tuple[str, str]:
     """Ottiene l'autore del primo commit di un branch."""
     # Prova prima a vedere se ci sono commit di merge che indicano l'autore
@@ -60,6 +75,35 @@ def get_branch_author(branch: str) -> Tuple[str, str]:
         if len(parts) >= 2:
             return parts[0], parts[1]
     return "", ""
+
+def find_pr_numbers(branch: str) -> List[str]:
+    """Cerca i numeri delle PR associate a un branch."""
+    pr_numbers = []
+    
+    # Cerca nei messaggi di commit pattern come "#123" o "pull request #123"
+    cmd = ['log', f'origin/{branch}', '--format=%s', '--all']
+    output = run_git_command(cmd)
+    
+    if output:
+        # Pattern per trovare PR: #123, PR #123, pull request #123, etc.
+        pr_pattern = r'(?:pull\s+request|PR|#)\s*#?(\d+)'
+        for line in output.split('\n'):
+            matches = re.findall(pr_pattern, line, re.IGNORECASE)
+            for match in matches:
+                if match not in pr_numbers:
+                    pr_numbers.append(match)
+    
+    # Cerca anche nei messaggi di merge
+    cmd = ['log', f'origin/{branch}', '--format=%b', '--merges', '-20']
+    output = run_git_command(cmd)
+    if output:
+        pr_pattern = r'(?:pull\s+request|PR|#)\s*#?(\d+)'
+        matches = re.findall(pr_pattern, output, re.IGNORECASE)
+        for match in matches:
+            if match not in pr_numbers:
+                pr_numbers.append(match)
+    
+    return sorted(pr_numbers, key=lambda x: int(x))
 
 def is_target_author(name: str, email: str) -> bool:
     """Verifica se l'autore è glughi o FrancescoPazz."""
@@ -196,7 +240,7 @@ def find_branch_parents(branch: str, all_branches: List[str], main_branch: str =
     
     return parents
 
-def analyze_branches():
+def analyze_branches(min_date: Optional[datetime] = None):
     """Analizza tutti i branch e crea il grafo delle connessioni."""
     print("Analizzando i branch...")
     
@@ -206,19 +250,31 @@ def analyze_branches():
     target_branches = {}
     main_branch = 'rer3d_from_8.7.9'
     
-    # Filtra i branch creati da glughi o FrancescoPazz
+    # Filtra i branch creati da glughi o FrancescoPazz dopo la data minima
     for branch in all_branches:
         if branch == main_branch:
             continue
             
         author_name, author_email = get_branch_author(branch)
         if is_target_author(author_name, author_email):
+            # Verifica la data di creazione
+            if min_date:
+                creation_date = get_branch_creation_date(branch)
+                if not creation_date or creation_date < min_date:
+                    continue
+            
+            # Cerca le PR associate
+            pr_numbers = find_pr_numbers(branch)
+            
             target_branches[branch] = {
                 'author': author_name,
-                'email': author_email
+                'email': author_email,
+                'pr_numbers': pr_numbers,
+                'creation_date': creation_date.isoformat() if creation_date else None
             }
     
-    print(f"Trovati {len(target_branches)} branch creati da glughi o FrancescoPazz")
+    date_filter = f" dopo {min_date.strftime('%d/%m/%Y')}" if min_date else ""
+    print(f"Trovati {len(target_branches)} branch creati da glughi o FrancescoPazz{date_filter}")
     
     # Trova le connessioni tra i branch
     connections = defaultdict(list)
@@ -254,7 +310,14 @@ def generate_dot_graph(target_branches: Dict, connections: Dict[str, List[str]],
     for branch, info in target_branches.items():
         author_short = 'glughi' if 'glughi' in info['email'].lower() or 'glughi' in info['author'].lower() else 'FrancescoPazz'
         color = 'lightgreen' if author_short == 'glughi' else 'lightyellow'
-        dot_content.append(f'  "{branch}" [label="{branch}\\n({author_short})", fillcolor={color}, style="filled,rounded"];')
+        
+        # Aggiunge informazioni sulle PR
+        label = f'{branch}\\n({author_short})'
+        if info.get('pr_numbers'):
+            pr_str = ', '.join([f'PR#{pr}' for pr in info['pr_numbers']])
+            label += f'\\n{pr_str}'
+        
+        dot_content.append(f'  "{branch}" [label="{label}", fillcolor={color}, style="filled,rounded"];')
     
     dot_content.append('')
     
@@ -279,19 +342,21 @@ def generate_markdown_report(target_branches: Dict, connections: Dict[str, List[
     
     for branch, info in target_branches.items():
         if 'glughi' in info['email'].lower() or 'glughi' in info['author'].lower():
-            glughi_branches.append(branch)
+            glughi_branches.append((branch, info))
         else:
-            francesco_branches.append(branch)
+            francesco_branches.append((branch, info))
     
     lines.append('## Branch per Autore\n')
     lines.append(f'### glughi ({len(glughi_branches)} branch)')
-    for branch in sorted(glughi_branches):
-        lines.append(f'- `{branch}`')
+    for branch, info in sorted(glughi_branches, key=lambda x: x[0]):
+        pr_info = f" - PR: {', '.join([f'#{pr}' for pr in info.get('pr_numbers', [])])}" if info.get('pr_numbers') else ""
+        lines.append(f'- `{branch}`{pr_info}')
     lines.append('')
     
     lines.append(f'### FrancescoPazz ({len(francesco_branches)} branch)')
-    for branch in sorted(francesco_branches):
-        lines.append(f'- `{branch}`')
+    for branch, info in sorted(francesco_branches, key=lambda x: x[0]):
+        pr_info = f" - PR: {', '.join([f'#{pr}' for pr in info.get('pr_numbers', [])])}" if info.get('pr_numbers') else ""
+        lines.append(f'- `{branch}`{pr_info}')
     lines.append('')
     
     lines.append('## Connessioni\n')
@@ -303,8 +368,200 @@ def generate_markdown_report(target_branches: Dict, connections: Dict[str, List[
     
     return '\n'.join(lines)
 
+def generate_html_graph(target_branches: Dict, connections: Dict[str, List[str]], main_branch: str):
+    """Genera un file HTML interattivo per visualizzare il grafo."""
+    html_content = '''<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grafo delle Connessioni tra Branch</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        #header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #network {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .legend {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .legend-item {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+        .legend-color {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>Grafo delle Connessioni tra Branch</h1>
+        <p><strong>Branch principale:</strong> <code>''' + main_branch + '''</code></p>
+        <p><strong>Branch analizzati:</strong> ''' + str(len(target_branches)) + '''</p>
+    </div>
+    
+    <div id="network"></div>
+    
+    <div class="legend">
+        <h3>Legenda</h3>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #ADD8E6;"></span>
+            Branch principale
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #90EE90;"></span>
+            Branch di glughi
+        </div>
+        <div class="legend-item">
+            <span class="legend-color" style="background-color: #FFFFE0;"></span>
+            Branch di FrancescoPazz
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        // Dati del grafo
+        var nodes = [];
+        var edges = [];
+        
+        // Aggiunge il branch principale
+        nodes.push({
+            id: "''' + main_branch + '''",
+            label: "''' + main_branch + '''\\n(MAIN)",
+            color: { background: '#ADD8E6', border: '#4682B4' },
+            font: { size: 14, face: 'Arial' }
+        });
+        
+        // Aggiunge i branch target
+'''
+    
+    # Aggiunge i nodi
+    for branch, info in target_branches.items():
+        author_short = 'glughi' if 'glughi' in info['email'].lower() or 'glughi' in info['author'].lower() else 'FrancescoPazz'
+        color = '#90EE90' if author_short == 'glughi' else '#FFFFE0'
+        
+        label = f'{branch}\\n({author_short})'
+        if info.get('pr_numbers'):
+            pr_str = ', '.join([f'PR#{pr}' for pr in info['pr_numbers']])
+            label += f'\\n{pr_str}'
+        
+        html_content += f'''        nodes.push({{
+            id: "{branch}",
+            label: "{label}",
+            color: {{ background: '{color}', border: '#666' }},
+            font: {{ size: 12, face: 'Arial' }},
+            title: "Branch: {branch}\\nAutore: {author_short}\\nPR: {', '.join(info.get('pr_numbers', ['Nessuna']))}"
+        }});
+'''
+    
+    # Aggiunge gli archi
+    html_content += '''
+        
+        // Aggiunge le connessioni
+'''
+    for branch, parents in connections.items():
+        for parent in parents:
+            html_content += f'        edges.push({{ from: "{parent}", to: "{branch}", arrows: "to" }});\n'
+    
+    html_content += '''
+        
+        // Crea la rete
+        var container = document.getElementById('network');
+        var data = {
+            nodes: nodes,
+            edges: edges
+        };
+        
+        var options = {
+            nodes: {
+                shape: 'box',
+                borderWidth: 2,
+                shadow: true
+            },
+            edges: {
+                arrows: {
+                    to: {
+                        enabled: true,
+                        scaleFactor: 1.2
+                    }
+                },
+                smooth: {
+                    type: 'continuous',
+                    roundness: 0.5
+                }
+            },
+            physics: {
+                enabled: true,
+                stabilization: {
+                    iterations: 200
+                }
+            },
+            layout: {
+                hierarchical: {
+                    enabled: true,
+                    direction: 'UD',
+                    sortMethod: 'directed',
+                    levelSeparation: 100,
+                    nodeSpacing: 150
+                }
+            },
+            interaction: {
+                dragNodes: true,
+                dragView: true,
+                zoomView: true
+            }
+        };
+        
+        var network = new vis.Network(container, data, options);
+        
+        // Eventi
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                var nodeId = params.nodes[0];
+                var node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    console.log("Nodo selezionato:", node);
+                }
+            }
+        });
+    </script>
+</body>
+</html>'''
+    
+    return html_content
+
 if __name__ == '__main__':
-    target_branches, connections, main_branch = analyze_branches()
+    # Data minima: 10 ottobre 2024
+    min_date = datetime(2024, 10, 10)
+    
+    target_branches, connections, main_branch = analyze_branches(min_date=min_date)
     
     # Genera il file DOT
     dot_content = generate_dot_graph(target_branches, connections, main_branch)
@@ -318,9 +575,16 @@ if __name__ == '__main__':
         f.write(md_content)
     print(f"Report Markdown generato: branch_graph_report.md")
     
+    # Genera il file HTML interattivo
+    html_content = generate_html_graph(target_branches, connections, main_branch)
+    with open('/workspace/branch_graph.html', 'w', encoding='utf-8') as f:
+        f.write(html_content)
+    print(f"File HTML generato: branch_graph.html")
+    
     # Salva anche i dati in JSON
     data = {
         'main_branch': main_branch,
+        'min_date': min_date.isoformat(),
         'branches': target_branches,
         'connections': connections
     }
