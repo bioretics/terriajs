@@ -119,6 +119,9 @@ const SIMPLE_STYLE_KEYS = [
   "fill-opacity"
 ];
 
+const RER3D_POI_NAME = "rer3d poi";
+const RER3D_POI_MAX_VISIBLE_DISTANCE = 100000;
+
 class GeoJsonStratum extends LoadableStratum(GeoJsonTraits) {
   static stratumName = "geojson";
   constructor(private readonly _item: GeoJsonMixin.Instance) {
@@ -184,13 +187,6 @@ class GeoJsonStratum extends LoadableStratum(GeoJsonTraits) {
       return true;
     }
   }
-
-  @computed get clusterize() {
-    if (this._item.featureCounts.point > 500) {
-      return true;
-    }
-    return undefined;
-  }
 }
 
 StratumOrder.addLoadStratum(GeoJsonStratum.stratumName);
@@ -224,12 +220,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     private _imageryProvider: ProtomapsImageryProvider | undefined;
 
     private tableStyleReactionDisposer: IReactionDisposer | undefined;
-    private _labelReactionDisposer: IReactionDisposer | undefined;
-    private _labeledDataSource:
-      | CustomDataSource
-      | CzmlDataSource
-      | GeoJsonDataSource
-      | undefined;
 
     /** Geojson FeatureCollection in WGS84 */
     @observable.ref _readyData?: FeatureCollectionWithCrs;
@@ -279,9 +269,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         "mapItems",
         this.stopTableStyleReaction.bind(this)
       );
-
-      onBecomeObserved(this, "mapItems", this.startLabelReaction.bind(this));
-      onBecomeUnobserved(this, "mapItems", this.stopLabelReaction.bind(this));
     }
 
     private startTableStyleReaction() {
@@ -312,32 +299,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       if (this.tableStyleReactionDisposer) {
         this.tableStyleReactionDisposer();
         this.tableStyleReactionDisposer = undefined;
-      }
-    }
-
-    private startLabelReaction() {
-      if (this._labelReactionDisposer) return;
-      this._labelReactionDisposer = reaction(
-        () => ({
-          metersPerPixel: this.terria.mainViewer.scale,
-          dataSource: this._dataSource
-        }),
-        ({ metersPerPixel, dataSource }) => {
-          if (!dataSource) return;
-          if (this._labeledDataSource === dataSource) return;
-          const maxDist = 100000;
-          const triggerScale = maxDist / 500;
-          if (metersPerPixel > triggerScale) return;
-          this.applyLabelsToEntities(dataSource, maxDist);
-        },
-        { fireImmediately: true }
-      );
-    }
-
-    private stopLabelReaction() {
-      if (this._labelReactionDisposer) {
-        this._labelReactionDisposer();
-        this._labelReactionDisposer = undefined;
       }
     }
 
@@ -612,7 +573,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         } else {
           const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
 
-          if (this.clustering.enabled || this.clusterize) {
+          if (this.clustering.enabled && this.name !== RER3D_POI_NAME) {
             const pinBackgroundColor = this.clustering.pinBackgroundColor;
             const pinSize = this.clustering.pinSize;
 
@@ -654,53 +615,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           })
         );
       }
-    }
-
-    @action
-    private applyLabelsToEntities(
-      dataSource: CustomDataSource | CzmlDataSource | GeoJsonDataSource,
-      maxDistance: number
-    ) {
-      if (!dataSource?.entities) return;
-
-      const visibilityRange = new DistanceDisplayCondition(0, maxDistance);
-      const fillColor = Color.BLACK.clone();
-      const outlineColor = Color.WHITE.clone();
-      const pixelOffset = new Cartesian2(0, -40);
-      const now = JulianDate.now();
-
-      const entities = dataSource.entities.values;
-      dataSource.entities.suspendEvents();
-
-      for (let i = 0; i < entities.length; i++) {
-        const entity = entities[i];
-        if (!entity.point && !entity.billboard) continue;
-
-        const prop = entity.properties?.["NOME"];
-        if (!prop) continue;
-        const rawValue = prop.getValue(now);
-        if (!rawValue) continue;
-        const styles = runInAction(() => this.stylesWithDefaults);
-        entity.label = new LabelGraphics({
-          text: String(rawValue),
-          font: "12px sans-serif",
-          fillColor,
-          outlineColor,
-          outlineWidth: 2,
-          style: LabelStyle.FILL_AND_OUTLINE,
-          verticalOrigin: VerticalOrigin.BOTTOM,
-          horizontalOrigin: HorizontalOrigin.CENTER,
-          heightReference: styles.clampToGround
-            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
-            : undefined,
-          pixelOffset,
-          distanceDisplayCondition: visibilityRange,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY
-        });
-      }
-
-      dataSource.entities.resumeEvents();
-      this._labeledDataSource = dataSource;
     }
 
     private async applyRandomPinBillboards(
@@ -758,6 +672,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       dataSource.entities.suspendEvents();
       for (let i = 0; i < entities.length; i++) {
         const entity = entities[i];
+        const visibilityRange = entity.properties?.["SCALA"]
+          ? new DistanceDisplayCondition(0, entity.properties?.["SCALA"])
+          : isDefined(RER3D_POI_MAX_VISIBLE_DISTANCE)
+          ? new DistanceDisplayCondition(0, RER3D_POI_MAX_VISIBLE_DISTANCE)
+          : undefined;
         if (!entity.point && !entity.billboard) continue;
 
         const styles = runInAction(() => this.stylesWithDefaults);
@@ -771,9 +690,32 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             : undefined,
           width: new ConstantProperty(32),
           height: new ConstantProperty(32),
+          distanceDisplayCondition: visibilityRange
+            ? new ConstantProperty(visibilityRange)
+            : undefined,
           disableDepthTestDistance: new ConstantProperty(
             Number.POSITIVE_INFINITY
           )
+        });
+        const propName = entity.properties?.["NOME"];
+        if (!propName) continue;
+        const rawValueName = propName.getValue(JulianDate.now());
+        if (!rawValueName) continue;
+        entity.label = new LabelGraphics({
+          text: String(rawValueName),
+          font: "12px sans-serif",
+          fillColor: Color.BLACK,
+          outlineColor: Color.WHITE,
+          outlineWidth: 2,
+          style: LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: VerticalOrigin.BOTTOM,
+          horizontalOrigin: HorizontalOrigin.CENTER,
+          heightReference: styles.clampToGround
+            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
+            : undefined,
+          pixelOffset: new Cartesian2(0, -40),
+          distanceDisplayCondition: visibilityRange,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
         });
         entity.point = undefined;
       }
@@ -1194,7 +1136,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       const dataSource = await GeoJsonDataSource.load(geoJson, styles);
 
-      if (this.name === "rer3d poi") {
+      if (this.name === RER3D_POI_NAME) {
         await this.applyRandomPinBillboards(dataSource);
       } else {
         const entities = dataSource.entities;
