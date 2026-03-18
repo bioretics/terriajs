@@ -1,0 +1,961 @@
+import { featureCollection } from "@turf/helpers";
+import { GeoJsonProperties, Geometry, GeometryCollection } from "geojson";
+import i18next from "i18next";
+import {
+  computed,
+  makeObservable,
+  onBecomeObserved,
+  onBecomeUnobserved,
+  override,
+  runInAction
+} from "mobx";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
+import URI from "urijs";
+import { FeatureCollectionWithCrs } from "../../../Core/GeoJson";
+import isDefined from "../../../Core/isDefined";
+import loadJson from "../../../Core/loadJson";
+import Result from "../../../Core/Result";
+import { networkRequestError } from "../../../Core/TerriaError";
+import ProtomapsImageryProvider from "../../../Map/ImageryProvider/ProtomapsImageryProvider";
+import featureDataToGeoJson from "../../../Map/PickedFeatures/featureDataToGeoJson";
+import { ProtomapsArcGisPbfSource } from "../../../Map/Vector/Protomaps/ProtomapsArcGisPbfSource";
+import { tableStyleToProtomaps } from "../../../Map/Vector/Protomaps/tableStyleToProtomaps";
+import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
+import MinMaxLevelMixin from "../../../ModelMixins/MinMaxLevelMixin";
+import RerPoiCatalogItemTraits, {
+  RER_POI_CATALOG_ITEM_TYPE,
+  RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
+  RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
+  RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
+  RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
+  RER_POI_USER_TRAITS
+} from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+import CreateModel from "../../Definition/CreateModel";
+import CommonStrata from "../../Definition/CommonStrata";
+import { ModelConstructorParameters } from "../../Definition/Model";
+import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
+import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
+
+type FeatureGeoJson = FeatureCollectionWithCrs<
+  Geometry | GeometryCollection,
+  GeoJsonProperties
+>;
+
+interface EsriJsonQueryOptions {
+  resultOffset?: number;
+  bbox?: Rectangle;
+  minLevelId?: number;
+  maxLevelId?: number;
+}
+
+interface DynamicViewportQuery {
+  requestKey: string;
+  filterKey: string;
+  queryRectangle: Rectangle;
+  requestOptions: EsriJsonQueryOptions;
+}
+
+interface DynamicViewportCacheEntry {
+  requestKey: string;
+  filterKey: string;
+  queryRectangle: Rectangle;
+  geoJson: FeatureGeoJson;
+  lastAccess: number;
+}
+
+const MIN_NEAR_CAMERA_BBOX_SCALE = 0.4;
+
+export default class RerPoiCatalogItem extends MinMaxLevelMixin(
+  GeoJsonMixin(CreateModel(RerPoiCatalogItemTraits))
+) {
+  static readonly type = RER_POI_CATALOG_ITEM_TYPE;
+
+  private removeCesiumCameraChangedListener: (() => void) | undefined;
+  private removeViewerChangedListener: (() => void) | undefined;
+  private removeLeafletMoveEndListener: (() => void) | undefined;
+  private dynamicReloadTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly dynamicViewportCache = new Map<
+    string,
+    DynamicViewportCacheEntry
+  >();
+  private readonly dynamicInFlightRequests = new Map<
+    string,
+    Promise<FeatureGeoJson>
+  >();
+  private activeDynamicQuery: DynamicViewportQuery | undefined;
+  private dynamicReloadQueued = false;
+  private dynamicReloadInProgress = false;
+
+  private readonly onDynamicViewportChanged = () => {
+    this.queueDynamicReload();
+  };
+
+  constructor(...args: ModelConstructorParameters) {
+    super(...args);
+    makeObservable(this);
+
+    runInAction(() => {
+      this.applyDefaultRerPoiTraits();
+    });
+
+    onBecomeObserved(this, "mapItems", () => {
+      this.startDynamicViewportRequests();
+    });
+
+    onBecomeUnobserved(this, "mapItems", () => {
+      this.stopDynamicViewportRequests();
+    });
+  }
+
+  get type(): string {
+    return RerPoiCatalogItem.type;
+  }
+
+  get typeName(): string {
+    return i18next.t("models.arcGisFeatureServerCatalogItem.name");
+  }
+
+  private applyDefaultRerPoiTraits() {
+    const userStratum = this.strata.get(CommonStrata.user) as
+      | Record<string, unknown>
+      | undefined;
+
+    Object.entries(RER_POI_USER_TRAITS).forEach(([trait, value]) => {
+      if (userStratum?.[trait] !== undefined) {
+        return;
+      }
+
+      this.setTrait(CommonStrata.user, trait as any, value as any);
+    });
+  }
+
+  @computed
+  get useTileRequests(): boolean {
+    return this.tileRequests && !this.dynamicViewportRequests;
+  }
+
+  private startDynamicViewportRequests() {
+    if (!this.dynamicViewportRequests) {
+      return;
+    }
+
+    if (!this.removeViewerChangedListener) {
+      this.removeViewerChangedListener =
+        this.terria.mainViewer.afterViewerChanged.addEventListener(() => {
+          this.attachCurrentViewerListener();
+          this.queueDynamicReload(true);
+        });
+    }
+
+    this.attachCurrentViewerListener();
+    this.queueDynamicReload(true);
+  }
+
+  private stopDynamicViewportRequests() {
+    this.detachCurrentViewerListener();
+
+    if (this.removeViewerChangedListener) {
+      this.removeViewerChangedListener();
+      this.removeViewerChangedListener = undefined;
+    }
+
+    if (this.dynamicReloadTimer) {
+      clearTimeout(this.dynamicReloadTimer);
+      this.dynamicReloadTimer = undefined;
+    }
+
+    this.dynamicReloadQueued = false;
+    this.dynamicReloadInProgress = false;
+  }
+
+  private attachCurrentViewerListener() {
+    this.detachCurrentViewerListener();
+
+    const cesium = this.terria.cesium;
+    if (cesium) {
+      this.removeCesiumCameraChangedListener =
+        cesium.scene.camera.changed.addEventListener(
+          this.onDynamicViewportChanged
+        );
+      return;
+    }
+
+    const leafletMap = this.terria.leaflet?.map;
+    if (leafletMap) {
+      leafletMap.on("moveend", this.onDynamicViewportChanged);
+      this.removeLeafletMoveEndListener = () => {
+        leafletMap.off("moveend", this.onDynamicViewportChanged);
+      };
+    }
+  }
+
+  private detachCurrentViewerListener() {
+    if (this.removeCesiumCameraChangedListener) {
+      this.removeCesiumCameraChangedListener();
+      this.removeCesiumCameraChangedListener = undefined;
+    }
+
+    if (this.removeLeafletMoveEndListener) {
+      this.removeLeafletMoveEndListener();
+      this.removeLeafletMoveEndListener = undefined;
+    }
+  }
+
+  private queueDynamicReload(immediate = false) {
+    if (!this.dynamicViewportRequests) {
+      return;
+    }
+
+    if (this.dynamicReloadTimer) {
+      clearTimeout(this.dynamicReloadTimer);
+      this.dynamicReloadTimer = undefined;
+    }
+
+    const debounceMs = immediate
+      ? 0
+      : Math.max(
+          0,
+          this.dynamicRequestDebounceMs ??
+            RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS
+        );
+
+    this.dynamicReloadTimer = setTimeout(() => {
+      this.dynamicReloadTimer = undefined;
+      void this.reloadDynamicViewportData();
+    }, debounceMs);
+  }
+
+  private async reloadDynamicViewportData() {
+    if (!this.dynamicViewportRequests || !this.show) {
+      return;
+    }
+
+    const nextQuery = this.getDynamicViewportQuery();
+    if (!nextQuery) {
+      return;
+    }
+
+    if (
+      this.activeDynamicQuery &&
+      this.activeDynamicQuery.filterKey === nextQuery.filterKey &&
+      rectangleContains(
+        this.activeDynamicQuery.queryRectangle,
+        nextQuery.queryRectangle
+      )
+    ) {
+      return;
+    }
+
+    if (this.dynamicReloadInProgress || this.isLoadingMapItems) {
+      this.dynamicReloadQueued = true;
+      return;
+    }
+
+    this.dynamicReloadInProgress = true;
+    try {
+      (await this.loadMapItems(true)).logError(
+        "Failed to reload RerPoi dynamic viewport data"
+      );
+    } finally {
+      this.dynamicReloadInProgress = false;
+      if (this.dynamicReloadQueued) {
+        this.dynamicReloadQueued = false;
+        this.queueDynamicReload(true);
+      }
+    }
+  }
+
+  protected async forceLoadMetadata(): Promise<void> {
+    if (this.strata.get(ArcGisFeatureServerStratum.stratumName) === undefined) {
+      const stratum = await ArcGisFeatureServerStratum.load(this as any);
+      runInAction(() => {
+        this.strata.set(ArcGisFeatureServerStratum.stratumName, stratum as any);
+      });
+    }
+  }
+
+  protected async forceLoadGeojsonData(): Promise<FeatureGeoJson> {
+    if (this.useTileRequests) return featureCollection([]);
+
+    const dynamicQuery = this.getDynamicViewportQuery();
+
+    if (this.dynamicViewportRequests && !dynamicQuery) {
+      this.activeDynamicQuery = undefined;
+      return featureCollection([]);
+    }
+
+    if (dynamicQuery) {
+      const cachedEntry = this.findCachedDynamicQuery(dynamicQuery);
+      if (cachedEntry) {
+        this.activeDynamicQuery = {
+          ...dynamicQuery,
+          requestKey: cachedEntry.requestKey,
+          queryRectangle: Rectangle.clone(cachedEntry.queryRectangle)
+        };
+        return cachedEntry.geoJson;
+      }
+
+      const inFlightRequest = this.dynamicInFlightRequests.get(
+        dynamicQuery.requestKey
+      );
+      if (inFlightRequest) {
+        const geoJson = await inFlightRequest;
+        this.activeDynamicQuery = dynamicQuery;
+        return geoJson;
+      }
+    } else {
+      this.activeDynamicQuery = undefined;
+    }
+
+    const loadPromise = this.loadGeoJsonFromServer(
+      dynamicQuery?.requestOptions
+    );
+
+    if (dynamicQuery) {
+      this.dynamicInFlightRequests.set(dynamicQuery.requestKey, loadPromise);
+    }
+
+    try {
+      const geoJson = await loadPromise;
+
+      if (dynamicQuery) {
+        this.cacheDynamicQuery(dynamicQuery, geoJson);
+        this.activeDynamicQuery = dynamicQuery;
+      }
+
+      return geoJson;
+    } finally {
+      if (dynamicQuery) {
+        this.dynamicInFlightRequests.delete(dynamicQuery.requestKey);
+      }
+    }
+  }
+
+  protected async loadGeoJsonFromServer(
+    queryOptions?: EsriJsonQueryOptions
+  ): Promise<FeatureGeoJson> {
+    const getEsriLayerJson = async (resultOffset?: number) => {
+      const url = proxyCatalogItemUrl(
+        this,
+        this.buildEsriJsonUrl({
+          ...queryOptions,
+          resultOffset
+        })
+          .throwIfUndefined()
+          .toString()
+      );
+      return await loadJson(url);
+    };
+
+    if (!this.supportsPagination) {
+      return (
+        featureDataToGeoJson(await getEsriLayerJson()) ?? {
+          type: "FeatureCollection",
+          features: []
+        }
+      );
+    }
+
+    const featuresPerRequest = this.featuresPerRequest;
+    const maxFeatures = this.maxFeatures;
+    const combinedEsriLayerJson = await getEsriLayerJson(0);
+    combinedEsriLayerJson.features = combinedEsriLayerJson.features ?? [];
+
+    const mapObjectIds = (features: any[]) =>
+      features
+        .map((feature: any) => this.getFeatureObjectId(feature))
+        .filter((id): id is string => isDefined(id));
+
+    const seenIDs: Set<string> = new Set(
+      mapObjectIds(combinedEsriLayerJson.features)
+    );
+
+    let currentOffset = 0;
+    let exceededTransferLimit = combinedEsriLayerJson.exceededTransferLimit;
+    while (
+      combinedEsriLayerJson.features.length <= maxFeatures &&
+      exceededTransferLimit === true
+    ) {
+      currentOffset += featuresPerRequest;
+      const newEsriLayerJson = await getEsriLayerJson(currentOffset);
+      if (
+        newEsriLayerJson.features === undefined ||
+        newEsriLayerJson.features.length === 0
+      ) {
+        break;
+      }
+
+      const newIds: string[] = mapObjectIds(newEsriLayerJson.features);
+
+      if (newIds.length > 0 && newIds.every((id) => seenIDs.has(id))) {
+        break;
+      }
+
+      newIds.forEach((id) => seenIDs.add(id));
+      combinedEsriLayerJson.features = combinedEsriLayerJson.features.concat(
+        newEsriLayerJson.features
+      );
+      exceededTransferLimit = newEsriLayerJson.exceededTransferLimit;
+
+      if (exceededTransferLimit) {
+        console.log("warning: exceeded transfer limit");
+      }
+    }
+
+    return (
+      featureDataToGeoJson(combinedEsriLayerJson) ?? {
+        type: "FeatureCollection",
+        features: []
+      }
+    );
+  }
+
+  private getDynamicViewportQuery(): DynamicViewportQuery | undefined {
+    if (
+      !this.dynamicViewportRequests ||
+      this.terria.currentViewer.type === "none"
+    ) {
+      return undefined;
+    }
+
+    const currentViewRectangle =
+      this.terria.currentViewer.getCurrentCameraView().rectangle;
+
+    const nearCameraHeightThreshold = this.nearCameraHeightThreshold;
+    const configuredNearCameraBboxScale = CesiumMath.clamp(
+      this.nearCameraBboxScale ?? 1,
+      0.05,
+      1
+    );
+    const nearCameraBboxScale = Math.max(
+      configuredNearCameraBboxScale,
+      MIN_NEAR_CAMERA_BBOX_SCALE
+    );
+    const currentCameraHeight = this.getCurrentCameraHeight();
+
+    const adaptedViewRectangle =
+      isDefined(nearCameraHeightThreshold) &&
+      isDefined(currentCameraHeight) &&
+      currentCameraHeight <= nearCameraHeightThreshold &&
+      nearCameraBboxScale < 1
+        ? scaleRectangleFromCenter(currentViewRectangle, nearCameraBboxScale)
+        : Rectangle.clone(currentViewRectangle);
+
+    const paddedRectangle = withRectanglePadding(
+      adaptedViewRectangle,
+      this.queryBboxPaddingRatio ?? RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
+    );
+    const queryRectangle = clipRectangleToDataset(
+      paddedRectangle,
+      this.cesiumRectangle
+    );
+
+    if (!queryRectangle || rectangleArea(queryRectangle) <= 0) {
+      return undefined;
+    }
+
+    const levelFilter = this.getLevelFilterForViewport(currentViewRectangle);
+    const requestKey = `${levelFilter.filterKey}|${rectangleToCacheKey(
+      queryRectangle
+    )}`;
+
+    return {
+      requestKey,
+      filterKey: levelFilter.filterKey,
+      queryRectangle,
+      requestOptions: {
+        bbox: queryRectangle,
+        minLevelId: levelFilter.minLevelId,
+        maxLevelId: levelFilter.maxLevelId
+      }
+    };
+  }
+
+  protected getBaseWhereClause() {
+    return (this.where === "1=1" ? this.layerDef : this.where) ?? "1=1";
+  }
+
+  private getLevelFilterForViewport(viewRectangle: Rectangle) {
+    const normalizedWhere = this.getBaseWhereClause();
+    const levelIdField = this.levelIdField?.trim();
+
+    if (!levelIdField) {
+      return {
+        minLevelId: undefined,
+        maxLevelId: undefined,
+        filterKey: normalizedWhere
+      };
+    }
+
+    const minLevelId = this.minimumLevelId;
+    let maxLevelId = this.maximumLevelId;
+
+    const overviewCoverageThreshold =
+      this.overviewRegionCoverageThreshold ??
+      RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
+    const isOverviewByCoverage =
+      this.getDatasetCoverageRatio(viewRectangle) >= overviewCoverageThreshold;
+    const currentCameraHeight = this.getCurrentCameraHeight();
+    const isOverviewByHeight =
+      isDefined(this.overviewCameraHeight) &&
+      isDefined(currentCameraHeight) &&
+      currentCameraHeight >= this.overviewCameraHeight;
+
+    if (
+      (isOverviewByCoverage || isOverviewByHeight) &&
+      isDefined(this.overviewMaximumLevelId)
+    ) {
+      maxLevelId = isDefined(maxLevelId)
+        ? Math.min(maxLevelId, this.overviewMaximumLevelId)
+        : this.overviewMaximumLevelId;
+    }
+
+    if (
+      isDefined(minLevelId) &&
+      isDefined(maxLevelId) &&
+      maxLevelId < minLevelId
+    ) {
+      maxLevelId = minLevelId;
+    }
+
+    if (
+      this.progressiveLevelLoading &&
+      isDefined(minLevelId) &&
+      isDefined(maxLevelId) &&
+      maxLevelId > minLevelId &&
+      isDefined(currentCameraHeight)
+    ) {
+      const selectedLevelId = this.getProgressiveLevelIdFromHeight(
+        currentCameraHeight,
+        minLevelId,
+        maxLevelId
+      );
+      maxLevelId = selectedLevelId;
+    }
+
+    return {
+      minLevelId,
+      maxLevelId,
+      filterKey: [
+        normalizedWhere,
+        levelIdField,
+        minLevelId ?? "",
+        maxLevelId ?? ""
+      ].join("|")
+    };
+  }
+
+  private getProgressiveLevelIdFromHeight(
+    cameraHeight: number,
+    minimumLevelId: number,
+    maximumLevelId: number
+  ) {
+    const nearHeight = Math.max(1, this.progressiveNearCameraHeight ?? 2000);
+    const farHeight = Math.max(
+      nearHeight + 1,
+      this.progressiveFarCameraHeight ?? this.overviewCameraHeight ?? 130000
+    );
+
+    const clampedHeight = CesiumMath.clamp(cameraHeight, nearHeight, farHeight);
+
+    const zoomRatio =
+      1 - (clampedHeight - nearHeight) / (farHeight - nearHeight);
+
+    const totalLevels = maximumLevelId - minimumLevelId;
+    const continuousLevel = minimumLevelId + zoomRatio * totalLevels;
+    const step = Math.max(1, Math.floor(this.progressiveLevelStep ?? 1));
+    const steppedLevel =
+      minimumLevelId +
+      Math.floor((continuousLevel - minimumLevelId) / step) * step;
+
+    return CesiumMath.clamp(steppedLevel, minimumLevelId, maximumLevelId);
+  }
+
+  private getDatasetCoverageRatio(viewRectangle: Rectangle): number {
+    if (!this.cesiumRectangle) {
+      return 0;
+    }
+
+    const intersection = Rectangle.intersection(
+      viewRectangle,
+      this.cesiumRectangle,
+      new Rectangle()
+    );
+    if (!intersection) {
+      return 0;
+    }
+
+    const datasetArea = rectangleArea(this.cesiumRectangle);
+    if (datasetArea <= 0) {
+      return 0;
+    }
+
+    return rectangleArea(intersection) / datasetArea;
+  }
+
+  private getCurrentCameraHeight(): number | undefined {
+    const currentView = this.terria.currentViewer.getCurrentCameraView();
+    if (!currentView.position) {
+      return undefined;
+    }
+
+    const position = Cartographic.fromCartesian(currentView.position);
+    return position?.height;
+  }
+
+  private findCachedDynamicQuery(
+    query: DynamicViewportQuery
+  ): DynamicViewportCacheEntry | undefined {
+    let bestMatch: DynamicViewportCacheEntry | undefined;
+
+    this.dynamicViewportCache.forEach((entry) => {
+      if (entry.filterKey !== query.filterKey) {
+        return;
+      }
+
+      if (!rectangleContains(entry.queryRectangle, query.queryRectangle)) {
+        return;
+      }
+
+      if (
+        !bestMatch ||
+        rectangleArea(entry.queryRectangle) <
+          rectangleArea(bestMatch.queryRectangle)
+      ) {
+        bestMatch = entry;
+      }
+    });
+
+    if (bestMatch) {
+      bestMatch.lastAccess = Date.now();
+    }
+
+    return bestMatch;
+  }
+
+  private cacheDynamicQuery(
+    query: DynamicViewportQuery,
+    geoJson: FeatureGeoJson
+  ) {
+    this.dynamicViewportCache.set(query.requestKey, {
+      requestKey: query.requestKey,
+      filterKey: query.filterKey,
+      queryRectangle: Rectangle.clone(query.queryRectangle),
+      geoJson,
+      lastAccess: Date.now()
+    });
+
+    this.trimDynamicCache();
+  }
+
+  private trimDynamicCache() {
+    const maxEntries = Math.max(
+      1,
+      this.dynamicCacheMaxEntries ?? RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
+    );
+
+    if (this.dynamicViewportCache.size <= maxEntries) {
+      return;
+    }
+
+    const entriesByAge = Array.from(this.dynamicViewportCache.values()).sort(
+      (a, b) => a.lastAccess - b.lastAccess
+    );
+    const countToDelete = this.dynamicViewportCache.size - maxEntries;
+
+    for (let i = 0; i < countToDelete; i++) {
+      this.dynamicViewportCache.delete(entriesByAge[i].requestKey);
+    }
+  }
+
+  @computed get imageryProvider() {
+    if (!this.useTileRequests) {
+      return undefined;
+    }
+
+    if (!this.strata.has(ArcGisFeatureServerStratum.stratumName)) {
+      return undefined;
+    }
+
+    const { paintRules, labelRules } = tableStyleToProtomaps(this, false, true);
+
+    const uri = this.buildEsriJsonUrl().logError(
+      "Failed to create valid FeatureServer URL"
+    );
+
+    if (!uri) return;
+
+    const url = proxyCatalogItemUrl(this, uri.toString());
+
+    let provider = new ProtomapsImageryProvider({
+      maximumZoom: this.getMaximumLevel(false),
+      minimumZoom: this.getMinimumLevel(false),
+      terria: this.terria,
+      data: new ProtomapsArcGisPbfSource({
+        url: url,
+        outFields: [...this.outFields],
+        featuresPerTileRequest: this.featuresPerTileRequest,
+        maxRecordCountFactor: this.maxRecordCountFactor,
+        maxTiledFeatures: this.maxTiledFeatures,
+        tilingScheme: new WebMercatorTilingScheme(),
+        enablePickFeatures: this.allowFeaturePicking,
+        objectIdField: this.objectIdField,
+        supportsQuantization: this.supportsQuantization
+      }),
+      id: this.uniqueId,
+      paintRules,
+      labelRules
+    });
+
+    provider = this.wrapImageryPickFeatures(provider);
+    provider = this.updateRequestImage(provider);
+
+    return provider;
+  }
+
+  @override
+  get mapItems() {
+    if (!this.useTileRequests) {
+      return super.mapItems;
+    }
+
+    if (!this.imageryProvider) return [];
+
+    return [
+      {
+        imageryProvider: this.imageryProvider,
+        show: this.show,
+        alpha: this.opacity,
+        clippingRectangle: this.clipToRectangle
+          ? this.cesiumRectangle
+          : undefined
+      }
+    ];
+  }
+
+  @override
+  get dataColumnMajor() {
+    if (super.dataColumnMajor.length > 0) {
+      return super.dataColumnMajor;
+    }
+
+    if (!this.useTileRequests) {
+      return [];
+    }
+
+    return this.columns.map((column) => [column.name ?? ""]);
+  }
+
+  buildEsriJsonUrl(options?: number | EsriJsonQueryOptions) {
+    const queryOptions =
+      typeof options === "number" ? { resultOffset: options } : options;
+
+    const url = cleanUrl(this.url || "0d");
+    const layerId = /^(.*(?:FeatureServer|MapServer))\/(\d+)/.exec(url)?.[2];
+
+    if (!layerId) {
+      return Result.error(
+        networkRequestError({
+          title: {
+            key: "models.arcGisFeatureServerCatalogItem.invalidServiceTitle"
+          },
+          message: {
+            key: "models.arcGisFeatureServerCatalogItem.invalidServiceMessage"
+          }
+        })
+      );
+    }
+
+    const where = this.getBaseWhereClause();
+    const levelFilter = this.buildLevelFilterClause(
+      queryOptions?.minLevelId,
+      queryOptions?.maxLevelId
+    );
+
+    const combinedWhere = [where, levelFilter]
+      .filter(
+        (clause): clause is string => isDefined(clause) && clause.length > 0
+      )
+      .map((clause) => `(${clause})`)
+      .join(" AND ");
+
+    const uri = new URI(url)
+      .segment("query")
+      .addQuery("f", "json")
+      .addQuery("where", combinedWhere.length > 0 ? combinedWhere : "1=1")
+      .addQuery("outFields", "*")
+      .addQuery("outSR", "4326");
+
+    if (queryOptions?.bbox) {
+      uri
+        .addQuery("geometry", rectangleToEsriEnvelope(queryOptions.bbox))
+        .addQuery("geometryType", "esriGeometryEnvelope")
+        .addQuery("inSR", "4326")
+        .addQuery("spatialRel", "esriSpatialRelIntersects")
+        .addQuery("returnGeometry", "true");
+    }
+
+    if (this.token) {
+      uri.addQuery("token", this.token);
+    }
+
+    if (queryOptions?.resultOffset !== undefined) {
+      uri
+        .addQuery("resultRecordCount", this.featuresPerRequest)
+        .addQuery("resultOffset", queryOptions.resultOffset);
+    }
+
+    return new Result(uri);
+  }
+
+  private getFeatureObjectId(feature: any): string | undefined {
+    return (
+      feature.attributes?.[this.objectIdField] ??
+      feature.attributes?.OBJECTID ??
+      feature.attributes?.objectid
+    );
+  }
+
+  private buildLevelFilterClause(
+    minLevelId: number | undefined,
+    maxLevelId: number | undefined
+  ): string | undefined {
+    const levelField = this.levelIdField?.trim();
+    if (!levelField) {
+      return undefined;
+    }
+
+    if (isDefined(minLevelId) && isDefined(maxLevelId)) {
+      if (minLevelId === maxLevelId) {
+        return `${levelField} = ${minLevelId}`;
+      }
+
+      return `${levelField} >= ${minLevelId} AND ${levelField} <= ${maxLevelId}`;
+    }
+
+    if (isDefined(minLevelId)) {
+      return `${levelField} >= ${minLevelId}`;
+    }
+
+    if (isDefined(maxLevelId)) {
+      return `${levelField} <= ${maxLevelId}`;
+    }
+
+    return undefined;
+  }
+}
+
+function withRectanglePadding(rectangle: Rectangle, paddingRatio: number) {
+  const width = Rectangle.computeWidth(rectangle);
+  const height = Rectangle.computeHeight(rectangle);
+
+  const safePaddingRatio = Math.max(0, paddingRatio);
+  const lonPadding = width * safePaddingRatio;
+  const latPadding = height * safePaddingRatio;
+
+  const west = CesiumMath.clamp(rectangle.west - lonPadding, -Math.PI, Math.PI);
+  const east = CesiumMath.clamp(rectangle.east + lonPadding, -Math.PI, Math.PI);
+  const south = CesiumMath.clamp(
+    rectangle.south - latPadding,
+    -CesiumMath.PI_OVER_TWO,
+    CesiumMath.PI_OVER_TWO
+  );
+  const north = CesiumMath.clamp(
+    rectangle.north + latPadding,
+    -CesiumMath.PI_OVER_TWO,
+    CesiumMath.PI_OVER_TWO
+  );
+
+  return new Rectangle(west, south, east, north);
+}
+
+function clipRectangleToDataset(
+  requestRectangle: Rectangle,
+  datasetRectangle: Rectangle | undefined
+) {
+  if (!datasetRectangle) {
+    return Rectangle.clone(requestRectangle);
+  }
+
+  const intersection = Rectangle.intersection(
+    requestRectangle,
+    datasetRectangle,
+    new Rectangle()
+  );
+
+  return intersection ? Rectangle.clone(intersection) : undefined;
+}
+
+function rectangleArea(rectangle: Rectangle) {
+  return Rectangle.computeWidth(rectangle) * Rectangle.computeHeight(rectangle);
+}
+
+function rectangleContains(container: Rectangle, value: Rectangle) {
+  return (
+    container.west <= value.west &&
+    container.south <= value.south &&
+    container.east >= value.east &&
+    container.north >= value.north
+  );
+}
+
+function rectangleToCacheKey(rectangle: Rectangle) {
+  return [
+    CesiumMath.toDegrees(rectangle.west).toFixed(5),
+    CesiumMath.toDegrees(rectangle.south).toFixed(5),
+    CesiumMath.toDegrees(rectangle.east).toFixed(5),
+    CesiumMath.toDegrees(rectangle.north).toFixed(5)
+  ].join(",");
+}
+
+function rectangleToEsriEnvelope(rectangle: Rectangle) {
+  return [
+    CesiumMath.toDegrees(rectangle.west),
+    CesiumMath.toDegrees(rectangle.south),
+    CesiumMath.toDegrees(rectangle.east),
+    CesiumMath.toDegrees(rectangle.north)
+  ].join(",");
+}
+
+function scaleRectangleFromCenter(rectangle: Rectangle, scale: number) {
+  const safeScale = CesiumMath.clamp(scale, 0.01, 1);
+  if (safeScale >= 1) {
+    return Rectangle.clone(rectangle);
+  }
+
+  const center = Rectangle.center(rectangle, new Cartographic());
+  const halfWidth = (Rectangle.computeWidth(rectangle) * safeScale) / 2;
+  const halfHeight = (Rectangle.computeHeight(rectangle) * safeScale) / 2;
+
+  const west = CesiumMath.clamp(
+    center.longitude - halfWidth,
+    -Math.PI,
+    Math.PI
+  );
+  const east = CesiumMath.clamp(
+    center.longitude + halfWidth,
+    -Math.PI,
+    Math.PI
+  );
+  const south = CesiumMath.clamp(
+    center.latitude - halfHeight,
+    -CesiumMath.PI_OVER_TWO,
+    CesiumMath.PI_OVER_TWO
+  );
+  const north = CesiumMath.clamp(
+    center.latitude + halfHeight,
+    -CesiumMath.PI_OVER_TWO,
+    CesiumMath.PI_OVER_TWO
+  );
+
+  return new Rectangle(west, south, east, north);
+}
+
+function cleanUrl(url: string): string {
+  const uri = new URI(url);
+  uri.search("");
+  return uri.toString();
+}
