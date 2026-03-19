@@ -85,7 +85,6 @@ import TableStylingWorkflow from "../Models/Workflows/TableStylingWorkflow";
 import createLongitudeLatitudeFeaturePerRow from "../Table/createLongitudeLatitudeFeaturePerRow";
 import TableAutomaticStylesStratum from "../Table/TableAutomaticStylesStratum";
 import TableStyle, { createRowGroupId } from "../Table/TableStyle";
-import { GLYPHS } from "../Styled/Icon";
 import { GeoJsonTraits } from "../Traits/TraitsClasses/GeoJsonTraits";
 import { RectangleTraits } from "../Traits/TraitsClasses/MappableTraits";
 import StyleTraits from "../Traits/TraitsClasses/StyleTraits";
@@ -93,13 +92,14 @@ import { DiscreteTimeAsJS } from "./DiscretelyTimeVaryingMixin";
 import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { ImageryParts, isDataSource } from "./MappableMixin";
+import {
+  applyRerPoiLabels,
+  applyRerPoiMakiBillboards,
+  RER3D_POI_NAME
+} from "./RerPoiHelpers";
 import TableMixin from "./TableMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
-import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
-import LabelGraphics from "terriajs-cesium/Source/DataSources/LabelGraphics";
-import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
-import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 
 export const FEATURE_ID_PROP = "_id_";
 
@@ -118,9 +118,6 @@ const SIMPLE_STYLE_KEYS = [
   "fill",
   "fill-opacity"
 ];
-
-const RER3D_POI_NAME = "rer3d poi";
-const RER3D_POI_MAX_VISIBLE_DISTANCE = 100000;
 
 class GeoJsonStratum extends LoadableStratum(GeoJsonTraits) {
   static stratumName = "geojson";
@@ -355,7 +352,11 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @override
     get mapItems() {
-      if (this.isLoadingMapItems) {
+      if (
+        this.isLoadingMapItems &&
+        !this._dataSource &&
+        !this._imageryProvider
+      ) {
         return [];
       }
       if (this._dataSource) {
@@ -615,111 +616,6 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           })
         );
       }
-    }
-
-    private async applyRandomPinBillboards(
-      dataSource: GeoJsonDataSource
-    ): Promise<void> {
-      const pinBuilder = new PinBuilder();
-      const PIN_VARIETY = 20;
-
-      const glyphIds: string[] =
-        typeof document !== "undefined"
-          ? Object.values(GLYPHS)
-              .filter(
-                (g): g is { id: string } => typeof (g as any)?.id === "string"
-              )
-              .map((g) => g.id)
-          : [];
-
-      const pinImages: string[] = [];
-      for (let i = 0; i < PIN_VARIETY; i++) {
-        const pinColor = new Color(
-          Math.random(),
-          Math.random(),
-          Math.random(),
-          1.0
-        );
-        let pinImage: string;
-        const glyphId =
-          glyphIds.length > 0
-            ? glyphIds[Math.floor(Math.random() * glyphIds.length)]
-            : undefined;
-        if (glyphId && typeof document !== "undefined") {
-          const symbol = document.getElementById(glyphId);
-          if (symbol) {
-            const viewBox = symbol.getAttribute("viewBox") ?? "0 0 100 100";
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}">${symbol.innerHTML}</svg>`;
-            const iconUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-              svg
-            )}`;
-            try {
-              const canvas = await pinBuilder.fromUrl(iconUrl, pinColor, 48);
-              pinImage = canvas.toDataURL();
-            } catch {
-              pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
-            }
-          } else {
-            pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
-          }
-        } else {
-          pinImage = pinBuilder.fromColor(pinColor, 48).toDataURL();
-        }
-        pinImages.push(pinImage);
-      }
-
-      const entities = dataSource.entities.values;
-      dataSource.entities.suspendEvents();
-      for (let i = 0; i < entities.length; i++) {
-        const entity = entities[i];
-        const visibilityRange = entity.properties?.["SCALA"]
-          ? new DistanceDisplayCondition(0, entity.properties?.["SCALA"])
-          : isDefined(RER3D_POI_MAX_VISIBLE_DISTANCE)
-          ? new DistanceDisplayCondition(0, RER3D_POI_MAX_VISIBLE_DISTANCE)
-          : undefined;
-        if (!entity.point && !entity.billboard) continue;
-
-        const styles = runInAction(() => this.stylesWithDefaults);
-        const pinImage =
-          pinImages[Math.floor(Math.random() * pinImages.length)];
-        entity.billboard = new BillboardGraphics({
-          image: new ConstantProperty(pinImage),
-          verticalOrigin: new ConstantProperty(VerticalOrigin.BOTTOM),
-          heightReference: styles.clampToGround
-            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
-            : undefined,
-          width: new ConstantProperty(32),
-          height: new ConstantProperty(32),
-          distanceDisplayCondition: visibilityRange
-            ? new ConstantProperty(visibilityRange)
-            : undefined,
-          disableDepthTestDistance: new ConstantProperty(
-            Number.POSITIVE_INFINITY
-          )
-        });
-        const propName = entity.properties?.["NOME"];
-        if (!propName) continue;
-        const rawValueName = propName.getValue(JulianDate.now());
-        if (!rawValueName) continue;
-        entity.label = new LabelGraphics({
-          text: String(rawValueName),
-          font: "12px sans-serif",
-          fillColor: Color.BLACK,
-          outlineColor: Color.WHITE,
-          outlineWidth: 2,
-          style: LabelStyle.FILL_AND_OUTLINE,
-          verticalOrigin: VerticalOrigin.BOTTOM,
-          horizontalOrigin: HorizontalOrigin.CENTER,
-          heightReference: styles.clampToGround
-            ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
-            : undefined,
-          pixelOffset: new Cartesian2(0, -40),
-          distanceDisplayCondition: visibilityRange,
-          disableDepthTestDistance: Number.POSITIVE_INFINITY
-        });
-        entity.point = undefined;
-      }
-      dataSource.entities.resumeEvents();
     }
 
     @action
@@ -1137,7 +1033,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       const dataSource = await GeoJsonDataSource.load(geoJson, styles);
 
       if (this.name === RER3D_POI_NAME) {
-        await this.applyRandomPinBillboards(dataSource);
+        applyRerPoiMakiBillboards(dataSource);
       } else {
         const entities = dataSource.entities;
         for (let i = 0; i < entities.values.length; ++i) {
@@ -1293,6 +1189,10 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             }
           }
         }
+      }
+
+      if (this.name === RER3D_POI_NAME) {
+        applyRerPoiLabels(dataSource, styles.clampToGround);
       }
 
       return dataSource;
