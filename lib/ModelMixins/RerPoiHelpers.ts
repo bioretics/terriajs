@@ -18,18 +18,22 @@ export const RER_POI_DEFAULT_NAME = "rer3d poi";
 export const RER_POI_URL_REGEX =
   /^https?:\/\/servizigis\.regione\.emilia-romagna\.it\/geoags\/rest\/services\/portale\/rer3d_poi\/MapServer\/0$/i;
 
+export const RER_POI_NAME_FIELD = "NOME";
+export const RER_POI_SCALE_FIELD = "SCALA";
+export const RER_POI_LEVEL_ID_FIELD = "LEVEL_ID";
+export const RER_POI_DOMAIN_ID_FIELD = "ID_DOMINIO";
+
+export const RER_POI_MIN_LEVEL_ID = 7;
+export const RER_POI_MAX_LEVEL_ID = 19;
+export const RER_POI_PROGRESSIVE_LEVEL_LOADING = true;
+export const RER_POI_DYNAMIC_VIEWPORT_REQUESTS = true;
 export const RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO = 0.2;
 export const RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES = 480;
 export const RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS = 350;
 export const RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD = 0.6;
-export const RER_POI_DYNAMIC_VIEWPORT_REQUESTS = true;
-export const RER_POI_LEVEL_ID_FIELD = "LEVEL_ID";
-export const RER_POI_MIN_LEVEL_ID = 7;
-export const RER_POI_MAX_LEVEL_ID = 19;
-export const RER_POI_OVERVIEW_CAMERA_HEIGHT = 130000;
 export const RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD = 25000;
 export const RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE = 0.55;
-export const RER_POI_PROGRESSIVE_LEVEL_LOADING = true;
+export const RER_POI_OVERVIEW_CAMERA_HEIGHT = 130000;
 export const RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT = 140000;
 export const RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT = 1800;
 export const RER_POI_PROGRESSIVE_LEVEL_STEP = 1;
@@ -123,11 +127,11 @@ export function applyRerPoiLabels(
     for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
       const properties = entity.properties;
-      const rawValueName = properties?.["NOME"]?.getValue(now);
+      const rawValueName = properties?.[RER_POI_NAME_FIELD]?.getValue(now);
       if (!rawValueName) continue;
 
       const visibilityRange = getRerPoiVisibilityRange(
-        properties?.["SCALA"]?.getValue(now)
+        properties?.[RER_POI_SCALE_FIELD]?.getValue(now)
       );
 
       entity.label = new LabelGraphics({
@@ -167,7 +171,7 @@ export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
       if (!entity.position) continue;
 
       const properties = entity.properties;
-      const domainRaw = properties?.["ID_DOMINIO"]?.getValue(now);
+      const domainRaw = properties?.[RER_POI_DOMAIN_ID_FIELD]?.getValue(now);
       const domainId = Number(domainRaw);
       const mapped = Number.isFinite(domainId)
         ? RER3D_POI_DOMAIN_ICON_MAP[domainId]
@@ -199,7 +203,7 @@ export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
       }
 
       const visibilityRange = getRerPoiVisibilityRange(
-        properties?.["SCALA"]?.getValue(now)
+        properties?.[RER_POI_SCALE_FIELD]?.getValue(now)
       );
 
       entity.billboard = new BillboardGraphics({
