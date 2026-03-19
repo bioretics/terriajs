@@ -25,7 +25,7 @@ import { ProtomapsArcGisPbfSource } from "../../../Map/Vector/Protomaps/Protomap
 import { tableStyleToProtomaps } from "../../../Map/Vector/Protomaps/tableStyleToProtomaps";
 import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import MinMaxLevelMixin from "../../../ModelMixins/MinMaxLevelMixin";
-import RerPoiCatalogItemTraits from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+import ArcGisFeatureServerCatalogItemTraits from "../../../Traits/TraitsClasses/ArcGisFeatureServerCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
 import CommonStrata from "../../Definition/CommonStrata";
 import { ModelConstructorParameters } from "../../Definition/Model";
@@ -80,7 +80,7 @@ interface DynamicViewportCacheEntry {
 const MIN_NEAR_CAMERA_BBOX_SCALE = 0.4;
 
 export default class RerPoiCatalogItem extends MinMaxLevelMixin(
-  GeoJsonMixin(CreateModel(RerPoiCatalogItemTraits))
+  GeoJsonMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
 ) {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
 
@@ -107,6 +107,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   constructor(...args: ModelConstructorParameters) {
     super(...args);
     makeObservable(this);
+    this.setTrait(CommonStrata.definition, "forceCesiumPrimitives", true);
 
     onBecomeObserved(this, "mapItems", () => {
       this.startDynamicViewportRequests();
@@ -209,10 +210,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const debounceMs = immediate
       ? 0
-      : Math.max(
-          0,
-          RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS
-        );
+      : Math.max(0, RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS);
 
     this.dynamicReloadTimer = setTimeout(() => {
       this.dynamicReloadTimer = undefined;
@@ -429,7 +427,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const adaptedViewRectangle =
       isDefined(currentCameraHeight) &&
-        currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD &&
+      currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD &&
       nearCameraBboxScale < 1
         ? scaleRectangleFromCenter(currentViewRectangle, nearCameraBboxScale)
         : Rectangle.clone(currentViewRectangle);
@@ -474,7 +472,8 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     const minLevelId = RER_POI_MIN_LEVEL_ID;
     let maxLevelId = RER_POI_MAX_LEVEL_ID;
 
-    const overviewCoverageThreshold = RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
+    const overviewCoverageThreshold =
+      RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
     const isOverviewByCoverage =
       this.getDatasetCoverageRatio(viewRectangle) >= overviewCoverageThreshold;
     const currentCameraHeight = this.getCurrentCameraHeight();
@@ -482,9 +481,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       isDefined(currentCameraHeight) &&
       currentCameraHeight >= RER_POI_OVERVIEW_CAMERA_HEIGHT;
 
-    if (
-      (isOverviewByCoverage || isOverviewByHeight)
-    ) {
+    if (isOverviewByCoverage || isOverviewByHeight) {
       maxLevelId = RER_POI_MIN_LEVEL_ID;
     }
 
@@ -627,10 +624,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private trimDynamicCache() {
-    const maxEntries = Math.max(
-      1,
-      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
-    );
+    const maxEntries = Math.max(1, RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES);
 
     if (this.dynamicViewportCache.size <= maxEntries) {
       return;
