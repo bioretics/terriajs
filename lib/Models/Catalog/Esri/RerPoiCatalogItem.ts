@@ -35,9 +35,19 @@ import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
+  RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
   RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
-  RER_POI_USER_TRAITS
+  RER_POI_DYNAMIC_VIEWPORT_REQUESTS,
+  RER_POI_LEVEL_ID_FIELD,
+  RER_POI_MAX_LEVEL_ID,
+  RER_POI_MIN_LEVEL_ID,
+  RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD,
+  RER_POI_OVERVIEW_CAMERA_HEIGHT,
+  RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT,
+  RER_POI_PROGRESSIVE_LEVEL_LOADING,
+  RER_POI_PROGRESSIVE_LEVEL_STEP,
+  RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
 } from "../../../ModelMixins/RerPoiHelpers";
 
 type FeatureGeoJson = FeatureCollectionWithCrs<
@@ -98,10 +108,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     super(...args);
     makeObservable(this);
 
-    runInAction(() => {
-      this.applyDefaultRerPoiTraits();
-    });
-
     onBecomeObserved(this, "mapItems", () => {
       this.startDynamicViewportRequests();
     });
@@ -119,27 +125,13 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     return i18next.t("models.arcGisFeatureServerCatalogItem.name");
   }
 
-  private applyDefaultRerPoiTraits() {
-    const userStratum = this.strata.get(CommonStrata.user) as
-      | Record<string, unknown>
-      | undefined;
-
-    Object.entries(RER_POI_USER_TRAITS).forEach(([trait, value]) => {
-      if (userStratum?.[trait] !== undefined) {
-        return;
-      }
-
-      this.setTrait(CommonStrata.user, trait as any, value as any);
-    });
-  }
-
   @computed
   get useTileRequests(): boolean {
-    return this.tileRequests && !this.dynamicViewportRequests;
+    return this.tileRequests && !RER_POI_DYNAMIC_VIEWPORT_REQUESTS;
   }
 
   private startDynamicViewportRequests() {
-    if (!this.dynamicViewportRequests) {
+    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS) {
       return;
     }
 
@@ -206,7 +198,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private queueDynamicReload(immediate = false) {
-    if (!this.dynamicViewportRequests) {
+    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS) {
       return;
     }
 
@@ -219,8 +211,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       ? 0
       : Math.max(
           0,
-          this.dynamicRequestDebounceMs ??
-            RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS
+          RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS
         );
 
     this.dynamicReloadTimer = setTimeout(() => {
@@ -230,7 +221,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private async reloadDynamicViewportData() {
-    if (!this.dynamicViewportRequests || !this.show) {
+    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS || !this.show) {
       return;
     }
 
@@ -283,7 +274,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const dynamicQuery = this.getDynamicViewportQuery();
 
-    if (this.dynamicViewportRequests && !dynamicQuery) {
+    if (RER_POI_DYNAMIC_VIEWPORT_REQUESTS && !dynamicQuery) {
       this.activeDynamicQuery = undefined;
       return featureCollection([]);
     }
@@ -416,7 +407,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   private getDynamicViewportQuery(): DynamicViewportQuery | undefined {
     if (
-      !this.dynamicViewportRequests ||
+      !RER_POI_DYNAMIC_VIEWPORT_REQUESTS ||
       this.terria.currentViewer.type === "none"
     ) {
       return undefined;
@@ -425,9 +416,8 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     const currentViewRectangle =
       this.terria.currentViewer.getCurrentCameraView().rectangle;
 
-    const nearCameraHeightThreshold = this.nearCameraHeightThreshold;
     const configuredNearCameraBboxScale = CesiumMath.clamp(
-      this.nearCameraBboxScale ?? 1,
+      RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
       0.05,
       1
     );
@@ -438,16 +428,15 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     const currentCameraHeight = this.getCurrentCameraHeight();
 
     const adaptedViewRectangle =
-      isDefined(nearCameraHeightThreshold) &&
       isDefined(currentCameraHeight) &&
-      currentCameraHeight <= nearCameraHeightThreshold &&
+        currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD &&
       nearCameraBboxScale < 1
         ? scaleRectangleFromCenter(currentViewRectangle, nearCameraBboxScale)
         : Rectangle.clone(currentViewRectangle);
 
     const paddedRectangle = withRectanglePadding(
       adaptedViewRectangle,
-      this.queryBboxPaddingRatio ?? RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
+      RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
     );
     const queryRectangle = clipRectangleToDataset(
       paddedRectangle,
@@ -481,37 +470,22 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   private getLevelFilterForViewport(viewRectangle: Rectangle) {
     const normalizedWhere = this.getBaseWhereClause();
-    const levelIdField = this.levelIdField?.trim();
 
-    if (!levelIdField) {
-      return {
-        minLevelId: undefined,
-        maxLevelId: undefined,
-        filterKey: normalizedWhere
-      };
-    }
+    const minLevelId = RER_POI_MIN_LEVEL_ID;
+    let maxLevelId = RER_POI_MAX_LEVEL_ID;
 
-    const minLevelId = this.minimumLevelId;
-    let maxLevelId = this.maximumLevelId;
-
-    const overviewCoverageThreshold =
-      this.overviewRegionCoverageThreshold ??
-      RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
+    const overviewCoverageThreshold = RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
     const isOverviewByCoverage =
       this.getDatasetCoverageRatio(viewRectangle) >= overviewCoverageThreshold;
     const currentCameraHeight = this.getCurrentCameraHeight();
     const isOverviewByHeight =
-      isDefined(this.overviewCameraHeight) &&
       isDefined(currentCameraHeight) &&
-      currentCameraHeight >= this.overviewCameraHeight;
+      currentCameraHeight >= RER_POI_OVERVIEW_CAMERA_HEIGHT;
 
     if (
-      (isOverviewByCoverage || isOverviewByHeight) &&
-      isDefined(this.overviewMaximumLevelId)
+      (isOverviewByCoverage || isOverviewByHeight)
     ) {
-      maxLevelId = isDefined(maxLevelId)
-        ? Math.min(maxLevelId, this.overviewMaximumLevelId)
-        : this.overviewMaximumLevelId;
+      maxLevelId = RER_POI_MIN_LEVEL_ID;
     }
 
     if (
@@ -523,7 +497,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     }
 
     if (
-      this.progressiveLevelLoading &&
+      RER_POI_PROGRESSIVE_LEVEL_LOADING &&
       isDefined(minLevelId) &&
       isDefined(maxLevelId) &&
       maxLevelId > minLevelId &&
@@ -542,7 +516,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       maxLevelId,
       filterKey: [
         normalizedWhere,
-        levelIdField,
+        RER_POI_LEVEL_ID_FIELD,
         minLevelId ?? "",
         maxLevelId ?? ""
       ].join("|")
@@ -554,10 +528,10 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     minimumLevelId: number,
     maximumLevelId: number
   ) {
-    const nearHeight = Math.max(1, this.progressiveNearCameraHeight ?? 2000);
+    const nearHeight = Math.max(1, RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT);
     const farHeight = Math.max(
       nearHeight + 1,
-      this.progressiveFarCameraHeight ?? this.overviewCameraHeight ?? 130000
+      RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT
     );
 
     const clampedHeight = CesiumMath.clamp(cameraHeight, nearHeight, farHeight);
@@ -567,7 +541,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const totalLevels = maximumLevelId - minimumLevelId;
     const continuousLevel = minimumLevelId + zoomRatio * totalLevels;
-    const step = Math.max(1, Math.floor(this.progressiveLevelStep ?? 1));
+    const step = Math.max(1, Math.floor(RER_POI_PROGRESSIVE_LEVEL_STEP));
     const steppedLevel =
       minimumLevelId +
       Math.floor((continuousLevel - minimumLevelId) / step) * step;
@@ -655,7 +629,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   private trimDynamicCache() {
     const maxEntries = Math.max(
       1,
-      this.dynamicCacheMaxEntries ?? RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
+      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
     );
 
     if (this.dynamicViewportCache.size <= maxEntries) {
@@ -824,7 +798,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     minLevelId: number | undefined,
     maxLevelId: number | undefined
   ): string | undefined {
-    const levelField = this.levelIdField?.trim();
+    const levelField = RER_POI_LEVEL_ID_FIELD;
     if (!levelField) {
       return undefined;
     }

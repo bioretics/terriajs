@@ -22,29 +22,17 @@ export const RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO = 0.2;
 export const RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES = 480;
 export const RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS = 350;
 export const RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD = 0.6;
-
-export const RER_POI_USER_TRAITS = {
-  name: RER_POI_DEFAULT_NAME,
-  tileRequests: false,
-  forceCesiumPrimitives: true,
-  dynamicViewportRequests: true,
-  queryBboxPaddingRatio: RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
-  dynamicCacheMaxEntries: RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
-  dynamicRequestDebounceMs: RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
-  levelIdField: "LEVEL_ID",
-  minimumLevelId: 7,
-  maximumLevelId: 19,
-  progressiveLevelLoading: true,
-  progressiveLevelStep: 1,
-  progressiveFarCameraHeight: 140000,
-  progressiveNearCameraHeight: 1800,
-  overviewMaximumLevelId: 7,
-  overviewRegionCoverageThreshold:
-    RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
-  overviewCameraHeight: 130000,
-  nearCameraHeightThreshold: 25000,
-  nearCameraBboxScale: 0.55
-} as const;
+export const RER_POI_DYNAMIC_VIEWPORT_REQUESTS = true;
+export const RER_POI_LEVEL_ID_FIELD = "LEVEL_ID";
+export const RER_POI_MIN_LEVEL_ID = 7;
+export const RER_POI_MAX_LEVEL_ID = 19;
+export const RER_POI_OVERVIEW_CAMERA_HEIGHT = 130000;
+export const RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD = 25000;
+export const RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE = 0.55;
+export const RER_POI_PROGRESSIVE_LEVEL_LOADING = true;
+export const RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT = 140000;
+export const RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT = 1800;
+export const RER_POI_PROGRESSIVE_LEVEL_STEP = 1;
 
 export function normalizeRerPoiUrl(url: string | undefined) {
   return (url || "")
