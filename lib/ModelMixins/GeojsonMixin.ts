@@ -92,14 +92,11 @@ import { DiscreteTimeAsJS } from "./DiscretelyTimeVaryingMixin";
 import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { ImageryParts, isDataSource } from "./MappableMixin";
-import {
-  applyRerPoiLabels,
-  applyRerPoiMakiBillboards,
-  RER3D_POI_NAME
-} from "./RerPoiHelpers";
+import { applyRerPoiLabels, applyRerPoiMakiBillboards } from "./RerPoiHelpers";
 import TableMixin from "./TableMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import { RER_POI_DEFAULT_NAME } from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 
 export const FEATURE_ID_PROP = "_id_";
 
@@ -574,7 +571,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         } else {
           const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
 
-          if (this.clustering.enabled && this.name !== RER3D_POI_NAME) {
+          if (this.clustering.enabled && this.name !== RER_POI_DEFAULT_NAME) {
             const pinBackgroundColor = this.clustering.pinBackgroundColor;
             const pinSize = this.clustering.pinSize;
 
@@ -1032,7 +1029,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       const dataSource = await GeoJsonDataSource.load(geoJson, styles);
 
-      if (this.name === RER3D_POI_NAME) {
+      if (this.name === RER_POI_DEFAULT_NAME) {
         applyRerPoiMakiBillboards(dataSource);
       } else {
         const entities = dataSource.entities;
@@ -1191,7 +1188,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         }
       }
 
-      if (this.name === RER3D_POI_NAME) {
+      if (this.name === RER_POI_DEFAULT_NAME) {
         applyRerPoiLabels(dataSource, styles.clampToGround);
       }
 

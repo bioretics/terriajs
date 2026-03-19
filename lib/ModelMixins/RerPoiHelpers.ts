@@ -13,46 +13,44 @@ import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import { getMakiIcon, isMakiIcon } from "../Map/Icons/Maki/MakiIcons";
 
-export const RER3D_POI_NAME = "rer3d poi";
-
 const RER3D_POI_MAX_VISIBLE_DISTANCE = 100000;
 const RER3D_POI_DEFAULT_MARKER_COLOR = "royalblue";
 const RER3D_POI_MARKER_SIZE = 36;
 const RER3D_POI_ICON_STROKE_WIDTH = 1;
 const RER3D_POI_ICON_STROKE_COLOR = "#ffffff";
 
-const RER3D_POI_DOMAIN_ICON_MAP: Record<
-  number,
-  { symbol: string; color?: string }
-> = {
-  1: { symbol: "village" },
-  2: { symbol: "village" },
-  3: { symbol: "industrial" },
-  4: { symbol: "village", color: "#ff0" },
-  5: { symbol: "village", color: "#333" },
-  6: { symbol: "village", color: "#fff" },
-  7: { symbol: "square" },
-  8: { symbol: "cross" },
-  9: { symbol: "mountain", color: "#ff00ff" },
-  10: { symbol: "triangle" },
-  11: { symbol: "triangle-stroked" },
-  12: { symbol: "marker" },
-  13: { symbol: "water" },
-  14: { symbol: "water" },
-  15: { symbol: "marker" },
-  16: { symbol: "water" },
-  17: { symbol: "water" },
-  18: { symbol: "water" },
-  19: { symbol: "marker" },
-  20: { symbol: "marker" },
-  21: { symbol: "marker" },
-  22: { symbol: "marker" },
-  23: { symbol: "water" },
-  24: { symbol: "marker" },
-  601: { symbol: "town" },
-  602: { symbol: "city" },
-  603: { symbol: "city" }
-};
+type RerPoiDomainStyle = { symbol: string; color?: string };
+type RerPoiDomainStyleGroup = RerPoiDomainStyle & { domainIds: number[] };
+
+const RER3D_POI_DOMAIN_STYLE_GROUPS: RerPoiDomainStyleGroup[] = [
+  { symbol: "village", domainIds: [1, 2] },
+  { symbol: "industrial", domainIds: [3] },
+  { symbol: "village", color: "#ff0", domainIds: [4] },
+  { symbol: "village", color: "#333", domainIds: [5] },
+  { symbol: "village", color: "#fff", domainIds: [6] },
+  { symbol: "square", domainIds: [7] },
+  { symbol: "cross", domainIds: [8] },
+  { symbol: "mountain", color: "#ff00ff", domainIds: [9] },
+  { symbol: "triangle", domainIds: [10] },
+  { symbol: "triangle-stroked", domainIds: [11] },
+  { symbol: "marker", domainIds: [12, 15, 19, 20, 21, 22, 24] },
+  { symbol: "water", domainIds: [13, 14, 16, 17, 18, 23] },
+  { symbol: "town", domainIds: [601] },
+  { symbol: "city", domainIds: [602, 603] }
+];
+
+const RER3D_POI_DOMAIN_ICON_MAP = RER3D_POI_DOMAIN_STYLE_GROUPS.reduce<
+  Record<number, RerPoiDomainStyle>
+>((acc, group) => {
+  for (let i = 0; i < group.domainIds.length; i++) {
+    const domainId = group.domainIds[i];
+    acc[domainId] = {
+      symbol: group.symbol,
+      color: group.color
+    };
+  }
+  return acc;
+}, {});
 
 const LABEL_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
 const LABEL_HORIZONTAL_ORIGIN = new ConstantProperty(HorizontalOrigin.CENTER);
