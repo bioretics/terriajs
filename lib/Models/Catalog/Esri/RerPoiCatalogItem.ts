@@ -38,14 +38,12 @@ import {
   RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
   RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
-  RER_POI_DYNAMIC_VIEWPORT_REQUESTS,
   RER_POI_LEVEL_ID_FIELD,
   RER_POI_MAX_LEVEL_ID,
   RER_POI_MIN_LEVEL_ID,
   RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD,
   RER_POI_OVERVIEW_CAMERA_HEIGHT,
   RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT,
-  RER_POI_PROGRESSIVE_LEVEL_LOADING,
   RER_POI_PROGRESSIVE_LEVEL_STEP,
   RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
 } from "../../../ModelMixins/RerPoiHelpers";
@@ -128,14 +126,10 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   @computed
   get useTileRequests(): boolean {
-    return this.tileRequests && !RER_POI_DYNAMIC_VIEWPORT_REQUESTS;
+    return this.tileRequests;
   }
 
   private startDynamicViewportRequests() {
-    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS) {
-      return;
-    }
-
     if (!this.removeViewerChangedListener) {
       this.removeViewerChangedListener =
         this.terria.mainViewer.afterViewerChanged.addEventListener(() => {
@@ -199,10 +193,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private queueDynamicReload(immediate = false) {
-    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS) {
-      return;
-    }
-
     if (this.dynamicReloadTimer) {
       clearTimeout(this.dynamicReloadTimer);
       this.dynamicReloadTimer = undefined;
@@ -219,7 +209,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private async reloadDynamicViewportData() {
-    if (!RER_POI_DYNAMIC_VIEWPORT_REQUESTS || !this.show) {
+    if (!this.show) {
       return;
     }
 
@@ -272,7 +262,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const dynamicQuery = this.getDynamicViewportQuery();
 
-    if (RER_POI_DYNAMIC_VIEWPORT_REQUESTS && !dynamicQuery) {
+    if (!dynamicQuery) {
       this.activeDynamicQuery = undefined;
       return featureCollection([]);
     }
@@ -404,10 +394,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private getDynamicViewportQuery(): DynamicViewportQuery | undefined {
-    if (
-      !RER_POI_DYNAMIC_VIEWPORT_REQUESTS ||
-      this.terria.currentViewer.type === "none"
-    ) {
+    if (this.terria.currentViewer.type === "none") {
       return undefined;
     }
 
@@ -494,7 +481,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     }
 
     if (
-      RER_POI_PROGRESSIVE_LEVEL_LOADING &&
       isDefined(minLevelId) &&
       isDefined(maxLevelId) &&
       maxLevelId > minLevelId &&
