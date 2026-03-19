@@ -71,7 +71,7 @@ import SdmxJsonCatalogItem from "./SdmxJson/SdmxJsonCatalogItem";
 import {
   isRerPoiUrl,
   RER_POI_CATALOG_ITEM_TYPE
-} from "../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+} from "../../ModelMixins/RerPoiHelpers";
 
 export default function registerCatalogMembers() {
   CatalogMemberFactory.register(CatalogGroup.type, CatalogGroup);

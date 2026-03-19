@@ -25,19 +25,20 @@ import { ProtomapsArcGisPbfSource } from "../../../Map/Vector/Protomaps/Protomap
 import { tableStyleToProtomaps } from "../../../Map/Vector/Protomaps/tableStyleToProtomaps";
 import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import MinMaxLevelMixin from "../../../ModelMixins/MinMaxLevelMixin";
-import RerPoiCatalogItemTraits, {
+import RerPoiCatalogItemTraits from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+import CreateModel from "../../Definition/CreateModel";
+import CommonStrata from "../../Definition/CommonStrata";
+import { ModelConstructorParameters } from "../../Definition/Model";
+import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
+import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
+import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
   RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
   RER_POI_USER_TRAITS
-} from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
-import CreateModel from "../../Definition/CreateModel";
-import CommonStrata from "../../Definition/CommonStrata";
-import { ModelConstructorParameters } from "../../Definition/Model";
-import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
+} from "../../../ModelMixins/RerPoiHelpers";
 
 type FeatureGeoJson = FeatureCollectionWithCrs<
   Geometry | GeometryCollection,

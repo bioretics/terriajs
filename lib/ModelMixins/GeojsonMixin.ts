@@ -92,11 +92,14 @@ import { DiscreteTimeAsJS } from "./DiscretelyTimeVaryingMixin";
 import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { ImageryParts, isDataSource } from "./MappableMixin";
-import { applyRerPoiLabels, applyRerPoiMakiBillboards } from "./RerPoiHelpers";
+import {
+  applyRerPoiLabels,
+  applyRerPoiMakiBillboards,
+  RER_POI_DEFAULT_NAME
+} from "./RerPoiHelpers";
 import TableMixin from "./TableMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
-import { RER_POI_DEFAULT_NAME } from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 
 export const FEATURE_ID_PROP = "_id_";
 

@@ -13,6 +13,50 @@ import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import { getMakiIcon, isMakiIcon } from "../Map/Icons/Maki/MakiIcons";
 
+export const RER_POI_CATALOG_ITEM_TYPE = "rer-poi";
+export const RER_POI_DEFAULT_NAME = "rer3d poi";
+export const RER_POI_URL_REGEX =
+  /^https?:\/\/servizigis\.regione\.emilia-romagna\.it\/geoags\/rest\/services\/portale\/rer3d_poi\/MapServer\/0$/i;
+
+export const RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO = 0.2;
+export const RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES = 480;
+export const RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS = 350;
+export const RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD = 0.6;
+
+export const RER_POI_USER_TRAITS = {
+  name: RER_POI_DEFAULT_NAME,
+  tileRequests: false,
+  forceCesiumPrimitives: true,
+  dynamicViewportRequests: true,
+  queryBboxPaddingRatio: RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
+  dynamicCacheMaxEntries: RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
+  dynamicRequestDebounceMs: RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
+  levelIdField: "LEVEL_ID",
+  minimumLevelId: 7,
+  maximumLevelId: 19,
+  progressiveLevelLoading: true,
+  progressiveLevelStep: 1,
+  progressiveFarCameraHeight: 140000,
+  progressiveNearCameraHeight: 1800,
+  overviewMaximumLevelId: 7,
+  overviewRegionCoverageThreshold:
+    RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
+  overviewCameraHeight: 130000,
+  nearCameraHeightThreshold: 25000,
+  nearCameraBboxScale: 0.55
+} as const;
+
+export function normalizeRerPoiUrl(url: string | undefined) {
+  return (url || "")
+    .trim()
+    .replace(/[?#].*$/, "")
+    .replace(/\/+$/, "");
+}
+
+export function isRerPoiUrl(url: string | undefined) {
+  return RER_POI_URL_REGEX.test(normalizeRerPoiUrl(url));
+}
+
 const RER3D_POI_MAX_VISIBLE_DISTANCE = 100000;
 const RER3D_POI_DEFAULT_MARKER_COLOR = "royalblue";
 const RER3D_POI_MARKER_SIZE = 36;
