@@ -120,11 +120,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     return i18next.t("models.arcGisFeatureServerCatalogItem.name");
   }
 
-  @computed
-  get useTileRequests(): boolean {
-    return this.tileRequests;
-  }
-
   private startDynamicViewportRequests() {
     if (!this.removeViewerChangedListener) {
       this.removeViewerChangedListener =
@@ -166,14 +161,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
         );
       return;
     }
-
-    const leafletMap = this.terria.leaflet?.map;
-    if (leafletMap) {
-      leafletMap.on("moveend", this.onDynamicViewportChanged);
-      this.removeLeafletMoveEndListener = () => {
-        leafletMap.off("moveend", this.onDynamicViewportChanged);
-      };
-    }
   }
 
   private detachCurrentViewerListener() {
@@ -196,7 +183,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const debounceMs = immediate
       ? 0
-      : Math.max(0, RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS);
+      : RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS;
 
     this.dynamicReloadTimer = setTimeout(() => {
       this.dynamicReloadTimer = undefined;
@@ -248,13 +235,13 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     if (this.strata.get(ArcGisFeatureServerStratum.stratumName) === undefined) {
       const stratum = await ArcGisFeatureServerStratum.load(this as any);
       runInAction(() => {
-        this.strata.set(ArcGisFeatureServerStratum.stratumName, stratum as any);
+        this.strata.set(ArcGisFeatureServerStratum.stratumName, stratum);
       });
     }
   }
 
   protected async forceLoadGeojsonData(): Promise<FeatureGeoJson> {
-    if (this.useTileRequests) return featureCollection([]);
+    if (this.tileRequests) return featureCollection([]);
 
     const dynamicQuery = this.getDynamicViewportQuery();
 
@@ -408,7 +395,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
           )
         : Rectangle.clone(currentViewRectangle);
 
-    const queryRectangle = withRectanglePadding(
+    const queryRectangle = rectangleWithPadding(
       adaptedViewRectangle,
       RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
     );
@@ -434,19 +421,13 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     };
   }
 
-  protected getBaseWhereClause() {
-    return (this.where === "1=1" ? this.layerDef : this.where) ?? "1=1";
-  }
-
   private getLevelFilterForViewport(viewRectangle: Rectangle) {
-    const normalizedWhere = this.getBaseWhereClause();
-
     const minLevelId = RER_POI_MIN_LEVEL_ID;
     let maxLevelId = RER_POI_MAX_LEVEL_ID;
 
-    const overviewCoverageThreshold = RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE;
     const isOverviewByCoverage =
-      this.getDatasetCoverageRatio(viewRectangle) >= overviewCoverageThreshold;
+      this.getDatasetCoverageRatio(viewRectangle) >=
+      RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE;
     const currentCameraHeight = this.getCurrentCameraHeight();
     const isOverviewByHeight =
       isDefined(currentCameraHeight) &&
@@ -482,7 +463,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       minLevelId,
       maxLevelId,
       filterKey: [
-        normalizedWhere,
+        this.where,
         RER_POI_LEVEL_ID_FIELD,
         minLevelId ?? "",
         maxLevelId ?? ""
@@ -495,16 +476,17 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     minimumLevelId: number,
     maximumLevelId: number
   ) {
-    const nearHeight = Math.max(1, RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT);
-    const farHeight = Math.max(
-      nearHeight + 1,
+    const clampedHeight = CesiumMath.clamp(
+      cameraHeight,
+      RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT,
       RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT
     );
 
-    const clampedHeight = CesiumMath.clamp(cameraHeight, nearHeight, farHeight);
-
     const zoomRatio =
-      1 - (clampedHeight - nearHeight) / (farHeight - nearHeight);
+      1 -
+      (clampedHeight - RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT) /
+        (RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT -
+          RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT);
 
     const totalLevels = maximumLevelId - minimumLevelId;
     const continuousLevel = minimumLevelId + zoomRatio * totalLevels;
@@ -594,16 +576,19 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   private trimDynamicCache() {
-    const maxEntries = Math.max(1, RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES);
-
-    if (this.dynamicViewportCache.size <= maxEntries) {
+    if (
+      this.dynamicViewportCache.size <=
+      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
+    ) {
       return;
     }
 
     const entriesByAge = Array.from(this.dynamicViewportCache.values()).sort(
       (a, b) => a.lastAccess - b.lastAccess
     );
-    const countToDelete = this.dynamicViewportCache.size - maxEntries;
+    const countToDelete =
+      this.dynamicViewportCache.size -
+      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES;
 
     for (let i = 0; i < countToDelete; i++) {
       this.dynamicViewportCache.delete(entriesByAge[i].requestKey);
@@ -611,10 +596,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 
   @computed get imageryProvider() {
-    if (!this.useTileRequests) {
-      return undefined;
-    }
-
     if (!this.strata.has(ArcGisFeatureServerStratum.stratumName)) {
       return undefined;
     }
@@ -657,7 +638,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   @override
   get mapItems() {
-    if (!this.useTileRequests) {
+    if (!this.tileRequests) {
       return super.mapItems;
     }
 
@@ -679,10 +660,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   get dataColumnMajor() {
     if (super.dataColumnMajor.length > 0) {
       return super.dataColumnMajor;
-    }
-
-    if (!this.useTileRequests) {
-      return [];
     }
 
     return this.columns.map((column) => [column.name ?? ""]);
@@ -708,13 +685,12 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       );
     }
 
-    const where = this.getBaseWhereClause();
     const levelFilter = this.buildLevelFilterClause(
       queryOptions?.minLevelId,
       queryOptions?.maxLevelId
     );
 
-    const combinedWhere = [where, levelFilter]
+    const combinedWhere = [this.where, levelFilter]
       .filter(
         (clause): clause is string => isDefined(clause) && clause.length > 0
       )
@@ -787,7 +763,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 }
 
-function withRectanglePadding(rectangle: Rectangle, paddingRatio: number) {
+function rectangleWithPadding(rectangle: Rectangle, paddingRatio: number) {
   const width = Rectangle.computeWidth(rectangle);
   const height = Rectangle.computeHeight(rectangle);
 
