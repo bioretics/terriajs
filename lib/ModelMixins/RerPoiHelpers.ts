@@ -25,16 +25,14 @@ export const RER_POI_DOMAIN_ID_FIELD = "ID_DOMINIO";
 
 export const RER_POI_MIN_LEVEL_ID = 7;
 export const RER_POI_MAX_LEVEL_ID = 19;
+export const RER_POI_PROGRESSIVE_LEVEL_STEP = 1;
+export const RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD = 25000;
+export const RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE = 0.55;
 export const RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO = 0.2;
 export const RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES = 480;
 export const RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS = 350;
-export const RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD = 0.6;
-export const RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD = 25000;
-export const RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE = 0.55;
-export const RER_POI_OVERVIEW_CAMERA_HEIGHT = 130000;
 export const RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT = 140000;
 export const RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT = 1800;
-export const RER_POI_PROGRESSIVE_LEVEL_STEP = 1;
 
 export function normalizeRerPoiUrl(url: string | undefined) {
   return (url || "")
@@ -47,16 +45,15 @@ export function isRerPoiUrl(url: string | undefined) {
   return RER_POI_URL_REGEX.test(normalizeRerPoiUrl(url));
 }
 
-const RER3D_POI_MAX_VISIBLE_DISTANCE = 100000;
-const RER3D_POI_DEFAULT_MARKER_COLOR = "royalblue";
-const RER3D_POI_MARKER_SIZE = 36;
-const RER3D_POI_ICON_STROKE_WIDTH = 1;
-const RER3D_POI_ICON_STROKE_COLOR = "#ffffff";
+const DEFAULT_MARKER_COLOR = "royalblue";
+const MARKER_SIZE = 36;
+const ICON_STROKE_WIDTH = 1;
+const ICON_STROKE_COLOR = "#ffffff";
 
-type RerPoiDomainStyle = { symbol: string; color?: string };
-type RerPoiDomainStyleGroup = RerPoiDomainStyle & { domainIds: number[] };
+type PoiDomainStyle = { symbol: string; color?: string };
+type PoiDomainStyleGroup = PoiDomainStyle & { domainIds: number[] };
 
-const RER3D_POI_DOMAIN_STYLE_GROUPS: RerPoiDomainStyleGroup[] = [
+const POI_DOMAIN_STYLE_GROUPS: PoiDomainStyleGroup[] = [
   { symbol: "village", domainIds: [1, 2] },
   { symbol: "industrial", domainIds: [3] },
   { symbol: "village", color: "#ff0", domainIds: [4] },
@@ -73,8 +70,8 @@ const RER3D_POI_DOMAIN_STYLE_GROUPS: RerPoiDomainStyleGroup[] = [
   { symbol: "city", domainIds: [602, 603] }
 ];
 
-const RER3D_POI_DOMAIN_ICON_MAP = RER3D_POI_DOMAIN_STYLE_GROUPS.reduce<
-  Record<number, RerPoiDomainStyle>
+const POI_DOMAIN_ICON_MAP = POI_DOMAIN_STYLE_GROUPS.reduce<
+  Record<number, PoiDomainStyle>
 >((acc, group) => {
   for (let i = 0; i < group.domainIds.length; i++) {
     const domainId = group.domainIds[i];
@@ -97,20 +94,20 @@ const BILLBOARD_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
 const BILLBOARD_HEIGHT_REFERENCE = new ConstantProperty(
   HeightReference.CLAMP_TO_GROUND
 );
-const BILLBOARD_SIZE = new ConstantProperty(RER3D_POI_MARKER_SIZE);
+const BILLBOARD_SIZE = new ConstantProperty(MARKER_SIZE);
 const BILLBOARD_EYE_OFFSET = new ConstantProperty(new Cartesian3(0, 0, -12));
 const BILLBOARD_DEPTH_TEST_DISTANCE = new ConstantProperty(
   Number.POSITIVE_INFINITY
 );
 
 function getRerPoiVisibilityRange(
-  scalaValue: unknown
+  scalaValue: number | undefined
 ): DistanceDisplayCondition | undefined {
   const maxDistance = Number(scalaValue);
   if (Number.isFinite(maxDistance)) {
     return new DistanceDisplayCondition(0, maxDistance);
   }
-  return new DistanceDisplayCondition(0, RER3D_POI_MAX_VISIBLE_DISTANCE);
+  return undefined;
 }
 
 export function applyRerPoiLabels(
@@ -172,23 +169,23 @@ export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
       const domainRaw = properties?.[RER_POI_DOMAIN_ID_FIELD]?.getValue(now);
       const domainId = Number(domainRaw);
       const mapped = Number.isFinite(domainId)
-        ? RER3D_POI_DOMAIN_ICON_MAP[domainId]
+        ? POI_DOMAIN_ICON_MAP[domainId]
         : undefined;
 
       const symbol = mapped?.symbol ?? "marker";
-      const color = mapped?.color ?? RER3D_POI_DEFAULT_MARKER_COLOR;
+      const color = mapped?.color ?? DEFAULT_MARKER_COLOR;
       const iconId = isMakiIcon(symbol) ? symbol : "marker";
-      const markerCacheKey = `${iconId}|${color}|${RER3D_POI_MARKER_SIZE}`;
+      const markerCacheKey = `${iconId}|${color}|${MARKER_SIZE}`;
 
       let markerImage = markerImageCache.get(markerCacheKey);
       if (!markerImage) {
         markerImage = getMakiIcon(
           iconId,
           color,
-          RER3D_POI_ICON_STROKE_WIDTH,
-          RER3D_POI_ICON_STROKE_COLOR,
-          RER3D_POI_MARKER_SIZE,
-          RER3D_POI_MARKER_SIZE
+          ICON_STROKE_WIDTH,
+          ICON_STROKE_COLOR,
+          MARKER_SIZE,
+          MARKER_SIZE
         );
 
         if (markerImage) {

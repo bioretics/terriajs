@@ -36,13 +36,11 @@ import {
   RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
   RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
-  RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
   RER_POI_LEVEL_ID_FIELD,
   RER_POI_MAX_LEVEL_ID,
   RER_POI_MIN_LEVEL_ID,
   RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD,
-  RER_POI_OVERVIEW_CAMERA_HEIGHT,
   RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT,
   RER_POI_PROGRESSIVE_LEVEL_STEP,
   RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
@@ -74,8 +72,6 @@ interface DynamicViewportCacheEntry {
   geoJson: FeatureGeoJson;
   lastAccess: number;
 }
-
-const MIN_NEAR_CAMERA_BBOX_SCALE = 0.4;
 
 export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   GeoJsonMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
@@ -401,31 +397,20 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     const currentViewRectangle =
       this.terria.currentViewer.getCurrentCameraView().rectangle;
 
-    const configuredNearCameraBboxScale = CesiumMath.clamp(
-      RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
-      0.05,
-      1
-    );
-    const nearCameraBboxScale = Math.max(
-      configuredNearCameraBboxScale,
-      MIN_NEAR_CAMERA_BBOX_SCALE
-    );
     const currentCameraHeight = this.getCurrentCameraHeight();
 
     const adaptedViewRectangle =
       isDefined(currentCameraHeight) &&
-      currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD &&
-      nearCameraBboxScale < 1
-        ? scaleRectangleFromCenter(currentViewRectangle, nearCameraBboxScale)
+      currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD
+        ? scaleRectangleFromCenter(
+            currentViewRectangle,
+            RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE
+          )
         : Rectangle.clone(currentViewRectangle);
 
-    const paddedRectangle = withRectanglePadding(
+    const queryRectangle = withRectanglePadding(
       adaptedViewRectangle,
       RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
-    );
-    const queryRectangle = clipRectangleToDataset(
-      paddedRectangle,
-      this.cesiumRectangle
     );
 
     if (!queryRectangle || rectangleArea(queryRectangle) <= 0) {
@@ -433,7 +418,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     }
 
     const levelFilter = this.getLevelFilterForViewport(currentViewRectangle);
-    const requestKey = `${levelFilter.filterKey}|${rectangleToCacheKey(
+    const requestKey = `${levelFilter.filterKey}|${rectangleToBounds(
       queryRectangle
     )}`;
 
@@ -459,14 +444,13 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     const minLevelId = RER_POI_MIN_LEVEL_ID;
     let maxLevelId = RER_POI_MAX_LEVEL_ID;
 
-    const overviewCoverageThreshold =
-      RER_POI_DEFAULT_OVERVIEW_REGION_COVERAGE_THRESHOLD;
+    const overviewCoverageThreshold = RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE;
     const isOverviewByCoverage =
       this.getDatasetCoverageRatio(viewRectangle) >= overviewCoverageThreshold;
     const currentCameraHeight = this.getCurrentCameraHeight();
     const isOverviewByHeight =
       isDefined(currentCameraHeight) &&
-      currentCameraHeight >= RER_POI_OVERVIEW_CAMERA_HEIGHT;
+      currentCameraHeight >= RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT;
 
     if (isOverviewByCoverage || isOverviewByHeight) {
       maxLevelId = RER_POI_MIN_LEVEL_ID;
@@ -746,7 +730,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     if (queryOptions?.bbox) {
       uri
-        .addQuery("geometry", rectangleToEsriEnvelope(queryOptions.bbox))
+        .addQuery("geometry", rectangleToBounds(queryOptions.bbox))
         .addQuery("geometryType", "esriGeometryEnvelope")
         .addQuery("inSR", "4326")
         .addQuery("spatialRel", "esriSpatialRelIntersects")
@@ -827,23 +811,6 @@ function withRectanglePadding(rectangle: Rectangle, paddingRatio: number) {
   return new Rectangle(west, south, east, north);
 }
 
-function clipRectangleToDataset(
-  requestRectangle: Rectangle,
-  datasetRectangle: Rectangle | undefined
-) {
-  if (!datasetRectangle) {
-    return Rectangle.clone(requestRectangle);
-  }
-
-  const intersection = Rectangle.intersection(
-    requestRectangle,
-    datasetRectangle,
-    new Rectangle()
-  );
-
-  return intersection ? Rectangle.clone(intersection) : undefined;
-}
-
 function rectangleArea(rectangle: Rectangle) {
   return Rectangle.computeWidth(rectangle) * Rectangle.computeHeight(rectangle);
 }
@@ -857,16 +824,7 @@ function rectangleContains(container: Rectangle, value: Rectangle) {
   );
 }
 
-function rectangleToCacheKey(rectangle: Rectangle) {
-  return [
-    CesiumMath.toDegrees(rectangle.west).toFixed(5),
-    CesiumMath.toDegrees(rectangle.south).toFixed(5),
-    CesiumMath.toDegrees(rectangle.east).toFixed(5),
-    CesiumMath.toDegrees(rectangle.north).toFixed(5)
-  ].join(",");
-}
-
-function rectangleToEsriEnvelope(rectangle: Rectangle) {
+function rectangleToBounds(rectangle: Rectangle) {
   return [
     CesiumMath.toDegrees(rectangle.west),
     CesiumMath.toDegrees(rectangle.south),
