@@ -291,11 +291,22 @@ class Chart extends React.Component {
     }
 
     this.disposeReaction = reaction(
-      () =>
-        this.props.selectedStopPointIdx || this.props.selectedSampledPointIdx,
-      (idx) => {
+      () => [
+        this.props.selectedStopPointIdx,
+        this.props.selectedSampledPointIdx
+      ],
+      ([selectedStopPointIdx, selectedSampledPointIdx]) => {
+        const hasStopPointSelection = typeof selectedStopPointIdx === "number";
+        const hasSampledPointSelection =
+          typeof selectedSampledPointIdx === "number";
+        const idx = hasStopPointSelection
+          ? selectedStopPointIdx
+          : hasSampledPointSelection
+          ? selectedSampledPointIdx
+          : null;
+
         if (typeof idx === "number" && this.props.chartItems) {
-          const isStopPointSelected = this.props.selectedStopPointIdx !== null;
+          const isStopPointSelected = hasStopPointSelection;
 
           const points = isStopPointSelected
             ? this.props.terria.measurableGeomList[
