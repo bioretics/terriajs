@@ -2788,8 +2788,116 @@ export default class TableStylingWorkflow
         : undefined,
 
       // Show advanced table options
-      ...(this.showAdvancedOptions ? this.advancedTableDimensions : [])
+      ...(this.showAdvancedOptions ? this.advancedTableDimensions : []),
+
+      {
+        type: "group",
+        id: "manage-user-style",
+        name: i18next.t("models.tableStyling.manageUserStyle"),
+        isOpen: true,
+        selectableDimensions: [
+          {
+            type: "button",
+            id: "save-user-style-json",
+            value: i18next.t("models.tableStyling.saveUserStyleJson"),
+            setDimensionValue: () => {
+              this.saveUserStyleToJsonFile();
+            }
+          },
+          {
+            type: "button",
+            id: "import-user-style-json",
+            value: i18next.t("models.tableStyling.importUserStyleJson"),
+            setDimensionValue: () => {
+              this.importUserStyleFromJsonFile();
+            }
+          }
+        ]
+      }
     ]);
+  }
+
+  private importUserStyleFromJsonFile() {
+    try {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json,application/json";
+
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return;
+
+        file
+          .text()
+          .then((fileContents) => {
+            const parsed = JSON.parse(fileContents) as unknown;
+
+            if (
+              !parsed ||
+              typeof parsed !== "object" ||
+              Array.isArray(parsed)
+            ) {
+              throw new Error("Invalid JSON format");
+            }
+
+            updateModelFromJson(
+              this.item,
+              CommonStrata.user,
+              parsed as any,
+              true
+            ).raiseError(this.item.terria, {
+              title: i18next.t("models.tableStyling.importUserStyleFailed")
+            });
+
+            this.setColorSchemeTypeFromPalette();
+          })
+          .catch((e) => {
+            TerriaError.from(e).raiseError(this.item.terria, {
+              title: i18next.t("models.tableStyling.importUserStyleFailed")
+            });
+          });
+      };
+
+      input.click();
+    } catch (e) {
+      TerriaError.from(e).raiseError(this.item.terria, {
+        title: i18next.t("models.tableStyling.importUserStyleFailed")
+      });
+    }
+  }
+
+  private saveUserStyleToJsonFile() {
+    const userStyleJson =
+      JSON.stringify(this.item.strata.get(CommonStrata.user)) ?? "{}";
+    try {
+      const rawFileNameBase =
+        this.item.uniqueId ?? this.tableStyle.id ?? "table-style";
+      const fileNameBase = (
+        rawFileNameBase.split(/[\\/]/).pop() ?? rawFileNameBase
+      )
+        .split(/[?#]/)[0]
+        .replace(/\.[^/.]+$/, "");
+      const safeFileNameBase =
+        fileNameBase
+          .replace(/[^a-zA-Z0-9_.-]+/g, "_")
+          .replace(/^_+|_+$/g, "") || "table-style";
+      const blob = new Blob([userStyleJson], {
+        type: "application/json;charset=utf-8"
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = `${safeFileNameBase}-user-style.json`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(downloadUrl);
+    } catch (e) {
+      TerriaError.from(e).raiseError(
+        this.item.terria,
+        "Failed to save user style JSON file. User stratum has been printed to console"
+      );
+    }
   }
 
   /**
