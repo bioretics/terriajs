@@ -34,6 +34,7 @@ import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
 import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
+  RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
   RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
@@ -80,7 +81,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   private removeCesiumCameraChangedListener: (() => void) | undefined;
   private removeViewerChangedListener: (() => void) | undefined;
-  private removeLeafletMoveEndListener: (() => void) | undefined;
   private dynamicReloadTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly dynamicViewportCache = new Map<
     string,
@@ -168,11 +168,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       this.removeCesiumCameraChangedListener();
       this.removeCesiumCameraChangedListener = undefined;
     }
-
-    if (this.removeLeafletMoveEndListener) {
-      this.removeLeafletMoveEndListener();
-      this.removeLeafletMoveEndListener = undefined;
-    }
   }
 
   private queueDynamicReload(immediate = false) {
@@ -210,6 +205,25 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       )
     ) {
       return;
+    }
+
+    if (
+      this.activeDynamicQuery &&
+      this.activeDynamicQuery.filterKey === nextQuery.filterKey
+    ) {
+      const nextArea = rectangleArea(nextQuery.queryRectangle);
+      const overlapArea = rectangleIntersectionArea(
+        this.activeDynamicQuery.queryRectangle,
+        nextQuery.queryRectangle
+      );
+      const newAreaRatio =
+        nextArea > 0 ? (nextArea - overlapArea) / nextArea : 1;
+
+      if (
+        newAreaRatio <= RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD
+      ) {
+        return;
+      }
     }
 
     if (this.dynamicReloadInProgress || this.isLoadingMapItems) {
@@ -250,50 +264,38 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       return featureCollection([]);
     }
 
-    if (dynamicQuery) {
-      const cachedEntry = this.findCachedDynamicQuery(dynamicQuery);
-      if (cachedEntry) {
-        this.activeDynamicQuery = {
-          ...dynamicQuery,
-          requestKey: cachedEntry.requestKey,
-          queryRectangle: Rectangle.clone(cachedEntry.queryRectangle)
-        };
-        return cachedEntry.geoJson;
-      }
-
-      const inFlightRequest = this.dynamicInFlightRequests.get(
-        dynamicQuery.requestKey
-      );
-      if (inFlightRequest) {
-        const geoJson = await inFlightRequest;
-        this.activeDynamicQuery = dynamicQuery;
-        return geoJson;
-      }
-    } else {
-      this.activeDynamicQuery = undefined;
+    const cachedEntry = this.findCachedDynamicQuery(dynamicQuery);
+    if (cachedEntry) {
+      this.activeDynamicQuery = {
+        ...dynamicQuery,
+        requestKey: cachedEntry.requestKey,
+        queryRectangle: Rectangle.clone(cachedEntry.queryRectangle)
+      };
+      return cachedEntry.geoJson;
     }
 
-    const loadPromise = this.loadGeoJsonFromServer(
-      dynamicQuery?.requestOptions
+    const inFlightRequest = this.dynamicInFlightRequests.get(
+      dynamicQuery.requestKey
     );
-
-    if (dynamicQuery) {
-      this.dynamicInFlightRequests.set(dynamicQuery.requestKey, loadPromise);
+    if (inFlightRequest) {
+      const geoJson = await inFlightRequest;
+      this.activeDynamicQuery = dynamicQuery;
+      return geoJson;
     }
+
+    const loadPromise = this.loadGeoJsonFromServer(dynamicQuery.requestOptions);
+
+    this.dynamicInFlightRequests.set(dynamicQuery.requestKey, loadPromise);
 
     try {
       const geoJson = await loadPromise;
 
-      if (dynamicQuery) {
-        this.cacheDynamicQuery(dynamicQuery, geoJson);
-        this.activeDynamicQuery = dynamicQuery;
-      }
+      this.cacheDynamicQuery(dynamicQuery, geoJson);
+      this.activeDynamicQuery = dynamicQuery;
 
       return geoJson;
     } finally {
-      if (dynamicQuery) {
-        this.dynamicInFlightRequests.delete(dynamicQuery.requestKey);
-      }
+      this.dynamicInFlightRequests.delete(dynamicQuery.requestKey);
     }
   }
 
@@ -310,7 +312,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
           .throwIfUndefined()
           .toString()
       );
-      return await loadJson(url);
+      return loadJson(url);
     };
 
     if (!this.supportsPagination) {
@@ -400,7 +402,7 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
     );
 
-    if (!queryRectangle || rectangleArea(queryRectangle) <= 0) {
+    if (rectangleArea(queryRectangle) <= 0) {
       return undefined;
     }
 
@@ -789,6 +791,15 @@ function rectangleWithPadding(rectangle: Rectangle, paddingRatio: number) {
 
 function rectangleArea(rectangle: Rectangle) {
   return Rectangle.computeWidth(rectangle) * Rectangle.computeHeight(rectangle);
+}
+
+function rectangleIntersectionArea(left: Rectangle, right: Rectangle) {
+  const intersection = Rectangle.intersection(left, right, new Rectangle());
+  if (!intersection) {
+    return 0;
+  }
+
+  return rectangleArea(intersection);
 }
 
 function rectangleContains(container: Rectangle, value: Rectangle) {

@@ -11,6 +11,7 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import isDefined from "../Core/isDefined";
 import { getMakiIcon, isMakiIcon } from "../Map/Icons/Maki/MakiIcons";
 
 export const RER_POI_CATALOG_ITEM_TYPE = "rer-poi";
@@ -31,6 +32,7 @@ export const RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE = 0.55;
 export const RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO = 0.2;
 export const RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES = 480;
 export const RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS = 350;
+export const RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD = 0.12;
 export const RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT = 140000;
 export const RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT = 1800;
 
@@ -49,6 +51,7 @@ const DEFAULT_MARKER_COLOR = "royalblue";
 const MARKER_SIZE = 36;
 const ICON_STROKE_WIDTH = 1;
 const ICON_STROKE_COLOR = "#ffffff";
+const MARKER_IMAGE_CACHE = new Map<string, string>();
 
 type PoiDomainStyle = { symbol: string; color?: string };
 type PoiDomainStyleGroup = PoiDomainStyle & { domainIds: number[] };
@@ -85,7 +88,6 @@ const POI_DOMAIN_ICON_MAP = POI_DOMAIN_STYLE_GROUPS.reduce<
 
 const LABEL_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
 const LABEL_HORIZONTAL_ORIGIN = new ConstantProperty(HorizontalOrigin.CENTER);
-const LABEL_EYE_OFFSET = new ConstantProperty(new Cartesian3(0, 0, -12));
 const LABEL_DEPTH_TEST_DISTANCE = new ConstantProperty(
   Number.POSITIVE_INFINITY
 );
@@ -110,10 +112,29 @@ function getRerPoiVisibilityRange(
   return undefined;
 }
 
-export function applyRerPoiLabels(
-  dataSource: GeoJsonDataSource,
-  clampToGround: boolean
-) {
+function getCachedMarkerImage(iconId: string, color: string) {
+  const markerCacheKey = `${iconId}|${color}|${MARKER_SIZE}`;
+  let markerImage = MARKER_IMAGE_CACHE.get(markerCacheKey);
+
+  if (!markerImage) {
+    markerImage = getMakiIcon(
+      iconId,
+      color,
+      ICON_STROKE_WIDTH,
+      ICON_STROKE_COLOR,
+      MARKER_SIZE,
+      MARKER_SIZE
+    );
+
+    if (markerImage) {
+      MARKER_IMAGE_CACHE.set(markerCacheKey, markerImage);
+    }
+  }
+
+  return markerImage;
+}
+
+export function applyRerPoiLabels(dataSource: GeoJsonDataSource) {
   const entities = dataSource.entities.values;
   const now = JulianDate.now();
 
@@ -123,7 +144,8 @@ export function applyRerPoiLabels(
       const entity = entities[i];
       const properties = entity.properties;
       const rawValueName = properties?.[RER_POI_NAME_FIELD]?.getValue(now);
-      if (!rawValueName) continue;
+      if (!isDefined(rawValueName) || String(rawValueName).length === 0)
+        continue;
 
       const visibilityRange = getRerPoiVisibilityRange(
         properties?.[RER_POI_SCALE_FIELD]?.getValue(now)
@@ -138,10 +160,7 @@ export function applyRerPoiLabels(
         style: LabelStyle.FILL_AND_OUTLINE,
         verticalOrigin: LABEL_VERTICAL_ORIGIN,
         horizontalOrigin: LABEL_HORIZONTAL_ORIGIN,
-        heightReference: clampToGround
-          ? new ConstantProperty(HeightReference.CLAMP_TO_GROUND)
-          : undefined,
-        eyeOffset: LABEL_EYE_OFFSET,
+        heightReference: undefined,
         pixelOffset: new Cartesian2(0, -40),
         distanceDisplayCondition: visibilityRange
           ? new ConstantProperty(visibilityRange)
@@ -157,7 +176,6 @@ export function applyRerPoiLabels(
 export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
   const entities = dataSource.entities.values;
   const now = JulianDate.now();
-  const markerImageCache = new Map<string, string>();
 
   dataSource.entities.suspendEvents();
   try {
@@ -175,23 +193,7 @@ export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
       const symbol = mapped?.symbol ?? "marker";
       const color = mapped?.color ?? DEFAULT_MARKER_COLOR;
       const iconId = isMakiIcon(symbol) ? symbol : "marker";
-      const markerCacheKey = `${iconId}|${color}|${MARKER_SIZE}`;
-
-      let markerImage = markerImageCache.get(markerCacheKey);
-      if (!markerImage) {
-        markerImage = getMakiIcon(
-          iconId,
-          color,
-          ICON_STROKE_WIDTH,
-          ICON_STROKE_COLOR,
-          MARKER_SIZE,
-          MARKER_SIZE
-        );
-
-        if (markerImage) {
-          markerImageCache.set(markerCacheKey, markerImage);
-        }
-      }
+      const markerImage = getCachedMarkerImage(iconId, color);
 
       if (!markerImage) {
         continue;

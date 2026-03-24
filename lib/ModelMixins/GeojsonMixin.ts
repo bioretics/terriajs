@@ -1030,7 +1030,15 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
       const styles = runInAction(() => this.stylesWithDefaults);
 
-      const dataSource = await GeoJsonDataSource.load(geoJson, styles);
+      const existingRerPoiDataSource =
+        this.name === RER_POI_DEFAULT_NAME &&
+        this._dataSource instanceof GeoJsonDataSource
+          ? this._dataSource
+          : undefined;
+
+      const dataSource = existingRerPoiDataSource
+        ? await existingRerPoiDataSource.load(geoJson, styles)
+        : await GeoJsonDataSource.load(geoJson, styles);
 
       if (this.name === RER_POI_DEFAULT_NAME) {
         applyRerPoiMakiBillboards(dataSource);
@@ -1192,7 +1200,7 @@ function GeoJsonMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
 
       if (this.name === RER_POI_DEFAULT_NAME) {
-        applyRerPoiLabels(dataSource, styles.clampToGround);
+        applyRerPoiLabels(dataSource);
       }
 
       return dataSource;
