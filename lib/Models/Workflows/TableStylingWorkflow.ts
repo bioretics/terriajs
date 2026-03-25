@@ -2800,7 +2800,7 @@ export default class TableStylingWorkflow
           {
             type: "button",
             id: "save-user-style-json",
-            value: i18next.t("models.tableStyling.saveUserStyleJson"),
+            value: i18next.t("models.tableStyling.saveUserStyle"),
             setDimensionValue: () => {
               this.saveUserStyleToJsonFile();
             }
@@ -2808,7 +2808,7 @@ export default class TableStylingWorkflow
           {
             type: "button",
             id: "import-user-style-json",
-            value: i18next.t("models.tableStyling.importUserStyleJson"),
+            value: i18next.t("models.tableStyling.importUserStyle"),
             setDimensionValue: () => {
               this.importUserStyleFromJsonFile();
             }
