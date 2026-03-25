@@ -1139,8 +1139,8 @@
     "tableStyling": {
       "showAdvancedOptions": "Mostra opzioni avanzate",
       "manageUserStyle": "Gestisci stile utente",
-      "saveUserStyleJson": "Salva stile utente (.json)",
-      "importUserStyleJson": "Importa stile utente (.json)",
+      "saveUserStyle": "Salva stile utente",
+      "importUserStyle": "Importa stile utente",
       "importUserStyleFailed": "Importazione dello stile utente JSON non riuscita"
     }
   },

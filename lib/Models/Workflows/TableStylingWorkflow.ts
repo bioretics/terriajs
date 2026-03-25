@@ -41,6 +41,7 @@ import { EnumColorTraits } from "../../Traits/TraitsClasses/Table/ColorStyleTrai
 import CommonStrata from "../Definition/CommonStrata";
 import Model from "../Definition/Model";
 import ModelPropertiesFromTraits from "../Definition/ModelPropertiesFromTraits";
+import saveStratumToJson from "../Definition/saveStratumToJson";
 import updateModelFromJson from "../Definition/updateModelFromJson";
 import {
   FlatSelectableDimension,
@@ -154,19 +155,19 @@ export default class TableStylingWorkflow
           ? {
               text: i18next.t("models.tableStyling.copyUserStratum"),
               onSelect: () => {
-                const stratum = JSON.stringify(
-                  this.item.strata.get(CommonStrata.user)
+                const styleSnippet = JSON.stringify(
+                  this.getCatalogStyleSnippet(),
+                  undefined,
+                  2
                 );
                 try {
-                  navigator.clipboard.writeText(
-                    JSON.stringify(this.item.strata.get(CommonStrata.user))
-                  );
+                  navigator.clipboard.writeText(styleSnippet);
                 } catch (e) {
                   TerriaError.from(e).raiseError(
                     this.item.terria,
                     "Failed to copy to clipboard. User stratum has been printed to console"
                   );
-                  console.log(stratum);
+                  console.log(styleSnippet);
                 }
               },
               disable: !this.showAdvancedOptions
@@ -2867,8 +2868,11 @@ export default class TableStylingWorkflow
   }
 
   private saveUserStyleToJsonFile() {
-    const userStyleJson =
-      JSON.stringify(this.item.strata.get(CommonStrata.user)) ?? "{}";
+    const userStyleJson = JSON.stringify(
+      this.getCatalogStyleSnippet(),
+      null,
+      2
+    );
     try {
       const rawFileNameBase =
         this.item.uniqueId ?? this.tableStyle.id ?? "table-style";
@@ -2898,6 +2902,96 @@ export default class TableStylingWorkflow
         "Failed to save user style JSON file. User stratum has been printed to console"
       );
     }
+  }
+
+  private getCatalogStyleSnippet(): {
+    activeStyle: string;
+    styles: Record<string, unknown>[];
+  } {
+    const activeStyle = this.tableStyle.id;
+    const mergedStyle = this.getMergedStyleTraitsJson(activeStyle);
+
+    return {
+      activeStyle,
+      styles: [
+        {
+          id: activeStyle,
+          ...mergedStyle
+        }
+      ]
+    };
+  }
+
+  private getMergedStyleTraitsJson(styleId: string): Record<string, unknown> {
+    const style = this.item.styles?.find((s) => s.id === styleId);
+    const defaultStyle = this.item.defaultStyle;
+
+    const result: Record<string, unknown> = {};
+
+    const stratumIds = Array.from(this.item.strata.keys());
+    stratumIds.forEach((stratumId) => {
+      const defaultStyleStratum = defaultStyle?.strata.get(stratumId);
+      if (defaultStyleStratum) {
+        this.mergeJsonObject(
+          result,
+          saveStratumToJson(defaultStyle.traits, defaultStyleStratum) as Record<
+            string,
+            unknown
+          >
+        );
+      }
+
+      const styleStratum = style?.strata.get(stratumId);
+      if (style && styleStratum) {
+        this.mergeJsonObject(
+          result,
+          saveStratumToJson(style.traits, styleStratum) as Record<
+            string,
+            unknown
+          >
+        );
+      }
+    });
+
+    delete result.hidden;
+    return result;
+  }
+
+  private mergeJsonObject(
+    target: Record<string, unknown>,
+    source: Record<string, unknown>
+  ) {
+    Object.keys(source).forEach((key) => {
+      const sourceValue = source[key];
+      const targetValue = target[key];
+
+      if (Array.isArray(sourceValue)) {
+        target[key] = sourceValue;
+        return;
+      }
+
+      if (
+        sourceValue &&
+        typeof sourceValue === "object" &&
+        !Array.isArray(sourceValue)
+      ) {
+        const nestedTarget =
+          targetValue &&
+          typeof targetValue === "object" &&
+          !Array.isArray(targetValue)
+            ? (targetValue as Record<string, unknown>)
+            : {};
+
+        this.mergeJsonObject(
+          nestedTarget,
+          sourceValue as Record<string, unknown>
+        );
+        target[key] = nestedTarget;
+        return;
+      }
+
+      target[key] = sourceValue;
+    });
   }
 
   /**
