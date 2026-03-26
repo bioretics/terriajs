@@ -34,14 +34,12 @@ import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
 import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
-  RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
-  RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE,
+  RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
   RER_POI_LEVEL_ID_FIELD,
   RER_POI_MAX_LEVEL_ID,
   RER_POI_MIN_LEVEL_ID,
-  RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD,
   RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT,
   RER_POI_PROGRESSIVE_LEVEL_STEP,
   RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
@@ -383,30 +381,26 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       return undefined;
     }
 
-    const currentViewRectangle =
-      this.terria.currentViewer.getCurrentCameraView().rectangle;
+    const currentView = this.terria.currentViewer.getCurrentCameraView();
+    const currentViewRectangle = currentView.rectangle;
 
-    const currentCameraHeight = this.getCurrentCameraHeight();
+    const pitch =
+      (currentView as { pitch?: number }).pitch ??
+      this.terria.cesium?.scene.camera.pitch;
 
-    const adaptedViewRectangle =
-      isDefined(currentCameraHeight) &&
-      currentCameraHeight <= RER_POI_NEAR_CAMERA_HEIGHT_THRESHOLD
-        ? scaleRectangleFromCenter(
-            currentViewRectangle,
-            RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE
-          )
-        : Rectangle.clone(currentViewRectangle);
+    const paddingMultiplier = getPaddingMultiplierForPitch(pitch, 1.5, 6);
 
     const queryRectangle = rectangleWithPadding(
-      adaptedViewRectangle,
-      RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO
+      currentViewRectangle,
+      RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
+      paddingMultiplier
     );
 
     if (rectangleArea(queryRectangle) <= 0) {
       return undefined;
     }
 
-    const levelFilter = this.getLevelFilterForViewport(currentViewRectangle);
+    const levelFilter = this.getLevelFilterForViewport();
     const requestKey = `${levelFilter.filterKey}|${rectangleToBounds(
       queryRectangle
     )}`;
@@ -423,19 +417,16 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     };
   }
 
-  private getLevelFilterForViewport(viewRectangle: Rectangle) {
+  private getLevelFilterForViewport() {
     const minLevelId = RER_POI_MIN_LEVEL_ID;
     let maxLevelId = RER_POI_MAX_LEVEL_ID;
 
-    const isOverviewByCoverage =
-      this.getDatasetCoverageRatio(viewRectangle) >=
-      RER_POI_DEFAULT_NEAR_CAMERA_BBOX_SCALE;
     const currentCameraHeight = this.getCurrentCameraHeight();
     const isOverviewByHeight =
       isDefined(currentCameraHeight) &&
       currentCameraHeight >= RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT;
 
-    if (isOverviewByCoverage || isOverviewByHeight) {
+    if (isOverviewByHeight) {
       maxLevelId = RER_POI_MIN_LEVEL_ID;
     }
 
@@ -498,28 +489,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       Math.floor((continuousLevel - minimumLevelId) / step) * step;
 
     return CesiumMath.clamp(steppedLevel, minimumLevelId, maximumLevelId);
-  }
-
-  private getDatasetCoverageRatio(viewRectangle: Rectangle): number {
-    if (!this.cesiumRectangle) {
-      return 0;
-    }
-
-    const intersection = Rectangle.intersection(
-      viewRectangle,
-      this.cesiumRectangle,
-      new Rectangle()
-    );
-    if (!intersection) {
-      return 0;
-    }
-
-    const datasetArea = rectangleArea(this.cesiumRectangle);
-    if (datasetArea <= 0) {
-      return 0;
-    }
-
-    return rectangleArea(intersection) / datasetArea;
   }
 
   private getCurrentCameraHeight(): number | undefined {
@@ -765,28 +734,64 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   }
 }
 
-function rectangleWithPadding(rectangle: Rectangle, paddingRatio: number) {
+function rectangleWithPadding(
+  rectangle: Rectangle,
+  paddingRatio: number,
+  verticalPaddingMultiplier = 1
+) {
   const width = Rectangle.computeWidth(rectangle);
   const height = Rectangle.computeHeight(rectangle);
 
   const safePaddingRatio = Math.max(0, paddingRatio);
+  const safeSouthPaddingMultiplier = CesiumMath.clamp(
+    verticalPaddingMultiplier,
+    1,
+    3
+  );
+  const safeNorthPaddingMultiplier = CesiumMath.clamp(
+    verticalPaddingMultiplier,
+    1,
+    6
+  );
   const lonPadding = width * safePaddingRatio;
   const latPadding = height * safePaddingRatio;
 
   const west = CesiumMath.clamp(rectangle.west - lonPadding, -Math.PI, Math.PI);
   const east = CesiumMath.clamp(rectangle.east + lonPadding, -Math.PI, Math.PI);
   const south = CesiumMath.clamp(
-    rectangle.south - latPadding,
+    rectangle.south - latPadding * safeSouthPaddingMultiplier,
     -CesiumMath.PI_OVER_TWO,
     CesiumMath.PI_OVER_TWO
   );
   const north = CesiumMath.clamp(
-    rectangle.north + latPadding,
+    rectangle.north + latPadding * safeNorthPaddingMultiplier,
     -CesiumMath.PI_OVER_TWO,
     CesiumMath.PI_OVER_TWO
   );
 
   return new Rectangle(west, south, east, north);
+}
+
+function getPaddingMultiplierForPitch(
+  pitch: number | undefined,
+  minMultiplier: number,
+  maxMultiplier: number
+) {
+  if (!isDefined(pitch)) {
+    return minMultiplier;
+  }
+
+  const safeMinMultiplier = Math.max(1, minMultiplier);
+  const safeMaxMultiplier = Math.max(safeMinMultiplier, maxMultiplier);
+
+  const clampedPitch = CesiumMath.clamp(pitch, -CesiumMath.PI_OVER_TWO, 0);
+
+  const pitchRatio =
+    (clampedPitch + CesiumMath.PI_OVER_TWO) / CesiumMath.PI_OVER_TWO;
+
+  return (
+    safeMinMultiplier + pitchRatio * (safeMaxMultiplier - safeMinMultiplier)
+  );
 }
 
 function rectangleArea(rectangle: Rectangle) {
@@ -818,40 +823,6 @@ function rectangleToBounds(rectangle: Rectangle) {
     CesiumMath.toDegrees(rectangle.east),
     CesiumMath.toDegrees(rectangle.north)
   ].join(",");
-}
-
-function scaleRectangleFromCenter(rectangle: Rectangle, scale: number) {
-  const safeScale = CesiumMath.clamp(scale, 0.01, 1);
-  if (safeScale >= 1) {
-    return Rectangle.clone(rectangle);
-  }
-
-  const center = Rectangle.center(rectangle, new Cartographic());
-  const halfWidth = (Rectangle.computeWidth(rectangle) * safeScale) / 2;
-  const halfHeight = (Rectangle.computeHeight(rectangle) * safeScale) / 2;
-
-  const west = CesiumMath.clamp(
-    center.longitude - halfWidth,
-    -Math.PI,
-    Math.PI
-  );
-  const east = CesiumMath.clamp(
-    center.longitude + halfWidth,
-    -Math.PI,
-    Math.PI
-  );
-  const south = CesiumMath.clamp(
-    center.latitude - halfHeight,
-    -CesiumMath.PI_OVER_TWO,
-    CesiumMath.PI_OVER_TWO
-  );
-  const north = CesiumMath.clamp(
-    center.latitude + halfHeight,
-    -CesiumMath.PI_OVER_TWO,
-    CesiumMath.PI_OVER_TWO
-  );
-
-  return new Rectangle(west, south, east, north);
 }
 
 function cleanUrl(url: string): string {
