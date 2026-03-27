@@ -33,7 +33,6 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
 import {
   RER_POI_CATALOG_ITEM_TYPE,
-  RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
   RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
@@ -58,18 +57,9 @@ interface EsriJsonQueryOptions {
 }
 
 interface DynamicViewportQuery {
-  requestKey: string;
   filterKey: string;
   queryRectangle: Rectangle;
   requestOptions: EsriJsonQueryOptions;
-}
-
-interface DynamicViewportCacheEntry {
-  requestKey: string;
-  filterKey: string;
-  queryRectangle: Rectangle;
-  geoJson: FeatureGeoJson;
-  lastAccess: number;
 }
 
 export default class RerPoiCatalogItem extends MinMaxLevelMixin(
@@ -80,14 +70,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
   private removeCesiumCameraChangedListener: (() => void) | undefined;
   private removeViewerChangedListener: (() => void) | undefined;
   private dynamicReloadTimer: ReturnType<typeof setTimeout> | undefined;
-  private readonly dynamicViewportCache = new Map<
-    string,
-    DynamicViewportCacheEntry
-  >();
-  private readonly dynamicInFlightRequests = new Map<
-    string,
-    Promise<FeatureGeoJson>
-  >();
   private activeDynamicQuery: DynamicViewportQuery | undefined;
   private dynamicReloadQueued = false;
   private dynamicReloadInProgress = false;
@@ -262,39 +244,11 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       return featureCollection([]);
     }
 
-    const cachedEntry = this.findCachedDynamicQuery(dynamicQuery);
-    if (cachedEntry) {
-      this.activeDynamicQuery = {
-        ...dynamicQuery,
-        requestKey: cachedEntry.requestKey,
-        queryRectangle: Rectangle.clone(cachedEntry.queryRectangle)
-      };
-      return cachedEntry.geoJson;
-    }
-
-    const inFlightRequest = this.dynamicInFlightRequests.get(
-      dynamicQuery.requestKey
+    const geoJson = await this.loadGeoJsonFromServer(
+      dynamicQuery.requestOptions
     );
-    if (inFlightRequest) {
-      const geoJson = await inFlightRequest;
-      this.activeDynamicQuery = dynamicQuery;
-      return geoJson;
-    }
-
-    const loadPromise = this.loadGeoJsonFromServer(dynamicQuery.requestOptions);
-
-    this.dynamicInFlightRequests.set(dynamicQuery.requestKey, loadPromise);
-
-    try {
-      const geoJson = await loadPromise;
-
-      this.cacheDynamicQuery(dynamicQuery, geoJson);
-      this.activeDynamicQuery = dynamicQuery;
-
-      return geoJson;
-    } finally {
-      this.dynamicInFlightRequests.delete(dynamicQuery.requestKey);
-    }
+    this.activeDynamicQuery = dynamicQuery;
+    return geoJson;
   }
 
   protected async loadGeoJsonFromServer(
@@ -401,12 +355,8 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     }
 
     const levelFilter = this.getLevelFilterForViewport();
-    const requestKey = `${levelFilter.filterKey}|${rectangleToBounds(
-      queryRectangle
-    )}`;
 
     return {
-      requestKey,
       filterKey: levelFilter.filterKey,
       queryRectangle,
       requestOptions: {
@@ -499,71 +449,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const position = Cartographic.fromCartesian(currentView.position);
     return position?.height;
-  }
-
-  private findCachedDynamicQuery(
-    query: DynamicViewportQuery
-  ): DynamicViewportCacheEntry | undefined {
-    let bestMatch: DynamicViewportCacheEntry | undefined;
-
-    this.dynamicViewportCache.forEach((entry) => {
-      if (entry.filterKey !== query.filterKey) {
-        return;
-      }
-
-      if (!rectangleContains(entry.queryRectangle, query.queryRectangle)) {
-        return;
-      }
-
-      if (
-        !bestMatch ||
-        rectangleArea(entry.queryRectangle) <
-          rectangleArea(bestMatch.queryRectangle)
-      ) {
-        bestMatch = entry;
-      }
-    });
-
-    if (bestMatch) {
-      bestMatch.lastAccess = Date.now();
-    }
-
-    return bestMatch;
-  }
-
-  private cacheDynamicQuery(
-    query: DynamicViewportQuery,
-    geoJson: FeatureGeoJson
-  ) {
-    this.dynamicViewportCache.set(query.requestKey, {
-      requestKey: query.requestKey,
-      filterKey: query.filterKey,
-      queryRectangle: Rectangle.clone(query.queryRectangle),
-      geoJson,
-      lastAccess: Date.now()
-    });
-
-    this.trimDynamicCache();
-  }
-
-  private trimDynamicCache() {
-    if (
-      this.dynamicViewportCache.size <=
-      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES
-    ) {
-      return;
-    }
-
-    const entriesByAge = Array.from(this.dynamicViewportCache.values()).sort(
-      (a, b) => a.lastAccess - b.lastAccess
-    );
-    const countToDelete =
-      this.dynamicViewportCache.size -
-      RER_POI_DEFAULT_DYNAMIC_CACHE_MAX_ENTRIES;
-
-    for (let i = 0; i < countToDelete; i++) {
-      this.dynamicViewportCache.delete(entriesByAge[i].requestKey);
-    }
   }
 
   @computed get imageryProvider() {
