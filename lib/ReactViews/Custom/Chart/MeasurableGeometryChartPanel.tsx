@@ -93,68 +93,29 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
-      const findNearestIndexByX = (
-        points: ChartPoint[] | undefined,
-        targetX: number
-      ): number | null => {
-        if (!points?.length) return null;
-
-        let nearestIndex = 0;
-        let minDelta = Math.abs(points[0].x - targetX);
-        for (let i = 1; i < points.length; i++) {
-          const delta = Math.abs(points[i].x - targetX);
-          if (delta < minDelta) {
-            minDelta = delta;
-            nearestIndex = i;
-          }
-        }
-
-        return nearestIndex;
-      };
-
-      const getAdaptiveProximityRange = (
-        points: ChartPoint[] | undefined,
-        index: number
-      ): number => {
-        if (!points?.length) return Infinity;
-        const prevDistance =
-          index > 0 ? Math.abs(points[index].x - points[index - 1].x) : null;
-        const nextDistance =
-          index < points.length - 1
-            ? Math.abs(points[index + 1].x - points[index].x)
-            : null;
-
-        const localSpacing = [prevDistance, nextDistance].filter(
-          (value): value is number => typeof value === "number" && value > 0
+      const pointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.GroundChart)
+        ?.points.findIndex(
+          (elem) => elem.x === newPoint.x && elem.y === newPoint.y
         );
 
-        if (localSpacing.length === 0) return Infinity;
-
-        return Math.min(...localSpacing) * 0.45;
-      };
-
-      const groundPoints = chartItems?.find(
-        (item) => item.key === ChartKeys.GroundChart
-      )?.points;
-      const airPoints = chartItems?.find(
-        (item) => item.key === ChartKeys.AirChart
-      )?.points;
-
-      const pointIndex = findNearestIndexByX(groundPoints, newPoint.x);
-      if (pointIndex === null) return;
+      if (pointIndex === -1 || pointIndex === undefined) return;
       const coords =
         terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
 
-      const airPointIndex = findNearestIndexByX(airPoints, newPoint.x);
-      const isWithinAdaptiveRange =
-        airPointIndex !== null &&
-        !!airPoints?.[airPointIndex] &&
-        Math.abs(airPoints[airPointIndex].x - newPoint.x) <=
-          getAdaptiveProximityRange(airPoints, airPointIndex);
+      const airPointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.AirChart)
+        ?.points.findIndex(
+          (elem) =>
+            Math.abs(elem.x - newPoint.x) <=
+            terria.measurableGeomSamplingStep + 5
+        );
       viewState.setSelectedStopPointIdx(
-        airPointIndex !== null && isWithinAdaptiveRange ? airPointIndex : null
+        airPointIndex !== -1 && airPointIndex !== undefined
+          ? airPointIndex
+          : null
       );
 
       MeasurablePanelManager.addMarker(coords);
