@@ -34,7 +34,6 @@ import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
 import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
-  RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD,
   RER_POI_DEFAULT_QUERY_BBOX_PADDING_RATIO,
   RER_POI_LEVEL_ID_FIELD,
   RER_POI_MAX_LEVEL_ID,
@@ -185,25 +184,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
       )
     ) {
       return;
-    }
-
-    if (
-      this.activeDynamicQuery &&
-      this.activeDynamicQuery.filterKey === nextQuery.filterKey
-    ) {
-      const nextArea = rectangleArea(nextQuery.queryRectangle);
-      const overlapArea = rectangleIntersectionArea(
-        this.activeDynamicQuery.queryRectangle,
-        nextQuery.queryRectangle
-      );
-      const newAreaRatio =
-        nextArea > 0 ? (nextArea - overlapArea) / nextArea : 1;
-
-      if (
-        newAreaRatio <= RER_POI_DEFAULT_MIN_NEW_VIEWPORT_AREA_RATIO_FOR_RELOAD
-      ) {
-        return;
-      }
     }
 
     if (this.dynamicReloadInProgress || this.isLoadingMapItems) {
@@ -681,15 +661,6 @@ function getPaddingMultiplierForPitch(
 
 function rectangleArea(rectangle: Rectangle) {
   return Rectangle.computeWidth(rectangle) * Rectangle.computeHeight(rectangle);
-}
-
-function rectangleIntersectionArea(left: Rectangle, right: Rectangle) {
-  const intersection = Rectangle.intersection(left, right, new Rectangle());
-  if (!intersection) {
-    return 0;
-  }
-
-  return rectangleArea(intersection);
 }
 
 function rectangleContains(container: Rectangle, value: Rectangle) {
