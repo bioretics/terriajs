@@ -26,7 +26,7 @@ class ZoomX extends React.Component {
   }
 
   componentDidMount() {
-    d3Select(this.props.surface).call(this.zoom);
+    d3Select(this.props.surface).call(this.zoom).call(this.zoom.scaleTo, 1);
   }
 
   render() {
