@@ -8,7 +8,6 @@ import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantPropert
 import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
 import LabelGraphics from "terriajs-cesium/Source/DataSources/LabelGraphics";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
-import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import isDefined from "../Core/isDefined";
@@ -48,6 +47,11 @@ const MARKER_SIZE = 36;
 const ICON_STROKE_WIDTH = 1;
 const ICON_STROKE_COLOR = "#ffffff";
 const MARKER_IMAGE_CACHE = new Map<string, string>();
+const VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
+const HEIGHT_REFERENCE = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+const SIZE = new ConstantProperty(MARKER_SIZE);
+const EYE_OFFSET = new ConstantProperty(new Cartesian3(0, 0, -12));
+const DEPTH_TEST_DISTANCE = new ConstantProperty(Number.POSITIVE_INFINITY);
 
 type PoiDomainStyle = { symbol: string; color?: string };
 type PoiDomainStyleGroup = PoiDomainStyle & { domainIds: number[] };
@@ -81,22 +85,6 @@ const POI_DOMAIN_ICON_MAP = POI_DOMAIN_STYLE_GROUPS.reduce<
   }
   return acc;
 }, {});
-
-const LABEL_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
-const LABEL_HORIZONTAL_ORIGIN = new ConstantProperty(HorizontalOrigin.CENTER);
-const LABEL_DEPTH_TEST_DISTANCE = new ConstantProperty(
-  Number.POSITIVE_INFINITY
-);
-
-const BILLBOARD_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
-const BILLBOARD_HEIGHT_REFERENCE = new ConstantProperty(
-  HeightReference.CLAMP_TO_GROUND
-);
-const BILLBOARD_SIZE = new ConstantProperty(MARKER_SIZE);
-const BILLBOARD_EYE_OFFSET = new ConstantProperty(new Cartesian3(0, 0, -12));
-const BILLBOARD_DEPTH_TEST_DISTANCE = new ConstantProperty(
-  Number.POSITIVE_INFINITY
-);
 
 function getRerPoiVisibilityRange(
   scalaValue: number | undefined
@@ -154,14 +142,14 @@ export function applyRerPoiLabels(dataSource: GeoJsonDataSource) {
         outlineColor: Color.WHITE,
         outlineWidth: 2,
         style: LabelStyle.FILL_AND_OUTLINE,
-        verticalOrigin: LABEL_VERTICAL_ORIGIN,
-        horizontalOrigin: LABEL_HORIZONTAL_ORIGIN,
-        heightReference: undefined,
         pixelOffset: new Cartesian2(0, -40),
+        verticalOrigin: VERTICAL_ORIGIN,
+        heightReference: HEIGHT_REFERENCE,
+        eyeOffset: EYE_OFFSET,
         distanceDisplayCondition: visibilityRange
           ? new ConstantProperty(visibilityRange)
           : undefined,
-        disableDepthTestDistance: LABEL_DEPTH_TEST_DISTANCE
+        disableDepthTestDistance: DEPTH_TEST_DISTANCE
       });
     }
   } finally {
@@ -201,15 +189,15 @@ export function applyRerPoiMakiBillboards(dataSource: GeoJsonDataSource) {
 
       entity.billboard = new BillboardGraphics({
         image: new ConstantProperty(markerImage),
-        verticalOrigin: BILLBOARD_VERTICAL_ORIGIN,
-        heightReference: BILLBOARD_HEIGHT_REFERENCE,
-        width: BILLBOARD_SIZE,
-        height: BILLBOARD_SIZE,
-        eyeOffset: BILLBOARD_EYE_OFFSET,
+        verticalOrigin: VERTICAL_ORIGIN,
+        heightReference: HEIGHT_REFERENCE,
+        width: SIZE,
+        height: SIZE,
+        eyeOffset: EYE_OFFSET,
         distanceDisplayCondition: visibilityRange
           ? new ConstantProperty(visibilityRange)
           : undefined,
-        disableDepthTestDistance: BILLBOARD_DEPTH_TEST_DISTANCE
+        disableDepthTestDistance: DEPTH_TEST_DISTANCE
       });
       entity.point = undefined;
     }

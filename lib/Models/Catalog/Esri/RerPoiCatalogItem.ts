@@ -43,11 +43,6 @@ import {
   RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
 } from "../../../ModelMixins/RerPoiHelpers";
 
-type FeatureGeoJson = FeatureCollectionWithCrs<
-  Geometry | GeometryCollection,
-  GeoJsonProperties
->;
-
 interface EsriJsonQueryOptions {
   resultOffset?: number;
   bbox?: Rectangle;
@@ -214,7 +209,9 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
     }
   }
 
-  protected async forceLoadGeojsonData(): Promise<FeatureGeoJson> {
+  protected async forceLoadGeojsonData(): Promise<
+    FeatureCollectionWithCrs<Geometry | GeometryCollection, GeoJsonProperties>
+  > {
     if (this.tileRequests) return featureCollection([]);
 
     const dynamicQuery = this.getDynamicViewportQuery();
@@ -233,7 +230,9 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   protected async loadGeoJsonFromServer(
     queryOptions?: EsriJsonQueryOptions
-  ): Promise<FeatureGeoJson> {
+  ): Promise<
+    FeatureCollectionWithCrs<Geometry | GeometryCollection, GeoJsonProperties>
+  > {
     const getEsriLayerJson = async (resultOffset?: number) => {
       const url = proxyCatalogItemUrl(
         this,
@@ -413,10 +412,12 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const totalLevels = maximumLevelId - minimumLevelId;
     const continuousLevel = minimumLevelId + zoomRatio * totalLevels;
-    const step = Math.max(1, Math.floor(RER_POI_PROGRESSIVE_LEVEL_STEP));
     const steppedLevel =
       minimumLevelId +
-      Math.floor((continuousLevel - minimumLevelId) / step) * step;
+      Math.floor(
+        (continuousLevel - minimumLevelId) / RER_POI_PROGRESSIVE_LEVEL_STEP
+      ) *
+        RER_POI_PROGRESSIVE_LEVEL_STEP;
 
     return CesiumMath.clamp(steppedLevel, minimumLevelId, maximumLevelId);
   }
