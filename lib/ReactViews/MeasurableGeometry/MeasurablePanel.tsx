@@ -1566,7 +1566,7 @@ const MeasurablePanel = observer((props: Props) => {
       viewState.setSelectedStopPointIdx(null);
       viewState.setSelectedSampledPointIdx(null);
       MeasurablePanelManager.removeAllMarkers();
-    }, [viewState]);
+    }, []);
 
     const handleMouseOver = React.useCallback(() => {
       if (terria.cesium) {
@@ -1591,7 +1591,6 @@ const MeasurablePanel = observer((props: Props) => {
       terria.cesium,
       terria.measurableGeomList,
       terria.measurableGeometryIndex,
-      viewState
     ]);
 
     const [localText, setLocalText] = React.useState(pointsDescription);
