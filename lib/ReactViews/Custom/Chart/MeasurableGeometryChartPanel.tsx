@@ -41,28 +41,8 @@ interface Props {
 }
 
 const CHART_POINT_EPS = 1e-6;
-
-/** Cumulative ground distance at each stop; matches MeasurableGeometryManager stopGroundDistances. */
-function nearestStopIndexForGroundChartX(
-  chartX: number,
-  stopGroundDistances: number[] | undefined,
-  numStops: number
-): number {
-  if (numStops <= 0) return 0;
-  const sgd = stopGroundDistances ?? [];
-  let cum = 0;
-  let bestIdx = 0;
-  let bestDiff = Math.abs(chartX - cum);
-  for (let j = 1; j < numStops; j++) {
-    cum += sgd[j] ?? 0;
-    const d = Math.abs(chartX - cum);
-    if (d < bestDiff) {
-      bestDiff = d;
-      bestIdx = j;
-    }
-  }
-  return bestIdx;
-}
+const STOP_MATCH_EPS_LL = 1e-6;
+const STOP_MATCH_EPS_H = 1.0;
 
 const MeasurableGeometryChartPanel = observer((props: Props) => {
   const { terria, viewState } = props;
@@ -84,6 +64,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
+    viewState.setMeasurableChartPointerIsOver(false);
   });
 
   const fetchPathDataChart = (
@@ -133,11 +114,21 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
       const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-      const stopIdx = nearestStopIndexForGroundChartX(
-        newPoint.x,
-        geom?.stopGroundDistances,
-        geom?.stopPoints?.length ?? 0
-      );
+      let stopIdx: number | null = null;
+      const stops = geom?.stopPoints;
+      if (stops) {
+        for (let k = 0; k < stops.length; k++) {
+          const st = stops[k];
+          if (
+            Math.abs(coords.latitude - st.latitude) < STOP_MATCH_EPS_LL &&
+            Math.abs(coords.longitude - st.longitude) < STOP_MATCH_EPS_LL &&
+            Math.abs(coords.height - st.height) < STOP_MATCH_EPS_H
+          ) {
+            stopIdx = k;
+            break;
+          }
+        }
+      }
       // Sampled index drives chart cursor (ground x); stop index drives the stop table row.
       viewState.setSelectedSampledPointIdx(pointIndex);
       viewState.setSelectedStopPointIdx(stopIdx);
@@ -228,6 +219,9 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                 height={CHART_HEIGHT}
                 chartItemKeyForPointMouseNear={ChartKeys}
                 onPointMouseNear={updateChartPointNearMouse}
+                onPointerOverChartChange={(over: boolean) =>
+                  viewState.setMeasurableChartPointerIsOver(over)
+                }
                 selectedStopPointIdx={viewState.selectedStopPointIdx}
                 selectedSampledPointIdx={viewState.selectedSampledPointIdx}
               />

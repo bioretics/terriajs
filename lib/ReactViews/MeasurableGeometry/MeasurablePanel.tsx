@@ -44,6 +44,35 @@ interface Props {
   terria: Terria;
 }
 
+/** Match stop table row to ground-path sampled index (same as elevation chart). */
+const STOP_MATCH_EPS_LL = 1e-6;
+const STOP_MATCH_EPS_H = 1.0;
+
+function findSampledIndexForStop(
+  geom:
+    | { stopPoints?: Cartographic[]; sampledPoints?: Cartographic[] }
+    | undefined,
+  stopIdx: number
+): number | null {
+  const stops = geom?.stopPoints;
+  const sampled = geom?.sampledPoints;
+  if (!stops || !sampled || stopIdx < 0 || stopIdx >= stops.length) {
+    return null;
+  }
+  const st = stops[stopIdx];
+  for (let i = 0; i < sampled.length; i++) {
+    const c = sampled[i];
+    if (
+      Math.abs(c.latitude - st.latitude) < STOP_MATCH_EPS_LL &&
+      Math.abs(c.longitude - st.longitude) < STOP_MATCH_EPS_LL &&
+      Math.abs(c.height - st.height) < STOP_MATCH_EPS_H
+    ) {
+      return i;
+    }
+  }
+  return null;
+}
+
 const MeasurablePanel = observer((props: Props) => {
   // Variables
   const { terria, viewState } = props;
@@ -69,7 +98,12 @@ const MeasurablePanel = observer((props: Props) => {
   const defaultX = 0;
   const defaultY = (windowHeight - initialHeight) / 2;
 
-  const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
+  const {
+    selectedStopPointIdx,
+    measurablePanelIsVisible,
+    measurableChartIsVisible,
+    measurableChartPointerIsOver
+  } = viewState;
 
   const panelRef = React.useRef<HTMLDivElement>(null);
   const summaryTableRef = React.useRef<HTMLDivElement>(null);
@@ -139,6 +173,9 @@ const MeasurablePanel = observer((props: Props) => {
   const toggleChart = action(() => {
     terria.measurableGeometryManager[terria.measurableGeometryIndex].resample();
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
+    if (!viewState.measurableChartIsVisible) {
+      viewState.setMeasurableChartPointerIsOver(false);
+    }
   });
 
   const toggleLineClampToGround = action(() => {
@@ -501,16 +538,22 @@ const MeasurablePanel = observer((props: Props) => {
         action: (point: Cartographic | null, idx: number | null) => void
       ) => {
         const rangeThreshold = getDynamicRangeThreshold();
-
-        const nearbyPoint = points.find((point) => {
+        let bestIdx = -1;
+        let bestScore = Infinity;
+        for (let i = 0; i < points.length; i++) {
+          const point = points[i];
           const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
           const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
-        });
-
-        if (nearbyPoint) {
-          const idx = points.indexOf(nearbyPoint);
-          action(nearbyPoint, idx);
+          if (latDiff <= rangeThreshold && lonDiff <= rangeThreshold) {
+            const score = latDiff * latDiff + lonDiff * lonDiff;
+            if (score < bestScore) {
+              bestScore = score;
+              bestIdx = i;
+            }
+          }
+        }
+        if (bestIdx >= 0) {
+          action(points[bestIdx], bestIdx);
         } else {
           action(null, null);
         }
@@ -531,7 +574,10 @@ const MeasurablePanel = observer((props: Props) => {
               if (point) {
                 MeasurablePanelManager.addMarker(point);
                 viewState.setSelectedSampledPointIdx(idx);
-              } else {
+              } else if (
+                !measurableChartIsVisible ||
+                !measurableChartPointerIsOver
+              ) {
                 MeasurablePanelManager.removeAllMarkers();
                 viewState.setSelectedSampledPointIdx(null);
               }
@@ -550,7 +596,10 @@ const MeasurablePanel = observer((props: Props) => {
               MeasurablePanelManager.addMarker(point);
               setHighlightedRow(idx);
               viewState.setSelectedStopPointIdx(idx);
-            } else {
+            } else if (
+              !measurableChartIsVisible ||
+              !measurableChartPointerIsOver
+            ) {
               if (
                 terria?.measurableGeomList[terria.measurableGeometryIndex]
                   ?.onlyPoints
@@ -579,7 +628,9 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeomList,
     terria.measurableGeometryIndex,
     currentGeom,
-    measurablePanelIsVisible
+    measurablePanelIsVisible,
+    measurableChartIsVisible,
+    measurableChartPointerIsOver
   ]);
 
   // Render Methods
@@ -1513,13 +1564,21 @@ const MeasurablePanel = observer((props: Props) => {
     const handleMouseLeave = React.useCallback(() => {
       setHighlightedRow(null);
       viewState.setSelectedStopPointIdx(null);
+      viewState.setSelectedSampledPointIdx(null);
       MeasurablePanelManager.removeAllMarkers();
-    }, []);
+    }, [viewState]);
 
     const handleMouseOver = React.useCallback(() => {
       if (terria.cesium) {
         setHighlightedRow(idx);
         viewState.setSelectedStopPointIdx(idx);
+        const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+        if (!onlyPoints && geom) {
+          const sampledIdx = findSampledIndexForStop(geom, idx);
+          viewState.setSelectedSampledPointIdx(sampledIdx);
+        } else {
+          viewState.setSelectedSampledPointIdx(null);
+        }
         MeasurablePanelManager.addMarker(
           terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
             idx
@@ -1528,9 +1587,11 @@ const MeasurablePanel = observer((props: Props) => {
       }
     }, [
       idx,
+      onlyPoints,
       terria.cesium,
       terria.measurableGeomList,
-      terria.measurableGeometryIndex
+      terria.measurableGeometryIndex,
+      viewState
     ]);
 
     const [localText, setLocalText] = React.useState(pointsDescription);

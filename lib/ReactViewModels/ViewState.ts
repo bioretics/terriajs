@@ -430,6 +430,17 @@ export default class ViewState {
   @observable measurableChartIsVisible: boolean = false;
 
   /**
+   * True while the pointer is over the elevation chart (not merely when the panel is open).
+   * Used so globe proximity does not clear chart-driven highlights only when the chart is hovered.
+   */
+  @observable measurableChartPointerIsOver: boolean = false;
+
+  @action
+  setMeasurableChartPointerIsOver(value: boolean) {
+    this.measurableChartPointerIsOver = value;
+  }
+
+  /**
    * Gets or sets a value indicating whether the DownloadPanel is visible.
    * @type {Boolean}
    */

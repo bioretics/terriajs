@@ -47,6 +47,7 @@ class BottomDockChart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
+    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -65,6 +66,7 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
+        onPointerOverChartChange={this.props.onPointerOverChartChange}
         selectedStopPointIdx={this.props.selectedStopPointIdx}
         selectedSampledPointIdx={this.props.selectedSampledPointIdx}
       />
@@ -85,6 +87,7 @@ class Chart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
+    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -102,38 +105,38 @@ class Chart extends React.Component {
     makeObservable(this);
   }
 
- @computed
-get chartItems() {
-  return sortChartItemsByType(this.props.chartItems)
-    .map((chartItem) => {
-      return {
-        ...chartItem,
-        points: [...chartItem.points].sort((p1, p2) => p1.x - p2.x)
-      };
-    })
-    .filter((chartItem) => chartItem.points.length > 0);
-}
+  @computed
+  get chartItems() {
+    return sortChartItemsByType(this.props.chartItems)
+      .map((chartItem) => {
+        return {
+          ...chartItem,
+          points: [...chartItem.points].sort((p1, p2) => p1.x - p2.x)
+        };
+      })
+      .filter((chartItem) => chartItem.points.length > 0);
+  }
 
-@computed
-get chartDataSignature() {
-  return this.chartItems
-    .map((item) => {
-      const first = item.points[0];
-      const last = item.points[item.points.length - 1];
+  @computed
+  get chartDataSignature() {
+    return this.chartItems
+      .map((item) => {
+        const first = item.points[0];
+        const last = item.points[item.points.length - 1];
 
-      return [
-        item.key,
-        item.points.length,
-        item.domain.x[0],
-        item.domain.x[1],
-        item.domain.y[0],
-        item.domain.y[1],
-        first ? `${first.x}:${first.y}` : "",
-        last ? `${last.x}:${last.y}` : ""
-      ].join("|");
-    })
-    .join(";");
-}
+        return [
+          item.key,
+          item.points.length,
+          item.domain.x[0],
+          item.domain.x[1],
+          item.domain.y[0],
+          item.domain.y[1],
+          first ? `${first.x}:${first.y}` : "",
+          last ? `${last.x}:${last.y}` : ""
+        ].join("|");
+      })
+      .join(";");
+  }
 
   @computed
   get plotHeight() {
@@ -273,12 +276,10 @@ get chartDataSignature() {
   }
 
   setMouseCoordsFromEvent(event) {
-    const coords = localPoint(
-      event.target.ownerSVGElement || event.target,
-      event
-    );
+    const coords = localPoint(event.currentTarget, event);
     if (!coords) return;
     this.setIsMouseOverChart(true);
+    this.props.onPointerOverChartChange?.(true);
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
@@ -288,17 +289,22 @@ get chartDataSignature() {
   componentDidMount() {
     this.disposeReaction = reaction(
       () =>
-        this.props.selectedSampledPointIdx ?? this.props.selectedStopPointIdx,
-      (idx) => {
+        `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
+      () => {
         if (this.isMouseOverChart) return;
-        if (typeof idx === "number" && this.props.chartItems) {
-          // Prefer sampled index when both are set (e.g. chart hover) so cursor x uses ground path, not air stop distances.
-          const isStopPointSelected =
-            (this.props.selectedSampledPointIdx === null ||
-              this.props.selectedSampledPointIdx === undefined) &&
-            this.props.selectedStopPointIdx !== null &&
-            this.props.selectedStopPointIdx !== undefined;
+        const { selectedSampledPointIdx, selectedStopPointIdx } = this.props;
+        // Prefer sampled index when both are set (e.g. chart hover / table row with ground match) so cursor x uses ground path.
+        const isStopPointSelected =
+          (selectedSampledPointIdx === null ||
+            selectedSampledPointIdx === undefined) &&
+          selectedStopPointIdx !== null &&
+          selectedStopPointIdx !== undefined;
 
+        const idx = isStopPointSelected
+          ? selectedStopPointIdx
+          : selectedSampledPointIdx;
+
+        if (typeof idx === "number" && this.props.chartItems) {
           const points = isStopPointSelected
             ? this.props.terria.measurableGeomList[
                 this.props.terria.measurableGeometryIndex
@@ -338,7 +344,7 @@ get chartDataSignature() {
             x: xCoord,
             y: yCoord
           });
-        } else {
+        } else if (!this.isMouseOverChart) {
           this.setMouseCoords(undefined);
         }
       }
@@ -426,16 +432,16 @@ get chartDataSignature() {
         style={{ background: terriaTheme.charcoalGrey }}
       >
         <ZoomX
-  key={this.chartDataSignature}
-  surface="#zoomSurface"
-  initialScale={this.initialXScale}
-  scaleExtent={[1, Infinity]}
-  translateExtent={[
-    [0, 0],
-    [Infinity, Infinity]
-  ]}
-  onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
->
+          key={this.chartDataSignature}
+          surface="#zoomSurface"
+          initialScale={this.initialXScale}
+          scaleExtent={[1, Infinity]}
+          translateExtent={[
+            [0, 0],
+            [Infinity, Infinity]
+          ]}
+          onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
+        >
           <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
             <button
               type="button"
@@ -460,9 +466,14 @@ get chartDataSignature() {
             <svg
               width="100%"
               height={height}
+              onMouseEnter={() => {
+                this.setIsMouseOverChart(true);
+                this.props.onPointerOverChartChange?.(true);
+              }}
               onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
               onMouseLeave={() => {
                 this.setIsMouseOverChart(false);
+                this.props.onPointerOverChartChange?.(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
