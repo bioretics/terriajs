@@ -1590,7 +1590,7 @@ const MeasurablePanel = observer((props: Props) => {
       onlyPoints,
       terria.cesium,
       terria.measurableGeomList,
-      terria.measurableGeometryIndex,
+      terria.measurableGeometryIndex
     ]);
 
     const [localText, setLocalText] = React.useState(pointsDescription);
