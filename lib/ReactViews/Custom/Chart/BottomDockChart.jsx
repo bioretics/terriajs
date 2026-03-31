@@ -28,7 +28,6 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
-import { Cartographic } from "terriajs-cesium";
 import { terriaTheme } from "../../StandardUserInterface";
 import html2canvas from "html2canvas";
 
@@ -96,23 +95,45 @@ class Chart extends React.Component {
 
   @observable.ref zoomedXScale;
   @observable mouseCoords;
+  @observable isMouseOverChart = false;
 
   constructor(props) {
     super(props);
     makeObservable(this);
   }
 
-  @computed
-  get chartItems() {
-    return sortChartItemsByType(this.props.chartItems)
-      .map((chartItem) => {
-        return {
-          ...chartItem,
-          points: chartItem.points.sort((p1, p2) => p1.x - p2.x)
-        };
-      })
-      .filter((chartItem) => chartItem.points.length > 0);
-  }
+ @computed
+get chartItems() {
+  return sortChartItemsByType(this.props.chartItems)
+    .map((chartItem) => {
+      return {
+        ...chartItem,
+        points: [...chartItem.points].sort((p1, p2) => p1.x - p2.x)
+      };
+    })
+    .filter((chartItem) => chartItem.points.length > 0);
+}
+
+@computed
+get chartDataSignature() {
+  return this.chartItems
+    .map((item) => {
+      const first = item.points[0];
+      const last = item.points[item.points.length - 1];
+
+      return [
+        item.key,
+        item.points.length,
+        item.domain.x[0],
+        item.domain.x[1],
+        item.domain.y[0],
+        item.domain.y[1],
+        first ? `${first.x}:${first.y}` : "",
+        last ? `${last.x}:${last.y}` : ""
+      ].join("|");
+    })
+    .join(";");
+}
 
   @computed
   get plotHeight() {
@@ -246,12 +267,18 @@ class Chart extends React.Component {
     this.mouseCoords = coords;
   }
 
+  @action
+  setIsMouseOverChart(value) {
+    this.isMouseOverChart = value;
+  }
+
   setMouseCoordsFromEvent(event) {
     const coords = localPoint(
       event.target.ownerSVGElement || event.target,
       event
     );
     if (!coords) return;
+    this.setIsMouseOverChart(true);
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
@@ -259,43 +286,16 @@ class Chart extends React.Component {
   }
 
   componentDidMount() {
-    function cartesianDistance(x1, y1, z1, x2, y2, z2) {
-      return Math.sqrt(
-        Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2) + Math.pow(z2 - z1, 2)
-      );
-    }
-
-    function calculateTotalCartesianDistance(points) {
-      let totalDistance = 0;
-
-      for (let i = 1; i < points.length; i++) {
-        const prev = points[i - 1];
-        const curr = points[i];
-
-        const prevCartesian = Cartographic.toCartesian(prev);
-        const currCartesian = Cartographic.toCartesian(curr);
-
-        if (prevCartesian && currCartesian) {
-          totalDistance += cartesianDistance(
-            prevCartesian.x,
-            prevCartesian.y,
-            prevCartesian.z,
-            currCartesian.x,
-            currCartesian.y,
-            currCartesian.z
-          );
-        }
-      }
-
-      return totalDistance;
-    }
-
     this.disposeReaction = reaction(
       () =>
-        this.props.selectedStopPointIdx ?? this.props.selectedSampledPointIdx,
+        this.props.selectedSampledPointIdx ?? this.props.selectedStopPointIdx,
       (idx) => {
+        if (this.isMouseOverChart) return;
         if (typeof idx === "number" && this.props.chartItems) {
+          // Prefer sampled index when both are set (e.g. chart hover) so cursor x uses ground path, not air stop distances.
           const isStopPointSelected =
+            (this.props.selectedSampledPointIdx === null ||
+              this.props.selectedSampledPointIdx === undefined) &&
             this.props.selectedStopPointIdx !== null &&
             this.props.selectedStopPointIdx !== undefined;
 
@@ -307,16 +307,23 @@ class Chart extends React.Component {
                 this.props.terria.measurableGeometryIndex
               ].sampledPoints;
 
+          const geom =
+            this.props.terria.measurableGeomList[
+              this.props.terria.measurableGeometryIndex
+            ];
           const sumDistances = isStopPointSelected
-            ? this.props.terria.measurableGeomList[
-                this.props.terria.measurableGeometryIndex
-              ].stopAirDistances
+            ? geom.stopAirDistances
                 .slice(0, idx + 1)
                 .reverse()
                 .reduce((acc, distance) => acc + distance, 0)
-            : calculateTotalCartesianDistance(
-                points.slice(0, idx + 1).reverse()
-              );
+            : (() => {
+                const sdist = geom.sampledDistances ?? [];
+                let s = 0;
+                for (let j = 0; j <= idx; j++) {
+                  s += sdist[j] ?? 0;
+                }
+                return s;
+              })();
 
           const selectedPoint = {
             x: sumDistances,
@@ -344,12 +351,17 @@ class Chart extends React.Component {
     }
   }
 
-  componentDidUpdate(prevProps) {
-    // Unset zoom scale if any chartItems are added or removed
-    if (prevProps.chartItems.length !== this.props.chartItems.length) {
+  // Clear zoom before the next paint when data changes so Plot.doZoom does not use a stale x-scale.
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    const prevSignature = getChartDataSignature(this.props.chartItems);
+    const nextSignature = getChartDataSignature(nextProps.chartItems);
+    if (prevSignature !== nextSignature) {
       this.setZoomedXScale(undefined);
+      this.setMouseCoords(undefined);
     }
+  }
 
+  componentDidUpdate() {
     // When pointsNearMouse changes, call onPointMouseNear callback to create the placeholder
     autorun(() => {
       if (
@@ -414,15 +426,16 @@ class Chart extends React.Component {
         style={{ background: terriaTheme.charcoalGrey }}
       >
         <ZoomX
-          surface="#zoomSurface"
-          initialScale={this.initialXScale}
-          scaleExtent={[1, Infinity]}
-          translateExtent={[
-            [0, 0],
-            [Infinity, Infinity]
-          ]}
-          onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
-        >
+  key={this.chartDataSignature}
+  surface="#zoomSurface"
+  initialScale={this.initialXScale}
+  scaleExtent={[1, Infinity]}
+  translateExtent={[
+    [0, 0],
+    [Infinity, Infinity]
+  ]}
+  onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
+>
           <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
             <button
               type="button"
@@ -449,6 +462,7 @@ class Chart extends React.Component {
               height={height}
               onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
               onMouseLeave={() => {
+                this.setIsMouseOverChart(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
@@ -717,6 +731,26 @@ function calculateDomain(chartItems) {
   };
 }
 
+function getChartDataSignature(chartItems) {
+  return sortChartItemsByType(chartItems)
+    .map((item) => {
+      const points = [...item.points].sort((a, b) => a.x - b.x);
+      const first = points[0];
+      const last = points[points.length - 1];
+
+      return [
+        item.key,
+        points.length,
+        item.domain.x[0],
+        item.domain.x[1],
+        item.domain.y[0],
+        item.domain.y[1],
+        first ? `${first.x}:${first.y}` : "",
+        last ? `${last.x}:${last.y}` : ""
+      ].join("|");
+    })
+    .join(";");
+}
 /**
  * Sorts chartItems so that `momentPoints` are rendered on top then
  * `momentLines` and then any other types.

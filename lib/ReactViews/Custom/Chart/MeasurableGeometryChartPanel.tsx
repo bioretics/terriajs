@@ -8,7 +8,7 @@ import Styles from "./chart-panel.scss";
 import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
 import Terria from "../../../Models/Terria";
-import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import { Cartographic } from "terriajs-cesium";
 import MeasurablePanelManager from "../MeasurablePanelManager";
 
 import i18next from "i18next";
@@ -38,6 +38,30 @@ interface ChartItem {
 interface Props {
   terria: Terria;
   viewState: ViewState;
+}
+
+const CHART_POINT_EPS = 1e-6;
+
+/** Cumulative ground distance at each stop; matches MeasurableGeometryManager stopGroundDistances. */
+function nearestStopIndexForGroundChartX(
+  chartX: number,
+  stopGroundDistances: number[] | undefined,
+  numStops: number
+): number {
+  if (numStops <= 0) return 0;
+  const sgd = stopGroundDistances ?? [];
+  let cum = 0;
+  let bestIdx = 0;
+  let bestDiff = Math.abs(chartX - cum);
+  for (let j = 1; j < numStops; j++) {
+    cum += sgd[j] ?? 0;
+    const d = Math.abs(chartX - cum);
+    if (d < bestDiff) {
+      bestDiff = d;
+      bestIdx = j;
+    }
+  }
+  return bestIdx;
 }
 
 const MeasurableGeometryChartPanel = observer((props: Props) => {
@@ -93,37 +117,30 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
-      const pointIndex = chartItems
-        ?.find((item) => item.key === ChartKeys.GroundChart)
-        ?.points.findIndex(
-          (elem) => elem.x === newPoint.x && elem.y === newPoint.y
-        );
+      const groundPoints = chartItems?.find(
+        (item) => item.key === ChartKeys.GroundChart
+      )?.points;
+      const pointIndex =
+        groundPoints?.findIndex(
+          (elem) =>
+            Math.abs(elem.x - newPoint.x) < CHART_POINT_EPS &&
+            Math.abs(elem.y - newPoint.y) < CHART_POINT_EPS
+        ) ?? -1;
 
       if (pointIndex === -1 || pointIndex === undefined) return;
       const coords =
         terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
-
-      const airPoints = chartItems?.find(
-        (item) => item.key === ChartKeys.AirChart
-      )?.points;
-
-      let airPointIndex: number | null = null;
-      if (airPoints && airPoints.length > 0) {
-        let minDist = Infinity;
-        let bestIdx = -1;
-        airPoints.forEach((elem, i) => {
-          const dist = Math.abs(elem.x - newPoint.x);
-          if (dist < minDist) {
-            minDist = dist;
-            bestIdx = i;
-          }
-        });
-        airPointIndex = bestIdx !== -1 ? bestIdx : null;
-      }
-
-      viewState.setSelectedStopPointIdx(airPointIndex);
+      const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
+      const stopIdx = nearestStopIndexForGroundChartX(
+        newPoint.x,
+        geom?.stopGroundDistances,
+        geom?.stopPoints?.length ?? 0
+      );
+      // Sampled index drives chart cursor (ground x); stop index drives the stop table row.
+      viewState.setSelectedSampledPointIdx(pointIndex);
+      viewState.setSelectedStopPointIdx(stopIdx);
 
       MeasurablePanelManager.addMarker(coords);
     } else if (newPoint === undefined) {
