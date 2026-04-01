@@ -151,6 +151,18 @@ export default class TableStylingWorkflow
             this.showAdvancedOptions = !this.showAdvancedOptions;
           })
         },
+        {
+          text: i18next.t("models.tableStyling.saveUserStyle"),
+          onSelect: () => {
+            this.saveUserStyleToJsonFile();
+          }
+        },
+        {
+          text: i18next.t("models.tableStyling.importUserStyle"),
+          onSelect: () => {
+            this.importUserStyleFromJsonFile();
+          }
+        },
         this.showAdvancedOptions
           ? {
               text: i18next.t("models.tableStyling.copyUserStratum"),
@@ -2789,32 +2801,7 @@ export default class TableStylingWorkflow
         : undefined,
 
       // Show advanced table options
-      ...(this.showAdvancedOptions ? this.advancedTableDimensions : []),
-
-      {
-        type: "group",
-        id: "manage-user-style",
-        name: i18next.t("models.tableStyling.manageUserStyle"),
-        isOpen: true,
-        selectableDimensions: [
-          {
-            type: "button",
-            id: "save-user-style-json",
-            value: i18next.t("models.tableStyling.saveUserStyle"),
-            setDimensionValue: () => {
-              this.saveUserStyleToJsonFile();
-            }
-          },
-          {
-            type: "button",
-            id: "import-user-style-json",
-            value: i18next.t("models.tableStyling.importUserStyle"),
-            setDimensionValue: () => {
-              this.importUserStyleFromJsonFile();
-            }
-          }
-        ]
-      }
+      ...(this.showAdvancedOptions ? this.advancedTableDimensions : [])
     ]);
   }
 
