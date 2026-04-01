@@ -152,9 +152,9 @@ export default class TableStylingWorkflow
           })
         },
         {
-          text: i18next.t("models.tableStyling.saveUserStyle"),
+          text: i18next.t("models.tableStyling.exportUserStyle"),
           onSelect: () => {
-            this.saveUserStyleToJsonFile();
+            this.exportUserStyleToJsonFile();
           }
         },
         {
@@ -2854,7 +2854,7 @@ export default class TableStylingWorkflow
     }
   }
 
-  private saveUserStyleToJsonFile() {
+  private exportUserStyleToJsonFile() {
     const userStyleJson = JSON.stringify(this.getCatalogStyleStrata(), null, 2);
     try {
       const rawFileNameBase =

@@ -1139,7 +1139,7 @@
     "tableStyling": {
       "showAdvancedOptions": "Mostra opzioni avanzate",
       "manageUserStyle": "Gestisci stile utente",
-      "saveUserStyle": "Salva stile utente",
+      "exportUserStyle": "Esporta stile utente",
       "importUserStyle": "Importa stile utente",
       "importUserStyleFailed": "Importazione dello stile utente JSON non riuscita"
     }
