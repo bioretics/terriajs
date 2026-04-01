@@ -10,6 +10,7 @@ import {
 } from "mobx";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
+import { JsonObject } from "../../Core/Json";
 import TerriaError from "../../Core/TerriaError";
 import ConstantColorMap from "../../Map/ColorMap/ConstantColorMap";
 import ContinuousColorMap from "../../Map/ColorMap/ContinuousColorMap";
@@ -2889,7 +2890,7 @@ export default class TableStylingWorkflow
 
   private getCatalogStyleStrata(): {
     activeStyle: string;
-    styles: Record<string, unknown>[];
+    styles: JsonObject[];
   } {
     const activeStyle = this.tableStyle.id;
     const mergedStyle = this.getMergedStyleTraitsJson(activeStyle);
@@ -2905,11 +2906,11 @@ export default class TableStylingWorkflow
     };
   }
 
-  private getMergedStyleTraitsJson(styleId: string): Record<string, unknown> {
+  private getMergedStyleTraitsJson(styleId: string): JsonObject {
     const style = this.item.styles?.find((s) => s.id === styleId);
     const defaultStyle = this.item.defaultStyle;
 
-    const result: Record<string, unknown> = {};
+    const result: JsonObject = {};
 
     const stratumIds = Array.from(this.item.strata.keys());
     stratumIds.forEach((stratumId) => {
@@ -2917,10 +2918,10 @@ export default class TableStylingWorkflow
       if (defaultStyleStratum) {
         this.mergeJsonObject(
           result,
-          saveStratumToJson(defaultStyle.traits, defaultStyleStratum) as Record<
-            string,
-            unknown
-          >
+          saveStratumToJson(
+            defaultStyle.traits,
+            defaultStyleStratum
+          ) as JsonObject
         );
       }
 
@@ -2928,10 +2929,7 @@ export default class TableStylingWorkflow
       if (style && styleStratum) {
         this.mergeJsonObject(
           result,
-          saveStratumToJson(style.traits, styleStratum) as Record<
-            string,
-            unknown
-          >
+          saveStratumToJson(style.traits, styleStratum) as JsonObject
         );
       }
     });
@@ -2940,10 +2938,7 @@ export default class TableStylingWorkflow
     return result;
   }
 
-  private mergeJsonObject(
-    target: Record<string, unknown>,
-    source: Record<string, unknown>
-  ) {
+  private mergeJsonObject(target: JsonObject, source: JsonObject) {
     Object.keys(source).forEach((key) => {
       const sourceValue = source[key];
       const targetValue = target[key];
@@ -2962,13 +2957,10 @@ export default class TableStylingWorkflow
           targetValue &&
           typeof targetValue === "object" &&
           !Array.isArray(targetValue)
-            ? (targetValue as Record<string, unknown>)
+            ? (targetValue as JsonObject)
             : {};
 
-        this.mergeJsonObject(
-          nestedTarget,
-          sourceValue as Record<string, unknown>
-        );
+        this.mergeJsonObject(nestedTarget, sourceValue as JsonObject);
         target[key] = nestedTarget;
         return;
       }
