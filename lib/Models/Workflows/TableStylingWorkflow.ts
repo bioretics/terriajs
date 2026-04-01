@@ -168,7 +168,7 @@ export default class TableStylingWorkflow
               text: i18next.t("models.tableStyling.copyUserStratum"),
               onSelect: () => {
                 const styleSnippet = JSON.stringify(
-                  this.getCatalogStyleSnippet(),
+                  this.getCatalogStyleStrata(),
                   undefined,
                   2
                 );
@@ -2855,11 +2855,7 @@ export default class TableStylingWorkflow
   }
 
   private saveUserStyleToJsonFile() {
-    const userStyleJson = JSON.stringify(
-      this.getCatalogStyleSnippet(),
-      null,
-      2
-    );
+    const userStyleJson = JSON.stringify(this.getCatalogStyleStrata(), null, 2);
     try {
       const rawFileNameBase =
         this.item.uniqueId ?? this.tableStyle.id ?? "table-style";
@@ -2891,7 +2887,7 @@ export default class TableStylingWorkflow
     }
   }
 
-  private getCatalogStyleSnippet(): {
+  private getCatalogStyleStrata(): {
     activeStyle: string;
     styles: Record<string, unknown>[];
   } {
