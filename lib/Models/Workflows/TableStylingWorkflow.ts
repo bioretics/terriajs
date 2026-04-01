@@ -8,6 +8,7 @@ import {
   runInAction,
   makeObservable
 } from "mobx";
+import mergeWith from "lodash-es/mergeWith";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
 import { JsonObject } from "../../Core/Json";
@@ -2911,62 +2912,37 @@ export default class TableStylingWorkflow
     const defaultStyle = this.item.defaultStyle;
 
     const result: JsonObject = {};
+    const mergeCustomizer = (_objValue: any, srcValue: any) => {
+      if (Array.isArray(srcValue)) return srcValue;
+      return undefined;
+    };
 
     const stratumIds = Array.from(this.item.strata.keys());
     stratumIds.forEach((stratumId) => {
       const defaultStyleStratum = defaultStyle?.strata.get(stratumId);
       if (defaultStyleStratum) {
-        this.mergeJsonObject(
+        mergeWith(
           result,
           saveStratumToJson(
             defaultStyle.traits,
             defaultStyleStratum
-          ) as JsonObject
+          ) as JsonObject,
+          mergeCustomizer
         );
       }
 
       const styleStratum = style?.strata.get(stratumId);
       if (style && styleStratum) {
-        this.mergeJsonObject(
+        mergeWith(
           result,
-          saveStratumToJson(style.traits, styleStratum) as JsonObject
+          saveStratumToJson(style.traits, styleStratum) as JsonObject,
+          mergeCustomizer
         );
       }
     });
 
     delete result.hidden;
     return result;
-  }
-
-  private mergeJsonObject(target: JsonObject, source: JsonObject) {
-    Object.keys(source).forEach((key) => {
-      const sourceValue = source[key];
-      const targetValue = target[key];
-
-      if (Array.isArray(sourceValue)) {
-        target[key] = sourceValue;
-        return;
-      }
-
-      if (
-        sourceValue &&
-        typeof sourceValue === "object" &&
-        !Array.isArray(sourceValue)
-      ) {
-        const nestedTarget =
-          targetValue &&
-          typeof targetValue === "object" &&
-          !Array.isArray(targetValue)
-            ? (targetValue as JsonObject)
-            : {};
-
-        this.mergeJsonObject(nestedTarget, sourceValue as JsonObject);
-        target[key] = nestedTarget;
-        return;
-      }
-
-      target[key] = sourceValue;
-    });
   }
 
   /**
