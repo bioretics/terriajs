@@ -118,27 +118,6 @@ class Chart extends React.Component {
   }
 
   @computed
-  get chartDataSignature() {
-    return this.chartItems
-      .map((item) => {
-        const first = item.points[0];
-        const last = item.points[item.points.length - 1];
-
-        return [
-          item.key,
-          item.points.length,
-          item.domain.x[0],
-          item.domain.x[1],
-          item.domain.y[0],
-          item.domain.y[1],
-          first ? `${first.x}:${first.y}` : "",
-          last ? `${last.x}:${last.y}` : ""
-        ].join("|");
-      })
-      .join(";");
-  }
-
-  @computed
   get plotHeight() {
     const { height, margin } = this.props;
     return height - margin.top - margin.bottom - Legends.maxHeightPx;
@@ -432,7 +411,7 @@ class Chart extends React.Component {
         style={{ background: terriaTheme.charcoalGrey }}
       >
         <ZoomX
-          key={this.chartDataSignature}
+          key={getChartDataSignature(this.props.chartItems)}
           surface="#zoomSurface"
           initialScale={this.initialXScale}
           scaleExtent={[1, Infinity]}
@@ -743,15 +722,16 @@ function calculateDomain(chartItems) {
 }
 
 function getChartDataSignature(chartItems) {
-  return sortChartItemsByType(chartItems)
+  //return sortChartItemsByType(chartItems)
+  return chartItems
     .map((item) => {
       const points = [...item.points].sort((a, b) => a.x - b.x);
       const first = points[0];
       const last = points[points.length - 1];
 
       return [
-        item.key,
-        points.length,
+        //item.key,
+        //points.length,
         item.domain.x[0],
         item.domain.x[1],
         item.domain.y[0],

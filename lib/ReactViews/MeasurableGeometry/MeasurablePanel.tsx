@@ -44,35 +44,6 @@ interface Props {
   terria: Terria;
 }
 
-/** Match stop table row to ground-path sampled index (same as elevation chart). */
-const STOP_MATCH_EPS_LL = 1e-6;
-const STOP_MATCH_EPS_H = 1.0;
-
-function findSampledIndexForStop(
-  geom:
-    | { stopPoints?: Cartographic[]; sampledPoints?: Cartographic[] }
-    | undefined,
-  stopIdx: number
-): number | null {
-  const stops = geom?.stopPoints;
-  const sampled = geom?.sampledPoints;
-  if (!stops || !sampled || stopIdx < 0 || stopIdx >= stops.length) {
-    return null;
-  }
-  const st = stops[stopIdx];
-  for (let i = 0; i < sampled.length; i++) {
-    const c = sampled[i];
-    if (
-      Math.abs(c.latitude - st.latitude) < STOP_MATCH_EPS_LL &&
-      Math.abs(c.longitude - st.longitude) < STOP_MATCH_EPS_LL &&
-      Math.abs(c.height - st.height) < STOP_MATCH_EPS_H
-    ) {
-      return i;
-    }
-  }
-  return null;
-}
-
 const MeasurablePanel = observer((props: Props) => {
   // Variables
   const { terria, viewState } = props;
@@ -1572,13 +1543,6 @@ const MeasurablePanel = observer((props: Props) => {
       if (terria.cesium) {
         setHighlightedRow(idx);
         viewState.setSelectedStopPointIdx(idx);
-        const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-        if (!onlyPoints && geom) {
-          const sampledIdx = findSampledIndexForStop(geom, idx);
-          viewState.setSelectedSampledPointIdx(sampledIdx);
-        } else {
-          viewState.setSelectedSampledPointIdx(null);
-        }
         MeasurablePanelManager.addMarker(
           terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
             idx
@@ -1587,7 +1551,6 @@ const MeasurablePanel = observer((props: Props) => {
       }
     }, [
       idx,
-      onlyPoints,
       terria.cesium,
       terria.measurableGeomList,
       terria.measurableGeometryIndex

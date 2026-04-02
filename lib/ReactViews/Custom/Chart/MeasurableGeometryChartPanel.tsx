@@ -40,9 +40,7 @@ interface Props {
   viewState: ViewState;
 }
 
-const CHART_POINT_EPS = 1e-6;
-const STOP_MATCH_EPS_LL = 1e-6;
-const STOP_MATCH_EPS_H = 1.0;
+const UPDATE_POINT_EPS = 1e-6;
 
 const MeasurableGeometryChartPanel = observer((props: Props) => {
   const { terria, viewState } = props;
@@ -103,11 +101,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       )?.points;
       const pointIndex =
         groundPoints?.findIndex(
-          (elem) =>
-            Math.abs(elem.x - newPoint.x) < CHART_POINT_EPS &&
-            Math.abs(elem.y - newPoint.y) < CHART_POINT_EPS
+          (elem) => Math.abs(elem.x - newPoint.x) < UPDATE_POINT_EPS
         ) ?? -1;
-
       if (pointIndex === -1 || pointIndex === undefined) return;
       const coords =
         terria?.measurableGeomList[terria.measurableGeometryIndex]
@@ -119,11 +114,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       if (stops) {
         for (let k = 0; k < stops.length; k++) {
           const st = stops[k];
-          if (
-            Math.abs(coords.latitude - st.latitude) < STOP_MATCH_EPS_LL &&
-            Math.abs(coords.longitude - st.longitude) < STOP_MATCH_EPS_LL &&
-            Math.abs(coords.height - st.height) < STOP_MATCH_EPS_H
-          ) {
+          if (Math.abs(coords.latitude - st.latitude) < UPDATE_POINT_EPS) {
             stopIdx = k;
             break;
           }
