@@ -108,22 +108,19 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
-      const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-      let stopIdx: number | null = null;
-      const stops = geom?.stopPoints;
-      if (stops) {
-        for (let k = 0; k < stops.length; k++) {
-          const st = stops[k];
-          if (Math.abs(coords.latitude - st.latitude) < UPDATE_POINT_EPS) {
-            stopIdx = k;
-            break;
-          }
-        }
-      }
+      const airPointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.AirChart)
+        ?.points.findIndex(
+          (elem) =>
+            Math.abs(elem.x - newPoint.x) <= terria.measurableGeomSamplingStep
+        );
       // Sampled index drives chart cursor (ground x); stop index drives the stop table row.
       viewState.setSelectedSampledPointIdx(pointIndex);
-      viewState.setSelectedStopPointIdx(stopIdx);
-
+      viewState.setSelectedStopPointIdx(
+        airPointIndex !== -1 && airPointIndex !== undefined
+          ? airPointIndex
+          : null
+      );
       MeasurablePanelManager.addMarker(coords);
     } else if (newPoint === undefined) {
       MeasurablePanelManager.removeAllMarkers();
