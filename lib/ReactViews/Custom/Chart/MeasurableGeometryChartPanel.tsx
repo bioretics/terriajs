@@ -40,8 +40,6 @@ interface Props {
   viewState: ViewState;
 }
 
-const UPDATE_POINT_EPS = 1e-6;
-
 const MeasurableGeometryChartPanel = observer((props: Props) => {
   const { terria, viewState } = props;
   const {
@@ -100,7 +98,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       )?.points;
       const pointIndex =
         groundPoints?.findIndex(
-          (elem) => Math.abs(elem.x - newPoint.x) < UPDATE_POINT_EPS
+          (elem) =>
+            Math.abs(elem.x - newPoint.x) < terria.measurableGeomSamplingStep
         ) ?? -1;
       if (pointIndex === -1 || pointIndex === undefined) return;
       const coords =
