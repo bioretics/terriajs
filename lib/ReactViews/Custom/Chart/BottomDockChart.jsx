@@ -95,7 +95,6 @@ class Chart extends React.Component {
 
   @observable.ref zoomedXScale;
   @observable mouseCoords;
-  @observable isMouseOverChart = false;
 
   constructor(props) {
     super(props);
@@ -246,15 +245,9 @@ class Chart extends React.Component {
     this.mouseCoords = coords;
   }
 
-  @action
-  setIsMouseOverChart(value) {
-    this.isMouseOverChart = value;
-  }
-
   setMouseCoordsFromEvent(event) {
     const coords = localPoint(event.currentTarget, event);
     if (!coords) return;
-    this.setIsMouseOverChart(true);
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
@@ -266,7 +259,6 @@ class Chart extends React.Component {
       () =>
         `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
       () => {
-        if (this.isMouseOverChart) return;
         const { selectedSampledPointIdx, selectedStopPointIdx } = this.props;
         // Prefer sampled index when both are set (e.g. chart hover / table row with ground match) so cursor x uses ground path.
         const isStopPointSelected =
@@ -319,8 +311,6 @@ class Chart extends React.Component {
             x: xCoord,
             y: yCoord
           });
-        } else if (!this.isMouseOverChart) {
-          this.setMouseCoords(undefined);
         }
       }
     );
@@ -441,12 +431,8 @@ class Chart extends React.Component {
             <svg
               width="100%"
               height={height}
-              onMouseEnter={() => {
-                this.setIsMouseOverChart(true);
-              }}
               onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
               onMouseLeave={() => {
-                this.setIsMouseOverChart(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
