@@ -72,8 +72,7 @@ const MeasurablePanel = observer((props: Props) => {
   const {
     selectedStopPointIdx,
     measurablePanelIsVisible,
-    measurableChartIsVisible,
-    measurableChartPointerIsOver
+    measurableChartIsVisible
   } = viewState;
 
   const panelRef = React.useRef<HTMLDivElement>(null);
@@ -144,9 +143,6 @@ const MeasurablePanel = observer((props: Props) => {
   const toggleChart = action(() => {
     terria.measurableGeometryManager[terria.measurableGeometryIndex].resample();
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
-    if (!viewState.measurableChartIsVisible) {
-      viewState.setMeasurableChartPointerIsOver(false);
-    }
   });
 
   const toggleLineClampToGround = action(() => {
@@ -545,10 +541,7 @@ const MeasurablePanel = observer((props: Props) => {
               if (point) {
                 MeasurablePanelManager.addMarker(point);
                 viewState.setSelectedSampledPointIdx(idx);
-              } else if (
-                !measurableChartIsVisible ||
-                !measurableChartPointerIsOver
-              ) {
+              } else if (!measurableChartIsVisible) {
                 MeasurablePanelManager.removeAllMarkers();
                 viewState.setSelectedSampledPointIdx(null);
               }
@@ -567,10 +560,7 @@ const MeasurablePanel = observer((props: Props) => {
               MeasurablePanelManager.addMarker(point);
               setHighlightedRow(idx);
               viewState.setSelectedStopPointIdx(idx);
-            } else if (
-              !measurableChartIsVisible ||
-              !measurableChartPointerIsOver
-            ) {
+            } else if (!measurableChartIsVisible) {
               if (
                 terria?.measurableGeomList[terria.measurableGeometryIndex]
                   ?.onlyPoints
@@ -600,8 +590,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeometryIndex,
     currentGeom,
     measurablePanelIsVisible,
-    measurableChartIsVisible,
-    measurableChartPointerIsOver
+    measurableChartIsVisible
   ]);
 
   // Render Methods

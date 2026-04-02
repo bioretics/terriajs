@@ -62,7 +62,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
-    viewState.setMeasurableChartPointerIsOver(false);
   });
 
   const fetchPathDataChart = (
@@ -207,9 +206,6 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
                 height={CHART_HEIGHT}
                 chartItemKeyForPointMouseNear={ChartKeys}
                 onPointMouseNear={updateChartPointNearMouse}
-                onPointerOverChartChange={(over: boolean) =>
-                  viewState.setMeasurableChartPointerIsOver(over)
-                }
                 selectedStopPointIdx={viewState.selectedStopPointIdx}
                 selectedSampledPointIdx={viewState.selectedSampledPointIdx}
               />
