@@ -47,7 +47,6 @@ class BottomDockChart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -66,7 +65,6 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
-        onPointerOverChartChange={this.props.onPointerOverChartChange}
         selectedStopPointIdx={this.props.selectedStopPointIdx}
         selectedSampledPointIdx={this.props.selectedSampledPointIdx}
       />
@@ -87,7 +85,6 @@ class Chart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -258,7 +255,6 @@ class Chart extends React.Component {
     const coords = localPoint(event.currentTarget, event);
     if (!coords) return;
     this.setIsMouseOverChart(true);
-    this.props.onPointerOverChartChange?.(true);
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
@@ -447,12 +443,10 @@ class Chart extends React.Component {
               height={height}
               onMouseEnter={() => {
                 this.setIsMouseOverChart(true);
-                this.props.onPointerOverChartChange?.(true);
               }}
               onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
               onMouseLeave={() => {
                 this.setIsMouseOverChart(false);
-                this.props.onPointerOverChartChange?.(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
