@@ -107,7 +107,7 @@ class Chart extends React.Component {
       .map((chartItem) => {
         return {
           ...chartItem,
-          points: [...chartItem.points].sort((p1, p2) => p1.x - p2.x)
+          points: chartItem.points.sort((p1, p2) => p1.x - p2.x)
         };
       })
       .filter((chartItem) => chartItem.points.length > 0);
@@ -246,7 +246,10 @@ class Chart extends React.Component {
   }
 
   setMouseCoordsFromEvent(event) {
-    const coords = localPoint(event.currentTarget, event);
+    const coords = localPoint(
+      event.target.ownerSVGElement || event.target,
+      event
+    );
     if (!coords) return;
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
@@ -260,7 +263,6 @@ class Chart extends React.Component {
         `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
       () => {
         const { selectedSampledPointIdx, selectedStopPointIdx } = this.props;
-        // Prefer sampled index when both are set (e.g. chart hover / table row with ground match) so cursor x uses ground path.
         const isStopPointSelected =
           (selectedSampledPointIdx === null ||
             selectedSampledPointIdx === undefined) &&
@@ -270,7 +272,6 @@ class Chart extends React.Component {
         const idx = isStopPointSelected
           ? selectedStopPointIdx
           : selectedSampledPointIdx;
-
         if (typeof idx === "number" && this.props.chartItems) {
           const points = isStopPointSelected
             ? this.props.terria.measurableGeomList[
@@ -289,14 +290,9 @@ class Chart extends React.Component {
                 .slice(0, idx + 1)
                 .reverse()
                 .reduce((acc, distance) => acc + distance, 0)
-            : (() => {
-                const sdist = geom.sampledDistances ?? [];
-                let s = 0;
-                for (let j = 0; j <= idx; j++) {
-                  s += sdist[j] ?? 0;
-                }
-                return s;
-              })();
+            : (geom.sampledDistances ?? [])
+                .slice(0, idx + 1)
+                .reduce((acc, distance) => acc + (distance ?? 0), 0);
 
           const selectedPoint = {
             x: sumDistances,
@@ -311,6 +307,8 @@ class Chart extends React.Component {
             x: xCoord,
             y: yCoord
           });
+        } else {
+          this.setMouseCoords(undefined);
         }
       }
     );
@@ -322,17 +320,15 @@ class Chart extends React.Component {
     }
   }
 
-  // Clear zoom before the next paint when data changes so Plot.doZoom does not use a stale x-scale.
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    const prevSignature = getChartDataSignature(this.props.chartItems);
-    const nextSignature = getChartDataSignature(nextProps.chartItems);
-    if (prevSignature !== nextSignature) {
+  componentDidUpdate(prevProps) {
+    // Unset zoom scale if any chartItems are added or removed
+    if (
+      prevProps.chartItems[0].points.length !==
+      this.props.chartItems[0].points.length
+    ) {
       this.setZoomedXScale(undefined);
-      this.setMouseCoords(undefined);
     }
-  }
 
-  componentDidUpdate() {
     // When pointsNearMouse changes, call onPointMouseNear callback to create the placeholder
     autorun(() => {
       if (
@@ -397,7 +393,6 @@ class Chart extends React.Component {
         style={{ background: terriaTheme.charcoalGrey }}
       >
         <ZoomX
-          key={getChartDataSignature(this.props.chartItems)}
           surface="#zoomSurface"
           initialScale={this.initialXScale}
           scaleExtent={[1, Infinity]}
@@ -701,27 +696,6 @@ function calculateDomain(chartItems) {
   };
 }
 
-function getChartDataSignature(chartItems) {
-  //return sortChartItemsByType(chartItems)
-  return chartItems
-    .map((item) => {
-      const points = [...item.points].sort((a, b) => a.x - b.x);
-      const first = points[0];
-      const last = points[points.length - 1];
-
-      return [
-        //item.key,
-        //points.length,
-        item.domain.x[0],
-        item.domain.x[1],
-        item.domain.y[0],
-        item.domain.y[1],
-        first ? `${first.x}:${first.y}` : "",
-        last ? `${last.x}:${last.y}` : ""
-      ].join("|");
-    })
-    .join(";");
-}
 /**
  * Sorts chartItems so that `momentPoints` are rendered on top then
  * `momentLines` and then any other types.

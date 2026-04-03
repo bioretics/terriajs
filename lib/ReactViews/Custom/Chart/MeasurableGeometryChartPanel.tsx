@@ -93,32 +93,27 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       (!chartPoint?.current || chartPoint.current !== newPoint)
     ) {
       chartPoint.current = newPoint;
-      const groundPoints = chartItems?.find(
-        (item) => item.key === ChartKeys.GroundChart
-      )?.points;
-      const pointIndex =
-        groundPoints?.findIndex(
-          (elem) =>
-            Math.abs(elem.x - newPoint.x) < terria.measurableGeomSamplingStep
-        ) ?? -1;
+      const pointIndex = chartItems
+        ?.find((item) => item.key === ChartKeys.GroundChart)
+        ?.points.findIndex((elem) => elem === newPoint);
       if (pointIndex === -1 || pointIndex === undefined) return;
       const coords =
         terria?.measurableGeomList[terria.measurableGeometryIndex]
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
+
       const airPointIndex = chartItems
         ?.find((item) => item.key === ChartKeys.AirChart)
         ?.points.findIndex(
           (elem) =>
             Math.abs(elem.x - newPoint.x) <= terria.measurableGeomSamplingStep
         );
-      // Sampled index drives chart cursor (ground x); stop index drives the stop table row.
-      viewState.setSelectedSampledPointIdx(pointIndex);
       viewState.setSelectedStopPointIdx(
         airPointIndex !== -1 && airPointIndex !== undefined
           ? airPointIndex
           : null
       );
+
       MeasurablePanelManager.addMarker(coords);
     } else if (newPoint === undefined) {
       MeasurablePanelManager.removeAllMarkers();

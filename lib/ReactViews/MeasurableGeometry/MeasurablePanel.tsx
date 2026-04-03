@@ -69,11 +69,7 @@ const MeasurablePanel = observer((props: Props) => {
   const defaultX = 0;
   const defaultY = (windowHeight - initialHeight) / 2;
 
-  const {
-    selectedStopPointIdx,
-    measurablePanelIsVisible,
-    measurableChartIsVisible
-  } = viewState;
+  const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
 
   const panelRef = React.useRef<HTMLDivElement>(null);
   const summaryTableRef = React.useRef<HTMLDivElement>(null);
@@ -505,22 +501,16 @@ const MeasurablePanel = observer((props: Props) => {
         action: (point: Cartographic | null, idx: number | null) => void
       ) => {
         const rangeThreshold = getDynamicRangeThreshold();
-        let bestIdx = -1;
-        let bestScore = Infinity;
-        for (let i = 0; i < points.length; i++) {
-          const point = points[i];
+
+        const nearbyPoint = points.find((point) => {
           const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
           const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-          if (latDiff <= rangeThreshold && lonDiff <= rangeThreshold) {
-            const score = latDiff * latDiff + lonDiff * lonDiff;
-            if (score < bestScore) {
-              bestScore = score;
-              bestIdx = i;
-            }
-          }
-        }
-        if (bestIdx >= 0) {
-          action(points[bestIdx], bestIdx);
+          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
+        });
+
+        if (nearbyPoint) {
+          const idx = points.indexOf(nearbyPoint);
+          action(nearbyPoint, idx);
         } else {
           action(null, null);
         }
@@ -541,7 +531,7 @@ const MeasurablePanel = observer((props: Props) => {
               if (point) {
                 MeasurablePanelManager.addMarker(point);
                 viewState.setSelectedSampledPointIdx(idx);
-              } else if (!measurableChartIsVisible) {
+              } else {
                 MeasurablePanelManager.removeAllMarkers();
                 viewState.setSelectedSampledPointIdx(null);
               }
@@ -560,7 +550,7 @@ const MeasurablePanel = observer((props: Props) => {
               MeasurablePanelManager.addMarker(point);
               setHighlightedRow(idx);
               viewState.setSelectedStopPointIdx(idx);
-            } else if (!measurableChartIsVisible) {
+            } else {
               if (
                 terria?.measurableGeomList[terria.measurableGeometryIndex]
                   ?.onlyPoints
@@ -589,8 +579,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeomList,
     terria.measurableGeometryIndex,
     currentGeom,
-    measurablePanelIsVisible,
-    measurableChartIsVisible
+    measurablePanelIsVisible
   ]);
 
   // Render Methods
@@ -1524,7 +1513,6 @@ const MeasurablePanel = observer((props: Props) => {
     const handleMouseLeave = React.useCallback(() => {
       setHighlightedRow(null);
       viewState.setSelectedStopPointIdx(null);
-      viewState.setSelectedSampledPointIdx(null);
       MeasurablePanelManager.removeAllMarkers();
     }, []);
 
