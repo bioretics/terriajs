@@ -37,114 +37,149 @@ const MeasurableMouseProximity = observer((props: Props) => {
       )
         return;
 
-      const getDynamicRangeThreshold = (): number => {
-        const fallback = 0.000025;
-        if (!terria?.cesium) return fallback;
+      const getDynamicProximityMeters = (): number => {
+        const fallbackMeters = 150;
+        if (!terria?.cesium) return fallbackMeters;
 
         const { scene } = terria.cesium;
         const canvas = scene.canvas;
         const centerX = Math.floor(canvas.clientWidth / 2);
-        const bottomY = canvas.clientHeight - 1;
+        const centerY = Math.floor(canvas.clientHeight / 2);
 
         const leftRay = scene.camera.getPickRay(
-          new Cartesian2(centerX, bottomY)
+          new Cartesian2(centerX, centerY)
         );
         const rightRay = scene.camera.getPickRay(
-          new Cartesian2(centerX + 1, bottomY)
+          new Cartesian2(centerX + 1, centerY)
         );
-        if (!isDefined(leftRay) || !isDefined(rightRay)) return fallback;
+        if (!isDefined(leftRay) || !isDefined(rightRay)) return fallbackMeters;
 
         const globe = scene.globe;
         const leftPosition = globe.pick(leftRay, scene);
         const rightPosition = globe.pick(rightRay, scene);
         if (!isDefined(leftPosition) || !isDefined(rightPosition))
-          return fallback;
+          return fallbackMeters;
 
-        const distance = Cartesian3.distance(leftPosition, rightPosition);
-        const proximityPixels = 5;
-        const proximityMeters = distance * proximityPixels;
-        const earthRadius = 6372797;
+        const metersPerPixel = Cartesian3.distance(leftPosition, rightPosition);
+        const proximityPixels = 8;
+        const minProximityMeters = 1;
+        const maxProximityMeters = 25000;
+        const proximityMeters = metersPerPixel * proximityPixels;
 
-        const threshold = proximityMeters / earthRadius;
-        return Math.max(threshold, fallback);
+        return Math.min(
+          maxProximityMeters,
+          Math.max(minProximityMeters, proximityMeters)
+        );
       };
 
-      const findNearbyPoint = (
+      const findNearestPointInRange = (
         points: Cartographic[],
-        action: (point: Cartographic | null, idx: number | null) => void
-      ) => {
-        const rangeThreshold = getDynamicRangeThreshold();
+        proximityMeters: number
+      ): { point: Cartographic; idx: number } | null => {
+        if (!points.length) return null;
 
-        const nearbyPoint = points.find((point) => {
-          const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
-          const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
+        const ellipsoid = terria?.cesium?.scene?.globe?.ellipsoid;
+        if (!ellipsoid) return null;
+
+        const mouseCartesian = Cartographic.toCartesian(mouseCoords, ellipsoid);
+        if (!isDefined(mouseCartesian)) return null;
+
+        let nearestPoint: Cartographic | null = null;
+        let nearestIdx: number | null = null;
+        let nearestDistanceSquared = Number.POSITIVE_INFINITY;
+        const proximityMetersSquared = proximityMeters * proximityMeters;
+
+        points.forEach((point, idx) => {
+          const pointCartesian = Cartographic.toCartesian(point, ellipsoid);
+          if (!isDefined(pointCartesian)) return;
+
+          const distanceSquared = Cartesian3.distanceSquared(
+            mouseCartesian,
+            pointCartesian
+          );
+          if (
+            distanceSquared <= proximityMetersSquared &&
+            distanceSquared < nearestDistanceSquared
+          ) {
+            nearestDistanceSquared = distanceSquared;
+            nearestPoint = point;
+            nearestIdx = idx;
+          }
         });
 
-        if (nearbyPoint) {
-          const idx = points.indexOf(nearbyPoint);
-          action(nearbyPoint, idx);
-        } else {
-          action(null, null);
+        if (nearestPoint && nearestIdx !== null) {
+          return {
+            point: nearestPoint,
+            idx: nearestIdx
+          };
         }
+
+        return null;
       };
 
-      if (
-        terria?.measurableGeomList[terria.measurableGeometryIndex]
-          ?.onlyPoints === false
-      ) {
-        if (
-          terria.measurableGeomList[terria.measurableGeometryIndex]
-            .sampledPoints
-        ) {
-          findNearbyPoint(
-            terria.measurableGeomList[terria.measurableGeometryIndex]
-              .sampledPoints ?? [],
-            (point, idx) => {
-              if (point) {
-                MeasurablePanelManager.addMarker(point);
-                viewState.setSelectedSampledPointIdx(idx);
-              } else {
-                MeasurablePanelManager.removeAllMarkers();
-                viewState.setSelectedSampledPointIdx(null);
-              }
-            }
-          );
-        }
+      const currentGeometry =
+        terria.measurableGeomList[terria.measurableGeometryIndex];
+      const proximityMeters = getDynamicProximityMeters();
+
+      const sampledNearby =
+        currentGeometry?.onlyPoints === false
+          ? findNearestPointInRange(
+              currentGeometry.sampledPoints ?? [],
+              proximityMeters
+            )
+          : null;
+
+      if (sampledNearby) {
+        viewState.setSelectedSampledPointIdx(sampledNearby.idx);
+      } else {
+        viewState.setSelectedSampledPointIdx(null);
       }
 
-      if (
-        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
-      ) {
-        findNearbyPoint(
-          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
-          (point, idx) => {
-            if (point) {
-              MeasurablePanelManager.addMarker(point);
-              onHighlightedRowChange(idx);
-              viewState.setSelectedStopPointIdx(idx);
-            } else {
-              if (
-                terria?.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.onlyPoints
-              )
-                MeasurablePanelManager.removeAllMarkers();
-              onHighlightedRowChange(null);
-              viewState.setSelectedStopPointIdx(null);
-            }
-          }
-        );
+      const stopNearby = findNearestPointInRange(
+        currentGeometry.stopPoints ?? [],
+        proximityMeters
+      );
+
+      if (stopNearby) {
+        onHighlightedRowChange(stopNearby.idx);
+        viewState.setSelectedStopPointIdx(stopNearby.idx);
+      } else {
+        onHighlightedRowChange(null);
+        viewState.setSelectedStopPointIdx(null);
+      }
+
+      const markerPoint = stopNearby?.point ?? sampledNearby?.point;
+      if (markerPoint) {
+        MeasurablePanelManager.addMarker(markerPoint);
+      } else {
+        MeasurablePanelManager.removeAllMarkers();
       }
 
       terria.currentViewer.notifyRepaintRequired();
     };
 
+    let animationFrameId: number | null = null;
+
+    const scheduleMouseProximity = () => {
+      if (animationFrameId !== null) return;
+
+      animationFrameId = window.requestAnimationFrame(() => {
+        animationFrameId = null;
+        handleMouseProximity();
+      });
+    };
+
     const disposer =
       terria.currentViewer.mouseCoords.updateEvent.addEventListener(
-        handleMouseProximity
+        scheduleMouseProximity
       );
 
-    return () => disposer();
+    return () => {
+      disposer();
+      if (animationFrameId !== null) {
+        window.cancelAnimationFrame(animationFrameId);
+      }
+    };
   }, [
     viewState,
     terria.cesium,
