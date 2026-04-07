@@ -95,6 +95,7 @@ class Chart extends React.Component {
 
   @observable.ref zoomedXScale;
   @observable mouseCoords;
+  zoomXRef = React.createRef();
 
   constructor(props) {
     super(props);
@@ -322,11 +323,10 @@ class Chart extends React.Component {
 
   componentDidUpdate(prevProps) {
     // Unset zoom scale if any chartItems are added or removed
-    if (
-      prevProps.chartItems[0].points.length !==
-      this.props.chartItems[0].points.length
-    ) {
+    if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
+      this.setMouseCoords(undefined);
+      this.zoomXRef.current?.resetZoom();
     }
 
     // When pointsNearMouse changes, call onPointMouseNear callback to create the placeholder
@@ -393,6 +393,7 @@ class Chart extends React.Component {
         style={{ background: terriaTheme.charcoalGrey }}
       >
         <ZoomX
+          ref={this.zoomXRef}
           surface="#zoomSurface"
           initialScale={this.initialXScale}
           scaleExtent={[1, Infinity]}
