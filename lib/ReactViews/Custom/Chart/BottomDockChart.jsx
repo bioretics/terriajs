@@ -262,6 +262,14 @@ class Chart extends React.Component {
   }
 
   componentDidMount() {
+    this.disposePointerOverChartReaction = reaction(
+      () => this.cursorX !== null,
+      (isPointerOverChart) => {
+        this.props.onPointerOverChartChange?.(isPointerOverChart);
+      },
+      { fireImmediately: true }
+    );
+
     this.disposeReaction = reaction(
       () =>
         `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
@@ -321,6 +329,9 @@ class Chart extends React.Component {
   componentWillUnmount() {
     if (this.disposeReaction) {
       this.disposeReaction();
+    }
+    if (this.disposePointerOverChartReaction) {
+      this.disposePointerOverChartReaction();
     }
   }
 
@@ -482,9 +493,6 @@ class Chart extends React.Component {
                   />
                   {this.cursorX !== null && this.cursorX !== undefined && (
                     <Cursor x={this.cursorX} stroke={defaultGridColor} />
-                  )}
-                  {this.props.onPointerOverChartChange?.(
-                    this.cursorX !== null && this.cursorX !== undefined
                   )}
                   <Plot
                     chartItems={this.chartItems}
