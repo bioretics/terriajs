@@ -11,7 +11,7 @@ import {
 import mergeWith from "lodash-es/mergeWith";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
-import { JsonObject } from "../../Core/Json";
+import { isJsonObject, JsonObject } from "../../Core/Json";
 import TerriaError from "../../Core/TerriaError";
 import ConstantColorMap from "../../Map/ColorMap/ConstantColorMap";
 import ContinuousColorMap from "../../Map/ColorMap/ContinuousColorMap";
@@ -169,19 +169,19 @@ export default class TableStylingWorkflow
           ? {
               text: i18next.t("models.tableStyling.copyUserStratum"),
               onSelect: () => {
-                const styleSnippet = JSON.stringify(
+                const stratum = JSON.stringify(
                   this.getCatalogStyleStrata(),
                   undefined,
                   2
                 );
                 try {
-                  navigator.clipboard.writeText(styleSnippet);
+                  navigator.clipboard.writeText(stratum);
                 } catch (e) {
                   TerriaError.from(e).raiseError(
                     this.item.terria,
                     "Failed to copy to clipboard. User stratum has been printed to console"
                   );
-                  console.log(styleSnippet);
+                  console.log(stratum);
                 }
               },
               disable: !this.showAdvancedOptions
@@ -2816,24 +2816,17 @@ export default class TableStylingWorkflow
       input.onchange = () => {
         const file = input.files?.[0];
         if (!file) return;
-
         file
           .text()
           .then((fileContents) => {
-            const parsed = JSON.parse(fileContents) as unknown;
-
-            if (
-              !parsed ||
-              typeof parsed !== "object" ||
-              Array.isArray(parsed)
-            ) {
+            const parsed = JSON.parse(fileContents) as JsonObject;
+            if (!isJsonObject(parsed)) {
               throw new Error("Invalid JSON format");
             }
-
             updateModelFromJson(
               this.item,
               CommonStrata.user,
-              parsed as any,
+              parsed,
               true
             ).raiseError(this.item.terria, {
               title: i18next.t("models.tableStyling.importUserStyleFailed")
@@ -2884,7 +2877,7 @@ export default class TableStylingWorkflow
     } catch (e) {
       TerriaError.from(e).raiseError(
         this.item.terria,
-        "Failed to save user style JSON file. User stratum has been printed to console"
+        "Failed to save user style JSON file. User stratum should be printed to console."
       );
     }
   }
