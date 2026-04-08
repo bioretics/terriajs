@@ -263,7 +263,7 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposePointerOverChartReaction = reaction(
-      () => this.cursorX !== null,
+      () => this.cursorX !== null && this.cursorX !== undefined,
       (isPointerOverChart) => {
         this.props.onPointerOverChartChange?.(isPointerOverChart);
       },
