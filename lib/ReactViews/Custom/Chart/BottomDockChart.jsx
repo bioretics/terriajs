@@ -47,6 +47,7 @@ class BottomDockChart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
+    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -65,6 +66,7 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
+        onPointerOverChartChange={this.props.onPointerOverChartChange}
         selectedStopPointIdx={this.props.selectedStopPointIdx}
         selectedSampledPointIdx={this.props.selectedSampledPointIdx}
       />
@@ -85,6 +87,7 @@ class Chart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
+    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -479,6 +482,9 @@ class Chart extends React.Component {
                   />
                   {this.cursorX !== null && this.cursorX !== undefined && (
                     <Cursor x={this.cursorX} stroke={defaultGridColor} />
+                  )}
+                  {this.props.onPointerOverChartChange?.(
+                    this.cursorX !== null && this.cursorX !== undefined
                   )}
                   <Plot
                     chartItems={this.chartItems}
