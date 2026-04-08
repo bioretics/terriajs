@@ -339,7 +339,7 @@ class Chart extends React.Component {
     // Unset zoom scale if any chartItems are added or removed
     if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
-      this.setMouseCoords(undefined);
+      //this.setMouseCoords(undefined); probably not needed also breaks cursorX sometimes
       this.zoomXRef.current?.resetZoom();
     }
 

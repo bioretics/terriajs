@@ -166,7 +166,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
           : null;
 
       const mouseDefinitelyOutside = !stopFar && !sampledFar;
-      console.log(viewState.measurableChartIsHovered);
+
       if (markerPoint) {
         lastMarkerRef.current = markerPoint;
         MeasurablePanelManager.addMarker(markerPoint);
