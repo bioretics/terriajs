@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -24,6 +24,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
   } = props;
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
+  const lastMarkerRef = useRef<Cartographic | null>(null);
 
   useEffect(() => {
     if (!measurablePanelIsVisible) return;
@@ -120,6 +121,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       const currentGeometry =
         terria.measurableGeomList[terria.measurableGeometryIndex];
       const proximityMeters = getDynamicProximityMeters();
+      const clearProximityMeters = proximityMeters * 1.5;
 
       const sampledNearby =
         currentGeometry?.onlyPoints === false
@@ -149,9 +151,27 @@ const MeasurableMouseProximity = observer((props: Props) => {
       }
 
       const markerPoint = stopNearby?.point ?? sampledNearby?.point;
+
+      const stopFar = findNearestPointInRange(
+        currentGeometry.stopPoints ?? [],
+        clearProximityMeters
+      );
+
+      const sampledFar =
+        currentGeometry?.onlyPoints === false
+          ? findNearestPointInRange(
+              currentGeometry.sampledPoints ?? [],
+              clearProximityMeters
+            )
+          : null;
+
+      const mouseDefinitelyOutside = !stopFar && !sampledFar;
+
       if (markerPoint) {
+        lastMarkerRef.current = markerPoint;
         MeasurablePanelManager.addMarker(markerPoint);
-      } else {
+      } else if (mouseDefinitelyOutside) {
+        lastMarkerRef.current = null;
         MeasurablePanelManager.removeAllMarkers();
       }
 
