@@ -145,7 +145,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (stopNearby) {
         onHighlightedRowChange(stopNearby.idx);
         viewState.setSelectedStopPointIdx(stopNearby.idx);
-      } else {
+      } else if (!mouseCoords) {
         onHighlightedRowChange(null);
         viewState.setSelectedStopPointIdx(null);
       }
@@ -170,8 +170,12 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (markerPoint) {
         lastMarkerRef.current = markerPoint;
         MeasurablePanelManager.addMarker(markerPoint);
-      } else if (mouseDefinitelyOutside && !mouseCoords) {
+      } else if (
+        mouseDefinitelyOutside &&
+        !viewState.measurableChartIsHovered
+      ) {
         lastMarkerRef.current = null;
+        viewState.setSelectedStopPointIdx(null);
         MeasurablePanelManager.removeAllMarkers();
       }
 
