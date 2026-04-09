@@ -40,6 +40,7 @@ import { defaultPlayPathTourPoints } from "./defaultPlayPathTourPoints";
 import { defaultMeasurableTourPoints } from "./defaultMeasurableTourPoints";
 import SearchState from "./SearchState";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
+import CatalogItemsSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
 import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
 import CzmlCatalogItem from "../Models/Catalog/CatalogItems/CzmlCatalogItem";
 
@@ -53,6 +54,9 @@ export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
 interface ViewStateOptions {
   terria: Terria;
   catalogSearchProvider: CatalogSearchProviderMixin.Instance | undefined;
+  catalogItemsSearchProvider?:
+    | CatalogItemsSearchProviderMixin.Instance
+    | undefined;
   errorHandlingProvider?: any;
 }
 
@@ -67,7 +71,8 @@ export default class ViewState {
     data: "data",
     preview: "preview",
     nowViewing: "nowViewing",
-    locationSearchResults: "locationSearchResults"
+    locationSearchResults: "locationSearchResults",
+    query: "query"
   });
   readonly searchState: SearchState;
   readonly terria: Terria;
@@ -262,6 +267,8 @@ export default class ViewState {
   @observable isPlayPathTour: boolean = false;
   @observable isMeasurableTour: boolean = false;
 
+  @observable isLoginPanelVisible: boolean = false;
+
   @observable showTour: boolean = false;
   @observable appRefs: Map<string, Ref<HTMLElement>> = new Map();
   @observable currentTourIndex: number = -1;
@@ -405,6 +412,12 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable measurablePanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the ViewshedPanel is visible.
+   * @type {Boolean}
+   */
+  @observable viewshedPanelIsVisible: boolean = false;
   /**
    * Gets or sets a value indicating whether the ElevationPanel is collapsed.
    * @type {Boolean}
@@ -434,6 +447,18 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable playPathPanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the QueryPanel is visible.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the QueryPanel is collapsed.
+   * @type {Boolean}
+   */
+  @observable queryPanelIsCollapsed: boolean = false;
 
   /**
    * True if this is (or will be) the first time the user has added data to the map.
@@ -478,13 +503,15 @@ export default class ViewState {
   private _storyBeforeUnloadSubscription: IReactionDisposer;
   private _measurablePanelIsVisibleSubscription: IReactionDisposer;
   private _disposeSamplingPathStep: IReactionDisposer;
+  private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
     const terria = options.terria;
     this.searchState = new SearchState({
       terria,
-      catalogSearchProvider: options.catalogSearchProvider
+      catalogSearchProvider: options.catalogSearchProvider,
+      catalogItemsSearchProvider: options.catalogItemsSearchProvider
     });
 
     this.errorProvider = options.errorHandlingProvider
@@ -655,6 +682,14 @@ export default class ViewState {
       }
     );
 
+    this._viewshedPanelIsVisibleSubscription = reaction(
+      () => this.terria.viewshedDistances,
+      (viewshedDistances?: (number | undefined)[]) => {
+        this.viewshedPanelIsVisible =
+          viewshedDistances !== undefined && viewshedDistances.length > 0;
+      }
+    );
+
     this._disposeSamplingPathStep = reaction(
       () => this.terria.measurableGeomSamplingStep,
       () => {
@@ -696,7 +731,7 @@ export default class ViewState {
     this._storyBeforeUnloadSubscription();
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
-
+    this._viewshedPanelIsVisibleSubscription();
     this.searchState.dispose();
   }
 
@@ -740,6 +775,22 @@ export default class ViewState {
   }
 
   @action
+  openQueryData(queryItem: BaseModel) {
+    this.terria.itemToQuery = queryItem;
+    if (this.useSmallScreenInterface) {
+      this.switchMobileView(this.mobileViewOptions.query);
+    } else {
+      this.queryPanelIsVisible = true;
+    }
+  }
+
+  @action
+  closeQuery() {
+    this.queryPanelIsVisible = false;
+    this.terria.itemToQuery = undefined;
+  }
+
+  @action
   openAddData() {
     this.explorerPanelIsVisible = true;
     this.activeTabCategory = DATA_CATALOG_NAME;
@@ -770,6 +821,24 @@ export default class ViewState {
   clearPreviewedItem() {
     this.userDataPreviewedItem = undefined;
     this._previewedItem = undefined;
+  }
+
+  @action
+  openMessageModal(header: string, message: string) {
+    this.terria.messageModal = {
+      isVisible: true,
+      header: header,
+      message: message
+    };
+  }
+
+  @action
+  closeMessageModal() {
+    this.terria.messageModal = {
+      isVisible: false,
+      header: undefined,
+      message: undefined
+    };
   }
 
   /**

@@ -29,12 +29,12 @@ class RelatedMaps extends React.Component<PropTypes> {
 
   render() {
     const t = this.props.t;
+    const smallScreen = this.props.viewState.useSmallScreenInterface;
     const dropdownTheme = {
       inner: Styles.dropdownInner,
+      btn: Styles.relatedMapsBtn,
       icon: "gallery"
     };
-
-    const smallScreen = this.props.viewState.useSmallScreenInterface;
 
     return (
       <MenuPanel

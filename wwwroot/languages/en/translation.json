@@ -52,6 +52,20 @@
       "content": "## Compare\n\nA powerful feature of Terria is the ability to compare datasets using a split screen view. For datasets with a time-series component, such as satellite images, you can compare dates backwards and forwards in time by clicking on the date picker/selector."
     }
   },
+  "viewshed": {
+    "toolButton": "Viewshed",
+    "toolButtonTitle": "Viewshed",
+    "messageHeader": "Viewshed",
+    "distance": "Distance:",
+    "distanceVisible": "Visible distance:",
+    "resultOk": "VISIBLE",
+    "resultKo": "HIDDEN",
+    "parameters": "Viewshed parameters",
+    "observerHeightInput": "Observer height above ground in meters (the orange point)",
+    "observerHeightInputTitle": "Height of observer above ground (m)",
+    "targetHeightInput": "Target height above ground in meters (the purple point)",
+    "targetHeightInputTitle": "Height of target above ground (m)"
+  },
   "measure": {
     "measurePointTool": "Measure Point Tool",
     "measureTool": "Open Measure Tool",
@@ -409,6 +423,10 @@
       "hideUnderground": "Terrain hides underground features",
       "showUndergroundFeatures": "Press to start showing features that are underneath the terrain surface",
       "hideUndergroundFeatures": "Press to start hiding features that are underneath the terrain surface",
+      "globeTranslucencyEnabled": "Terrain became translucent approaching the surface",
+      "globeTranslucencyEnabledTitle": "Check to start making the terrain become translucent when the camera is close to the surface",
+      "enableCollisionDetection": "Avoid camera collisions with the terrain",
+      "enableCollisionDetectionTitle": "Check to avoid the camera collisions with the terrain",
       "sideLabel": "Show Terrain on the",
       "left": "Left",
       "both": "Both",
@@ -453,6 +471,26 @@
     "fromPlaceholder": "From",
     "toPlaceholder": "To",
     "applyButton": "Apply"
+  },
+  "login": {
+    "loginTitle": "Login",
+    "logoutTitle": "Logout",
+    "logoutConfirmTitle": "Confirm logout",
+    "logoutConfirmMessage": "Do you want to log out?",
+    "logoutConfirmOk": "Logout",
+    "logoutConfirmCancel": "Cancel",
+    "loginPanelHeader": "User authentication",
+    "loginPanelUsername": "Username",
+    "loginPanelUsernameTitle": "Enter your username",
+    "loginPanelPassword": "Password",
+    "loginPanelPasswordTitle": "Enter your password",
+    "loginPanelOk": "Login",
+    "loginPanelCancel": "Cancel",
+    "loginPanelLoading": "Authenticating...",
+    "loginPanelInvalidCredentials": "Invalid username or password. Please check your credentials and try again.",
+    "loginPanelConnectionProblem": "Unable to reach the authentication service. Please check your internet connection and try again.",
+    "loginPanelGenericError": "An unexpected error occurred during login. Please try again later.",
+    "loginPanelMissingFields": "Please enter both username and password."
   },
   "helpPanel": {
     "btnText": "Help",
@@ -667,7 +705,26 @@
     "viewLess": "View less {{name}} results",
     "viewMore": "View more {{name}} results",
     "placeholder": "Search for locations",
-    "searchCatalogue": "Search the catalogue"
+    "searchCatalogue": "Search the catalogue",
+    "searchInCatalogItems": "Search '{{locationSearchText}}' in the Catalog Items"
+  },
+  "queryTab": {
+    "charts": "Charts",
+    "table": "Table",
+    "aggregateBy": "Aggregate by",
+    "represent": "Represent",
+    "graphModel": "Graph model",
+    "percentage": "Percentage",
+    "value": "Value",
+    "category": "Category",
+    "sum": "Sum",
+    "count": "Count",
+    "pivotTable": "Pivot table",
+    "horizontalBars": "Horizontal bars",
+    "verticalBars": "Vertical bars",
+    "pie": "Pie",
+    "changeColors": "Change colors",
+    "aggregationNotPossible": "The filter combination does not allow generating aggregation charts"
   },
   "mobile": {
     "toggleNavigation": "toggle navigation",
@@ -745,6 +802,8 @@
     "previewItem": "About Data",
     "splitItemTitle": "Duplicate and show splitter",
     "splitItem": "Compare",
+    "copyItem": "Copy",
+    "copyItemTitle": "Copy",
     "diffImageTitle": "View image differences between two dates",
     "diffImage": "Difference",
     "exportDataTitle": "Export map data",
@@ -1750,6 +1809,9 @@
         }
       }
     },
+    "globeClipping": {
+      "enableMessage": "Clip globe from data"
+    },
     "commonModelErrors": {
       "3dTypeIn2dMode": "**Note:** This dataset can not be displayed in the 2D viewer. Switch to one of the 3D map modes."
     },
@@ -1761,6 +1823,10 @@
       "hideAdvancedOptions": "Hide advanced options",
       "showAdvancedOptions": "Show advanced options",
       "copyUserStratum": "Copy user stratum to clipboard",
+      "manageUserStyle": "Manage user style",
+      "exportUserStyle": "Export user style",
+      "importUserStyle": "Import user style",
+      "importUserStyleFailed": "Failed to import user style JSON",
       "name": "Style",
       "reset": "Reset to default style",
       "data": {

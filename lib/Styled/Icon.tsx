@@ -4,6 +4,7 @@ import styled from "styled-components";
 
 // Icon
 export const GLYPHS = {
+  chartTable: require("../../wwwroot/images/icons/chartTable.svg"),
   calendar: require("../../wwwroot/images/icons/calendar.svg"),
   calendar2: require("../../wwwroot/images/icons/calendar2.svg"),
   about: require("../../wwwroot/images/icons/about.svg"),
@@ -103,6 +104,7 @@ export const GLYPHS = {
   menuDotted: require("../../wwwroot/images/icons/menu-dotted.svg"),
   cancel: require("../../wwwroot/images/icons/cancel.svg"),
   user: require("../../wwwroot/images/icons/user.svg"),
+  logout: require("../../wwwroot/images/icons/logout.svg"),
   datePicker: require("../../wwwroot/images/icons/date-picker-icon.svg"),
   tour: require("../../wwwroot/images/icons/take-the-tour-icon.svg"),
   layers: require("../../wwwroot/images/icons/pulling-away-layers-icon.svg"),

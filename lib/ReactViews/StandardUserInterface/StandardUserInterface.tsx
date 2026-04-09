@@ -46,6 +46,11 @@ import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
 import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPanel";
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
 import MicrozonationPanel from "../Microzonation/MicrozonationPanel";
+import QueryWindow from "../QueryWindow/QueryWindow";
+import { MessageModal } from "../MessageModal/MessageModal";
+import ViewshedPanel from "../Viewshed/ViewshedPanel";
+import LoginPanel from "../Login/LoginPanel";
+
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
@@ -235,6 +240,14 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                   <div id="map-data-attribution" />
                   <main>
                     <ExplorerWindow />
+                    <QueryWindow />
+                    {props.terria.messageModal?.isVisible && (
+                      <MessageModal
+                        closeModal={() => props.viewState.closeMessageModal()}
+                        header={props.terria.messageModal.header}
+                        message={props.terria.messageModal.message}
+                      />
+                    )}
                     {props.terria.configParameters.experimentalFeatures &&
                       !props.viewState.hideMapUi && (
                         <ExperimentalFeatures
@@ -294,6 +307,11 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 terria={props.terria}
                 viewState={props.viewState}
               />
+              <ViewshedPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
+              <LoginPanel terria={props.terria} viewState={props.viewState} />
             </div>
             <DragDropFile />
             <DragDropNotification />
