@@ -100,6 +100,13 @@ class Chart extends React.Component {
   @observable mouseCoords;
   zoomXRef = React.createRef();
 
+  @observable isPointerOverChart = false;
+
+  @action
+  setPointerOverChart(value) {
+    this.isPointerOverChart = value;
+  }
+
   constructor(props) {
     super(props);
     makeObservable(this);
@@ -263,7 +270,7 @@ class Chart extends React.Component {
 
   componentDidMount() {
     this.disposePointerOverChartReaction = reaction(
-      () => this.cursorX !== null && this.cursorX !== undefined,
+      () => this.isPointerOverChart,
       (isPointerOverChart) => {
         this.props.onPointerOverChartChange?.(isPointerOverChart);
       },
@@ -339,7 +346,7 @@ class Chart extends React.Component {
     // Unset zoom scale if any chartItems are added or removed
     if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
-      //this.setMouseCoords(undefined); probably not needed also breaks cursorX sometimes
+      this.setMouseCoords(undefined);
       this.zoomXRef.current?.resetZoom();
     }
 
@@ -441,8 +448,12 @@ class Chart extends React.Component {
             <svg
               width="100%"
               height={height}
-              onMouseMove={this.setMouseCoordsFromEvent.bind(this)}
+              onMouseMove={(e) => {
+                this.setMouseCoordsFromEvent(e);
+                this.setPointerOverChart(true);
+              }}
               onMouseLeave={() => {
+                this.setPointerOverChart(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
