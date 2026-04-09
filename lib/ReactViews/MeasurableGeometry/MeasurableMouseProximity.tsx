@@ -122,6 +122,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
         terria.measurableGeomList[terria.measurableGeometryIndex];
       const proximityMeters = getDynamicProximityMeters();
       const clearProximityMeters = proximityMeters * 1.5;
+      const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
 
       const sampledNearby =
         currentGeometry?.onlyPoints === false
@@ -170,10 +171,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (markerPoint) {
         lastMarkerRef.current = markerPoint;
         MeasurablePanelManager.addMarker(markerPoint);
-      } else if (
-        mouseDefinitelyOutside &&
-        !viewState.measurableChartIsHovered
-      ) {
+      } else if (mouseDefinitelyOutside && !isPointerOverChart) {
         lastMarkerRef.current = null;
         viewState.setSelectedStopPointIdx(null);
         MeasurablePanelManager.removeAllMarkers();

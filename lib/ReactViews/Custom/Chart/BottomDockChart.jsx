@@ -28,6 +28,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import MeasurablePanelManager from "../MeasurablePanelManager";
 import { terriaTheme } from "../../StandardUserInterface";
 import html2canvas from "html2canvas";
 
@@ -47,7 +48,6 @@ class BottomDockChart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -66,7 +66,6 @@ class BottomDockChart extends React.Component {
         )}
         chartItemKeyForPointMouseNear={this.props.chartItemKeyForPointMouseNear}
         onPointMouseNear={this.props.onPointMouseNear}
-        onPointerOverChartChange={this.props.onPointerOverChartChange}
         selectedStopPointIdx={this.props.selectedStopPointIdx}
         selectedSampledPointIdx={this.props.selectedSampledPointIdx}
       />
@@ -87,7 +86,6 @@ class Chart extends React.Component {
     margin: PropTypes.object,
     chartItemKeyForPointMouseNear: PropTypes.object,
     onPointMouseNear: PropTypes.func,
-    onPointerOverChartChange: PropTypes.func,
     selectedStopPointIdx: PropTypes.number,
     selectedSampledPointIdx: PropTypes.number
   };
@@ -99,13 +97,6 @@ class Chart extends React.Component {
   @observable.ref zoomedXScale;
   @observable mouseCoords;
   zoomXRef = React.createRef();
-
-  @observable isPointerOverChart = false;
-
-  @action
-  setPointerOverChart(value) {
-    this.isPointerOverChart = value;
-  }
 
   constructor(props) {
     super(props);
@@ -269,14 +260,6 @@ class Chart extends React.Component {
   }
 
   componentDidMount() {
-    this.disposePointerOverChartReaction = reaction(
-      () => this.isPointerOverChart,
-      (isPointerOverChart) => {
-        this.props.onPointerOverChartChange?.(isPointerOverChart);
-      },
-      { fireImmediately: true }
-    );
-
     this.disposeReaction = reaction(
       () =>
         `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
@@ -334,11 +317,10 @@ class Chart extends React.Component {
   }
 
   componentWillUnmount() {
+    MeasurablePanelManager.setPointerOverChart(false);
+
     if (this.disposeReaction) {
       this.disposeReaction();
-    }
-    if (this.disposePointerOverChartReaction) {
-      this.disposePointerOverChartReaction();
     }
   }
 
@@ -410,6 +392,8 @@ class Chart extends React.Component {
     return (
       <div
         className={Styles.chart}
+        onMouseEnter={() => MeasurablePanelManager.setPointerOverChart(true)}
+        onMouseLeave={() => MeasurablePanelManager.setPointerOverChart(false)}
         ref={this.chartRef}
         style={{ background: terriaTheme.charcoalGrey }}
       >
@@ -450,10 +434,8 @@ class Chart extends React.Component {
               height={height}
               onMouseMove={(e) => {
                 this.setMouseCoordsFromEvent(e);
-                this.setPointerOverChart(true);
               }}
               onMouseLeave={() => {
-                this.setPointerOverChart(false);
                 this.setMouseCoords(undefined);
                 // On mouseLeave event remove position placeholder
                 this.props.onPointMouseNear(undefined);
