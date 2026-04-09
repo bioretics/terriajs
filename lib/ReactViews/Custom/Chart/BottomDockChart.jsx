@@ -264,6 +264,8 @@ class Chart extends React.Component {
       () =>
         `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
       () => {
+        if (MeasurablePanelManager.isPointerOverChart()) return;
+
         const { selectedSampledPointIdx, selectedStopPointIdx } = this.props;
         const isStopPointSelected =
           (selectedSampledPointIdx === null ||
