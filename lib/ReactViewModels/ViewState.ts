@@ -430,12 +430,6 @@ export default class ViewState {
   @observable measurableChartIsVisible: boolean = false;
 
   /**
-   * Gets or sets a value indicating whether the ElevationChart is visible.
-   * @type {Boolean}
-   */
-  @observable measurableChartIsHovered: boolean = false;
-
-  /**
    * Gets or sets a value indicating whether the DownloadPanel is visible.
    * @type {Boolean}
    */
@@ -767,11 +761,6 @@ export default class ViewState {
   @action
   toggleStoryBuilder() {
     this.storyBuilderShown = !this.storyBuilderShown;
-  }
-
-  @action
-  setMeasurableChartIsHovered(value: boolean) {
-    this.measurableChartIsHovered = value;
   }
 
   @action

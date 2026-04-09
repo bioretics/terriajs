@@ -170,10 +170,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (markerPoint) {
         lastMarkerRef.current = markerPoint;
         MeasurablePanelManager.addMarker(markerPoint);
-      } else if (
-        mouseDefinitelyOutside &&
-        !viewState.measurableChartIsHovered
-      ) {
+      } else if (mouseDefinitelyOutside && !mouseCoords) {
         lastMarkerRef.current = null;
         MeasurablePanelManager.removeAllMarkers();
       }

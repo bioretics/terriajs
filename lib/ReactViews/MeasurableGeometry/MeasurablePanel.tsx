@@ -137,9 +137,6 @@ const MeasurablePanel = observer((props: Props) => {
   const toggleChart = action(() => {
     terria.measurableGeometryManager[terria.measurableGeometryIndex].resample();
     viewState.measurableChartIsVisible = !viewState.measurableChartIsVisible;
-    if (!viewState.measurableChartIsVisible) {
-      viewState.setMeasurableChartIsHovered(false);
-    }
   });
 
   const toggleLineClampToGround = action(() => {
