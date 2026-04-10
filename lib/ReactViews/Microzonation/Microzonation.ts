@@ -1,6 +1,5 @@
 import { RectangleCoordinates } from "../../Models/FunctionParameters/RectangleParameter";
 import loadJson from "../../Core/loadJson";
-import Terria from "../../Models/Terria";
 
 export type MicrozonationRecord = {
   id?: string | number;
@@ -185,7 +184,7 @@ export const normalizeDetail = (properties: any): MicrozonationDetail => ({
   }
 });
 
-const buildWfsUrl = (config: WfsConfig, terria?: Terria): string => {
+const buildWfsUrl = (config: WfsConfig): string => {
   const baseUrl = config.url;
   const params: Record<string, string> = {
     service: "WFS",
@@ -208,8 +207,7 @@ const buildWfsUrl = (config: WfsConfig, terria?: Terria): string => {
 };
 
 export const fetchWfsFeatures = async (
-  config: WfsConfig | undefined,
-  terria?: Terria
+  config: WfsConfig | undefined
 ): Promise<{
   records: MicrozonationRecord[];
   propertiesById: Map<string | number, any>;
@@ -222,7 +220,7 @@ export const fetchWfsFeatures = async (
       geometryById: new Map()
     };
   }
-  const url = buildWfsUrl(config, terria);
+  const url = buildWfsUrl(config);
   const json = await loadJson(url);
   const features: any[] = json?.features ?? [];
 

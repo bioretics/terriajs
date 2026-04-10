@@ -123,7 +123,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
       try {
         setLoadingList(true);
         setListError(undefined);
-        const result = await fetchWfsFeatures(wfsConfig, terria);
+        const result = await fetchWfsFeatures(wfsConfig);
         if (isMounted) {
           setRecords(result.records);
           setPropertiesById(result.propertiesById);
