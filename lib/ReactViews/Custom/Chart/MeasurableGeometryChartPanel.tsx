@@ -102,16 +102,24 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           ?.sampledPoints?.[pointIndex];
       if (!coords) return;
 
-      const airPointIndex = chartItems
-        ?.find((item) => item.key === ChartKeys.AirChart)
-        ?.points.findIndex(
-          (elem) =>
-            Math.abs(elem.x - newPoint.x) <= terria.measurableGeomSamplingStep
-        );
+      let airPointIndex = -1;
+      let minDistance = Infinity;
+      const airPoints = chartItems?.find(
+        (item) => item.key === ChartKeys.AirChart
+      )?.points;
+
+      if (airPoints) {
+        airPoints.forEach((elem, index) => {
+          const dist = Math.abs(elem.x - newPoint.x);
+          if (dist < minDistance && dist <= terria.measurableGeomSamplingStep) {
+            minDistance = dist;
+            airPointIndex = index;
+          }
+        });
+      }
+
       viewState.setSelectedStopPointIdx(
-        airPointIndex !== -1 && airPointIndex !== undefined
-          ? airPointIndex
-          : null
+        airPointIndex !== -1 ? airPointIndex : null
       );
 
       MeasurablePanelManager.addMarker(coords);
