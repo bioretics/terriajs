@@ -24,7 +24,8 @@ import {
   RER_POI_MIN_LEVEL_ID,
   RER_POI_PROGRESSIVE_FAR_CAMERA_HEIGHT,
   RER_POI_PROGRESSIVE_LEVEL_STEP,
-  RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT
+  RER_POI_PROGRESSIVE_NEAR_CAMERA_HEIGHT,
+  normalizeRerPoiUrl
 } from "../../../ModelMixins/RerPoiHelpers";
 
 interface EsriJsonQueryOptions {
@@ -404,7 +405,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const queryOptions =
       typeof options === "number" ? { resultOffset: options } : options;
 
-    const url = cleanUrl(this.url || "0d");
+    const url = normalizeRerPoiUrl(this.url || "0d");
     const layerId = /^(.*(?:FeatureServer|MapServer))\/(\d+)/.exec(url)?.[2];
 
     if (!layerId) {
@@ -578,10 +579,4 @@ function rectangleToBounds(rectangle: Rectangle) {
     CesiumMath.toDegrees(rectangle.east),
     CesiumMath.toDegrees(rectangle.north)
   ].join(",");
-}
-
-function cleanUrl(url: string): string {
-  const uri = new URI(url);
-  uri.search("");
-  return uri.toString();
 }
