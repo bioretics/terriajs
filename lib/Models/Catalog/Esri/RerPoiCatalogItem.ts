@@ -1,36 +1,20 @@
 import { featureCollection } from "@turf/helpers";
 import { GeoJsonProperties, Geometry, GeometryCollection } from "geojson";
-import i18next from "i18next";
-import {
-  computed,
-  makeObservable,
-  onBecomeObserved,
-  onBecomeUnobserved,
-  override,
-  runInAction
-} from "mobx";
+import { onBecomeObserved, onBecomeUnobserved } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
-import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
 import URI from "urijs";
 import { FeatureCollectionWithCrs } from "../../../Core/GeoJson";
 import isDefined from "../../../Core/isDefined";
 import loadJson from "../../../Core/loadJson";
 import Result from "../../../Core/Result";
 import { networkRequestError } from "../../../Core/TerriaError";
-import ProtomapsImageryProvider from "../../../Map/ImageryProvider/ProtomapsImageryProvider";
 import featureDataToGeoJson from "../../../Map/PickedFeatures/featureDataToGeoJson";
-import { ProtomapsArcGisPbfSource } from "../../../Map/Vector/Protomaps/ProtomapsArcGisPbfSource";
-import { tableStyleToProtomaps } from "../../../Map/Vector/Protomaps/tableStyleToProtomaps";
-import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
-import MinMaxLevelMixin from "../../../ModelMixins/MinMaxLevelMixin";
-import ArcGisFeatureServerCatalogItemTraits from "../../../Traits/TraitsClasses/ArcGisFeatureServerCatalogItemTraits";
-import CreateModel from "../../Definition/CreateModel";
 import CommonStrata from "../../Definition/CommonStrata";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
+import ArcGisFeatureServerCatalogItem from "./ArcGisFeatureServerCatalogItem";
 import {
   RER_POI_CATALOG_ITEM_TYPE,
   RER_POI_DEFAULT_DYNAMIC_REQUEST_DEBOUNCE_MS,
@@ -56,9 +40,7 @@ interface DynamicViewportQuery {
   requestOptions: EsriJsonQueryOptions;
 }
 
-export default class RerPoiCatalogItem extends MinMaxLevelMixin(
-  GeoJsonMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
-) {
+export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
 
   private removeCesiumCameraChangedListener: (() => void) | undefined;
@@ -74,7 +56,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   constructor(...args: ModelConstructorParameters) {
     super(...args);
-    makeObservable(this);
     this.setTrait(CommonStrata.definition, "forceCesiumPrimitives", true);
 
     onBecomeObserved(this, "mapItems", () => {
@@ -88,10 +69,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
   get type(): string {
     return RerPoiCatalogItem.type;
-  }
-
-  get typeName(): string {
-    return i18next.t("models.arcGisFeatureServerCatalogItem.name");
   }
 
   private startDynamicViewportRequests() {
@@ -197,15 +174,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
         this.dynamicReloadQueued = false;
         this.queueDynamicReload(true);
       }
-    }
-  }
-
-  protected async forceLoadMetadata(): Promise<void> {
-    if (this.strata.get(ArcGisFeatureServerStratum.stratumName) === undefined) {
-      const stratum = await ArcGisFeatureServerStratum.load(this as any);
-      runInAction(() => {
-        this.strata.set(ArcGisFeatureServerStratum.stratumName, stratum);
-      });
     }
   }
 
@@ -430,76 +398,6 @@ export default class RerPoiCatalogItem extends MinMaxLevelMixin(
 
     const position = Cartographic.fromCartesian(currentView.position);
     return position?.height;
-  }
-
-  @computed get imageryProvider() {
-    if (!this.strata.has(ArcGisFeatureServerStratum.stratumName)) {
-      return undefined;
-    }
-
-    const { paintRules, labelRules } = tableStyleToProtomaps(this, false, true);
-
-    const uri = this.buildEsriJsonUrl().logError(
-      "Failed to create valid FeatureServer URL"
-    );
-
-    if (!uri) return;
-
-    const url = proxyCatalogItemUrl(this, uri.toString());
-
-    let provider = new ProtomapsImageryProvider({
-      maximumZoom: this.getMaximumLevel(false),
-      minimumZoom: this.getMinimumLevel(false),
-      terria: this.terria,
-      data: new ProtomapsArcGisPbfSource({
-        url: url,
-        outFields: [...this.outFields],
-        featuresPerTileRequest: this.featuresPerTileRequest,
-        maxRecordCountFactor: this.maxRecordCountFactor,
-        maxTiledFeatures: this.maxTiledFeatures,
-        tilingScheme: new WebMercatorTilingScheme(),
-        enablePickFeatures: this.allowFeaturePicking,
-        objectIdField: this.objectIdField,
-        supportsQuantization: this.supportsQuantization
-      }),
-      id: this.uniqueId,
-      paintRules,
-      labelRules
-    });
-
-    provider = this.wrapImageryPickFeatures(provider);
-    provider = this.updateRequestImage(provider);
-
-    return provider;
-  }
-
-  @override
-  get mapItems() {
-    if (!this.tileRequests) {
-      return super.mapItems;
-    }
-
-    if (!this.imageryProvider) return [];
-
-    return [
-      {
-        imageryProvider: this.imageryProvider,
-        show: this.show,
-        alpha: this.opacity,
-        clippingRectangle: this.clipToRectangle
-          ? this.cesiumRectangle
-          : undefined
-      }
-    ];
-  }
-
-  @override
-  get dataColumnMajor() {
-    if (super.dataColumnMajor.length > 0) {
-      return super.dataColumnMajor;
-    }
-
-    return this.columns.map((column) => [column.name ?? ""]);
   }
 
   buildEsriJsonUrl(options?: number | EsriJsonQueryOptions) {

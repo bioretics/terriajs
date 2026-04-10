@@ -24,7 +24,7 @@ import { ArcGisFeatureServerStratum } from "./ArcGisFeatureServerStratum";
 export default class ArcGisFeatureServerCatalogItem extends MinMaxLevelMixin(
   GeoJsonMixin(CreateModel(ArcGisFeatureServerCatalogItemTraits))
 ) {
-  static readonly type = "esri-featureServer";
+  static readonly type: string = "esri-featureServer";
   constructor(...args: ModelConstructorParameters) {
     super(...args);
     makeObservable(this);
