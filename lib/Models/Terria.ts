@@ -677,7 +677,7 @@ export default class Terria {
     feedbackUrl: undefined,
     initFragmentPaths: ["init/"],
     storyEnabled: true,
-    microzonationEnabled: true,
+    microzonationEnabled: false,
     microzonationConfig: undefined,
     interceptBrowserPrint: true,
     tabbedCatalog: false,

@@ -204,9 +204,6 @@ const buildWfsUrl = (config: WfsConfig, terria?: Terria): string => {
   const separator = baseUrl.includes("?") ? "&" : "?";
   const fullUrl = `${baseUrl}${separator}${queryString}`;
 
-  if (terria?.corsProxy?.shouldUseProxy(fullUrl)) {
-    return terria.corsProxy.getURL(fullUrl);
-  }
   return fullUrl;
 };
 
