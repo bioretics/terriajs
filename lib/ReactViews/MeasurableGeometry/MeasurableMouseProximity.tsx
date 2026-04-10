@@ -146,7 +146,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (stopNearby) {
         onHighlightedRowChange(stopNearby.idx);
         viewState.setSelectedStopPointIdx(stopNearby.idx);
-      } else if (!mouseCoords) {
+      } else {
         onHighlightedRowChange(null);
         viewState.setSelectedStopPointIdx(null);
       }

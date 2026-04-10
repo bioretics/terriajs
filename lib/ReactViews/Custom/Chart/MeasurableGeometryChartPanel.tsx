@@ -134,8 +134,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
     if (measurableGeomList && measurableGeomList[measurableGeometryIndex]) {
       const airData = fetchPathDataChart(
         measurableGeomList[measurableGeometryIndex].stopPoints,
-        measurableGeomList[measurableGeometryIndex].stopAirDistances,
-        measurableGeomList[measurableGeometryIndex].airDistance
+        measurableGeomList[measurableGeometryIndex].stopGroundDistances,
+        measurableGeomList[measurableGeometryIndex].groundDistance
       );
       const groundData = fetchPathDataChart(
         measurableGeomList[measurableGeometryIndex].sampledPoints,
