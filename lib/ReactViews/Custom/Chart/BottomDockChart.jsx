@@ -96,8 +96,9 @@ class Chart extends React.Component {
 
   @observable.ref zoomedXScale;
   @observable mouseCoords;
+  @observable.ref forcedPoint = undefined;
   zoomXRef = React.createRef();
-
+  hoverAutorunDisposer = undefined;
   constructor(props) {
     super(props);
     makeObservable(this);
@@ -109,7 +110,7 @@ class Chart extends React.Component {
       .map((chartItem) => {
         return {
           ...chartItem,
-          points: chartItem.points.sort((p1, p2) => p1.x - p2.x)
+          points: [...chartItem.points].sort((p1, p2) => p1.x - p2.x)
         };
       })
       .filter((chartItem) => chartItem.points.length > 0);
@@ -332,26 +333,27 @@ class Chart extends React.Component {
       this.setZoomedXScale(undefined);
       this.setMouseCoords(undefined);
       this.zoomXRef.current?.resetZoom();
+      this.chartPoint = { current: undefined };
     }
 
-    // When pointsNearMouse changes, call onPointMouseNear callback to create the placeholder
-    autorun(() => {
-      if (
-        this.pointsNearMouse &&
-        this.pointsNearMouse.length > 0 &&
-        this.props.onPointMouseNear
-      ) {
-        const pointNearMouse = this.pointsNearMouse.find(
-          (elem) =>
-            elem.chartItem.key ===
-              this.props.chartItemKeyForPointMouseNear.AirChart ||
-            elem.chartItem.key ===
-              this.props.chartItemKeyForPointMouseNear.GroundChart
-        );
-        if (pointNearMouse) {
-          this.props.onPointMouseNear(pointNearMouse.point);
-        }
-      }
+    // Dispose the previous autorun so we do not stack listeners on every update
+    if (this.hoverAutorunDisposer) {
+      this.hoverAutorunDisposer();
+      this.hoverAutorunDisposer = undefined;
+    }
+
+    // Keep hover state in sync with the current mouse position.
+    // Important: also emit undefined when nothing is near the mouse.
+    this.hoverAutorunDisposer = autorun(() => {
+      const pointNearMouse = this.pointsNearMouse.find(
+        (elem) =>
+          elem.chartItem.key ===
+            this.props.chartItemKeyForPointMouseNear.AirChart ||
+          elem.chartItem.key ===
+            this.props.chartItemKeyForPointMouseNear.GroundChart
+      );
+
+      this.props.onPointMouseNear?.(pointNearMouse?.point);
     });
   }
 

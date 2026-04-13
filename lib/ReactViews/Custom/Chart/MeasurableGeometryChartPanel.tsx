@@ -124,6 +124,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
       MeasurablePanelManager.addMarker(coords);
     } else if (newPoint === undefined) {
+      chartPoint.current = undefined;
       viewState.setSelectedStopPointIdx(null);
       MeasurablePanelManager.removeAllMarkers();
       terria.currentViewer.notifyRepaintRequired();
