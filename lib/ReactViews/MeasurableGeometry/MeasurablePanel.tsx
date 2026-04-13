@@ -372,6 +372,26 @@ const MeasurablePanel = observer((props: Props) => {
     }
   }, [measurablePanelIsVisible]);
 
+  useEffect(() => {
+    if (measurablePanelIsVisible) {
+      const timeoutId = setTimeout(() => {
+        runInAction(() => {
+          terria.measurableGeomList.forEach((geom, index) => {
+            if (geom?.stopPoints && geom.stopPoints.length > 0) {
+              terria.measurableGeometryManager[index]?.resample(index);
+            }
+          });
+        });
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [
+    terria.mainViewer.viewerMode,
+    measurablePanelIsVisible,
+    terria.measurableGeomList,
+    terria.measurableGeometryManager
+  ]);
+
   const startMeasurableTour = () => {
     setShowTourPrompt(false);
     localStorage.setItem("measurableTourShown", "true");

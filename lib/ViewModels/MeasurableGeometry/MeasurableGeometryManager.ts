@@ -47,26 +47,17 @@ export default class MeasurableGeometryManager {
     );
   }
 
-  resample() {
+  resample(index: number = this.terria.measurableGeometryIndex) {
     this.sampleFromCartographics(
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.stopPoints ?? [],
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isClosed,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.onlyPoints,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pointDescriptions,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pathNotes,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.isFileUploaded,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.indexPath,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.featureProperties,
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-        ?.pointProperties
+      this.terria.measurableGeomList[index]?.stopPoints ?? [],
+      this.terria.measurableGeomList[index]?.isClosed,
+      this.terria.measurableGeomList[index]?.onlyPoints,
+      this.terria.measurableGeomList[index]?.pointDescriptions,
+      this.terria.measurableGeomList[index]?.pathNotes,
+      this.terria.measurableGeomList[index]?.isFileUploaded,
+      this.terria.measurableGeomList[index]?.indexPath,
+      this.terria.measurableGeomList[index]?.featureProperties,
+      this.terria.measurableGeomList[index]?.pointProperties
     );
   }
 
