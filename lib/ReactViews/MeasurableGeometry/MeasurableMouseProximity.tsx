@@ -35,8 +35,11 @@ const MeasurableMouseProximity = observer((props: Props) => {
         !mouseCoords ||
         !terria.measurableGeomList ||
         !terria.measurableGeomList[terria.measurableGeometryIndex]
-      )
+      ) {
         return;
+      }
+
+      const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
 
       const getDynamicProximityMeters = (): number => {
         const fallbackMeters = 150;
@@ -58,8 +61,9 @@ const MeasurableMouseProximity = observer((props: Props) => {
         const globe = scene.globe;
         const leftPosition = globe.pick(leftRay, scene);
         const rightPosition = globe.pick(rightRay, scene);
-        if (!isDefined(leftPosition) || !isDefined(rightPosition))
+        if (!isDefined(leftPosition) || !isDefined(rightPosition)) {
           return fallbackMeters;
+        }
 
         const metersPerPixel = Cartesian3.distance(leftPosition, rightPosition);
         const proximityPixels = 8;
@@ -109,10 +113,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
         });
 
         if (nearestPoint && nearestIdx !== null) {
-          return {
-            point: nearestPoint,
-            idx: nearestIdx
-          };
+          return { point: nearestPoint, idx: nearestIdx };
         }
 
         return null;
@@ -122,7 +123,6 @@ const MeasurableMouseProximity = observer((props: Props) => {
         terria.measurableGeomList[terria.measurableGeometryIndex];
       const proximityMeters = getDynamicProximityMeters();
       const clearProximityMeters = proximityMeters * 1.5;
-      const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
 
       const sampledNearby =
         currentGeometry?.onlyPoints === false
@@ -134,7 +134,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
 
       if (sampledNearby) {
         viewState.setSelectedSampledPointIdx(sampledNearby.idx);
-      } else {
+      } else if (!isPointerOverChart) {
         viewState.setSelectedSampledPointIdx(null);
       }
 
@@ -146,7 +146,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       if (stopNearby) {
         onHighlightedRowChange(stopNearby.idx);
         viewState.setSelectedStopPointIdx(stopNearby.idx);
-      } else {
+      } else if (!isPointerOverChart) {
         onHighlightedRowChange(null);
         viewState.setSelectedStopPointIdx(null);
       }
