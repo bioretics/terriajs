@@ -5,6 +5,7 @@ import classNames from "classnames";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import { action, computed, runInAction } from "mobx";
 import { observer } from "mobx-react";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -152,14 +153,13 @@ const MeasurablePanel = observer((props: Props) => {
 
   const getBearing = computed(() => {
     if (
-      !terria?.cesium?.scene?.globe?.ellipsoid ||
       !terria?.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints ||
       terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
         .length === 0
     ) {
       return "";
     }
-    const ellipsoid = terria.cesium.scene.globe.ellipsoid;
+    const ellipsoid = terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
     const start =
       terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[0];
     const end =
@@ -265,7 +265,7 @@ const MeasurablePanel = observer((props: Props) => {
       geom,
       name: layerName,
       kind,
-      ellipsoid: terria?.cesium?.scene?.globe?.ellipsoid
+      ellipsoid: terria?.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84
     });
 
     const href = DataUri.make("txt", text);
@@ -283,7 +283,8 @@ const MeasurablePanel = observer((props: Props) => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
-    const ellipsoid = terria?.cesium?.scene?.globe?.ellipsoid;
+    const ellipsoid =
+      terria?.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return;
 
     const links = await MeasurableGeometryExporter.generateAllDownloadLinks(
@@ -807,77 +808,71 @@ const MeasurablePanel = observer((props: Props) => {
             </Button>
           </div>
           <small>
-            {!is2dMode && (
-              <>
-                <table className={Styles.elevation}>
-                  <thead>
-                    <tr>
-                      <th
-                        colSpan={2}
-                        css={`
-                          padding: 8px;
-                          text-align: center;
-                          border-bottom: 1px solid ${theme.textLight}44;
-                        `}
-                      >
-                        {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
-                      </th>
-                      <th
-                        colSpan={2}
-                        css={`
-                          padding: 8px;
-                          text-align: center;
-                          border-bottom: 1px solid ${theme.textLight}44;
-                        `}
-                      >
-                        {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td
-                        css={`
-                          padding: 8px;
-                        `}
-                      >
-                        {prettifyNumber(currentGeom.geodeticArea ?? 0, true)}
-                      </td>
-                      <td
-                        css={`
-                          padding: 8px;
-                        `}
-                      >
-                        {(currentGeom.geodeticArea ?? 0) > 0
-                          ? `${(
-                              (currentGeom.geodeticArea ?? 0) * 0.0001
-                            ).toFixed(4)} ha`
-                          : ""}
-                      </td>
-                      <td
-                        css={`
-                          padding: 8px;
-                        `}
-                      >
-                        {prettifyNumber(currentGeom.airArea ?? 0, true)}
-                      </td>
-                      <td
-                        css={`
-                          padding: 8px;
-                        `}
-                      >
-                        {(currentGeom.airArea ?? 0) > 0
-                          ? `${((currentGeom.airArea ?? 0) * 0.0001).toFixed(
-                              4
-                            )} ha`
-                          : ""}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div style={{ marginTop: "15px", marginBottom: "10px" }} />
-              </>
-            )}
+            <table className={Styles.elevation}>
+              <thead>
+                <tr>
+                  <th
+                    colSpan={2}
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                      border-bottom: 1px solid ${theme.textLight}44;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
+                  </th>
+                  <th
+                    colSpan={2}
+                    css={`
+                      padding: 8px;
+                      text-align: center;
+                      border-bottom: 1px solid ${theme.textLight}44;
+                    `}
+                  >
+                    {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(currentGeom.geodeticArea ?? 0, true)}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {(currentGeom.geodeticArea ?? 0) > 0
+                      ? `${((currentGeom.geodeticArea ?? 0) * 0.0001).toFixed(
+                          4
+                        )} ha`
+                      : ""}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {prettifyNumber(currentGeom.airArea ?? 0, true)}
+                  </td>
+                  <td
+                    css={`
+                      padding: 8px;
+                    `}
+                  >
+                    {(currentGeom.airArea ?? 0) > 0
+                      ? `${((currentGeom.airArea ?? 0) * 0.0001).toFixed(4)} ha`
+                      : ""}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div style={{ marginTop: "15px", marginBottom: "10px" }} />
 
             {renderSummaryTable(
               [

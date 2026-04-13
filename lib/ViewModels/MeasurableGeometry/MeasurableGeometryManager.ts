@@ -330,7 +330,8 @@ export default class MeasurableGeometryManager {
   public calculateGeodeticArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
     let totalArea = 0;
@@ -362,7 +363,8 @@ export default class MeasurableGeometryManager {
   private calculateAirArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
     const cartesianPoints = stopPoints.map((point) =>
