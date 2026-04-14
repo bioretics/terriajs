@@ -55,7 +55,7 @@ export default class MeasurableGeometryManager {
       this.terria.measurableGeomList[index]?.pointDescriptions,
       this.terria.measurableGeomList[index]?.pathNotes,
       this.terria.measurableGeomList[index]?.isFileUploaded,
-      this.terria.measurableGeomList[index]?.indexPath,
+      this.terria.measurableGeomList[index]?.indexPath ?? index,
       this.terria.measurableGeomList[index]?.featureProperties,
       this.terria.measurableGeomList[index]?.pointProperties
     );
