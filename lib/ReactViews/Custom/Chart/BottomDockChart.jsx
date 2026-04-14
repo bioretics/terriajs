@@ -185,9 +185,15 @@ class Chart extends React.Component {
 
   @computed
   get cursorX() {
-    if (this.pointsNearMouse.length > 0)
+    if (this.forcedPoint) {
+      return this.xScale(this.forcedPoint.x);
+    }
+
+    if (this.pointsNearMouse.length > 0) {
       return this.xScale(this.pointsNearMouse[0].point.x);
-    return this.mouseCoords && this.mouseCoords.x;
+    }
+
+    return this.mouseCoords?.x;
   }
 
   @computed
@@ -304,10 +310,9 @@ class Chart extends React.Component {
             return;
           }
 
-          const x = geom.stopAirDistances
+          const x = geom.stopGroundDistances
             .slice(0, idx + 1)
-            .reverse()
-            .reduce((acc, distance) => acc + distance, 0);
+            .reduce((acc, distance) => acc + (distance ?? 0), 0);
 
           const selectedPoint = {
             x,
