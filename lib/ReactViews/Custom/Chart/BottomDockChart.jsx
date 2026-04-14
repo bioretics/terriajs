@@ -248,12 +248,19 @@ class Chart extends React.Component {
     this.mouseCoords = coords;
   }
 
+  @action
+  setForcedPoint(point) {
+    this.forcedPoint = point;
+  }
+
   setMouseCoordsFromEvent(event) {
     const coords = localPoint(
       event.target.ownerSVGElement || event.target,
       event
     );
     if (!coords) return;
+
+    this.setForcedPoint(undefined);
     this.setMouseCoords({
       x: coords.x - this.adjustedMargin.left,
       y: coords.y - this.adjustedMargin.top
@@ -277,44 +284,65 @@ class Chart extends React.Component {
         const idx = isStopPointSelected
           ? selectedStopPointIdx
           : selectedSampledPointIdx;
-        if (typeof idx === "number" && this.props.chartItems) {
-          const points = isStopPointSelected
-            ? this.props.terria.measurableGeomList[
-                this.props.terria.measurableGeometryIndex
-              ].stopPoints
-            : this.props.terria.measurableGeomList[
-                this.props.terria.measurableGeometryIndex
-              ].sampledPoints;
 
-          const geom =
-            this.props.terria.measurableGeomList[
-              this.props.terria.measurableGeometryIndex
-            ];
-          const sumDistances = isStopPointSelected
-            ? geom.stopAirDistances
-                .slice(0, idx + 1)
-                .reverse()
-                .reduce((acc, distance) => acc + distance, 0)
-            : (geom.sampledDistances ?? [])
-                .slice(0, idx + 1)
-                .reduce((acc, distance) => acc + (distance ?? 0), 0);
+        if (typeof idx !== "number" || !this.props.chartItems) {
+          this.setForcedPoint(undefined);
+          this.setMouseCoords(undefined);
+          return;
+        }
+
+        const geom =
+          this.props.terria.measurableGeomList[
+            this.props.terria.measurableGeometryIndex
+          ];
+
+        if (isStopPointSelected) {
+          const stopPoint = geom?.stopPoints?.[idx];
+          if (!stopPoint) {
+            this.setForcedPoint(undefined);
+            this.setMouseCoords(undefined);
+            return;
+          }
+
+          const x = geom.stopAirDistances
+            .slice(0, idx + 1)
+            .reverse()
+            .reduce((acc, distance) => acc + distance, 0);
 
           const selectedPoint = {
-            x: sumDistances,
-            y: points[idx].height
+            x,
+            y: stopPoint.height
           };
 
-          // Simulate the mouse coords from the selected point coords in the chart.
-          const xCoord = this.xScale(selectedPoint.x);
-          const yCoord = this.yAxes[0].scale(selectedPoint.y);
-
+          this.setForcedPoint(selectedPoint);
           this.setMouseCoords({
-            x: xCoord,
-            y: yCoord
+            x: this.xScale(selectedPoint.x),
+            y: this.yAxes[0].scale(selectedPoint.y)
           });
-        } else {
-          this.setMouseCoords(undefined);
+          return;
         }
+
+        const sampledPoint = geom?.sampledPoints?.[idx];
+        if (!sampledPoint) {
+          this.setForcedPoint(undefined);
+          this.setMouseCoords(undefined);
+          return;
+        }
+
+        const sumDistances = (geom.sampledDistances ?? [])
+          .slice(0, idx + 1)
+          .reduce((acc, distance) => acc + (distance ?? 0), 0);
+
+        const selectedPoint = {
+          x: sumDistances,
+          y: sampledPoint.height
+        };
+
+        this.setForcedPoint(undefined);
+        this.setMouseCoords({
+          x: this.xScale(selectedPoint.x),
+          y: this.yAxes[0].scale(selectedPoint.y)
+        });
       }
     );
   }
@@ -332,6 +360,7 @@ class Chart extends React.Component {
     if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
       this.setMouseCoords(undefined);
+      this.setForcedPoint(undefined);
       this.zoomXRef.current?.resetZoom();
       this.chartPoint = { current: undefined };
     }
@@ -345,6 +374,11 @@ class Chart extends React.Component {
     // Keep hover state in sync with the current mouse position.
     // Important: also emit undefined when nothing is near the mouse.
     this.hoverAutorunDisposer = autorun(() => {
+      if (this.forcedPoint) {
+        this.props.onPointMouseNear?.(this.forcedPoint);
+        return;
+      }
+
       const pointNearMouse = this.pointsNearMouse.find(
         (elem) =>
           elem.chartItem.key ===
@@ -441,7 +475,7 @@ class Chart extends React.Component {
               }}
               onMouseLeave={() => {
                 this.setMouseCoords(undefined);
-                // On mouseLeave event remove position placeholder
+                this.setForcedPoint(undefined);
                 this.props.onPointMouseNear(undefined);
               }}
             >
