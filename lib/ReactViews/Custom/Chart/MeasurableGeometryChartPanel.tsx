@@ -55,12 +55,21 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
   const [chartItems, setChartItems] = useState<ChartItem[]>();
 
   const chartPoint = useRef<ChartPoint>();
+  const previousViewerMode = useRef(terria.mainViewer.viewerMode);
 
   MeasurablePanelManager.initialize(terria);
 
   const closePanel = action(() => {
     viewState.measurableChartIsVisible = false;
   });
+
+  useEffect(() => {
+    const currentViewerMode = terria.mainViewer.viewerMode;
+    if (previousViewerMode.current !== currentViewerMode) {
+      closePanel();
+    }
+    previousViewerMode.current = currentViewerMode;
+  }, [terria.mainViewer.viewerMode, closePanel]);
 
   const fetchPathDataChart = (
     points: Cartographic[] | undefined,
