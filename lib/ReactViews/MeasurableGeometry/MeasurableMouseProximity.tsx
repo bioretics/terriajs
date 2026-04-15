@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
@@ -30,7 +30,6 @@ const MeasurableMouseProximity = observer((props: Props) => {
   } = props;
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
-  const lastMarkerRef = useRef<Cartographic | null>(null);
   const [cachedPoints, setCachedPoints] = useState<CachedGeometryPoints | null>(
     null
   );
@@ -258,10 +257,8 @@ const MeasurableMouseProximity = observer((props: Props) => {
           markerPoint,
           ellipsoid
         );
-        lastMarkerRef.current = markerCartographic;
         MeasurablePanelManager.addMarker(markerCartographic);
       } else if (mouseDefinitelyOutside && !isPointerOverChart) {
-        lastMarkerRef.current = null;
         viewState.setSelectedStopPointIdx(null);
         MeasurablePanelManager.removeAllMarkers();
       }
