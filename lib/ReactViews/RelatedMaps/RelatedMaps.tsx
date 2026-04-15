@@ -69,7 +69,7 @@ class RelatedMaps extends React.Component<PropTypes> {
             <Box displayInlineBlock>
               <a
                 target="_blank"
-                style={{ color: this.props.theme.colorPrimary }}
+                style={{ color: this.props.theme.textLight }}
                 href={map.url}
                 rel="noreferrer"
               >
