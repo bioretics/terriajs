@@ -57,7 +57,6 @@ import {
   MeasurePolygonTool
 } from "../../Map/MapNavigation/Items";
 import { MeasureToolsController } from "../../Map/MapNavigation/Items/MeasureTools";
-import ViewerMode from "../../../Models/ViewerMode";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -663,27 +662,23 @@ class ViewingControls extends React.Component<
                 </BoxViewingControl>
               </ViewingControlMenuButton>
             </li>
-            {viewState.terria.mainViewer.viewerMode !== ViewerMode.Leaflet &&
-              viewState.terria.mainViewer.viewerMode !==
-                ViewerMode.Cesium2D && (
-                <li>
-                  <ViewingControlMenuButton
-                    onClick={() => {
-                      if (MeasurableGeometryMixin.isMixedInto(item)) {
-                        runInAction(() => {
-                          item.computePath();
-                          viewState.playPathPanelIsVisible = true;
-                        });
-                      }
-                    }}
-                  >
-                    <BoxViewingControl>
-                      <StyledIcon glyph={Icon.GLYPHS.play} />
-                      <span>{t("workbench.playPath")}</span>
-                    </BoxViewingControl>
-                  </ViewingControlMenuButton>
-                </li>
-              )}
+            <li>
+              <ViewingControlMenuButton
+                onClick={() => {
+                  if (MeasurableGeometryMixin.isMixedInto(item)) {
+                    runInAction(() => {
+                      item.computePath();
+                      viewState.playPathPanelIsVisible = true;
+                    });
+                  }
+                }}
+              >
+                <BoxViewingControl>
+                  <StyledIcon glyph={Icon.GLYPHS.play} />
+                  <span>{t("workbench.playPath")}</span>
+                </BoxViewingControl>
+              </ViewingControlMenuButton>
+            </li>
           </>
         )}
         {(!MeasurableGeometryMixin.isMixedInto(item) || !item.canUseAsPath) &&
