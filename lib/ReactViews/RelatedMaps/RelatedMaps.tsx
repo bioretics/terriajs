@@ -57,8 +57,8 @@ class RelatedMaps extends React.Component<PropTypes> {
                   style={{
                     marginRight: "10px",
                     marginBottom: "10px",
-                    width: "200px",
-                    height: "150px"
+                    width: "200px"
+                    //height: "150px"
                   }}
                   src={map.imageUrl}
                   alt={map.title}
