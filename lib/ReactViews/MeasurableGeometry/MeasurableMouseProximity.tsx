@@ -1,12 +1,13 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import { observer } from "mobx-react";
 import isDefined from "../../Core/isDefined";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
+import SceneTransforms from "terriajs-cesium/Source/Scene/SceneTransforms";
 
 interface Props {
   terria: Terria;
@@ -14,6 +15,11 @@ interface Props {
   measurablePanelIsVisible: boolean;
   onHighlightedRowChange: (idx: number | null) => void;
 }
+
+type CachedGeometryPoints = {
+  stopPoints: Cartesian3[];
+  sampledPoints: Cartesian3[];
+};
 
 const MeasurableMouseProximity = observer((props: Props) => {
   const {
@@ -25,92 +31,169 @@ const MeasurableMouseProximity = observer((props: Props) => {
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
   const lastMarkerRef = useRef<Cartographic | null>(null);
+  const [cachedPoints, setCachedPoints] = useState<CachedGeometryPoints | null>(
+    null
+  );
+
+  useEffect(() => {
+    const scene = terria.cesium?.scene;
+    const ellipsoid = scene?.globe?.ellipsoid;
+    const terrainProvider = scene?.globe?.terrainProvider;
+
+    if (!currentGeom || !scene || !ellipsoid) {
+      setCachedPoints(null);
+      return;
+    }
+
+    let active = true;
+
+    const toCartesianFallback = (points: Cartographic[]) =>
+      points.map((p) =>
+        Cartesian3.fromRadians(
+          p.longitude,
+          p.latitude,
+          p.height ?? 0,
+          ellipsoid
+        )
+      );
+
+    const sampleAndCache = async () => {
+      const stopSource = currentGeom.stopPoints ?? [];
+      const sampledSource =
+        currentGeom.onlyPoints === false ? currentGeom.sampledPoints ?? [] : [];
+
+      const fallback = {
+        stopPoints: toCartesianFallback(stopSource),
+        sampledPoints: toCartesianFallback(sampledSource)
+      };
+
+      setCachedPoints(fallback);
+
+      if (!terrainProvider) return;
+
+      try {
+        const [sampledStops, sampledSamples] = await Promise.all([
+          sampleTerrainMostDetailed(
+            terrainProvider,
+            stopSource.map((p) => Cartographic.clone(p))
+          ),
+          currentGeom.onlyPoints === false
+            ? sampleTerrainMostDetailed(
+                terrainProvider,
+                sampledSource.map((p) => Cartographic.clone(p))
+              )
+            : Promise.resolve([])
+        ]);
+
+        if (!active) return;
+
+        setCachedPoints({
+          stopPoints: sampledStops.map((p) =>
+            Cartesian3.fromRadians(
+              p.longitude,
+              p.latitude,
+              p.height ?? 0,
+              ellipsoid
+            )
+          ),
+          sampledPoints:
+            currentGeom.onlyPoints === false
+              ? sampledSamples.map((p) =>
+                  Cartesian3.fromRadians(
+                    p.longitude,
+                    p.latitude,
+                    p.height ?? 0,
+                    ellipsoid
+                  )
+                )
+              : []
+        });
+      } catch {
+        if (!active) return;
+      }
+    };
+
+    void sampleAndCache();
+
+    return () => {
+      active = false;
+    };
+  }, [currentGeom, terria.cesium]);
 
   useEffect(() => {
     if (!measurablePanelIsVisible) return;
 
     const handleMouseProximity = () => {
+      const scene = terria?.cesium?.scene;
+      const ellipsoid = scene?.globe?.ellipsoid;
+      if (!scene || !ellipsoid) return;
+
       const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
+      const currentGeometry =
+        terria.measurableGeomList[terria.measurableGeometryIndex];
+
       if (
         !mouseCoords ||
         !terria.measurableGeomList ||
-        !terria.measurableGeomList[terria.measurableGeometryIndex]
+        !currentGeometry ||
+        !cachedPoints
       ) {
         return;
       }
 
       const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
 
-      const getDynamicProximityMeters = (): number => {
-        const fallbackMeters = 150;
-        if (!terria?.cesium) return fallbackMeters;
-
-        const { scene } = terria.cesium;
-        const canvas = scene.canvas;
-        const centerX = Math.floor(canvas.clientWidth / 2);
-        const centerY = Math.floor(canvas.clientHeight / 2);
-
-        const leftRay = scene.camera.getPickRay(
-          new Cartesian2(centerX, centerY)
-        );
-        const rightRay = scene.camera.getPickRay(
-          new Cartesian2(centerX + 1, centerY)
-        );
-        if (!isDefined(leftRay) || !isDefined(rightRay)) return fallbackMeters;
-
-        const globe = scene.globe;
-        const leftPosition = globe.pick(leftRay, scene);
-        const rightPosition = globe.pick(rightRay, scene);
-        if (!isDefined(leftPosition) || !isDefined(rightPosition)) {
-          return fallbackMeters;
-        }
-
-        const metersPerPixel = Cartesian3.distance(leftPosition, rightPosition);
-        const proximityPixels = 8;
-        const minProximityMeters = 1;
-        const maxProximityMeters = 25000;
-        const proximityMeters = metersPerPixel * proximityPixels;
-
-        return Math.min(
-          maxProximityMeters,
-          Math.max(minProximityMeters, proximityMeters)
-        );
-      };
-
-      const findNearestPointInRange = (
-        points: Cartographic[],
-        proximityMeters: number
-      ): { point: Cartographic; idx: number } | null => {
+      const findNearestPointInRangeScreen = (
+        points: Cartesian3[],
+        mouseCoords: Cartographic,
+        pixelRadius: number
+      ): { point: Cartesian3; idx: number } | null => {
         if (!points.length) return null;
 
-        const ellipsoid = terria?.cesium?.scene?.globe?.ellipsoid;
-        if (!ellipsoid) return null;
+        const scene = terria?.cesium?.scene;
+        const ellipsoid = scene?.globe?.ellipsoid;
+        if (!scene || !ellipsoid) return null;
 
-        const mouseCartesian = Cartographic.toCartesian(mouseCoords, ellipsoid);
-        if (!isDefined(mouseCartesian)) return null;
+        const mouseCartesian = Cartesian3.fromRadians(
+          mouseCoords.longitude,
+          mouseCoords.latitude,
+          mouseCoords.height ?? 0,
+          ellipsoid
+        );
 
-        let nearestPoint: Cartographic | null = null;
+        const mouseWindowPos = SceneTransforms.wgs84ToWindowCoordinates(
+          scene,
+          mouseCartesian
+        );
+        if (!isDefined(mouseWindowPos)) return null;
+
+        let nearestPoint: Cartesian3 | null = null;
         let nearestIdx: number | null = null;
         let nearestDistanceSquared = Number.POSITIVE_INFINITY;
-        const proximityMetersSquared = proximityMeters * proximityMeters;
+        const radiusSquared = pixelRadius * pixelRadius;
 
-        points.forEach((point, idx) => {
-          const pointCartesian = Cartographic.toCartesian(point, ellipsoid);
-          if (!isDefined(pointCartesian)) return;
+        for (let idx = 0; idx < points.length; idx++) {
+          const pointCartesian = points[idx];
 
-          const distanceSquared = Cartesian3.distanceSquared(
-            mouseCartesian,
+          const windowPos = SceneTransforms.wgs84ToWindowCoordinates(
+            scene,
             pointCartesian
           );
+          if (!isDefined(windowPos)) continue;
+
+          const dx = windowPos.x - mouseWindowPos.x;
+          const dy = windowPos.y - mouseWindowPos.y;
+          const distanceSquared = dx * dx + dy * dy;
+
           if (
-            distanceSquared <= proximityMetersSquared &&
+            distanceSquared <= radiusSquared &&
             distanceSquared < nearestDistanceSquared
           ) {
             nearestDistanceSquared = distanceSquared;
-            nearestPoint = point;
+            nearestPoint = pointCartesian;
             nearestIdx = idx;
           }
-        });
+        }
 
         if (nearestPoint && nearestIdx !== null) {
           return { point: nearestPoint, idx: nearestIdx };
@@ -119,16 +202,15 @@ const MeasurableMouseProximity = observer((props: Props) => {
         return null;
       };
 
-      const currentGeometry =
-        terria.measurableGeomList[terria.measurableGeometryIndex];
-      const proximityMeters = getDynamicProximityMeters();
-      const clearProximityMeters = proximityMeters * 1.5;
+      const proximityPixels = 10;
+      const clearProximityPixels = 14;
 
       const sampledNearby =
         currentGeometry?.onlyPoints === false
-          ? findNearestPointInRange(
-              currentGeometry.sampledPoints ?? [],
-              proximityMeters
+          ? findNearestPointInRangeScreen(
+              cachedPoints.sampledPoints,
+              mouseCoords,
+              proximityPixels
             )
           : null;
 
@@ -138,9 +220,10 @@ const MeasurableMouseProximity = observer((props: Props) => {
         viewState.setSelectedSampledPointIdx(null);
       }
 
-      const stopNearby = findNearestPointInRange(
-        currentGeometry.stopPoints ?? [],
-        proximityMeters
+      const stopNearby = findNearestPointInRangeScreen(
+        cachedPoints.stopPoints,
+        mouseCoords,
+        proximityPixels
       );
 
       if (stopNearby) {
@@ -151,26 +234,32 @@ const MeasurableMouseProximity = observer((props: Props) => {
         viewState.setSelectedStopPointIdx(null);
       }
 
-      const markerPoint = stopNearby?.point ?? sampledNearby?.point;
-
-      const stopFar = findNearestPointInRange(
-        currentGeometry.stopPoints ?? [],
-        clearProximityMeters
+      const stopFar = findNearestPointInRangeScreen(
+        cachedPoints.stopPoints,
+        mouseCoords,
+        clearProximityPixels
       );
 
       const sampledFar =
         currentGeometry?.onlyPoints === false
-          ? findNearestPointInRange(
-              currentGeometry.sampledPoints ?? [],
-              clearProximityMeters
+          ? findNearestPointInRangeScreen(
+              cachedPoints.sampledPoints,
+              mouseCoords,
+              clearProximityPixels
             )
           : null;
 
       const mouseDefinitelyOutside = !stopFar && !sampledFar;
 
+      const markerPoint = stopNearby?.point ?? sampledNearby?.point;
+
       if (markerPoint) {
-        lastMarkerRef.current = markerPoint;
-        MeasurablePanelManager.addMarker(markerPoint);
+        const markerCartographic = Cartographic.fromCartesian(
+          markerPoint,
+          ellipsoid
+        );
+        lastMarkerRef.current = markerCartographic;
+        MeasurablePanelManager.addMarker(markerCartographic);
       } else if (mouseDefinitelyOutside && !isPointerOverChart) {
         lastMarkerRef.current = null;
         viewState.setSelectedStopPointIdx(null);
@@ -210,7 +299,8 @@ const MeasurableMouseProximity = observer((props: Props) => {
     terria.measurableGeometryIndex,
     currentGeom,
     measurablePanelIsVisible,
-    onHighlightedRowChange
+    onHighlightedRowChange,
+    cachedPoints
   ]);
 
   return null;
