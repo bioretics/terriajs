@@ -42,6 +42,7 @@ import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
 import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
+import ViewerMode from "./ViewerMode";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -187,6 +188,24 @@ export default class UserDrawing extends MappableMixin(
     return this.drawRectangle
       ? [this.otherEntities]
       : [this.pointEntities, this.otherEntities];
+  }
+
+  private get pointBillboardOptions() {
+    if (this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D) {
+      return {
+        image: this.svgPoint,
+        heightReference: HeightReference.NONE,
+        eyeOffset: Cartesian3.ZERO,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
+      };
+    }
+
+    return {
+      image: this.svgPoint,
+      heightReference: HeightReference.CLAMP_TO_GROUND,
+      eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
+      disableDepthTestDistance: Number.POSITIVE_INFINITY
+    };
   }
 
   get svgPoint() {
@@ -517,11 +536,7 @@ export default class UserDrawing extends MappableMixin(
           position: new ConstantPositionProperty(
             Cartographic.toCartesian(drawStopPoints[i])
           ),
-          billboard: {
-            image: this.svgPoint,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-          }
+          billboard: this.pointBillboardOptions as any
         });
         this.pointEntities.entities.add(pointEntity);
       }
@@ -765,11 +780,7 @@ export default class UserDrawing extends MappableMixin(
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
-      billboard: {
-        image: this.svgPoint,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      } as any
+      billboard: this.pointBillboardOptions as any
     });
     // Remove the existing points if we are in drawRectangle mode and the user
     // has picked a 3rd point. This lets the user draw new rectangle that
@@ -796,11 +807,7 @@ export default class UserDrawing extends MappableMixin(
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
-      billboard: {
-        image: this.svgPoint,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      } as any
+      billboard: this.pointBillboardOptions as any
     });
     this.pointEntities.entities.suspendEvents();
     const points: Entity[] = clone(this.pointEntities.entities.values, false);

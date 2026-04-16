@@ -121,6 +121,8 @@ export default class MeasurableGeometryManager {
     const terrainProvider = this.terria.cesium?.scene?.terrainProvider;
     const ellipsoid =
       this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
+    const canSampleMostDetailed =
+      !!terrainProvider && !!(terrainProvider as any).availability;
 
     // index of the original stops in the new array of sampling points
     const originalStopsIndex: number[] = [0];
@@ -150,8 +152,11 @@ export default class MeasurableGeometryManager {
 
     // sample points on terrain
     const terrainPromises = [
-      terrainProvider
-        ? sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics)
+      canSampleMostDetailed
+        ? sampleTerrainMostDetailed(
+            terrainProvider,
+            interpolatedCartographics
+          ).catch(() => interpolatedCartographics)
         : Promise.resolve(interpolatedCartographics)
     ];
     if (
