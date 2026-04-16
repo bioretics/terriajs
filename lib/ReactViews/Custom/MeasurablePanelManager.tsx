@@ -36,9 +36,18 @@ class MeasurablePanelMarkerModel extends MappableMixin(
 export default class MeasurablePanelManager {
   private static markerModel: MeasurablePanelMarkerModel | null = null;
   private static terria: Terria;
+  private static pointerOverChart = false;
 
   static initialize(terria: Terria) {
     MeasurablePanelManager.terria = terria;
+  }
+
+  static setPointerOverChart(value: boolean) {
+    MeasurablePanelManager.pointerOverChart = value;
+  }
+
+  static isPointerOverChart() {
+    return MeasurablePanelManager.pointerOverChart;
   }
 
   private static initializeModel() {
