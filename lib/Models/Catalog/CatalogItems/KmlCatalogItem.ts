@@ -12,6 +12,7 @@ import Property from "terriajs-cesium/Source/DataSources/Property";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import { cesiumColorToKmlAbgr } from "../../../Core/KmlColorUtils";
 import isDefined from "../../../Core/isDefined";
 import readXml from "../../../Core/readXml";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
@@ -27,6 +28,7 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import Color from "terriajs-cesium/Source/Core/Color";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
@@ -429,7 +431,14 @@ class KmlCatalogItem
             allCoordinates[allCoordinates.length - 1]
           ));
 
-      this.asPath(positions, pathNotes, i, closeLoop);
+      this.asPath(
+        positions,
+        pathNotes,
+        i,
+        closeLoop,
+        undefined,
+        ...extractEntityColors(element)
+      );
     });
   }
 
@@ -532,6 +541,45 @@ function getPropertyValue<T>(property: Property | undefined): T | undefined {
     return undefined;
   }
   return property.getValue(JulianDate.now());
+}
+
+function extractEntityColors(
+  entity: Entity
+): [string | undefined, string | undefined, boolean | undefined] {
+  const now = JulianDate.now();
+  let lineColor: string | undefined;
+  let polyColor: string | undefined;
+  let polyFill: boolean | undefined;
+
+  if (entity.polygon) {
+    const outlineColor = entity.polygon.outlineColor?.getValue(now);
+    if (outlineColor && outlineColor instanceof Color) {
+      lineColor = cesiumColorToKmlAbgr(outlineColor);
+    }
+    const material = entity.polygon.material;
+    if (material) {
+      const materialColor = (material as any).color?.getValue(now);
+      if (materialColor && materialColor instanceof Color) {
+        polyColor = cesiumColorToKmlAbgr(materialColor);
+      }
+    }
+    const fill = entity.polygon.fill?.getValue(now);
+    if (fill !== undefined) {
+      polyFill = fill;
+    }
+  }
+
+  if (entity.polyline) {
+    const material = entity.polyline.material;
+    if (material) {
+      const materialColor = (material as any).color?.getValue(now);
+      if (materialColor && materialColor instanceof Color) {
+        lineColor = cesiumColorToKmlAbgr(materialColor);
+      }
+    }
+  }
+
+  return [lineColor, polyColor, polyFill];
 }
 
 function samplePolygonHierarchyPositions(

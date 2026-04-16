@@ -6,12 +6,14 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
 import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
 import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 import {
   EllipsoidGeodesic,
   exportKml,
   exportKmlResultKml
 } from "terriajs-cesium";
 import DataUri from "../../Core/DataUri";
+import { kmlAbgrToCesiumColor } from "../../Core/KmlColorUtils";
 import { MeasurableGeometry } from "./MeasurableGeometryManager";
 import { DownloadLink } from "./MeasurableGeometryDownload";
 
@@ -168,10 +170,11 @@ export default class MeasurableGeometryExporter {
           <description>${geom.pathNotes ?? ""}</description>
           <Style>
             <LineStyle>
-              <color>ff0000ff</color>
+              <color>${geom.lineColor ?? "ff0000ff"}</color>
             </LineStyle>
             <PolyStyle>
-              <fill>0</fill>
+              <fill>${geom.polyFill ?? false ? 1 : 0}</fill>
+              ${geom.polyColor ? `<color>${geom.polyColor}</color>` : ""}
             </PolyStyle>
           </Style>
           <Polygon>
@@ -211,13 +214,17 @@ export default class MeasurableGeometryExporter {
     };
 
     geomList.forEach((geom, idx) => {
+      const lineMaterial = geom.lineColor
+        ? new ColorMaterialProperty(kmlAbgrToCesiumColor(geom.lineColor))
+        : undefined;
       output.entities.add(
         new Entity({
           id: idx.toString(),
           polyline: new PolylineGraphics({
             positions: geom.stopPoints.map((elem) =>
               Cartographic.toCartesian(elem, ellipsoid)
-            )
+            ),
+            ...(lineMaterial ? { material: lineMaterial } : {})
           }),
           description: geom.pathNotes
         })
@@ -261,10 +268,11 @@ export default class MeasurableGeometryExporter {
                 <description>${geom.pathNotes}</description>
                 <Style>
                   <LineStyle>
-                    <color>ff0000ff</color>
+                    <color>${geom.lineColor ?? "ff0000ff"}</color>
                   </LineStyle>
                   <PolyStyle>
-                    <fill>0</fill>
+                    <fill>${geom.polyFill ?? false ? 1 : 0}</fill>
+                    ${geom.polyColor ? `<color>${geom.polyColor}</color>` : ""}
                   </PolyStyle>
                 </Style>
                 <Polygon>
@@ -295,13 +303,18 @@ export default class MeasurableGeometryExporter {
       ellipsoid: ellipsoid
     };
 
+    const lineMaterial = geom.lineColor
+      ? new ColorMaterialProperty(kmlAbgrToCesiumColor(geom.lineColor))
+      : undefined;
+
     output.entities.add(
       new Entity({
         id: "0",
         polyline: new PolylineGraphics({
           positions: geom.stopPoints.map((elem) =>
             Cartographic.toCartesian(elem, ellipsoid)
-          )
+          ),
+          ...(lineMaterial ? { material: lineMaterial } : {})
         }),
         name: name,
         description: geom.pathNotes
@@ -325,11 +338,17 @@ export default class MeasurableGeometryExporter {
       ellipsoid: ellipsoid
     };
 
+    const pointColor = geom.lineColor
+      ? kmlAbgrToCesiumColor(geom.lineColor)
+      : undefined;
+
     geom.stopPoints.forEach((elem, index) => {
       output.entities.add(
         new Entity({
           id: index.toString(),
-          point: new PointGraphics({}),
+          point: new PointGraphics({
+            ...(pointColor ? { color: pointColor } : {})
+          }),
           position: Cartographic.toCartesian(elem, ellipsoid),
           description: geom.pointDescriptions?.[index]
         })

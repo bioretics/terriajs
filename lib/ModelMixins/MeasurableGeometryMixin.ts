@@ -30,7 +30,10 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
-      featureProperties?: JsonObject
+      featureProperties?: JsonObject,
+      lineColor?: string,
+      polyColor?: string,
+      polyFill?: boolean
     ) {
       if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
         this.terria.measurableGeometryManager.push(
@@ -47,7 +50,11 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         pathNotes,
         true,
         indexPath,
-        featureProperties
+        featureProperties,
+        undefined,
+        lineColor,
+        polyColor,
+        polyFill
       );
     }
 
@@ -56,7 +63,10 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
-      featureProperties?: JsonObject
+      featureProperties?: JsonObject,
+      lineColor?: string,
+      polyColor?: string,
+      polyFill?: boolean
     ) {
       if (!this?.terria?.cesium?.scene) {
         return;
@@ -76,7 +86,10 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           pathNotes,
           indexPath,
           closeLoop,
-          featureProperties
+          featureProperties,
+          lineColor,
+          polyColor,
+          polyFill
         );
       });
     }
