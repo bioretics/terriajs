@@ -542,6 +542,7 @@ export default class UserDrawing extends MappableMixin(
         }
         this.updateAreaLabel();
       }
+      this.dragHelper?.resetDragCount();
       this.prepareToAddNewPoint();
     });
     this.dragHelper.setUp();
