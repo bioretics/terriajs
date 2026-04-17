@@ -526,6 +526,7 @@ export default class UserDrawing extends MappableMixin(
         this.pointEntities.entities.add(pointEntity);
       }
     }
+    this.dragHelper?.updateDraggableObjects(this.pointEntities);
     this.updateSegmentLabels();
     this.terria.currentViewer.notifyRepaintRequired();
   }
@@ -772,10 +773,14 @@ export default class UserDrawing extends MappableMixin(
           }
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
-            this.addPointToPointEntities("First Point", pickedPoint);
-            if (this.autoClosePolygon) {
-              this.clickedExistingPoint(this.pointEntities.entities.values);
+
+            if (!this.clickedExistingPoint(pickedFeatures.features)) {
+              this.addPointToPointEntities("First Point", pickedPoint);
+              if (this.autoClosePolygon) {
+                this.clickedExistingPoint(this.pointEntities.entities.values);
+              }
             }
+
             reaction.dispose();
             this.prepareToAddNewPoint();
           }
