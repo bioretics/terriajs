@@ -59,6 +59,8 @@ const MeasurablePanel = observer((props: Props) => {
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const [showTourPrompt, setShowTourPrompt] = React.useState(false);
+  const [isEditingUploadedPath, setIsEditingUploadedPath] =
+    React.useState(false);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = props.viewState.useSmallScreenInterface;
 
@@ -108,6 +110,7 @@ const MeasurablePanel = observer((props: Props) => {
       1,
       terria.measurableGeometryManager.length - 1
     );
+    setIsEditingUploadedPath(false);
     viewState.measurablePanelIsVisible = false;
     viewState.mobileMeasureToolsButtonVisible = false;
     [
@@ -135,6 +138,7 @@ const MeasurablePanel = observer((props: Props) => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
+    setIsEditingUploadedPath(true);
     geom.isFileUploaded = false;
 
     const isClosed = geom.isClosed || geom.hasArea;
@@ -1066,8 +1070,9 @@ const MeasurablePanel = observer((props: Props) => {
                   </Select>
                   {terria.measurableGeomList &&
                     terria.measurableGeomList[terria.measurableGeometryIndex] &&
-                    !terria.measurableGeomList[terria.measurableGeometryIndex]
-                      .isFileUploaded &&
+                    (!terria.measurableGeomList[terria.measurableGeometryIndex]
+                      .isFileUploaded ||
+                      isEditingUploadedPath) &&
                     !isMobile && (
                       <div style={{ display: "flex", alignItems: "center" }}>
                         <Button
@@ -1171,24 +1176,25 @@ const MeasurablePanel = observer((props: Props) => {
                       </div>
                     )}
                   {terria.measurableGeomList[terria.measurableGeometryIndex]
-                    .isFileUploaded && (
-                    <Button
-                      disabled={
-                        terria.measurableGeomList[
-                          terria.measurableGeometryIndex
-                        ]?.isPointAdding
-                      }
-                      css={`
-                        color: ${theme.textLight};
-                        background: ${theme.colorPrimary};
-                        margin-left: 10px;
-                      `}
-                      onClick={handleEditUploadedPath}
-                      title={i18next.t("measurableGeometry.editPath")}
-                    >
-                      {i18next.t("measurableGeometry.edit")}
-                    </Button>
-                  )}
+                    .isFileUploaded &&
+                    !isEditingUploadedPath && (
+                      <Button
+                        disabled={
+                          terria.measurableGeomList[
+                            terria.measurableGeometryIndex
+                          ]?.isPointAdding
+                        }
+                        css={`
+                          color: ${theme.textLight};
+                          background: ${theme.colorPrimary};
+                          margin-left: 10px;
+                        `}
+                        onClick={handleEditUploadedPath}
+                        title={i18next.t("measurableGeometry.editPath")}
+                      >
+                        {i18next.t("measurableGeometry.edit")}
+                      </Button>
+                    )}
                 </div>
               )}
             <Box
