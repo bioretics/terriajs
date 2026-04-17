@@ -1255,7 +1255,17 @@ const MeasurablePanel = observer((props: Props) => {
 
         {!!terria?.cesium?.scene?.globe?.ellipsoid &&
           terria.measurableGeomList &&
-          terria.measurableGeomList[terria.measurableGeometryIndex] && (
+          terria.measurableGeomList[terria.measurableGeometryIndex] &&
+          (isEditingUploadedPath ||
+            [
+              MeasureToolsController.id,
+              MeasureLineTool.id,
+              MeasurePolygonTool.id,
+              MeasurePointTool.id,
+              MeasureAngleTool.id
+            ].some(
+              (id) => terria.mapNavigationModel.findItem(id)?.controller?.active
+            )) && (
             <div
               css={`
                 display: flex;
