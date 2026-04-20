@@ -131,9 +131,10 @@ const SrsSelection = (props: ISrsSelectionProps) => {
   const isCartographic = props.isCartographic;
   const conversionList = props.conversionList;
   const setSrs = props.setSrs;
+
   useEffect(() => {
     setSrs(conversionList[0]);
-  }, [isCartographic, conversionList, setSrs]);
+  }, [isCartographic, conversionList]);
 
   return (
     <div>
