@@ -128,13 +128,13 @@ interface ISrsSelectionProps {
 }
 
 const SrsSelection = (props: ISrsSelectionProps) => {
-  const isCartographic = props.isCartographic;
-  const conversionList = props.conversionList;
-  const setSrs = props.setSrs;
+  const { isCartographic, conversionList, setSrs } = props;
 
   useEffect(() => {
-    setSrs(conversionList[0]);
-  }, [isCartographic, conversionList]);
+    if (isCartographic && conversionList.length > 0) {
+      setSrs(conversionList[0]);
+    }
+  }, [isCartographic, conversionList, setSrs]);
 
   return (
     <div>
@@ -199,7 +199,9 @@ interface SharePanelState {
 @observer
 class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   static displayName = "CoordsPanel";
-
+  private setSrs = (value: ISrsConversion) => {
+    this.srs = value;
+  };
   private conversionList: ISrsConversion[] = [
     {
       desc: "EPSG:4326 WGS84 → EPSG:3003 Monte Mario / Italy zone 1",
@@ -571,9 +573,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
         <SrsSelection
           title="Conversione"
           isCartographic={this.isInputCartographic}
-          setSrs={(value: ISrsConversion) => {
-            this.srs = value;
-          }}
+          setSrs={this.setSrs}
           reset={() => {
             this.reset();
           }}
