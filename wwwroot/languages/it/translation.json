@@ -1463,6 +1463,7 @@
     "searchItemTitle": "Cerca",
     "searchItem": "Cerca",
     "pathItem": "Percorso",
+    "circleItem": "Cerchio",
     "pointsItem": "Punti",
     "playPath": "Avvia percorso",
     "dimensionsSelector": {

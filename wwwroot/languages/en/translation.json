@@ -699,6 +699,7 @@
     "searchItemTitle": "Search",
     "splitScreenMode": "SPLIT SCREEN MODE",
     "pathItem": "Path",
+    "circleItem": "Circle",
     "pointsItem": "Points",
     "playPath": "Play Path"
   },
