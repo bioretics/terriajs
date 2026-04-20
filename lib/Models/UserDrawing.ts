@@ -96,6 +96,7 @@ export default class UserDrawing extends MappableMixin(
   private mousePointEntity?: Entity;
   private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
+  private disposeViewerModeReaction?: IReactionDisposer;
 
   private isAngleMeasuring: boolean = false;
   private isPointMeasuring: boolean = false;
@@ -551,6 +552,23 @@ export default class UserDrawing extends MappableMixin(
     this.terria.currentViewer.notifyRepaintRequired();
   }
 
+  private refreshPointBillboardsForViewerMode() {
+    for (const pointEntity of this.pointEntities.entities.values) {
+      if (!pointEntity.billboard) {
+        continue;
+      }
+      pointEntity.billboard = { ...this.pointBillboardOptions } as any;
+    }
+
+    this.updateSegmentLabels();
+    this.updateAreaLabel();
+    if (this.isAngleMeasuring) {
+      this.updateAngle();
+    }
+
+    this.terria.currentViewer.notifyRepaintRequired();
+  }
+
   enterDrawMode(sender?: any) {
     this.isAngleMeasuring = sender === MeasureAngleTool.id;
     this.isPointMeasuring = sender === MeasurePointTool.id;
@@ -650,6 +668,13 @@ export default class UserDrawing extends MappableMixin(
             new ConstantProperty(clampMeasureLineToGround);
           this.terria.currentViewer.notifyRepaintRequired();
         }
+      }
+    );
+
+    this.disposeViewerModeReaction = reaction(
+      () => this.terria.mainViewer.viewerMode,
+      () => {
+        this.refreshPointBillboardsForViewerMode();
       }
     );
 
@@ -1142,6 +1167,10 @@ export default class UserDrawing extends MappableMixin(
 
     if (isDefined(this.disposeClampMeasureLineToGround)) {
       this.disposeClampMeasureLineToGround();
+    }
+
+    if (isDefined(this.disposeViewerModeReaction)) {
+      this.disposeViewerModeReaction();
     }
 
     // Allow client to clean up too
