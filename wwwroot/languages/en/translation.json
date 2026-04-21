@@ -169,6 +169,20 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Speed",
+    "interpolation": {
+      "name": "Interpolation",
+      "linear": "Linear approximation",
+      "lagrange": "Lagrange polynomial",
+      "hermite": "Hermite polynomial"
+    },
+    "trackingFrame": {
+      "name": "Tracking frame",
+      "autodetect": "Auto-detect",
+      "inertial": "Inertial",
+      "velocity": "Velocity",
+      "enu": "East-North-Up"
+    },
+    "tourPrompt": "First time using Play Path? Take a quick tour!",
     "tooltip": {
       "play": "Play path",
       "pause": "Pause path",

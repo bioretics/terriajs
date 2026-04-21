@@ -1894,4 +1894,8 @@ declare module "terriajs-cesium/Source/Widget/CesiumWidget" {
   import { CesiumWidget } from "terriajs-cesium";
   export default CesiumWidget;
 }
+declare module "terriajs-cesium/Source/Core/TrackingReferenceFrame" {
+  import { TrackingReferenceFrame } from "terriajs-cesium";
+  export default TrackingReferenceFrame;
+}
 // End Generated Declarations

@@ -172,6 +172,20 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "interpolation": {
+      "": "Interpolazione",
+      "linear": "Approssimazione lineare",
+      "lagrange": "Polinomio di Lagrange",
+      "hermite": "Polinomio di Hermite"
+    },
+    "trackingFrame": {
+      "": "Sistema di tracking",
+      "autodetect": "Auto",
+      "inertial": "Inerziale",
+      "velocity": "Velocità",
+      "enu": "Est-Nord-Su"
+    },
+    "tourPrompt": "Prima volta con Play Path? Fai un tour rapido!",
     "tooltip": {
       "play": "Avvia percorso",
       "pause": "Pausa percorso",

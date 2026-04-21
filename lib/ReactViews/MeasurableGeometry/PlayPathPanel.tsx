@@ -14,6 +14,7 @@ import { observer } from "mobx-react";
 import { useEffect, useState, useRef } from "react";
 import Box from "../../Styled/Box";
 import Text from "../../Styled/Text";
+import { TrackingReferenceFrame } from "terriajs-cesium";
 
 interface Props {
   terria: Terria;
@@ -39,6 +40,10 @@ const PlayPathPanel = observer((props: Props) => {
   const {
     playSpeed,
     setPlaySpeed,
+    interpolationMode,
+    setInterpolationMode,
+    trackingReferenceFrame,
+    setTrackingReferenceFrame,
     playingPath,
     isCameraMoving,
     countdown,
@@ -47,8 +52,7 @@ const PlayPathPanel = observer((props: Props) => {
     onPlay,
     onPause,
     onStop,
-    resetPlayPath,
-    isPitchTooLow
+    resetPlayPath
   } = usePlayPath(props.terria, props.viewState);
 
   const currentGeom =
@@ -89,7 +93,9 @@ const PlayPathPanel = observer((props: Props) => {
       props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
 
     if (currentGeom !== lastGeom) {
-      resetPlayPath();
+      if (!props.viewState.isPlayingPath && countdown === null) {
+        resetPlayPath();
+      }
       setLastGeom(currentGeom);
     }
   }, [
@@ -97,6 +103,8 @@ const PlayPathPanel = observer((props: Props) => {
     props.terria.measurableGeomList,
     props.terria.measurableGeometryIndex,
     lastGeom,
+    props.viewState.isPlayingPath,
+    countdown,
     resetPlayPath
   ]);
 
@@ -211,6 +219,7 @@ const PlayPathPanel = observer((props: Props) => {
   };
 
   const renderBody = () => {
+    const canChangeOptions = !playingPath && countdown === null;
     return (
       <div
         ref={cameraPositionRef}
@@ -220,14 +229,14 @@ const PlayPathPanel = observer((props: Props) => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 8
+          gap: 8,
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
+          overflowX: "hidden"
         }}
       >
-        {isPitchTooLow() && !playingPath && (
-          <div style={{ color: "red", marginBottom: 4 }}>
-            {i18next.t("playPath.tooltip.pitchTooLow")}
-          </div>
-        )}
         <div
           style={{
             display: "flex",
@@ -235,25 +244,23 @@ const PlayPathPanel = observer((props: Props) => {
             alignItems: "stretch",
             justifyContent: "center",
             gap: 8,
-            width: "100%"
+            width: "100%",
+            minWidth: 0
           }}
         >
           <Button
             ref={playButtonRef}
             onClick={playingPath ? onPause : onPlay}
-            disabled={
-              (!playingPath && isCameraMoving) ||
-              (!playingPath && isPitchTooLow())
-            }
+            disabled={!playingPath && isCameraMoving}
             css={`
               color: ${theme.textLight};
               background: ${theme.colorPrimary};
               min-width: 50px;
             `}
             title={
-              isPitchTooLow() && !playingPath
-                ? i18next.t("playPath.tooltip.pitchTooLow")
-                : playingPath
+              playingPath
+                ? i18next.t("playPath.tooltip.pause", "Pause")
+                : i18next.t("playPath.tooltip.play", "Play")
             }
           >
             <StyledIcon
@@ -267,7 +274,11 @@ const PlayPathPanel = observer((props: Props) => {
             title={i18next.t("playPath.tooltip.stop")}
             disabled={
               !playingPath &&
-              !(currentPointIndex > 0 && currentPointIndex < pointsSize!! - 1)
+              !(
+                pointsSize !== undefined &&
+                currentPointIndex > 0 &&
+                currentPointIndex < pointsSize - 1
+              )
             }
             css={`
               color: ${theme.textLight};
@@ -278,6 +289,111 @@ const PlayPathPanel = observer((props: Props) => {
             <StyledIcon glyph={Icon.GLYPHS.revert} styledWidth="16px" />
           </Button>
         </div>
+
+        <div
+          className="no-drag"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            minWidth: 0,
+            gap: 8
+          }}
+        >
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t("playPath.interpolation.name")}:
+          </label>
+          <select
+            value={interpolationMode}
+            onChange={(e) => setInterpolationMode(e.target.value as any)}
+            disabled={!canChangeOptions}
+            style={{
+              flex: "1 1 0%",
+              width: "100%",
+              minWidth: 0,
+              maxWidth: "100%",
+              padding: "4px 6px",
+              borderRadius: 4,
+              border: `1px solid ${theme.textLight}`,
+              background: theme.colorPrimary,
+              color: theme.textLight,
+              opacity: canChangeOptions ? 1 : 0.6,
+              cursor: canChangeOptions ? "pointer" : "not-allowed",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+          >
+            <option value="linear">
+              {i18next.t(
+                "playPath.interpolation.linear",
+                "Linear Approximation"
+              )}
+            </option>
+            <option value="lagrange">
+              {i18next.t(
+                "playPath.interpolation.lagrange",
+                "Lagrange Polynomial"
+              )}
+            </option>
+            <option value="hermite">
+              {i18next.t(
+                "playPath.interpolation.hermite",
+                "Hermite Polynomial"
+              )}
+            </option>
+          </select>
+        </div>
+
+        <div
+          className="no-drag"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            minWidth: 0,
+            gap: 8
+          }}
+        >
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t("playPath.trackingFrame.name")}:
+          </label>
+          <select
+            value={trackingReferenceFrame}
+            onChange={(e) =>
+              setTrackingReferenceFrame(Number(e.target.value) as any)
+            }
+            disabled={!canChangeOptions}
+            style={{
+              flex: "1 1 0%",
+              width: "100%",
+              minWidth: 0,
+              maxWidth: "100%",
+              padding: "4px 6px",
+              borderRadius: 4,
+              border: `1px solid ${theme.textLight}`,
+              background: theme.colorPrimary,
+              color: theme.textLight,
+              opacity: canChangeOptions ? 1 : 0.6,
+              cursor: canChangeOptions ? "pointer" : "not-allowed",
+              overflow: "hidden",
+              textOverflow: "ellipsis"
+            }}
+          >
+            <option value={TrackingReferenceFrame.AUTODETECT}>
+              {i18next.t("playPath.trackingFrame.autodetect", "Auto-detect")}
+            </option>
+            <option value={TrackingReferenceFrame.INERTIAL}>
+              {i18next.t("playPath.trackingFrame.inertial")}
+            </option>
+            <option value={TrackingReferenceFrame.VELOCITY}>
+              {i18next.t("playPath.trackingFrame.velocity")}
+            </option>
+            <option value={TrackingReferenceFrame.ENU}>
+              {i18next.t("playPath.trackingFrame.enu")}
+            </option>
+          </select>
+        </div>
+
         <div
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
           className="no-drag"
@@ -285,7 +401,8 @@ const PlayPathPanel = observer((props: Props) => {
             display: "flex",
             alignItems: "center",
             width: "100%",
-            maxWidth: "130%",
+            maxWidth: "100%",
+            minWidth: 0,
             gap: 8
           }}
         >
@@ -293,12 +410,12 @@ const PlayPathPanel = observer((props: Props) => {
             {i18next.t("playPath.speed")}:
           </label>
           <Slider
-            min={0.5}
+            min={0.1}
             max={3}
             step={0.1}
             value={playSpeed}
             onChange={(val) => {
-              setPlaySpeed(val);
+              setPlaySpeed(val as number);
             }}
             aria-valuetext={`${i18next.t(
               "playPath.tooltip.speedSlider"
@@ -322,17 +439,24 @@ const PlayPathPanel = observer((props: Props) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.1,
+        width: Math.min(380, Math.max(300, window.innerWidth * 0.22)),
         height: "auto"
       }}
       maxWidth={window.innerWidth * 0.4}
+      minWidth={280}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
       <div
         ref={panelRef}
         className={panelClassName}
-        style={{ pointerEvents: "auto", position: "relative" }}
+        style={{
+          pointerEvents: "auto",
+          position: "relative",
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box"
+        }}
         aria-hidden={!props.viewState.playPathPanelIsVisible}
       >
         {renderTourPrompt()}
