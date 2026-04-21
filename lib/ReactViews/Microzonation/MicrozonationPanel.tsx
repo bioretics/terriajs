@@ -76,7 +76,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   );
   const rafRef = useRef<number | null>(null);
 
-  const wfsConfig = terria.configParameters.microzonationConfig;
+  const wfsConfig = terria.microzonationConfig;
 
   const [records, setRecords] = useState<MicrozonationRecord[]>([]);
   const [propertiesById, setPropertiesById] = useState<

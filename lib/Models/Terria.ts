@@ -105,6 +105,7 @@ import IElementConfig from "./IElementConfig";
 import InitSource, {
   InitSourceData,
   InitSourceFromData,
+  MicrozonationConfig,
   ShareInitSourceData,
   StoryData,
   isInitFromData,
@@ -190,20 +191,6 @@ export interface ConfigParameters {
    * Whether the story is enabled. If false story function button won't be available.
    */
   storyEnabled: boolean;
-
-  /**
-   * Enables seismic microzonation panel.
-   */
-  microzonationEnabled?: boolean;
-
-  /**
-   * WFS configuration for the seismic microzonation service.
-   */
-  microzonationConfig?: {
-    url: string;
-    typeName: string;
-    outputFormat?: string;
-  };
 
   /**
    * True (the default) to intercept the browser's print feature and use a custom one accessible through the Share panel.
@@ -677,8 +664,6 @@ export default class Terria {
     feedbackUrl: undefined,
     initFragmentPaths: ["init/"],
     storyEnabled: true,
-    microzonationEnabled: false,
-    microzonationConfig: undefined,
     interceptBrowserPrint: true,
     tabbedCatalog: false,
     useCesiumIonTerrain: true,
@@ -761,6 +746,12 @@ export default class Terria {
     globeTranslucency: undefined,
     showEnableCollisionControl: false
   };
+
+  @observable
+  microzonationEnabled: boolean = false;
+
+  @observable
+  microzonationConfig: MicrozonationConfig | undefined;
 
   @observable
   pickedFeatures: PickedFeatures | undefined;
@@ -1936,8 +1927,13 @@ export default class Terria {
       const parameterOverrides: Partial<ConfigParameters> = {};
       let hasOverrides = false;
 
-      const { brandBarElements, brandBarSmallElements, displayOneBrand } =
-        initData.parameters;
+      const {
+        brandBarElements,
+        brandBarSmallElements,
+        displayOneBrand,
+        microzonationEnabled,
+        microzonationConfig
+      } = initData.parameters;
 
       const stringArrayFrom = (value: unknown): string[] | undefined => {
         if (!Array.isArray(value)) return undefined;
@@ -1962,6 +1958,24 @@ export default class Terria {
       if (isJsonNumber(displayOneBrand)) {
         parameterOverrides.displayOneBrand = Number(displayOneBrand);
         hasOverrides = true;
+      }
+
+      if (isJsonBoolean(microzonationEnabled)) {
+        this.microzonationEnabled = microzonationEnabled;
+      }
+
+      if (
+        isJsonObject(microzonationConfig) &&
+        isJsonString(microzonationConfig.url) &&
+        isJsonString(microzonationConfig.typeName)
+      ) {
+        this.microzonationConfig = {
+          url: microzonationConfig.url,
+          typeName: microzonationConfig.typeName,
+          outputFormat: isJsonString(microzonationConfig.outputFormat)
+            ? microzonationConfig.outputFormat
+            : undefined
+        };
       }
 
       if (hasOverrides) {

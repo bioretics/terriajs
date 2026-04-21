@@ -38,7 +38,7 @@ const MenuBar = observer((props) => {
   };
 
   const storyEnabled = terria.configParameters.storyEnabled;
-  const microzonationEnabled = terria.configParameters?.microzonationEnabled;
+  const microzonationEnabled = terria.microzonationEnabled;
   const loginEnabled = terria.configParameters.userProfileLoginServiceUrl;
   const enableTools = terria.userProperties.get("tools") === "1";
 
