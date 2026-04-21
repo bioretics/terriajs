@@ -161,7 +161,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
             ellipsoid
           );
 
-          const mouseWindowPos = SceneTransforms.wgs84ToWindowCoordinates(
+          const mouseWindowPos = SceneTransforms.worldToWindowCoordinates(
             scene,
             mouseCartesian
           );
@@ -186,7 +186,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
 
           let pointScreenPoint: { x: number; y: number } | undefined;
           if (scene) {
-            const windowPos = SceneTransforms.wgs84ToWindowCoordinates(
+            const windowPos = SceneTransforms.worldToWindowCoordinates(
               scene,
               pointCartesian
             );

@@ -121,10 +121,21 @@ function configureWebpack(
   });
 
   const zipJsDir = path.dirname(require.resolve("@zip.js/zip.js/package.json"));
+  const fs = require("fs");
+  const nestedZipJsDir = path.join(
+    cesiumDir,
+    "node_modules",
+    "@zip.js",
+    "zip.js"
+  );
+  const zipJsIncludeDirs = [zipJsDir];
+  if (fs.existsSync(nestedZipJsDir)) {
+    zipJsIncludeDirs.push(nestedZipJsDir);
+  }
 
   config.module.rules.push({
     test: /\.js$/,
-    include: zipJsDir,
+    include: zipJsIncludeDirs,
     loader: require.resolve("@open-wc/webpack-import-meta-loader")
   });
 

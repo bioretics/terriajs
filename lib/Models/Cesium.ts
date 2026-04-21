@@ -21,7 +21,6 @@ import CesiumTerrainProvider from "terriajs-cesium/Source/Core/CesiumTerrainProv
 import Clock from "terriajs-cesium/Source/Core/Clock";
 import createWorldTerrainAsync from "terriajs-cesium/Source/Core/createWorldTerrainAsync";
 import Credit from "terriajs-cesium/Source/Core/Credit";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import defined from "terriajs-cesium/Source/Core/defined";
 import destroyObject from "terriajs-cesium/Source/Core/destroyObject";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -104,6 +103,75 @@ type CreditDisplayElement = {
   credit: Credit;
   count: number;
 };
+
+type DataSourceWithVisualizers = DataSource & {
+  _visualizers?: any[];
+};
+
+type DataSourceDisplayPrototype = {
+  _onDataSourceAdded: (
+    dataSourceCollection: DataSourceCollection | undefined,
+    dataSource: DataSourceWithVisualizers
+  ) => any;
+  _onDataSourceRemoved: (
+    dataSourceCollection: DataSourceCollection | undefined,
+    dataSource: DataSourceWithVisualizers
+  ) => any;
+  __terriaVisualizerGuardsPatched?: boolean;
+};
+
+function patchCesiumDataSourceDisplay() {
+  const prototype =
+    DataSourceDisplay.prototype as any as DataSourceDisplayPrototype;
+
+  if (prototype.__terriaVisualizerGuardsPatched) {
+    return;
+  }
+
+  const originalOnDataSourceAdded = prototype._onDataSourceAdded;
+  prototype._onDataSourceAdded = function (
+    this: DataSourceDisplay,
+    dataSourceCollection: DataSourceCollection | undefined,
+    dataSource: DataSourceWithVisualizers
+  ) {
+    const result = originalOnDataSourceAdded.call(
+      this,
+      dataSourceCollection,
+      dataSource
+    );
+
+    if (!isDefined(dataSource._visualizers)) {
+      dataSource._visualizers = [];
+    }
+
+    return result;
+  };
+
+  const originalOnDataSourceRemoved = prototype._onDataSourceRemoved;
+  prototype._onDataSourceRemoved = function (
+    this: DataSourceDisplay,
+    dataSourceCollection: DataSourceCollection | undefined,
+    dataSource: DataSourceWithVisualizers
+  ) {
+    if (!isDefined(dataSource._visualizers)) {
+      dataSource._visualizers = [];
+    }
+
+    const result = originalOnDataSourceRemoved.call(
+      this,
+      dataSourceCollection,
+      dataSource
+    );
+
+    if (!isDefined(dataSource._visualizers)) {
+      dataSource._visualizers = [];
+    }
+
+    return result;
+  };
+
+  prototype.__terriaVisualizerGuardsPatched = true;
+}
 
 // Intermediary
 const cartesian3Scratch = new Cartesian3();
@@ -226,6 +294,8 @@ export default class Cesium extends GlobeOrMap {
     }
 
     //new Cesium3DTilesInspector(document.getElementsByClassName("cesium-widget").item(0), this.scene);
+
+    patchCesiumDataSourceDisplay();
 
     this.dataSourceDisplay = new DataSourceDisplay({
       scene: this.scene,
@@ -1679,10 +1749,8 @@ export default class Cesium extends GlobeOrMap {
                 const screenPosition = this._computePositionOnScreen(
                   result.pickPosition
                 );
-
-                if (!screenPosition) return;
-
                 const pickedSide =
+                  screenPosition &&
                   this._getSplitterSideForScreenPosition(screenPosition);
 
                 features = features.filter((feature) => {
@@ -1696,7 +1764,7 @@ export default class Cesium extends GlobeOrMap {
 
               return resultFeaturesSoFar.concat(features);
             },
-            defaultValue(existingFeatures, [])
+            existingFeatures ?? []
           );
         });
       })
@@ -1763,7 +1831,7 @@ export default class Cesium extends GlobeOrMap {
    * @return The screen position, or undefined if the position is not on the screen.
    */
   private _computePositionOnScreen(position: Cartesian3, result?: Cartesian2) {
-    return SceneTransforms.wgs84ToWindowCoordinates(
+    return SceneTransforms.worldToWindowCoordinates(
       this.scene,
       position,
       result

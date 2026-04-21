@@ -246,10 +246,6 @@ declare module "terriajs-cesium/Source/Core/DefaultProxy" {
   import { DefaultProxy } from "terriajs-cesium";
   export default DefaultProxy;
 }
-declare module "terriajs-cesium/Source/Core/defaultValue" {
-  import { defaultValue } from "terriajs-cesium";
-  export default defaultValue;
-}
 declare module "terriajs-cesium/Source/Core/defined" {
   import { defined } from "terriajs-cesium";
   export default defined;

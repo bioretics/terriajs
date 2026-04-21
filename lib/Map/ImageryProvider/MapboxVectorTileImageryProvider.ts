@@ -7,7 +7,6 @@ import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Credit from "terriajs-cesium/Source/Core/Credit";
 import DefaultProxy from "terriajs-cesium/Source/Core/DefaultProxy";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import DeveloperError from "terriajs-cesium/Source/Core/DeveloperError";
 import CesiumEvent from "terriajs-cesium/Source/Core/Event";
 import Intersect from "terriajs-cesium/Source/Core/Intersect";
@@ -80,7 +79,7 @@ export default class MapboxVectorTileImageryProvider
     this._uriTemplate = new URITemplate(options.url);
     this._layerName = options.layerName;
 
-    this._subdomains = defaultValue(options.subdomains, []);
+    this._subdomains = (options.subdomains || []) as string[];
     this._styleFunc = options.styleFunc;
 
     this._tilingScheme = new WebMercatorTilingScheme();
@@ -88,12 +87,9 @@ export default class MapboxVectorTileImageryProvider
     this._tileWidth = 256;
     this._tileHeight = 256;
 
-    this._minimumLevel = defaultValue(options.minimumZoom, 0);
-    this._maximumLevel = defaultValue(options.maximumZoom, Infinity);
-    this._maximumNativeLevel = defaultValue(
-      options.maximumNativeZoom,
-      this._maximumLevel
-    );
+    this._minimumLevel = options.minimumZoom ?? 0;
+    this._maximumLevel = options.maximumZoom ?? Infinity;
+    this._maximumNativeLevel = options.maximumNativeZoom ?? this._maximumLevel;
 
     this._rectangle = isDefined(options.rectangle)
       ? Rectangle.intersection(
@@ -522,7 +518,7 @@ export default class MapboxVectorTileImageryProvider
           regionStyling.fillStyle = "rgba(0,0,0,0)";
           regionStyling.lineJoin = "round";
           regionStyling.lineWidth = Math.floor(
-            1.5 * defaultValue(regionStyling.lineWidth, 1) + 1
+            1.5 * (regionStyling.lineWidth ?? 1) + 1
           );
           return regionStyling;
         }

@@ -3,7 +3,6 @@ import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import EventHelper from "terriajs-cesium/Source/Core/EventHelper";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import destroyObject from "terriajs-cesium/Source/Core/destroyObject";
 import BoundingSphereState from "terriajs-cesium/Source/DataSources/BoundingSphereState";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
@@ -73,10 +72,9 @@ export default class LeafletDataSourceDisplay {
     this._displayID = createGuid();
     this._scene = options.scene;
     this._dataSourceCollection = options.dataSourceCollection;
-    this._visualizersCallback = defaultValue(
-      options.visualizersCallback,
-      LeafletDataSourceDisplay.defaultVisualizersCallback
-    );
+    this._visualizersCallback =
+      options.visualizersCallback ??
+      LeafletDataSourceDisplay.defaultVisualizersCallback;
 
     this._eventHelper = new EventHelper();
     this._eventHelper.add(
@@ -176,11 +174,8 @@ export default class LeafletDataSourceDisplay {
     _dataSourceCollection: DataSourceCollection | undefined,
     dataSource: LeafletDataSource
   ) {
-    const visualizers = this._visualizersCallback(
-      this._scene,
-      undefined,
-      dataSource
-    );
+    const visualizers =
+      this._visualizersCallback(this._scene, undefined, dataSource) ?? [];
 
     dataSource.visualizersByDisplayID = dataSource.visualizersByDisplayID || {};
     dataSource.visualizersByDisplayID[this._displayID] = visualizers;
@@ -205,7 +200,9 @@ export default class LeafletDataSourceDisplay {
 
       if (isDefined(dataSource.visualizers)) {
         const index = dataSource.visualizers.indexOf(visualizer);
-        dataSource.visualizers.splice(index, 1);
+        if (index !== -1) {
+          dataSource.visualizers.splice(index, 1);
+        }
       }
     }
 
@@ -291,7 +288,7 @@ export default class LeafletDataSourceDisplay {
     const tmp = new BoundingSphere();
 
     let count = 0;
-    let state = BoundingSphereState.DONE;
+    let state: BoundingSphereState;
     const visualizers = dataSource.visualizers;
     const visualizersLength = visualizers.length;
 

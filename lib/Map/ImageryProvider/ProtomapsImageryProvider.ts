@@ -30,7 +30,6 @@ import CesiumEvent from "terriajs-cesium/Source/Core/Event";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
 import TerriaError from "../../Core/TerriaError";
 import isDefined from "../../Core/isDefined";
@@ -318,12 +317,9 @@ export default class ProtomapsImageryProvider
     this.tileWidth = tileSize;
     this.tileHeight = tileSize;
 
-    this.minimumLevel = defaultValue(options.minimumZoom, 0);
-    this.maximumLevel = defaultValue(options.maximumZoom, 24);
-    this.maximumNativeZoom = defaultValue(
-      options.maximumNativeZoom,
-      this.maximumLevel
-    );
+    this.minimumLevel = options.minimumZoom ?? 0;
+    this.maximumLevel = options.maximumZoom ?? 24;
+    this.maximumNativeZoom = options.maximumNativeZoom ?? this.maximumLevel;
 
     this.rectangle = isDefined(options.rectangle)
       ? Rectangle.intersection(

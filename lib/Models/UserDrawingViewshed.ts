@@ -10,7 +10,6 @@ import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
@@ -67,15 +66,13 @@ export default class UserDrawingViewshed extends MappableMixin(
     /**
      * Text that appears at the top of the dialog when drawmode is active.
      */
-    this.messageHeader = defaultValue(
-      options.messageHeader,
-      i18next.t("models.userDrawing.messageHeader")
-    );
+    this.messageHeader =
+      options.messageHeader ?? i18next.t("models.userDrawing.messageHeader");
 
     /**
      * The number of maximum points allowed.
      */
-    this.numMaxPoints = defaultValue(options.numMaxPoints, undefined);
+    this.numMaxPoints = options.numMaxPoints ?? undefined;
 
     /**
      * Callback that occurs when the dialog is redrawn, to add additional information to dialog.
@@ -447,11 +444,11 @@ export default class UserDrawingViewshed extends MappableMixin(
    * Figure out the text for the dialog button.
    */
   getButtonText() {
-    return defaultValue(
-      this.buttonText,
-      this.pointEntities.entities.values.length >= 2
+    return (
+      this.buttonText ??
+      (this.pointEntities.entities.values.length >= 2
         ? i18next.t("models.userDrawing.btnDone")
-        : i18next.t("models.userDrawing.btnCancel")
+        : i18next.t("models.userDrawing.btnCancel"))
     );
   }
 
