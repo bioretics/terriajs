@@ -171,7 +171,7 @@ export class MeasureLineTool extends MapNavigationItemController {
     }
     let numberStr = number.toFixed(2);
     // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-    numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     numberStr = `${numberStr} ${label}`;
     return numberStr;
   }
@@ -342,7 +342,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
     }
     let numberStr = number.toFixed(2);
     // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-    numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     numberStr = `${numberStr} ${label}`;
     if (squared) {
       numberStr += "\u00B2";
@@ -714,6 +714,11 @@ export class MeasureCircleTool extends MapNavigationItemController {
     this.isDrawingRadius = false;
   }
 
+  private updateCircleStats(radiusMetres: number) {
+    this.radiusMetres = radiusMetres;
+    this.areaMetresSquared = Math.PI * radiusMetres * radiusMetres;
+  }
+
   private getSurfaceDistance2D(pointOne: Cartesian3, pointTwo: Cartesian3) {
     const pointOneCartographic = Cartographic.fromCartesian(
       pointOne,
@@ -813,9 +818,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
     );
 
     pointEntities[1].position = new ConstantPositionProperty(updatedEdge);
-
-    this.radiusMetres = radiusMetres;
-    this.areaMetresSquared = Math.PI * radiusMetres * radiusMetres;
     this.updateMeasurableGeomList(center, updatedEdge);
     this.terria.currentViewer.notifyRepaintRequired();
     return true;
@@ -829,8 +831,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
     const edgeCarto = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
 
-    this.radiusMetres = radius;
-    this.areaMetresSquared = area;
+    this.updateCircleStats(radius);
 
     runInAction(() => {
       const geomIndex = this.terria.measurableGeometryIndex;
@@ -876,10 +877,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
       pointEntities.entities.removeAll();
       pointEntities.entities.add(lastEntity);
 
-      this.circleLocked = false;
-      this.isDrawingRadius = false;
-      this.radiusMetres = 0;
-      this.areaMetresSquared = 0;
+      this.resetCircleState();
 
       const newCenter = lastEntity.position?.getValue(
         this.terria.timelineClock.currentTime
@@ -910,10 +908,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
       const center = points[0];
       const lastPoint = points[points.length - 1];
 
-      const radius = this.getSurfaceDistance2D(center, lastPoint);
-      this.radiusMetres = radius;
-      this.areaMetresSquared = Math.PI * radius * radius;
-
       this.updateMeasurableGeomList(center, lastPoint);
 
       this.terria.currentViewer.notifyRepaintRequired();
@@ -921,9 +915,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     }
 
     if (isMove && points.length >= 2) {
-      const radius = this.getSurfaceDistance2D(points[0], points[1]);
-      this.radiusMetres = radius;
-      this.areaMetresSquared = Math.PI * radius * radius;
+      this.updateCircleStats(this.getSurfaceDistance2D(points[0], points[1]));
 
       if (this.circleLocked) {
         this.updateMeasurableGeomList(points[0], points[1]);

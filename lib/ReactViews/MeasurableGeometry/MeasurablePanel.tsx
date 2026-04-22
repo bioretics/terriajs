@@ -65,20 +65,20 @@ const MeasurablePanel = observer((props: Props) => {
   const defaultY = (windowHeight - initialHeight) / 2;
 
   const { selectedStopPointIdx, measurablePanelIsVisible } = viewState;
+  const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
 
   // Initialize utils methods and variables
   MeasurablePanelManager.initialize(terria);
 
-  runInAction(() => {
-    if (
-      terria.measurableGeomList &&
-      terria.measurableGeomList[terria.measurableGeometryIndex]
-    ) {
-      terria.measurableGeomList[
-        terria.measurableGeometryIndex
-      ].showDistanceLabels = showDistances;
+  useEffect(() => {
+    if (!currentGeom) {
+      return;
     }
-  });
+
+    runInAction(() => {
+      currentGeom.showDistanceLabels = showDistances;
+    });
+  }, [currentGeom, showDistances]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: viewState.measurablePanelIsCollapsed,
@@ -272,8 +272,6 @@ const MeasurablePanel = observer((props: Props) => {
     }
     terria.currentViewer.notifyRepaintRequired();
   }, [terria.currentViewer, selectedStopPointIdx]);
-
-  const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
 
   useEffect(() => {
     if (currentGeom?.isCircle !== true) {

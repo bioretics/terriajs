@@ -33,14 +33,21 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       closeLoop?: boolean,
       closeGeomProperties?: Partial<MeasurableGeometry>
     ) {
-      if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
-        this.terria.measurableGeometryManager.push(
-          Object.freeze(new MeasurableGeometryManager(this.terria))
-        );
+      if (indexPath !== undefined) {
+        while (!this.terria.measurableGeometryManager[indexPath]) {
+          this.terria.measurableGeometryManager.push(
+            Object.freeze(new MeasurableGeometryManager(this.terria))
+          );
+        }
       }
-      this.terria.measurableGeometryManager[
-        this.terria.measurableGeometryIndex
-      ].sampleFromCartographics(
+
+      const managerIndex = indexPath ?? this.terria.measurableGeometryIndex;
+      const manager = this.terria.measurableGeometryManager[managerIndex];
+      if (!manager) {
+        return;
+      }
+
+      manager.sampleFromCartographics(
         stopPoints,
         closeLoop ?? false,
         false,

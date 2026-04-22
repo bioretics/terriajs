@@ -51,6 +51,10 @@ export default class MeasurableGeometryManager {
   resample() {
     const currentGeometry =
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
+    if (!currentGeometry || !currentGeometry.stopPoints?.length) {
+      return;
+    }
+
     const closeGeomProperties = currentGeometry?.isCircle
       ? {
           hasArea: true,
@@ -141,7 +145,7 @@ export default class MeasurableGeometryManager {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
 
-    if (!terrainProvider || !ellipsoid) {
+    if (!terrainProvider || !ellipsoid || cartoPositions.length === 0) {
       return;
     }
 
