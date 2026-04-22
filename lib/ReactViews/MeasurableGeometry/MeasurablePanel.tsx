@@ -603,8 +603,7 @@ const MeasurablePanel = observer((props: Props) => {
       const perimeter = currentGeom.circlePerimeter ?? 0;
       const area = currentGeom.circleArea ?? 0;
       const areaHa = area > 0 ? (area * 0.0001).toFixed(4) : "";
-      const canEditCircleRadius =
-        activeToolIsCircle() && currentGeom.isFileUploaded !== true;
+      const canEditCircleRadius = activeToolIsCircle();
 
       return (
         <>
@@ -615,14 +614,16 @@ const MeasurablePanel = observer((props: Props) => {
             <table className={Styles.elevation}>
               <thead>
                 <tr>
-                  <th
-                    css={`
-                      padding: 8px;
-                      text-align: center;
-                    `}
-                  >
-                    {i18next.t("measurableGeometry.circleRadius")}
-                  </th>
+                  {!canEditCircleRadius && (
+                    <th
+                      css={`
+                        padding: 8px;
+                        text-align: center;
+                      `}
+                    >
+                      {i18next.t("measurableGeometry.circleRadius")}
+                    </th>
+                  )}
                   <th
                     css={`
                       padding: 8px;
@@ -643,13 +644,15 @@ const MeasurablePanel = observer((props: Props) => {
               </thead>
               <tbody>
                 <tr>
-                  <td
-                    css={`
-                      padding: 8px;
-                    `}
-                  >
-                    {prettifyNumber(radius)}
-                  </td>
+                  {!canEditCircleRadius && (
+                    <td
+                      css={`
+                        padding: 8px;
+                      `}
+                    >
+                      {prettifyNumber(radius)}
+                    </td>
+                  )}
                   <td
                     css={`
                       padding: 8px;
@@ -665,6 +668,38 @@ const MeasurablePanel = observer((props: Props) => {
                     {prettifyNumber(perimeter)}
                   </td>
                 </tr>
+                {canEditCircleRadius && (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      css={`
+                        padding: 8px;
+                      `}
+                    >
+                      <div style={{ marginBottom: "8px" }}>
+                        {`${i18next.t("measurableGeometry.circleRadius")} (m)`}
+                      </div>
+                      <Input
+                        title={i18next.t("measurableGeometry.circleRadius")}
+                        light={false}
+                        dark
+                        type="number"
+                        min={0}
+                        step={0.1}
+                        value={circleRadiusInput}
+                        style={{ width: "100%" }}
+                        onChange={(e) => setCircleRadiusInput(e.target.value)}
+                        onBlur={applyCircleRadiusFromInput}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            applyCircleRadiusFromInput();
+                          }
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
 
@@ -710,31 +745,6 @@ const MeasurablePanel = observer((props: Props) => {
                 </tr>
               </tbody>
             </table>
-
-            {canEditCircleRadius && (
-              <div style={{ marginTop: "15px" }}>
-                <Text textLight style={{ marginLeft: 1 }} title="">
-                  {`${i18next.t("measurableGeometry.circleRadius")} (m)`}
-                </Text>
-                <Input
-                  title={i18next.t("measurableGeometry.circleRadius")}
-                  light={false}
-                  dark
-                  type="number"
-                  min={0}
-                  step={0.1}
-                  value={circleRadiusInput}
-                  onChange={(e) => setCircleRadiusInput(e.target.value)}
-                  onBlur={applyCircleRadiusFromInput}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      applyCircleRadiusFromInput();
-                    }
-                  }}
-                />
-              </div>
-            )}
           </small>
         </>
       );
