@@ -337,7 +337,8 @@ class ViewingControls extends React.Component<
           false,
           true,
           descriptions,
-          pathNotes
+          pathNotes,
+          true
         );
         return;
       }
