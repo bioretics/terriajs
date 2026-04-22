@@ -10,6 +10,7 @@ import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
+import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import Terria from "../../../../Models/Terria";
 import UserDrawing from "../../../../Models/UserDrawing";
 import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
@@ -713,8 +714,115 @@ export class MeasureCircleTool extends MapNavigationItemController {
     this.isDrawingRadius = false;
   }
 
+  private getSurfaceDistance2D(pointOne: Cartesian3, pointTwo: Cartesian3) {
+    const pointOneCartographic = Cartographic.fromCartesian(
+      pointOne,
+      Ellipsoid.WGS84
+    );
+    const pointTwoCartographic = Cartographic.fromCartesian(
+      pointTwo,
+      Ellipsoid.WGS84
+    );
+    const geodesic = new EllipsoidGeodesic(
+      new Cartographic(
+        pointOneCartographic.longitude,
+        pointOneCartographic.latitude,
+        0
+      ),
+      new Cartographic(
+        pointTwoCartographic.longitude,
+        pointTwoCartographic.latitude,
+        0
+      ),
+      Ellipsoid.WGS84
+    );
+    return geodesic.surfaceDistance;
+  }
+
+  private getBearingRadians(pointOne: Cartographic, pointTwo: Cartographic) {
+    const geodesic = new EllipsoidGeodesic(
+      new Cartographic(pointOne.longitude, pointOne.latitude, 0),
+      new Cartographic(pointTwo.longitude, pointTwo.latitude, 0),
+      Ellipsoid.WGS84
+    );
+    return Number.isFinite(geodesic.startHeading) ? geodesic.startHeading : 0;
+  }
+
+  private getPointAtDistance(
+    center: Cartographic,
+    distanceMetres: number,
+    bearingRadians: number
+  ) {
+    const earthRadius = Ellipsoid.WGS84.maximumRadius;
+    const angularDistance = distanceMetres / earthRadius;
+    const sinLat1 = Math.sin(center.latitude);
+    const cosLat1 = Math.cos(center.latitude);
+    const sinAd = Math.sin(angularDistance);
+    const cosAd = Math.cos(angularDistance);
+    const sinBearing = Math.sin(bearingRadians);
+    const cosBearing = Math.cos(bearingRadians);
+
+    const lat2 = Math.asin(sinLat1 * cosAd + cosLat1 * sinAd * cosBearing);
+    const lon2 =
+      center.longitude +
+      Math.atan2(
+        sinBearing * sinAd * cosLat1,
+        cosAd - sinLat1 * Math.sin(lat2)
+      );
+
+    return new Cartographic(
+      CesiumMath.negativePiToPi(lon2),
+      lat2,
+      center.height
+    );
+  }
+
+  setRadiusFromPanel(radiusMetres: number): boolean {
+    if (
+      !Number.isFinite(radiusMetres) ||
+      radiusMetres <= 0 ||
+      !this.circleLocked
+    ) {
+      return false;
+    }
+
+    const pointEntities = this.userDrawing.pointEntities.entities.values;
+    if (pointEntities.length < 2) {
+      return false;
+    }
+
+    const currentTime = this.terria.timelineClock.currentTime;
+    const center = pointEntities[0].position?.getValue(currentTime);
+    const edge = pointEntities[1].position?.getValue(currentTime);
+
+    if (!center || !edge) {
+      return false;
+    }
+
+    const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
+    const edgeCarto = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
+    const bearing = this.getBearingRadians(centerCarto, edgeCarto);
+    const updatedEdgeCarto = this.getPointAtDistance(
+      centerCarto,
+      radiusMetres,
+      bearing
+    );
+    const updatedEdge = Cartographic.toCartesian(
+      updatedEdgeCarto,
+      Ellipsoid.WGS84
+    );
+
+    pointEntities[1].position = new ConstantPositionProperty(updatedEdge);
+
+    this.radiusMetres = radiusMetres;
+    this.areaMetresSquared = Math.PI * radiusMetres * radiusMetres;
+    this.updateMeasurableGeomList(center, updatedEdge);
+    this.terria.currentViewer.notifyRepaintRequired();
+    return true;
+  }
+
   private updateMeasurableGeomList(center: Cartesian3, edge: Cartesian3) {
-    const radius = this.getGeodesicDistance(center, edge);
+    const radius = this.getSurfaceDistance2D(center, edge);
     const area = Math.PI * radius * radius;
     const perimeter = 2 * Math.PI * radius;
     const diameter = 2 * radius;
@@ -802,7 +910,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
       const center = points[0];
       const lastPoint = points[points.length - 1];
 
-      const radius = this.getGeodesicDistance(center, lastPoint);
+      const radius = this.getSurfaceDistance2D(center, lastPoint);
       this.radiusMetres = radius;
       this.areaMetresSquared = Math.PI * radius * radius;
 
@@ -813,7 +921,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     }
 
     if (isMove && points.length >= 2) {
-      const radius = this.getGeodesicDistance(points[0], points[1]);
+      const radius = this.getSurfaceDistance2D(points[0], points[1]);
       this.radiusMetres = radius;
       this.areaMetresSquared = Math.PI * radius * radius;
 
@@ -824,18 +932,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
       this.terria.currentViewer.notifyRepaintRequired();
       return;
     }
-  }
-
-  private getGeodesicDistance(pointOne: Cartesian3, pointTwo: Cartesian3) {
-    const pickedPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointOne);
-    const lastPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointTwo);
-    const geodesic = new EllipsoidGeodesic(
-      pickedPointCartographic,
-      lastPointCartographic
-    );
-    return geodesic.surfaceDistance;
   }
 
   onMakeDialogMessage = () => {

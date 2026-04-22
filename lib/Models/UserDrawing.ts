@@ -291,11 +291,23 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private getCircleGeodesicDistance(center: Cartesian3, edge: Cartesian3) {
-    const centerCartographic = Ellipsoid.WGS84.cartesianToCartographic(center);
-    const edgeCartographic = Ellipsoid.WGS84.cartesianToCartographic(edge);
+    const centerCartographic = Cartographic.fromCartesian(
+      center,
+      Ellipsoid.WGS84
+    );
+    const edgeCartographic = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
     const geodesic = new EllipsoidGeodesic(
-      centerCartographic,
-      edgeCartographic
+      new Cartographic(
+        centerCartographic.longitude,
+        centerCartographic.latitude,
+        0
+      ),
+      new Cartographic(
+        edgeCartographic.longitude,
+        edgeCartographic.latitude,
+        0
+      ),
+      Ellipsoid.WGS84
     );
     return geodesic.surfaceDistance;
   }
@@ -428,9 +440,13 @@ export default class UserDrawing extends MappableMixin(
           }
           return [center, edge];
         }, false),
-        clampToGround: true,
+        clampToGround: false,
         width: 20,
         material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 0.0, 0.0, 0.35),
+          glowPower: 0.15
+        } as any),
+        depthFailMaterial: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.35),
           glowPower: 0.15
         } as any)

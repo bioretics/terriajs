@@ -51,6 +51,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeomSamplingStep
   );
   const [layerName, setLayerName] = React.useState("temp_layer");
+  const [circleRadiusInput, setCircleRadiusInput] = React.useState("");
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -134,6 +135,17 @@ const MeasurablePanel = observer((props: Props) => {
   const changeSamplingPathStep = action((val: number) => {
     terria.measurableGeomSamplingStep = val;
   });
+
+  const getCircleToolController = () => {
+    const controller = terria.mapNavigationModel.findItem(
+      MeasureCircleTool.id
+    )?.controller;
+    return controller instanceof MeasureCircleTool ? controller : undefined;
+  };
+
+  const activeToolIsCircle = () => {
+    return getCircleToolController()?.active === true;
+  };
 
   const getBearing = computed(() => {
     if (
@@ -262,6 +274,51 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, selectedStopPointIdx]);
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
+
+  useEffect(() => {
+    if (currentGeom?.isCircle !== true) {
+      setCircleRadiusInput("");
+      return;
+    }
+
+    const radius = currentGeom.circleRadius;
+    if (typeof radius === "number" && radius > 0) {
+      setCircleRadiusInput(radius.toFixed(2));
+      return;
+    }
+
+    setCircleRadiusInput("");
+  }, [
+    currentGeom?.isCircle,
+    currentGeom?.circleRadius,
+    terria.measurableGeometryIndex
+  ]);
+
+  const applyCircleRadiusFromInput = () => {
+    const fallbackRadius =
+      typeof currentGeom?.circleRadius === "number" &&
+      currentGeom.circleRadius > 0
+        ? currentGeom.circleRadius.toFixed(2)
+        : "";
+    const radiusValue = Number.parseFloat(circleRadiusInput.replace(",", "."));
+
+    if (!Number.isFinite(radiusValue) || radiusValue <= 0) {
+      setCircleRadiusInput(fallbackRadius);
+      return;
+    }
+
+    const circleToolController = getCircleToolController();
+    if (
+      !circleToolController ||
+      !circleToolController.setRadiusFromPanel(radiusValue)
+    ) {
+      setCircleRadiusInput(fallbackRadius);
+      return;
+    }
+
+    setCircleRadiusInput(radiusValue.toFixed(2));
+  };
+
   useEffect(() => {
     const clearHoveredMarkers = () => {
       MeasurablePanelManager.removeAllMarkers();
@@ -537,13 +594,6 @@ const MeasurablePanel = observer((props: Props) => {
       terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!currentGeom) return null;
 
-    const activeToolIsCircle = () => {
-      const circleTool = terria.mapNavigationModel.findItem(
-        MeasureCircleTool.id
-      );
-      return circleTool?.controller?.active === true;
-    };
-
     const isCircleGeometry =
       activeToolIsCircle() || currentGeom.isCircle === true;
 
@@ -553,6 +603,8 @@ const MeasurablePanel = observer((props: Props) => {
       const perimeter = currentGeom.circlePerimeter ?? 0;
       const area = currentGeom.circleArea ?? 0;
       const areaHa = area > 0 ? (area * 0.0001).toFixed(4) : "";
+      const canEditCircleRadius =
+        activeToolIsCircle() && currentGeom.isFileUploaded !== true;
 
       return (
         <>
@@ -658,6 +710,31 @@ const MeasurablePanel = observer((props: Props) => {
                 </tr>
               </tbody>
             </table>
+
+            {canEditCircleRadius && (
+              <div style={{ marginTop: "15px" }}>
+                <Text textLight style={{ marginLeft: 1 }} title="">
+                  {`${i18next.t("measurableGeometry.circleRadius")} (m)`}
+                </Text>
+                <Input
+                  title={i18next.t("measurableGeometry.circleRadius")}
+                  light={false}
+                  dark
+                  type="number"
+                  min={0}
+                  step={0.1}
+                  value={circleRadiusInput}
+                  onChange={(e) => setCircleRadiusInput(e.target.value)}
+                  onBlur={applyCircleRadiusFromInput}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      applyCircleRadiusFromInput();
+                    }
+                  }}
+                />
+              </div>
+            )}
           </small>
         </>
       );
