@@ -125,16 +125,15 @@ interface ISrsSelectionProps {
   reset: () => void;
   convert: () => void;
   conversionList: ISrsConversion[];
+  isOpen: boolean;
 }
 
 const SrsSelection = (props: ISrsSelectionProps) => {
-  const { isCartographic, conversionList, setSrs } = props;
+  const { conversionList, setSrs, isOpen } = props;
 
   useEffect(() => {
-    if (isCartographic && conversionList.length > 0) {
-      setSrs(conversionList[0]);
-    }
-  }, [isCartographic, conversionList, setSrs]);
+    setSrs(conversionList[0]);
+  }, [isOpen, setSrs, conversionList]);
 
   return (
     <div>
@@ -142,20 +141,16 @@ const SrsSelection = (props: ISrsSelectionProps) => {
 
       <Select
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-          props.setSrs(props.conversionList[parseInt(e.target.value, 10)]);
+          setSrs(conversionList[parseInt(e.target.value, 10)]);
         }}
         title={props.tooltip}
       >
-        {props.conversionList.map((conv, index) => {
-          if (
-            !props.isCartographic ||
-            (props.isCartographic && conv.from === 4326)
-          )
-            return (
-              <option key={index} className={Styles.crsItem} value={index}>
-                {conv.desc}
-              </option>
-            );
+        {conversionList.map((conv, index) => {
+          return (
+            <option key={index} className={Styles.crsItem} value={index}>
+              {conv.desc}
+            </option>
+          );
         })}
       </Select>
       <Button
@@ -582,6 +577,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           }}
           conversionList={this.conversionList}
           tooltip={t("coordsPanel.srsSelectionTooltip")}
+          isOpen={this.state.isOpen}
         />
         <CoordsText
           name="coordsOut"
