@@ -505,7 +505,7 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeometryIndex
   ]);
 
-  const applyCircleRadiusFromInput = () => {
+  const applyCircleRadiusFromInput = async () => {
     const fallbackRadius =
       typeof currentGeom?.circleRadius === "number" &&
       currentGeom.circleRadius > 0
@@ -527,7 +527,7 @@ const MeasurablePanel = observer((props: Props) => {
       return;
     }
 
-    setCircleRadiusInput(radiusValue.toFixed(2));
+    await setCircleRadiusInput(radiusValue.toFixed(2));
   };
 
   // Render Methods

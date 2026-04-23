@@ -22,6 +22,7 @@ import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import MeasureTools from "../../../../Models/MeasureTools";
 import ViewState from "../../../../ReactViewModels/ViewState";
+import { sampleTerrainMostDetailed } from "terriajs-cesium";
 
 interface IProps {
   terria: Terria;
@@ -748,8 +749,8 @@ export class MeasureCircleTool extends MapNavigationItemController {
         hasArea: true,
         stopPoints: [centerCarto, edgeCarto],
         stopGeodeticDistances: [0, radius],
-        stopAirDistances: [],
-        stopGroundDistances: [],
+        stopAirDistances: [0, radius],
+        stopGroundDistances: [0, radius],
         pointDescriptions: prev?.pointDescriptions ?? [],
         showDistanceLabels: false,
         pathNotes: prev?.pathNotes ?? "",
@@ -767,7 +768,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     });
   }
 
-  setRadiusFromPanel(radiusMetres: number): boolean {
+  async setRadiusFromPanel(radiusMetres: number): Promise<boolean> {
     if (
       !Number.isFinite(radiusMetres) ||
       radiusMetres <= 0 ||
@@ -786,15 +787,31 @@ export class MeasureCircleTool extends MapNavigationItemController {
 
     const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
     const edgeCarto = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
-    const bearing = this.circleBearingRad;
-    if (bearing === undefined) return false;
     const geodesic = new EllipsoidGeodesic(
-      centerCarto,
-      edgeCarto,
+      new Cartographic(centerCarto.longitude, centerCarto.latitude, 0),
+      new Cartographic(edgeCarto.longitude, edgeCarto.latitude, 0),
       Ellipsoid.WGS84
     );
-
     const newEdgeCarto = geodesic.interpolateUsingSurfaceDistance(radiusMetres);
+
+    const terrainProvider = (this.terria.currentViewer as any)?.scene
+      ?.terrainProvider;
+    if (terrainProvider) {
+      try {
+        const positions = [
+          new Cartographic(newEdgeCarto.longitude, newEdgeCarto.latitude, 0)
+        ];
+        const [sampled] = await sampleTerrainMostDetailed(
+          terrainProvider,
+          positions
+        );
+        newEdgeCarto.height = sampled.height ?? edgeCarto.height;
+      } catch {
+        newEdgeCarto.height = edgeCarto.height;
+      }
+    } else {
+      newEdgeCarto.height = edgeCarto.height;
+    }
 
     const newEdge = Cartographic.toCartesian(newEdgeCarto, Ellipsoid.WGS84);
 
