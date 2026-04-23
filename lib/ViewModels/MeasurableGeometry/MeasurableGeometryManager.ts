@@ -54,8 +54,7 @@ export default class MeasurableGeometryManager {
   }
 
   resample(index: number = this.terria.measurableGeometryIndex) {
-    const currentGeometry =
-      this.terria.measurableGeomList[index];
+    const currentGeometry = this.terria.measurableGeomList[index];
     if (!currentGeometry || !currentGeometry.stopPoints?.length) {
       return;
     }
@@ -146,7 +145,8 @@ export default class MeasurableGeometryManager {
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
 
     if (!terrainProvider || !ellipsoid || cartoPositions.length === 0) {
       return;

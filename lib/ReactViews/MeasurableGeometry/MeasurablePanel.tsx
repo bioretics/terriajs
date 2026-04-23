@@ -1356,7 +1356,8 @@ const MeasurablePanel = observer((props: Props) => {
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
           !terria?.measurableGeomList[terria.measurableGeometryIndex]
             ?.onlyPoints &&
-          !is2dMode && showSamplingStep &&
+          !is2dMode &&
+          showSamplingStep &&
           renderSamplingStep()}
         <br />
         <div ref={summaryTableRef}>{renderGeometrySummary()}</div>

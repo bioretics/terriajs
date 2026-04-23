@@ -1838,13 +1838,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           ? this.getCloseGeomProperties(properties)
           : properties;
 
-        this.asPath(
-          coordinates,
-          pathNotes,
-          index,
-          closeLoop,
-          geomProperties
-        );
+        this.asPath(coordinates, pathNotes, index, closeLoop, geomProperties);
       };
 
       for (let i = 0; i < this.readyData.features.length; i++) {

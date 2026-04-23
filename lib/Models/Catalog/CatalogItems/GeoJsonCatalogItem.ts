@@ -31,7 +31,8 @@ import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrain
 
 class GeoJsonCatalogItem
   extends CesiumIonMixin(GeoJsonMixin(CreateModel(GeoJsonCatalogItemTraits)))
-  implements HasLocalData {
+  implements HasLocalData
+{
   static readonly type = "geojson";
 
   constructor(...args: ModelConstructorParameters) {
@@ -144,9 +145,9 @@ class GeoJsonCatalogItem
         // specific CRS information when merging the multiple FCs.
         const geojson = await (fc
           ? reprojectToGeographic(
-            fc,
-            this.terria.configParameters.proj4ServiceBaseUrl
-          )
+              fc,
+              this.terria.configParameters.proj4ServiceBaseUrl
+            )
           : undefined);
         return geojson;
       });
