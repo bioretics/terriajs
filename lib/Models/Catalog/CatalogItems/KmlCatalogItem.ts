@@ -20,8 +20,9 @@ import MappableMixin from "../../../ModelMixins/MappableMixin";
 import UrlMixin from "../../../ModelMixins/UrlMixin";
 import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
+import { BaseModel, ModelConstructorParameters } from "../../Definition/Model";
+import { ModelId } from "../../../Traits/ModelReference";
 import HasLocalData from "../../HasLocalData";
-import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
@@ -29,30 +30,29 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
 } from "../../../ModelMixins/ExportableMixin";
-import ExportableFormat from "../../../ViewModels/Measure/ExportableFormat";
-import DataUri from "../../../Core/DataUri";
-import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
-import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
-import EntityCollection from "terriajs-cesium/Source/DataSources/EntityCollection";
-import PolylineGraphics from "terriajs-cesium/Source/DataSources/PolylineGraphics";
-import { exportKmlResultKml } from "terriajs-cesium";
-import exportKml from "terriajs-cesium/Source/DataSources/exportKml";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import PointGraphics from "terriajs-cesium/Source/DataSources/PointGraphics";
+import SearchableCatalogItemMixin, {
+  SearchableData
+} from "../../../ModelMixins/SearchableCatalogItemMixin";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
 const kmzRegex = /\.kmz$/i;
 
 class KmlCatalogItem
-  extends MeasurableGeometryMixin(
-    MappableMixin(
-      ExportableMixin(
-        UrlMixin(
-          CesiumIonMixin(CatalogMemberMixin(CreateModel(KmlCatalogItemTraits)))
+  extends SearchableCatalogItemMixin(
+    MeasurableGeometryMixin(
+      MappableMixin(
+        ExportableMixin(
+          UrlMixin(
+            CesiumIonMixin(
+              CatalogMemberMixin(CreateModel(KmlCatalogItemTraits))
+            )
+          )
         )
       )
     )
   )
-  implements HasLocalData, ExportableFormat
+  implements HasLocalData
 {
   static readonly type = "kml";
 
@@ -71,6 +71,14 @@ class KmlCatalogItem
 
   setFileInput(file: File) {
     this._kmlFile = file;
+  }
+
+  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
+    const newModel = super.duplicateModel(newId, sourceReference);
+    if (this._kmlFile) {
+      newModel.setFileInput(this._kmlFile);
+    }
+    return newModel;
   }
 
   @computed
@@ -128,316 +136,6 @@ class KmlCatalogItem
             })
           })
         );
-      });
-  }
-
-  private async generateMultiPathKmlPolygon(
-    geomList: MeasurableGeometry[]
-  ): Promise<string | undefined> {
-    if (!geomList?.length) return undefined;
-
-    let polygonsContent = "";
-    geomList.forEach((geom, idx) => {
-      const coords = geom.stopPoints.map((pt) => {
-        const lon = CesiumMath.toDegrees(pt.longitude);
-        const lat = CesiumMath.toDegrees(pt.latitude);
-        return `${lon},${lat}`;
-      });
-
-      if (coords[0] !== coords[coords.length - 1]) {
-        coords.push(coords[0]);
-      }
-
-      const coordsString = coords.join(" ");
-
-      polygonsContent += `<Placemark id="${idx}">
-          <description>${geom.pathNotes ?? ""}</description>
-          <Style>
-            <LineStyle>
-              <color>ff0000ff</color>
-            </LineStyle>
-            <PolyStyle>
-              <fill>0</fill>
-            </PolyStyle>
-          </Style>
-          <Polygon>
-            <altitudeMode>clampToGround</altitudeMode>
-            <outerBoundaryIs>
-              <LinearRing>
-                <altitudeMode>clampToGround</altitudeMode>
-                <coordinates>${coordsString}</coordinates>
-              </LinearRing>
-            </outerBoundaryIs>
-          </Polygon>
-        </Placemark>`;
-    });
-
-    return `<?xml version="1.0" encoding="utf-8"?>
-      <kml xmlns="http://www.opengis.net/kml/2.2">
-        <Document id="root_doc">
-          <Folder>
-          <name>${this.name || ""}</name>
-            ${polygonsContent}
-          </Folder>
-        </Document>
-      </kml>`;
-  }
-
-  private async generateMultiPathKmlLines(
-    geomList: MeasurableGeometry[],
-    name: string,
-    ellipsoid?: Ellipsoid
-  ): Promise<string | undefined> {
-    if (!geomList?.length || !ellipsoid) return undefined;
-
-    const output = {
-      entities: new EntityCollection(),
-      kmz: false,
-      ellipsoid: ellipsoid
-    };
-
-    geomList.forEach((geom, idx) => {
-      output.entities.add(
-        new Entity({
-          id: idx.toString(),
-          polyline: new PolylineGraphics({
-            positions: geom.stopPoints.map((elem) =>
-              Cartographic.toCartesian(elem, ellipsoid)
-            )
-          }),
-          description: geom.pathNotes
-        })
-      );
-    });
-
-    const res = (await exportKml(output)) as exportKmlResultKml;
-    res.kml = res.kml
-      .replace(
-        /<Document\s+xmlns="">/,
-        `<Document xmlns=""><Folder><name>${name || ""}</name>`
-      )
-      .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
-  }
-
-  private async generateKmlPolygon(
-    geom: MeasurableGeometry,
-    name: string
-  ): Promise<string | undefined> {
-    if (!geom?.stopPoints) return undefined;
-
-    const coords = geom.stopPoints.map((point) => {
-      const lon = CesiumMath.toDegrees(point.longitude);
-      const lat = CesiumMath.toDegrees(point.latitude);
-      return `${lon},${lat}`;
-    });
-
-    if (coords[0] !== coords[coords.length - 1]) {
-      coords.push(coords[0]);
-    }
-
-    const coordsString = coords.join(" ");
-
-    const kml = `<?xml version="1.0" encoding="utf-8"?>
-        <kml xmlns="http://www.opengis.net/kml/2.2">
-          <Document id="root_doc">
-            <Folder>
-            <Placemark id="0">
-                <name>${name}</name>
-                <description>${geom.pathNotes}</description>
-                <Style>
-                  <LineStyle>
-                    <color>ff0000ff</color>
-                  </LineStyle>
-                  <PolyStyle>
-                    <fill>0</fill>
-                  </PolyStyle>
-                </Style>
-                <Polygon>
-                  <altitudeMode>clampToGround</altitudeMode>
-                  <outerBoundaryIs>
-                    <LinearRing>
-                      <altitudeMode>clampToGround</altitudeMode>
-                      <coordinates>${coordsString}</coordinates>
-                    </LinearRing>
-                  </outerBoundaryIs>
-                </Polygon>
-              </Placemark>
-            </Folder>
-          </Document>
-        </kml>`;
-
-    return kml;
-  }
-
-  private async generateKmlLines(
-    geom: MeasurableGeometry,
-    name: string,
-    ellipsoid?: Ellipsoid
-  ): Promise<string | undefined> {
-    if (!geom?.stopPoints || !ellipsoid) return undefined;
-
-    const output = {
-      entities: new EntityCollection(),
-      kmz: false,
-      ellipsoid: ellipsoid
-    };
-
-    output.entities.add(
-      new Entity({
-        id: "0",
-        polyline: new PolylineGraphics({
-          positions: geom.stopPoints.map((elem) =>
-            Cartographic.toCartesian(elem, ellipsoid)
-          )
-        }),
-        name: name,
-        description: geom.pathNotes
-      })
-    );
-
-    const res = (await exportKml(output)) as exportKmlResultKml;
-    return res.kml;
-  }
-
-  private async generateKmlPoints(
-    geom: MeasurableGeometry,
-    name: string,
-    ellipsoid?: Ellipsoid
-  ): Promise<string | undefined> {
-    if (!geom?.stopPoints || !ellipsoid) return undefined;
-
-    const output = {
-      entities: new EntityCollection(),
-      kmz: false,
-      ellipsoid: ellipsoid
-    };
-
-    geom.stopPoints.forEach((elem, index) => {
-      output.entities.add(
-        new Entity({
-          id: index.toString(),
-          point: new PointGraphics({}),
-          position: Cartographic.toCartesian(elem, ellipsoid),
-          description: geom.pointDescriptions?.[index]
-        })
-      );
-    });
-
-    const res = (await exportKml(output)) as exportKmlResultKml;
-    res.kml = res.kml
-      .replace(
-        /<Document\s+xmlns="">/,
-        `<Document xmlns=""><Folder><name>${name || ""}</name><description>${
-          geom.pathNotes || ""
-        }</description>`
-      )
-      .replace(/<\/Document>/, "</Folder></Document>");
-    return res.kml;
-  }
-
-  async generateDownloadLinks(
-    geom: MeasurableGeometry,
-    name: string,
-    isMultiPath: boolean,
-    geomList?: MeasurableGeometry[],
-    ellipsoid?: Ellipsoid
-  ): Promise<DownloadLink[]> {
-    const downloads: DownloadLink[] = [];
-
-    if (isMultiPath && geomList) {
-      const multiPathPolygon = await this.generateMultiPathKmlPolygon(geomList);
-      const multiPathLines = await this.generateMultiPathKmlLines(
-        geomList,
-        name,
-        ellipsoid
-      );
-
-      downloads.push(
-        {
-          key: "kmlMultiPathPolygon",
-          href: multiPathPolygon
-            ? DataUri.make(
-                "application/vnd.google-earth.kml+xml;charset=utf-8",
-                multiPathPolygon
-              )
-            : false,
-          download: `${name}_polygon_multipath.kml`,
-          label: `Multi ${i18next.t("downloadData.polygon")} KML`
-        },
-        {
-          key: "kmlMultiPathLines",
-          href: multiPathLines
-            ? DataUri.make(
-                "application/vnd.google-earth.kml+xml;charset=utf-8",
-                multiPathLines
-              )
-            : false,
-          download: `${name}_lines_multipath.kml`,
-          label: `Multi ${i18next.t("downloadData.lines")} KML`
-        }
-      );
-    } else {
-      const kmlPolygon = await this.generateKmlPolygon(geom, name);
-      const kmlLines = await this.generateKmlLines(geom, name, ellipsoid);
-      const kmlPoints = await this.generateKmlPoints(geom, name, ellipsoid);
-
-      downloads.push(
-        {
-          key: "kmlPolygon",
-          href: kmlPolygon
-            ? DataUri.make(
-                "application/vnd.google-earth.kml+xml;charset=utf-8",
-                kmlPolygon
-              )
-            : false,
-          download: `${name}_polygon.kml`,
-          label: `${i18next.t("downloadData.polygon")} KML`
-        },
-        {
-          key: "kmlLines",
-          href: kmlLines
-            ? DataUri.make(
-                "application/vnd.google-earth.kml+xml;charset=utf-8",
-                kmlLines
-              )
-            : false,
-          download: `${name}_lines.kml`,
-          label: `${i18next.t("downloadData.lines")} KML`
-        },
-        {
-          key: "kmlPoints",
-          href: kmlPoints
-            ? DataUri.make(
-                "application/vnd.google-earth.kml+xml;charset=utf-8",
-                kmlPoints
-              )
-            : false,
-          download: `${name}_points.kml`,
-          label: `${i18next.t("downloadData.points")} KML`
-        }
-      );
-    }
-
-    return downloads
-      .filter((download) => download.href !== false)
-      .filter((download) => {
-        if (geom.onlyPoints) {
-          return (
-            !download.download?.includes("_lines") &&
-            !download.download?.includes("_polygon")
-          );
-        } else if (geom.isClosed) {
-          return (
-            !download.download?.includes("_points") &&
-            !download.download?.includes("_lines")
-          );
-        } else {
-          return (
-            !download.download?.includes("_points") &&
-            !download.download?.includes("_polygon")
-          );
-        }
       });
   }
 
@@ -571,6 +269,64 @@ class KmlCatalogItem
     }
   }
 
+  doSearch(text: string): Promise<SearchableData[]> {
+    if (!this.nameOfCatalogItemSearchField || !this._dataSource?.entities)
+      return Promise.resolve([]);
+    const nameOfCatalogItemSearchField = this.nameOfCatalogItemSearchField;
+
+    const filteredElements = this._dataSource.entities.values.filter(
+      (entity) => {
+        return (
+          (entity.billboard ||
+            entity.point ||
+            entity.polyline ||
+            entity.polygon) &&
+          (entity.properties?.[nameOfCatalogItemSearchField]
+            .valueOf()
+            .toLowerCase()
+            .includes(text) ||
+            entity.name?.toLowerCase().includes(text))
+        );
+      }
+    );
+    const searchableData = filteredElements.map((entity) => {
+      let cartoPosition: Cartographic;
+
+      if (entity.polyline) {
+        cartoPosition = Rectangle.center(
+          Rectangle.fromCartesianArray(
+            entity.polyline?.positions?.getValue(JulianDate.now()) ?? []
+          )
+        );
+      } else if (entity.polygon) {
+        cartoPosition = Rectangle.center(
+          Rectangle.fromCartesianArray(
+            (
+              entity.polygon?.hierarchy?.getValue(JulianDate.now()) as
+                | PolygonHierarchy
+                | undefined
+            )?.positions ?? []
+          )
+        );
+      } else {
+        const cartesianPosition = entity.position!.getValue(JulianDate.now());
+        cartoPosition = Cartographic.fromCartesian(cartesianPosition!!);
+      }
+
+      return {
+        searchField:
+          entity.name ??
+          (entity.properties![
+            nameOfCatalogItemSearchField
+          ].valueOf() as string),
+        latitude: CesiumMath.toDegrees(cartoPosition.latitude),
+        longitude: CesiumMath.toDegrees(cartoPosition.longitude)
+      };
+    });
+
+    return Promise.resolve(searchableData);
+  }
+
   @computed
   get canUseAsPath() {
     const entities = this._dataSource?.entities?.values ?? [];
@@ -578,11 +334,9 @@ class KmlCatalogItem
     const polylines = entities.filter((e) => e?.polyline);
 
     if (polygons.length === 1) {
-      return this.isPolygonValid(polygons) || this.arePolylinesValid(polygons);
+      return this.isPolygonValid(polygons);
     } else if (polylines.length === 1) {
-      return (
-        this.isPolygonValid(polylines) || this.arePolylinesValid(polylines)
-      );
+      return this.arePolylinesValid(polylines);
     } else if (polylines.length > 1) {
       return polylines.every((polyline) => this.arePolylinesValid([polyline]));
     } else if (polygons.length > 1) {
@@ -622,7 +376,13 @@ class KmlCatalogItem
       ({ count }) => count === 1
     ).length;
 
-    return validPoints === 2;
+    if (validPoints === 2) return true;
+
+    if (validPoints === 0) {
+      return pointOccurrences.every(({ count }) => count === 2);
+    }
+
+    return false;
   }
 
   // Updates the occurrences of a given point in the pointOccurrences array.
@@ -643,7 +403,6 @@ class KmlCatalogItem
   computePath() {
     const entities = this._dataSource?.entities?.values ?? [];
     const items = entities.filter((e) => e && (e.polygon || e.polyline));
-    const closeLoop = entities.filter((e) => e?.polygon) !== undefined;
     if (items.length === 0) return;
 
     items.forEach((element, i) => {
@@ -655,14 +414,20 @@ class KmlCatalogItem
         pathNotes = doc.body.textContent || "";
       }
       const allCoordinates = this.getPositions(element);
+      if (allCoordinates.length === 0) return;
+
       const allCartographics = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
       );
       const positions = allCartographics;
 
-      console.log("test entities", entities);
-      console.log("test data source", this._dataSource);
-      console.log("test closed loop", closeLoop);
+      const closeLoop =
+        !!element.polygon ||
+        (allCoordinates.length > 1 &&
+          Cartesian3.equals(
+            allCoordinates[0],
+            allCoordinates[allCoordinates.length - 1]
+          ));
 
       this.asPath(positions, pathNotes, i, closeLoop);
     });
@@ -737,14 +502,18 @@ class KmlCatalogItem
       Cartographic.fromCartesian(pos)
     );
 
-    if (!this.terria?.cesium?.scene) return;
-    const terrainProvider = this.terria.cesium.scene.terrainProvider;
+    if (cartographicPositions.length === 0) return;
 
-    const resolvedPositions = cartographicPositions.every(
-      (pos) => pos.height < 1
-    )
-      ? await sampleTerrainMostDetailed(terrainProvider, cartographicPositions)
-      : cartographicPositions;
+    if (!this.terria) return;
+    const terrainProvider = this.terria.cesium?.scene?.terrainProvider;
+
+    const resolvedPositions =
+      terrainProvider && cartographicPositions.every((pos) => pos.height < 1)
+        ? await sampleTerrainMostDetailed(
+            terrainProvider,
+            cartographicPositions
+          )
+        : cartographicPositions;
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex

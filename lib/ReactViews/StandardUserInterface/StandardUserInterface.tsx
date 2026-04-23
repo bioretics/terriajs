@@ -45,6 +45,12 @@ import { terriaTheme } from "./StandardTheme";
 import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
 import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPanel";
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
+import MicrozonationPanel from "../Microzonation/MicrozonationPanel";
+import QueryWindow from "../QueryWindow/QueryWindow";
+import { MessageModal } from "../MessageModal/MessageModal";
+import ViewshedPanel from "../Viewshed/ViewshedPanel";
+import LoginPanel from "../Login/LoginPanel";
+
 export const animationDuration = 250;
 
 interface StandardUserInterfaceProps {
@@ -137,6 +143,10 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
     const showStoryBuilder =
       props.viewState.storyBuilderShown &&
       !props.viewState.useSmallScreenInterface;
+    const showMicrozonationPanel =
+      props.viewState.microzonationPanelShown &&
+      !props.viewState.useSmallScreenInterface &&
+      props.terria.configParameters?.microzonationEnabled;
     const showStoryPanel =
       props.terria.configParameters.storyEnabled &&
       props.terria.stories.length > 0 &&
@@ -230,6 +240,14 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                   <div id="map-data-attribution" />
                   <main>
                     <ExplorerWindow />
+                    <QueryWindow />
+                    {props.terria.messageModal?.isVisible && (
+                      <MessageModal
+                        closeModal={() => props.viewState.closeMessageModal()}
+                        header={props.terria.messageModal.header}
+                        message={props.terria.messageModal.message}
+                      />
+                    )}
                     {props.terria.configParameters.experimentalFeatures &&
                       !props.viewState.hideMapUi && (
                         <ExperimentalFeatures
@@ -289,6 +307,11 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 terria={props.terria}
                 viewState={props.viewState}
               />
+              <ViewshedPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
+              <LoginPanel terria={props.terria} viewState={props.viewState} />
             </div>
             <DragDropFile />
             <DragDropNotification />
@@ -297,6 +320,12 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
           {props.terria.configParameters.storyEnabled && showStoryBuilder && (
             <StoryBuilder
               isVisible={showStoryBuilder}
+              animationDuration={animationDuration}
+            />
+          )}
+          {showMicrozonationPanel && (
+            <MicrozonationPanel
+              isVisible={showMicrozonationPanel}
               animationDuration={animationDuration}
             />
           )}

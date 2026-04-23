@@ -8,9 +8,12 @@ import ModelTraits from "../ModelTraits";
 import ClusteringTraits from "./ClusteringTraits";
 import FeatureInfoUrlTemplateTraits from "./FeatureInfoTraits";
 import LegendOwnerTraits from "./LegendOwnerTraits";
+import SearchableCatalogItemTraits from "./SearchableCatalogItemTraits";
+import QueryableCatalogItemTraits from "./QueryableCatalogItemTraits";
 import StyleTraits from "./StyleTraits";
 import TableTraits from "./Table/TableTraits";
 import UrlTraits from "./UrlTraits";
+import GlobeClippingTraits from "./GlobeClippingTraits";
 
 export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
   @anyTrait({
@@ -38,6 +41,9 @@ export class PerPropertyGeoJsonStyleTraits extends ModelTraits {
 }
 
 export class GeoJsonTraits extends mixTraits(
+  GlobeClippingTraits,
+  QueryableCatalogItemTraits,
+  SearchableCatalogItemTraits,
   FeatureInfoUrlTemplateTraits,
   LegendOwnerTraits,
   TableTraits,
@@ -172,4 +178,12 @@ export class GeoJsonTraits extends mixTraits(
       "Allows to activate the clustering of entities, works only with Cesium as a viewer."
   })
   clustering?: ClusteringTraits;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "mixedStyle",
+    description:
+      "If true use Cesium primitives with some TableStyle properties."
+  })
+  mixedStyle = false;
 }

@@ -16,11 +16,6 @@ import Terria from "../../Terria";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-import ExportableFormat from "../../../ViewModels/Measure/ExportableFormat";
-import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
-import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
-import DataUri from "../../../Core/DataUri";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
 // Types of CSVs:
 // - Points - Latitude and longitude columns or address
@@ -36,7 +31,7 @@ export default class CsvCatalogItem
   extends AutoRefreshingMixin(
     TableMixin(UrlMixin(CreateModel(CsvCatalogItemTraits)))
   )
-  implements HasLocalData, ExportableFormat
+  implements HasLocalData
 {
   static get type() {
     return "csv";
@@ -73,65 +68,6 @@ export default class CsvCatalogItem
   @override
   get cacheDuration() {
     return super.cacheDuration || "1d";
-  }
-
-  private generateCsvData(geom: MeasurableGeometry, name: string): string {
-    const headers = [
-      "name",
-      "path_notes",
-      ...Object.keys(geom.stopPoints[0]),
-      "description"
-    ].join(",");
-
-    const rows = [headers];
-
-    rows.push(
-      ...geom.stopPoints.map((elem, index) =>
-        [
-          name,
-          geom.pathNotes,
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height),
-          geom.pointDescriptions?.[index] || ""
-        ].join(",")
-      )
-    );
-
-    return rows.join("\n");
-  }
-
-  async generateDownloadLinks(
-    geom: MeasurableGeometry,
-    name: string
-  ): Promise<DownloadLink[]> {
-    const downloads: DownloadLink[] = [
-      {
-        key: "csv",
-        href: DataUri.make("csv", this.generateCsvData(geom, name)),
-        download: `${name}_points.csv`,
-        label: "CSV"
-      }
-    ];
-
-    return downloads.filter((download) => {
-      if (geom.onlyPoints) {
-        return (
-          !download.download?.includes("_lines") &&
-          !download.download?.includes("_polygon")
-        );
-      } else if (geom.isClosed) {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_lines")
-        );
-      } else {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_polygon")
-        );
-      }
-    });
   }
 
   @override
@@ -211,22 +147,39 @@ export default class CsvCatalogItem
     });
   }
 
-  public forceLoadTableData(): Promise<string[][]> {
+  private normalizeContent(csv: string): string {
+    const firstLine = csv.split("\n")[0];
+    const separator = firstLine.includes(";") ? ";" : ",";
+
+    if (separator === ";") {
+      return csv.replace(/(\d),(\d)/g, "$1.$2").replace(/;/g, ",");
+    }
+
+    return csv;
+  }
+
+  public async forceLoadTableData(): Promise<string[][]> {
     if (this.csvString !== undefined) {
+      const normalized = this.normalizeContent(this.csvString);
       return Csv.parseString(
-        this.csvString,
+        normalized,
         true,
         this.ignoreRowsStartingWithComment
       );
     } else if (this._csvFile !== undefined) {
-      return Csv.parseFile(
-        this._csvFile,
+      const text = await this._csvFile.text();
+      const normalized = this.normalizeContent(text);
+      return Csv.parseString(
+        normalized,
         true,
         this.ignoreRowsStartingWithComment
       );
     } else if (this.url !== undefined) {
-      return Csv.parseUrl(
-        proxyCatalogItemUrl(this, this.url),
+      const response = await fetch(proxyCatalogItemUrl(this, this.url));
+      const text = await response.text();
+      const normalized = this.normalizeContent(text);
+      return Csv.parseString(
+        normalized,
         true,
         this.ignoreRowsStartingWithComment
       );
@@ -250,24 +203,28 @@ export default class CsvCatalogItem
       return acc;
     }, {} as { [key: string]: any[] });
 
-    const path_notes = columns["path_notes"]?.[0] || "";
-    const longitudes = columns["longitude"] || [];
-    const latitudes = columns["latitude"] || [];
-    const heights = columns["height"] || [];
-    const descriptions = columns["description"] || [];
+    const rawPathNotes = (columns["path_notes"] as any[]) || [];
+    const longitudes = (columns["longitude"] as any[]) || [];
+    const latitudes = (columns["latitude"] as any[]) || [];
+    const heights = (columns["height"] as any[]) || [];
+    const descriptions = (columns["description"] as any[]) || [];
+    const path_notes =
+      rawPathNotes.find((v) => typeof v === "string" && v.trim().length > 0) ||
+      "";
 
     const positions = longitudes.map((longitude: number, i: number) =>
       Cartographic.fromDegrees(longitude, latitudes[i], heights[i])
     );
 
-    if (!this.terria?.cesium?.scene) {
+    if (!this.terria) {
       return;
     }
-    const terrainProvider = this.terria.cesium.scene.terrainProvider;
+    const terrainProvider = this.terria.cesium?.scene?.terrainProvider;
 
-    const resolvedPositions = positions.every((pos) => pos.height < 1)
-      ? await sampleTerrainMostDetailed(terrainProvider, positions)
-      : positions;
+    const resolvedPositions =
+      terrainProvider && positions.every((pos) => pos.height < 1)
+        ? await sampleTerrainMostDetailed(terrainProvider, positions)
+        : positions;
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex

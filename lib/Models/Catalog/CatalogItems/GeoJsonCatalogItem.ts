@@ -14,9 +14,13 @@ import GeoJsonMixin, {
 } from "../../../ModelMixins/GeojsonMixin";
 import GeoJsonCatalogItemTraits from "../../../Traits/TraitsClasses/GeoJsonCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
+import Model, {
+  BaseModel,
+  ModelConstructorParameters
+} from "../../Definition/Model";
+import { ModelId } from "../../../Traits/ModelReference";
 import HasLocalData from "../../HasLocalData";
 import Terria from "../../Terria";
-import Model, { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import ApiRequestTraits from "../../../Traits/TraitsClasses/ApiRequestTraits";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
@@ -24,16 +28,10 @@ import { featureCollection, FeatureCollection } from "@turf/helpers";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-import ExportableFormat from "../../../ViewModels/Measure/ExportableFormat";
-import DataUri from "../../../Core/DataUri";
-import { DownloadLink } from "../../../ViewModels/Measure/MeasurableDownload";
-import { MeasurableGeometry } from "../../../ViewModels/Measure/MeasurableGeometryManager";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
 class GeoJsonCatalogItem
   extends CesiumIonMixin(GeoJsonMixin(CreateModel(GeoJsonCatalogItemTraits)))
-  implements HasLocalData, ExportableFormat
-{
+  implements HasLocalData {
   static readonly type = "geojson";
 
   constructor(...args: ModelConstructorParameters) {
@@ -55,213 +53,16 @@ class GeoJsonCatalogItem
     this._file = file;
   }
 
+  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
+    const newModel = super.duplicateModel(newId, sourceReference);
+    if (this._file) {
+      newModel.setFileInput(this._file);
+    }
+    return newModel;
+  }
+
   @computed get hasLocalData(): boolean {
     return isDefined(this._file);
-  }
-
-  private generateMultiPathJsonPolygon(
-    geomList: MeasurableGeometry[],
-    name: string
-  ): string {
-    return JSON.stringify({
-      type: "FeatureCollection",
-      name: name || "",
-      features: geomList.map((geom) => {
-        const coordinates = geom.stopPoints.map((elem) => [
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude)
-        ]);
-
-        if (
-          coordinates.length &&
-          (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
-            coordinates[0][1] !== coordinates[coordinates.length - 1][1])
-        ) {
-          coordinates.push(coordinates[0]);
-        }
-
-        return {
-          type: "Feature",
-          geometry: {
-            type: "MultiPolygon",
-            coordinates: [[coordinates]]
-          },
-          properties: {
-            path_notes: geom.pathNotes || ""
-          }
-        };
-      })
-    });
-  }
-
-  private generateMultiPathJsonLineStrings(
-    geomList: MeasurableGeometry[],
-    name: string
-  ): string {
-    return JSON.stringify({
-      type: "FeatureCollection",
-      name: name || "",
-      features: geomList.map((geom) => ({
-        type: "Feature",
-        geometry: {
-          type: "MultiLineString",
-          coordinates: [
-            geom.stopPoints.map((elem) => [
-              CesiumMath.toDegrees(elem.longitude),
-              CesiumMath.toDegrees(elem.latitude),
-              Math.round(elem.height)
-            ])
-          ]
-        },
-        properties: {
-          path_notes: geom.pathNotes
-        }
-      }))
-    });
-  }
-
-  private generateJsonPolygon(geom: MeasurableGeometry, name: string): string {
-    const coordinates = geom.stopPoints.map((elem) => [
-      CesiumMath.toDegrees(elem.longitude),
-      CesiumMath.toDegrees(elem.latitude)
-    ]);
-
-    if (
-      coordinates.length &&
-      (coordinates[0][0] !== coordinates[coordinates.length - 1][0] ||
-        coordinates[0][1] !== coordinates[coordinates.length - 1][1])
-    ) {
-      coordinates.push(coordinates[0]);
-    }
-
-    return JSON.stringify({
-      name: name || "",
-      type: "Feature",
-      geometry: {
-        type: "Polygon",
-        coordinates: [coordinates]
-      },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
-    });
-  }
-
-  private generateJsonLineStrings(
-    geom: MeasurableGeometry,
-    name: string
-  ): string {
-    return JSON.stringify({
-      name: name || "",
-      type: "Feature",
-      geometry: {
-        type: "LineString",
-        coordinates: geom.stopPoints.map((elem) => [
-          CesiumMath.toDegrees(elem.longitude),
-          CesiumMath.toDegrees(elem.latitude),
-          Math.round(elem.height)
-        ])
-      },
-      properties: {
-        path_notes: geom.pathNotes || ""
-      }
-    });
-  }
-
-  private generateJsonPoints(geom: MeasurableGeometry, name: string): string {
-    return JSON.stringify({
-      name: name || "",
-      path_notes: geom.pathNotes || "",
-      type: "FeatureCollection",
-      features: geom.stopPoints.map((elem, index) => {
-        return {
-          type: "Feature",
-          properties: {
-            description: geom.pointDescriptions?.[index] || ""
-          },
-          geometry: {
-            coordinates: [
-              CesiumMath.toDegrees(elem.longitude),
-              CesiumMath.toDegrees(elem.latitude),
-              elem.height
-            ],
-            type: "Point"
-          }
-        };
-      })
-    });
-  }
-
-  async generateDownloadLinks(
-    geom: MeasurableGeometry,
-    name: string,
-    isMultiPath: boolean,
-    geomList?: MeasurableGeometry[]
-  ): Promise<DownloadLink[]> {
-    const downloads: DownloadLink[] = [];
-
-    if (isMultiPath && geomList) {
-      downloads.push(
-        {
-          key: "jsonMultiPathPolygon",
-          href: DataUri.make(
-            "json",
-            this.generateMultiPathJsonPolygon(geomList, name)
-          ),
-          download: `${name}_polygon_multipath.geojson`,
-          label: `Multi ${i18next.t("downloadData.polygon")} GEOJSON`
-        },
-        {
-          key: "jsonMultiPathLines",
-          href: DataUri.make(
-            "json",
-            this.generateMultiPathJsonLineStrings(geomList, name)
-          ),
-          download: `${name}_lines_multipath.geojson`,
-          label: `Multi ${i18next.t("downloadData.lines")} GEOJSON`
-        }
-      );
-    } else {
-      downloads.push(
-        {
-          key: "jsonPolygon",
-          href: DataUri.make("json", this.generateJsonPolygon(geom, name)),
-          download: `${name}_polygon.geojson`,
-          label: `${i18next.t("downloadData.polygon")} GEOJSON`
-        },
-        {
-          key: "jsonLines",
-          href: DataUri.make("json", this.generateJsonLineStrings(geom, name)),
-          download: `${name}_lines.geojson`,
-          label: `${i18next.t("downloadData.lines")} GEOJSON`
-        },
-        {
-          key: "jsonPoints",
-          href: DataUri.make("json", this.generateJsonPoints(geom, name)),
-          download: `${name}_points.geojson`,
-          label: `${i18next.t("downloadData.points")} GEOJSON`
-        }
-      );
-    }
-
-    return downloads.filter((download) => {
-      if (geom.onlyPoints) {
-        return (
-          !download.download?.includes("_lines") &&
-          !download.download?.includes("_polygon")
-        );
-      } else if (geom.isClosed) {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_lines")
-        );
-      } else {
-        return (
-          !download.download?.includes("_points") &&
-          !download.download?.includes("_polygon")
-        );
-      }
-    });
   }
 
   /**
@@ -343,9 +144,9 @@ class GeoJsonCatalogItem
         // specific CRS information when merging the multiple FCs.
         const geojson = await (fc
           ? reprojectToGeographic(
-              fc,
-              this.terria.configParameters.proj4ServiceBaseUrl
-            )
+            fc,
+            this.terria.configParameters.proj4ServiceBaseUrl
+          )
           : undefined);
         return geojson;
       });
@@ -419,6 +220,8 @@ class GeoJsonCatalogItem
 
     const positions: Cartographic[] = [];
     const descriptions: string[] = [];
+    const pointProperties: any[] = [];
+    let featureProperties: any | undefined;
 
     fc.features.forEach((feature) => {
       if (!feature.geometry) return;
@@ -436,6 +239,7 @@ class GeoJsonCatalogItem
             )
           );
           descriptions.push(feature.properties?.description || "");
+          pointProperties.push(feature.properties ?? {});
           break;
         }
         case "LineString": {
@@ -447,6 +251,9 @@ class GeoJsonCatalogItem
             positions.push(Cartographic.fromDegrees(lon, lat, alt));
           });
           descriptions.push(feature.properties?.description || "");
+          if (!featureProperties && feature.properties) {
+            featureProperties = feature.properties as any;
+          }
           break;
         }
         default:
@@ -455,14 +262,25 @@ class GeoJsonCatalogItem
     });
     if (positions.length === 0) return;
 
-    if (!this.terria?.cesium?.scene) return;
-    const terrainProvider = this.terria.cesium.scene.terrainProvider;
+    if (!this.terria) return;
+    const terrainProvider = this.terria.cesium?.scene?.terrainProvider;
 
-    const resolvedPositions = positions.every((pos) => pos.height < 1)
-      ? await sampleTerrainMostDetailed(terrainProvider, positions)
-      : positions;
+    const resolvedPositions =
+      terrainProvider && positions.every((pos) => pos.height < 1)
+        ? await sampleTerrainMostDetailed(terrainProvider, positions)
+        : positions;
 
-    const pathNotes = (fc as any).path_notes || "";
+    const rawPathNotes = (fc as any).path_notes;
+    let pathNotes = typeof rawPathNotes === "string" ? rawPathNotes : "";
+
+    if (!pathNotes && fc.features.length > 0) {
+      const firstProps = fc.features[0].properties as any;
+      if (typeof firstProps?.path_notes === "string") {
+        pathNotes = firstProps.path_notes;
+      } else if (typeof firstProps?.description === "string") {
+        pathNotes = this.extractPathNotes(firstProps.description);
+      }
+    }
 
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex
@@ -471,8 +289,23 @@ class GeoJsonCatalogItem
       false,
       true,
       descriptions,
-      pathNotes
+      pathNotes,
+      true,
+      undefined,
+      {
+        featureProperties,
+        pointProperties: pointProperties.length ? pointProperties : undefined
+      }
     );
+  }
+
+  private extractPathNotes(description: string): string {
+    const line = description
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .find((l) => l.toLowerCase().startsWith("path_notes:"));
+    if (!line) return description;
+    return line.slice("path_notes:".length).trim();
   }
 }
 

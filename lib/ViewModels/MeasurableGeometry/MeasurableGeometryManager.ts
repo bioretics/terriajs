@@ -6,6 +6,8 @@ import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
+import { JsonObject } from "../../Core/Json";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 
 export interface MeasurableGeometry {
   isClosed: boolean;
@@ -33,6 +35,9 @@ export interface MeasurableGeometry {
   circlePerimeter?: number;
   circleArea?: number;
   circleCenter?: Cartographic;
+  indexPath?: number;
+  featureProperties?: JsonObject;
+  pointProperties?: JsonObject[];
 }
 
 export default class MeasurableGeometryManager {
@@ -48,9 +53,9 @@ export default class MeasurableGeometryManager {
     );
   }
 
-  resample() {
+  resample(index: number = this.terria.measurableGeometryIndex) {
     const currentGeometry =
-      this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
+      this.terria.measurableGeomList[index];
     if (!currentGeometry || !currentGeometry.stopPoints?.length) {
       return;
     }
@@ -79,7 +84,7 @@ export default class MeasurableGeometryManager {
       currentGeometry?.pointDescriptions,
       currentGeometry?.pathNotes,
       currentGeometry?.isFileUploaded,
-      undefined,
+      currentGeometry?.indexPath ?? index,
       closeGeomProperties
     );
   }
@@ -92,10 +97,8 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean
   ) {
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
-    if (!ellipsoid) {
-      return;
-    }
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
 
     // extract valid points from CustomDataSource
     const cartesianEntities = pointEntities.entities.values.filter(
@@ -140,10 +143,10 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number,
-    closeGeomProperties?: Partial<MeasurableGeometry>
+    geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
+    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
 
     if (!terrainProvider || !ellipsoid || cartoPositions.length === 0) {
       return;
@@ -177,9 +180,14 @@ export default class MeasurableGeometryManager {
 
     // sample points on terrain
     const terrainPromises = [
-      sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics)
+      terrainProvider
+        ? sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics)
+        : Promise.resolve(interpolatedCartographics)
     ];
-    if (this.terria.configParameters.useElevationMeanSeaLevel) {
+    if (
+      this.terria.configParameters.useElevationMeanSeaLevel &&
+      terrainProvider
+    ) {
       terrainPromises.push(
         this.geoidModel.getHeights(interpolatedCartographics)
       );
@@ -247,7 +255,7 @@ export default class MeasurableGeometryManager {
             pathNotes,
             isFileUploaded,
             indexPath,
-            closeGeomProperties
+            geomProperties
           ]
         : [
             cartoPositions,
@@ -262,7 +270,7 @@ export default class MeasurableGeometryManager {
             pathNotes,
             isFileUploaded,
             indexPath,
-            closeGeomProperties
+            geomProperties
           ];
 
       this.updatePath(...updatePathParams);
@@ -283,7 +291,7 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number,
-    closeGeomProperties?: Partial<MeasurableGeometry>
+    geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
     let geodeticArea = 0;
     let airArea = 0;
@@ -317,7 +325,8 @@ export default class MeasurableGeometryManager {
       pointDescriptions: pointDescriptions,
       pathNotes: pathNotes,
       isFileUploaded: isFileUploaded,
-      ...(closeGeomProperties ?? {})
+      indexPath: indexPath,
+      ...(geomProperties ?? {})
     };
 
     if (indexPath !== undefined) {
@@ -335,10 +344,11 @@ export default class MeasurableGeometryManager {
     }
   }
 
-  private calculateGeodeticArea(stopPoints: Cartographic[]): number {
+  public calculateGeodeticArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
     let totalArea = 0;
@@ -370,7 +380,8 @@ export default class MeasurableGeometryManager {
   private calculateAirArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
-    const ellipsoid = this.terria.cesium?.scene.globe.ellipsoid;
+    const ellipsoid =
+      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
     const cartesianPoints = stopPoints.map((point) =>

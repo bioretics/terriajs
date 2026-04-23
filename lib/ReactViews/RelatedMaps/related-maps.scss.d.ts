@@ -5,6 +5,7 @@ interface CssExports {
   'dropdownInner': string;
   'image': string;
   'link': string;
+  'relatedMapsBtn': string;
   'section': string;
 }
 declare var cssExports: CssExports;

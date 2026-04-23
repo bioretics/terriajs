@@ -18,6 +18,7 @@ import { BaseModel } from "../../../Models/Definition/Model";
 import Terria from "../../../Models/Terria";
 import ViewerMode, {
   MapViewers,
+  MapViewersKey,
   setViewerMode
 } from "../../../Models/ViewerMode";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -53,10 +54,6 @@ class SettingPanel extends React.Component<PropTypes> {
   constructor(props: PropTypes) {
     super(props);
     makeObservable(this);
-
-    Object.entries(MapViewers).forEach(([key, elem]) => {
-      elem.available = props.terria.configParameters.mapViewers.includes(key);
-    });
   }
 
   @observable _hoverBaseMap = null;
@@ -142,6 +139,22 @@ class SettingPanel extends React.Component<PropTypes> {
     this.props.terria.currentViewer.notifyRepaintRequired();
   }
 
+  @action
+  toggleGlobeTranslucencyEnabled(event: ChangeEvent<HTMLInputElement>) {
+    event.stopPropagation();
+    this.props.terria.globeTranslucencyEnabled =
+      !this.props.terria.globeTranslucencyEnabled;
+    this.props.terria.currentViewer.notifyRepaintRequired();
+  }
+
+  @action
+  toggleEnableCollisionDetection(event: ChangeEvent<HTMLInputElement>) {
+    event.stopPropagation();
+    this.props.terria.enableCollisionDetection =
+      !this.props.terria.enableCollisionDetection;
+    this.props.terria.currentViewer.notifyRepaintRequired();
+  }
+
   onBaseMaximumScreenSpaceErrorChange(bmsse: number) {
     this.props.terria.setBaseMaximumScreenSpaceError(bmsse);
     this.props.terria.setLocalProperty(
@@ -173,7 +186,7 @@ class SettingPanel extends React.Component<PropTypes> {
     };
     const currentViewer =
       this.props.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
-        ? ViewerMode.Cesium2D
+        ? "2dcesium"
         : this.props.terria.mainViewer.viewerMode === ViewerMode.Cesium
         ? this.props.terria.mainViewer.viewerOptions.useTerrain
           ? "3d"
@@ -211,13 +224,6 @@ class SettingPanel extends React.Component<PropTypes> {
       ? t("settingPanel.terrain.showUndergroundFeatures")
       : t("settingPanel.terrain.hideUndergroundFeatures");
 
-    if (
-      this.props.terria.configParameters.useCesiumIonTerrain ||
-      this.props.terria.configParameters.cesiumTerrainUrl
-    ) {
-      MapViewers["3d"].available = true;
-    }
-
     const supportsSide = isCesiumWithTerrain;
 
     let currentSide = sides.both;
@@ -231,6 +237,17 @@ class SettingPanel extends React.Component<PropTypes> {
           break;
       }
     }
+
+    const filteredMapViewers = Object.entries(MapViewers).filter(
+      ([key, viewerMode]) =>
+        viewerMode.available &&
+        this.props.terria.configParameters.mapViewers.includes(
+          key as MapViewersKey
+        )
+    );
+    const availableMapViewers = filteredMapViewers.length
+      ? filteredMapViewers
+      : [["2d", MapViewers["2d"]] as const];
 
     const timelineStack = this.props.terria.timelineStack;
 
@@ -253,17 +270,17 @@ class SettingPanel extends React.Component<PropTypes> {
             <Text as="label">{t("settingPanel.mapView")}</Text>
           </Box>
           <FlexGrid gap={1} elementsNo={3}>
-            {Object.entries(MapViewers)
-              .filter(([_, viewerMode]) => viewerMode.available)
-              .map(([key, viewerMode]) => (
-                <SettingsButton
-                  key={key}
-                  isActive={key === currentViewer}
-                  onClick={(event: any) => this.selectViewer(key as any, event)}
-                >
-                  <Text mini>{t(viewerMode.label)}</Text>
-                </SettingsButton>
-              ))}
+            {availableMapViewers.map(([key, viewerMode]) => (
+              <SettingsButton
+                key={key}
+                isActive={key === currentViewer}
+                onClick={(event: MouseEvent<HTMLButtonElement>) =>
+                  this.selectViewer(key as keyof typeof MapViewers, event)
+                }
+              >
+                <Text mini>{t(viewerMode.label)}</Text>
+              </SettingsButton>
+            ))}
           </FlexGrid>
           {!!supportsSide && (
             <>
@@ -302,6 +319,47 @@ class SettingPanel extends React.Component<PropTypes> {
                       {t("settingPanel.terrain.hideUnderground")}
                     </TextSpan>
                   </Checkbox>
+                  {this.props.terria.configParameters.globeTranslucency && (
+                    <>
+                      <Spacing bottom={2} />
+                      <Checkbox
+                        textProps={{ small: true }}
+                        id="globeTranslucencyEnabled"
+                        title={t(
+                          "settingPanel.terrain.globeTranslucencyEnabledTitle"
+                        )}
+                        isChecked={this.props.terria.globeTranslucencyEnabled}
+                        onChange={this.toggleGlobeTranslucencyEnabled.bind(
+                          this
+                        )}
+                      >
+                        <TextSpan>
+                          {t("settingPanel.terrain.globeTranslucencyEnabled")}
+                        </TextSpan>
+                      </Checkbox>
+                    </>
+                  )}
+                  {this.props.terria.configParameters
+                    .showEnableCollisionControl && (
+                    <>
+                      <Spacing bottom={2} />
+                      <Checkbox
+                        textProps={{ small: true }}
+                        id="enableCollisionDetection"
+                        title={t(
+                          "settingPanel.terrain.enableCollisionDetectionTitle"
+                        )}
+                        isChecked={this.props.terria.enableCollisionDetection}
+                        onChange={this.toggleEnableCollisionDetection.bind(
+                          this
+                        )}
+                      >
+                        <TextSpan>
+                          {t("settingPanel.terrain.enableCollisionDetection")}
+                        </TextSpan>
+                      </Checkbox>
+                    </>
+                  )}
                 </>
               )}
             </>

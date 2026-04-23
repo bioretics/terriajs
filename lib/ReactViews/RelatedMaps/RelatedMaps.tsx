@@ -29,12 +29,12 @@ class RelatedMaps extends React.Component<PropTypes> {
 
   render() {
     const t = this.props.t;
+    const smallScreen = this.props.viewState.useSmallScreenInterface;
     const dropdownTheme = {
       inner: Styles.dropdownInner,
+      btn: Styles.relatedMapsBtn,
       icon: "gallery"
     };
-
-    const smallScreen = this.props.viewState.useSmallScreenInterface;
 
     return (
       <MenuPanel
@@ -57,8 +57,8 @@ class RelatedMaps extends React.Component<PropTypes> {
                   style={{
                     marginRight: "10px",
                     marginBottom: "10px",
-                    width: "200px",
-                    height: "150px"
+                    width: "200px"
+                    //height: "150px"
                   }}
                   src={map.imageUrl}
                   alt={map.title}
@@ -69,7 +69,7 @@ class RelatedMaps extends React.Component<PropTypes> {
             <Box displayInlineBlock>
               <a
                 target="_blank"
-                style={{ color: this.props.theme.colorPrimary }}
+                style={{ color: this.props.theme.textLight }}
                 href={map.url}
                 rel="noreferrer"
               >

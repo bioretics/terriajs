@@ -9,7 +9,7 @@ import Terria from "../../Models/Terria";
 import Input from "../../Styled/Input";
 import MeasurableDownload, {
   DownloadLink
-} from "../../ViewModels/Measure/MeasurableDownload";
+} from "../../ViewModels/MeasurableGeometry/MeasurableGeometryDownload";
 import ViewState from "../../ReactViewModels/ViewState";
 import { observer } from "mobx-react";
 
@@ -18,10 +18,11 @@ interface Props {
   viewState: ViewState;
   pathNotes: string;
   ellipsoid: Ellipsoid;
+  defaultFilename?: string;
 }
 
 const MeasurableDownloadContent = observer((props: Props) => {
-  const { terria, viewState, pathNotes, ellipsoid } = props;
+  const { terria, viewState, pathNotes, ellipsoid, defaultFilename } = props;
   const [name, setName] = useState<string>("");
   const [selectedElementIndex, setSelectedElementIndex] = useState<number>(
     terria.measurableGeometryIndex
@@ -49,7 +50,9 @@ const MeasurableDownloadContent = observer((props: Props) => {
 
   useEffect(() => {
     if (viewState.measurableDownloadPanelIsVisible) {
-      setName("");
+      setName(
+        MeasurableDownload.normalizeDefaultFilename(defaultFilename ?? "")
+      );
       setSelectedFormat("");
       setSelectedElementIndex(terria.measurableGeometryIndex);
       setIsSelectAll(terria.measurableGeomList.length > 1);
@@ -57,7 +60,8 @@ const MeasurableDownloadContent = observer((props: Props) => {
   }, [
     terria.measurableGeometryIndex,
     viewState.measurableDownloadPanelIsVisible,
-    terria.measurableGeomList.length
+    terria.measurableGeomList.length,
+    defaultFilename
   ]);
 
   useEffect(() => {
@@ -74,8 +78,8 @@ const MeasurableDownloadContent = observer((props: Props) => {
             geom,
             name,
             isMultiPath,
-            geomListForMultiPath,
-            ellipsoid
+            ellipsoid,
+            geomListForMultiPath
           );
 
           setDownloadLinks(allLinks);

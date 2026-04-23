@@ -6,9 +6,8 @@ import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
-import MeasurableGeometryManager, {
-  MeasurableGeometry
-} from "../ViewModels/Measure/MeasurableGeometryManager";
+import MeasurableGeometryManager, { MeasurableGeometry } from "../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import { JsonObject } from "../Core/Json";
 
 type MixinModel = Model<MappableTraits>;
 
@@ -31,7 +30,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
-      closeGeomProperties?: Partial<MeasurableGeometry>
+      geomProperties?: Partial<MeasurableGeometry> | JsonObject
     ) {
       if (indexPath !== undefined) {
         while (!this.terria.measurableGeometryManager[indexPath]) {
@@ -55,7 +54,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         pathNotes,
         true,
         indexPath,
-        closeGeomProperties
+        geomProperties
       );
     }
 
@@ -64,27 +63,30 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
-      closeGeomProperties?: Partial<MeasurableGeometry>
+      geomProperties?: Partial<MeasurableGeometry> | JsonObject
     ) {
-      if (!this?.terria?.cesium?.scene) {
+      if (!this?.terria) {
         return;
       }
-      const terrainProvider: TerrainProvider =
-        this.terria?.cesium?.scene.terrainProvider;
+
+      const terrainProvider: TerrainProvider | undefined =
+        this.terria?.cesium?.scene?.terrainProvider;
 
       let prom = Promise.resolve(positions);
-      if (positions.every((element) => element.height < 1)) {
+
+      if (terrainProvider && positions.every((element) => element.height < 1)) {
         prom = prom.then((pos) =>
           sampleTerrainMostDetailed(terrainProvider, pos)
         );
       }
+
       prom.then((newPositions: Cartographic[]) => {
         this.update(
           newPositions,
           pathNotes,
           indexPath,
           closeLoop,
-          closeGeomProperties
+          geomProperties
         );
       });
     }

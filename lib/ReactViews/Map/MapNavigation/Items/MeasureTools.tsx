@@ -935,7 +935,8 @@ export class MeasurePointTool extends MapNavigationItemController {
   }
 
   onPointMoved(pointEntities: CustomDataSource) {
-    console.log("Ho spostato: ", pointEntities);
+    // This is no different to clicking a point.
+    this.onPointClicked(pointEntities);
   }
 
   onMakeDialogMessage = () => {

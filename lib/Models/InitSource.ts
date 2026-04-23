@@ -49,6 +49,31 @@ export interface ShareInitSourceData {
 export interface InitSourceData {
   stratum?: string;
   corsDomains?: string[];
+  parameters?: {
+    brandBarElements?: string[];
+    brandBarSmallElements?: string[];
+    displayOneBrand?: number;
+    theme?: {
+      colorPrimary?: string;
+      colorSecondary?: string;
+      textLight?: string;
+      textLightTranslucent?: string;
+      textLightDimmed?: string;
+      textDark?: string;
+      textDarker?: string;
+      textBlack?: string;
+      turquoiseBlue?: string;
+      dark?: string;
+      darkTranslucent?: string;
+      darkWithOverlay?: string;
+      darkLighter?: string;
+      grey?: string;
+      greyLighter?: string;
+      greyLighter2?: string;
+      greyLightest?: string;
+      charcoalGrey?: string;
+    };
+  };
   catalog?: JsonObject[];
   elements?: Map<string, IElementConfig>;
   stories?: StoryData[];
