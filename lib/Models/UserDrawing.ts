@@ -101,7 +101,6 @@ export default class UserDrawing extends MappableMixin(
   private isAngleMeasuring: boolean = false;
   private isPointMeasuring: boolean = false;
   private isCircleMeasuring: boolean = false;
-  private readonly circleBearings: number[];
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -180,10 +179,6 @@ export default class UserDrawing extends MappableMixin(
     this.drawRectangle = defaultValue(options.drawRectangle, false);
 
     this.invisible = options.invisible;
-
-    this.circleBearings = new Array(65)
-      .fill(0)
-      .map((_, i) => (2 * Math.PI * i) / 64);
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -262,16 +257,6 @@ export default class UserDrawing extends MappableMixin(
     toRemove.forEach((e) => this.otherEntities.entities.remove(e));
   }
 
-  private getCurrentMouseCartesianPosition() {
-    const cartographicMouseCoords =
-      this.terria.currentViewer.mouseCoords.cartographic;
-    if (!cartographicMouseCoords) {
-      return undefined;
-    }
-
-    return Ellipsoid.WGS84.cartographicToCartesian(cartographicMouseCoords);
-  }
-
   private getCircleDisplayPoints(time?: JulianDate) {
     const currentTime = time ?? this.terria.timelineClock.currentTime;
     const center =
@@ -283,7 +268,9 @@ export default class UserDrawing extends MappableMixin(
 
     const edge =
       this.pointEntities.entities.values[1]?.position?.getValue(currentTime) ??
-      this.getCurrentMouseCartesianPosition();
+      Ellipsoid.WGS84.cartographicToCartesian(
+        this.terria.currentViewer.mouseCoords.cartographic!!
+      );
 
     if (!edge) {
       return [center];
@@ -319,9 +306,13 @@ export default class UserDrawing extends MappableMixin(
     const earthRadius = Ellipsoid.WGS84.maximumRadius;
     const angularDistance = radius / earthRadius;
     const positions: Cartesian3[] = [];
+    const segments = Math.max(16, Math.min(256, Math.floor(radius / 5)));
+    const circleBearings = new Array(segments)
+      .fill(0)
+      .map((_, i) => (2 * Math.PI * i) / (segments - 1));
 
-    for (let i = 0; i < this.circleBearings.length; i++) {
-      const bearing = this.circleBearings[i];
+    for (let i = 0; i < circleBearings.length; i++) {
+      const bearing = circleBearings[i];
       const lat1 = centerCarto.latitude;
       const lon1 = centerCarto.longitude;
 

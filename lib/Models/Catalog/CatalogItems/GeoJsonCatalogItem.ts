@@ -284,7 +284,6 @@ class GeoJsonCatalogItem
     }
 
     const isCircle = fc.features[0].properties?.is_circle === true;
-    console.log("geojsonmixin isCircle", isCircle);
     const circleRadius = fc.features[0].properties?.circle_radius || 0;
     const circleCenter = Cartographic.fromDegrees(
       fc.features[0].properties?.center_lon,

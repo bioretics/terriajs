@@ -37,21 +37,15 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       circleCenter?: Cartographic,
       geomProperties?: Partial<MeasurableGeometry> | JsonObject
     ) {
-      if (indexPath !== undefined) {
-        while (!this.terria.measurableGeometryManager[indexPath]) {
-          this.terria.measurableGeometryManager.push(
-            Object.freeze(new MeasurableGeometryManager(this.terria))
-          );
-        }
+      if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
+        this.terria.measurableGeometryManager.push(
+          Object.freeze(new MeasurableGeometryManager(this.terria))
+        );
       }
 
-      const managerIndex = indexPath ?? this.terria.measurableGeometryIndex;
-      const manager = this.terria.measurableGeometryManager[managerIndex];
-      if (!manager) {
-        return;
-      }
-
-      manager.sampleFromCartographics(
+      this.terria.measurableGeometryManager[
+        this.terria.measurableGeometryIndex
+      ].sampleFromCartographics(
         stopPoints,
         closeLoop ?? false,
         false,

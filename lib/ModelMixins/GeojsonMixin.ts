@@ -1773,7 +1773,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           : {};
         const pathNotes = properties.desc || properties.path_notes || "";
         const isCircle = properties.is_circle === true;
-        console.log("geojsonmixin isCircle", isCircle);
         const circleRadius = properties.circle_radius || 0;
         const circleCenter = Cartographic.fromDegrees(
           properties.center_lon,
@@ -1782,8 +1781,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         );
         const coordinates = this.convertJsonCoords(jsonCoords);
         const geomProperties = properties;
-
-        console.log("geojsonmixin geom:", geomProperties);
 
         this.asPath(
           coordinates,
