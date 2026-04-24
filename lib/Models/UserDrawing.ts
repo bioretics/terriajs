@@ -260,24 +260,20 @@ export default class UserDrawing extends MappableMixin(
   private getCircleDisplayPoints(time?: JulianDate) {
     const t = time ?? this.terria.timelineClock.currentTime;
     const [centerEntity, edgeEntity] = this.pointEntities.entities.values;
-
     const center = centerEntity?.position?.getValue(t);
     if (!center) return [];
-
     const edge =
       edgeEntity?.position?.getValue(t) ??
       (this.terria.currentViewer.mouseCoords.cartographic &&
         Ellipsoid.WGS84.cartographicToCartesian(
           this.terria.currentViewer.mouseCoords.cartographic
         ));
-
     return edge ? [center, edge] : [center];
   }
 
   private getCircleGeodesicDistance(center: Cartesian3, edge: Cartesian3) {
     const c1 = Cartographic.fromCartesian(center);
     const c2 = Cartographic.fromCartesian(edge);
-
     return new EllipsoidGeodesic(
       new Cartographic(c1.longitude, c1.latitude),
       new Cartographic(c2.longitude, c2.latitude)
@@ -288,22 +284,18 @@ export default class UserDrawing extends MappableMixin(
     const centerCarto = Cartographic.fromCartesian(center);
     const earthRadius = Ellipsoid.WGS84.maximumRadius;
     const angularDistance = radius / earthRadius;
-
     const segments = Math.max(
       64,
       Math.min(512, Math.ceil((2 * Math.PI * radius) / 20))
     );
     const positions: Cartesian3[] = new Array(segments);
-
     const { latitude: lat1, longitude: lon1, height } = centerCarto;
     const sinLat1 = Math.sin(lat1);
     const cosLat1 = Math.cos(lat1);
     const sinAd = Math.sin(angularDistance);
     const cosAd = Math.cos(angularDistance);
-
     for (let i = 0; i < segments; i++) {
       const bearing = (2 * Math.PI * i) / (segments - 1);
-
       const lat2 = Math.asin(
         sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
       );
@@ -313,33 +305,12 @@ export default class UserDrawing extends MappableMixin(
           Math.sin(bearing) * sinAd * cosLat1,
           cosAd - sinLat1 * Math.sin(lat2)
         );
-
       positions[i] = Cartographic.toCartesian(
         new Cartographic(lon2, lat2, height)
       );
     }
 
     return positions;
-  }
-
-  private prettifyCircleArea(a: number) {
-    if (a <= 0) return "";
-
-    if (a >= 1_000_000) {
-      const km2 = a / 1_000_000;
-      return `${km2.toFixed(km2 >= 10 ? 1 : 2)} km²`;
-    }
-
-    return `${a.toFixed(a >= 10_000 ? 0 : 2)} m²`;
-  }
-
-  private prettifyCircleDistance(d: number) {
-    if (d <= 0) return "";
-
-    const isKm = d > 999;
-    const value = isKm ? d / 1000 : d;
-
-    return `${value.toFixed(isKm ? 2 : 1)} ${isKm ? "km" : "m"}`;
   }
 
   private createCircleEntities() {
@@ -383,7 +354,7 @@ export default class UserDrawing extends MappableMixin(
           }
 
           const radius = this.getCircleGeodesicDistance(center, edge);
-          return this.prettifyCircleArea(Math.PI * radius * radius);
+          return MeasureCircleTool.prettifyArea(Math.PI * radius * radius);
         }, false),
         font: "16px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
@@ -436,9 +407,8 @@ export default class UserDrawing extends MappableMixin(
           if (!center || !edge) {
             return "";
           }
-
           const radius = this.getCircleGeodesicDistance(center, edge);
-          return this.prettifyCircleDistance(radius);
+          return MeasureCircleTool.prettifyDistance(radius);
         }, false),
         font: "14px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
@@ -459,7 +429,6 @@ export default class UserDrawing extends MappableMixin(
         if (this.pointEntities.entities.values.length !== 1) {
           return undefined;
         }
-
         return this.getCircleDisplayPoints(time)[1];
       }, false) as any,
       billboard: {

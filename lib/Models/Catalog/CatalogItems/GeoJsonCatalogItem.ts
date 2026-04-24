@@ -287,8 +287,7 @@ class GeoJsonCatalogItem
     const circleRadius = fc.features[0].properties?.circle_radius || 0;
     const circleCenter = Cartographic.fromDegrees(
       fc.features[0].properties?.center_lon,
-      fc.features[0].properties?.center_lat,
-      0
+      fc.features[0].properties?.center_lat
     );
 
     this.terria.measurableGeometryManager[

@@ -42,7 +42,6 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           Object.freeze(new MeasurableGeometryManager(this.terria))
         );
       }
-
       this.terria.measurableGeometryManager[
         this.terria.measurableGeometryIndex
       ].sampleFromCartographics(

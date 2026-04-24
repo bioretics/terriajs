@@ -706,29 +706,20 @@ export class MeasureCircleTool extends MapNavigationItemController {
     return Number.isFinite(geo.startHeading) ? geo.startHeading : 0;
   }
 
-  private pointAtBearingDistance(
-    center: Cartographic,
-    distanceMetres: number,
-    bearingRad: number
-  ): Cartographic {
-    const geo = new EllipsoidGeodesic(
-      center,
-      new Cartographic(
-        center.longitude + 0.0001 * Math.cos(bearingRad),
-        center.latitude + 0.0001 * Math.sin(bearingRad)
-      ),
-      Ellipsoid.WGS84
-    );
-    return geo.interpolateUsingSurfaceDistance(distanceMetres);
+  public static prettifyArea(a: number) {
+    if (a <= 0) return "";
+    if (a >= 1_000_000) {
+      const km2 = a / 1_000_000;
+      return `${km2.toFixed(km2 >= 10 ? 1 : 2)} km²`;
+    }
+    return `${a.toFixed(a >= 10_000 ? 0 : 2)} m²`;
   }
 
-  private prettifyArea(m2: number): string {
-    if (m2 <= 0) return "";
-    if (m2 >= 1_000_000) {
-      const km2 = m2 / 1_000_000;
-      return `${km2 >= 10 ? km2.toFixed(1) : km2.toFixed(2)} km\u00B2`;
-    }
-    return `${m2.toFixed(m2 >= 10_000 ? 0 : 2)} m\u00B2`;
+  public static prettifyDistance(d: number) {
+    if (d <= 0) return "";
+    const isKm = d > 999;
+    const value = isKm ? d / 1000 : d;
+    return `${value.toFixed(isKm ? 2 : 1)} ${isKm ? "km" : "m"}`;
   }
 
   private get currentGeom() {
@@ -860,7 +851,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
   }
 
   onMakeDialogMessage = (): string =>
-    this.prettifyArea(this.currentGeom?.circleArea ?? 0);
+    MeasureCircleTool.prettifyArea(this.currentGeom?.circleArea ?? 0);
 
   onCleanUp() {
     this.circleLocked = false;
