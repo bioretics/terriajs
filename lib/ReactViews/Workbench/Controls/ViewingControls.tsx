@@ -523,11 +523,6 @@ class ViewingControls extends React.Component<
 
   renderViewingControlsMenu() {
     const { t, item, viewState } = this.props;
-    const currentGeom =
-      this.props.viewState.terria.measurableGeomList[
-        this.props.viewState.terria.measurableGeometryIndex
-      ];
-    const showCirclePathLabel = currentGeom?.isCircle === true;
     const canSplit =
       !item.terria.configParameters.disableSplitter &&
       hasTraits(item, SplitterTraits, "splitDirection") &&
@@ -666,13 +661,7 @@ class ViewingControls extends React.Component<
               >
                 <BoxViewingControl>
                   <StyledIcon glyph={Icon.GLYPHS.lineChart} />
-                  <span>
-                    {t(
-                      showCirclePathLabel
-                        ? "workbench.circleItem"
-                        : "workbench.pathItem"
-                    )}
-                  </span>
+                  <span>{t("workbench.pathItem")}</span>
                 </BoxViewingControl>
               </ViewingControlMenuButton>
             </li>

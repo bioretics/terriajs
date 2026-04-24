@@ -153,16 +153,13 @@ export default class MeasurableGeometryManager {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid =
       this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
-
     if (!terrainProvider || !ellipsoid || cartoPositions.length === 0) {
       return;
     }
-
     // index of the original stops in the new array of sampling points
     const originalStopsIndex: number[] = [0];
     // geodetic distance between two stops
     const stopGeodeticDistances: number[] = [0];
-
     // compute sampling points every "samplingStep" meters
     const interpolatedCartographics = [cartoPositions[0]];
     for (let i = 0; i < cartoPositions.length - 1; ++i) {
@@ -183,7 +180,6 @@ export default class MeasurableGeometryManager {
       originalStopsIndex.push(interpolatedCartographics.length);
       interpolatedCartographics.push(cartoPositions[i + 1]);
     }
-
     // sample points on terrain
     const terrainPromises = [
       terrainProvider
@@ -205,11 +201,9 @@ export default class MeasurableGeometryManager {
           (elem, i) => (elem.height -= geoidHeights[i].height)
         );
       }
-
       const sampledCartesians = ellipsoid.cartographicArrayToCartesianArray(
         sampledCartographics[0]
       );
-
       // compute distances
       const stepDistances: number[] = [];
       for (let i = 0; i < sampledCartesians.length; ++i) {
@@ -222,13 +216,11 @@ export default class MeasurableGeometryManager {
             : 0;
         stepDistances.push(dist);
       }
-
       const stopAirDistances: number[] = [0];
       const distances3d: number[] = [0];
       for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
         cartoPositions[i].height =
           sampledCartographics[0][originalStopsIndex[i]].height;
-
         stopAirDistances.push(
           Cartesian3.distance(
             sampledCartesians[originalStopsIndex[i + 1]],
@@ -245,7 +237,6 @@ export default class MeasurableGeometryManager {
             .reduce((sum: number, current: number) => sum + current, 0)
         );
       }
-
       // update state of Terria
       const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints
         ? [

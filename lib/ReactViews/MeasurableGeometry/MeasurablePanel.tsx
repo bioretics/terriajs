@@ -90,7 +90,6 @@ const MeasurablePanel = observer((props: Props) => {
     if (!currentGeom) {
       return;
     }
-
     runInAction(() => {
       currentGeom.showDistanceLabels = showDistances;
     });
@@ -491,13 +490,11 @@ const MeasurablePanel = observer((props: Props) => {
       setCircleRadiusInput("");
       return;
     }
-
     const radius = currentGeom.circleRadius;
     if (typeof radius === "number" && radius > 0) {
       setCircleRadiusInput(radius.toFixed(2));
       return;
     }
-
     setCircleRadiusInput("");
   }, [
     currentGeom?.isCircle,
@@ -512,12 +509,10 @@ const MeasurablePanel = observer((props: Props) => {
         ? currentGeom.circleRadius.toFixed(2)
         : "";
     const radiusValue = Number.parseFloat(circleRadiusInput.replace(",", "."));
-
     if (!Number.isFinite(radiusValue) || radiusValue <= 0) {
       setCircleRadiusInput(fallbackRadius);
       return;
     }
-
     const circleToolController = getCircleToolController();
     if (
       !circleToolController ||
@@ -526,7 +521,6 @@ const MeasurablePanel = observer((props: Props) => {
       setCircleRadiusInput(fallbackRadius);
       return;
     }
-
     await setCircleRadiusInput(radiusValue.toFixed(2));
   };
 
@@ -854,13 +848,6 @@ const MeasurablePanel = observer((props: Props) => {
         </>
       );
     }
-
-    const activeToolIsPolygon = () => {
-      const polygonTool = terria.mapNavigationModel.findItem(
-        MeasurePolygonTool.id
-      );
-      return polygonTool?.controller?.active === true;
-    };
 
     if (activeToolIsPolygon() || currentGeom.hasArea || currentGeom.isClosed) {
       return (
