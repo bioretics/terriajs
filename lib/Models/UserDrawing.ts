@@ -289,7 +289,10 @@ export default class UserDrawing extends MappableMixin(
     const earthRadius = Ellipsoid.WGS84.maximumRadius;
     const angularDistance = radius / earthRadius;
 
-    const segments = Math.max(64, Math.min(512, Math.ceil((2 * Math.PI * radius) / 20)));
+    const segments = Math.max(
+      64,
+      Math.min(512, Math.ceil((2 * Math.PI * radius) / 20))
+    );
     const positions: Cartesian3[] = new Array(segments);
 
     const { latitude: lat1, longitude: lon1, height } = centerCarto;

@@ -1768,16 +1768,13 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         const { jsonCoords, closeLoop } = coordsResult;
         if (!jsonCoords || jsonCoords.length === 0) return;
 
-        const properties = isJsonObject(feature.properties)
-          ? feature.properties
-          : {};
+        const properties = feature?.properties ?? {};
         const pathNotes = properties.desc || properties.path_notes || "";
         const isCircle = properties.is_circle === true;
         const circleRadius = properties.circle_radius || 0;
         const circleCenter = Cartographic.fromDegrees(
           properties.center_lon,
-          properties.center_lat,
-          0
+          properties.center_lat
         );
         const coordinates = this.convertJsonCoords(jsonCoords);
         const geomProperties = properties;
@@ -2675,37 +2672,11 @@ function createEntityFromHole(
   createEntitiesFromHoles(entityCollection, hole.holes, mainEntity);
 }
 
-function getPropertyValue<T>(property: Property | undefined): T | undefined;
-function getPropertyValue(
-  property: unknown,
-  options: { parseNumber: true }
-): number | undefined;
-function getPropertyValue<T>(
-  property: Property | unknown,
-  options?: { parseNumber?: boolean }
-): T | number | undefined {
-  if (property === undefined || property === null) {
+function getPropertyValue<T>(property: Property | undefined): T | undefined {
+  if (property === undefined) {
     return undefined;
   }
-
-  if (options?.parseNumber) {
-    if (isJsonNumber(property)) {
-      return property;
-    }
-
-    if (isJsonString(property)) {
-      const parsedValue = Number(property);
-      return Number.isFinite(parsedValue) ? parsedValue : undefined;
-    }
-
-    return undefined;
-  }
-
-  if (typeof (property as Property).getValue === "function") {
-    return (property as Property).getValue(JulianDate.now());
-  }
-
-  return undefined;
+  return property.getValue(JulianDate.now());
 }
 
 function isPolygonOnTerrain(polygon: PolygonGraphics, now: JulianDate) {
