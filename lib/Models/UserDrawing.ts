@@ -258,114 +258,85 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private getCircleDisplayPoints(time?: JulianDate) {
-    const currentTime = time ?? this.terria.timelineClock.currentTime;
-    const center =
-      this.pointEntities.entities.values[0]?.position?.getValue(currentTime);
+    const t = time ?? this.terria.timelineClock.currentTime;
+    const [centerEntity, edgeEntity] = this.pointEntities.entities.values;
 
-    if (!center) {
-      return [];
-    }
+    const center = centerEntity?.position?.getValue(t);
+    if (!center) return [];
 
     const edge =
-      this.pointEntities.entities.values[1]?.position?.getValue(currentTime) ??
-      Ellipsoid.WGS84.cartographicToCartesian(
-        this.terria.currentViewer.mouseCoords.cartographic!!
-      );
+      edgeEntity?.position?.getValue(t) ??
+      (this.terria.currentViewer.mouseCoords.cartographic &&
+        Ellipsoid.WGS84.cartographicToCartesian(
+          this.terria.currentViewer.mouseCoords.cartographic
+        ));
 
-    if (!edge) {
-      return [center];
-    }
-
-    return [center, edge];
+    return edge ? [center, edge] : [center];
   }
 
   private getCircleGeodesicDistance(center: Cartesian3, edge: Cartesian3) {
-    const centerCartographic = Cartographic.fromCartesian(
-      center,
-      Ellipsoid.WGS84
-    );
-    const edgeCartographic = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
-    const geodesic = new EllipsoidGeodesic(
-      new Cartographic(
-        centerCartographic.longitude,
-        centerCartographic.latitude,
-        0
-      ),
-      new Cartographic(
-        edgeCartographic.longitude,
-        edgeCartographic.latitude,
-        0
-      ),
-      Ellipsoid.WGS84
-    );
-    return geodesic.surfaceDistance;
+    const c1 = Cartographic.fromCartesian(center);
+    const c2 = Cartographic.fromCartesian(edge);
+
+    return new EllipsoidGeodesic(
+      new Cartographic(c1.longitude, c1.latitude),
+      new Cartographic(c2.longitude, c2.latitude)
+    ).surfaceDistance;
   }
 
   private buildCirclePolylinePositions(center: Cartesian3, radius: number) {
-    const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
+    const centerCarto = Cartographic.fromCartesian(center);
     const earthRadius = Ellipsoid.WGS84.maximumRadius;
     const angularDistance = radius / earthRadius;
-    const positions: Cartesian3[] = [];
-    const segments = Math.max(16, Math.min(256, Math.floor(radius / 5)));
-    const circleBearings = new Array(segments)
-      .fill(0)
-      .map((_, i) => (2 * Math.PI * i) / (segments - 1));
 
-    for (let i = 0; i < circleBearings.length; i++) {
-      const bearing = circleBearings[i];
-      const lat1 = centerCarto.latitude;
-      const lon1 = centerCarto.longitude;
+    const segments = Math.max(64, Math.min(512, Math.ceil((2 * Math.PI * radius) / 20)));
+    const positions: Cartesian3[] = new Array(segments);
 
-      const sinLat1 = Math.sin(lat1);
-      const cosLat1 = Math.cos(lat1);
-      const sinAd = Math.sin(angularDistance);
-      const cosAd = Math.cos(angularDistance);
-      const sinBearing = Math.sin(bearing);
-      const cosBearing = Math.cos(bearing);
+    const { latitude: lat1, longitude: lon1, height } = centerCarto;
+    const sinLat1 = Math.sin(lat1);
+    const cosLat1 = Math.cos(lat1);
+    const sinAd = Math.sin(angularDistance);
+    const cosAd = Math.cos(angularDistance);
 
-      const lat2 = Math.asin(sinLat1 * cosAd + cosLat1 * sinAd * cosBearing);
+    for (let i = 0; i < segments; i++) {
+      const bearing = (2 * Math.PI * i) / (segments - 1);
+
+      const lat2 = Math.asin(
+        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
+      );
       const lon2 =
         lon1 +
         Math.atan2(
-          sinBearing * sinAd * cosLat1,
+          Math.sin(bearing) * sinAd * cosLat1,
           cosAd - sinLat1 * Math.sin(lat2)
         );
 
-      positions.push(
-        Cartographic.toCartesian(
-          new Cartographic(lon2, lat2, centerCarto.height),
-          Ellipsoid.WGS84
-        )
+      positions[i] = Cartographic.toCartesian(
+        new Cartographic(lon2, lat2, height)
       );
     }
 
     return positions;
   }
 
-  private prettifyCircleArea(areaMetresSquared: number) {
-    if (areaMetresSquared <= 0) {
-      return "";
+  private prettifyCircleArea(a: number) {
+    if (a <= 0) return "";
+
+    if (a >= 1_000_000) {
+      const km2 = a / 1_000_000;
+      return `${km2.toFixed(km2 >= 10 ? 1 : 2)} km²`;
     }
 
-    if (areaMetresSquared >= 1_000_000) {
-      const km2 = areaMetresSquared / 1_000_000;
-      const kmStr = km2 >= 10 ? km2.toFixed(1) : km2.toFixed(2);
-      return `${kmStr} km\u00B2`;
-    }
-
-    const decimals = areaMetresSquared >= 10_000 ? 0 : 2;
-    return `${areaMetresSquared.toFixed(decimals)} m\u00B2`;
+    return `${a.toFixed(a >= 10_000 ? 0 : 2)} m²`;
   }
 
-  private prettifyCircleDistance(distanceMetres: number) {
-    if (distanceMetres <= 0) {
-      return "";
-    }
+  private prettifyCircleDistance(d: number) {
+    if (d <= 0) return "";
 
-    const label = distanceMetres > 999 ? "km" : "m";
-    const value = label === "km" ? distanceMetres / 1000.0 : distanceMetres;
-    const precision = label === "km" ? 2 : 1;
-    return `${value.toFixed(precision)} ${label}`;
+    const isKm = d > 999;
+    const value = isKm ? d / 1000 : d;
+
+    return `${value.toFixed(isKm ? 2 : 1)} ${isKm ? "km" : "m"}`;
   }
 
   private createCircleEntities() {
@@ -497,49 +468,31 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private updateSegmentLabels() {
-    const currentGeom =
+    const geom =
       this.terria.measurableGeomList[this.terria.measurableGeometryIndex];
 
-    if (this.isCircleMeasuring || currentGeom?.isCircle) {
+    if (
+      this.isCircleMeasuring ||
+      geom?.isCircle ||
+      !geom?.showDistanceLabels ||
+      geom.onlyPoints
+    ) {
       this.clearSegmentLabels();
       return;
     }
 
-    if (!currentGeom?.showDistanceLabels) {
-      this.clearSegmentLabels();
-      return;
+    this.clearSegmentLabels();
+    const pts = this.pointEntities.entities.values;
+    for (let i = 0; i < pts.length - 1; i++) {
+      this.otherEntities.entities.add(
+        this.createSegmentLabel(`SegmentLabel-${i}`, pts[i], pts[i + 1])
+      );
     }
 
-    if (!currentGeom.onlyPoints) {
-      this.clearSegmentLabels();
-
-      const numPoints = this.pointEntities.entities.values.length;
-      for (let i = 0; i < numPoints - 1; i++) {
-        const entityA = this.pointEntities.entities.values[i];
-        const entityB = this.pointEntities.entities.values[i + 1];
-        if (entityA && entityB) {
-          const labelEntity = this.createSegmentLabel(
-            `SegmentLabel-${i}`,
-            entityA,
-            entityB
-          );
-          this.otherEntities.entities.add(labelEntity);
-        }
-      }
-
-      if (this.closeLoop && numPoints > 1) {
-        const lastIndex = numPoints - 1;
-        const entityA = this.pointEntities.entities.values[lastIndex];
-        const entityB = this.pointEntities.entities.values[0];
-        if (entityA && entityB) {
-          const labelEntity = this.createSegmentLabel(
-            "SegmentLabel-close",
-            entityA,
-            entityB
-          );
-          this.otherEntities.entities.add(labelEntity);
-        }
-      }
+    if (this.closeLoop && pts.length > 1) {
+      this.otherEntities.entities.add(
+        this.createSegmentLabel("SegmentLabel-close", pts.at(-1)!, pts[0])
+      );
     }
     this.terria.currentViewer.notifyRepaintRequired();
   }
