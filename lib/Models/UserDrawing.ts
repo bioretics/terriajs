@@ -270,37 +270,23 @@ export default class UserDrawing extends MappableMixin(
     return edge ? [center, edge] : [center];
   }
 
-  private buildCirclePolylinePositions(center: Cartesian3, radius: number) {
+  private buildCirclePolylinePositions(
+    center: Cartesian3,
+    radius: number
+  ): Cartesian3[] {
     const centerCarto = Cartographic.fromCartesian(center);
-    const earthRadius = Ellipsoid.WGS84.maximumRadius;
-    const angularDistance = radius / earthRadius;
     const segments = Math.max(
       64,
       Math.min(512, Math.ceil((2 * Math.PI * radius) / 20))
     );
-    const positions: Cartesian3[] = new Array(segments);
-    const { latitude: lat1, longitude: lon1, height } = centerCarto;
-    const sinLat1 = Math.sin(lat1);
-    const cosLat1 = Math.cos(lat1);
-    const sinAd = Math.sin(angularDistance);
-    const cosAd = Math.cos(angularDistance);
-    for (let i = 0; i < segments; i++) {
-      const bearing = (2 * Math.PI * i) / (segments - 1);
-      const lat2 = Math.asin(
-        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
-      );
-      const lon2 =
-        lon1 +
-        Math.atan2(
-          Math.sin(bearing) * sinAd * cosLat1,
-          cosAd - sinLat1 * Math.sin(lat2)
-        );
-      positions[i] = Cartographic.toCartesian(
-        new Cartographic(lon2, lat2, height)
-      );
-    }
-
-    return positions;
+    return MeasureCircleTool.buildCircleRingRadians(
+      centerCarto.latitude,
+      centerCarto.longitude,
+      radius,
+      segments
+    ).map(({ lat, lon }) =>
+      Cartographic.toCartesian(new Cartographic(lon, lat, centerCarto.height))
+    );
   }
 
   private createCircleEntities() {

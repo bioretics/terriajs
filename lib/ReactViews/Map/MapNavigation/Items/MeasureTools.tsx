@@ -789,6 +789,38 @@ export class MeasureCircleTool extends MapNavigationItemController {
     return true;
   }
 
+  static buildCircleRingRadians(
+    centerLat: number,
+    centerLon: number,
+    radius: number,
+    segments: number,
+    closedRing = false
+  ): { lat: number; lon: number }[] {
+    const earthRadius = Ellipsoid.WGS84.maximumRadius;
+    const angularDistance = radius / earthRadius;
+    const sinLat1 = Math.sin(centerLat);
+    const cosLat1 = Math.cos(centerLat);
+    const sinAd = Math.sin(angularDistance);
+    const cosAd = Math.cos(angularDistance);
+    const count = closedRing ? segments + 1 : segments;
+    const points: { lat: number; lon: number }[] = new Array(count);
+    for (let i = 0; i < count; i++) {
+      const bearing = (2 * Math.PI * (i % segments)) / segments;
+      const lat2 = Math.asin(
+        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
+      );
+      const lon2 =
+        centerLon +
+        Math.atan2(
+          Math.sin(bearing) * sinAd * cosLat1,
+          cosAd - sinLat1 * Math.sin(lat2)
+        );
+      points[i] = { lat: lat2, lon: lon2 };
+    }
+
+    return points;
+  }
+
   private onPointUpdated(pointEntities: CustomDataSource, isMove: boolean) {
     const t = this.terria.timelineClock.currentTime;
     const entities = pointEntities.entities.values;

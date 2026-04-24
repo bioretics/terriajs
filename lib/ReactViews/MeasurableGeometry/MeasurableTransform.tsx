@@ -1,5 +1,4 @@
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
-import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import DataUri from "../../Core/DataUri";
 import { MeasurableGeometry } from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import i18next from "i18next";
@@ -9,6 +8,7 @@ import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
 import { observer } from "mobx-react";
+import { MeasureCircleTool } from "../Map/MapNavigation/Items";
 
 interface Props {
   terria: Terria;
@@ -246,33 +246,16 @@ const MeasurableTransform = observer((props: Props) => {
     const radius = geom.circleRadius ?? 0;
     if (!center || radius <= 0) return "";
 
-    const numPoints = 64;
-    const earthRadius = Ellipsoid.WGS84.maximumRadius;
-    const angularDistance = radius / earthRadius;
-    const coordinates: number[][] = [];
-
-    for (let i = 0; i <= numPoints; i++) {
-      const bearing = (2 * Math.PI * (i % numPoints)) / numPoints;
-      const lat1 = center.latitude;
-      const lon1 = center.longitude;
-      const sinLat1 = Math.sin(lat1);
-      const cosLat1 = Math.cos(lat1);
-      const sinAd = Math.sin(angularDistance);
-      const cosAd = Math.cos(angularDistance);
-      const lat2 = Math.asin(
-        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
-      );
-      const lon2 =
-        lon1 +
-        Math.atan2(
-          Math.sin(bearing) * sinAd * cosLat1,
-          cosAd - sinLat1 * Math.sin(lat2)
-        );
-      coordinates.push([
-        CesiumMath.toDegrees(lon2),
-        CesiumMath.toDegrees(lat2)
-      ]);
-    }
+    const coordinates = MeasureCircleTool.buildCircleRingRadians(
+      center.latitude,
+      center.longitude,
+      radius,
+      64,
+      true
+    ).map(({ lat, lon }) => [
+      CesiumMath.toDegrees(lon),
+      CesiumMath.toDegrees(lat)
+    ]);
 
     return JSON.stringify({
       name: layerName || "",
