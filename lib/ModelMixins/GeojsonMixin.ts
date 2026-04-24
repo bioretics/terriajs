@@ -1758,67 +1758,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       });
     }
 
-    private getCloseGeomProperties(properties: JsonObject) {
-      const radius = getPropertyValue(properties.radius, { parseNumber: true });
-      const diameter = getPropertyValue(properties.diameter, {
-        parseNumber: true
-      });
-      const perimeter = getPropertyValue(properties.perimeter, {
-        parseNumber: true
-      });
-      const area = getPropertyValue(properties.area, { parseNumber: true });
-      const centerLat = getPropertyValue(properties.center_lat, {
-        parseNumber: true
-      });
-      const centerLon = getPropertyValue(properties.center_lon, {
-        parseNumber: true
-      });
-      const isCircleFeature =
-        properties.isCircle === true ||
-        properties.isCircle === "true" ||
-        (radius !== undefined &&
-          centerLat !== undefined &&
-          centerLon !== undefined);
-
-      if (
-        !isCircleFeature ||
-        centerLat === undefined ||
-        centerLon === undefined
-      ) {
-        return undefined;
-      }
-
-      const resolvedRadius =
-        radius ??
-        (diameter !== undefined
-          ? diameter / 2
-          : perimeter !== undefined
-          ? perimeter / (2 * Math.PI)
-          : area !== undefined
-          ? Math.sqrt(area / Math.PI)
-          : undefined);
-
-      if (resolvedRadius === undefined) {
-        return undefined;
-      }
-
-      const resolvedDiameter = diameter ?? resolvedRadius * 2;
-      const resolvedPerimeter = perimeter ?? 2 * Math.PI * resolvedRadius;
-      const resolvedArea = area ?? Math.PI * resolvedRadius * resolvedRadius;
-
-      return {
-        hasArea: true,
-        isCircle: true,
-        circleRadius: resolvedRadius,
-        circleDiameter: resolvedDiameter,
-        circlePerimeter: resolvedPerimeter,
-        circleArea: resolvedArea,
-        circleCenter: Cartographic.fromDegrees(centerLon, centerLat, 0),
-        geodeticDistance: resolvedPerimeter,
-        geodeticArea: resolvedArea
-      };
-    }
-
     computePath() {
       if (!this.readyData || !isJsonArray(this.readyData.features)) return;
 
@@ -1833,12 +1772,29 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           ? feature.properties
           : {};
         const pathNotes = properties.desc || properties.path_notes || "";
+        const isCircle = properties.is_circle === true;
+        console.log("geojsonmixin isCircle", isCircle);
+        const circleRadius = properties.circle_radius || 0;
+        const circleCenter = Cartographic.fromDegrees(
+          properties.center_lon,
+          properties.center_lat,
+          0
+        );
         const coordinates = this.convertJsonCoords(jsonCoords);
-        const geomProperties = closeLoop
-          ? this.getCloseGeomProperties(properties)
-          : properties;
+        const geomProperties = properties;
 
-        this.asPath(coordinates, pathNotes, index, closeLoop, geomProperties);
+        console.log("geojsonmixin geom:", geomProperties);
+
+        this.asPath(
+          coordinates,
+          pathNotes,
+          index,
+          closeLoop,
+          isCircle,
+          circleRadius,
+          circleCenter,
+          geomProperties
+        );
       };
 
       for (let i = 0; i < this.readyData.features.length; i++) {

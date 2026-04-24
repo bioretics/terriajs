@@ -32,6 +32,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
+      isCircle?: boolean,
+      circleRadius?: number,
+      circleCenter?: Cartographic,
       geomProperties?: Partial<MeasurableGeometry> | JsonObject
     ) {
       if (indexPath !== undefined) {
@@ -56,6 +59,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         pathNotes,
         true,
         indexPath,
+        isCircle,
+        circleRadius,
+        circleCenter,
         geomProperties
       );
     }
@@ -65,6 +71,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       pathNotes?: any,
       indexPath?: number,
       closeLoop?: boolean,
+      isCircle?: boolean,
+      circleRadius?: number,
+      circleCenter?: Cartographic,
       geomProperties?: Partial<MeasurableGeometry> | JsonObject
     ) {
       if (!this?.terria) {
@@ -88,6 +97,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           pathNotes,
           indexPath,
           closeLoop,
+          isCircle,
+          circleRadius,
+          circleCenter,
           geomProperties
         );
       });

@@ -283,11 +283,8 @@ const MeasurableTransform = observer((props: Props) => {
       },
       properties: {
         path_notes: pathNotes || "",
-        isCircle: true,
-        radius: radius,
-        diameter: geom.circleDiameter ?? 0,
-        perimeter: geom.circlePerimeter ?? 0,
-        area: geom.circleArea ?? 0,
+        is_circle: true,
+        circle_radius: radius,
         center_lat: CesiumMath.toDegrees(center.latitude),
         center_lon: CesiumMath.toDegrees(center.longitude)
       }

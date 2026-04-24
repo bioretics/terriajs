@@ -283,6 +283,15 @@ class GeoJsonCatalogItem
       }
     }
 
+    const isCircle = fc.features[0].properties?.is_circle === true;
+    console.log("geojsonmixin isCircle", isCircle);
+    const circleRadius = fc.features[0].properties?.circle_radius || 0;
+    const circleCenter = Cartographic.fromDegrees(
+      fc.features[0].properties?.center_lon,
+      fc.features[0].properties?.center_lat,
+      0
+    );
+
     this.terria.measurableGeometryManager[
       this.terria.measurableGeometryIndex
     ].sampleFromCartographics(
@@ -293,6 +302,9 @@ class GeoJsonCatalogItem
       pathNotes,
       true,
       undefined,
+      isCircle,
+      circleRadius,
+      circleCenter,
       {
         featureProperties,
         pointProperties: pointProperties.length ? pointProperties : undefined

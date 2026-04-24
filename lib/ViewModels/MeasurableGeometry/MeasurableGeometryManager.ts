@@ -84,6 +84,9 @@ export default class MeasurableGeometryManager {
       currentGeometry?.pathNotes,
       currentGeometry?.isFileUploaded,
       currentGeometry?.indexPath ?? index,
+      currentGeometry?.isCircle,
+      currentGeometry?.circleRadius,
+      currentGeometry?.circleCenter,
       closeGeomProperties
     );
   }
@@ -142,6 +145,9 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number,
+    isCircle?: boolean,
+    circleRadius?: number,
+    circleCenter?: Cartographic,
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
@@ -255,6 +261,9 @@ export default class MeasurableGeometryManager {
             pathNotes,
             isFileUploaded,
             indexPath,
+            false,
+            circleRadius,
+            circleCenter,
             geomProperties
           ]
         : [
@@ -270,6 +279,9 @@ export default class MeasurableGeometryManager {
             pathNotes,
             isFileUploaded,
             indexPath,
+            isCircle,
+            circleRadius,
+            circleCenter,
             geomProperties
           ];
 
@@ -291,6 +303,9 @@ export default class MeasurableGeometryManager {
     pathNotes?: string,
     isFileUploaded?: boolean,
     indexPath?: number,
+    isCircle?: boolean,
+    circleRadius?: number,
+    circleCenter?: Cartographic,
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
     let geodeticArea = 0;
@@ -325,6 +340,14 @@ export default class MeasurableGeometryManager {
       pointDescriptions: pointDescriptions,
       pathNotes: pathNotes,
       isFileUploaded: isFileUploaded,
+      isCircle: isCircle,
+      circleRadius: circleRadius,
+      circleDiameter: circleRadius ? circleRadius * 2 : undefined,
+      circlePerimeter: circleRadius ? 2 * Math.PI * circleRadius : undefined,
+      circleArea: circleRadius
+        ? Math.PI * circleRadius * circleRadius
+        : undefined,
+      circleCenter: circleCenter,
       indexPath: indexPath,
       ...(geomProperties ?? {})
     };
