@@ -14,7 +14,6 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -271,15 +270,6 @@ export default class UserDrawing extends MappableMixin(
     return edge ? [center, edge] : [center];
   }
 
-  private getCircleGeodesicDistance(center: Cartesian3, edge: Cartesian3) {
-    const c1 = Cartographic.fromCartesian(center);
-    const c2 = Cartographic.fromCartesian(edge);
-    return new EllipsoidGeodesic(
-      new Cartographic(c1.longitude, c1.latitude),
-      new Cartographic(c2.longitude, c2.latitude)
-    ).surfaceDistance;
-  }
-
   private buildCirclePolylinePositions(center: Cartesian3, radius: number) {
     const centerCarto = Cartographic.fromCartesian(center);
     const earthRadius = Ellipsoid.WGS84.maximumRadius;
@@ -324,7 +314,7 @@ export default class UserDrawing extends MappableMixin(
             return [];
           }
 
-          const radius = this.getCircleGeodesicDistance(center, edge);
+          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
           if (radius <= 0) {
             return [];
           }
@@ -336,9 +326,9 @@ export default class UserDrawing extends MappableMixin(
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.1),
           glowPower: 0.25
-        } as any)
+        })
       }
-    } as any);
+    });
 
     this.otherEntities.entities.add({
       id: "Circle Label",
@@ -353,7 +343,7 @@ export default class UserDrawing extends MappableMixin(
             return "";
           }
 
-          const radius = this.getCircleGeodesicDistance(center, edge);
+          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
           return MeasureCircleTool.prettifyArea(Math.PI * radius * radius);
         }, false),
         font: "16px sans-serif",
@@ -365,7 +355,7 @@ export default class UserDrawing extends MappableMixin(
         verticalOrigin: VerticalOrigin.BOTTOM,
         disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
-    } as any);
+    });
 
     this.otherEntities.entities.add({
       id: "Circle Radius Line",
@@ -383,13 +373,13 @@ export default class UserDrawing extends MappableMixin(
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.35),
           glowPower: 0.15
-        } as any),
+        }),
         depthFailMaterial: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.35),
           glowPower: 0.15
-        } as any)
+        })
       }
-    } as any);
+    });
 
     this.otherEntities.entities.add({
       id: "Circle Radius Label",
@@ -407,7 +397,7 @@ export default class UserDrawing extends MappableMixin(
           if (!center || !edge) {
             return "";
           }
-          const radius = this.getCircleGeodesicDistance(center, edge);
+          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
           return MeasureCircleTool.prettifyDistance(radius);
         }, false),
         font: "14px sans-serif",
@@ -420,7 +410,7 @@ export default class UserDrawing extends MappableMixin(
         horizontalOrigin: HorizontalOrigin.CENTER,
         disableDepthTestDistance: Number.POSITIVE_INFINITY
       }
-    } as any);
+    });
 
     this.otherEntities.entities.add({
       id: "Circle Preview Point",
@@ -430,12 +420,12 @@ export default class UserDrawing extends MappableMixin(
           return undefined;
         }
         return this.getCircleDisplayPoints(time)[1];
-      }, false) as any,
+      }, false),
       billboard: {
         image: this.svgPoint,
         heightReference: HeightReference.CLAMP_TO_GROUND,
         eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      } as any
+      }
     } as any);
   }
 
@@ -790,17 +780,12 @@ export default class UserDrawing extends MappableMixin(
     this.disposeClampMeasureLineToGround = reaction(
       () => this.terria?.clampMeasureLineToGround,
       (clampMeasureLineToGround) => {
-        let hasPolylines = false;
-        for (const entity of this.otherEntities.entities.values) {
-          if (entity.polyline) {
-            entity.polyline.clampToGround = new ConstantProperty(
-              clampMeasureLineToGround
-            );
-            hasPolylines = true;
-          }
-        }
-
-        if (hasPolylines) {
+        if (
+          this.otherEntities.entities.values.length > 0 &&
+          this.otherEntities.entities.values[0]?.polyline
+        ) {
+          this.otherEntities.entities.values[0].polyline.clampToGround =
+            new ConstantProperty(clampMeasureLineToGround);
           this.terria.currentViewer.notifyRepaintRequired();
         }
       }
