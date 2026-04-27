@@ -16,6 +16,7 @@ import createZoomToFunction from "../../../../Map/Vector/zoomRectangleFromPoint"
 import loadJson from "../../../../Core/loadJson";
 import {
   action,
+  computed,
   IReactionDisposer,
   makeObservable,
   observable,
@@ -125,21 +126,33 @@ interface ISrsSelectionProps {
   reset: () => void;
   convert: () => void;
   conversionList: ISrsConversion[];
+  selectedSrs: ISrsConversion;
   isOpen: boolean;
 }
 
 const SrsSelection = (props: ISrsSelectionProps) => {
-  const { conversionList, setSrs, isOpen } = props;
+  const { conversionList, setSrs, isOpen, selectedSrs } = props;
 
   useEffect(() => {
-    setSrs(conversionList[0]);
+    // Reset to first item when list changes (e.g., due to input type filter)
+    // or when panel opens/closes
+    if (conversionList && conversionList.length > 0) {
+      setSrs(conversionList[0]);
+    }
   }, [isOpen, setSrs, conversionList]);
+
+  // Find the index of the currently selected conversion in the filtered list
+  const selectedIndex = conversionList.findIndex(
+    (conv) => conv.from === selectedSrs.from && conv.to === selectedSrs.to
+  );
+  const controlledValue = selectedIndex >= 0 ? selectedIndex.toString() : "0";
 
   return (
     <div>
       <div>{props.title}</div>
 
       <Select
+        value={controlledValue}
         onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
           setSrs(conversionList[parseInt(e.target.value, 10)]);
         }}
@@ -197,6 +210,19 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   private setSrs = (value: ISrsConversion) => {
     this.srs = value;
   };
+
+  // Get filtered conversion list based on input type
+  // Using @computed to cache the result so the reference only changes when isInputCartographic changes
+  @computed
+  private get filteredConversionList(): ISrsConversion[] {
+    if (this.isInputCartographic) {
+      // If input is geographic (lat/lon), show conversions FROM 4326 (to projected systems)
+      return this.conversionList.filter((conv) => conv.from === 4326);
+    } else {
+      // If input is projected, show conversions FROM projected systems (to 4326)
+      return this.conversionList.filter((conv) => conv.from !== 4326);
+    }
+  }
   private conversionList: ISrsConversion[] = [
     {
       desc: "EPSG:4326 WGS84 → EPSG:3003 Monte Mario / Italy zone 1",
@@ -401,9 +427,9 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   private inputY?: number;
   private outputX?: number;
   private outputY?: number;
-  private isInputCartographic: boolean;
-  private isOutputCartographic: boolean;
-  private srs: ISrsConversion;
+  @observable private isInputCartographic: boolean;
+  @observable private isOutputCartographic: boolean;
+  @observable private srs: ISrsConversion;
   private pickedPositionSubscription: IReactionDisposer;
   private coordsInputTxtSubscription: IReactionDisposer;
 
@@ -420,22 +446,29 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     this.coordsOutputTxt = "";
     this.isInputCartographic = false;
     this.isOutputCartographic = false;
-    this.srs = this.conversionList[0];
+    this.srs = this.filteredConversionList[0];
 
     this.coordsInputTxtSubscription = reaction(
       () => this.coordsInputTxt,
-      (coordsInputTxt) => {
+      action((coordsInputTxt) => {
         if (coordsInputTxt && coordsInputTxt !== "") {
           const splitted = coordsInputTxt.toString().split(/[ |,|;]+/g);
           this.inputX = parseFloat(splitted[0]);
           this.inputY = parseFloat(splitted[1]);
-          this.isInputCartographic =
-            this.inputX >= 0 &&
-            this.inputX <= 360 &&
-            this.inputY >= 0 &&
-            this.inputY <= 360;
+          // Improved detection: check if coordinates look like lat/lon (geographic)
+          // inputX should be longitude (-180 to 180), inputY should be latitude (-90 to 90)
+          const isLikelyLatitude = this.inputY >= -90 && this.inputY <= 90;
+          const isLikelyLongitude = this.inputX >= -180 && this.inputX <= 180;
+          this.isInputCartographic = isLikelyLatitude && isLikelyLongitude;
+          // Reset srs to first item of the newly filtered list when input type changes
+          if (
+            this.filteredConversionList &&
+            this.filteredConversionList.length > 0
+          ) {
+            this.srs = this.filteredConversionList[0];
+          }
         }
-      }
+      })
     );
 
     this.pickedPositionSubscription = reaction(
@@ -575,7 +608,8 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           convert={() => {
             this.callConverter();
           }}
-          conversionList={this.conversionList}
+          conversionList={this.filteredConversionList}
+          selectedSrs={this.srs}
           tooltip={t("coordsPanel.srsSelectionTooltip")}
           isOpen={this.state.isOpen}
         />
