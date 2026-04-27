@@ -59,7 +59,6 @@ export interface InitSourceData {
     brandBarElements?: string[];
     brandBarSmallElements?: string[];
     displayOneBrand?: number;
-    microzonationEnabled?: boolean;
     microzonationConfig?: MicrozonationConfig;
     theme?: {
       colorPrimary?: string;

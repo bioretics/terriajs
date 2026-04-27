@@ -146,7 +146,7 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
     const showMicrozonationPanel =
       props.viewState.microzonationPanelShown &&
       !props.viewState.useSmallScreenInterface &&
-      props.terria.microzonationEnabled;
+      !!props.terria.configParameters.microzonationConfig;
     const showStoryPanel =
       props.terria.configParameters.storyEnabled &&
       props.terria.stories.length > 0 &&

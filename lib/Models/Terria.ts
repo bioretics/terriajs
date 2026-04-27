@@ -263,6 +263,8 @@ export interface ConfigParameters {
   disableMyLocation?: boolean;
   disableSplitter?: boolean;
 
+  microzonationConfig?: MicrozonationConfig;
+
   disablePedestrianMode?: boolean;
 
   experimentalFeatures?: boolean;
@@ -678,6 +680,7 @@ export default class Terria {
     hideTerriaLogo: false,
     brandBarElements: undefined,
     brandBarSmallElements: undefined,
+    microzonationConfig: undefined,
     displayOneBrand: 0,
     disableMyLocation: undefined,
     disableSplitter: undefined,
@@ -746,12 +749,6 @@ export default class Terria {
     globeTranslucency: undefined,
     showEnableCollisionControl: false
   };
-
-  @observable
-  microzonationEnabled: boolean = false;
-
-  @observable
-  microzonationConfig: MicrozonationConfig | undefined;
 
   @observable
   pickedFeatures: PickedFeatures | undefined;
@@ -1931,7 +1928,6 @@ export default class Terria {
         brandBarElements,
         brandBarSmallElements,
         displayOneBrand,
-        microzonationEnabled,
         microzonationConfig
       } = initData.parameters;
 
@@ -1960,22 +1956,19 @@ export default class Terria {
         hasOverrides = true;
       }
 
-      if (isJsonBoolean(microzonationEnabled)) {
-        this.microzonationEnabled = microzonationEnabled;
-      }
-
       if (
         isJsonObject(microzonationConfig) &&
         isJsonString(microzonationConfig.url) &&
         isJsonString(microzonationConfig.typeName)
       ) {
-        this.microzonationConfig = {
+        parameterOverrides.microzonationConfig = {
           url: microzonationConfig.url,
           typeName: microzonationConfig.typeName,
           outputFormat: isJsonString(microzonationConfig.outputFormat)
             ? microzonationConfig.outputFormat
             : undefined
         };
+        hasOverrides = true;
       }
 
       if (hasOverrides) {
