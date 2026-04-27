@@ -805,7 +805,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     const count = closedRing ? segments + 1 : segments;
     const points: { lat: number; lon: number }[] = new Array(count);
     for (let i = 0; i < count; i++) {
-      const bearing = (2 * Math.PI * (i % segments)) / segments;
+      const bearing = (2 * Math.PI * (i % segments)) / segments - 1;
       const lat2 = Math.asin(
         sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
       );
