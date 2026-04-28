@@ -8,7 +8,6 @@ import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSourc
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
 import { JsonObject } from "../../Core/Json";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
-
 export interface MeasurableGeometry {
   isClosed: boolean;
   hasArea: boolean;
@@ -89,6 +88,99 @@ export default class MeasurableGeometryManager {
       currentGeometry?.circleCenter,
       closeGeomProperties
     );
+  }
+
+  getGeodesicDistance(
+    pointOne: Cartesian3,
+    pointTwo: Cartesian3,
+    ellipsoid: Ellipsoid = Ellipsoid.WGS84
+  ): number {
+    const pickedPointCartographic = ellipsoid.cartesianToCartographic(pointOne);
+    const lastPointCartographic = ellipsoid.cartesianToCartographic(pointTwo);
+
+    if (!pickedPointCartographic || !lastPointCartographic) {
+      return 0;
+    }
+
+    const geodesic = new EllipsoidGeodesic(
+      pickedPointCartographic,
+      lastPointCartographic,
+      ellipsoid
+    );
+    return geodesic.surfaceDistance;
+  }
+
+  buildCircleRingRadians(
+    centerLat: number,
+    centerLon: number,
+    radius: number,
+    segments: number,
+    closedRing = false
+  ): { lat: number; lon: number }[] {
+    const earthRadius = Ellipsoid.WGS84.maximumRadius;
+    const angularDistance = radius / earthRadius;
+    const sinLat1 = Math.sin(centerLat);
+    const cosLat1 = Math.cos(centerLat);
+    const sinAd = Math.sin(angularDistance);
+    const cosAd = Math.cos(angularDistance);
+    const count = closedRing ? segments + 1 : segments;
+    const points: { lat: number; lon: number }[] = new Array(count);
+
+    for (let i = 0; i < count; i++) {
+      const bearing = (2 * Math.PI * (i % segments)) / segments - 1;
+      const lat2 = Math.asin(
+        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
+      );
+      const lon2 =
+        centerLon +
+        Math.atan2(
+          Math.sin(bearing) * sinAd * cosLat1,
+          cosAd - sinLat1 * Math.sin(lat2)
+        );
+      points[i] = { lat: lat2, lon: lon2 };
+    }
+
+    return points;
+  }
+
+  @action
+  updateCircleGeometry(
+    center: Cartesian3,
+    edge: Cartesian3,
+    indexPath: number = this.terria.measurableGeometryIndex
+  ) {
+    const radius = this.getGeodesicDistance(center, edge);
+    const centerCarto = Cartographic.fromCartesian(center);
+    const edgeCarto = Cartographic.fromCartesian(edge);
+    const currentGeometry = this.terria.measurableGeomList[indexPath];
+
+    const circleGeometry: MeasurableGeometry = {
+      ...(currentGeometry ?? {}),
+      isClosed: true,
+      hasArea: true,
+      stopPoints: [centerCarto, edgeCarto],
+      stopGeodeticDistances: [0, radius],
+      stopAirDistances: [0, radius],
+      stopGroundDistances: [0, radius],
+      geodeticDistance: 2 * Math.PI * radius,
+      geodeticArea: Math.PI * radius * radius,
+      onlyPoints: false,
+      isCircle: true,
+      circleRadius: radius,
+      circleDiameter: radius * 2,
+      circlePerimeter: 2 * Math.PI * radius,
+      circleArea: Math.PI * radius * radius,
+      circleCenter: centerCarto,
+      showDistanceLabels: false,
+      isPointAdding: false,
+      indexPath
+    };
+
+    while (this.terria.measurableGeomList.length < indexPath) {
+      this.terria.measurableGeomList.push(circleGeometry);
+    }
+
+    this.terria.measurableGeomList[indexPath] = circleGeometry;
   }
 
   sampleFromCustomDataSource(

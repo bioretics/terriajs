@@ -1,6 +1,6 @@
 "use strict";
 
-import { action, computed, makeObservable, runInAction } from "mobx";
+import { action, computed, makeObservable } from "mobx";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
@@ -211,17 +211,9 @@ export class MeasureLineTool extends MapNavigationItemController {
   }
 
   getGeodesicDistance(pointOne: Cartesian3, pointTwo: Cartesian3) {
-    // Note that Cartesian.distance gives the straight line distance between the two points, ignoring
-    // curvature. This is not what we want.
-    const pickedPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointOne);
-    const lastPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointTwo);
-    const geodesic = new EllipsoidGeodesic(
-      pickedPointCartographic,
-      lastPointCartographic
-    );
-    return geodesic.surfaceDistance;
+    return this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].getGeodesicDistance(pointOne, pointTwo);
   }
 
   onCleanUp() {
@@ -479,17 +471,9 @@ export class MeasurePolygonTool extends MapNavigationItemController {
   }
 
   getGeodesicDistance(pointOne: Cartesian3, pointTwo: Cartesian3) {
-    // Note that Cartesian.distance gives the straight line distance between the two points, ignoring
-    // curvature. This is not what we want.
-    const pickedPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointOne);
-    const lastPointCartographic =
-      Ellipsoid.WGS84.cartesianToCartographic(pointTwo);
-    const geodesic = new EllipsoidGeodesic(
-      pickedPointCartographic,
-      lastPointCartographic
-    );
-    return geodesic.surfaceDistance;
+    return this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ].getGeodesicDistance(pointOne, pointTwo);
   }
 
   onCleanUp() {
@@ -646,7 +630,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
   private readonly terria: Terria;
   private readonly userDrawing: UserDrawing;
   private circleLocked = false;
-  private circleBearingRad: number | undefined;
 
   onOpen: () => void;
   onClose: () => void;
@@ -662,6 +645,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
       messageHeader: () => i18next.t("measure.measureCircleTool"),
       allowPolygon: false,
       autoClosePolygon: false,
+      prettifyNumber: this.prettifyNumber.bind(this),
       onPointClicked: (pts) => this.onPointUpdated(pts, false),
       onPointMoved: (pts) => this.onPointUpdated(pts, true),
       onCleanUp: this.onCleanUp.bind(this),
@@ -688,67 +672,34 @@ export class MeasureCircleTool extends MapNavigationItemController {
     );
   }
 
-  static getGeodesicDistance(a: Cartesian3, b: Cartesian3): number {
-    const c1 = Cartographic.fromCartesian(a);
-    const c2 = Cartographic.fromCartesian(b);
-    return new EllipsoidGeodesic(
-      new Cartographic(c1.longitude, c1.latitude),
-      new Cartographic(c2.longitude, c2.latitude)
-    ).surfaceDistance;
-  }
-
-  private geodesicBearing(a: Cartographic, b: Cartographic): number {
-    const h = new EllipsoidGeodesic(
-      new Cartographic(a.longitude, a.latitude),
-      new Cartographic(b.longitude, b.latitude)
-    ).startHeading;
-    return Number.isFinite(h) ? h : 0;
-  }
-
-  public static prettifyArea(a: number) {
-    if (a <= 0) return "";
-    if (a >= 1_000_000) {
-      const km2 = a / 1_000_000;
-      return `${km2.toFixed(km2 >= 10 ? 1 : 2)} km²`;
+  prettifyNumber(number: number, squared: boolean = false) {
+    if (number <= 0) {
+      return "";
     }
-    return `${a.toFixed(a >= 10_000 ? 0 : 2)} m²`;
+
+    let label = "m";
+    if (squared) {
+      label = "km";
+      number = number / 1000000.0;
+    } else if (number > 999) {
+      label = "km";
+      number = number / 1000.0;
+    }
+
+    let numberStr = number.toFixed(2);
+    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    numberStr = `${numberStr} ${label}`;
+    if (squared) {
+      numberStr += "\u00B2";
+    }
+
+    return numberStr;
   }
 
-  public static prettifyDistance(d: number) {
-    if (d <= 0) return "";
-    const isKm = d > 999;
-    const value = isKm ? d / 1000 : d;
-    return `${value.toFixed(isKm ? 2 : 1)} ${isKm ? "km" : "m"}`;
-  }
-
-  private updateGeom(center: Cartesian3, edge: Cartesian3) {
-    const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
-    const area = Math.PI * radius * radius;
-    const centerCarto = Cartographic.fromCartesian(center);
-    const edgeCarto = Cartographic.fromCartesian(edge);
-    runInAction(() => {
-      const idx = this.terria.measurableGeometryIndex;
-      const prev = this.terria.measurableGeomList[idx];
-      this.terria.measurableGeomList[idx] = {
-        ...prev,
-        isClosed: true,
-        hasArea: true,
-        isCircle: true,
-        showDistanceLabels: false,
-        stopPoints: [centerCarto, edgeCarto],
-        stopGeodeticDistances: [0, radius],
-        stopAirDistances: [0, radius],
-        stopGroundDistances: [0, radius],
-        isPointAdding: false,
-        circleRadius: radius,
-        circleDiameter: radius * 2,
-        circlePerimeter: 2 * Math.PI * radius,
-        circleArea: area,
-        circleCenter: centerCarto,
-        geodeticArea: area,
-        geodeticDistance: 2 * Math.PI * radius
-      };
-    });
+  private updateCircleGeometry(center: Cartesian3, edge: Cartesian3) {
+    this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ]?.updateCircleGeometry(center, edge);
   }
 
   async setRadiusFromPanel(radius: number): Promise<boolean> {
@@ -784,41 +735,9 @@ export class MeasureCircleTool extends MapNavigationItemController {
     }
     const newEdge = Cartographic.toCartesian(newEdgeCarto);
     edgeE.position = new ConstantPositionProperty(newEdge);
-    this.updateGeom(center, newEdge);
+    this.updateCircleGeometry(center, newEdge);
     this.terria.currentViewer.notifyRepaintRequired();
     return true;
-  }
-
-  static buildCircleRingRadians(
-    centerLat: number,
-    centerLon: number,
-    radius: number,
-    segments: number,
-    closedRing = false
-  ): { lat: number; lon: number }[] {
-    const earthRadius = Ellipsoid.WGS84.maximumRadius;
-    const angularDistance = radius / earthRadius;
-    const sinLat1 = Math.sin(centerLat);
-    const cosLat1 = Math.cos(centerLat);
-    const sinAd = Math.sin(angularDistance);
-    const cosAd = Math.cos(angularDistance);
-    const count = closedRing ? segments + 1 : segments;
-    const points: { lat: number; lon: number }[] = new Array(count);
-    for (let i = 0; i < count; i++) {
-      const bearing = (2 * Math.PI * (i % segments)) / segments - 1;
-      const lat2 = Math.asin(
-        sinLat1 * cosAd + cosLat1 * sinAd * Math.cos(bearing)
-      );
-      const lon2 =
-        centerLon +
-        Math.atan2(
-          Math.sin(bearing) * sinAd * cosLat1,
-          cosAd - sinLat1 * Math.sin(lat2)
-        );
-      points[i] = { lat: lat2, lon: lon2 };
-    }
-
-    return points;
   }
 
   private onPointUpdated(pointEntities: CustomDataSource, isMove: boolean) {
@@ -840,16 +759,13 @@ export class MeasureCircleTool extends MapNavigationItemController {
       this.circleLocked = true;
       const center = points[0];
       const edge = points[points.length - 1];
-      const centerCarto = Cartographic.fromCartesian(center, Ellipsoid.WGS84);
-      const edgeCarto = Cartographic.fromCartesian(edge, Ellipsoid.WGS84);
-      this.circleBearingRad = this.geodesicBearing(centerCarto, edgeCarto);
-      this.updateGeom(center, edge);
+      this.updateCircleGeometry(center, edge);
       this.terria.currentViewer.notifyRepaintRequired();
       return;
     }
 
     if (isMove && points.length >= 2) {
-      if (this.circleLocked) this.updateGeom(points[0], points[1]);
+      if (this.circleLocked) this.updateCircleGeometry(points[0], points[1]);
       this.terria.currentViewer.notifyRepaintRequired();
     }
   }
@@ -860,7 +776,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
 
   onCleanUp() {
     this.circleLocked = false;
-    this.circleBearingRad = undefined;
     this.onClose();
     super.deactivate();
   }
@@ -868,7 +783,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
   activate() {
     this.onOpen();
     this.circleLocked = false;
-    this.circleBearingRad = undefined;
     this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode(MeasureCircleTool.id);
     super.activate();
@@ -877,7 +791,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
   deactivate() {
     this.onClose();
     this.circleLocked = false;
-    this.circleBearingRad = undefined;
     this.userDrawing.endDrawing();
     super.deactivate();
   }

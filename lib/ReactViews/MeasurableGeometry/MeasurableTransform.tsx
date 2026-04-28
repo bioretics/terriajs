@@ -8,7 +8,6 @@ import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
 import { observer } from "mobx-react";
-import { MeasureCircleTool } from "../Map/MapNavigation/Items";
 
 interface Props {
   terria: Terria;
@@ -246,16 +245,20 @@ const MeasurableTransform = observer((props: Props) => {
     const radius = geom.circleRadius ?? 0;
     if (!center || radius <= 0) return "";
 
-    const coordinates = MeasureCircleTool.buildCircleRingRadians(
-      center.latitude,
-      center.longitude,
-      radius,
-      64,
-      true
-    ).map(({ lat, lon }) => [
-      CesiumMath.toDegrees(lon),
-      CesiumMath.toDegrees(lat)
-    ]);
+    const coordinates = terria.measurableGeometryManager[
+      terria.measurableGeometryIndex
+    ]
+      .buildCircleRingRadians(
+        center.latitude,
+        center.longitude,
+        radius,
+        64,
+        true
+      )
+      .map(({ lat, lon }) => [
+        CesiumMath.toDegrees(lon),
+        CesiumMath.toDegrees(lat)
+      ]);
 
     return JSON.stringify({
       name: layerName || "",

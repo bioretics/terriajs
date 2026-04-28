@@ -40,9 +40,11 @@ import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
-import { MeasureAngleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
-import { MeasurePointTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
-import { MeasureCircleTool } from "../ReactViews/Map/MapNavigation/Items/MeasureTools";
+import {
+  MeasureAngleTool,
+  MeasureCircleTool,
+  MeasurePointTool
+} from "../ReactViews/Map/MapNavigation/Items";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -57,6 +59,7 @@ interface Options {
   drawRectangle?: boolean;
   onMakeDialogMessage?: () => string;
   buttonText?: string;
+  prettifyNumber?: (number: number, squared?: boolean) => string;
   onPointClicked?: (dataSource: DataSource) => void;
   onPointMoved?: (dataSource: DataSource) => void;
   onDrawingComplete?: (params: OnDrawingCompleteParams) => void;
@@ -72,6 +75,10 @@ export default class UserDrawing extends MappableMixin(
   private readonly autoClosePolygon: boolean;
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
+  private readonly prettifyNumber?: (
+    number: number,
+    squared?: boolean
+  ) => string;
   private readonly onPointClicked?: (dataSource: CustomDataSource) => void;
   private readonly onPointMoved?: (dataSource: CustomDataSource) => void;
   private readonly onDrawingComplete?: (
@@ -130,6 +137,8 @@ export default class UserDrawing extends MappableMixin(
     this.onMakeDialogMessage = options.onMakeDialogMessage;
 
     this.buttonText = options.buttonText;
+
+    this.prettifyNumber = options.prettifyNumber;
 
     /**
      * Callback that occurs when point is clicked (may be added or removed). Function takes a CustomDataSource which is
@@ -279,14 +288,18 @@ export default class UserDrawing extends MappableMixin(
       64,
       Math.min(512, Math.ceil((2 * Math.PI * radius) / 20))
     );
-    return MeasureCircleTool.buildCircleRingRadians(
-      centerCarto.latitude,
-      centerCarto.longitude,
-      radius,
-      segments
-    ).map(({ lat, lon }) =>
-      Cartographic.toCartesian(new Cartographic(lon, lat, centerCarto.height))
-    );
+    return this.terria.measurableGeometryManager[
+      this.terria.measurableGeometryIndex
+    ]
+      .buildCircleRingRadians(
+        centerCarto.latitude,
+        centerCarto.longitude,
+        radius,
+        segments
+      )
+      .map(({ lat, lon }) =>
+        Cartographic.toCartesian(new Cartographic(lon, lat, centerCarto.height))
+      );
   }
 
   private createCircleEntities() {
@@ -300,7 +313,9 @@ export default class UserDrawing extends MappableMixin(
             return [];
           }
 
-          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
+          const radius = this.terria.measurableGeometryManager[
+            this.terria.measurableGeometryIndex
+          ].getGeodesicDistance(center, edge);
           if (radius <= 0) {
             return [];
           }
@@ -329,8 +344,10 @@ export default class UserDrawing extends MappableMixin(
             return "";
           }
 
-          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
-          return MeasureCircleTool.prettifyArea(Math.PI * radius * radius);
+          const radius = this.terria.measurableGeometryManager[
+            this.terria.measurableGeometryIndex
+          ].getGeodesicDistance(center, edge);
+          return this.prettifyNumber?.(Math.PI * radius * radius, true) ?? "";
         }, false),
         font: "16px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
@@ -383,8 +400,10 @@ export default class UserDrawing extends MappableMixin(
           if (!center || !edge) {
             return "";
           }
-          const radius = MeasureCircleTool.getGeodesicDistance(center, edge);
-          return MeasureCircleTool.prettifyDistance(radius);
+          const radius = this.terria.measurableGeometryManager[
+            this.terria.measurableGeometryIndex
+          ].getGeodesicDistance(center, edge);
+          return this.prettifyNumber?.(radius) ?? "";
         }, false),
         font: "14px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
