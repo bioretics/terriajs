@@ -27,7 +27,8 @@ import {
   filterRecords,
   formatValue,
   uniqueSorted,
-  computeGeometryBBox
+  computeGeometryBBox,
+  MicrozonationDocument
 } from "./Microzonation";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
@@ -99,6 +100,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const [loadingList, setLoadingList] = useState(false);
   const [listError, setListError] = useState<string | undefined>(undefined);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [documents, setDocuments] = useState<MicrozonationDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
 
   useEffect(() => {
     setHasLoaded(false);
@@ -191,6 +194,77 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const loadDetail = (record: MicrozonationRecord) => {
     const resolved = getDetailFromProperties(propertiesById, record);
     setDetail(resolved);
+
+    setLoadingDocs(true);
+
+    setTimeout(() => {
+      setDocuments([
+        {
+          id: "1",
+          type: "MZS",
+          desc: "11_Shapefile Elementi MS01",
+          startDate: "25/07/2014",
+          endDate: "22/05/2020",
+          url: "/mock/ms01_shapefile.zip"
+        },
+        {
+          id: "2",
+          type: "MZS",
+          desc: "15_Carta Geologico-Tecnica MS01",
+          startDate: "25/07/2014",
+          url: "/mock/carta_geologica.pdf"
+        },
+        {
+          id: "3",
+          type: "MZS",
+          desc: "17_Relazione Illustrativa MS01",
+          startDate: "25/07/2014",
+          endDate: "22/05/2020",
+          url: "/mock/relazione_ms01.pdf"
+        },
+        {
+          id: "4",
+          type: "MZS",
+          desc: "18_Indagini MS01",
+          startDate: "25/07/2014",
+          url: "/mock/indagini_ms01.pdf"
+        },
+        {
+          id: "5",
+          type: "CLE",
+          desc: "11_Shapefile Elementi CLE",
+          startDate: "23/05/2013",
+          endDate: "23/05/2013",
+          url: "/mock/cle_shapefile.zip"
+        },
+        {
+          id: "6",
+          type: "CLE",
+          desc: "10_Strati Cartografici 1:2.000",
+          startDate: "23/05/2013",
+          endDate: "23/05/2013",
+          url: "/mock/strati_cartografici.pdf"
+        },
+        {
+          id: "7",
+          type: "CLE",
+          desc: "12_Schede Elementi CLE",
+          startDate: "23/05/2013",
+          endDate: "23/05/2013",
+          url: "/mock/schede_cle.pdf"
+        },
+        {
+          id: "8",
+          type: "CLE",
+          desc: "13_Relazione Tecnica Illustrativa",
+          startDate: "23/05/2013",
+          endDate: "23/05/2013",
+          url: "/mock/relazione_cle.pdf"
+        }
+      ]);
+
+      setLoadingDocs(false);
+    }, 500);
   };
 
   const zoomToRecord = (record: MicrozonationRecord) => {
@@ -608,6 +682,63 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+        {detail && (
+          <div className={Styles.sectionTitle}>
+            {t("microzonation.documents")}
+          </div>
+        )}
+
+        {detail && (
+          <div className={Styles.detailWrapper}>
+            {loadingDocs && (
+              <div className={Styles.notice}>
+                {t("microzonation.loadingDocuments")}
+              </div>
+            )}
+
+            {!loadingDocs && documents.length === 0 && (
+              <div className={Styles.emptyState}>
+                {t("microzonation.noDocuments")}
+              </div>
+            )}
+
+            {!loadingDocs && documents.length > 0 && (
+              <div className={Styles.tableWrapper}>
+                <table className={Styles.table}>
+                  <thead>
+                    <tr>
+                      <th>{t("microzonation.type")}</th>
+                      <th>{t("microzonation.description")}</th>
+                      <th>{t("microzonation.startDate")}</th>
+                      <th>{t("microzonation.endDate")}</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.map((doc) => (
+                      <tr key={doc.id} className={Styles.rowClickable}>
+                        <td>{doc.type}</td>
+                        <td>{doc.desc}</td>
+                        <td>{doc.startDate ?? "-"}</td>
+                        <td>{doc.endDate ?? "-"}</td>
+                        <td>
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                          >
+                            {t("microzonation.download")}
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
         <div className={Styles.emergencyPlansLink}>

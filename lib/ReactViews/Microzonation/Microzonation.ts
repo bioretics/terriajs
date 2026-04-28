@@ -37,6 +37,16 @@ export type MicrozonationDetail = {
     municipalPlan?: string;
     link?: string;
   };
+  documents?: MicrozonationDocument[];
+};
+
+export type MicrozonationDocument = {
+  id: string;
+  url: string;
+  type: string;
+  desc: string;
+  startDate: string;
+  endDate?: string;
 };
 
 export type Filters = {

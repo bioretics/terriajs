@@ -654,7 +654,11 @@
     "docStart": "Start",
     "docEnd": "End",
     "docDownload": "Download attachment",
-    "municipalEmergencyPlans": "Municipal Emergency Plans"
+    "municipalEmergencyPlans": "Municipal Emergency Plans",
+    "type": "Type",
+    "description": "Description",
+    "startDate": "Start Date",
+    "endDate": "End Date"
   },
   "satelliteGuidance": {
     "menuTitle": "You can access map guides at any time by looking in the <2>help menu</2>.",
