@@ -1928,7 +1928,8 @@ export default class Terria {
         brandBarElements,
         brandBarSmallElements,
         displayOneBrand,
-        microzonationConfig
+        microzonationConfig,
+        relatedMaps
       } = initData.parameters;
 
       const stringArrayFrom = (value: unknown): string[] | undefined => {
@@ -1936,6 +1937,26 @@ export default class Terria {
         return value.every((item) => typeof item === "string") &&
           value.some((item) => item !== "")
           ? (value as string[]).slice()
+          : undefined;
+      };
+
+      const relatedMapsFrom = (value: unknown): RelatedMap[] | undefined => {
+        if (!Array.isArray(value)) return undefined;
+
+        const parsedRelatedMaps = value.map((item) => {
+          if (!isJsonObject(item)) return undefined;
+
+          const { imageUrl, url, title, description } = item;
+          return isJsonString(imageUrl) &&
+            isJsonString(url) &&
+            isJsonString(title) &&
+            isJsonString(description)
+            ? { imageUrl, url, title, description }
+            : undefined;
+        });
+
+        return parsedRelatedMaps.every(isDefined)
+          ? (parsedRelatedMaps as RelatedMap[])
           : undefined;
       };
 
@@ -1968,6 +1989,12 @@ export default class Terria {
             ? microzonationConfig.outputFormat
             : undefined
         };
+        hasOverrides = true;
+      }
+      
+      const overrideRelatedMaps = relatedMapsFrom(relatedMaps);
+      if (overrideRelatedMaps) {
+        parameterOverrides.relatedMaps = overrideRelatedMaps;
         hasOverrides = true;
       }
 
