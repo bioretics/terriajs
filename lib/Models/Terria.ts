@@ -1991,7 +1991,7 @@ export default class Terria {
         };
         hasOverrides = true;
       }
-      
+
       const overrideRelatedMaps = relatedMapsFrom(relatedMaps);
       if (overrideRelatedMaps) {
         parameterOverrides.relatedMaps = overrideRelatedMaps;
