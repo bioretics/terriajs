@@ -201,8 +201,8 @@ export interface ConfigParameters {
    */
   microzonationConfig?: {
     url: string;
-    typeName: string;
-    documentsTypeName?: string;
+    projectsLayerName: string;
+    documentsLayerName?: string;
     outputFormat?: string;
   };
 

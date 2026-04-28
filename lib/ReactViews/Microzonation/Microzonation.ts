@@ -58,18 +58,16 @@ export type Filters = {
 
 export type WfsConfig = {
   url: string;
-  typeName: string;
-  documentsTypeName?: string;
+  projectsLayerName: string;
+  documentsLayerName?: string;
   outputFormat?: string;
 };
 
-const normalizeText = (value: unknown): string =>
-  value === null || value === undefined || value === "" ? "" : String(value);
-
 const normalizeDocumentType = (properties: any): string => {
-  const parts = [properties?.tipo_microzonazione, properties?.tipo_documento]
-    .map(normalizeText)
-    .filter((value) => value !== "");
+  const parts = [
+    properties?.tipo_microzonazione,
+    properties?.tipo_documento
+  ].filter((value) => value !== "");
 
   return parts.length > 0 ? parts.join(" - ") : "-";
 };
@@ -79,7 +77,7 @@ const normalizeDocument = (
   index: number
 ): MicrozonationDocument | undefined => {
   const properties = feature?.properties ?? {};
-  const url = normalizeText(properties?.link).trim();
+  const url = String(properties?.link).trim();
 
   if (!url) {
     return undefined;
@@ -232,7 +230,7 @@ export const normalizeDetail = (properties: any): MicrozonationDetail => ({
 });
 
 type WfsUrlOptions = {
-  typeName?: string;
+  layerName?: string;
   extraParams?: Record<string, string | undefined>;
 };
 
@@ -245,7 +243,7 @@ const buildWfsUrl = (
     service: "WFS",
     version: "1.0.0",
     request: "GetFeature",
-    typeName: options.typeName ?? config.typeName,
+    typeName: options.layerName ?? config.projectsLayerName,
     outputFormat: config.outputFormat ?? "application/json",
     srsName: "EPSG:4326"
   };
@@ -310,13 +308,13 @@ export const fetchWfsDocuments = async (
     return [];
   }
 
-  const documentsTypeName = normalizeText(config.documentsTypeName).trim();
-  if (!documentsTypeName) {
+  const documentsLayerName = String(config.documentsLayerName).trim();
+  if (!documentsLayerName) {
     return [];
   }
 
   const url = buildWfsUrl(config, {
-    typeName: documentsTypeName,
+    layerName: documentsLayerName,
     extraParams: {
       CQL_FILTER: `id_stato_progetto=${String(idStatoProgetto)}`
     }

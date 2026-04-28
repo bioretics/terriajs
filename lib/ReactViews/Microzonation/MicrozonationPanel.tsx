@@ -116,7 +116,12 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setListError(undefined);
     setDocuments([]);
     setLoadingDocs(false);
-  }, [wfsConfig?.url, wfsConfig?.typeName]);
+  }, [
+    wfsConfig?.url,
+    wfsConfig?.projectsLayerName,
+    wfsConfig?.documentsLayerName,
+    wfsConfig?.outputFormat
+  ]);
 
   useEffect(() => {
     if (!props.isVisible || hasLoaded) {
