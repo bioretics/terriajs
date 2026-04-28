@@ -207,22 +207,23 @@ interface SharePanelState {
 @observer
 class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   static displayName = "CoordsPanel";
-  private setSrs = (value: ISrsConversion) => {
+
+  setSrs = action((value: ISrsConversion) => {
     this.srs = value;
-  };
+  });
 
   // Get filtered conversion list based on input type
-  // Using @computed to cache the result so the reference only changes when isInputCartographic changes
+  // Using @computed to cache the result so the reference only changes when isInputNotCartographic changes
   @computed
   private get filteredConversionList(): ISrsConversion[] {
-    if (this.isInputCartographic) {
-      // If input is geographic (lat/lon), show conversions FROM 4326 (to projected systems)
-      return this.conversionList.filter((conv) => conv.from === 4326);
-    } else {
+    if (this.isInputNotCartographic) {
       // If input is projected, show conversions FROM projected systems (to 4326)
       return this.conversionList.filter((conv) => conv.from !== 4326);
     }
+
+    return this.conversionList;
   }
+
   private conversionList: ISrsConversion[] = [
     {
       desc: "EPSG:4326 WGS84 → EPSG:3003 Monte Mario / Italy zone 1",
@@ -427,7 +428,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   private inputY?: number;
   private outputX?: number;
   private outputY?: number;
-  @observable private isInputCartographic: boolean;
+  @observable private isInputNotCartographic: boolean;
   @observable private isOutputCartographic: boolean;
   @observable private srs: ISrsConversion;
   private pickedPositionSubscription: IReactionDisposer;
@@ -444,7 +445,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
 
     this.coordsInputTxt = "";
     this.coordsOutputTxt = "";
-    this.isInputCartographic = false;
+    this.isInputNotCartographic = false;
     this.isOutputCartographic = false;
     this.srs = this.filteredConversionList[0];
 
@@ -455,11 +456,13 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           const splitted = coordsInputTxt.toString().split(/[ |,|;]+/g);
           this.inputX = parseFloat(splitted[0]);
           this.inputY = parseFloat(splitted[1]);
-          // Improved detection: check if coordinates look like lat/lon (geographic)
-          // inputX should be longitude (-180 to 180), inputY should be latitude (-90 to 90)
-          const isLikelyLatitude = this.inputY >= -90 && this.inputY <= 90;
-          const isLikelyLongitude = this.inputX >= -180 && this.inputX <= 180;
-          this.isInputCartographic = isLikelyLatitude && isLikelyLongitude;
+
+          const isDefinitelyNotLatitude = this.inputY < -90 || this.inputY > 90;
+          const isDefinitelyNotLongitude =
+            this.inputX < -360 || this.inputX > 360;
+          this.isInputNotCartographic =
+            isDefinitelyNotLatitude && isDefinitelyNotLongitude;
+
           // Reset srs to first item of the newly filtered list when input type changes
           if (
             this.filteredConversionList &&
@@ -500,7 +503,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   reset() {
     this.coordsInputTxt = "";
     this.coordsOutputTxt = "";
-    this.isInputCartographic = false;
+    this.isInputNotCartographic = false;
     this.isOutputCartographic = false;
   }
 
@@ -533,9 +536,9 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     const results = await loadJson(`${url}?inSR=${this.srs.from}
       &outSR=${this.srs.to}
       &geometries=${
-        this.isInputCartographic
-          ? this.inputY.toString() + "," + this.inputX.toString()
-          : this.inputX.toString() + "," + this.inputY.toString()
+        this.isInputNotCartographic
+          ? this.inputX.toString() + "," + this.inputY.toString()
+          : this.inputY.toString() + "," + this.inputX.toString()
       }
       &transformation=${
         this.srs.wkt ? JSON.stringify({ wkt: this.srs.wkt }) : "{}"
@@ -590,7 +593,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           setValue={action((value) => {
             this.coordsInputTxt = value;
           })}
-          isCartographic={this.isInputCartographic}
+          isCartographic={this.isInputNotCartographic}
           moveTo={() => {
             this.moveToA(this.inputX, this.inputY);
           }}
@@ -600,7 +603,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
         />
         <SrsSelection
           title="Conversione"
-          isCartographic={this.isInputCartographic}
+          isCartographic={this.isInputNotCartographic}
           setSrs={this.setSrs}
           reset={() => {
             this.reset();
