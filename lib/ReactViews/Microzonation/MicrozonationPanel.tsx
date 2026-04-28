@@ -23,6 +23,7 @@ import {
   MicrozonationRecord,
   emptyFilters,
   fetchWfsFeatures,
+  fetchWfsDocuments,
   getDetailFromProperties,
   filterRecords,
   formatValue,
@@ -113,6 +114,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setSelectedRecord(undefined);
     setDetail(undefined);
     setListError(undefined);
+    setDocuments([]);
+    setLoadingDocs(false);
   }, [wfsConfig?.url, wfsConfig?.typeName]);
 
   useEffect(() => {
@@ -189,82 +192,31 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setHasSearched(false);
     setSelectedRecord(undefined);
     setDetail(undefined);
+    setDocuments([]);
+    setLoadingDocs(false);
   };
 
-  const loadDetail = (record: MicrozonationRecord) => {
+  const loadDetail = async (record: MicrozonationRecord) => {
     const resolved = getDetailFromProperties(propertiesById, record);
     setDetail(resolved);
 
-    setLoadingDocs(true);
-
-    setTimeout(() => {
-      setDocuments([
-        {
-          id: "1",
-          type: "MZS",
-          desc: "11_Shapefile Elementi MS01",
-          startDate: "25/07/2014",
-          endDate: "22/05/2020",
-          url: "/mock/ms01_shapefile.zip"
-        },
-        {
-          id: "2",
-          type: "MZS",
-          desc: "15_Carta Geologico-Tecnica MS01",
-          startDate: "25/07/2014",
-          url: "/mock/carta_geologica.pdf"
-        },
-        {
-          id: "3",
-          type: "MZS",
-          desc: "17_Relazione Illustrativa MS01",
-          startDate: "25/07/2014",
-          endDate: "22/05/2020",
-          url: "/mock/relazione_ms01.pdf"
-        },
-        {
-          id: "4",
-          type: "MZS",
-          desc: "18_Indagini MS01",
-          startDate: "25/07/2014",
-          url: "/mock/indagini_ms01.pdf"
-        },
-        {
-          id: "5",
-          type: "CLE",
-          desc: "11_Shapefile Elementi CLE",
-          startDate: "23/05/2013",
-          endDate: "23/05/2013",
-          url: "/mock/cle_shapefile.zip"
-        },
-        {
-          id: "6",
-          type: "CLE",
-          desc: "10_Strati Cartografici 1:2.000",
-          startDate: "23/05/2013",
-          endDate: "23/05/2013",
-          url: "/mock/strati_cartografici.pdf"
-        },
-        {
-          id: "7",
-          type: "CLE",
-          desc: "12_Schede Elementi CLE",
-          startDate: "23/05/2013",
-          endDate: "23/05/2013",
-          url: "/mock/schede_cle.pdf"
-        },
-        {
-          id: "8",
-          type: "CLE",
-          desc: "13_Relazione Tecnica Illustrativa",
-          startDate: "23/05/2013",
-          endDate: "23/05/2013",
-          url: "/mock/relazione_cle.pdf"
-        }
-      ]);
-
+    if (record.id === null || record.id === undefined) {
+      setDocuments([]);
       setLoadingDocs(false);
-    }, 500);
+      return;
+    }
+
+    setLoadingDocs(true);
+    setDocuments([]);
+
+    try {
+      const fetchedDocuments = await fetchWfsDocuments(wfsConfig, record.id);
+      setDocuments(fetchedDocuments);
+    } catch {
+      setDocuments([]);
+    } finally {
+      setLoadingDocs(false);
+    }
   };
 
   const zoomToRecord = (record: MicrozonationRecord) => {
@@ -532,7 +484,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                         }
                         onClick={() => {
                           setSelectedRecord(record);
-                          loadDetail(record);
+                          void loadDetail(record);
                           zoomToRecord(record);
                         }}
                       >
@@ -719,10 +671,10 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                   <tbody>
                     {documents.map((doc) => (
                       <tr key={doc.id} className={Styles.rowClickable}>
-                        <td>{doc.type}</td>
-                        <td>{doc.desc}</td>
-                        <td>{doc.startDate ?? "-"}</td>
-                        <td>{doc.endDate ?? "-"}</td>
+                        <td>{formatValue(doc.type)}</td>
+                        <td>{formatValue(doc.desc)}</td>
+                        <td>{formatValue(doc.startDate)}</td>
+                        <td>{formatValue(doc.endDate)}</td>
                         <td>
                           <a
                             href={doc.url}
