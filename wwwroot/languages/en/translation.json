@@ -655,7 +655,9 @@
     "docEnd": "End",
     "docDownload": "Download attachment",
     "municipalEmergencyPlans": "Municipal Emergency Plans",
-    "type": "Type",
+    "typeMS": "MS type",
+    "typeDoc": "Doc type",
+    "docFormat": "Doc format",
     "description": "Description",
     "startDate": "Start Date",
     "endDate": "End Date"

@@ -43,8 +43,10 @@ export type MicrozonationDetail = {
 export type MicrozonationDocument = {
   id: string;
   url: string;
-  type: string;
+  typeMS: string;
+  typeDoc: string;
   desc: string;
+  docFormat: string;
   startDate: string;
   endDate?: string;
 };
@@ -63,15 +65,6 @@ export type WfsConfig = {
   outputFormat?: string;
 };
 
-const normalizeDocumentType = (properties: any): string => {
-  const parts = [
-    properties?.tipo_microzonazione,
-    properties?.tipo_documento
-  ].filter((value) => value !== "");
-
-  return parts.length > 0 ? parts.join(" - ") : "-";
-};
-
 const normalizeDocument = (
   feature: any,
   index: number
@@ -86,8 +79,10 @@ const normalizeDocument = (
   return {
     id: String(feature?.id ?? properties?.descrizione_file ?? index),
     url,
-    type: normalizeDocumentType(properties),
+    typeMS: formatValue(properties?.tipo_microzonazione),
+    typeDoc: formatValue(properties?.tipo_documento),
     desc: formatValue(properties?.descrizione_file),
+    docFormat: properties?.link?.split(".").pop() ?? "",
     startDate: formatValue(properties?.validita_inizio),
     endDate:
       properties?.validita_fine !== null &&
