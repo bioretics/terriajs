@@ -105,6 +105,7 @@ import IElementConfig from "./IElementConfig";
 import InitSource, {
   InitSourceData,
   InitSourceFromData,
+  MicrozonationConfig,
   ShareInitSourceData,
   StoryData,
   isInitFromData,
@@ -192,21 +193,6 @@ export interface ConfigParameters {
   storyEnabled: boolean;
 
   /**
-   * Enables seismic microzonation panel.
-   */
-  microzonationEnabled?: boolean;
-
-  /**
-   * WFS configuration for the seismic microzonation service.
-   */
-  microzonationConfig?: {
-    url: string;
-    projectsLayerName: string;
-    documentsLayerName?: string;
-    outputFormat?: string;
-  };
-
-  /**
    * True (the default) to intercept the browser's print feature and use a custom one accessible through the Share panel.
    */
   interceptBrowserPrint?: boolean;
@@ -276,6 +262,8 @@ export interface ConfigParameters {
    */
   disableMyLocation?: boolean;
   disableSplitter?: boolean;
+
+  microzonationConfig?: MicrozonationConfig;
 
   disablePedestrianMode?: boolean;
 
@@ -678,8 +666,6 @@ export default class Terria {
     feedbackUrl: undefined,
     initFragmentPaths: ["init/"],
     storyEnabled: true,
-    microzonationEnabled: false,
-    microzonationConfig: undefined,
     interceptBrowserPrint: true,
     tabbedCatalog: false,
     useCesiumIonTerrain: true,
@@ -694,6 +680,7 @@ export default class Terria {
     hideTerriaLogo: false,
     brandBarElements: undefined,
     brandBarSmallElements: undefined,
+    microzonationConfig: undefined,
     displayOneBrand: 0,
     disableMyLocation: undefined,
     disableSplitter: undefined,
@@ -1937,14 +1924,39 @@ export default class Terria {
       const parameterOverrides: Partial<ConfigParameters> = {};
       let hasOverrides = false;
 
-      const { brandBarElements, brandBarSmallElements, displayOneBrand } =
-        initData.parameters;
+      const {
+        brandBarElements,
+        brandBarSmallElements,
+        displayOneBrand,
+        microzonationConfig,
+        relatedMaps
+      } = initData.parameters;
 
       const stringArrayFrom = (value: unknown): string[] | undefined => {
         if (!Array.isArray(value)) return undefined;
         return value.every((item) => typeof item === "string") &&
           value.some((item) => item !== "")
           ? (value as string[]).slice()
+          : undefined;
+      };
+
+      const relatedMapsFrom = (value: unknown): RelatedMap[] | undefined => {
+        if (!Array.isArray(value)) return undefined;
+
+        const parsedRelatedMaps = value.map((item) => {
+          if (!isJsonObject(item)) return undefined;
+
+          const { imageUrl, url, title, description } = item;
+          return isJsonString(imageUrl) &&
+            isJsonString(url) &&
+            isJsonString(title) &&
+            isJsonString(description)
+            ? { imageUrl, url, title, description }
+            : undefined;
+        });
+
+        return parsedRelatedMaps.every(isDefined)
+          ? (parsedRelatedMaps as RelatedMap[])
           : undefined;
       };
 
@@ -1962,6 +1974,27 @@ export default class Terria {
 
       if (isJsonNumber(displayOneBrand)) {
         parameterOverrides.displayOneBrand = Number(displayOneBrand);
+        hasOverrides = true;
+      }
+
+      if (
+        isJsonObject(microzonationConfig) &&
+        isJsonString(microzonationConfig.url) &&
+        isJsonString(microzonationConfig.typeName)
+      ) {
+        parameterOverrides.microzonationConfig = {
+          url: microzonationConfig.url,
+          typeName: microzonationConfig.typeName,
+          outputFormat: isJsonString(microzonationConfig.outputFormat)
+            ? microzonationConfig.outputFormat
+            : undefined
+        };
+        hasOverrides = true;
+      }
+
+      const overrideRelatedMaps = relatedMapsFrom(relatedMaps);
+      if (overrideRelatedMaps) {
+        parameterOverrides.relatedMaps = overrideRelatedMaps;
         hasOverrides = true;
       }
 
