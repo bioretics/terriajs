@@ -29,7 +29,8 @@ import {
   formatValue,
   uniqueSorted,
   computeGeometryBBox,
-  MicrozonationDocument
+  MicrozonationDocument,
+  formatDate
 } from "./Microzonation";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
@@ -668,7 +669,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 <table className={Styles.table}>
                   <thead>
                     <tr>
-                      <th>{t("microzonation.typeMS")}</th>
                       <th>{t("microzonation.typeDoc")}</th>
                       <th>{t("microzonation.description")}</th>
                       <th>{t("microzonation.docFormat")}</th>
@@ -680,12 +680,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                   <tbody>
                     {documents.map((doc) => (
                       <tr key={doc.id} className={Styles.rowClickable}>
-                        <td>{formatValue(doc.typeMS)}</td>
                         <td>{formatValue(doc.typeDoc)}</td>
                         <td>{formatValue(doc.desc)}</td>
                         <td>{formatValue(doc.docFormat)}</td>
-                        <td>{formatValue(doc.startDate)}</td>
-                        <td>{formatValue(doc.endDate)}</td>
+                        <td>{formatDate(doc.startDate)}</td>
+                        <td>{formatDate(doc.endDate)}</td>
                         <td>
                           <a
                             href={doc.url}

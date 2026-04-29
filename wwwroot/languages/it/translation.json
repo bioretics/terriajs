@@ -1728,12 +1728,11 @@
     "docEnd": "Fine",
     "docDownload": "Scarica allegato",
     "municipalEmergencyPlans": "Piani Emergenza Comunali",
-    "typeMS": "Tipo MS",
-    "typeDoc": "Tipo Doc",
-    "docFormat": "Formato Doc",
+    "typeDoc": "Tipo",
+    "docFormat": "Formato",
     "description": "Descrizione",
-    "startDate": "Data inizio",
-    "endDate": "Data fine"
+    "startDate": "Inizio",
+    "endDate": "Fine"
   },
   "dragDrop": {
     "not": "<0>bbbb</0>",
