@@ -305,6 +305,33 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     [panelWidth]
   );
 
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortedDocuments = useMemo(() => {
+    if (!sortKey) return documents;
+    const sorted = [...documents].sort((a: any, b: any) => {
+      const aVal = a?.[sortKey];
+      const bVal = b?.[sortKey];
+      if (aVal === null) return 1;
+      if (bVal === null) return -1;
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [documents, sortKey, sortDir]);
+
+  const onSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
   return (
     <Panel
       ref={panelRef}
@@ -667,16 +694,41 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 <table className={Styles.table}>
                   <thead>
                     <tr>
-                      <th>{t("microzonation.typeDoc")}</th>
-                      <th>{t("microzonation.description")}</th>
-                      <th>{t("microzonation.docFormat")}</th>
-                      <th>{t("microzonation.startDate")}</th>
-                      <th>{t("microzonation.endDate")}</th>
+                      <th
+                        onClick={() => onSort("typeDoc")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.typeDoc")}
+                      </th>
+                      <th
+                        onClick={() => onSort("desc")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.description")}
+                      </th>
+                      <th
+                        onClick={() => onSort("docFormat")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.docFormat")}
+                      </th>
+                      <th
+                        onClick={() => onSort("startDate")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.startDate")}
+                      </th>
+                      <th
+                        onClick={() => onSort("endDate")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.endDate")}
+                      </th>
                       <th />
                     </tr>
                   </thead>
                   <tbody>
-                    {documents.map((doc) => (
+                    {sortedDocuments.map((doc) => (
                       <tr key={doc.id} className={Styles.rowClickable}>
                         <td>{formatValue(doc.typeDoc)}</td>
                         <td>{formatValue(doc.desc)}</td>
