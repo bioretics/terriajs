@@ -175,10 +175,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     return uniqueSorted(filtered.map((r) => r.municipality));
   }, [records, filters.province]);
   const microzonationLabels: Record<string, string> = {
-    "1": t("microzonation.level1"),
     "2": t("microzonation.level2"),
-    "3": t("microzonation.level3"),
-    no: t("microzonation.levelNo")
+    "3": t("microzonation.level3")
   };
 
   const cleLabels: Record<string, string> = {
