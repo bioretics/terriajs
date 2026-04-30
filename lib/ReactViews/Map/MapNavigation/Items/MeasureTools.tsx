@@ -160,23 +160,6 @@ export class MeasureLineTool extends MapNavigationItemController {
     );
   }
 
-  prettifyNumber(number: number) {
-    if (number <= 0) {
-      return "";
-    }
-    // Given a number representing a number in metres, make it human readable
-    let label = "m";
-    if (number > 999) {
-      label = "km";
-      number = number / 1000.0;
-    }
-    let numberStr = number.toFixed(2);
-    // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    numberStr = `${numberStr} ${label}`;
-    return numberStr;
-  }
-
   updateDistance(pointEntities: CustomDataSource) {
     this.totalDistanceMetres = 0;
     if (pointEntities.entities.values.length < 1) {
@@ -314,33 +297,6 @@ export class MeasurePolygonTool extends MapNavigationItemController {
         this.props.viewState.useSmallScreenInterface) &&
       super.visible
     );
-  }
-
-  prettifyNumber(number: number, squared: boolean) {
-    if (number <= 0) {
-      return "";
-    }
-    // Given a number representing a number in metres, make it human readable
-    let label = "m";
-    if (squared) {
-      if (number > 999999) {
-        label = "km";
-        number = number / 1000000.0;
-      }
-    } else {
-      if (number > 999) {
-        label = "km";
-        number = number / 1000.0;
-      }
-    }
-    let numberStr = number.toFixed(2);
-    // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
-    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    numberStr = `${numberStr} ${label}`;
-    if (squared) {
-      numberStr += "\u00B2";
-    }
-    return numberStr;
   }
 
   updateDistance(pointEntities: CustomDataSource) {
@@ -669,30 +625,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
         this.props.viewState.useSmallScreenInterface) &&
       super.visible
     );
-  }
-
-  prettifyNumber(number: number, squared: boolean = false) {
-    if (number <= 0) {
-      return "";
-    }
-
-    let label = "m";
-    if (squared) {
-      label = "km";
-      number = number / 1000000.0;
-    } else if (number > 999) {
-      label = "km";
-      number = number / 1000.0;
-    }
-
-    let numberStr = number.toFixed(2);
-    numberStr = numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    numberStr = `${numberStr} ${label}`;
-    if (squared) {
-      numberStr += "\u00B2";
-    }
-
-    return numberStr;
   }
 
   private updateCircleGeometry(center: Cartesian3, edge: Cartesian3) {
