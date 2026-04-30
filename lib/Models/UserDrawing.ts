@@ -1073,7 +1073,7 @@ export default class UserDrawing extends MappableMixin(
       if (index === -1) {
         // Probably a layer or feature that has nothing to do with what we're drawing.
         return;
-      } else if (index === 0 && !this.closeLoop && this.allowPolygon) {
+      } else if (index === 0 && this.allowPolygon) {
         // Index is zero if it's the first point, meaning we have a closed shape
         this.polygon = this.otherEntities.entities.add({
           name: "User polygon",
@@ -1101,7 +1101,6 @@ export default class UserDrawing extends MappableMixin(
         userClickedExistingPoint = true;
         return;
       } else if (
-        index === 0 &&
         this.closeLoop &&
         this.allowPolygon &&
         !this.autoClosePolygon

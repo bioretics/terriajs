@@ -33,9 +33,11 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       featureProperties?: JsonObject
     ) {
       if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
-        this.terria.measurableGeometryManager.push(
-          Object.freeze(new MeasurableGeometryManager(this.terria))
-        );
+        while (this.terria.measurableGeometryManager.length <= indexPath) {
+          this.terria.measurableGeometryManager.push(
+            Object.freeze(new MeasurableGeometryManager(this.terria))
+          );
+        }
       }
       this.terria.measurableGeometryManager[
         this.terria.measurableGeometryIndex
