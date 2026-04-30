@@ -342,14 +342,16 @@ export default class UserDrawing extends MappableMixin(
           ].getGeodesicDistance(center, edge);
           return `${((Math.PI * radius * radius) / 1000000.0).toFixed(2)} km²`;
         }, false),
-        font: "16px sans-serif",
+        font: "bold 17px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.BLACK,
-        outlineColor: Color.WHITE,
-        outlineWidth: 2,
-        pixelOffset: new Cartesian2(0, -20),
-        verticalOrigin: VerticalOrigin.BOTTOM,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY
+        fillColor: Color.fromCssColorString("#E8A200"),
+        outlineColor: Color.BLACK,
+        outlineWidth: 3,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        pixelOffset: new Cartesian2(0, -16),
+        verticalOrigin: VerticalOrigin.CENTER,
+        horizontalOrigin: HorizontalOrigin.CENTER
       }
     });
 
@@ -399,15 +401,15 @@ export default class UserDrawing extends MappableMixin(
           if (radius >= 1000) return `${(radius / 1000).toFixed(2)} km`;
           return `${radius.toFixed(2)} m`;
         }, false),
-        font: "14px sans-serif",
+        font: "18px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.BLACK,
+        fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
-        outlineWidth: 2,
-        pixelOffset: new Cartesian2(0, -12),
-        verticalOrigin: VerticalOrigin.BOTTOM,
-        horizontalOrigin: HorizontalOrigin.CENTER,
-        disableDepthTestDistance: Number.POSITIVE_INFINITY
+        outlineWidth: 4,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        pixelOffset: new Cartesian2(0, -16),
+        verticalOrigin: VerticalOrigin.BOTTOM
       }
     });
 
@@ -631,14 +633,15 @@ export default class UserDrawing extends MappableMixin(
       position: labelPosition,
       label: {
         text: labelText,
-        font: "16px sans-serif",
+        font: "18px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.BLACK,
+        fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
-        outlineWidth: 2,
-        pixelOffset: new Cartesian2(0, -10),
-        verticalOrigin: VerticalOrigin.BOTTOM,
-        horizontalOrigin: HorizontalOrigin.CENTER
+        outlineWidth: 4,
+        heightReference: HeightReference.CLAMP_TO_GROUND,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        pixelOffset: new Cartesian2(0, -16),
+        verticalOrigin: VerticalOrigin.BOTTOM
       }
     });
 
