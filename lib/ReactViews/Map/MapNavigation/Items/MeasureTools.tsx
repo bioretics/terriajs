@@ -645,7 +645,6 @@ export class MeasureCircleTool extends MapNavigationItemController {
       messageHeader: () => i18next.t("measure.measureCircleTool"),
       allowPolygon: false,
       autoClosePolygon: false,
-      prettifyNumber: this.prettifyNumber.bind(this),
       onPointClicked: (pts) => this.onPointUpdated(pts, false),
       onPointMoved: (pts) => this.onPointUpdated(pts, true),
       onCleanUp: this.onCleanUp.bind(this),

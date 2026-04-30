@@ -59,7 +59,6 @@ interface Options {
   drawRectangle?: boolean;
   onMakeDialogMessage?: () => string;
   buttonText?: string;
-  prettifyNumber?: (number: number, squared?: boolean) => string;
   onPointClicked?: (dataSource: DataSource) => void;
   onPointMoved?: (dataSource: DataSource) => void;
   onDrawingComplete?: (params: OnDrawingCompleteParams) => void;
@@ -75,10 +74,6 @@ export default class UserDrawing extends MappableMixin(
   private readonly autoClosePolygon: boolean;
   private readonly onMakeDialogMessage?: () => string;
   private readonly buttonText?: string;
-  private readonly prettifyNumber?: (
-    number: number,
-    squared?: boolean
-  ) => string;
   private readonly onPointClicked?: (dataSource: CustomDataSource) => void;
   private readonly onPointMoved?: (dataSource: CustomDataSource) => void;
   private readonly onDrawingComplete?: (
@@ -137,8 +132,6 @@ export default class UserDrawing extends MappableMixin(
     this.onMakeDialogMessage = options.onMakeDialogMessage;
 
     this.buttonText = options.buttonText;
-
-    this.prettifyNumber = options.prettifyNumber;
 
     /**
      * Callback that occurs when point is clicked (may be added or removed). Function takes a CustomDataSource which is
@@ -347,7 +340,7 @@ export default class UserDrawing extends MappableMixin(
           const radius = this.terria.measurableGeometryManager[
             this.terria.measurableGeometryIndex
           ].getGeodesicDistance(center, edge);
-          return this.prettifyNumber?.(Math.PI * radius * radius, true) ?? "";
+          return `${((Math.PI * radius * radius) / 1000000.0).toFixed(2)} km²`;
         }, false),
         font: "16px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
@@ -403,7 +396,8 @@ export default class UserDrawing extends MappableMixin(
           const radius = this.terria.measurableGeometryManager[
             this.terria.measurableGeometryIndex
           ].getGeodesicDistance(center, edge);
-          return this.prettifyNumber?.(radius) ?? "";
+          if (radius >= 1000) return `${(radius / 1000).toFixed(2)} km`;
+          return `${radius.toFixed(2)} m`;
         }, false),
         font: "14px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
