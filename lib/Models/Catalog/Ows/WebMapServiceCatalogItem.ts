@@ -661,7 +661,6 @@ class WebMapServiceCatalogItem
       const stylesToUse = this.stylesToUse;
       const options = filterOutUndefined(
         layer.styles.map(function (s) {
-          console.log(s.name);
           if (
             isDefined(s.name) &&
             (!stylesToUse ||
