@@ -196,6 +196,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const viewer = terria.currentViewer;
     const cartesians = pts.map((p) => Cartographic.toCartesian(p));
     const useLookAt = Boolean(camera && cartesians.length);
+    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
     const pitch = camera?.pitch ?? 0;
     const initialIdx = currentPointIndexRef.current;
 
@@ -244,14 +245,21 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const tryStep = async (i: number) => {
       const duration = 2 / playSpeedRef.current;
       let hpr: HeadingPitchRange | undefined;
-      if (
-        useLookAt &&
-        ((i < pts.length - 1 && !reverseRef.current) ||
-          (reverseRef.current && i > 0))
-      ) {
-        const next = reverseRef.current ? pts[i - 1] : pts[i + 1];
+      const isForwardStep = !reverseRef.current;
+      const hasNextPoint = isForwardStep ? i < pts.length - 1 : i > 0;
+      const isTerminalStep = isForwardStep ? i === pts.length - 1 : i === 0;
+
+      if (useLookAt && hasNextPoint) {
+        const next = isForwardStep ? pts[i + 1] : pts[i - 1];
         const heading =
           (new EllipsoidGeodesic(pts[i], next).startHeading +
+            CesiumMath.TWO_PI) %
+          CesiumMath.TWO_PI;
+        hpr = new HeadingPitchRange(heading, -pitch, dist);
+      } else if (useLookAt && isCesium2D && isTerminalStep && pts.length > 1) {
+        const previous = isForwardStep ? pts[i - 1] : pts[i + 1];
+        const heading =
+          (new EllipsoidGeodesic(previous, pts[i]).startHeading +
             CesiumMath.TWO_PI) %
           CesiumMath.TWO_PI;
         hpr = new HeadingPitchRange(heading, -pitch, dist);
