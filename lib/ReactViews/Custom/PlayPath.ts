@@ -8,6 +8,7 @@ import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CameraView from "../../Models/CameraView";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
+import ViewerMode from "../../Models/ViewerMode";
 import { runInAction } from "mobx";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
@@ -197,9 +198,19 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const useLookAt = Boolean(camera && cartesians.length);
     const pitch = camera?.pitch ?? 0;
     const initialIdx = currentPointIndexRef.current;
-    const dist = camera
-      ? Cartesian3.distance(camera.position, cartesians[initialIdx])
-      : 1000;
+
+    let dist = 1000;
+    if (camera) {
+      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+      if (isCesium2D) {
+        dist = camera.positionCartographic.height || 1000;
+      } else {
+        const cameraTrueCartesian = Cartographic.toCartesian(
+          camera.positionCartographic
+        );
+        dist = Cartesian3.distance(cameraTrueCartesian, cartesians[initialIdx]);
+      }
+    }
 
     const isResume = initialIdx !== startIdxRef.current;
 
@@ -311,8 +322,14 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       return;
     }
     const cartesian = pts.map((p) => Cartographic.toCartesian(p));
-    const distFirst = Cartesian3.distance(camera.position, cartesian[0]);
-    const distLast = Cartesian3.distance(camera.position, cartesian.at(-1)!);
+    const cameraTrueCartesian = Cartographic.toCartesian(
+      camera.positionCartographic
+    );
+    const distFirst = Cartesian3.distance(cameraTrueCartesian, cartesian[0]);
+    const distLast = Cartesian3.distance(
+      cameraTrueCartesian,
+      cartesian.at(-1)!
+    );
     reverseRef.current = distFirst > distLast;
     startIdxRef.current = reverseRef.current ? pts.length - 1 : 0;
     setCurrentPointIndex(startIdxRef.current);
@@ -337,10 +354,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const targetIdx = startIdxRef.current;
     reverseRef.current = startIdxRef.current === pts.length - 1;
     const point = pts[targetIdx];
-    const dist = Cartesian3.distance(
-      camera.position,
-      Cartographic.toCartesian(point)
+    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const cameraTrueCartesian = Cartographic.toCartesian(
+      camera.positionCartographic
     );
+    const dist = isCesium2D
+      ? camera.positionCartographic.height || 1000
+      : Cartesian3.distance(
+          cameraTrueCartesian,
+          Cartographic.toCartesian(point)
+        );
     const pitch = camera.pitch ?? 0;
     let hpr: HeadingPitchRange | undefined;
     if (pts.length > 1) {
