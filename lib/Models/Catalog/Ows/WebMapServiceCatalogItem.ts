@@ -658,9 +658,15 @@ class WebMapServiceCatalogItem
         } styles`;
       }
 
+      const stylesToUse = this.stylesToUse;
       const options = filterOutUndefined(
         layer.styles.map(function (s) {
-          if (isDefined(s.name)) {
+          if (
+            isDefined(s.name) &&
+            (!stylesToUse ||
+              stylesToUse.length === 0 ||
+              stylesToUse.includes(s.name))
+          ) {
             return {
               name: s.title || s.name || "",
               id: s.name as string

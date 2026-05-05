@@ -244,10 +244,13 @@ export default class MeasurableGeometryManager {
   ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid =
-      this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
-    if (!terrainProvider || !ellipsoid || cartoPositions.length === 0) {
-      return;
-    }
+      this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
+    const canSampleMostDetailed =
+      !!terrainProvider &&
+      !!(terrainProvider as any).availability &&
+      !!ellipsoid &&
+      cartoPositions.length > 0;
+
     // index of the original stops in the new array of sampling points
     const originalStopsIndex: number[] = [0];
     // geodetic distance between two stops
@@ -274,8 +277,11 @@ export default class MeasurableGeometryManager {
     }
     // sample points on terrain
     const terrainPromises = [
-      terrainProvider
-        ? sampleTerrainMostDetailed(terrainProvider, interpolatedCartographics)
+      canSampleMostDetailed
+        ? sampleTerrainMostDetailed(
+            terrainProvider,
+            interpolatedCartographics
+          ).catch(() => interpolatedCartographics)
         : Promise.resolve(interpolatedCartographics)
     ];
     if (
@@ -293,40 +299,46 @@ export default class MeasurableGeometryManager {
           (elem, i) => (elem.height -= geoidHeights[i].height)
         );
       }
-      const sampledCartesians = ellipsoid.cartographicArrayToCartesianArray(
-        sampledCartographics[0]
-      );
+
+      const sampledPoints = sampledCartographics[0];
+      const sampledCartesians =
+        ellipsoid.cartographicArrayToCartesianArray(sampledPoints);
+      const hasDetailedTerrainSampling = canSampleMostDetailed;
+
       // compute distances
-      const stepDistances: number[] = [];
-      for (let i = 0; i < sampledCartesians.length; ++i) {
-        const dist: number =
-          i > 0
-            ? Cartesian3.distance(
-                sampledCartesians[i - 1],
-                sampledCartesians[i]
-              )
-            : 0;
+      const stepDistances: number[] = [0];
+      for (let i = 1; i < sampledCartesians.length; ++i) {
+        const dist: number = hasDetailedTerrainSampling
+          ? Cartesian3.distance(sampledCartesians[i - 1], sampledCartesians[i])
+          : new EllipsoidGeodesic(
+              sampledPoints[i - 1],
+              sampledPoints[i],
+              ellipsoid
+            ).surfaceDistance;
         stepDistances.push(dist);
       }
       const stopAirDistances: number[] = [0];
-      const distances3d: number[] = [0];
+      const stopGroundDistances: number[] = [0];
       for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
-        cartoPositions[i].height =
-          sampledCartographics[0][originalStopsIndex[i]].height;
+        cartoPositions[i].height = sampledPoints[originalStopsIndex[i]].height;
+
         stopAirDistances.push(
           Cartesian3.distance(
             sampledCartesians[originalStopsIndex[i + 1]],
             sampledCartesians[originalStopsIndex[i]]
           )
         );
-        distances3d.push(
-          stepDistances
-            .filter(
-              (_, index) =>
-                index > originalStopsIndex[i] &&
-                index <= originalStopsIndex[i + 1]
-            )
-            .reduce((sum: number, current: number) => sum + current, 0)
+
+        stopGroundDistances.push(
+          hasDetailedTerrainSampling
+            ? stepDistances
+                .filter(
+                  (_, index) =>
+                    index > originalStopsIndex[i] &&
+                    index <= originalStopsIndex[i + 1]
+                )
+                .reduce((sum: number, current: number) => sum + current, 0)
+            : stopGeodeticDistances[i + 1]
         );
       }
       // update state of Terria
@@ -353,8 +365,8 @@ export default class MeasurableGeometryManager {
             cartoPositions,
             stopGeodeticDistances,
             stopAirDistances,
-            distances3d,
-            sampledCartographics[0],
+            stopGroundDistances,
+            sampledPoints,
             stepDistances,
             closeLoop,
             false,

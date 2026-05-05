@@ -650,7 +650,6 @@
     "level1": "Level 1",
     "level2": "Level 2",
     "level3": "Level 3",
-    "levelNo": "No",
     "cleDone": "Done",
     "cleNo": "No",
     "civilProtectionPlan": "Civil Protection Plan",
@@ -662,7 +661,12 @@
     "docStart": "Start",
     "docEnd": "End",
     "docDownload": "Download attachment",
-    "municipalEmergencyPlans": "Municipal Emergency Plans"
+    "municipalEmergencyPlans": "Municipal Emergency Plans",
+    "typeDoc": "Type",
+    "docFormat": "Format",
+    "description": "Description",
+    "startDate": "Start",
+    "endDate": "End"
   },
   "satelliteGuidance": {
     "menuTitle": "You can access map guides at any time by looking in the <2>help menu</2>.",

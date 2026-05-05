@@ -105,6 +105,7 @@ import IElementConfig from "./IElementConfig";
 import InitSource, {
   InitSourceData,
   InitSourceFromData,
+  MicrozonationConfig,
   ShareInitSourceData,
   StoryData,
   isInitFromData,
@@ -192,20 +193,6 @@ export interface ConfigParameters {
   storyEnabled: boolean;
 
   /**
-   * Enables seismic microzonation panel.
-   */
-  microzonationEnabled?: boolean;
-
-  /**
-   * WFS configuration for the seismic microzonation service.
-   */
-  microzonationConfig?: {
-    url: string;
-    typeName: string;
-    outputFormat?: string;
-  };
-
-  /**
    * True (the default) to intercept the browser's print feature and use a custom one accessible through the Share panel.
    */
   interceptBrowserPrint?: boolean;
@@ -275,6 +262,8 @@ export interface ConfigParameters {
    */
   disableMyLocation?: boolean;
   disableSplitter?: boolean;
+
+  microzonationConfig?: MicrozonationConfig;
 
   disablePedestrianMode?: boolean;
 
@@ -677,8 +666,6 @@ export default class Terria {
     feedbackUrl: undefined,
     initFragmentPaths: ["init/"],
     storyEnabled: true,
-    microzonationEnabled: false,
-    microzonationConfig: undefined,
     interceptBrowserPrint: true,
     tabbedCatalog: false,
     useCesiumIonTerrain: true,
@@ -693,6 +680,7 @@ export default class Terria {
     hideTerriaLogo: false,
     brandBarElements: undefined,
     brandBarSmallElements: undefined,
+    microzonationConfig: undefined,
     displayOneBrand: 0,
     disableMyLocation: undefined,
     disableSplitter: undefined,
@@ -1932,35 +1920,46 @@ export default class Terria {
         ? initData.stratum
         : CommonStrata.definition;
 
-    if (isJsonObject(initData.parameters)) {
+    // Overwriting config from init files.
+    if (initData.parameters) {
       const parameterOverrides: Partial<ConfigParameters> = {};
       let hasOverrides = false;
 
-      const { brandBarElements, brandBarSmallElements, displayOneBrand } =
-        initData.parameters;
+      const {
+        brandBarElements,
+        brandBarSmallElements,
+        displayOneBrand,
+        microzonationConfig,
+        relatedMaps
+      } = initData.parameters;
 
-      const stringArrayFrom = (value: unknown): string[] | undefined => {
-        if (!Array.isArray(value)) return undefined;
-        return value.every((item) => typeof item === "string") &&
-          value.some((item) => item !== "")
-          ? (value as string[]).slice()
-          : undefined;
-      };
-
-      const overrideBrandElements = stringArrayFrom(brandBarElements);
-      if (overrideBrandElements) {
-        parameterOverrides.brandBarElements = overrideBrandElements;
+      if (brandBarElements) {
+        parameterOverrides.brandBarElements = brandBarElements;
         hasOverrides = true;
       }
 
-      const overrideBrandSmallElements = stringArrayFrom(brandBarSmallElements);
-      if (overrideBrandSmallElements) {
-        parameterOverrides.brandBarSmallElements = overrideBrandSmallElements;
+      if (brandBarSmallElements) {
+        parameterOverrides.brandBarSmallElements = brandBarSmallElements;
         hasOverrides = true;
       }
 
-      if (isJsonNumber(displayOneBrand)) {
-        parameterOverrides.displayOneBrand = Number(displayOneBrand);
+      if (displayOneBrand) {
+        parameterOverrides.displayOneBrand = displayOneBrand;
+        hasOverrides = true;
+      }
+
+      if (microzonationConfig) {
+        parameterOverrides.microzonationConfig = {
+          url: microzonationConfig.url,
+          projectsLayerName: microzonationConfig.projectsLayerName,
+          documentsLayerName: microzonationConfig.documentsLayerName,
+          outputFormat: microzonationConfig.outputFormat
+        };
+        hasOverrides = true;
+      }
+
+      if (relatedMaps) {
+        parameterOverrides.relatedMaps = relatedMaps;
         hasOverrides = true;
       }
 

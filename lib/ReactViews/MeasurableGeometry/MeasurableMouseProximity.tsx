@@ -7,6 +7,7 @@ import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrain
 import { observer } from "mobx-react";
 import isDefined from "../../Core/isDefined";
 import Terria from "../../Models/Terria";
+import ViewerMode from "../../Models/ViewerMode";
 import ViewState from "../../ReactViewModels/ViewState";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import SceneTransforms from "terriajs-cesium/Source/Scene/SceneTransforms";
@@ -157,6 +158,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
       }
 
       const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
+      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
 
       const findNearestPointInRangeScreen = (
         points: Cartesian3[],
@@ -167,19 +169,24 @@ const MeasurableMouseProximity = observer((props: Props) => {
 
         let mouseScreenPoint: { x: number; y: number } | undefined;
         if (scene) {
-          const mouseCartesian = Cartesian3.fromRadians(
-            mouseCoords.longitude,
-            mouseCoords.latitude,
-            mouseCoords.height ?? 0,
-            ellipsoid
-          );
+          const mouseWindowPos =
+            terria.currentViewer.mouseCoords.screenPosition;
+          if (isDefined(mouseWindowPos)) {
+            mouseScreenPoint = mouseWindowPos;
+          } else {
+            const mouseHeight = isCesium2D ? 0 : mouseCoords.height ?? 0;
+            const mouseCartesian = Cartesian3.fromRadians(
+              mouseCoords.longitude,
+              mouseCoords.latitude,
+              mouseHeight,
+              ellipsoid
+            );
 
-          const mouseWindowPos = SceneTransforms.wgs84ToWindowCoordinates(
-            scene,
-            mouseCartesian
-          );
-          if (!isDefined(mouseWindowPos)) return null;
-          mouseScreenPoint = mouseWindowPos;
+            const projectedMouseWindowPos =
+              SceneTransforms.wgs84ToWindowCoordinates(scene, mouseCartesian);
+            if (!isDefined(projectedMouseWindowPos)) return null;
+            mouseScreenPoint = projectedMouseWindowPos;
+          }
         } else if (leafletMap) {
           mouseScreenPoint = leafletMap.latLngToContainerPoint([
             CesiumMath.toDegrees(mouseCoords.latitude),
@@ -199,9 +206,22 @@ const MeasurableMouseProximity = observer((props: Props) => {
 
           let pointScreenPoint: { x: number; y: number } | undefined;
           if (scene) {
+            const pointCartographic = isCesium2D
+              ? Cartographic.fromCartesian(pointCartesian, ellipsoid)
+              : undefined;
+            const pointCartesianForProjection =
+              isCesium2D && pointCartographic
+                ? Cartesian3.fromRadians(
+                    pointCartographic.longitude,
+                    pointCartographic.latitude,
+                    0,
+                    ellipsoid
+                  )
+                : pointCartesian;
+
             const windowPos = SceneTransforms.wgs84ToWindowCoordinates(
               scene,
-              pointCartesian
+              pointCartesianForProjection
             );
             if (!isDefined(windowPos)) continue;
             pointScreenPoint = windowPos;
@@ -296,6 +316,9 @@ const MeasurableMouseProximity = observer((props: Props) => {
           markerPoint,
           ellipsoid
         );
+        if (isCesium2D) {
+          markerCartographic.height = 0;
+        }
         MeasurablePanelManager.addMarker(markerCartographic);
       } else if (mouseDefinitelyOutside && !isPointerOverChart) {
         viewState.setSelectedStopPointIdx(null);
@@ -334,6 +357,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
     terria.currentViewer,
     terria.mapNavigationModel,
     terria.measurableGeomList,
+    terria.mainViewer.viewerMode,
     terria.measurableGeometryIndex,
     currentGeom,
     measurablePanelIsVisible,

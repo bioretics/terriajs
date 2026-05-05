@@ -45,6 +45,7 @@ import {
   MeasureCircleTool,
   MeasurePointTool
 } from "../ReactViews/Map/MapNavigation/Items";
+import ViewerMode from "./ViewerMode";
 
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
@@ -98,6 +99,7 @@ export default class UserDrawing extends MappableMixin(
   private mousePointEntity?: Entity;
   private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
+  private disposeViewerModeReaction?: IReactionDisposer;
 
   private isAngleMeasuring: boolean = false;
   private isPointMeasuring: boolean = false;
@@ -193,6 +195,30 @@ export default class UserDrawing extends MappableMixin(
       : [this.pointEntities, this.otherEntities];
   }
 
+  private get pointBillboardOptions() {
+    if (this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D) {
+      return {
+        image: this.svgPoint,
+        heightReference: HeightReference.NONE,
+        eyeOffset: Cartesian3.ZERO,
+        disableDepthTestDistance: Number.POSITIVE_INFINITY
+      };
+    }
+
+    return {
+      image: this.svgPoint,
+      heightReference: HeightReference.CLAMP_TO_GROUND,
+      eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
+      disableDepthTestDistance: Number.POSITIVE_INFINITY
+    };
+  }
+
+  private get labelHeightReference() {
+    return this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+      ? HeightReference.NONE
+      : HeightReference.CLAMP_TO_GROUND;
+  }
+
   get svgPoint() {
     /**
      * SVG element for point drawn when user clicks.
@@ -240,7 +266,7 @@ export default class UserDrawing extends MappableMixin(
         fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
         outlineWidth: 4,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
+        heightReference: this.labelHeightReference,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         pixelOffset: new Cartesian2(0, -16),
         verticalOrigin: VerticalOrigin.BOTTOM
@@ -576,7 +602,7 @@ export default class UserDrawing extends MappableMixin(
         fillColor: Color.fromCssColorString("#E8A200"),
         outlineColor: Color.BLACK,
         outlineWidth: 3,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
+        heightReference: this.labelHeightReference,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         pixelOffset: new Cartesian2(0, 0),
         verticalOrigin: VerticalOrigin.CENTER,
@@ -677,16 +703,29 @@ export default class UserDrawing extends MappableMixin(
           position: new ConstantPositionProperty(
             Cartographic.toCartesian(drawStopPoints[i])
           ),
-          billboard: {
-            image: this.svgPoint,
-            heightReference: HeightReference.CLAMP_TO_GROUND,
-            eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-          }
+          billboard: this.pointBillboardOptions as any
         });
         this.pointEntities.entities.add(pointEntity);
       }
     }
     this.updateSegmentLabels();
+    this.terria.currentViewer.notifyRepaintRequired();
+  }
+
+  private refreshPointBillboardsForViewerMode() {
+    for (const pointEntity of this.pointEntities.entities.values) {
+      if (!pointEntity.billboard) {
+        continue;
+      }
+      pointEntity.billboard = { ...this.pointBillboardOptions } as any;
+    }
+
+    this.updateSegmentLabels();
+    this.updateAreaLabel();
+    if (this.isAngleMeasuring) {
+      this.updateAngle();
+    }
+
     this.terria.currentViewer.notifyRepaintRequired();
   }
 
@@ -703,6 +742,7 @@ export default class UserDrawing extends MappableMixin(
         }
         this.updateAreaLabel();
       }
+      this.dragHelper?.resetDragCount();
       this.prepareToAddNewPoint();
     });
     this.dragHelper.setUp();
@@ -790,6 +830,13 @@ export default class UserDrawing extends MappableMixin(
             new ConstantProperty(clampMeasureLineToGround);
           this.terria.currentViewer.notifyRepaintRequired();
         }
+      }
+    );
+
+    this.disposeViewerModeReaction = reaction(
+      () => this.terria.mainViewer.viewerMode,
+      () => {
+        this.refreshPointBillboardsForViewerMode();
       }
     );
 
@@ -928,11 +975,7 @@ export default class UserDrawing extends MappableMixin(
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
-      billboard: {
-        image: this.svgPoint,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      } as any
+      billboard: this.pointBillboardOptions as any
     });
     // Remove the existing points if we are in drawRectangle mode and the user
     // has picked a 3rd point. This lets the user draw new rectangle that
@@ -959,11 +1002,7 @@ export default class UserDrawing extends MappableMixin(
     const pointEntity = new Entity({
       name: name,
       position: new ConstantPositionProperty(position),
-      billboard: {
-        image: this.svgPoint,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      } as any
+      billboard: this.pointBillboardOptions as any
     });
     this.pointEntities.entities.suspendEvents();
     const points: Entity[] = clone(this.pointEntities.entities.values, false);
@@ -1191,6 +1230,10 @@ export default class UserDrawing extends MappableMixin(
     const that = this;
 
     features.forEach((feature) => {
+      if (userClickedExistingPoint) {
+        return;
+      }
+
       let index = -1;
       for (let i = 0; i < this.pointEntities.entities.values.length; i++) {
         const pointFeature = this.pointEntities.entities.values[i];
@@ -1298,6 +1341,10 @@ export default class UserDrawing extends MappableMixin(
 
     if (isDefined(this.disposeClampMeasureLineToGround)) {
       this.disposeClampMeasureLineToGround();
+    }
+
+    if (isDefined(this.disposeViewerModeReaction)) {
+      this.disposeViewerModeReaction();
     }
 
     // Allow client to clean up too
