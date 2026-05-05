@@ -709,11 +709,24 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private refreshPointBillboardsForViewerMode() {
-    for (const pointEntity of this.pointEntities.entities.values) {
-      if (!pointEntity.billboard) {
-        continue;
+    for (const entity of this.pointEntities.entities.values) {
+      if (entity.billboard) {
+        entity.billboard = { ...this.pointBillboardOptions } as any;
       }
-      pointEntity.billboard = { ...this.pointBillboardOptions } as any;
+    }
+
+    for (const entity of this.otherEntities.entities.values) {
+      if (entity.label) {
+        entity.label.heightReference = new ConstantProperty(
+          this.labelHeightReference
+        );
+        entity.label = { ...entity.label } as any;
+      }
+    }
+
+    if (this.isCircleMeasuring) {
+      this.otherEntities.entities.removeAll();
+      this.createCircleEntities();
     }
 
     this.updateSegmentLabels();
