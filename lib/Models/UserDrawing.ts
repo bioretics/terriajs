@@ -241,6 +241,30 @@ export default class UserDrawing extends MappableMixin(
     return this.getRectangleForShape();
   }
 
+  private get cesiumGlobe(): any | undefined {
+    if (this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D) {
+      return undefined;
+    }
+    return (this.terria.currentViewer as any)?.scene?.globe ?? undefined;
+  }
+
+  private liftToTerrain(pos: Cartesian3): Cartesian3 {
+    const globe = this.cesiumGlobe;
+    if (!globe) {
+      return pos;
+    }
+
+    const carto = Cartographic.fromCartesian(pos);
+    const terrainHeight: number | undefined = globe.getHeight(carto);
+
+    if (terrainHeight !== undefined && carto.height < terrainHeight) {
+      return Cartographic.toCartesian(
+        new Cartographic(carto.longitude, carto.latitude, terrainHeight)
+      );
+    }
+    return pos;
+  }
+
   private createSegmentLabel(
     name: string,
     entityA: Entity,
@@ -387,18 +411,12 @@ export default class UserDrawing extends MappableMixin(
       polyline: {
         positions: new CallbackProperty((time: JulianDate) => {
           const [center, edge] = this.getCircleDisplayPoints(time);
-          if (!center || !edge) {
-            return [];
-          }
-          return [center, edge];
+          if (!center || !edge) return [];
+          return [this.liftToTerrain(center), this.liftToTerrain(edge)];
         }, false),
         clampToGround: false,
         width: 20,
         material: new PolylineGlowMaterialProperty({
-          color: new Color(0.0, 0.0, 0.0, 0.35),
-          glowPower: 0.15
-        }),
-        depthFailMaterial: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.35),
           glowPower: 0.15
         })
@@ -410,10 +428,10 @@ export default class UserDrawing extends MappableMixin(
       name: "Circle Radius Label",
       position: new CallbackProperty((time: JulianDate) => {
         const [center, edge] = this.getCircleDisplayPoints(time);
-        if (!center || !edge) {
-          return undefined;
-        }
-        return Cartesian3.midpoint(center, edge, new Cartesian3());
+        if (!center || !edge) return undefined;
+        const liftedCenter = this.liftToTerrain(center);
+        const liftedEdge = this.liftToTerrain(edge);
+        return Cartesian3.midpoint(liftedCenter, liftedEdge, new Cartesian3());
       }, false) as any,
       label: {
         text: new CallbackProperty((time: JulianDate) => {
