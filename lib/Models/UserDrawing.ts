@@ -341,7 +341,7 @@ export default class UserDrawing extends MappableMixin(
 
           return this.buildCirclePolylinePositions(center, radius);
         }, false),
-        clampToGround: true,
+        clampToGround: !!this.terria?.clampMeasureLineToGround,
         width: 20,
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.1),
@@ -373,7 +373,7 @@ export default class UserDrawing extends MappableMixin(
         fillColor: Color.fromCssColorString("#E8A200"),
         outlineColor: Color.BLACK,
         outlineWidth: 3,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
+        heightReference: this.labelHeightReference,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         pixelOffset: new Cartesian2(0, -16),
         verticalOrigin: VerticalOrigin.CENTER,
@@ -432,7 +432,7 @@ export default class UserDrawing extends MappableMixin(
         fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
         outlineWidth: 4,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
+        heightReference: this.labelHeightReference,
         disableDepthTestDistance: Number.POSITIVE_INFINITY,
         pixelOffset: new Cartesian2(0, -16),
         verticalOrigin: VerticalOrigin.BOTTOM
@@ -448,11 +448,7 @@ export default class UserDrawing extends MappableMixin(
         }
         return this.getCircleDisplayPoints(time)[1];
       }, false),
-      billboard: {
-        image: this.svgPoint,
-        heightReference: HeightReference.CLAMP_TO_GROUND,
-        eyeOffset: new Cartesian3(0.0, 0.0, -50.0)
-      }
+      billboard: { ...this.pointBillboardOptions }
     } as any);
   }
 
