@@ -78,7 +78,14 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
-    const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
+
+    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+
+    const pts = isCesium2D
+      ? geom.stopPoints
+      : terria.cesium
+      ? geom.sampledPoints
+      : geom.stopPoints;
 
     if (!pts || pts.length === 0) return;
 
