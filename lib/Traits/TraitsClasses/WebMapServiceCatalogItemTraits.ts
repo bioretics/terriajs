@@ -346,4 +346,11 @@ export default class WebMapServiceCatalogItemTraits extends mixTraits(
       "Additional parameters to pass WMS `GetFeatureInfo` requests. If `parameters` trait is also defined, this is applied on top. Dimension parameters are stored in `dimensions`."
   })
   getFeatureInfoParameters?: JsonObject;
+
+  @primitiveArrayTrait({
+    type: "string",
+    name: "Styles to use",
+    description: "If it is present, use only the styles defined in the list."
+  })
+  stylesToUse?: string[];
 }

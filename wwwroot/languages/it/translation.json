@@ -307,6 +307,7 @@
     },
     "viewerModeLabels": {
       "Leaflet": "2D",
+      "Cesium2D": "2D Cesium",
       "CesiumTerrain": "Terreno 3D",
       "CesiumEllipsoid": "3D Regolare"
     },
@@ -1714,7 +1715,6 @@
     "level1": "Livello 1",
     "level2": "Livello 2",
     "level3": "Livello 3",
-    "levelNo": "No",
     "cleDone": "Eseguita",
     "cleNo": "No",
     "civilProtectionPlan": "Piano di Protezione Civile",
@@ -1726,7 +1726,12 @@
     "docStart": "Inizio",
     "docEnd": "Fine",
     "docDownload": "Scarica allegato",
-    "municipalEmergencyPlans": "Piani Emergenza Comunali"
+    "municipalEmergencyPlans": "Piani Emergenza Comunali",
+    "typeDoc": "Tipo",
+    "docFormat": "Formato",
+    "description": "Descrizione",
+    "startDate": "Inizio",
+    "endDate": "Fine"
   },
   "dragDrop": {
     "not": "<0>bbbb</0>",
@@ -1999,5 +2004,11 @@
   },
   "includeStory": {
     "message": "Includi Storia in Condividi"
+  },
+  "relatedMaps": {
+    "buttonText": "Collegamenti",
+    "buttonTitle": "Vedi i collegamenti",
+    "panelHeading": "Collegamenti",
+    "panelText": "Cliccando su una delle immagini seguenti aprirà il link alla mappa (in un'altra finestra o tab)."
   }
 }

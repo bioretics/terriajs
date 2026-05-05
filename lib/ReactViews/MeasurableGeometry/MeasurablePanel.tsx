@@ -9,8 +9,6 @@ import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
-import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
@@ -30,10 +28,10 @@ import {
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
-import isDefined from "../../Core/isDefined";
 import Checkbox from "../../Styled/Checkbox";
 import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 import MeasurableTransform from "./MeasurableTransform";
+import MeasurableMouseProximity from "./MeasurableMouseProximity";
 import DataUri from "../../Core/DataUri";
 import {
   generatePathSummaryTxtData,
@@ -475,134 +473,6 @@ const MeasurablePanel = observer((props: Props) => {
   }, [terria.currentViewer, selectedStopPointIdx]);
 
   const currentGeom = terria.measurableGeomList[terria.measurableGeometryIndex];
-  useEffect(() => {
-    if (!measurablePanelIsVisible) return;
-    const handleMouseProximity = () => {
-      const mouseCoords = terria.currentViewer.mouseCoords.cartographic;
-      if (
-        !mouseCoords ||
-        !terria.measurableGeomList ||
-        !terria.measurableGeomList[terria.measurableGeometryIndex]
-      )
-        return;
-
-      const getDynamicRangeThreshold = (): number => {
-        const fallback = 0.000025;
-        if (!terria?.cesium) return fallback;
-
-        const { scene } = terria.cesium;
-        const canvas = scene.canvas;
-        const centerX = Math.floor(canvas.clientWidth / 2);
-        const bottomY = canvas.clientHeight - 1;
-
-        const leftRay = scene.camera.getPickRay(
-          new Cartesian2(centerX, bottomY)
-        );
-        const rightRay = scene.camera.getPickRay(
-          new Cartesian2(centerX + 1, bottomY)
-        );
-        if (!isDefined(leftRay) || !isDefined(rightRay)) return fallback;
-
-        const globe = scene.globe;
-        const leftPosition = globe.pick(leftRay, scene);
-        const rightPosition = globe.pick(rightRay, scene);
-        if (!isDefined(leftPosition) || !isDefined(rightPosition))
-          return fallback;
-
-        const distance = Cartesian3.distance(leftPosition, rightPosition);
-        const proximityPixels = 5;
-        const proximityMeters = distance * proximityPixels;
-        const earthRadius = 6372797;
-
-        const threshold = proximityMeters / earthRadius;
-        return Math.max(threshold, fallback);
-      };
-
-      const findNearbyPoint = (
-        points: Cartographic[],
-        action: (point: Cartographic | null, idx: number | null) => void
-      ) => {
-        const rangeThreshold = getDynamicRangeThreshold();
-
-        const nearbyPoint = points.find((point) => {
-          const latDiff = Math.abs(mouseCoords.latitude - point.latitude);
-          const lonDiff = Math.abs(mouseCoords.longitude - point.longitude);
-          return latDiff <= rangeThreshold && lonDiff <= rangeThreshold;
-        });
-
-        if (nearbyPoint) {
-          const idx = points.indexOf(nearbyPoint);
-          action(nearbyPoint, idx);
-        } else {
-          action(null, null);
-        }
-      };
-
-      if (
-        terria?.measurableGeomList[terria.measurableGeometryIndex]
-          ?.onlyPoints === false
-      ) {
-        if (
-          terria.measurableGeomList[terria.measurableGeometryIndex]
-            .sampledPoints
-        ) {
-          findNearbyPoint(
-            terria.measurableGeomList[terria.measurableGeometryIndex]
-              .sampledPoints ?? [],
-            (point, idx) => {
-              if (point) {
-                MeasurablePanelManager.addMarker(point);
-                viewState.setSelectedSampledPointIdx(idx);
-              } else {
-                MeasurablePanelManager.removeAllMarkers();
-                viewState.setSelectedSampledPointIdx(null);
-              }
-            }
-          );
-        }
-      }
-
-      if (
-        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints
-      ) {
-        findNearbyPoint(
-          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints,
-          (point, idx) => {
-            if (point) {
-              MeasurablePanelManager.addMarker(point);
-              setHighlightedRow(idx);
-              viewState.setSelectedStopPointIdx(idx);
-            } else {
-              if (
-                terria?.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.onlyPoints
-              )
-                MeasurablePanelManager.removeAllMarkers();
-              setHighlightedRow(null);
-              viewState.setSelectedStopPointIdx(null);
-            }
-          }
-        );
-      }
-
-      terria.currentViewer.notifyRepaintRequired();
-    };
-
-    const disposer =
-      terria.currentViewer.mouseCoords.updateEvent.addEventListener(
-        handleMouseProximity
-      );
-
-    return () => disposer();
-  }, [
-    viewState,
-    terria.cesium,
-    terria.currentViewer,
-    terria.measurableGeomList,
-    terria.measurableGeometryIndex,
-    currentGeom,
-    measurablePanelIsVisible
-  ]);
 
   // Render Methods
   const renderHeader = () => {
@@ -652,10 +522,6 @@ const MeasurablePanel = observer((props: Props) => {
           })}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
-          disabled={
-            terria.measurableGeomList[terria.measurableGeometryIndex]
-              ?.isPointAdding
-          }
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>
@@ -769,6 +635,7 @@ const MeasurablePanel = observer((props: Props) => {
     const is2dMode =
       terria.mainViewer.viewerMode === ViewerMode.Leaflet ||
       terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const showGroundDistance = !is2dMode;
     const currentGeom =
       terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!currentGeom) return null;
@@ -996,12 +863,16 @@ const MeasurablePanel = observer((props: Props) => {
               [
                 "measurableGeometry.geometrySummaryDistGeo",
                 "measurableGeometry.geometrySummaryDistAir",
-                "measurableGeometry.geometrySummaryDistGround"
+                ...(showGroundDistance
+                  ? ["measurableGeometry.geometrySummaryDistGround"]
+                  : [])
               ],
               [
                 prettifyNumber(currentGeom.geodeticDistance ?? 0),
                 prettifyNumber(currentGeom.airDistance ?? 0),
-                prettifyNumber(currentGeom.groundDistance ?? 0)
+                ...(showGroundDistance
+                  ? [prettifyNumber(currentGeom.groundDistance ?? 0)]
+                  : [])
               ]
             )}
         </small>
@@ -1309,6 +1180,7 @@ const MeasurablePanel = observer((props: Props) => {
     const is2dMode =
       terria.mainViewer.viewerMode === ViewerMode.Leaflet ||
       terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const showGroundDistance = !is2dMode;
     const stopPoints =
       terria?.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints ||
       [];
@@ -1437,11 +1309,13 @@ const MeasurablePanel = observer((props: Props) => {
                     <th>
                       {i18next.t("measurableGeometry.geometrySummaryDistAir")}
                     </th>
-                    <th>
-                      {i18next.t(
-                        "measurableGeometry.geometrySummaryDistGround"
-                      )}
-                    </th>
+                    {showGroundDistance && (
+                      <th>
+                        {i18next.t(
+                          "measurableGeometry.geometrySummaryDistGround"
+                        )}
+                      </th>
+                    )}
                     {!is2dMode && (
                       <th>
                         {i18next.t("measurableGeometry.geometrySummarySlope")}
@@ -1524,6 +1398,7 @@ const MeasurablePanel = observer((props: Props) => {
   }) => {
     const theme = useTheme();
     const isHighlighted = idx === highlightedRow;
+    const showGroundDistance = !is2dMode;
 
     const renderDistanceData = React.useCallback(
       (distanceArray: any[], index: number) =>
@@ -1556,21 +1431,14 @@ const MeasurablePanel = observer((props: Props) => {
     }, []);
 
     const handleMouseOver = React.useCallback(() => {
-      if (terria.cesium) {
-        setHighlightedRow(idx);
-        viewState.setSelectedStopPointIdx(idx);
-        MeasurablePanelManager.addMarker(
-          terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
-            idx
-          ]
-        );
-      }
-    }, [
-      idx,
-      terria.cesium,
-      terria.measurableGeomList,
-      terria.measurableGeometryIndex
-    ]);
+      setHighlightedRow(idx);
+      viewState.setSelectedStopPointIdx(idx);
+      MeasurablePanelManager.addMarker(
+        terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
+          idx
+        ]
+      );
+    }, [idx, terria.measurableGeomList, terria.measurableGeometryIndex]);
 
     const [localText, setLocalText] = React.useState(pointsDescription);
     useEffect(() => {
@@ -1620,13 +1488,15 @@ const MeasurablePanel = observer((props: Props) => {
                 idx
               )}
             </td>
-            <td>
-              {renderDistanceData(
-                terria.measurableGeomList[terria.measurableGeometryIndex]
-                  ?.stopGroundDistances,
-                idx
-              )}
-            </td>
+            {showGroundDistance && (
+              <td>
+                {renderDistanceData(
+                  terria.measurableGeomList[terria.measurableGeometryIndex]
+                    ?.stopGroundDistances,
+                  idx
+                )}
+              </td>
+            )}
             {!is2dMode && <td>{renderSlope(idx)}</td>}
           </>
         )}
@@ -1714,6 +1584,12 @@ const MeasurablePanel = observer((props: Props) => {
       style={{ pointerEvents: "auto", position: "relative" }}
       aria-hidden={!measurablePanelIsVisible}
     >
+      <MeasurableMouseProximity
+        terria={terria}
+        viewState={viewState}
+        measurablePanelIsVisible={measurablePanelIsVisible}
+        onHighlightedRowChange={setHighlightedRow}
+      />
       {renderTourPrompt()}
       {renderHeader()}
       {renderBody()}

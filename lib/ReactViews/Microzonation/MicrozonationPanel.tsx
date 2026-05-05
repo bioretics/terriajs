@@ -23,11 +23,14 @@ import {
   MicrozonationRecord,
   emptyFilters,
   fetchWfsFeatures,
+  fetchWfsDocuments,
   getDetailFromProperties,
   filterRecords,
   formatValue,
   uniqueSorted,
-  computeGeometryBBox
+  computeGeometryBBox,
+  MicrozonationDocument,
+  formatDate
 } from "./Microzonation";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
@@ -99,6 +102,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
   const [loadingList, setLoadingList] = useState(false);
   const [listError, setListError] = useState<string | undefined>(undefined);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [documents, setDocuments] = useState<MicrozonationDocument[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
 
   useEffect(() => {
     setHasLoaded(false);
@@ -110,7 +115,14 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setSelectedRecord(undefined);
     setDetail(undefined);
     setListError(undefined);
-  }, [wfsConfig?.url, wfsConfig?.typeName]);
+    setDocuments([]);
+    setLoadingDocs(false);
+  }, [
+    wfsConfig?.url,
+    wfsConfig?.projectsLayerName,
+    wfsConfig?.documentsLayerName,
+    wfsConfig?.outputFormat
+  ]);
 
   useEffect(() => {
     if (!props.isVisible || hasLoaded) {
@@ -156,15 +168,15 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     () => uniqueSorted(records.map((r) => r.province)),
     [records]
   );
-  const municipalityOptions = useMemo(
-    () => uniqueSorted(records.map((r) => r.municipality)),
-    [records]
-  );
+  const municipalityOptions = useMemo(() => {
+    const filtered = filters.province
+      ? records.filter((r) => r.province === filters.province)
+      : records;
+    return uniqueSorted(filtered.map((r) => r.municipality));
+  }, [records, filters.province]);
   const microzonationLabels: Record<string, string> = {
-    "1": t("microzonation.level1"),
     "2": t("microzonation.level2"),
-    "3": t("microzonation.level3"),
-    no: t("microzonation.levelNo")
+    "3": t("microzonation.level3")
   };
 
   const cleLabels: Record<string, string> = {
@@ -186,11 +198,31 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setHasSearched(false);
     setSelectedRecord(undefined);
     setDetail(undefined);
+    setDocuments([]);
+    setLoadingDocs(false);
   };
 
-  const loadDetail = (record: MicrozonationRecord) => {
+  const loadDetail = async (record: MicrozonationRecord) => {
     const resolved = getDetailFromProperties(propertiesById, record);
     setDetail(resolved);
+
+    if (record.id === null || record.id === undefined) {
+      setDocuments([]);
+      setLoadingDocs(false);
+      return;
+    }
+
+    setLoadingDocs(true);
+    setDocuments([]);
+
+    try {
+      const fetchedDocuments = await fetchWfsDocuments(wfsConfig, record.id);
+      setDocuments(fetchedDocuments);
+    } catch {
+      setDocuments([]);
+    } finally {
+      setLoadingDocs(false);
+    }
   };
 
   const zoomToRecord = (record: MicrozonationRecord) => {
@@ -272,6 +304,33 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     },
     [panelWidth]
   );
+
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortedDocuments = useMemo(() => {
+    if (!sortKey) return documents;
+    const sorted = [...documents].sort((a: any, b: any) => {
+      const aVal = a?.[sortKey];
+      const bVal = b?.[sortKey];
+      if (aVal === null) return 1;
+      if (bVal === null) return -1;
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return sorted;
+  }, [documents, sortKey, sortDir]);
+
+  const onSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDir((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
 
   return (
     <Panel
@@ -458,7 +517,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                         }
                         onClick={() => {
                           setSelectedRecord(record);
-                          loadDetail(record);
+                          void loadDetail(record);
                           zoomToRecord(record);
                         }}
                       >
@@ -608,6 +667,90 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+        {detail && (
+          <div className={Styles.sectionTitle}>
+            {t("microzonation.documents")}
+          </div>
+        )}
+
+        {detail && (
+          <div className={Styles.detailWrapper}>
+            {loadingDocs && (
+              <div className={Styles.notice}>
+                {t("microzonation.loadingDocuments")}
+              </div>
+            )}
+
+            {!loadingDocs && documents.length === 0 && (
+              <div className={Styles.emptyState}>
+                {t("microzonation.noDocuments")}
+              </div>
+            )}
+
+            {!loadingDocs && documents.length > 0 && (
+              <div className={Styles.tableWrapper}>
+                <table className={Styles.table}>
+                  <thead>
+                    <tr>
+                      <th
+                        onClick={() => onSort("typeDoc")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.typeDoc")}
+                      </th>
+                      <th
+                        onClick={() => onSort("desc")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.description")}
+                      </th>
+                      <th
+                        onClick={() => onSort("docFormat")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.docFormat")}
+                      </th>
+                      <th
+                        onClick={() => onSort("startDate")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.startDate")}
+                      </th>
+                      <th
+                        onClick={() => onSort("endDate")}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {t("microzonation.endDate")}
+                      </th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedDocuments.map((doc) => (
+                      <tr key={doc.id} className={Styles.rowClickable}>
+                        <td>{formatValue(doc.typeDoc)}</td>
+                        <td>{formatValue(doc.desc)}</td>
+                        <td>{formatValue(doc.docFormat)}</td>
+                        <td>{formatDate(doc.startDate)}</td>
+                        <td>{formatDate(doc.endDate)}</td>
+                        <td>
+                          <a
+                            href={doc.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                          >
+                            {t("microzonation.download")}
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
         <div className={Styles.emergencyPlansLink}>
