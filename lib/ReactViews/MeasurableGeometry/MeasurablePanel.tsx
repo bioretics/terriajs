@@ -58,6 +58,7 @@ const MeasurablePanel = observer((props: Props) => {
   );
   const [layerName, setLayerName] = React.useState("temp_layer");
   const [circleRadiusInput, setCircleRadiusInput] = React.useState("");
+  const [isRadiusInputEnabled, setIsRadiusInputEnabled] = React.useState(false);
   const [isValidSamplingPathStep, setIsValidSamplingPathStep] =
     React.useState(true);
   const [showTourPrompt, setShowTourPrompt] = React.useState(false);
@@ -773,26 +774,65 @@ const MeasurablePanel = observer((props: Props) => {
                       `}
                     >
                       <div style={{ marginBottom: "8px" }}>
-                        {`${i18next.t("measurableGeometry.circleRadius")} (m)`}
+                        <span>{`${i18next.t(
+                          "measurableGeometry.circleRadius"
+                        )} (m)`}</span>
                       </div>
-                      <Input
-                        title={i18next.t("measurableGeometry.circleRadius")}
-                        light={false}
-                        dark
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={circleRadiusInput}
-                        style={{ width: "100%" }}
-                        onChange={(e) => setCircleRadiusInput(e.target.value)}
-                        onBlur={applyCircleRadiusFromInput}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            applyCircleRadiusFromInput();
-                          }
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "stretch"
                         }}
-                      />
+                      >
+                        <Input
+                          title={i18next.t("measurableGeometry.circleRadius")}
+                          disabled={!isRadiusInputEnabled}
+                          light={false}
+                          dark
+                          type="number"
+                          min={0}
+                          step={0.1}
+                          value={circleRadiusInput}
+                          style={{
+                            flex: 1,
+                            opacity: isRadiusInputEnabled ? 1 : 0.6,
+                            cursor: isRadiusInputEnabled
+                              ? "text"
+                              : "not-allowed"
+                          }}
+                          onChange={(e) => setCircleRadiusInput(e.target.value)}
+                          onBlur={applyCircleRadiusFromInput}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              applyCircleRadiusFromInput();
+                              setIsRadiusInputEnabled(false);
+                            }
+                          }}
+                        />
+                        <Button
+                          css={`
+                            color: ${theme.textLight};
+                            background: ${theme.colorPrimary};
+                          `}
+                          onClick={() =>
+                            setIsRadiusInputEnabled(!isRadiusInputEnabled)
+                          }
+                          title={i18next.t("general.edit", "Edit")}
+                        >
+                          <StyledIcon
+                            light
+                            realDark={false}
+                            glyph={
+                              !isRadiusInputEnabled
+                                ? Icon.GLYPHS.editStory
+                                : Icon.GLYPHS.lock
+                            }
+                            styledWidth="16px"
+                          />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 )}
