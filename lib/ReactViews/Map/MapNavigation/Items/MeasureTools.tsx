@@ -494,6 +494,18 @@ export class MeasurePolygonTool extends MapNavigationItemController {
    */
   activate() {
     this.onOpen();
+    if (!this._disposeIndexReaction) {
+      this._disposeIndexReaction = reaction(
+        () => this.terria.measurableGeometryIndex,
+        () => {
+          if (this.active) {
+            this.userDrawing.cleanUp(true);
+            this.userDrawing.enterDrawMode();
+          }
+        }
+      );
+    }
+
     this.userDrawing.cleanUp(true);
     this.userDrawing.enterDrawMode();
     super.activate();
