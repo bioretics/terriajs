@@ -707,32 +707,19 @@ export default class UserDrawing extends MappableMixin(
   }
 
   private refreshPoints() {
+    this.pointEntities.entities.removeAll();
     const idx = this.terria.measurableGeometryIndex;
     const stopPoints = this.terria.measurableGeomList[idx]?.stopPoints;
-    const drawStopPoints = stopPoints
-      ? this.getStopPointsForDrawing(stopPoints)
-      : [];
-
-    const currentEntities = [...this.pointEntities.entities.values];
-
-    for (let i = drawStopPoints.length; i < currentEntities.length; i++) {
-      this.pointEntities.entities.remove(currentEntities[i]);
-    }
-
-    for (let i = 0; i < drawStopPoints.length; i++) {
-      if (i < currentEntities.length) {
-        currentEntities[i].position = new ConstantPositionProperty(
-          Cartographic.toCartesian(drawStopPoints[i])
-        );
-      } else {
-        this.pointEntities.entities.add(
-          new Entity({
-            position: new ConstantPositionProperty(
-              Cartographic.toCartesian(drawStopPoints[i])
-            ),
-            billboard: this.pointBillboardOptions as any
-          })
-        );
+    if (stopPoints) {
+      const drawStopPoints = this.getStopPointsForDrawing(stopPoints);
+      for (let i = 0; i < drawStopPoints.length; ++i) {
+        const pointEntity = new Entity({
+          position: new ConstantPositionProperty(
+            Cartographic.toCartesian(drawStopPoints[i])
+          ),
+          billboard: this.pointBillboardOptions as any
+        });
+        this.pointEntities.entities.add(pointEntity);
       }
     }
     this.updateSegmentLabels();
