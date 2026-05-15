@@ -879,17 +879,6 @@ export function getRectangleFromLayer(
     extent?.spatialReference?.latestWkid ?? extent?.spatialReference?.wkid;
 
   if (isDefined(extent) && isDefined(wkidCode)) {
-    // Validate that extent has valid numeric bounds
-    if (
-      !Number.isFinite(extent.xmin) ||
-      !Number.isFinite(extent.ymin) ||
-      !Number.isFinite(extent.xmax) ||
-      !Number.isFinite(extent.ymax)
-    ) {
-      console.warn("Invalid extent coordinates", extent);
-      return;
-    }
-
     if (wkidCode === 4326) {
       return updateBbox(extent, rectangle);
     }
