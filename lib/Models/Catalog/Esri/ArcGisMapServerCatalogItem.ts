@@ -1,6 +1,6 @@
 import i18next from "i18next";
 //import uniqWith from "lodash-es/uniqWith";
-import { computed, makeObservable, override, runInAction } from "mobx";
+import { computed, makeObservable, runInAction } from "mobx";
 import { IPromiseBasedObservable, fromPromise } from "mobx-utils";
 import moment from "moment";
 import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
@@ -57,8 +57,7 @@ import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import { JsonObject } from "../../../Core/Json";
 import { FeatureCollection, Geometry } from "@turf/helpers";
 import bbox from "@turf/bbox";
-
-const proj4 = require("proj4").default;
+import proj4 from "proj4";
 
 class MapServerStratum extends LoadableStratum(
   ArcGisMapServerCatalogItemTraits
@@ -408,14 +407,6 @@ export default class ArcGisMapServerCatalogItem extends SearchableCatalogItemMix
       this._currentImageryPromise,
       this._nextImageryPromise
     ]).then(() => {});
-  }
-
-  @override
-  get cacheDuration(): string {
-    if (isDefined(super.cacheDuration)) {
-      return super.cacheDuration;
-    }
-    return "1d";
   }
 
   @computed
@@ -879,35 +870,67 @@ export function getRectangleFromLayer(
   const wkidCode =
     extent?.spatialReference?.latestWkid ?? extent?.spatialReference?.wkid;
 
-  if (isDefined(extent) && isDefined(wkidCode)) {
-    if (wkidCode === 4326) {
-      return updateBbox(extent, rectangle);
-    }
+  if (!isDefined(extent) || !isDefined(wkidCode)) {
+    return;
+  }
 
-    const wkid = "EPSG:" + wkidCode;
+  // Validate that extent has valid numeric bounds
+  if (
+    !Number.isFinite(extent.xmin) ||
+    !Number.isFinite(extent.ymin) ||
+    !Number.isFinite(extent.xmax) ||
+    !Number.isFinite(extent.ymax)
+  ) {
+    console.warn("Invalid extent coordinates", extent);
+    return;
+  }
 
-    if (!isDefined(Proj4Definitions[wkid])) {
-      console.warn("No Proj4 definition for " + wkid);
+  if (wkidCode === 4326 || wkidCode === 4283) {
+    return updateBbox(extent, rectangle);
+  }
+
+  const wkid = "EPSG:" + wkidCode;
+
+  if (!isDefined(Proj4Definitions[wkid])) {
+    console.warn("No Proj4 definition for " + wkid);
+    return;
+  }
+
+  try {
+    const source = Proj4Definitions[wkid];
+    const dest = "EPSG:4326";
+
+    const p1 = proj4(source, dest, [extent.xmin, extent.ymin]);
+    const west = p1[0];
+    const south = p1[1];
+
+    const p2 = proj4(source, dest, [extent.xmax, extent.ymax]);
+    const east = p2[0];
+    const north = p2[1];
+
+    // Validate projected coordinates are finite
+    if (
+      !Number.isFinite(west) ||
+      !Number.isFinite(south) ||
+      !Number.isFinite(east) ||
+      !Number.isFinite(north)
+    ) {
+      console.warn("Projected coordinates are not finite", {
+        west,
+        south,
+        east,
+        north
+      });
       return;
     }
-
-    const source = new proj4.Proj(Proj4Definitions[wkid]);
-    const dest = new proj4.Proj("EPSG:4326");
-
-    let p = proj4(source, dest, [extent.xmin, extent.ymin]);
-
-    const west = p[0];
-    const south = p[1];
-
-    p = proj4(source, dest, [extent.xmax, extent.ymax]);
-
-    const east = p[0];
-    const north = p[1];
 
     return updateBbox(
       { xmin: west, ymin: south, xmax: east, ymax: north },
       rectangle
     );
+  } catch (error) {
+    console.warn("Error projecting extent for EPSG:" + wkidCode, error);
+    return;
   }
 }
 
