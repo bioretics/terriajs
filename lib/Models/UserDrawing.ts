@@ -14,6 +14,7 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -283,7 +284,19 @@ export default class UserDrawing extends MappableMixin(
           const posA = entityA.position?.getValue(time);
           const posB = entityB.position?.getValue(time);
           if (!posA || !posB) return "";
-          return (Cartesian3.distance(posA, posB) / 1000).toFixed(2) + " km";
+          const ellipsoid =
+            this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
+          const distanceMetres = new EllipsoidGeodesic(
+            Cartographic.fromCartesian(posA, ellipsoid),
+            Cartographic.fromCartesian(posB, ellipsoid),
+            ellipsoid
+          ).surfaceDistance;
+
+          if (distanceMetres >= 1000) {
+            return `${(distanceMetres / 1000).toFixed(2)} km`;
+          }
+
+          return `${distanceMetres.toFixed(2)} m`;
         }, false),
         font: "18px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
