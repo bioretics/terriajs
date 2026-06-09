@@ -220,6 +220,31 @@ const PlayPathPanel = observer((props: Props) => {
 
   const renderBody = () => {
     const canChangeOptions = !playingPath && countdown === null;
+
+    const rowStyle: React.CSSProperties = {
+      display: "flex",
+      alignItems: "center",
+      width: "100%",
+      minWidth: 0,
+      gap: 8
+    };
+
+    const selectStyle: React.CSSProperties = {
+      flex: "1 1 0%",
+      width: "100%",
+      minWidth: 0,
+      maxWidth: "100%",
+      padding: "4px 6px",
+      borderRadius: 4,
+      border: `1px solid ${theme.textLight}`,
+      background: theme.colorPrimary,
+      color: theme.textLight,
+      opacity: canChangeOptions ? 1 : 0.6,
+      cursor: canChangeOptions ? "pointer" : "not-allowed",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    };
+
     return (
       <div
         ref={cameraPositionRef}
@@ -290,16 +315,7 @@ const PlayPathPanel = observer((props: Props) => {
           </Button>
         </div>
 
-        <div
-          className="no-drag"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            minWidth: 0,
-            gap: 8
-          }}
-        >
+        <div className="no-drag" style={rowStyle}>
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
             {i18next.t("playPath.interpolation.name")}:
           </label>
@@ -307,21 +323,7 @@ const PlayPathPanel = observer((props: Props) => {
             value={interpolationMode}
             onChange={(e) => setInterpolationMode(e.target.value as any)}
             disabled={!canChangeOptions}
-            style={{
-              flex: "1 1 0%",
-              width: "100%",
-              minWidth: 0,
-              maxWidth: "100%",
-              padding: "4px 6px",
-              borderRadius: 4,
-              border: `1px solid ${theme.textLight}`,
-              background: theme.colorPrimary,
-              color: theme.textLight,
-              opacity: canChangeOptions ? 1 : 0.6,
-              cursor: canChangeOptions ? "pointer" : "not-allowed",
-              overflow: "hidden",
-              textOverflow: "ellipsis"
-            }}
+            style={selectStyle}
           >
             <option value="linear">
               {i18next.t(
@@ -344,16 +346,7 @@ const PlayPathPanel = observer((props: Props) => {
           </select>
         </div>
 
-        <div
-          className="no-drag"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            minWidth: 0,
-            gap: 8
-          }}
-        >
+        <div className="no-drag" style={rowStyle}>
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
             {i18next.t("playPath.trackingFrame.name")}:
           </label>
@@ -363,21 +356,7 @@ const PlayPathPanel = observer((props: Props) => {
               setTrackingReferenceFrame(Number(e.target.value) as any)
             }
             disabled={!canChangeOptions}
-            style={{
-              flex: "1 1 0%",
-              width: "100%",
-              minWidth: 0,
-              maxWidth: "100%",
-              padding: "4px 6px",
-              borderRadius: 4,
-              border: `1px solid ${theme.textLight}`,
-              background: theme.colorPrimary,
-              color: theme.textLight,
-              opacity: canChangeOptions ? 1 : 0.6,
-              cursor: canChangeOptions ? "pointer" : "not-allowed",
-              overflow: "hidden",
-              textOverflow: "ellipsis"
-            }}
+            style={selectStyle}
           >
             <option value={TrackingReferenceFrame.AUTODETECT}>
               {i18next.t("playPath.trackingFrame.autodetect", "Auto-detect")}
@@ -397,14 +376,7 @@ const PlayPathPanel = observer((props: Props) => {
         <div
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
           className="no-drag"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            maxWidth: "100%",
-            minWidth: 0,
-            gap: 8
-          }}
+          style={{ ...rowStyle, maxWidth: "100%" }}
         >
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
             {i18next.t("playPath.speed")}:
