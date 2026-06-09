@@ -84,6 +84,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     terria.currentViewer.notifyRepaintRequired();
   }, [terria]);
 
+  const clearAnimation = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  }, []);
+
   const resetPlayPath = useCallback(() => {
     if (viewState.isPlayingPath) {
       abortPlayingPathRef.current = false;
@@ -101,15 +108,12 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     lastReportedPointIndexRef.current = null;
     pausedElapsedSecondsRef.current = null;
 
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
+    clearAnimation();
     restoreCameraAfterTracking();
     entityViewRef.current = null;
     playEntityRef.current = null;
     lastCameraCoordsRef.current = null;
-  }, [viewState, restoreCameraAfterTracking]);
+  }, [viewState, restoreCameraAfterTracking, clearAnimation]);
 
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -163,15 +167,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   useEffect(() => {
     currentPointIndexRef.current = currentPointIndex;
-  }, [currentPointIndex]);
-
-  useEffect(() => {
     playSpeedRef.current = playSpeed;
-  }, [playSpeed]);
-
-  useEffect(() => {
     interpolationModeRef.current = interpolationMode;
-  }, [interpolationMode]);
+  }, [currentPointIndex, playSpeed, interpolationMode]);
 
   useEffect(() => {
     trackingReferenceFrameRef.current = trackingReferenceFrame;
@@ -317,6 +315,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       Math.min(n - 1, currentPointIndexRef.current)
     );
 
+    let viewFrom: Cartesian3 | undefined;
     if (trackingReferenceFrameRef.current === TrackingReferenceFrame.ENU) {
       const initialEntityPos = (positionProperty as any).getValue(
         sampleStart,
@@ -331,31 +330,19 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         );
         const fixedToEnu = Matrix4.inverse(enuToFixed, new Matrix4());
         const camPos = (camera as any).positionWC ?? camera.position;
-        const camPosEnu = Matrix4.multiplyByPoint(
+        viewFrom = Matrix4.multiplyByPoint(
           fixedToEnu,
           camPos,
           new Cartesian3()
         );
-        (entity as any).viewFrom = camPosEnu;
-      } else {
-        const dist = Cartesian3.distance(
-          camera.position,
-          cartesians[initialIdx]
-        );
-        (entity as any).viewFrom = new Cartesian3(
-          -dist,
-          0,
-          Math.max(10, dist * 0.2)
-        );
       }
-    } else {
-      const dist = Cartesian3.distance(camera.position, cartesians[initialIdx]);
-      (entity as any).viewFrom = new Cartesian3(
-        -dist,
-        0,
-        Math.max(10, dist * 0.2)
-      );
     }
+
+    if (!viewFrom) {
+      const dist = Cartesian3.distance(camera.position, cartesians[initialIdx]);
+      viewFrom = new Cartesian3(-dist, 0, Math.max(10, dist * 0.2));
+    }
+    (entity as any).viewFrom = viewFrom;
 
     playEntityRef.current = entity;
     const entityView = new EntityView(entity, scene, scene.globe.ellipsoid);
@@ -398,19 +385,17 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
       entityView.update(timeScratchRef.current);
 
-      if (!lastCameraCoordsRef.current) {
-        lastCameraCoordsRef.current = {
+      let coords = lastCameraCoordsRef.current;
+      if (!coords) {
+        coords = lastCameraCoordsRef.current = {
           position: new Cartesian3(),
           direction: new Cartesian3(),
           up: new Cartesian3()
         };
       }
-      Cartesian3.clone(camera.positionWC, lastCameraCoordsRef.current.position);
-      Cartesian3.clone(
-        camera.directionWC,
-        lastCameraCoordsRef.current.direction
-      );
-      Cartesian3.clone(camera.upWC, lastCameraCoordsRef.current.up);
+      Cartesian3.clone(camera.positionWC, coords.position);
+      Cartesian3.clone(camera.directionWC, coords.direction);
+      Cartesian3.clone(camera.upWC, coords.up);
 
       let lo = 0;
       let hi = n - 1;
@@ -452,12 +437,15 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       rafIdRef.current = requestAnimationFrame(tick);
     };
 
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
+    clearAnimation();
     rafIdRef.current = requestAnimationFrame(tick);
-  }, [getPoints, terria, viewState, restoreCameraAfterTracking]);
+  }, [
+    getPoints,
+    terria,
+    viewState,
+    restoreCameraAfterTracking,
+    clearAnimation
+  ]);
 
   const onPlay = () => {
     const pts = getPoints();
@@ -492,10 +480,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const onPause = () => {
     pausedElapsedSecondsRef.current = elapsedSecondsRef.current;
     abortPlayingPathRef.current = false;
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
+    clearAnimation();
     restoreCameraAfterTracking();
     runInAction(() => {
       viewState.isPlayingPath = false;
@@ -504,10 +489,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   const onStop = () => {
     abortPlayingPathRef.current = false;
-    if (rafIdRef.current !== null) {
-      cancelAnimationFrame(rafIdRef.current);
-      rafIdRef.current = null;
-    }
+    clearAnimation();
     restoreCameraAfterTracking();
     entityViewRef.current = null;
     playEntityRef.current = null;
