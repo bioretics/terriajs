@@ -44,6 +44,8 @@ const PlayPathPanel = observer((props: Props) => {
     setInterpolationMode,
     trackingReferenceFrame,
     setTrackingReferenceFrame,
+    startFromLastPoint,
+    setStartFromLastPoint,
     playingPath,
     isCameraMoving,
     countdown,
@@ -313,6 +315,63 @@ const PlayPathPanel = observer((props: Props) => {
           >
             <StyledIcon glyph={Icon.GLYPHS.revert} styledWidth="16px" />
           </Button>
+        </div>
+
+        <div className="no-drag" style={{ ...rowStyle, alignItems: "center" }}>
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t("playPath.startFrom.name", "Start from")}:
+          </label>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              flex: "1 1 0%",
+              minWidth: 0,
+              opacity: canChangeOptions ? 1 : 0.6,
+              cursor: canChangeOptions ? "pointer" : "not-allowed"
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: "0.9em",
+                cursor: canChangeOptions ? "pointer" : "not-allowed"
+              }}
+            >
+              <input
+                type="radio"
+                name="playPathStartFrom"
+                checked={!startFromLastPoint}
+                onChange={() => setStartFromLastPoint(false)}
+                disabled={!canChangeOptions}
+              />
+              {i18next.t("playPath.startFrom.first", "First point")}
+            </label>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: "0.9em",
+                cursor: canChangeOptions ? "pointer" : "not-allowed"
+              }}
+            >
+              <input
+                type="radio"
+                name="playPathStartFrom"
+                checked={startFromLastPoint}
+                onChange={() => setStartFromLastPoint(true)}
+                disabled={!canChangeOptions}
+              />
+              {i18next.t("playPath.startFrom.last", "Last point")}
+            </label>
+          </div>
         </div>
 
         <div className="no-drag" style={rowStyle}>
