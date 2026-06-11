@@ -309,11 +309,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     lastReportedPointIndexRef.current = null;
     pausedElapsedSecondsRef.current = null;
 
-    clearAnimation();
-    restoreCameraAfterTracking();
-    playEntityRef.current = null;
+    // Clear stale data BEFORE restoring camera
     lastCameraCoordsRef.current = null;
     getPositionAtElapsedRef.current = null;
+    playEntityRef.current = null;
+
+    clearAnimation();
+    restoreCameraAfterTracking();
     updatePositionMarker();
   }, [
     getPoints,
@@ -871,6 +873,31 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   useEffect(() => {
     if (viewState.isPlayingPath) playPath();
   }, [viewState.isPlayingPath, playPath]);
+
+  // Handle stopping the playpath when isPlayingPath becomes false
+  useEffect(() => {
+    if (!viewState.isPlayingPath) {
+      abortPlayingPathRef.current = false;
+      clearAnimation();
+      (terria.cesium?.scene.camera as any)?.cancelFlight?.();
+      restoreCameraAfterTracking();
+
+      // Remove the marker when playpath is stopped
+      const markerModel = markerModelRef.current;
+      if (markerModel) {
+        markerModel.markerDataSource.entities.removeAll();
+        terria.overlays.remove(markerModel);
+        markerModelRef.current = null;
+        markerEntityRef.current = null;
+        markerPositionRef.current = null;
+      }
+    }
+  }, [
+    viewState.isPlayingPath,
+    clearAnimation,
+    restoreCameraAfterTracking,
+    terria
+  ]);
 
   return {
     playSpeed,

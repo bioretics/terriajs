@@ -150,6 +150,16 @@ class ViewingControls extends React.Component<
       DataSourceAction.removeFromWorkbench,
       getPath(this.props.item)
     );
+
+    // Stop playpath and close playpath panel if they are active
+    runInAction(() => {
+      if (this.props.viewState.isPlayingPath) {
+        this.props.viewState.isPlayingPath = false;
+      }
+      if (this.props.viewState.playPathPanelIsVisible) {
+        this.props.viewState.playPathPanelIsVisible = false;
+      }
+    });
   }
 
   @action
