@@ -46,6 +46,8 @@ const PlayPathPanel = observer((props: Props) => {
     setTrackingReferenceFrame,
     startFromLastPoint,
     setStartFromLastPoint,
+    showPositionMarker,
+    setShowPositionMarker,
     playingPath,
     isCameraMoving,
     countdown,
@@ -403,6 +405,26 @@ const PlayPathPanel = observer((props: Props) => {
               )}
             </option>
           </select>
+        </div>
+
+        <div className="no-drag" style={rowStyle}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: "0.9em",
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={showPositionMarker}
+              onChange={(e) => setShowPositionMarker(e.target.checked)}
+            />
+            {i18next.t("playPath.positionMarker", "Position marker")}
+          </label>
         </div>
 
         <div className="no-drag" style={rowStyle}>

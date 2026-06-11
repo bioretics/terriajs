@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { computed, makeObservable } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import HeadingPitchRange from "terriajs-cesium/Source/Core/HeadingPitchRange";
@@ -14,19 +16,70 @@ import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import Transforms from "terriajs-cesium/Source/Core/Transforms";
 import SampledPositionProperty from "terriajs-cesium/Source/DataSources/SampledPositionProperty";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
+import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
+import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import VelocityOrientationProperty from "terriajs-cesium/Source/DataSources/VelocityOrientationProperty";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import EntityView from "terriajs-cesium/Source/DataSources/EntityView";
+import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { TrackingReferenceFrame } from "terriajs-cesium";
 import CameraView from "../../Models/CameraView";
+import CreateModel from "../../Models/Definition/CreateModel";
+import MappableMixin from "../../ModelMixins/MappableMixin";
+import MappableTraits from "../../Traits/TraitsClasses/MappableTraits";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import ViewerMode from "../../Models/ViewerMode";
-import { runInAction } from "mobx";
+import { reaction, runInAction } from "mobx";
 
 type InterpolationMode = "linear" | "lagrange" | "hermite";
 type TrackingReferenceFrameValue =
   typeof TrackingReferenceFrame[keyof typeof TrackingReferenceFrame];
+type PathPositionGetter = (elapsedSeconds: number) => Cartesian3;
+
+const playPathMarkerSvg =
+  "data:image/svg+xml," +
+  '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">' +
+  '<circle cx="10" cy="10" r="5" stroke="rgb(0,170,215)" stroke-width="4" fill="white" /> ' +
+  "</svg>";
+
+function getPlayPathMarkerBillboardOptions(terria: Terria) {
+  const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+
+  if (isCesium2D) {
+    return {
+      image: playPathMarkerSvg,
+      heightReference: HeightReference.NONE,
+      eyeOffset: Cartesian3.ZERO,
+      disableDepthTestDistance: Number.POSITIVE_INFINITY
+    };
+  }
+
+  return {
+    image: playPathMarkerSvg,
+    heightReference: HeightReference.CLAMP_TO_GROUND,
+    eyeOffset: new Cartesian3(0.0, 0.0, -50.0),
+    disableDepthTestDistance: Number.POSITIVE_INFINITY
+  };
+}
+
+class PlayPathMarkerModel extends MappableMixin(CreateModel(MappableTraits)) {
+  readonly markerDataSource: CustomDataSource;
+
+  constructor(uniqueId: string, terria: Terria) {
+    super(uniqueId, terria);
+    makeObservable(this);
+    this.markerDataSource = new CustomDataSource("PlayPathPositionMarker");
+  }
+
+  protected forceLoadMapItems(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  @computed get mapItems() {
+    return [this.markerDataSource];
+  }
+}
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const [playSpeed, setPlaySpeed] = useState(1);
@@ -39,6 +92,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const [trackingReferenceFrame, setTrackingReferenceFrame] =
     useState<TrackingReferenceFrameValue>(TrackingReferenceFrame.AUTODETECT);
   const [startFromLastPoint, setStartFromLastPoint] = useState(false);
+  const [showPositionMarker, setShowPositionMarker] = useState(true);
 
   const startIdxRef = useRef(0);
   const reverseRef = useRef(false);
@@ -64,6 +118,12 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     direction: Cartesian3;
     up: Cartesian3;
   } | null>(null);
+  const showPositionMarkerRef = useRef(showPositionMarker);
+  const getPositionAtElapsedRef = useRef<PathPositionGetter | null>(null);
+  const markerModelRef = useRef<PlayPathMarkerModel | null>(null);
+  const markerEntityRef = useRef<Entity | null>(null);
+  const markerPositionRef = useRef<ConstantPositionProperty | null>(null);
+  const markerPositionScratchRef = useRef(new Cartesian3());
 
   const setPlayingPathState = useCallback(
     (value: boolean) => {
@@ -123,6 +183,113 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     startFromLastPointRef.current = startFromLastPoint;
   }, [startFromLastPoint]);
 
+  useEffect(() => {
+    showPositionMarkerRef.current = showPositionMarker;
+  }, [showPositionMarker]);
+
+  const notifyMarkerRepaint = useCallback(() => {
+    terria.currentViewer.notifyRepaintRequired();
+    if (terria.leaflet) {
+      terria.leaflet.dataSourceDisplay.update(terria.timelineClock.currentTime);
+    }
+  }, [terria]);
+
+  const updatePositionMarker = useCallback(
+    (elapsedOverride?: number) => {
+      const markerModel = markerModelRef.current;
+      const entity = markerEntityRef.current;
+      if (!markerModel || !entity) return;
+
+      const visible = showPositionMarkerRef.current;
+      markerModel.markerDataSource.show = visible;
+
+      if (!visible) {
+        notifyMarkerRepaint();
+        return;
+      }
+
+      const pts = getPoints();
+      if (!pts?.length) return;
+
+      const getter = getPositionAtElapsedRef.current;
+      const pausedElapsed = pausedElapsedSecondsRef.current;
+      const isPlaying = viewState.isPlayingPath;
+      let position: Cartesian3;
+
+      if (
+        getter &&
+        (elapsedOverride !== undefined || isPlaying || pausedElapsed !== null)
+      ) {
+        const elapsed =
+          elapsedOverride ??
+          (isPlaying ? elapsedSecondsRef.current : pausedElapsed ?? 0);
+        position = getter(elapsed);
+      } else {
+        const idx = Math.max(
+          0,
+          Math.min(pts.length - 1, currentPointIndexRef.current)
+        );
+        position = Cartographic.toCartesian(pts[idx]);
+      }
+
+      markerPositionRef.current?.setValue(position);
+      notifyMarkerRepaint();
+    },
+    [getPoints, notifyMarkerRepaint, viewState.isPlayingPath]
+  );
+
+  const refreshMarkerBillboardForViewerMode = useCallback(() => {
+    const entity = markerEntityRef.current;
+    if (!entity?.billboard) return;
+
+    entity.billboard = {
+      ...getPlayPathMarkerBillboardOptions(terria)
+    } as any;
+    updatePositionMarker();
+  }, [terria, updatePositionMarker]);
+
+  useEffect(() => {
+    const markerModel = new PlayPathMarkerModel(createGuid(), terria);
+    markerModelRef.current = markerModel;
+    void terria.overlays.add(markerModel);
+    void markerModel.loadMapItems();
+
+    const markerPosition = new ConstantPositionProperty(new Cartesian3());
+    const markerEntity = new Entity({
+      position: markerPosition,
+      billboard: getPlayPathMarkerBillboardOptions(terria)
+    } as any);
+
+    markerModel.markerDataSource.show = showPositionMarkerRef.current;
+    markerModel.markerDataSource.entities.add(markerEntity);
+
+    markerEntityRef.current = markerEntity;
+    markerPositionRef.current = markerPosition;
+    updatePositionMarker();
+
+    return () => {
+      markerModel.markerDataSource.entities.removeAll();
+      terria.overlays.remove(markerModel);
+      markerModelRef.current = null;
+      markerEntityRef.current = null;
+      markerPositionRef.current = null;
+    };
+  }, [terria, updatePositionMarker]);
+
+  useEffect(() => {
+    const dispose = reaction(
+      () => terria.mainViewer.viewerMode,
+      () => {
+        refreshMarkerBillboardForViewerMode();
+      }
+    );
+    return () => dispose();
+  }, [terria, refreshMarkerBillboardForViewerMode]);
+
+  useEffect(() => {
+    updatePositionMarker();
+  }, [showPositionMarker, currentPointIndex, updatePositionMarker]);
+
   const resetPlayPath = useCallback(() => {
     const pts = getPoints();
     const targetIdx =
@@ -146,12 +313,15 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     restoreCameraAfterTracking();
     playEntityRef.current = null;
     lastCameraCoordsRef.current = null;
+    getPositionAtElapsedRef.current = null;
+    updatePositionMarker();
   }, [
     getPoints,
     viewState,
     setPlayingPathState,
     restoreCameraAfterTracking,
-    clearAnimation
+    clearAnimation,
+    updatePositionMarker
   ]);
 
   useEffect(() => {
@@ -270,6 +440,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         0,
         Math.min(pts.length - 1, currentPointIndexRef.current)
       );
+      updatePositionMarker();
 
       for (
         let i = start;
@@ -321,6 +492,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         currentPointIndexRef.current = displayIndex;
         lastReportedPointIndexRef.current = displayIndex;
         setCurrentPointIndex(displayIndex);
+        updatePositionMarker();
         viewer.notifyRepaintRequired();
 
         if (reachedEnd) {
@@ -441,6 +613,15 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       positionProperty = position;
     }
 
+    getPositionAtElapsedRef.current = (elapsedSeconds: number) => {
+      const clamped = Math.min(totalDuration, Math.max(0, elapsedSeconds));
+      JulianDate.addSeconds(sampleStart, clamped, timeScratchRef.current);
+      return (positionProperty as any).getValue(
+        timeScratchRef.current,
+        markerPositionScratchRef.current
+      ) as Cartesian3;
+    };
+
     const entity = new Entity({
       position: positionProperty,
       orientation: new VelocityOrientationProperty(positionProperty)
@@ -501,6 +682,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     lastFramePerfRef.current = performance.now();
     lastUiUpdatePerfRef.current = 0;
     pausedElapsedSecondsRef.current = null;
+    updatePositionMarker(elapsedSecondsRef.current);
 
     const tick = () => {
       if (!abortPlayingPathRef.current) {
@@ -524,6 +706,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       );
 
       entityView.update(timeScratchRef.current);
+
+      if (showPositionMarkerRef.current) {
+        updatePositionMarker(clampedElapsed);
+      }
 
       let coords = lastCameraCoordsRef.current;
       if (!coords) {
@@ -572,6 +758,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         }
 
         pausedElapsedSecondsRef.current = null;
+        updatePositionMarker(totalDuration);
         restoreCameraAfterTracking();
         setPlayingPathState(false);
         return;
@@ -587,7 +774,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     terria,
     restoreCameraAfterTracking,
     clearAnimation,
-    setPlayingPathState
+    setPlayingPathState,
+    updatePositionMarker
   ]);
 
   const onPlay = () => {
@@ -616,6 +804,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     (terria.cesium?.scene.camera as any)?.cancelFlight?.();
     restoreCameraAfterTracking();
     setPlayingPathState(false);
+    updatePositionMarker(pausedElapsedSecondsRef.current);
   };
 
   const onStop = () => {
@@ -626,6 +815,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     playEntityRef.current = null;
     lastReportedPointIndexRef.current = null;
     lastCameraCoordsRef.current = null;
+    getPositionAtElapsedRef.current = null;
     pausedElapsedSecondsRef.current = null;
     setPlayingPathState(false);
 
@@ -674,6 +864,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     );
     setCurrentPointIndex(targetIdx);
     currentPointIndexRef.current = targetIdx;
+    updatePositionMarker();
     terria.currentViewer.notifyRepaintRequired();
   };
 
@@ -690,6 +881,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     setTrackingReferenceFrame,
     startFromLastPoint,
     setStartFromLastPoint,
+    showPositionMarker,
+    setShowPositionMarker,
     playingPath: viewState.isPlayingPath,
     isCameraMoving,
     countdown,

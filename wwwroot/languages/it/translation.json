@@ -186,6 +186,7 @@
       "lagrange": "Polinomio di Lagrange",
       "hermite": "Polinomio di Hermite"
     },
+    "positionMarker": "Indicatore posizione",
     "trackingFrame": {
       "": "Sistema di tracking",
       "autodetect": "Auto",
@@ -1738,6 +1739,7 @@
     "level1": "Livello 1",
     "level2": "Livello 2",
     "level3": "Livello 3",
+    "levelNo": "No",
     "cleDone": "Eseguita",
     "cleNo": "No",
     "civilProtectionPlan": "Piano di Protezione Civile",
@@ -1749,12 +1751,7 @@
     "docStart": "Inizio",
     "docEnd": "Fine",
     "docDownload": "Scarica allegato",
-    "municipalEmergencyPlans": "Piani Emergenza Comunali",
-    "typeDoc": "Tipo",
-    "docFormat": "Formato",
-    "description": "Descrizione",
-    "startDate": "Inizio",
-    "endDate": "Fine"
+    "municipalEmergencyPlans": "Piani Emergenza Comunali"
   },
   "dragDrop": {
     "not": "<0>bbbb</0>",

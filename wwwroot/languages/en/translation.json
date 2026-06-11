@@ -123,11 +123,6 @@
     "showDistanceCheckbox": "Show distances labels",
     "showDistanceCheckboxTitle": "Toggle distance labels",
     "tempLayerName": "Insert the temporary layer name",
-    "circleRadius": "Radius",
-    "circleDiameter": "Diameter",
-    "circlePerimeter": "Circumference",
-    "circleAreaM2": "Area (m\u00B2)",
-    "circleAreaHa": "Area (ha)",
     "downloadSummaryInfo": "Download info",
     "downloadSummaryInfoTitle": "Download summary info",
     "downloadLayer": "Download layer",
@@ -183,6 +178,7 @@
       "lagrange": "Lagrange polynomial",
       "hermite": "Hermite polynomial"
     },
+    "positionMarker": "Position marker",
     "trackingFrame": {
       "name": "Tracking frame",
       "autodetect": "Auto-detect",
@@ -664,6 +660,7 @@
     "level1": "Level 1",
     "level2": "Level 2",
     "level3": "Level 3",
+    "levelNo": "No",
     "cleDone": "Done",
     "cleNo": "No",
     "civilProtectionPlan": "Civil Protection Plan",
@@ -675,12 +672,7 @@
     "docStart": "Start",
     "docEnd": "End",
     "docDownload": "Download attachment",
-    "municipalEmergencyPlans": "Municipal Emergency Plans",
-    "typeDoc": "Type",
-    "docFormat": "Format",
-    "description": "Description",
-    "startDate": "Start",
-    "endDate": "End"
+    "municipalEmergencyPlans": "Municipal Emergency Plans"
   },
   "satelliteGuidance": {
     "menuTitle": "You can access map guides at any time by looking in the <2>help menu</2>.",
