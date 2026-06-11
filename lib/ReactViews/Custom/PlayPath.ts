@@ -21,6 +21,7 @@ import { TrackingReferenceFrame } from "terriajs-cesium";
 import CameraView from "../../Models/CameraView";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
+import ViewerMode from "../../Models/ViewerMode";
 import { runInAction } from "mobx";
 
 type InterpolationMode = "linear" | "lagrange" | "hermite";
@@ -75,7 +76,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   const restoreCameraAfterTracking = useCallback(() => {
     const camera = terria.cesium?.scene.camera;
-    if (!camera) return;
+    if (!camera || terria.currentViewer.type === "Leaflet") {
+      return;
+    }
 
     const saved = lastCameraCoordsRef.current;
     camera.lookAtTransform(Matrix4.IDENTITY);
@@ -104,7 +107,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
-    const pts = terria.cesium ? geom.sampledPoints : geom.stopPoints;
+    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const isLeaflet = terria.mainViewer.viewerMode === ViewerMode.Leaflet;
+
+    const pts =
+      isCesium2D || isLeaflet || !terria.cesium
+        ? geom.stopPoints
+        : geom.sampledPoints;
     if (!pts || pts.length === 0) return;
 
     return pts;
@@ -201,8 +210,138 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     const pts = getPoints();
     const cesiumModel = terria.cesium;
-    if (!pts?.length || !cesiumModel) {
+    const viewer = terria.currentViewer;
+
+    if (!pts?.length) {
       setPlayingPathState(false);
+      return;
+    }
+
+    const runCameraStepPath = async () => {
+      playEntityRef.current = null;
+      lastCameraCoordsRef.current = null;
+      pausedElapsedSecondsRef.current = null;
+      elapsedSecondsRef.current = 0;
+
+      const isLeafletViewer = viewer.type === "Leaflet";
+      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+      const camera = isLeafletViewer ? undefined : cesiumModel?.scene.camera;
+      const cartesians = pts.map((p) => Cartographic.toCartesian(p));
+      const initialIdx = Math.max(
+        0,
+        Math.min(pts.length - 1, currentPointIndexRef.current)
+      );
+      const pitch = camera?.pitch ?? 0;
+
+      let dist = 1000;
+      if (camera) {
+        if (isCesium2D) {
+          dist = camera.positionCartographic.height || 1000;
+        } else {
+          const cameraTrueCartesian = Cartographic.toCartesian(
+            camera.positionCartographic
+          );
+          dist = Cartesian3.distance(
+            cameraTrueCartesian,
+            cartesians[initialIdx]
+          );
+        }
+      }
+
+      const waitForLeafletFlight = (durationSeconds: number) =>
+        new Promise<"loaded">((resolve) => {
+          window.setTimeout(() => resolve("loaded"), durationSeconds * 1000);
+        });
+
+      const waitForAbort = () =>
+        new Promise<"abort">((resolve) => {
+          const check = () => {
+            if (!abortPlayingPathRef.current) {
+              resolve("abort");
+            } else {
+              window.setTimeout(check, 50);
+            }
+          };
+          check();
+        });
+
+      const step = reverseRef.current ? -1 : 1;
+      const start = Math.max(
+        0,
+        Math.min(pts.length - 1, currentPointIndexRef.current)
+      );
+
+      for (
+        let i = start;
+        abortPlayingPathRef.current && i >= 0 && i < pts.length;
+        i += step
+      ) {
+        const duration = 2 / Math.max(0.01, playSpeedRef.current);
+        let hpr: HeadingPitchRange | undefined;
+        const isForwardStep = step > 0;
+        const hasNextPoint = isForwardStep ? i < pts.length - 1 : i > 0;
+        const isTerminalStep = isForwardStep ? i === pts.length - 1 : i === 0;
+
+        if (camera && hasNextPoint) {
+          const next = isForwardStep ? pts[i + 1] : pts[i - 1];
+          const heading =
+            (new EllipsoidGeodesic(pts[i], next).startHeading +
+              CesiumMath.TWO_PI) %
+            CesiumMath.TWO_PI;
+          hpr = new HeadingPitchRange(heading, -pitch, dist);
+        } else if (camera && isCesium2D && isTerminalStep && pts.length > 1) {
+          const previous = isForwardStep ? pts[i - 1] : pts[i + 1];
+          const heading =
+            (new EllipsoidGeodesic(previous, pts[i]).startHeading +
+              CesiumMath.TWO_PI) %
+            CesiumMath.TWO_PI;
+          hpr = new HeadingPitchRange(heading, -pitch, dist);
+        }
+
+        const target = hpr
+          ? CameraView.fromLookAt(pts[i], hpr)
+          : Rectangle.fromCartographicArray([pts[i]]);
+
+        const zoom = viewer.doZoomTo(target, duration).then(() => "loaded");
+        const result = await Promise.race([
+          isLeafletViewer
+            ? zoom.then(() => waitForLeafletFlight(duration))
+            : zoom,
+          waitForAbort()
+        ]);
+
+        if (result === "abort") {
+          return;
+        }
+
+        const nextIndex = i + step;
+        const reachedEnd = nextIndex < 0 || nextIndex >= pts.length;
+        const displayIndex = reachedEnd ? i : nextIndex;
+
+        currentPointIndexRef.current = displayIndex;
+        lastReportedPointIndexRef.current = displayIndex;
+        setCurrentPointIndex(displayIndex);
+        viewer.notifyRepaintRequired();
+
+        if (reachedEnd) {
+          break;
+        }
+      }
+
+      if (abortPlayingPathRef.current) {
+        abortPlayingPathRef.current = false;
+        pausedElapsedSecondsRef.current = null;
+        setPlayingPathState(false);
+      }
+    };
+
+    if (
+      !cesiumModel ||
+      viewer.type === "Leaflet" ||
+      terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+    ) {
+      clearAnimation();
+      void runCameraStepPath();
       return;
     }
 
@@ -338,8 +477,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     }
 
     if (!viewFrom) {
-      const dist = Cartesian3.distance(camera.position, cartesians[initialIdx]);
-      viewFrom = new Cartesian3(-dist, 0, Math.max(10, dist * 0.2));
+      const cameraPosition = (camera as any).positionWC ?? camera.position;
+      const dist = Cartesian3.distance(cameraPosition, cartesians[initialIdx]);
+      const safeDist = Number.isFinite(dist) && dist > 0 ? dist : 1000;
+      viewFrom = new Cartesian3(-safeDist, 0, Math.max(10, safeDist * 0.2));
     }
     (entity as any).viewFrom = viewFrom;
 
@@ -451,8 +592,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   const onPlay = () => {
     const pts = getPoints();
-    const camera = terria.cesium?.scene.camera;
-    if (!pts?.length || !camera) return;
+    if (!pts?.length) return;
 
     if (!viewState.isPlayingPath && pausedElapsedSecondsRef.current !== null) {
       setPlayingPathState(true);
@@ -465,6 +605,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     currentPointIndexRef.current = startIdx;
     setCurrentPointIndex(startIdx);
     pausedElapsedSecondsRef.current = null;
+    lastReportedPointIndexRef.current = null;
     setCountdown(3);
   };
 
@@ -472,6 +613,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     pausedElapsedSecondsRef.current = elapsedSecondsRef.current;
     abortPlayingPathRef.current = false;
     clearAnimation();
+    (terria.cesium?.scene.camera as any)?.cancelFlight?.();
     restoreCameraAfterTracking();
     setPlayingPathState(false);
   };
@@ -479,6 +621,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const onStop = () => {
     abortPlayingPathRef.current = false;
     clearAnimation();
+    (terria.cesium?.scene.camera as any)?.cancelFlight?.();
     restoreCameraAfterTracking();
     playEntityRef.current = null;
     lastReportedPointIndexRef.current = null;
@@ -487,23 +630,34 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     setPlayingPathState(false);
 
     const pts = getPoints();
-    const camera = terria.cesium?.scene.camera;
-    if (!pts?.length || !camera) return;
+    const camera =
+      terria.currentViewer.type === "Leaflet"
+        ? undefined
+        : terria.cesium?.scene.camera;
+    if (!pts?.length) return;
 
-    const targetIdx = startFromLastPointRef.current ? pts.length - 1 : 0;
-    startIdxRef.current = targetIdx;
-    reverseRef.current = startFromLastPointRef.current;
-
-    const point = pts[targetIdx];
-    const dist = Cartesian3.distance(
-      camera.position,
-      Cartographic.toCartesian(point)
+    const targetIdx = Math.max(
+      0,
+      Math.min(pts.length - 1, startIdxRef.current)
     );
-    const pitch = camera.pitch ?? 0;
+    startIdxRef.current = targetIdx;
+    reverseRef.current = startIdxRef.current === pts.length - 1;
+    const point = pts[targetIdx];
     let hpr: HeadingPitchRange | undefined;
 
-    if (pts.length > 1) {
-      const neighborIdx = reverseRef.current ? targetIdx - 1 : targetIdx + 1;
+    const neighborIdx = reverseRef.current ? targetIdx - 1 : targetIdx + 1;
+    if (camera && neighborIdx >= 0 && neighborIdx < pts.length) {
+      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+      const cameraTrueCartesian = Cartographic.toCartesian(
+        camera.positionCartographic
+      );
+      const dist = isCesium2D
+        ? camera.positionCartographic.height || 1000
+        : Cartesian3.distance(
+            cameraTrueCartesian,
+            Cartographic.toCartesian(point)
+          );
+      const pitch = camera.pitch ?? 0;
       const heading =
         (new EllipsoidGeodesic(point, pts[neighborIdx]).startHeading +
           CesiumMath.TWO_PI) %
@@ -511,7 +665,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       hpr = new HeadingPitchRange(heading, -pitch, dist);
     }
 
-    const duration = 3 / playSpeedRef.current;
+    const duration = 3 / Math.max(0.01, playSpeedRef.current);
     terria.currentViewer.doZoomTo(
       hpr
         ? CameraView.fromLookAt(point, hpr)

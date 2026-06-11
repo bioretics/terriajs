@@ -57,7 +57,6 @@ import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import { JsonObject } from "../../../Core/Json";
 import { FeatureCollection, Geometry } from "@turf/helpers";
 import bbox from "@turf/bbox";
-
 const proj4 = require("proj4").default;
 
 class MapServerStratum extends LoadableStratum(
@@ -891,23 +890,26 @@ export function getRectangleFromLayer(
       return;
     }
 
-    const source = new proj4.Proj(Proj4Definitions[wkid]);
-    const dest = new proj4.Proj("EPSG:4326");
+    try {
+      const source = Proj4Definitions[wkid];
+      const dest = "EPSG:4326";
 
-    let p = proj4(source, dest, [extent.xmin, extent.ymin]);
+      const p1 = proj4(source, dest, [extent.xmin, extent.ymin]);
+      const west = p1[0];
+      const south = p1[1];
 
-    const west = p[0];
-    const south = p[1];
+      const p2 = proj4(source, dest, [extent.xmax, extent.ymax]);
+      const east = p2[0];
+      const north = p2[1];
 
-    p = proj4(source, dest, [extent.xmax, extent.ymax]);
-
-    const east = p[0];
-    const north = p[1];
-
-    return updateBbox(
-      { xmin: west, ymin: south, xmax: east, ymax: north },
-      rectangle
-    );
+      return updateBbox(
+        { xmin: west, ymin: south, xmax: east, ymax: north },
+        rectangle
+      );
+    } catch (error) {
+      console.warn("Error projecting extent for EPSG:" + wkidCode, error);
+      return;
+    }
   }
 }
 

@@ -1,7 +1,14 @@
 import classNames from "classnames";
 import { TFunction } from "i18next";
 import { merge } from "lodash-es";
-import { action, computed, observable, reaction, runInAction } from "mobx";
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  reaction,
+  runInAction
+} from "mobx";
 import { observer } from "mobx-react";
 import { IDisposer } from "mobx-utils";
 import Mustache from "mustache";
@@ -58,6 +65,11 @@ interface FeatureInfoProps extends WithViewState {
 export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   private templateReactionDisposer: IDisposer | undefined;
   private removeFeatureChangedSubscription: (() => void) | undefined;
+
+  constructor(props: FeatureInfoProps) {
+    super(props);
+    makeObservable(this);
+  }
 
   @observable private fields?: string[];
 

@@ -4,6 +4,7 @@ import { TerriaErrorSeverity } from "../Core/TerriaError";
 import { ProviderCoordsMap } from "../Map/PickedFeatures/PickedFeatures";
 import { BaseMapsJson } from "./BaseMaps/BaseMapsModel";
 import IElementConfig from "./IElementConfig";
+import { RelatedMap } from "./RelatedMaps";
 
 export interface InitSourcePickedFeatures {
   providerCoords?: ProviderCoordsMap;
@@ -46,6 +47,13 @@ export interface ShareInitSourceData {
   initSources: (InitSourceData | string)[];
 }
 
+export interface MicrozonationConfig {
+  url: string;
+  projectsLayerName: string;
+  documentsLayerName?: string;
+  outputFormat?: string;
+}
+
 export interface InitSourceData {
   stratum?: string;
   corsDomains?: string[];
@@ -53,6 +61,8 @@ export interface InitSourceData {
     brandBarElements?: string[];
     brandBarSmallElements?: string[];
     displayOneBrand?: number;
+    microzonationConfig?: MicrozonationConfig;
+    relatedMaps?: RelatedMap[];
     theme?: {
       colorPrimary?: string;
       colorSecondary?: string;
