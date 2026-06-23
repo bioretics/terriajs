@@ -283,7 +283,15 @@ export default class UserDrawing extends MappableMixin(
           const posA = entityA.position?.getValue(time);
           const posB = entityB.position?.getValue(time);
           if (!posA || !posB) return "";
-          return (Cartesian3.distance(posA, posB) / 1000).toFixed(2) + " km";
+          const distanceMetres = this.terria.measurableGeometryManager[
+            this.terria.measurableGeometryIndex
+          ].getGeodesicDistance(posA, posB);
+
+          if (distanceMetres >= 1000) {
+            return `${(distanceMetres / 1000).toFixed(2)} km`;
+          }
+
+          return `${distanceMetres.toFixed(2)} m`;
         }, false),
         font: "18px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
