@@ -373,7 +373,7 @@ export default class UserDrawing extends MappableMixin(
 
           return this.buildCirclePolylinePositions(center, radius);
         }, false),
-        clampToGround: !!this.terria?.clampMeasureLineToGround,
+        clampToGround: true,
         width: 20,
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 0.0, 0.0, 0.1),
