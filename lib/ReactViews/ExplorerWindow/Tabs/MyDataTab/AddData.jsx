@@ -223,18 +223,19 @@ class AddData extends React.Component {
       icon: <Icon glyph={Icon.GLYPHS.opened} />
     };
 
-    const dataTypes = this.state.localDataTypes.reduce(
-      function (result, currentDataType) {
-        if (currentDataType.extensions) {
-          return result.concat(
-            currentDataType.extensions.map((extension) => "." + extension)
-          );
-        } else {
-          return result;
-        }
-      },
-      []
-    );
+    const dataTypes = this.state.localDataTypes.reduce(function (
+      result,
+      currentDataType
+    ) {
+      if (currentDataType.extensions) {
+        return result.concat(
+          currentDataType.extensions.map((extension) => "." + extension)
+        );
+      } else {
+        return result;
+      }
+    },
+    []);
 
     const remoteDataType =
       this.props.viewState.remoteDataType ?? this.state.remoteDataTypes[0];
