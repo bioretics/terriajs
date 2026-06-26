@@ -85,8 +85,27 @@ class AddData extends React.Component {
     this.setState({
       isLoading: true
     });
+
+    const existingNames = new Set(
+      this.props.terria.workbench.items.map((item) => item.name).filter(Boolean)
+    );
+
+    const files = Array.from(e.target.files).map((file) => {
+      const uniqueName = makeUniqueFilename(file.name, existingNames);
+      existingNames.add(uniqueName);
+
+      if (uniqueName === file.name) {
+        return file;
+      }
+
+      return new File([file], uniqueName, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+    });
+
     addUserFiles(
-      e.target.files,
+      files,
       this.props.terria,
       this.props.viewState,
       this.state.localDataType
@@ -204,19 +223,18 @@ class AddData extends React.Component {
       icon: <Icon glyph={Icon.GLYPHS.opened} />
     };
 
-    const dataTypes = this.state.localDataTypes.reduce(function (
-      result,
-      currentDataType
-    ) {
-      if (currentDataType.extensions) {
-        return result.concat(
-          currentDataType.extensions.map((extension) => "." + extension)
-        );
-      } else {
-        return result;
-      }
-    },
-    []);
+    const dataTypes = this.state.localDataTypes.reduce(
+      function (result, currentDataType) {
+        if (currentDataType.extensions) {
+          return result.concat(
+            currentDataType.extensions.map((extension) => "." + extension)
+          );
+        } else {
+          return result;
+        }
+      },
+      []
+    );
 
     const remoteDataType =
       this.props.viewState.remoteDataType ?? this.state.remoteDataTypes[0];
@@ -326,6 +344,34 @@ class AddData extends React.Component {
   render() {
     return <div className={Styles.inner}>{this.renderPanels()}</div>;
   }
+}
+
+/**
+ * Returns a filename that does not collide with the provided set.
+ *
+ * Examples:
+ * - map.geojson -> map_2.geojson
+ * - map_2.geojson -> map_3.geojson
+ * - map -> map_2
+ */
+function makeUniqueFilename(filename, existingNames) {
+  if (!existingNames.has(filename)) {
+    return filename;
+  }
+
+  const dotIndex = filename.lastIndexOf(".");
+  const baseName = dotIndex === -1 ? filename : filename.slice(0, dotIndex);
+  const extension = dotIndex === -1 ? "" : filename.slice(dotIndex);
+
+  let suffix = 2;
+  let candidate = `${baseName}_${suffix}${extension}`;
+
+  while (existingNames.has(candidate)) {
+    suffix += 1;
+    candidate = `${baseName}_${suffix}${extension}`;
+  }
+
+  return candidate;
 }
 
 /**
