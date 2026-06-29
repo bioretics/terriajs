@@ -149,6 +149,15 @@
       "clampButton": "## Clamp to ground\n\nToggle between clamped-to-terrain distances and free (air) distances.",
       "transformButton": "## Transform\n\nTurns your measurement into a temporary layer you can style, export, or present it in flight mode.",
       "multiPathControls": "## Multi-path management\n\nSwitch between paths, add new paths, or remove the current one to build multi-segment measurements."
+    },
+    "areaInfo": {
+      "title": "About this measurement",
+      "circleTitle": "Circle area",
+      "polygonGeoTitle": "Geodesic area",
+      "polygonAirTitle": "3D surface area",
+      "circleDesc": "The area is derived from the geodesic radius between the centre and the edge point, projected onto the ellipsoid surface. Terrain elevation is not taken into account.",
+      "polygonGeoDesc": "The geodesic area is computed by projecting the polygon onto the ellipsoid surface using geodesic distances. It represents the flat geographic extent of the shape, independent of terrain relief.",
+      "polygonAirDesc": "The 3D surface area is computed using the actual 3D positions of each vertex, accounting for terrain elevation. It approximates the real physical area of the ground surface, including topographic relief."
     }
   },
   "elevationChart": {
