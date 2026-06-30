@@ -727,7 +727,20 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                     `}
                   >
-                    {i18next.t("measurableGeometry.circleDiameter")}
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 4
+                      }}
+                    >
+                      {i18next.t("measurableGeometry.circleDiameter")}
+                      <MeasurableInfoPanel
+                        kind="circleDiameter"
+                        disabled={!currentGeom.stopPoints?.length}
+                      />
+                    </span>
                   </th>
                   <th
                     css={`
@@ -846,7 +859,7 @@ const MeasurablePanel = observer((props: Props) => {
                     >
                       {i18next.t("measurableGeometry.circleAreaM2")}
                       <MeasurableInfoPanel
-                        kind="circle"
+                        kind="circleArea"
                         disabled={!currentGeom.stopPoints?.length}
                       />
                     </span>

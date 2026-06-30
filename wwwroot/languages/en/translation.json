@@ -153,9 +153,11 @@
     "areaInfo": {
       "title": "About this measurement",
       "circleTitle": "Circle area",
+      "circleDiameterTitle": "Circle diameter",
       "polygonGeoTitle": "Geodesic area",
       "polygonAirTitle": "Air area",
       "circleDesc": "The area is derived from the geodesic radius between the centre and the edge point, projected onto the ellipsoid surface. Terrain elevation is not taken into account.",
+      "circleDiameterDesc": "The diameter is calculated as twice the geodesic radius between the centre and the edge point of the circle, projected onto the ellipsoid surface. As with the radius, terrain elevation is not taken into account.",
       "polygonGeoDesc": "The geodesic area is computed by projecting the polygon onto the ellipsoid surface using geodesic distances. It represents the flat geographic extent of the shape, independent of terrain relief.",
       "polygonAirDesc": "The 3D surface area is computed using the actual 3D positions of each vertex, accounting for terrain elevation. It approximates the real physical area of the ground surface, including topographic relief."
     }

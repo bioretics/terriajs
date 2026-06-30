@@ -4,21 +4,26 @@ import { useTheme } from "styled-components";
 import Button from "../../Styled/Button";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 
-export type MeasurableInfoKind = "circle" | "polygonGeo" | "polygonAir";
-
+export type MeasurableInfoKind =
+  | "circleArea"
+  | "circleDiameter"
+  | "polygonGeo"
+  | "polygonAir";
 interface MeasurableInfoPanelProps {
   kind: MeasurableInfoKind;
   disabled?: boolean;
 }
 
 const TITLE_KEYS: Record<MeasurableInfoKind, string> = {
-  circle: "measurableGeometry.areaInfo.circleTitle",
+  circleArea: "measurableGeometry.areaInfo.circleTitle",
+  circleDiameter: "measurableGeometry.areaInfo.circleDiameterTitle",
   polygonGeo: "measurableGeometry.areaInfo.polygonGeoTitle",
   polygonAir: "measurableGeometry.areaInfo.polygonAirTitle"
 };
 
 const DESC_KEYS: Record<MeasurableInfoKind, string> = {
-  circle: "measurableGeometry.areaInfo.circleDesc",
+  circleArea: "measurableGeometry.areaInfo.circleDesc",
+  circleDiameter: "measurableGeometry.areaInfo.circleDiameterDesc",
   polygonGeo: "measurableGeometry.areaInfo.polygonGeoDesc",
   polygonAir: "measurableGeometry.areaInfo.polygonAirDesc"
 };
