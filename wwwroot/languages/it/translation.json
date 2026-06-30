@@ -157,7 +157,7 @@
       "title": "Informazioni sulla misura",
       "circleTitle": "Area del cerchio",
       "polygonGeoTitle": "Area geodetica",
-      "polygonAirTitle": "Area superficiale 3D",
+      "polygonAirTitle": "Area in aria",
       "circleDesc": "L'area è calcolata a partire dal raggio geodetico tra il centro e il punto sul bordo, proiettato sulla superficie dell'ellissoide. L'elevazione del terreno non viene considerata.",
       "polygonGeoDesc": "L'area geodetica è calcolata proiettando il poligono sulla superficie dell'ellissoide tramite distanze geodetiche. Rappresenta l'estensione geografica piatta della forma, indipendentemente dal rilievo del terreno.",
       "polygonAirDesc": "L'area superficiale 3D è calcolata utilizzando le posizioni tridimensionali reali di ciascun vertice, tenendo conto dell'elevazione del terreno. Approssima la reale estensione fisica della superficie del suolo, incluso il rilievo topografico."
