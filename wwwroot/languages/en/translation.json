@@ -177,6 +177,9 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Speed",
+    "samplingStepHeader": "Sampling step",
+    "samplingStepButtonText": "Change",
+    "samplingStepButtonTitle": "Apply the new flight sampling step, independent from the Measure panel's",
     "tooltip": {
       "play": "Play path",
       "pause": "Pause path",

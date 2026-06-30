@@ -10,6 +10,7 @@ import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import ViewerMode from "../../Models/ViewerMode";
 import { runInAction } from "mobx";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const [playSpeed, setPlaySpeed] = useState(1);
@@ -75,22 +76,57 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     checkAndUpdatePitch();
   }, [viewState, checkAndUpdatePitch]);
 
+  const resamplePathForFlight = useCallback(
+    (
+      points: Cartographic[] | undefined,
+      samplingStep: number
+    ): Cartographic[] | undefined => {
+      if (!points || points.length === 0) return points;
+      if (!(samplingStep > 0)) return points;
+
+      const ellipsoid =
+        terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
+      const result: Cartographic[] = [points[0]];
+
+      for (let i = 0; i < points.length - 1; i++) {
+        const start = points[i];
+        const end = points[i + 1];
+        const geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
+        const segmentDistance = geodesic.surfaceDistance;
+
+        if (segmentDistance > samplingStep) {
+          const segmentsCount = Math.ceil(segmentDistance / samplingStep);
+          for (let s = 1; s < segmentsCount; s++) {
+            const fraction = s / segmentsCount;
+            const interpolated = geodesic.interpolateUsingFraction(fraction);
+            interpolated.height =
+              start.height + (end.height - start.height) * fraction;
+            result.push(interpolated);
+          }
+        }
+        result.push(end);
+      }
+
+      return result;
+    },
+    [terria]
+  );
+
   const getPoints = useCallback(() => {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
 
-    const pts = isCesium2D
-      ? geom.stopPoints
-      : terria.cesium
-      ? geom.sampledPoints
-      : geom.stopPoints;
+    const pts =
+      isCesium2D || !terria.cesium
+        ? geom.stopPoints
+        : resamplePathForFlight(geom.stopPoints, terria.playPathSamplingStep);
 
     if (!pts || pts.length === 0) return;
 
     return pts;
-  }, [terria]);
+  }, [terria, resamplePathForFlight]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
@@ -426,6 +462,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     terria.currentViewer.notifyRepaintRequired();
   };
 
+  const changePlayPathSamplingStep = useCallback(
+    (val: number) => {
+      runInAction(() => {
+        terria.playPathSamplingStep = val;
+      });
+      resetPlayPath();
+    },
+    [terria, resetPlayPath]
+  );
+
   useEffect(() => {
     if (viewState.isPlayingPath) playPath();
   }, [viewState.isPlayingPath, playPath]);
@@ -442,6 +488,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     onPause,
     onStop,
     resetPlayPath,
-    isPitchTooLow
+    isPitchTooLow,
+    playPathSamplingStep: terria.playPathSamplingStep,
+    changePlayPathSamplingStep
   };
 }
