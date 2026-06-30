@@ -700,6 +700,15 @@ const MeasurablePanel = observer((props: Props) => {
       const area = currentGeom.circleArea ?? 0;
       const areaHa = area > 0 ? (area * 0.0001).toFixed(4) : "";
       const canEditCircleRadius = activeToolIsCircle();
+      const parsedCircleRadiusInput = Number.parseFloat(
+        circleRadiusInput.replace(",", ".")
+      );
+      const isCircleRadiusInputValid =
+        Number.isFinite(parsedCircleRadiusInput) && parsedCircleRadiusInput > 0;
+      const appliedCircleRadiusFixed = radius > 0 ? radius.toFixed(2) : "";
+      const isCircleRadiusInputChanged =
+        isCircleRadiusInputValid &&
+        parsedCircleRadiusInput.toFixed(2) !== appliedCircleRadiusFixed;
 
       return (
         <>
@@ -808,14 +817,20 @@ const MeasurablePanel = observer((props: Props) => {
                             onChange={(e) =>
                               setCircleRadiusInput(e.target.value)
                             }
-                            onBlur={applyCircleRadiusFromInput}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                applyCircleRadiusFromInput();
-                              }
-                            }}
                           />
+                          <Button
+                            css={`
+                              color: ${theme.textLight};
+                              background: ${theme.colorPrimary};
+                              margin-left: 5px;
+                              margin-bottom: 10px;
+                            `}
+                            onClick={applyCircleRadiusFromInput}
+                            disabled={!isCircleRadiusInputChanged}
+                            title={i18next.t("measurableGeometry.editButton")}
+                          >
+                            {i18next.t("measurableGeometry.editButton")}
+                          </Button>
                         </div>
                       </td>
                     </tr>
