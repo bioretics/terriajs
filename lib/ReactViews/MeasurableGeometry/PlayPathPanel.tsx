@@ -541,6 +541,7 @@ const PlayPathPanel = observer((props: Props) => {
             onClick={() => {
               if (isValidSamplingStep) {
                 changePlayPathSamplingStep(samplingStepInput);
+                onStop();
               }
             }}
           >
