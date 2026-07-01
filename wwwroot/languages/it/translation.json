@@ -195,6 +195,10 @@
       "enu": "Est-Nord-Su"
     },
     "tourPrompt": "Prima volta con Play Path? Fai un tour rapido!",
+    "samplingStepHeader": "Passo di campionamento",
+    "samplingStepButtonText": "Cambia",
+    "samplingStepButtonTitle": "Applica il nuovo passo di campionamento del volo, indipendente da quello del pannello Misure",
+
     "tooltip": {
       "play": "Avvia percorso",
       "pause": "Pausa percorso",

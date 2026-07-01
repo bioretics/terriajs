@@ -187,6 +187,9 @@
       "enu": "East-North-Up"
     },
     "tourPrompt": "First time using Play Path? Take a quick tour!",
+    "samplingStepHeader": "Sampling step",
+    "samplingStepButtonText": "Change",
+    "samplingStepButtonTitle": "Apply the new flight sampling step, independent from the Measure panel's",
     "tooltip": {
       "play": "Play path",
       "pause": "Pause path",
