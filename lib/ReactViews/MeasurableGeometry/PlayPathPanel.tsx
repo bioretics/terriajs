@@ -16,6 +16,7 @@ import Box from "../../Styled/Box";
 import Text from "../../Styled/Text";
 import { TrackingReferenceFrame } from "terriajs-cesium";
 import Input from "../../Styled/Input";
+import ViewerMode from "../../Models/ViewerMode";
 
 interface Props {
   terria: Terria;
@@ -235,6 +236,8 @@ const PlayPathPanel = observer((props: Props) => {
 
   const renderBody = () => {
     const canChangeOptions = !playingPath && countdown === null;
+    const showTrackingFrameControl =
+      props.terria.mainViewer.viewerMode === ViewerMode.Cesium;
 
     const rowStyle: React.CSSProperties = {
       display: "flex",
@@ -438,32 +441,34 @@ const PlayPathPanel = observer((props: Props) => {
           </label>
         </div>
 
-        <div className="no-drag" style={rowStyle}>
-          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
-            {i18next.t("playPath.trackingFrame.name")}:
-          </label>
-          <select
-            value={trackingReferenceFrame}
-            onChange={(e) =>
-              setTrackingReferenceFrame(Number(e.target.value) as any)
-            }
-            disabled={!canChangeOptions}
-            style={selectStyle}
-          >
-            <option value={TrackingReferenceFrame.AUTODETECT}>
-              {i18next.t("playPath.trackingFrame.autodetect", "Auto-detect")}
-            </option>
-            <option value={TrackingReferenceFrame.INERTIAL}>
-              {i18next.t("playPath.trackingFrame.inertial")}
-            </option>
-            <option value={TrackingReferenceFrame.VELOCITY}>
-              {i18next.t("playPath.trackingFrame.velocity")}
-            </option>
-            <option value={TrackingReferenceFrame.ENU}>
-              {i18next.t("playPath.trackingFrame.enu")}
-            </option>
-          </select>
-        </div>
+        {showTrackingFrameControl && (
+          <div className="no-drag" style={rowStyle}>
+            <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+              {i18next.t("playPath.trackingFrame.name")}:
+            </label>
+            <select
+              value={trackingReferenceFrame}
+              onChange={(e) =>
+                setTrackingReferenceFrame(Number(e.target.value) as any)
+              }
+              disabled={!canChangeOptions}
+              style={selectStyle}
+            >
+              <option value={TrackingReferenceFrame.AUTODETECT}>
+                {i18next.t("playPath.trackingFrame.autodetect", "Auto-detect")}
+              </option>
+              <option value={TrackingReferenceFrame.INERTIAL}>
+                {i18next.t("playPath.trackingFrame.inertial")}
+              </option>
+              <option value={TrackingReferenceFrame.VELOCITY}>
+                {i18next.t("playPath.trackingFrame.velocity")}
+              </option>
+              <option value={TrackingReferenceFrame.ENU}>
+                {i18next.t("playPath.trackingFrame.enu")}
+              </option>
+            </select>
+          </div>
+        )}
 
         <div
           title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
