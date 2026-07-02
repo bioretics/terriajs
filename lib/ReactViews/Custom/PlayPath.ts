@@ -106,6 +106,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     trackingReferenceFrame
   );
   const startFromLastPointRef = useRef(startFromLastPoint);
+  const playbackSpeedScaleRef = useRef(1);
   const rafIdRef = useRef<number | null>(null);
   const playEntityRef = useRef<Entity | null>(null);
   const lastReportedPointIndexRef = useRef<number | null>(null);
@@ -169,6 +170,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       points: Cartographic[] | undefined,
       samplingStep: number
     ): Cartographic[] | undefined => {
+      playbackSpeedScaleRef.current = 1;
       if (!points || points.length === 0) return points;
       if (!(samplingStep > 0)) return points;
 
@@ -194,7 +196,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         }
         result.push(end);
       }
-
+      if (points.length > 1 && result.length > 1) {
+        playbackSpeedScaleRef.current =
+          (result.length - 1) / (points.length - 1);
+      }
       return result;
     },
     [terria]
@@ -204,10 +209,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
-    const pts = resamplePathForFlight(
-      geom.stopPoints,
-      terria.playPathSamplingStep
-    );
+    const pts = (() => {
+      playbackSpeedScaleRef.current = 1;
+      return resamplePathForFlight(
+        geom.stopPoints,
+        terria.playPathSamplingStep
+      );
+    })();
 
     if (!pts || pts.length === 0) return;
 
@@ -589,7 +597,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
           return;
         }
 
-        const speed = Math.max(0.01, playSpeedRef.current);
+        const effectivePlaySpeed = () =>
+          Math.max(0.01, playSpeedRef.current * playbackSpeedScaleRef.current);
+
+        const speed = effectivePlaySpeed();
         const now = performance.now();
         const last = lastFramePerfRef.current ?? now;
         lastFramePerfRef.current = now;
@@ -736,7 +747,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         return;
       }
 
-      const speed = Math.max(0.01, playSpeedRef.current);
+      const speed = Math.max(
+        0.01,
+        playSpeedRef.current * playbackSpeedScaleRef.current
+      );
       const now = performance.now();
       const last = lastFramePerfRef.current ?? now;
       lastFramePerfRef.current = now;
@@ -902,7 +916,11 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       hpr = new HeadingPitchRange(heading, -pitch, dist);
     }
 
-    const duration = 3 / Math.max(0.01, playSpeedRef.current);
+    const effectivePlaySpeed = Math.max(
+      0.01,
+      playSpeedRef.current * playbackSpeedScaleRef.current
+    );
+    const duration = 3 / effectivePlaySpeed;
     terria.currentViewer.doZoomTo(
       hpr
         ? CameraView.fromLookAt(point, hpr)
