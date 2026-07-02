@@ -204,13 +204,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
     if (!geom) return;
 
-    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
-    const isLeaflet = terria.mainViewer.viewerMode === ViewerMode.Leaflet;
-
-    const pts =
-      isCesium2D || isLeaflet || !terria.cesium
-        ? geom.stopPoints
-        : resamplePathForFlight(geom.stopPoints, terria.playPathSamplingStep);
+    const pts = resamplePathForFlight(
+      geom.stopPoints,
+      terria.playPathSamplingStep
+    );
 
     if (!pts || pts.length === 0) return;
 
@@ -427,141 +424,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       return;
     }
 
-    const runCameraStepPath = async () => {
-      playEntityRef.current = null;
-      lastCameraCoordsRef.current = null;
-      pausedElapsedSecondsRef.current = null;
-      elapsedSecondsRef.current = 0;
-
-      const isLeafletViewer = viewer.type === "Leaflet";
-      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
-      const camera = isLeafletViewer ? undefined : cesiumModel?.scene.camera;
-      const cartesians = pts.map((p) => Cartographic.toCartesian(p));
-      const initialIdx = Math.max(
-        0,
-        Math.min(pts.length - 1, currentPointIndexRef.current)
-      );
-      const pitch = camera?.pitch ?? 0;
-
-      let dist = 1000;
-      if (camera) {
-        if (isCesium2D) {
-          dist = camera.positionCartographic.height || 1000;
-        } else {
-          const cameraTrueCartesian = Cartographic.toCartesian(
-            camera.positionCartographic
-          );
-          dist = Cartesian3.distance(
-            cameraTrueCartesian,
-            cartesians[initialIdx]
-          );
-        }
-      }
-
-      const waitForLeafletFlight = (durationSeconds: number) =>
-        new Promise<"loaded">((resolve) => {
-          window.setTimeout(() => resolve("loaded"), durationSeconds * 1000);
-        });
-
-      const waitForAbort = () =>
-        new Promise<"abort">((resolve) => {
-          const check = () => {
-            if (!abortPlayingPathRef.current) {
-              resolve("abort");
-            } else {
-              window.setTimeout(check, 50);
-            }
-          };
-          check();
-        });
-
-      const step = reverseRef.current ? -1 : 1;
-      const start = Math.max(
-        0,
-        Math.min(pts.length - 1, currentPointIndexRef.current)
-      );
-      updatePositionMarker();
-
-      for (
-        let i = start;
-        abortPlayingPathRef.current && i >= 0 && i < pts.length;
-        i += step
-      ) {
-        const duration = 2 / Math.max(0.01, playSpeedRef.current);
-        let hpr: HeadingPitchRange | undefined;
-        const isForwardStep = step > 0;
-        const hasNextPoint = isForwardStep ? i < pts.length - 1 : i > 0;
-        const isTerminalStep = isForwardStep ? i === pts.length - 1 : i === 0;
-
-        if (camera && hasNextPoint) {
-          const next = isForwardStep ? pts[i + 1] : pts[i - 1];
-          const heading =
-            (new EllipsoidGeodesic(pts[i], next).startHeading +
-              CesiumMath.TWO_PI) %
-            CesiumMath.TWO_PI;
-          hpr = new HeadingPitchRange(heading, -pitch, dist);
-        } else if (camera && isCesium2D && isTerminalStep && pts.length > 1) {
-          const previous = isForwardStep ? pts[i - 1] : pts[i + 1];
-          const heading =
-            (new EllipsoidGeodesic(previous, pts[i]).startHeading +
-              CesiumMath.TWO_PI) %
-            CesiumMath.TWO_PI;
-          hpr = new HeadingPitchRange(heading, -pitch, dist);
-        }
-
-        const target = hpr
-          ? CameraView.fromLookAt(pts[i], hpr)
-          : Rectangle.fromCartographicArray([pts[i]]);
-
-        const zoom = viewer.doZoomTo(target, duration).then(() => "loaded");
-        const result = await Promise.race([
-          isLeafletViewer
-            ? zoom.then(() => waitForLeafletFlight(duration))
-            : zoom,
-          waitForAbort()
-        ]);
-
-        if (result === "abort") {
-          return;
-        }
-
-        const nextIndex = i + step;
-        const reachedEnd = nextIndex < 0 || nextIndex >= pts.length;
-        const displayIndex = reachedEnd ? i : nextIndex;
-
-        currentPointIndexRef.current = displayIndex;
-        lastReportedPointIndexRef.current = displayIndex;
-        setCurrentPointIndex(displayIndex);
-        updatePositionMarker();
-        viewer.notifyRepaintRequired();
-
-        if (reachedEnd) {
-          break;
-        }
-      }
-
-      if (abortPlayingPathRef.current) {
-        abortPlayingPathRef.current = false;
-        pausedElapsedSecondsRef.current = null;
-        setPlayingPathState(false);
-      }
-    };
-
-    if (
-      !cesiumModel ||
-      viewer.type === "Leaflet" ||
-      terria.mainViewer.viewerMode === ViewerMode.Cesium2D
-    ) {
-      clearAnimation();
-      void runCameraStepPath();
-      return;
-    }
-
-    const scene = cesiumModel.scene;
-    const camera = scene.camera;
-
-    lastCameraCoordsRef.current = null;
-
     const baseStepSeconds = 5;
     const n = pts.length;
     const sampleStart = JulianDate.now();
@@ -661,6 +523,151 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         markerPositionScratchRef.current
       ) as Cartesian3;
     };
+
+    const runCameraStepPath = async () => {
+      playEntityRef.current = null;
+      lastCameraCoordsRef.current = null;
+      const initialIdx = Math.max(
+        0,
+        Math.min(pts.length - 1, currentPointIndexRef.current)
+      );
+      const initialOrderPos = orderPosByIndex[initialIdx] ?? 0;
+      const resumeElapsed = pausedElapsedSecondsRef.current;
+      const startElapsed =
+        resumeElapsed !== null
+          ? resumeElapsed
+          : sampleSeconds[Math.max(0, Math.min(n - 1, initialOrderPos))] ?? 0;
+
+      pausedElapsedSecondsRef.current = null;
+      elapsedSecondsRef.current = Math.min(
+        totalDuration,
+        Math.max(0, startElapsed)
+      );
+
+      const isLeafletViewer = viewer.type === "Leaflet";
+      const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+      const camera = isLeafletViewer ? undefined : cesiumModel?.scene.camera;
+      const followCameraToPosition = (position: Cartesian3) => {
+        if (isLeafletViewer) {
+          const leafletMap = terria.leaflet?.map;
+          if (!leafletMap) return;
+
+          const carto = Cartographic.fromCartesian(position);
+          leafletMap.panTo(
+            [
+              CesiumMath.toDegrees(carto.latitude),
+              CesiumMath.toDegrees(carto.longitude)
+            ],
+            { animate: false }
+          );
+          return;
+        }
+
+        if (isCesium2D && camera) {
+          const carto = Cartographic.fromCartesian(position);
+          const destination = Cartographic.toCartesian(
+            new Cartographic(
+              carto.longitude,
+              carto.latitude,
+              camera.positionCartographic.height || 1000
+            )
+          );
+
+          camera.setView({
+            destination,
+            orientation: {
+              heading: camera.heading,
+              pitch: camera.pitch,
+              roll: camera.roll
+            }
+          });
+        }
+      };
+
+      const stepToElapsedPosition = () => {
+        if (!abortPlayingPathRef.current) {
+          return;
+        }
+
+        const speed = Math.max(0.01, playSpeedRef.current);
+        const now = performance.now();
+        const last = lastFramePerfRef.current ?? now;
+        lastFramePerfRef.current = now;
+        const dt = Math.min(0.1, Math.max(0, (now - last) / 1000));
+
+        elapsedSecondsRef.current = Math.min(
+          totalDuration,
+          elapsedSecondsRef.current + dt * speed
+        );
+
+        const clampedElapsed = Math.min(
+          totalDuration,
+          Math.max(0, elapsedSecondsRef.current)
+        );
+        const currentPosition =
+          getPositionAtElapsedRef.current?.(clampedElapsed);
+
+        if (currentPosition) {
+          followCameraToPosition(currentPosition);
+        }
+
+        if (showPositionMarkerRef.current) {
+          updatePositionMarker(clampedElapsed);
+        }
+
+        let lo = 0;
+        let hi = n - 1;
+        while (lo < hi) {
+          const mid = Math.floor((lo + hi + 1) / 2);
+          if (sampleSeconds[mid] <= clampedElapsed) lo = mid;
+          else hi = mid - 1;
+        }
+
+        const idx = orderIndices[lo] ?? 0;
+        if (lastReportedPointIndexRef.current !== idx) {
+          lastReportedPointIndexRef.current = idx;
+          setCurrentPointIndex(idx);
+        }
+
+        viewer.notifyRepaintRequired();
+
+        if (clampedElapsed < totalDuration) {
+          rafIdRef.current = requestAnimationFrame(stepToElapsedPosition);
+        } else {
+          abortPlayingPathRef.current = false;
+          pausedElapsedSecondsRef.current = null;
+          setPlayingPathState(false);
+        }
+      };
+
+      lastFramePerfRef.current = performance.now();
+
+      const initialPosition = getPositionAtElapsedRef.current?.(
+        elapsedSecondsRef.current
+      );
+      if (initialPosition) {
+        followCameraToPosition(initialPosition);
+      }
+
+      updatePositionMarker(elapsedSecondsRef.current);
+      rafIdRef.current = requestAnimationFrame(stepToElapsedPosition);
+      return;
+    };
+
+    if (
+      !cesiumModel ||
+      viewer.type === "Leaflet" ||
+      terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+    ) {
+      clearAnimation();
+      void runCameraStepPath();
+      return;
+    }
+
+    const scene = cesiumModel.scene;
+    const camera = scene.camera;
+
+    lastCameraCoordsRef.current = null;
 
     const entity = new Entity({
       position: positionProperty,
