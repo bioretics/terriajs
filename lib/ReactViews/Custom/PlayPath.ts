@@ -120,6 +120,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     direction: Cartesian3;
     up: Cartesian3;
   } | null>(null);
+  const skipCameraRestoreOnStopRef = useRef(false);
   const showPositionMarkerRef = useRef(showPositionMarker);
   const getPositionAtElapsedRef = useRef<PathPositionGetter | null>(null);
   const markerModelRef = useRef<PlayPathMarkerModel | null>(null);
@@ -889,9 +890,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   const onStop = () => {
     abortPlayingPathRef.current = false;
+    skipCameraRestoreOnStopRef.current = true;
     clearAnimation();
     (terria.cesium?.scene.camera as any)?.cancelFlight?.();
-    restoreCameraAfterTracking();
     playEntityRef.current = null;
     lastReportedPointIndexRef.current = null;
     lastCameraCoordsRef.current = null;
@@ -967,9 +968,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   useEffect(() => {
     if (!viewState.isPlayingPath) {
       abortPlayingPathRef.current = false;
-      clearAnimation();
-      (terria.cesium?.scene.camera as any)?.cancelFlight?.();
-      restoreCameraAfterTracking();
+      if (!skipCameraRestoreOnStopRef.current) {
+        clearAnimation();
+        (terria.cesium?.scene.camera as any)?.cancelFlight?.();
+        restoreCameraAfterTracking();
+      }
+
+      skipCameraRestoreOnStopRef.current = false;
 
       // Remove the marker when playpath is stopped
       const markerModel = markerModelRef.current;
