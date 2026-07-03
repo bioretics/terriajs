@@ -916,10 +916,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       hpr = new HeadingPitchRange(heading, -pitch, dist);
     }
 
-    const effectivePlaySpeed = Math.max(
-      0.01,
-      playSpeedRef.current * playbackSpeedScaleRef.current
-    );
+    const effectivePlaySpeed = Math.max(0.01, playSpeedRef.current);
     const duration = 3 / effectivePlaySpeed;
     terria.currentViewer.doZoomTo(
       hpr
