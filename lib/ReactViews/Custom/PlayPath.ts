@@ -127,6 +127,22 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const markerPositionRef = useRef<ConstantPositionProperty | null>(null);
   const markerPositionScratchRef = useRef(new Cartesian3());
 
+  const createMarkerEntity = useCallback(
+    (markerModel: PlayPathMarkerModel) => {
+      const markerPosition = new ConstantPositionProperty(new Cartesian3());
+      const markerEntity = new Entity({
+        position: markerPosition,
+        billboard: getPlayPathMarkerBillboardOptions(terria)
+      } as any);
+
+      markerModel.markerDataSource.entities.add(markerEntity);
+      markerEntityRef.current = markerEntity;
+      markerPositionRef.current = markerPosition;
+      return markerEntity;
+    },
+    [terria]
+  );
+
   const setPlayingPathState = useCallback(
     (value: boolean) => {
       runInAction(() => {
@@ -241,12 +257,27 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     (elapsedOverride?: number) => {
       const markerModel = markerModelRef.current;
       const entity = markerEntityRef.current;
-      if (!markerModel || !entity) return;
-
       const visible = showPositionMarkerRef.current;
+
+      if (!markerModel) return;
+
+      if (!entity) {
+        if (!visible) {
+          notifyMarkerRepaint();
+          return;
+        }
+
+        createMarkerEntity(markerModel);
+      }
+
       markerModel.markerDataSource.show = visible;
 
       if (!visible) {
+        if (terria.currentViewer.type === "Leaflet") {
+          markerModel.markerDataSource.entities.removeAll();
+          markerEntityRef.current = null;
+          markerPositionRef.current = null;
+        }
         notifyMarkerRepaint();
         return;
       }
@@ -278,7 +309,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       markerPositionRef.current?.setValue(position);
       notifyMarkerRepaint();
     },
-    [getPoints, notifyMarkerRepaint, viewState.isPlayingPath]
+    [createMarkerEntity, getPoints, notifyMarkerRepaint, terria, viewState.isPlayingPath]
   );
 
   const refreshMarkerBillboardForViewerMode = useCallback(() => {
@@ -297,17 +328,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     void terria.overlays.add(markerModel);
     void markerModel.loadMapItems();
 
-    const markerPosition = new ConstantPositionProperty(new Cartesian3());
-    const markerEntity = new Entity({
-      position: markerPosition,
-      billboard: getPlayPathMarkerBillboardOptions(terria)
-    } as any);
-
     markerModel.markerDataSource.show = showPositionMarkerRef.current;
-    markerModel.markerDataSource.entities.add(markerEntity);
 
-    markerEntityRef.current = markerEntity;
-    markerPositionRef.current = markerPosition;
+    createMarkerEntity(markerModel);
     updatePositionMarker();
 
     return () => {
@@ -317,7 +340,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       markerEntityRef.current = null;
       markerPositionRef.current = null;
     };
-  }, [terria, updatePositionMarker]);
+  }, [createMarkerEntity, terria, updatePositionMarker]);
 
   useEffect(() => {
     const dispose = reaction(
@@ -622,9 +645,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
           followCameraToPosition(currentPosition);
         }
 
-        if (showPositionMarkerRef.current) {
-          updatePositionMarker(clampedElapsed);
-        }
+        updatePositionMarker(clampedElapsed);
 
         let lo = 0;
         let hi = n - 1;
@@ -768,9 +789,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
       entityView.update(timeScratchRef.current);
 
-      if (showPositionMarkerRef.current) {
-        updatePositionMarker(clampedElapsed);
-      }
+      updatePositionMarker(clampedElapsed);
 
       let coords = lastCameraCoordsRef.current;
       if (!coords) {
