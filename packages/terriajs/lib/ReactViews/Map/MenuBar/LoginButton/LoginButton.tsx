@@ -124,7 +124,11 @@ const LoginButton = observer((props: Props) => {
               }
             }`}
         `}
-        title={!isLoggedIn ? t(($) => $.login.loginTitle) : t(($) => $.login.logoutTitle)}
+        title={
+          !isLoggedIn
+            ? t(($) => $.login.loginTitle)
+            : t(($) => $.login.logoutTitle)
+        }
       >
         <Icon glyph={isLoggedIn ? Icon.GLYPHS.logout : Icon.GLYPHS.user} />
       </button>

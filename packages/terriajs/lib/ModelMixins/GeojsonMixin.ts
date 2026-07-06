@@ -383,7 +383,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           sender: this,
           message: "No data available to download."
         });
-      } catch (geoJsonError) {
+      } catch (_geoJsonError) {
         try {
           if (typeof (this as any).sampleFromGpxData === "function") {
             await (this as any).sampleFromGpxData();
@@ -394,7 +394,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
             sender: this,
             message: "No data available to download."
           });
-        } catch (gpxError) {
+        } catch (_gpxError) {
           throw new TerriaError({
             sender: this,
             message: "No data available to download."
@@ -412,7 +412,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           (this as any).tryGeoJsonOrGpxSampling();
         }
         await action;
-      } catch (e) {
+      } catch (_e) {
         return this._exportDataFallback();
       }
     }
@@ -2008,10 +2008,10 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
                 property?.type === "dictionary"
                   ? JSON.parse((value as ConstantProperty).valueOf() as string)
                   : property?.type === "enum" && property?.enumMultiValue
-                  ? ((value as ConstantProperty).valueOf() as string)
-                      .split(",")
-                      .map((txt) => txt.trim())
-                  : value
+                    ? ((value as ConstantProperty).valueOf() as string)
+                        .split(",")
+                        .map((txt) => txt.trim())
+                    : value
               ];
             })
           );

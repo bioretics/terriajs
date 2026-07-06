@@ -177,7 +177,9 @@ export const ShareUrl = forwardRef<
       <Spacing bottom={2} />
       <Box column>
         <TextSpan medium>{t(($) => $.share.importExportMapTitle)}</TextSpan>
-        <Explanation>{t(($) => $.share.importExportMapExplanation)}</Explanation>
+        <Explanation>
+          {t(($) => $.share.importExportMapExplanation)}
+        </Explanation>
         <Box gap>
           <PrintButton primary fullWidth onClick={exportMap}>
             {t(($) => $.share.exportMapButton)}

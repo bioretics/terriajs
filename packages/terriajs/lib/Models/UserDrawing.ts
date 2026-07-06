@@ -270,14 +270,14 @@ export default class UserDrawing extends MappableMixin(
   ): Entity {
     return new Entity({
       name,
-      position: new CallbackProperty((time: JulianDate) => {
+      position: new CallbackProperty((time?: JulianDate) => {
         const posA = entityA.position?.getValue(time);
         const posB = entityB.position?.getValue(time);
         if (!posA || !posB) return undefined;
         return Cartesian3.midpoint(posA, posB, new Cartesian3());
       }, false) as any,
       label: {
-        text: new CallbackProperty((time: JulianDate) => {
+        text: new CallbackProperty((time?: JulianDate) => {
           const posA = entityA.position?.getValue(time);
           const posB = entityB.position?.getValue(time);
           if (!posA || !posB) return "";
@@ -356,7 +356,7 @@ export default class UserDrawing extends MappableMixin(
       id: "Circle Line",
       name: "Circle Line",
       polyline: {
-        positions: new CallbackProperty((time: JulianDate) => {
+        positions: new CallbackProperty((time?: JulianDate) => {
           const [center, edge] = this.getCircleDisplayPoints(time);
           if (!center || !edge) {
             return [];
@@ -383,11 +383,11 @@ export default class UserDrawing extends MappableMixin(
     this.otherEntities.entities.add({
       id: "Circle Label",
       name: "Circle Label",
-      position: new CallbackProperty((time: JulianDate) => {
+      position: new CallbackProperty((time?: JulianDate) => {
         return this.getCircleDisplayPoints(time)[0];
       }, false) as any,
       label: {
-        text: new CallbackProperty((time: JulianDate) => {
+        text: new CallbackProperty((time?: JulianDate) => {
           const [center, edge] = this.getCircleDisplayPoints(time);
           if (!center || !edge) {
             return "";
@@ -415,7 +415,7 @@ export default class UserDrawing extends MappableMixin(
       id: "Circle Radius Line",
       name: "Circle Radius Line",
       polyline: {
-        positions: new CallbackProperty((time: JulianDate) => {
+        positions: new CallbackProperty((time?: JulianDate) => {
           const [center, edge] = this.getCircleDisplayPoints(time);
           if (!center || !edge) return [];
           return [this.liftToTerrain(center), this.liftToTerrain(edge)];
@@ -432,7 +432,7 @@ export default class UserDrawing extends MappableMixin(
     this.otherEntities.entities.add({
       id: "Circle Radius Label",
       name: "Circle Radius Label",
-      position: new CallbackProperty((time: JulianDate) => {
+      position: new CallbackProperty((time?: JulianDate) => {
         const [center, edge] = this.getCircleDisplayPoints(time);
         if (!center || !edge) return undefined;
         const liftedCenter = this.liftToTerrain(center);
@@ -440,7 +440,7 @@ export default class UserDrawing extends MappableMixin(
         return Cartesian3.midpoint(liftedCenter, liftedEdge, new Cartesian3());
       }, false) as any,
       label: {
-        text: new CallbackProperty((time: JulianDate) => {
+        text: new CallbackProperty((time?: JulianDate) => {
           const [center, edge] = this.getCircleDisplayPoints(time);
           if (!center || !edge) {
             return "";
@@ -466,7 +466,7 @@ export default class UserDrawing extends MappableMixin(
     this.otherEntities.entities.add({
       id: "Circle Preview Point",
       name: "Circle Preview Point",
-      position: new CallbackProperty((time: JulianDate) => {
+      position: new CallbackProperty((time?: JulianDate) => {
         if (this.pointEntities.entities.values.length !== 1) {
           return undefined;
         }
@@ -829,7 +829,7 @@ export default class UserDrawing extends MappableMixin(
     this.disposeShowDistanceLabelsReaction = reaction(
       () =>
         this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
-          ?.showDistanceLabels!!,
+          ?.showDistanceLabels ?? false,
       (showLabels: boolean) => {
         if (!showLabels) {
           const labelsToRemove: Entity[] = [];

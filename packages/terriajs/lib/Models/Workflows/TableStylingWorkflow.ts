@@ -3087,14 +3087,18 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
               parsed,
               true
             ).raiseError(this.item.terria, {
-              title: i18next.t(($) => $.models.tableStyling.importUserStyleFailed)
+              title: i18next.t(
+                ($) => $.models.tableStyling.importUserStyleFailed
+              )
             });
 
             this.setColorSchemeTypeFromPalette();
           })
           .catch((e) => {
             TerriaError.from(e).raiseError(this.item.terria, {
-              title: i18next.t(($) => $.models.tableStyling.importUserStyleFailed)
+              title: i18next.t(
+                ($) => $.models.tableStyling.importUserStyleFailed
+              )
             });
           });
       };

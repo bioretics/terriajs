@@ -5,10 +5,7 @@ import {
   observable,
   runInAction
 } from "mobx";
-import {
-  Category,
-  SearchAction
-} from "../../Core/Analytics/analyticEvents";
+import { Category, SearchAction } from "../../Core/Analytics/analyticEvents";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
 import CommonStrata from "../Definition/CommonStrata";
 import CreateModel from "../Definition/CreateModel";

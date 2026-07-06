@@ -29,7 +29,7 @@ export const MapViewers = Object.seal({
   "2dcesium": {
     viewerMode: ViewerMode.Cesium2D,
     terrain: false,
-    label: "settingPanel.viewerModeLabels.Cesium2D",
+    label: keyFromSelector(($) => $.settingPanel.viewerModeLabels.Cesium2D),
     available: true
   },
   "2d": {

@@ -591,7 +591,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                     );
                   })
                 }
-                title={t("workbench.pathItemTitle")}
+                title={t(($) => $.workbench.pathItemTitle)}
               >
                 <BoxViewingControl>
                   <StyledIcon glyph={Icon.GLYPHS.lineChart} />

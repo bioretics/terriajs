@@ -16,14 +16,13 @@ import Input from "../../../../Styled/Input";
 import Icon, { StyledIcon } from "../../../../Styled/Icon";
 import { TextSpan } from "../../../../Styled/Text";
 
-const MenuPanel =
-  require("../../../StandardUserInterface/customizable/MenuPanel").default;
+import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
 
 interface PropTypes extends WithTranslation {
   terria: Terria;
-  modalWidth: number;
+  modalWidth?: number;
   viewState: ViewState;
-  onUserClick: () => void;
+  onUserClick?: () => void;
   t: TFunction;
 }
 
@@ -117,6 +116,7 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
     };
 
     return (
+      //@ts-expect-error - not yet ready to tackle tsfying MenuPanel
       <MenuPanel
         theme={dropdownTheme}
         btnText={t(($) => $.colorPanel.header)}

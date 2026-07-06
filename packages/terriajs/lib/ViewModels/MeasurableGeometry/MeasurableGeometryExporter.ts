@@ -357,7 +357,7 @@ export default class MeasurableGeometryExporter {
 
     const ensureClamp = (tag: "LineString" | "Point") => {
       const regex = new RegExp(`<${tag}>([\\s\\S]*?)<\\/${tag}>`, "g");
-      normalized = normalized.replace(regex, (full, inner) => {
+      normalized = normalized.replace(regex, (_full, inner) => {
         const withoutAltitudeMode = inner.replace(
           /<altitudeMode>[\s\S]*?<\/altitudeMode>/gi,
           ""

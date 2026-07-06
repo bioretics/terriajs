@@ -382,7 +382,7 @@ const MeasurableTransform = observer((props: Props) => {
           viewState.measurableDownloadPanelIsVisible === true
         }
       >
-        {i18next.t(($) => $.transformLayer.transform)}
+        <span>{i18next.t(($) => $.transformLayer.transform)}</span>
       </Button>
     </div>
   );

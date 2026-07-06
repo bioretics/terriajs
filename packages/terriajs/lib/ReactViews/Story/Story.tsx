@@ -1,5 +1,7 @@
 import classNames from "classnames";
-import React, {
+import {
+  type CSSProperties,
+  useState,
   RefObject,
   MouseEventHandler,
   useEffect,
@@ -154,7 +156,7 @@ const recaptureStory =
 
 const StoryMenu = (props: MenuProps) => {
   const { t } = useTranslation();
-  const [menuStyle, setMenuStyle] = React.useState<React.CSSProperties>({});
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   useLayoutEffect(() => {
     const updatePosition = () => {
       if (!props.menuAnchorRef.current) return;

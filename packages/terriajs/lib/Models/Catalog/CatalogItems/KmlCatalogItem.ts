@@ -180,7 +180,7 @@ class KmlCatalogItem
         action = this.sampleFromKmlData.bind(this)();
       }
       await action;
-    } catch (e) {
+    } catch (_e) {
       return this._exportDataFallback();
     }
   }
@@ -317,7 +317,7 @@ class KmlCatalogItem
         );
       } else {
         const cartesianPosition = entity.position!.getValue(JulianDate.now());
-        cartoPosition = Cartographic.fromCartesian(cartesianPosition!!);
+        cartoPosition = Cartographic.fromCartesian(cartesianPosition!);
       }
 
       return {
@@ -482,7 +482,6 @@ class KmlCatalogItem
     const entities = this._dataSource?.entities?.values ?? [];
     if (entities.length === 0) return;
     let pathNotes = "";
-    let pointDescriptions: string[] = [];
     const folder = entities[0];
     const descriptionValue = folder.description?.getValue(JulianDate.now());
 
@@ -492,15 +491,17 @@ class KmlCatalogItem
       pathNotes = doc.body.textContent || "";
     }
 
-    pointDescriptions = (folder as any)._children.map((entity: any) => {
-      const descriptionValue = entity.description?.getValue(JulianDate.now());
-      if (descriptionValue) {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(descriptionValue, "text/html");
-        return doc.body.textContent || "";
+    const pointDescriptions: string[] = (folder as any)._children.map(
+      (entity: any) => {
+        const descriptionValue = entity.description?.getValue(JulianDate.now());
+        if (descriptionValue) {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(descriptionValue, "text/html");
+          return doc.body.textContent || "";
+        }
+        return "";
       }
-      return "";
-    });
+    );
 
     const cartesianPositions: Cartesian3[] = entities.flatMap(
       (entity) => entity.position?.getValue(JulianDate.now())?.clone() ?? []

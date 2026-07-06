@@ -477,7 +477,9 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         </div>
 
         {loadingList && (
-          <div className={Styles.notice}>{t(($) => $.microzonation.loadingList)}</div>
+          <div className={Styles.notice}>
+            {t(($) => $.microzonation.loadingList)}
+          </div>
         )}
         {listError && <div className={Styles.error}>{listError}</div>}
 
@@ -679,7 +681,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           <div className={Styles.detailWrapper}>
             {loadingDocs && (
               <div className={Styles.notice}>
-                {t("microzonation.loadingDocuments")}
+                {t(($) => $.microzonation.loadingDocuments)}
               </div>
             )}
 

@@ -149,7 +149,9 @@ const MeasurableDownloadContent = observer((props: Props) => {
             }
             disabled={isLoading}
           >
-            <option value="all">{i18next.t(($) => $.downloadData.selectAll)}</option>
+            <option value="all">
+              {i18next.t(($) => $.downloadData.selectAll)}
+            </option>
             {terria.measurableGeomList.map((geom, index) => {
               const hasValidPoints =
                 geom.stopPoints && geom.stopPoints.length > 0;
@@ -211,9 +213,11 @@ const MeasurableDownloadContent = observer((props: Props) => {
           onClick={handleDownload}
           disabled={isDownloadDisabled}
         >
-          {isLoading
-            ? i18next.t(($) => $.loader.loadingMessage)
-            : i18next.t("Download")}
+          <span>
+            {isLoading
+              ? i18next.t(($) => $.loader.loadingMessage)
+              : i18next.t(($) => $.measurableGeometry.download)}
+          </span>
         </Button>
       </div>
     </>

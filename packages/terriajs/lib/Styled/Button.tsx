@@ -1,6 +1,6 @@
 import {
+  type ReactNode,
   ReactChild,
-  ReactChildren,
   Ref,
   ComponentPropsWithoutRef,
   FC,
@@ -178,7 +178,7 @@ export type ButtonProps = {
   textLight?: boolean;
   rightIcon?: boolean;
   textProps?: any;
-  children?: ReactChildren;
+  children?: ReactNode;
   buttonRef?: Ref<HTMLButtonElement>;
   title?: string;
 } & ComponentPropsWithoutRef<typeof StyledButton>;

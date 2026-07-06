@@ -354,13 +354,16 @@ const SettingPanel: FC = observer(() => {
                       textProps={{ small: true }}
                       id="globeTranslucencyEnabled"
                       title={t(
-                        "settingPanel.terrain.globeTranslucencyEnabledTitle"
+                        ($) =>
+                          $.settingPanel.terrain.globeTranslucencyEnabledTitle
                       )}
                       isChecked={terria.globeTranslucencyEnabled}
                       onChange={toggleGlobeTranslucencyEnabled}
                     >
                       <TextSpan>
-                        {t(($) => $.settingPanel.terrain.globeTranslucencyEnabled)}
+                        {t(
+                          ($) => $.settingPanel.terrain.globeTranslucencyEnabled
+                        )}
                       </TextSpan>
                     </Checkbox>
                   </>
@@ -373,13 +376,16 @@ const SettingPanel: FC = observer(() => {
                       textProps={{ small: true }}
                       id="enableCollisionDetection"
                       title={t(
-                        "settingPanel.terrain.enableCollisionDetectionTitle"
+                        ($) =>
+                          $.settingPanel.terrain.enableCollisionDetectionTitle
                       )}
                       isChecked={terria.enableCollisionDetection}
                       onChange={toggleEnableCollisionDetection}
                     >
                       <TextSpan>
-                        {t(($) => $.settingPanel.terrain.enableCollisionDetection)}
+                        {t(
+                          ($) => $.settingPanel.terrain.enableCollisionDetection
+                        )}
                       </TextSpan>
                     </Checkbox>
                   </>

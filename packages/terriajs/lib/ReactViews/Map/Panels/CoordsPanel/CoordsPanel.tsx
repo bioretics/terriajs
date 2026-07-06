@@ -25,8 +25,7 @@ import {
 } from "mobx";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
-const MenuPanel =
-  require("../../../StandardUserInterface/customizable/MenuPanel").default;
+import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
 
 interface ICoordsTextProps {
   name: string;
@@ -193,10 +192,10 @@ const SrsSelection = (props: ISrsSelectionProps) => {
 
 interface PropTypes extends WithTranslation {
   terria: Terria;
-  modalWidth: number;
+  modalWidth?: number;
   viewState: ViewState;
-  onUserClick: () => void;
-  btnDisabled: boolean;
+  onUserClick?: () => void;
+  btnDisabled?: boolean;
   t: TFunction;
 }
 
@@ -576,6 +575,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     };
 
     return (
+      //@ts-expect-error - not yet ready to tackle tsfying MenuPanel
       <MenuPanel
         theme={dropdownTheme}
         btnText={t(($) => $.coordsPanel.header)}

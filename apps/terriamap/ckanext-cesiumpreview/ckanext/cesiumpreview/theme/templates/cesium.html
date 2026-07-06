@@ -1,18 +1,14 @@
-{% extends 'dataviewer/base.html' %}
-
-{% block page %}
+{% extends 'dataviewer/base.html' %} {% block page %}
 <script>
-{% set package = c.package or h.get_action('package_show',{"id":c.id}) %}
-    var spatial = '{{ package.spatial|safe }}';
-
+  {% set package = c.package or h.get_action('package_show',{"id":c.id}) %}
+      var spatial = '{{ package.spatial|safe }}';
 </script>
-  <div>
-    <pre data-module="cesiumpreview">
+<div>
+  <pre data-module="cesiumpreview">
       <div class="loading">
         {{ _('Loading...') }}
       </div>
     </pre>
-  </div>
+</div>
 
-  {% resource 'ckanext-cesiumpreview/main' %}
-{% endblock %}
+{% resource 'ckanext-cesiumpreview/main' %} {% endblock %}

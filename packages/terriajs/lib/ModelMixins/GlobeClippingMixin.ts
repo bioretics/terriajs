@@ -120,8 +120,9 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 }
 
 namespace GlobeClippingMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof GlobeClippingMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof GlobeClippingMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model?.hasGlobeClippingMixin === true;

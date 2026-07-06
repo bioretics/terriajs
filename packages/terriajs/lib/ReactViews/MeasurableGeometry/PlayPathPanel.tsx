@@ -163,10 +163,7 @@ const PlayPathPanel = observer((props: Props) => {
         }}
       >
         <Text small textLight>
-          {i18next.t(
-            "playPath.tourPrompt",
-            "First time using Play Path? Take a quick tour!"
-          )}
+          {i18next.t(($) => $.playPath.tourPrompt)}
         </Text>
         <Box centered gap={2} style={{ marginTop: 4 }}>
           <Button
@@ -189,7 +186,7 @@ const PlayPathPanel = observer((props: Props) => {
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t(($) => $.general.skip, "Skip")}
+            {i18next.t(($) => $.general.skip)}
           </Button>
         </Box>
       </Box>
@@ -202,7 +199,7 @@ const PlayPathPanel = observer((props: Props) => {
       <button
         onClick={startPlayPathTour}
         className={Styles.btnCloseFeature}
-        title={i18next.t(($) => $.playPath.tour.helpButton, "Open Play Path tour")}
+        title={i18next.t(($) => $.playPath.tour.helpButton)}
         style={{ marginRight: 25 }}
       >
         <Icon glyph={Icon.GLYPHS.helpThick} />
@@ -267,7 +264,7 @@ const PlayPathPanel = observer((props: Props) => {
             title={i18next.t(($) => $.playPath.tooltip.stop)}
             disabled={
               !playingPath &&
-              !(currentPointIndex > 0 && currentPointIndex < pointsSize!! - 1)
+              !(currentPointIndex > 0 && currentPointIndex < pointsSize! - 1)
             }
             css={`
               color: ${theme.textLight};
@@ -301,7 +298,7 @@ const PlayPathPanel = observer((props: Props) => {
               setPlaySpeed(val);
             }}
             aria-valuetext={`${i18next.t(
-              "playPath.tooltip.speedSlider"
+              ($) => $.playPath.tooltip.speedSlider
             )}: ${playSpeed}x`}
             css={`
               flex: 1;

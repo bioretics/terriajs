@@ -21,11 +21,7 @@ import ApiRequestTraits from "../../../Traits/TraitsClasses/ApiRequestTraits";
 import GeoJsonCatalogItemTraits from "../../../Traits/TraitsClasses/GeoJsonCatalogItemTraits";
 import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
-import Model, {
-  BaseModel,
-  ModelConstructorParameters
-} from "../../Definition/Model";
-import { ModelId } from "../../../Traits/ModelReference";
+import Model, { ModelConstructorParameters } from "../../Definition/Model";
 import HasLocalData from "../../HasLocalData";
 import Terria from "../../Terria";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";

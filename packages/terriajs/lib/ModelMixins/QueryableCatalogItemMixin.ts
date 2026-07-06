@@ -27,10 +27,6 @@ export interface QueryableProperties {
 
 function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
   abstract class QueryableCatalogItemMixin extends Base {
-    constructor(...args: any[]) {
-      super(...args);
-    }
-
     get ENUM_ALL_VALUE(): string {
       return "--tutto";
     }
@@ -161,8 +157,9 @@ function QueryableCatalogItemMixin<T extends Constructor<MixinModel>>(Base: T) {
 }
 
 namespace QueryableCatalogItemMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof QueryableCatalogItemMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof QueryableCatalogItemMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model?.hasQueryableCatalogItemMixin;

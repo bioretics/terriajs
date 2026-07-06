@@ -35,8 +35,9 @@ function CatalogItemsSearchProviderMixin<
 }
 
 namespace CatalogItemsSearchProviderMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof CatalogItemsSearchProviderMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof CatalogItemsSearchProviderMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model && model.hasCatalogItemsSearchProviderMixin;

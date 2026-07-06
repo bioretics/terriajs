@@ -55,7 +55,7 @@ import SearchableCatalogItemMixin, {
   SearchableData
 } from "../../../ModelMixins/SearchableCatalogItemMixin";
 import { JsonObject } from "../../../Core/Json";
-import { FeatureCollection, Geometry } from "@turf/helpers";
+import { FeatureCollection, Point } from "geojson";
 import bbox from "@turf/bbox";
 import proj4 from "proj4";
 
@@ -800,10 +800,10 @@ export default class ArcGisMapServerCatalogItem extends SearchableCatalogItemMix
       let lon: number;
       if (
         type === "Point" &&
-        (feature.geometry as Geometry).coordinates.length === 2
+        (feature.geometry as Point).coordinates.length === 2
       ) {
-        lon = (feature.geometry as Geometry).coordinates[0] as number;
-        lat = (feature.geometry as Geometry).coordinates[1] as number;
+        lon = (feature.geometry as Point).coordinates[0] as number;
+        lat = (feature.geometry as Point).coordinates[1] as number;
       } else {
         const geojsonBbox = bbox(feature);
         const west = geojsonBbox[0];

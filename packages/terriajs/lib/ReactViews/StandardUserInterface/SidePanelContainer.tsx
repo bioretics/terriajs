@@ -1,4 +1,3 @@
-import { action } from "mobx";
 import styled from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
@@ -67,9 +66,7 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
         className={
           viewState.topElement === "SidePanel" ? "top-element" : undefined
         }
-        onClick={action(() => {
-          viewState.topElement = "SidePanel";
-        })}
+        onClick={() => viewState.setTopElement("SidePanel")}
         onTransitionEnd={() => viewState.triggerResizeEvent()}
       >
         {props.children}

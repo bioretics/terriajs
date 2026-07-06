@@ -183,11 +183,14 @@ export default class CsvCatalogItem
   public async sampleFromCsvData(): Promise<void> {
     const data = await this.forceLoadTableData();
 
-    const columns = data.reduce((acc, row) => {
-      const [columnName, ...values] = row;
-      acc[columnName] = values;
-      return acc;
-    }, {} as { [key: string]: any[] });
+    const columns = data.reduce(
+      (acc, row) => {
+        const [columnName, ...values] = row;
+        acc[columnName] = values;
+        return acc;
+      },
+      {} as { [key: string]: any[] }
+    );
 
     const rawPathNotes = (columns["path_notes"] as any[]) || [];
     const longitudes = (columns["longitude"] as any[]) || [];

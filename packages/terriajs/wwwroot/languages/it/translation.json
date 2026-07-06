@@ -1829,7 +1829,8 @@
       "clampButton": "## Ancoraggio al terreno\n\nPassa tra distanze ancorate al terreno e distanze libere (in aria).",
       "transformButton": "## Trasforma\n\nTrasforma la misura in un layer temporaneo che puoi stilizzare, esportare o presentare in modalità volo.",
       "multiPathControls": "## Gestione multipercorsi\n\nCambia percorso, aggiungine uno nuovo o rimuovi quello corrente per creare misure multi-tratta."
-    }
+    },
+    "download": "Scarica"
   },
   "elevationChart": {
     "header": "Profilo altimetrico",
@@ -1880,7 +1881,8 @@
       "speedSlider": "## Controllo Velocità\n\nRegola la velocità dell'animazione trascinando il cursore. Puoi impostare velocità da 0.5x (più lenta) fino a 3x (più veloce).",
       "playPathPanel": "## Pannello Play Path\n\nQuesto pannello permette di visualizzare mediante lo scorrimento della camera sulla mappa un percorso disegnato manualmente o caricato da file. Il pannello può essere spostato trascinandolo e anche chiuso per avere una visuale completa.",
       "cameraPosition": "## Posizione della Camera\n\nLa camera seguirà il percorso prestabilito. All'inizio sarà necessario posizionarla in prossimità del punto di partenza (che può coincidere con l’inizio effettivo del percorso o con il punto finale). È inoltre importante impostare lo zoom e l'inclinazione della camera in modo coerente con le caratteristiche del tracciato: ad esempio, in presenza di zone montuose è preferibile evitare un’inclinazione troppo bassa."
-    }
+    },
+    "tourPrompt": "Prima volta con Play Path? Fai un rapido tour!"
   },
   "pickInfo": {
     "toolName": "Info",

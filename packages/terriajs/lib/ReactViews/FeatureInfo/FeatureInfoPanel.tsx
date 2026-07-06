@@ -293,7 +293,7 @@ class FeatureInfoPanel extends Component<Props> {
     const prettyHeight = this.props.viewState.terria.cesium
       ? this.props.viewState.terria.pickedPosition?.height
         ? `${this.props.viewState.terria.pickedPosition?.height.toFixed(1)}${t(
-            "featureInfo.heightAboveSea"
+            ($) => $.featureInfo.heightAboveSea
           )}`
         : ""
       : "2D";
@@ -606,12 +606,12 @@ interface IWhereAmIProps {
   t: TFunction;
 }
 
-const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
+const WhereAmI = ({
   whereAmI,
   whereAmIDetailed,
   viewState,
   t
-}) => {
+}: IWhereAmIProps) => {
   return (
     <>
       <div className={Styles.location}>

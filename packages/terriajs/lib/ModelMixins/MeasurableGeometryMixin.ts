@@ -108,8 +108,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
 }
 
 namespace MeasurableGeometryMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof MeasurableGeometryMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof MeasurableGeometryMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model?.hasMeasurableMixin;

@@ -6,7 +6,7 @@ import SearchableCatalogItemTraits from "../Traits/TraitsClasses/SearchableCatal
 import SearchResult from "../Models/SearchProviders/SearchResult";
 import createZoomToFunction from "../Map/Vector/zoomRectangleFromPoint";
 
-import { Geometry } from "@turf/helpers";
+import { Geometry } from "geojson";
 import TerriaFeature from "../Models/Feature/Feature";
 import { JsonObject } from "../Core/Json";
 
@@ -68,8 +68,9 @@ function SearchableCatalogItemMixin<T extends Constructor<MixinModel>>(
 }
 
 namespace SearchableCatalogItemMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof SearchableCatalogItemMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof SearchableCatalogItemMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model?.hasSearchableCatalogItemMixin;

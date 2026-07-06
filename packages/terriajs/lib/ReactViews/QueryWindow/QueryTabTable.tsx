@@ -8,6 +8,7 @@ import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
+import { Point } from "geojson";
 import MappableMixin from "../../ModelMixins/MappableMixin";
 import GeoJsonMixin from "../../ModelMixins/GeojsonMixin";
 
@@ -92,8 +93,8 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
                   const values = filteredFeatures.map((elem) =>
                     [
                       ...Object.values(elem.properties!),
-                      (elem.geometry as Geom).coordinates[1],
-                      (elem.geometry as Geometry).coordinates[0]
+                      (elem.geometry as Point).coordinates[1],
+                      (elem.geometry as Point).coordinates[0]
                     ].join(";")
                   );
                   const rows = [header, ...values];

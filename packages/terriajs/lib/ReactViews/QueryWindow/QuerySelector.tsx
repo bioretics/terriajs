@@ -16,7 +16,7 @@ const QuerySelector = observer(
     const { t } = useTranslation();
     return (
       <>
-        <Box styledMargin="10px 20px">{t(label)}</Box>
+        <Box styledMargin="10px 20px">{t(label as any)}</Box>
         <Box styledMargin="0px 20px 10px 20px">
           <Select
             css={`
@@ -41,7 +41,7 @@ const QuerySelector = observer(
                 >
                   {opt.label.startsWith("sum-")
                     ? `${t(($) => $.queryTab.sum)} "${opt.label.slice(4)}"`
-                    : t(opt.label)}
+                    : t(opt.label as any)}
                 </option>
               );
             })}

@@ -71,7 +71,7 @@ export function SearchInCatalogItems({
       fullWidth
       onClick={() => {
         const { searchState } = viewState;
-        searchState.catalogItemsSearchText = searchState.locationSearchText;
+        searchState.setCatalogItemsSearchText(searchState.locationSearchText);
         if (handleClick) {
           handleClick();
         }

@@ -334,9 +334,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
         .replace("Mrd", "Mld");
     };
 
-    const randomIndex = Math.floor(
-      (randomNumber ?? Math.random()) * COLORS.length
-    );
+    const randomIndex = Math.floor(randomNumber * COLORS.length);
 
     const renderPieChart = () => {
       const dataPurged = data.filter((elem) => elem.valuePerc > 0);

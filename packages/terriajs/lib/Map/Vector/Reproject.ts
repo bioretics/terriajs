@@ -66,10 +66,9 @@ export default {
     }
     // proj4 2.19's bundled types require ProjectionDefinition, but the
     // runtime accepts proj strings (as upstream's original code relies on).
-    type ProjArg = Parameters<typeof proj4.transform>[0];
     const result = proj4.transform(
-      source as unknown as ProjArg,
-      dest as unknown as ProjArg,
+      source as unknown as Parameters<typeof proj4.transform>[0],
+      dest as unknown as Parameters<typeof proj4.transform>[0],
       coordinates,
       false
     );

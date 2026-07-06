@@ -193,7 +193,7 @@ const LoginPanel = observer((props: Props) => {
               })}
             >
               <Text style={{ textAlign: "center", fontSize: "0.8em" }}>
-                {t(messageKey)}
+                {t(messageKey as any)}
               </Text>
             </div>
           )}

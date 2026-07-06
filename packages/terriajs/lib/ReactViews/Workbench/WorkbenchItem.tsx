@@ -138,9 +138,7 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
               <BoxSpan
                 padded
                 title={
-                  isOpen
-                    ? t(($) => $.general.close)
-                    : t(($) => $.general.open)
+                  isOpen ? t(($) => $.general.close) : t(($) => $.general.open)
                 }
               >
                 {isOpen ? (

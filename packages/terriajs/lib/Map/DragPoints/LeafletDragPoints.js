@@ -127,7 +127,7 @@ LeafletDragPoints.prototype._onMouseMove = function (move) {
  *
  * @param {Leaflet.MouseEvent} e Information about where the event occurred.
  */
-LeafletDragPoints.prototype._onMouseUp = function (e) {
+LeafletDragPoints.prototype._onMouseUp = function (_e) {
   const currentPosition = defined(this._entityDragged)
     ? this._entityDragged.position.getValue(
         this._terria.timelineClock.currentTime

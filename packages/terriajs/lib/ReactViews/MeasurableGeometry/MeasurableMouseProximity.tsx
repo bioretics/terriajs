@@ -63,7 +63,9 @@ const MeasurableMouseProximity = observer((props: Props) => {
     const sampleAndCache = async () => {
       const stopSource = currentGeom.stopPoints ?? [];
       const sampledSource =
-        currentGeom.onlyPoints === false ? currentGeom.sampledPoints ?? [] : [];
+        currentGeom.onlyPoints === false
+          ? (currentGeom.sampledPoints ?? [])
+          : [];
 
       const fallback = {
         stopPoints: toCartesianFallback(stopSource),
@@ -174,7 +176,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
           if (isDefined(mouseWindowPos)) {
             mouseScreenPoint = mouseWindowPos;
           } else {
-            const mouseHeight = isCesium2D ? 0 : mouseCoords.height ?? 0;
+            const mouseHeight = isCesium2D ? 0 : (mouseCoords.height ?? 0);
             const mouseCartesian = Cartesian3.fromRadians(
               mouseCoords.longitude,
               mouseCoords.latitude,
@@ -183,7 +185,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
             );
 
             const projectedMouseWindowPos =
-              SceneTransforms.wgs84ToWindowCoordinates(scene, mouseCartesian);
+              SceneTransforms.worldToWindowCoordinates(scene, mouseCartesian);
             if (!isDefined(projectedMouseWindowPos)) return null;
             mouseScreenPoint = projectedMouseWindowPos;
           }
@@ -219,7 +221,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
                   )
                 : pointCartesian;
 
-            const windowPos = SceneTransforms.wgs84ToWindowCoordinates(
+            const windowPos = SceneTransforms.worldToWindowCoordinates(
               scene,
               pointCartesianForProjection
             );

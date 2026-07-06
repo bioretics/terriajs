@@ -90,7 +90,7 @@ export default observer<React.FC>(function QueryWindow() {
                   }}
                   isCurrent={currentTab === keyTab}
                 >
-                  {t(Tabs[keyTab].title)}
+                  {t(Tabs[keyTab].title as any)}
                 </ButtonTab>
               </div>
             </li>

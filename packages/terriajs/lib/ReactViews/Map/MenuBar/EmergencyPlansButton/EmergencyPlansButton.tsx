@@ -1,4 +1,4 @@
-import React, { Ref } from "react";
+import { Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { DefaultTheme } from "styled-components";
 import Terria from "../../../../Models/Terria";

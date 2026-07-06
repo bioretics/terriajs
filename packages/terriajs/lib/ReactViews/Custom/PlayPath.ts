@@ -84,8 +84,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const pts = isCesium2D
       ? geom.stopPoints
       : terria.cesium
-      ? geom.sampledPoints
-      : geom.stopPoints;
+        ? geom.sampledPoints
+        : geom.stopPoints;
 
     if (!pts || pts.length === 0) return;
 
@@ -96,6 +96,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const camera = terria.cesium?.scene.camera;
     if (!camera) return;
 
+    // Deliberate initial sync update (fork rer3d); safe: runs once per camera.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkAndUpdatePitch();
 
     const onCameraChanged = () => {
@@ -158,6 +160,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   useEffect(() => {
     if (countdown === null) return;
     if (countdown === 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- countdown handoff (fork rer3d)
       setCountdown(null);
       runInAction(() => {
         viewState.isPlayingPath = true;

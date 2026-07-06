@@ -8,7 +8,7 @@ import Text from "../../../Styled/Text";
 import Icon, { StyledIcon } from "../../../Styled/Icon";
 import MovementsController from "./MovementsController";
 
-const wasdControlsImage = require("../../../../wwwroot/images/keyboard_controls.svg");
+import wasdControlsImage from "../../../../wwwroot/images/keyboard_controls.svg";
 
 type MovementControlsProps = {
   cesium: Cesium;
@@ -24,7 +24,6 @@ const MovementControls: React.FC<MovementControlsProps> = (props) => {
     const movementsController = new MovementsController(props.cesium);
     const detach = movementsController.activate();
     return detach;
-    /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [props.cesium]);
 
   return (

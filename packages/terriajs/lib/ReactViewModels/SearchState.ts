@@ -110,6 +110,12 @@ export default class SearchState {
       this.catalogItemsSearchProvider?.search(newText, false);
   }
 
+  // Fork (rer3d): action form of the setter for use inside React handlers.
+  @action
+  setCatalogItemsSearchText(newText: string): void {
+    this.catalogItemsSearchText = newText;
+  }
+
   @computed
   get locationSearchProviders(): LocationSearchProviderMixin.Instance[] {
     return this.terria.searchBarModel.locationSearchProvidersArray;

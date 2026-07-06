@@ -1,4 +1,5 @@
 import { Rnd } from "react-rnd";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import { runInAction } from "mobx";
 import MeasurableDownloadContent from "./MeasurableDownloadContent";
 import Terria from "../../Models/Terria";
@@ -83,7 +84,10 @@ const MeasurableDownloadPanel = observer((props: Props) => {
           terria={downloadProps.terria}
           viewState={downloadProps.viewState}
           pathNotes={currentGeom.pathNotes ?? ""}
-          ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
+          ellipsoid={
+            downloadProps.terria?.cesium?.scene?.globe?.ellipsoid ??
+            Ellipsoid.WGS84
+          }
           defaultFilename={
             downloadProps.viewState.measurableDownloadPanelDefaultName
           }
@@ -133,7 +137,10 @@ const MeasurableDownloadPanel = observer((props: Props) => {
             terria={downloadProps.terria}
             viewState={downloadProps.viewState}
             pathNotes={currentGeom.pathNotes ?? ""}
-            ellipsoid={downloadProps.terria?.cesium?.scene?.globe?.ellipsoid!!}
+            ellipsoid={
+              downloadProps.terria?.cesium?.scene?.globe?.ellipsoid ??
+              Ellipsoid.WGS84
+            }
             defaultFilename={
               downloadProps.viewState.measurableDownloadPanelDefaultName
             }

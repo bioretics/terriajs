@@ -1746,8 +1746,7 @@ export default class Cesium extends GlobeOrMap {
                     this._getSplitterSideForScreenPosition(screenPosition);
 
                   features = features.filter((feature) => {
-                    const splitDirection =
-                      feature.imageryLayer?.splitDirection;
+                    const splitDirection = feature.imageryLayer?.splitDirection;
                     return (
                       splitDirection === pickedSide ||
                       splitDirection === SplitDirection.NONE
