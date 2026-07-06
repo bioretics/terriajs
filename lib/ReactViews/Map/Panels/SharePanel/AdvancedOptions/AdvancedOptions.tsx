@@ -19,6 +19,10 @@ interface IAdvancedOptionsProps {
   includeStoryInShare: boolean;
   includeStoryInShareOnChange: () => void;
   shouldShortenOnChange: () => void;
+  includeScaleBar: boolean;
+  includeScaleBarOnChange: () => void;
+  includeCompass: boolean;
+  includeCompassOnChange: () => void;
   shareUrl: MutableRefObject<IShareUrlRef | null>;
 }
 
@@ -28,6 +32,10 @@ export const AdvancedOptions: FC<IAdvancedOptionsProps> = ({
   includeStoryInShare,
   includeStoryInShareOnChange,
   shouldShortenOnChange,
+  includeScaleBar,
+  includeScaleBarOnChange,
+  includeCompass,
+  includeCompassOnChange,
   shareUrl
 }) => {
   const { t } = useTranslation();
@@ -87,6 +95,24 @@ export const AdvancedOptions: FC<IAdvancedOptionsProps> = ({
               isDisabled={!canShortenUrl}
             >
               <TextSpan>{t("share.shortenUsingService")}</TextSpan>
+            </Checkbox>
+            <Spacing bottom={1} />
+            <Checkbox
+              textProps={{ medium: true }}
+              id="includeScaleBar"
+              isChecked={includeScaleBar}
+              onChange={includeScaleBarOnChange}
+            >
+              <TextSpan>{t("share.includeScaleBar")}</TextSpan>
+            </Checkbox>
+            <Spacing bottom={1} />
+            <Checkbox
+              textProps={{ medium: true }}
+              id="includeCompass"
+              isChecked={includeCompass}
+              onChange={includeCompassOnChange}
+            >
+              <TextSpan>{t("share.includeCompass")}</TextSpan>
             </Checkbox>
             <Spacing bottom={2} />
             <EmbedSection shareUrl={shareUrl?.current} />

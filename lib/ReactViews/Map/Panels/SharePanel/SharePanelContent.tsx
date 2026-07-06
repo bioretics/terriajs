@@ -1,4 +1,5 @@
 import React, { FC, useCallback, useMemo, useState } from "react";
+import { observer } from "mobx-react";
 import { useTranslation } from "react-i18next";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
@@ -19,11 +20,8 @@ interface ISharePanelContentProps {
   closePanel: () => void;
 }
 
-export const SharePanelContent: FC<ISharePanelContentProps> = ({
-  terria,
-  viewState,
-  closePanel
-}) => {
+export const SharePanelContent: FC<ISharePanelContentProps> = observer(
+  ({ terria, viewState, closePanel }) => {
   const { t } = useTranslation();
   const canShortenUrl = useMemo(() => !!canShorten(terria), [terria]);
 
@@ -71,8 +69,12 @@ export const SharePanelContent: FC<ISharePanelContentProps> = ({
         shouldShortenOnChange={shouldShortenOnChange}
         includeStoryInShare={includeStoryInShare}
         includeStoryInShareOnChange={includeStoryInShareOnChange}
+        includeScaleBar={viewState.printIncludeScaleBar}
+        includeScaleBarOnChange={() => viewState.togglePrintIncludeScaleBar()}
+        includeCompass={viewState.printIncludeCompass}
+        includeCompassOnChange={() => viewState.togglePrintIncludeCompass()}
         shareUrl={shareUrlRef}
       />
     </Box>
   );
-};
+});

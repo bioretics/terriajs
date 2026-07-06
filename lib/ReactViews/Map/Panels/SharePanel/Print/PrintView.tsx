@@ -1,4 +1,5 @@
 import DOMPurify from "dompurify";
+import { observer } from "mobx-react";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { StyleSheetManager, ThemeProvider } from "styled-components";
@@ -10,6 +11,7 @@ import {
   buildShortShareLink,
   canShorten
 } from "../BuildShareLink";
+import PrintCompass from "./PrintCompass";
 import PrintDatasets from "./PrintDatasets";
 import PrintSource from "./PrintSource";
 import PrintViewButtons from "./PrintViewButtons";
@@ -68,6 +70,7 @@ const styles = `
       position: absolute;
       bottom: 5px;
       right: 10px;
+      z-index: 1;
       background: white;
       padding: 5px;
     }
@@ -85,6 +88,10 @@ const styles = `
       border-right: 3px solid black;
       border-left: 3px solid black;
       margin: 0 auto;
+    }
+
+    .tjs-print__compass label {
+      color: black;
     }
 
     body {
@@ -133,12 +140,13 @@ const getScale = (maybeElement: Element | undefined) =>
     ? PRINT_MAP_WIDTH / (maybeElement as HTMLElement).offsetWidth
     : 1;
 
-const PrintView = (props: Props) => {
+const PrintView = observer((props: Props) => {
   const viewState = useViewState();
   const rootNode = useRef(document.createElement("main"));
 
   const [screenshot, setScreenshot] = useState<Promise<string> | null>(null);
   const [shareLink, setShareLink] = useState("");
+  const mapScale = getScale(viewState.terria.currentViewer.getContainer());
 
   useEffect(() => {
     props.window.document.title = "Print view";
@@ -176,7 +184,13 @@ const PrintView = (props: Props) => {
   return ReactDOM.createPortal(
     <StyleSheetManager target={props.window.document.head}>
       <ThemeProvider theme={terriaTheme}>
-        <PrintViewButtons window={props.window} screenshot={screenshot} />
+        <PrintViewButtons
+          window={props.window}
+          screenshot={screenshot}
+          terria={viewState.terria}
+          includeScaleBar={viewState.printIncludeScaleBar}
+          includeCompass={viewState.printIncludeCompass}
+        />
         <section className="mapSection">
           <div className="datasets">
             <PrintWorkbench workbench={viewState.terria.workbench} />
@@ -184,12 +198,15 @@ const PrintView = (props: Props) => {
           <div className="map">
             {screenshot ? (
               <PrintViewMap screenshot={screenshot}>
-                <DistanceLegend
-                  scale={getScale(
-                    viewState.terria.currentViewer.getContainer()
-                  )}
-                  isPrintMode
-                />
+                {viewState.printIncludeScaleBar && (
+                  <DistanceLegend scale={mapScale} isPrintMode />
+                )}
+                {viewState.printIncludeCompass && (
+                  <PrintCompass
+                    terria={viewState.terria}
+                    scale={mapScale}
+                  />
+                )}
               </PrintViewMap>
             ) : (
               <div>Loading...</div>
@@ -207,6 +224,6 @@ const PrintView = (props: Props) => {
     </StyleSheetManager>,
     rootNode.current
   );
-};
+});
 
 export default PrintView;
