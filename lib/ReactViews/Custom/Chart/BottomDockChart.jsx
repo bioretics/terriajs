@@ -15,6 +15,7 @@ import { Group } from "@visx/group";
 import { withParentSize } from "@visx/responsive";
 import { scaleLinear, scaleTime } from "@visx/scale";
 import { Line } from "@visx/shape";
+import FileSaver from "file-saver";
 import PropTypes from "prop-types";
 import React from "react";
 import groupBy from "lodash-es/groupBy";
@@ -28,6 +29,7 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import Dropdown from "../../Generic/Dropdown";
 import MeasurablePanelManager from "../MeasurablePanelManager";
 import { terriaTheme } from "../../StandardUserInterface";
 import html2canvas from "html2canvas";
@@ -97,6 +99,7 @@ class Chart extends React.Component {
   @observable.ref zoomedXScale;
   @observable mouseCoords;
   @observable.ref forcedPoint = undefined;
+  @observable isDownloading;
   zoomXRef = React.createRef();
   hoverAutorunDisposer = undefined;
   constructor(props) {
@@ -259,6 +262,11 @@ class Chart extends React.Component {
     this.forcedPoint = point;
   }
 
+  @action
+  setIsDownloading(isDownloading) {
+    this.isDownloading = isDownloading;
+  }
+
   setMouseCoordsFromEvent(event) {
     const coords = localPoint(
       event.target.ownerSVGElement || event.target,
@@ -396,13 +404,7 @@ class Chart extends React.Component {
     });
   }
 
-  @observable isDownloading;
   chartRef = React.createRef();
-
-  @action
-  setIsDownloading(isDownloading) {
-    this.isDownloading = isDownloading;
-  }
 
   downloadChart = () => {
     this.setIsDownloading(true);
@@ -428,6 +430,42 @@ class Chart extends React.Component {
     }, 0);
   };
 
+  downloadPoints = (format) => {
+    const payload = generatePointExportPayload(
+      this.props.terria,
+      this.chartItems,
+      this.props.xAxis
+    );
+
+    const formats = {
+      geojson: {
+        filename: "chart-points.geojson",
+        mimeType: "application/geo+json;charset=utf-8",
+        content: generateGeoJson(payload)
+      },
+      kml: {
+        filename: "chart-points.kml",
+        mimeType: "application/vnd.google-earth.kml+xml;charset=utf-8",
+        content: generateKml(payload)
+      },
+      csv: {
+        filename: "chart-points.csv",
+        mimeType: "text/csv;charset=utf-8",
+        content: generateCsv(payload)
+      }
+    };
+
+    const selectedFormat = formats[format];
+    if (!selectedFormat) {
+      return;
+    }
+
+    FileSaver.saveAs(
+      new Blob([selectedFormat.content], { type: selectedFormat.mimeType }),
+      selectedFormat.filename
+    );
+  };
+
   render() {
     const { height, xAxis, terria } = this.props;
     if (this.chartItems.length === 0)
@@ -451,24 +489,34 @@ class Chart extends React.Component {
           ]}
           onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
         >
-          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 8
+            }}
+          >
             <button
               type="button"
-              className={Styles.btn}
+              className={Styles.downloadButton}
               style={{
-                marginTop: "auto",
-                marginBottom: "auto",
-                color: "#ffffff",
-                background: "#519ac2",
-                border: "1px solid #ffffff",
-                borderRadius: 4,
                 display: this.isDownloading ? "none" : "inline-block"
               }}
               onClick={this.downloadChart}
               disabled={this.isDownloading}
             >
-              Download
+              Download image
             </button>
+            <Dropdown
+              theme={{ button: Styles.downloadButton }}
+              options={[{ name: "GeoJSON" }, { name: "KML" }, { name: "CSV" }]}
+              selectOption={(option) => {
+                this.downloadPoints(option.name.toLowerCase());
+              }}
+            >
+              Download points ▾
+            </Dropdown>
             <Legends width={this.plotWidth} chartItems={this.chartItems} />
           </div>
           <div style={{ position: "relative" }}>
@@ -794,4 +842,198 @@ function findNearestPoint(points, coords, xScale, maxDistancePx) {
 function sanitizeIdString(id) {
   // delete all non-alphanum chars
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
+function generatePointExportPayload(terria, chartItems, xAxis) {
+  const geom = terria?.measurableGeomList?.[terria?.measurableGeometryIndex];
+
+  if (geom) {
+    return chartItems.flatMap((chartItem) => {
+      const series = getGeometrySeries(geom, chartItem.key);
+      if (!series) {
+        return [];
+      }
+
+      return series.points.map((point, index) => ({
+        seriesName: chartItem.name,
+        seriesKey: chartItem.key,
+        pointIndex: index,
+        x: series.distances
+          ? cumulativeDistance(series.distances, index)
+          : null,
+        y: point.height,
+        longitude: degrees(point.longitude),
+        latitude: degrees(point.latitude),
+        height: point.height,
+        description: series.descriptions?.[index] ?? ""
+      }));
+    });
+  }
+
+  return chartItems.flatMap((chartItem) =>
+    chartItem.points.map((point, index) => ({
+      seriesName: chartItem.name,
+      seriesKey: chartItem.key,
+      pointIndex: index,
+      x: serializeChartValue(point.x, xAxis),
+      y: point.y,
+      longitude: null,
+      latitude: null,
+      height: null,
+      description: ""
+    }))
+  );
+}
+
+function getGeometrySeries(geom, chartItemKey) {
+  if (chartItemKey === "path") {
+    return {
+      points: geom.stopPoints ?? [],
+      distances: geom.stopGroundDistances ?? [],
+      descriptions: geom.pointDescriptions ?? []
+    };
+  }
+
+  if (chartItemKey === "path_sampled") {
+    return {
+      points: geom.sampledPoints ?? [],
+      distances: geom.sampledDistances ?? [],
+      descriptions: geom.pointDescriptions ?? []
+    };
+  }
+
+  return undefined;
+}
+
+function cumulativeDistance(distances, pointIndex) {
+  return distances
+    .slice(0, pointIndex + 1)
+    .reduce((acc, distance) => acc + (distance ?? 0), 0);
+}
+
+function degrees(radians) {
+  return (radians * 180) / Math.PI;
+}
+
+function serializeChartValue(value, xAxis) {
+  if (value instanceof Date) {
+    return xAxis?.scale === "time" ? value.toISOString() : value.getTime();
+  }
+
+  return value;
+}
+
+function generateCsv(rows) {
+  const headers = [
+    "series_name",
+    "series_key",
+    "point_index",
+    "x",
+    "y",
+    "longitude",
+    "latitude",
+    "height",
+    "description"
+  ];
+
+  return [
+    headers.join(","),
+    ...rows.map((row) =>
+      [
+        row.seriesName,
+        row.seriesKey,
+        row.pointIndex,
+        row.x,
+        row.y,
+        row.longitude,
+        row.latitude,
+        row.height,
+        row.description
+      ]
+        .map(csvCell)
+        .join(",")
+    )
+  ].join("\n");
+}
+
+function generateGeoJson(rows) {
+  return JSON.stringify({
+    type: "FeatureCollection",
+    name: "chart-points",
+    features: rows.map((row) => ({
+      type: "Feature",
+      properties: {
+        series_name: row.seriesName,
+        series_key: row.seriesKey,
+        point_index: row.pointIndex,
+        x: row.x,
+        y: row.y,
+        height: row.height,
+        description: row.description
+      },
+      geometry:
+        row.longitude !== null && row.latitude !== null
+          ? {
+              type: "Point",
+              coordinates: [row.longitude, row.latitude, row.height]
+            }
+          : {
+              type: "Point",
+              coordinates: [row.x, row.y]
+            }
+    }))
+  });
+}
+
+function generateKml(rows) {
+  const placemarks = rows
+    .map((row) => {
+      const coordinates =
+        row.longitude !== null && row.latitude !== null
+          ? `${row.longitude},${row.latitude},${row.height ?? 0}`
+          : `${row.x},${row.y},0`;
+
+      return `
+        <Placemark>
+          <name>${escapeXml(row.seriesName)} ${escapeXml(row.pointIndex)}</name>
+          <description><![CDATA[
+            <div><strong>Series:</strong> ${escapeXml(row.seriesName)}</div>
+            <div><strong>Key:</strong> ${escapeXml(row.seriesKey)}</div>
+            <div><strong>Point:</strong> ${escapeXml(row.pointIndex)}</div>
+            <div><strong>x:</strong> ${escapeXml(row.x)}</div>
+            <div><strong>y:</strong> ${escapeXml(row.y)}</div>
+            <div><strong>Longitude:</strong> ${escapeXml(row.longitude)}</div>
+            <div><strong>Latitude:</strong> ${escapeXml(row.latitude)}</div>
+            <div><strong>Height:</strong> ${escapeXml(row.height)}</div>
+            <div><strong>Description:</strong> ${escapeXml(
+              row.description
+            )}</div>
+          ]]></description>
+          <Point>
+            <coordinates>${coordinates}</coordinates>
+          </Point>
+        </Placemark>`;
+    })
+    .join("");
+
+  return `<?xml version="1.0" encoding="utf-8"?>
+  <kml xmlns="http://www.opengis.net/kml/2.2">
+    <Document>
+      <name>chart-points</name>
+      ${placemarks}
+    </Document>
+  </kml>`;
+}
+
+function csvCell(value) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+function escapeXml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
