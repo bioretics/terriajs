@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import React, { VFC, useCallback, useEffect, useState } from "react";
+import { VFC, useCallback, useEffect, useState } from "react";
 import styled, { css, keyframes, useTheme } from "styled-components";
 import EventHelper from "terriajs-cesium/Source/Core/EventHelper";
 import { useViewState } from "../Context";
@@ -59,7 +59,10 @@ interface IStyledProgressBarProps {
 const StyledProgressBar = styled.div<IStyledProgressBarProps>`
   height: 5px;
   overflow: hidden;
-  transition: opacity 200ms linear, width 200ms linear, visibility 400ms linear;
+  transition:
+    opacity 200ms linear,
+    width 200ms linear,
+    visibility 400ms linear;
   background-color: ${(props) => props.backgroundColor};
   width: ${(props) => props.loadPercentage};
 

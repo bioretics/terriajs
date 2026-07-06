@@ -1,16 +1,12 @@
-import { WithT } from "i18next";
 import isEmpty from "lodash-es/isEmpty";
-import React, { useEffect, useState } from "react";
+import { FC, FormEvent, ChangeEvent, useEffect, useState } from "react";
+import { TFunction } from "i18next";
 import {
   useTranslation,
   WithTranslation,
   withTranslation
 } from "react-i18next";
-import ReactSelect, {
-  ActionMeta,
-  OptionTypeBase,
-  ValueType
-} from "react-select";
+import ReactSelect, { ActionMeta, OnChangeValue } from "react-select";
 import styled from "styled-components";
 import ItemSearchProvider, {
   EnumItemSearchParameter,
@@ -42,7 +38,7 @@ type State =
   | { is: "error"; error: Error }
   | { is: "results"; results: ItemSearchResult[] };
 
-const SearchForm: React.FC<SearchFormProps> = (props) => {
+const SearchForm: FC<SearchFormProps> = (props) => {
   const { parameters, itemSearchProvider } = props;
   const [t] = useTranslation();
   const [state, setState] = useState<State>({ is: "initial" });
@@ -84,7 +80,7 @@ const SearchForm: React.FC<SearchFormProps> = (props) => {
       });
   }
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = (e: FormEvent) => {
     try {
       search();
     } finally {
@@ -100,10 +96,12 @@ const SearchForm: React.FC<SearchFormProps> = (props) => {
     <Form onSubmit={onSubmit}>
       <Box centered>
         {state.is === "searching" && (
-          <Loading>{t("itemSearchTool.searching")}</Loading>
+          <Loading>{t(($) => $.itemSearchTool.searching)}</Loading>
         )}
         {state.is === "error" && (
-          <ErrorComponent>{t("itemSearchTool.searchError")}</ErrorComponent>
+          <ErrorComponent>
+            {t(($) => $.itemSearchTool.searchError)}
+          </ErrorComponent>
         )}
       </Box>
       <FieldSet disabled={disabled}>
@@ -119,24 +117,25 @@ const SearchForm: React.FC<SearchFormProps> = (props) => {
           </Field>
         ))}
         <SearchButton primary type="submit" disabled={disabled}>
-          {t("itemSearchTool.searchBtnText")}
+          {t(($) => $.itemSearchTool.searchBtnText)}
         </SearchButton>
         <Button secondary type="reset" onClick={clearForm} disabled={disabled}>
-          {t("itemSearchTool.resetBtnText")}
+          {t(($) => $.itemSearchTool.resetBtnText)}
         </Button>
       </FieldSet>
     </Form>
   );
 };
 
-interface ParameterProps extends WithT {
+interface ParameterProps {
   parameter: ItemSearchParameter;
   onChange: (value: any) => void;
   value?: any;
   disabled: boolean;
+  t: TFunction;
 }
 
-const Parameter: React.FC<ParameterProps> = (props) => {
+const Parameter: FC<ParameterProps> = (props) => {
   const { parameter } = props;
   switch (parameter.type) {
     case "numeric":
@@ -148,18 +147,19 @@ const Parameter: React.FC<ParameterProps> = (props) => {
   }
 };
 
-interface NumericParameterProps extends WithT {
+interface NumericParameterProps {
   parameter: NumericItemSearchParameter;
   onChange: (value: { start?: number; end?: number } | undefined) => void;
   value?: { start: number; end: number };
+  t: TFunction;
 }
 
-export const NumericParameter: React.FC<NumericParameterProps> = (props) => {
+export const NumericParameter: FC<NumericParameterProps> = (props) => {
   const { parameter, value, t } = props;
   const { min, max } = parameter.range;
 
   const onChange =
-    (tag: "start" | "end") => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (tag: "start" | "end") => (e: ChangeEvent<HTMLInputElement>) => {
       const parsed = parseFloat(e.target.value);
       const newValue: any = { ...props.value };
       if (isNaN(parsed)) delete newValue[tag];
@@ -177,7 +177,9 @@ export const NumericParameter: React.FC<NumericParameterProps> = (props) => {
       >
         <HalfWidthLabel>
           <Box column>
-            <Text small>{t("itemSearchTool.numericParameter.minimum")}</Text>
+            <Text small>
+              {t(($) => $.itemSearchTool.numericParameter.minimum)}
+            </Text>
             <Input
               type="number"
               name={`${parameter.id}-min`}
@@ -192,7 +194,9 @@ export const NumericParameter: React.FC<NumericParameterProps> = (props) => {
         </HalfWidthLabel>
         <HalfWidthLabel>
           <Box column>
-            <Text small>{t("itemSearchTool.numericParameter.maximum")}</Text>
+            <Text small>
+              {t(($) => $.itemSearchTool.numericParameter.maximum)}
+            </Text>
             <Input
               type="number"
               name={`${parameter.id}-max`}
@@ -217,15 +221,12 @@ interface EnumParameterProps {
   disabled: boolean;
 }
 
-type SelectOnChangeHandler<
-  OptionType extends OptionTypeBase,
-  IsMulti extends boolean
-> = (
-  value: ValueType<OptionType, IsMulti>,
+type SelectOnChangeHandler<OptionType, IsMulti extends boolean> = (
+  value: OnChangeValue<OptionType, IsMulti>,
   actionMeta: ActionMeta<OptionType>
 ) => void;
 
-const EnumParameter: React.FC<EnumParameterProps> = (props) => {
+const EnumParameter: FC<EnumParameterProps> = (props) => {
   const { parameter, disabled } = props;
   const options = parameter.values.map(({ id }) => ({
     value: id,
@@ -266,7 +267,7 @@ interface TextParameterProps {
   onChange: (value: string | undefined) => void;
 }
 
-const TextParameter: React.FC<TextParameterProps> = (props) => {
+const TextParameter: FC<TextParameterProps> = (props) => {
   const { parameter, value, onChange } = props;
   return (
     <Box column>
@@ -327,7 +328,9 @@ const Input = styled.input`
   font-size: 1.1em;
 `;
 
-const Select = styled(ReactSelect).attrs({
+const Select = styled(
+  ReactSelect<{ value: string; label: string }, true>
+).attrs({
   classNamePrefix: "ReactSelect"
 })`
   color: ${(p) => p.theme.dark};

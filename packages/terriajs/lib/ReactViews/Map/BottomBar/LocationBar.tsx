@@ -1,4 +1,3 @@
-import React from "react";
 import { observer } from "mobx-react";
 import { FC, RefObject, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -80,13 +79,13 @@ export const LocationBar: FC<ILocationBarProps> = observer(
           {!mouseCoords.useProjection ? (
             <>
               <Section centered>
-                <StyledText>{t("legend.lat")}</StyledText>
+                <StyledText>{t(($) => $.legend.lat)}</StyledText>
                 <StyledText ref={latitudeRef}>
                   {mouseCoords.latitude}
                 </StyledText>
               </Section>
               <Section centered>
-                <StyledText>{t("legend.lon")}</StyledText>
+                <StyledText>{t(($) => $.legend.lon)}</StyledText>
                 <StyledText ref={longitudeRef}>
                   {mouseCoords.longitude}
                 </StyledText>
@@ -95,21 +94,21 @@ export const LocationBar: FC<ILocationBarProps> = observer(
           ) : (
             <>
               <Section>
-                <StyledText>{t("legend.zone")}</StyledText>
+                <StyledText>{t(($) => $.legend.zone)}</StyledText>
                 <StyledText ref={utmZoneRef}>{mouseCoords.utmZone}</StyledText>
               </Section>
               <Section>
-                <StyledText>{t("legend.e")}</StyledText>
+                <StyledText>{t(($) => $.legend.e)}</StyledText>
                 <StyledText ref={eastRef}>{mouseCoords.east}</StyledText>
               </Section>
               <Section>
-                <StyledText>{t("legend.n")}</StyledText>
+                <StyledText>{t(($) => $.legend.n)}</StyledText>
                 <StyledText ref={northRef}>{mouseCoords.north}</StyledText>
               </Section>
             </>
           )}
           <Section>
-            <StyledText>{t("legend.elev")}</StyledText>
+            <StyledText>{t(($) => $.legend.elev)}</StyledText>
             <StyledText ref={elevationRef}>{mouseCoords.elevation}</StyledText>
           </Section>
         </RawButton>

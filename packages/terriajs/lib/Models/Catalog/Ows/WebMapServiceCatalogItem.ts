@@ -1,5 +1,3 @@
-// const mobx = require('mobx');
-// const mobxUtils = require('mobx-utils');
 // Problems in current architecture:
 // 1. After loading, can't tell what user actually set versus what came from e.g. GetCapabilities.
 //  Solution: layering
@@ -7,13 +5,19 @@
 // 3. Observable spaghetti
 //  Solution: think in terms of pipelines with computed observables, document patterns.
 // 4. All code for all catalog item types needs to be loaded before we can do anything.
+import { FeatureCollection } from "geojson";
 import i18next from "i18next";
 import { computed, makeObservable, override, runInAction } from "mobx";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import GeographicProjection from "terriajs-cesium/Source/Core/GeographicProjection";
 import GeographicTilingScheme from "terriajs-cesium/Source/Core/GeographicTilingScheme";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import MapProjection from "terriajs-cesium/Source/Core/MapProjection";
 import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
 import combine from "terriajs-cesium/Source/Core/combine";
 import GetFeatureInfoFormat from "terriajs-cesium/Source/Scene/GetFeatureInfoFormat";
+import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
 import WebMapServiceImageryProvider from "terriajs-cesium/Source/Scene/WebMapServiceImageryProvider";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import URI from "urijs";
@@ -132,7 +136,7 @@ class WebMapServiceCatalogItem
 
   // hide elements in the info section which might show information about the datasource
   _sourceInfoItemNames = [
-    i18next.t("models.webMapServiceCatalogItem.getCapabilitiesUrl")
+    i18next.t(($) => $.models.webMapServiceCatalogItem.getCapabilitiesUrl)
   ];
 
   _webMapServiceCatalogGroup: undefined | WebMapServiceCatalogGroup = undefined;
@@ -191,7 +195,7 @@ class WebMapServiceCatalogItem
       this.tilingScheme instanceof GeographicTilingScheme &&
       this.terria.currentViewer.type === "Leaflet"
     ) {
-      return i18next.t("map.cesium.notWebMercatorTilingScheme", this);
+      return i18next.t(($) => $.map.cesium.notWebMercatorTilingScheme);
     }
     return super.shortReport;
   }
@@ -220,10 +224,15 @@ class WebMapServiceCatalogItem
     if (this.invalidLayers.length > 0)
       throw new TerriaError({
         sender: this,
-        title: i18next.t("models.webMapServiceCatalogItem.noLayerFoundTitle"),
+        title: i18next.t(
+          ($) => $.models.webMapServiceCatalogItem.noLayerFoundTitle
+        ),
         message: i18next.t(
-          "models.webMapServiceCatalogItem.noLayerFoundMessage",
-          { name: getName(this), layers: this.invalidLayers.join(", ") }
+          ($) => $.models.webMapServiceCatalogItem.noLayerFoundMessage,
+          {
+            name: getName(this),
+            layers: this.invalidLayers.join(", ")
+          }
         )
       });
   }
@@ -364,6 +373,20 @@ class WebMapServiceCatalogItem
     this.setTrait(CommonStrata.user, "secondDiffDate", undefined);
     this.setTrait(CommonStrata.user, "diffStyleId", undefined);
     this.setTrait(CommonStrata.user, "isShowingDiff", false);
+  }
+
+  getLegendBaseUrl(): string {
+    // Remove problematic query parameters from URL
+    const baseUrl = QUERY_PARAMETERS_TO_REMOVE.reduce(
+      (url, parameter) =>
+        url
+          .removeQuery(parameter)
+          .removeQuery(parameter.toUpperCase())
+          .removeQuery(parameter.toLowerCase()),
+      new URI(this.url)
+    );
+
+    return baseUrl.toString();
   }
 
   getLegendUrlForStyle(
@@ -614,15 +637,7 @@ class WebMapServiceCatalogItem
         credit: this.attribution
         // Note: we set enablePickFeatures in _currentImageryParts and _nextImageryParts
       };
-
-      if (isDefined(this.getFeatureInfoFormat?.type)) {
-        imageryOptions.getFeatureInfoFormats = [
-          new GetFeatureInfoFormat(
-            this.getFeatureInfoFormat.type,
-            this.getFeatureInfoFormat.format
-          )
-        ];
-      }
+      imageryOptions.getFeatureInfoFormats = this.getFeatureInfoFormats;
 
       if (
         imageryOptions.maximumLevel !== undefined &&
@@ -703,7 +718,7 @@ class WebMapServiceCatalogItem
         // Therefore - we only add the "Default style" / undefined option if supportsGetLegendGraphic is true
         allowUndefined: this.supportsGetLegendGraphic && options.length > 1,
         undefinedLabel: i18next.t(
-          "models.webMapServiceCatalogItem.defaultStyleLabel"
+          ($) => $.models.webMapServiceCatalogItem.defaultStyleLabel
         ),
         disable: this.isShowingDiff
       };
@@ -794,6 +809,31 @@ class WebMapServiceCatalogItem
     if (this.getFeatureInfoFormat.format !== "text/csv") return () => ({});
     return csvFeatureInfoContext(this);
   }
+
+  @computed
+  get getFeatureInfoFormats() {
+    const customFormat = this.getFeatureInfoFormat;
+    if (customFormat) {
+      if (customFormat.type === "json") {
+        return [
+          new GetFeatureInfoFormat("json", "application/json", (json) =>
+            geoJsonToFeatureInfoWithProject(json, this.tilingScheme.projection)
+          )
+        ];
+      } else {
+        return [
+          new GetFeatureInfoFormat(customFormat.type, customFormat.format)
+        ];
+      }
+    }
+    return [
+      new GetFeatureInfoFormat("json", "application/json", (json) =>
+        geoJsonToFeatureInfoWithProject(json, this.tilingScheme.projection)
+      ),
+      new GetFeatureInfoFormat("xml", "text/xml"),
+      new GetFeatureInfoFormat("csv", "text/csv")
+    ];
+  }
 }
 
 /**
@@ -820,6 +860,44 @@ export function formatDimensionsForOws(
       },
     {}
   );
+}
+
+// Take the GetFeatureInfo response and reproject the feature coordinates to geographic if necessary, so the position is correct when displayed on the map.
+// Cesium [GetFeatureInfoFormat](https://github.com/CesiumGS/cesium/blob/5754031f65646bee5f9d0e9a56dec7d3677a8b08/packages/engine/Source/Scene/GetFeatureInfoFormat.js#L74) assumes picked features is returned in geographic projection, so we need to convert them when tile scheme is not geographic.
+function geoJsonToFeatureInfoWithProject(
+  json: FeatureCollection,
+  projection: MapProjection
+) {
+  const result = [];
+
+  const features = json.features;
+  for (let i = 0; i < features.length; ++i) {
+    const feature = features[i];
+
+    const featureInfo = new ImageryLayerFeatureInfo();
+    featureInfo.data = feature;
+    featureInfo.properties = feature.properties;
+    featureInfo.configureNameFromProperties(feature.properties);
+    featureInfo.configureDescriptionFromProperties(feature.properties);
+
+    // If this is a point feature, use the coordinates of the point.
+    if (!!feature.geometry && feature.geometry.type === "Point") {
+      const x = feature.geometry.coordinates[0];
+      const y = feature.geometry.coordinates[1];
+
+      if (!projection || projection instanceof GeographicProjection) {
+        featureInfo.position = Cartographic.fromDegrees(x, y);
+      } else {
+        const positionInMeters = new Cartesian3(x, y, 0);
+        const cartographic = projection.unproject(positionInMeters);
+        featureInfo.position = cartographic;
+      }
+    }
+
+    result.push(featureInfo);
+  }
+
+  return result;
 }
 
 export default WebMapServiceCatalogItem;

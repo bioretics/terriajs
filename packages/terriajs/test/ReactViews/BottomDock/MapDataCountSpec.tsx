@@ -1,47 +1,46 @@
-const create: any = require("react-test-renderer").create;
-import React from "react";
-import { act } from "react-dom/test-utils";
+import { render, screen } from "@testing-library/react";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { runInAction } from "mobx";
-const MapDataCount =
-  require("../../../lib/ReactViews/BottomDock/MapDataCount").default;
+import MapDataCount from "../../../lib/ReactViews/BottomDock/MapDataCount";
+import SimpleCatalogItem from "../../Helpers/SimpleCatalogItem";
 
 describe("MapDataCount", function () {
   let terria: Terria;
   let viewState: ViewState;
-
-  let testRenderer: any;
 
   beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     viewState = new ViewState({
-      terria: terria,
-      catalogSearchProvider: undefined
+      terria: terria
     });
   });
 
-  it("renders", function () {
+  it("renders noMapDataEnabled when no data on map", function () {
     expect(viewState.useSmallScreenInterface).toEqual(false);
-    act(() => {
-      testRenderer = create(
-        <MapDataCount terria={terria} viewState={viewState} />
-      );
-    });
-    const divs = testRenderer.root.findByType("div");
-    expect(divs).toBeDefined();
+    render(<MapDataCount terria={terria} viewState={viewState} />);
+    expect(screen.getByText("countDatasets.noMapDataEnabled")).toBeVisible();
+  });
+
+  it("renders count of datasets on map", async function () {
+    const simple1 = new SimpleCatalogItem("simple1", terria);
+    terria.addModel(simple1);
+    await terria.workbench.add(simple1);
+
+    render(<MapDataCount terria={terria} viewState={viewState} />);
+
+    expect(screen.getByText("countDatasets.mapDataState")).toBeVisible();
   });
 
   it("doesn't render anything when in mobile UI via useSmallScreenInterface", function () {
     runInAction(() => (viewState.useSmallScreenInterface = true));
     expect(viewState.useSmallScreenInterface).toEqual(true);
-    act(() => {
-      testRenderer = create(
-        <MapDataCount terria={terria} viewState={viewState} />
-      );
-    });
-    expect(() => testRenderer.root.findByType("div")).toThrow();
+    render(<MapDataCount terria={terria} viewState={viewState} />);
+
+    expect(
+      screen.queryByText("countDatasets.noMapDataEnabled")
+    ).not.toBeInTheDocument();
   });
 });

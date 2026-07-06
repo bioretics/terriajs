@@ -1,13 +1,13 @@
 import { observer } from "mobx-react";
 import { runInAction } from "mobx";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { Trans, withTranslation } from "react-i18next";
 import {
   Category,
   DatatabAction
-} from "../../../../Core/AnalyticEvents/analyticEvents";
-import getDataType from "../../../../Core/getDataType";
+} from "../../../../Core/Analytics/analyticEvents";
+import getDataTypes from "../../../../Core/getDataType";
 import TimeVarying from "../../../../ModelMixins/TimeVarying";
 import addUserCatalogMember from "../../../../Models/Catalog/addUserCatalogMember";
 import addUserFiles from "../../../../Models/Catalog/addUserFiles";
@@ -28,7 +28,7 @@ import TerriaError from "../../../../Core/TerriaError";
  * Add data panel in modal window -> My data tab
  */
 @observer
-class AddData extends React.Component {
+class AddData extends Component {
   static propTypes = {
     terria: PropTypes.object,
     viewState: PropTypes.object,
@@ -46,13 +46,14 @@ class AddData extends React.Component {
 
   constructor(props) {
     super(props);
+    const dataTypes = getDataTypes();
 
     const remoteDataTypes =
-      this.props.remoteDataTypes ?? getDataType().remoteDataType;
+      this.props.remoteDataTypes ?? dataTypes.remoteDataType;
 
     // Automatically suffix supported extension types to localDataType names
     const localDataTypes = (
-      this.props.localDataTypes ?? getDataType().localDataType
+      this.props.localDataTypes ?? dataTypes.localDataType
     ).map((dataType) => {
       const extensions = dataType.extensions?.length
         ? ` (${buildExtensionsList(dataType.extensions)})`
@@ -105,7 +106,7 @@ class AddData extends React.Component {
   async handleUrl(e) {
     const url = this.state.remoteUrl;
     e.preventDefault();
-    this.props.terria.analytics?.logEvent(
+    this.props.terria.analytics.logEvent(
       Category.dataTab,
       DatatabAction.addDataUrl,
       url
@@ -120,7 +121,6 @@ class AddData extends React.Component {
     ) {
       promise = createCatalogItemFromFileOrUrl(
         this.props.terria,
-        this.props.viewState,
         this.state.remoteUrl,
         this.props.viewState.remoteDataType?.value
       );
@@ -215,8 +215,7 @@ class AddData extends React.Component {
       } else {
         return result;
       }
-    },
-    []);
+    }, []);
 
     const remoteDataType =
       this.props.viewState.remoteDataType ?? this.state.remoteDataTypes[0];
@@ -225,10 +224,12 @@ class AddData extends React.Component {
       <div className={Styles.tabPanels}>
         {this.props.activeTab === "local" && (
           <>
-            <div className={Styles.tabHeading}>{t("addData.localAdd")}</div>
+            <div className={Styles.tabHeading}>
+              {t(($) => $.addData.localAdd)}
+            </div>
             <section className={Styles.tabPanel}>
               <label className={Styles.label}>
-                <Trans i18nKey="addData.localFileType">
+                <Trans i18nKey={($) => $.addData.localFileType}>
                   <strong>Step 1:</strong> Select file type
                 </Trans>
               </label>
@@ -245,7 +246,7 @@ class AddData extends React.Component {
                   )
                 : null}
               <label className={Styles.label}>
-                <Trans i18nKey="addData.localFile">
+                <Trans i18nKey={($) => $.addData.localFile}>
                   <strong>Step 2:</strong> Select file
                 </Trans>
               </label>
@@ -259,10 +260,12 @@ class AddData extends React.Component {
         )}
         {this.props.activeTab === "web" && (
           <>
-            <div className={Styles.tabHeading}>{t("addData.webAdd")}</div>
+            <div className={Styles.tabHeading}>
+              {t(($) => $.addData.webAdd)}
+            </div>
             <section className={Styles.tabPanel}>
               <label className={Styles.label}>
-                <Trans i18nKey="addData.webFileType">
+                <Trans i18nKey={($) => $.addData.webFileType}>
                   <strong>Step 1:</strong> Select file or web service type
                 </Trans>
               </label>
@@ -296,7 +299,7 @@ class AddData extends React.Component {
     return (
       <>
         <label className={Styles.label}>
-          <Trans i18nKey="addData.webFile">
+          <Trans i18nKey={($) => $.addData.webFile}>
             <strong>Step 2:</strong> Enter the URL of the data file or web
             service
           </Trans>
@@ -315,7 +318,7 @@ class AddData extends React.Component {
             onClick={this.handleUrl.bind(this)}
             className={Styles.urlInputBtn}
           >
-            {t("addData.urlInputBtn")}
+            {t(($) => $.addData.urlInputBtn)}
           </button>
           {this.state.isLoading && <Loader />}
         </form>
@@ -336,4 +339,4 @@ function buildExtensionsList(extensions) {
   return extensions.map((ext) => `.${ext}`).join(", ");
 }
 
-module.exports = withTranslation()(AddData);
+export default withTranslation()(AddData);

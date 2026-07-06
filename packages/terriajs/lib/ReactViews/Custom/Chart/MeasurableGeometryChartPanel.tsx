@@ -3,7 +3,9 @@
 import { observer } from "mobx-react";
 import { useState, useEffect, useRef } from "react";
 import Icon from "../../../Styled/Icon";
-import Chart from "./BottomDockChart";
+// Fork (rer3d): measurable charts use the fork's chart component (kept
+// separate from upstream's rewritten BottomDockChart.tsx).
+import Chart from "./MeasurableBottomDockChart";
 import Styles from "./chart-panel.scss";
 import { action } from "mobx";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -145,8 +147,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
 
       if (groundData?.chartPoints && groundData.chartDomain) {
         items.push({
-          categoryName: i18next.t("elevationChart.measure"),
-          name: i18next.t("elevationChart.measureGround"),
+          categoryName: i18next.t(($) => $.elevationChart.measure),
+          name: i18next.t(($) => $.elevationChart.measureGround),
           units: "m",
           key: ChartKeys.GroundChart,
           type: "lineAndPoint",
@@ -158,8 +160,8 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
       }
       if (airData?.chartPoints && airData.chartDomain) {
         items.push({
-          categoryName: i18next.t("elevationChart.measure"),
-          name: i18next.t("elevationChart.measureAir"),
+          categoryName: i18next.t(($) => $.elevationChart.measure),
+          name: i18next.t(($) => $.elevationChart.measureAir),
           units: "m",
           key: ChartKeys.AirChart,
           type: "lineAndPoint",
@@ -185,7 +187,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
         <div className={Styles.chartPanel} style={{ height: PANEL_HEIGHT }}>
           <div className={Styles.header}>
             <label className={Styles.sectionLabel}>
-              {i18next.t("elevationChart.header")}
+              {i18next.t(($) => $.elevationChart.header)}
             </label>
             <button
               type="button"

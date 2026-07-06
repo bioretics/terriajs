@@ -1,6 +1,4 @@
-"use strict";
-
-import React from "react";
+import { Component } from "react";
 import PropTypes from "prop-types";
 import defined from "terriajs-cesium/Source/Core/defined";
 import Styles from "./parameter-editors.scss";
@@ -24,7 +22,7 @@ import { runInAction } from "mobx";
 import CommonStrata from "../../Models/Definition/CommonStrata";
 
 @observer
-class GeoJsonParameterEditor extends React.Component {
+class GeoJsonParameterEditor extends Component {
   static propTypes = {
     previewed: PropTypes.object,
     parameter: PropTypes.object,
@@ -43,7 +41,7 @@ class GeoJsonParameterEditor extends React.Component {
         this.props.previewed.terria,
         this.props.viewState,
         this.props.parameter,
-        this.props.t("analytics.selectLocation")
+        this.props.t(($) => $.analytics.selectLocation)
       );
       this.props.parameter.subtype = GeoJsonParameter.PointType;
     });
@@ -78,7 +76,7 @@ class GeoJsonParameterEditor extends React.Component {
     return (
       <div>
         <div>
-          <strong>{t("analytics.selectLocation")}</strong>
+          <strong>{t(($) => $.analytics.selectLocation)}</strong>
         </div>
         <div
           className="container"
@@ -94,7 +92,7 @@ class GeoJsonParameterEditor extends React.Component {
             onClick={() => this.selectPointOnMap()}
             className={Styles.btnLocationSelector}
           >
-            <strong>{t("analytics.point")}</strong>
+            <strong>{t(($) => $.analytics.point)}</strong>
           </button>
           <button
             type="button"
@@ -102,14 +100,14 @@ class GeoJsonParameterEditor extends React.Component {
             onClick={() => this.selectPolygonOnMap()}
             className={Styles.btnLocationSelector}
           >
-            <strong>{t("analytics.polygon")}</strong>
+            <strong>{t(($) => $.analytics.polygon)}</strong>
           </button>
           <button
             type="button"
             onClick={() => this.selectExistingPolygonOnMap()}
             className={Styles.btnLocationSelector}
           >
-            <strong>{t("analytics.existingPolygon")}</strong>
+            <strong>{t(($) => $.analytics.existingPolygon)}</strong>
           </button>
         </div>
         <input
@@ -122,7 +120,7 @@ class GeoJsonParameterEditor extends React.Component {
           )}
         />
         {getDisplayValue(this.props.parameter.value, this.props.parameter) ===
-          "" && <div>{t("analytics.nothingSelected")}</div>}
+          "" && <div>{t(($) => $.analytics.nothingSelected)}</div>}
       </div>
     );
   }
@@ -144,4 +142,4 @@ function getDisplayValue(value, parameter) {
   return getRegionPickerDisplayValue(value, parameter);
 }
 
-module.exports = withTranslation()(GeoJsonParameterEditor);
+export default withTranslation()(GeoJsonParameterEditor);

@@ -9,14 +9,10 @@ class TestSearchProvider extends SearchProviderMixin(
 ) {
   type = "test";
 
-  constructor(uniqueId: string | undefined, terria: Terria) {
-    super(uniqueId, terria);
-  }
-
-  public override logEvent = jasmine.createSpy();
+  public override logEvent = jasmine.createSpy("logEvent");
   public override doSearch = jasmine
-    .createSpy()
-    .and.returnValue(Promise.resolve());
+    .createSpy("doSearch")
+    .and.callFake(() => Promise.resolve());
 }
 
 describe("SearchProviderMixin", () => {
@@ -38,38 +34,78 @@ describe("SearchProviderMixin", () => {
   });
 
   it(" - should not run search if searchText is undefined", () => {
-    const result = searchProvider.search(undefined as never);
-    expect(result.resultsCompletePromise).toBeDefined();
-    expect(result.message).toBeDefined();
+    searchProvider.search(undefined as never);
+    expect(searchProvider.searchResult.isSearching).toBeFalsy();
+    expect(searchProvider.searchResult.message).toBeDefined();
 
     expect(searchProvider.logEvent).not.toHaveBeenCalled();
     expect(searchProvider.doSearch).not.toHaveBeenCalled();
   });
 
   it(" - should not run search if only spaces", () => {
-    const result = searchProvider.search("        ");
-    expect(result.resultsCompletePromise).toBeDefined();
-    expect(result.message).toBeDefined();
+    searchProvider.search("        ");
+    expect(searchProvider.searchResult.isSearching).toBeFalsy();
+    expect(searchProvider.searchResult.message).toBeDefined();
 
     expect(searchProvider.logEvent).not.toHaveBeenCalled();
     expect(searchProvider.doSearch).not.toHaveBeenCalled();
   });
 
   it(" - should not run search if searchText less than minCharacters", () => {
-    const result = searchProvider.search("12");
-    expect(result.resultsCompletePromise).toBeDefined();
-    expect(result.message).toBeDefined();
+    searchProvider.search("12");
+    expect(searchProvider.searchResult.isSearching).toBeFalsy();
+    expect(searchProvider.searchResult.message).toBeDefined();
 
     expect(searchProvider.logEvent).not.toHaveBeenCalled();
     expect(searchProvider.doSearch).not.toHaveBeenCalled();
   });
 
   it(" - should run search if searchText is valid", () => {
-    const result = searchProvider.search("1234");
-    expect(result.resultsCompletePromise).toBeDefined();
-    expect(result.message).not.toBeDefined();
+    searchProvider.search("1234", true);
+    expect(searchProvider.searchResult.isSearching).toBeTruthy();
+    expect(searchProvider.searchResult.message).not.toBeDefined();
 
     expect(searchProvider.logEvent).toHaveBeenCalled();
     expect(searchProvider.doSearch).toHaveBeenCalled();
+  });
+
+  describe("searchBarModel minCharacters fallback", () => {
+    let freshProvider: TestSearchProvider;
+
+    beforeEach(() => {
+      freshProvider = new TestSearchProvider("fresh", terria);
+      freshProvider.logEvent.calls.reset();
+      freshProvider.doSearch.calls.reset();
+    });
+
+    it(" - uses searchBarModel minCharacters when provider trait is not set", () => {
+      terria.searchBarModel.setTrait(
+        CommonStrata.definition,
+        "minCharacters",
+        7
+      );
+      expect(freshProvider.minCharacters).toEqual(7);
+    });
+
+    it(" - provider minCharacters takes precedence over searchBarModel", () => {
+      terria.searchBarModel.setTrait(
+        CommonStrata.definition,
+        "minCharacters",
+        7
+      );
+      freshProvider.setTrait(CommonStrata.definition, "minCharacters", 2);
+      expect(freshProvider.minCharacters).toEqual(2);
+    });
+
+    it(" - does not search when text is shorter than searchBarModel minCharacters", () => {
+      terria.searchBarModel.setTrait(
+        CommonStrata.definition,
+        "minCharacters",
+        7
+      );
+      freshProvider.search("abc", true);
+      expect(freshProvider.searchResult.isSearching).toBeFalsy();
+      expect(freshProvider.doSearch).not.toHaveBeenCalled();
+    });
   });
 });

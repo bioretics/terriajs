@@ -114,13 +114,13 @@ export function getFeatureStyle(style: TableStyle, rowId: number) {
   const pointStyle = style.pointStyleMap.traits.enabled
     ? isConstantStyleMap(style.pointStyleMap.styleMap)
       ? style.pointStyleMap.styleMap.style
-      : style.pointStyleMap.styleMap.mapValueToStyle(rowId)
+      : style.pointStyleMap.styleMap.mapRowIdToStyle(rowId)
     : undefined;
 
   const outlineStyle = style.outlineStyleMap.traits.enabled
     ? isConstantStyleMap(style.outlineStyleMap.styleMap)
       ? style.outlineStyleMap.styleMap.style
-      : style.outlineStyleMap.styleMap.mapValueToStyle(rowId)
+      : style.outlineStyleMap.styleMap.mapRowIdToStyle(rowId)
     : undefined;
 
   // If no outline color is defined in traits, use current basemap contrast color
@@ -186,7 +186,7 @@ export function getFeatureStyle(style: TableStyle, rowId: number) {
   const trailStyle = style.trailStyleMap.traits.enabled
     ? isConstantStyleMap(style.trailStyleMap.styleMap)
       ? style.trailStyleMap.styleMap.style
-      : style.trailStyleMap.styleMap.mapValueToStyle(rowId)
+      : style.trailStyleMap.styleMap.mapRowIdToStyle(rowId)
     : undefined;
 
   const pathGraphicsOptions: SupportedPathGraphics | undefined = trailStyle;
@@ -211,7 +211,7 @@ export function getFeatureStyle(style: TableStyle, rowId: number) {
   const labelStyle = style.labelStyleMap.traits.enabled
     ? isConstantStyleMap(style.labelStyleMap.styleMap)
       ? style.labelStyleMap.styleMap.style
-      : style.labelStyleMap.styleMap.mapValueToStyle(rowId)
+      : style.labelStyleMap.styleMap.mapRowIdToStyle(rowId)
     : undefined;
 
   const labelGraphicsOptions: SupportedLabelGraphics | undefined = labelStyle
@@ -224,8 +224,8 @@ export function getFeatureStyle(style: TableStyle, rowId: number) {
           labelStyle.style === "OUTLINE"
             ? LabelStyle.OUTLINE
             : labelStyle.style === "FILL_AND_OUTLINE"
-            ? LabelStyle.FILL_AND_OUTLINE
-            : LabelStyle.FILL,
+              ? LabelStyle.FILL_AND_OUTLINE
+              : LabelStyle.FILL,
         fillColor: Color.fromCssColorString(labelStyle.fillColor),
         outlineColor: Color.fromCssColorString(labelStyle.outlineColor),
         pixelOffset: new Cartesian2(
@@ -236,16 +236,16 @@ export function getFeatureStyle(style: TableStyle, rowId: number) {
           labelStyle.verticalOrigin === "TOP"
             ? VerticalOrigin.TOP
             : labelStyle.verticalOrigin === "BOTTOM"
-            ? VerticalOrigin.BOTTOM
-            : labelStyle.verticalOrigin === "BASELINE"
-            ? VerticalOrigin.BASELINE
-            : VerticalOrigin.CENTER,
+              ? VerticalOrigin.BOTTOM
+              : labelStyle.verticalOrigin === "BASELINE"
+                ? VerticalOrigin.BASELINE
+                : VerticalOrigin.CENTER,
         horizontalOrigin:
           labelStyle.horizontalOrigin === "CENTER"
             ? HorizontalOrigin.CENTER
             : labelStyle.horizontalOrigin === "RIGHT"
-            ? HorizontalOrigin.RIGHT
-            : HorizontalOrigin.LEFT,
+              ? HorizontalOrigin.RIGHT
+              : HorizontalOrigin.LEFT,
         scaleByDistance: scaleByDistanceFromTraits(labelStyle?.scaleByDistance),
         disableDepthTestDistance: labelStyle?.disableDepthTestDistance
       }

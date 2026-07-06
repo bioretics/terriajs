@@ -1,5 +1,4 @@
 import { observer } from "mobx-react";
-import React from "react";
 import { useTranslation } from "react-i18next";
 import { useViewState } from "../Context";
 import HelpPrompt from "./HelpPrompt";
@@ -19,10 +18,10 @@ export const SatelliteHelpPrompt = observer(() => {
     <HelpPrompt
       isVisible={showHelp}
       viewState={viewState}
-      title={t("satelliteGuidance.titleI")}
-      content={t("satelliteGuidance.bodyI")}
-      dismissLabel={t("satelliteGuidance.prevI")}
-      acceptLabel={t("satelliteGuidance.nextI")}
+      title={t(($) => $.satelliteGuidance.titleI)}
+      content={t(($) => $.satelliteGuidance.bodyI)}
+      dismissLabel={t(($) => $.satelliteGuidance.prevI)}
+      acceptLabel={t(($) => $.satelliteGuidance.nextI)}
       onAccept={() => {
         dismissSatellitePrompt();
         viewState.showHelpPanel();

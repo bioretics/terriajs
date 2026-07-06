@@ -10,7 +10,6 @@ import Button from "../../Styled/Button";
 import DataUri from "../../Core/DataUri";
 import MappableMixin from "../../ModelMixins/MappableMixin";
 import GeoJsonMixin from "../../ModelMixins/GeojsonMixin";
-import { Geometry } from "@turf/helpers";
 
 const QueryTabTable: React.FC<TabPropsType> = observer(
   ({ item, terria }: TabPropsType) => {
@@ -93,7 +92,7 @@ const QueryTabTable: React.FC<TabPropsType> = observer(
                   const values = filteredFeatures.map((elem) =>
                     [
                       ...Object.values(elem.properties!),
-                      (elem.geometry as Geometry).coordinates[1],
+                      (elem.geometry as Geom).coordinates[1],
                       (elem.geometry as Geometry).coordinates[0]
                     ].join(";")
                   );

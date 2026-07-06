@@ -1,7 +1,12 @@
 import i18next from "i18next";
 import { computed, makeObservable, override, runInAction } from "mobx";
 import combine from "terriajs-cesium/Source/Core/combine";
+// Fork (rer3d): Resource used for typed WFS GetFeature requests.
 import Resource from "terriajs-cesium/Source/Core/Resource";
+import {
+  FeatureCollectionWithCrs,
+  toFeatureCollection
+} from "../../../Core/GeoJson";
 import TerriaError from "../../../Core/TerriaError";
 import containsAny from "../../../Core/containsAny";
 import isDefined from "../../../Core/isDefined";
@@ -9,10 +14,7 @@ import isReadOnlyArray from "../../../Core/isReadOnlyArray";
 import loadText from "../../../Core/loadText";
 import gmlToGeoJson from "../../../Map/Vector/gmlToGeoJson";
 import { getName } from "../../../ModelMixins/CatalogMemberMixin";
-import GeoJsonMixin, {
-  FeatureCollectionWithCrs,
-  toFeatureCollection
-} from "../../../ModelMixins/GeojsonMixin";
+import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import GetCapabilitiesMixin from "../../../ModelMixins/GetCapabilitiesMixin";
 import xml2json from "../../../ThirdParty/xml2json";
 import { InfoSectionTraits } from "../../../Traits/TraitsClasses/CatalogMemberTraits";
@@ -41,9 +43,11 @@ export class GetCapabilitiesStratum extends LoadableStratum(
   ): Promise<GetCapabilitiesStratum> {
     if (!isDefined(catalogItem.getCapabilitiesUrl)) {
       throw new TerriaError({
-        title: i18next.t("models.webFeatureServiceCatalogItem.missingUrlTitle"),
+        title: i18next.t(
+          ($) => $.models.webFeatureServiceCatalogItem.missingUrlTitle
+        ),
         message: i18next.t(
-          "models.webFeatureServiceCatalogItem.missingUrlMessage"
+          ($) => $.models.webFeatureServiceCatalogItem.missingUrlMessage
         )
       });
     }
@@ -96,7 +100,7 @@ export class GetCapabilitiesStratum extends LoadableStratum(
     const result: StratumFromTraits<InfoSectionTraits>[] = [
       createStratumInstance(InfoSectionTraits, {
         name: i18next.t(
-          "models.webFeatureServiceCatalogItem.getCapabilitiesUrl"
+          ($) => $.models.webFeatureServiceCatalogItem.getCapabilitiesUrl
         ),
         content: this.catalogItem.getCapabilitiesUrl
       })
@@ -118,7 +122,7 @@ export class GetCapabilitiesStratum extends LoadableStratum(
       const suffix =
         this.capabilitiesFeatureTypes.size === 1 ? "" : ` - ${layer.Title}`;
       const name = `${i18next.t(
-        "models.webFeatureServiceCatalogItem.abstract"
+        ($) => $.models.webFeatureServiceCatalogItem.abstract
       )}${suffix}`;
 
       result.push(
@@ -145,7 +149,9 @@ export class GetCapabilitiesStratum extends LoadableStratum(
       ) {
         result.push(
           createStratumInstance(InfoSectionTraits, {
-            name: i18next.t("models.webFeatureServiceCatalogItem.abstract"),
+            name: i18next.t(
+              ($) => $.models.webFeatureServiceCatalogItem.abstract
+            ),
             content: service.Abstract
           })
         );
@@ -159,7 +165,7 @@ export class GetCapabilitiesStratum extends LoadableStratum(
         result.push(
           createStratumInstance(InfoSectionTraits, {
             name: i18next.t(
-              "models.webFeatureServiceCatalogItem.accessConstraints"
+              ($) => $.models.webFeatureServiceCatalogItem.accessConstraints
             ),
             content: service.AccessConstraints
           })
@@ -171,8 +177,8 @@ export class GetCapabilitiesStratum extends LoadableStratum(
 
   @computed
   get infoSectionOrder(): string[] {
-    let layerDescriptions = [
-      i18next.t("models.webFeatureServiceCatalogItem.abstract")
+    let layerDescriptions: string[] = [
+      i18next.t(($) => $.models.webFeatureServiceCatalogItem.abstract)
     ];
 
     // If more than one layer, push layer description titles for each applicable layer
@@ -188,7 +194,7 @@ export class GetCapabilitiesStratum extends LoadableStratum(
           )
         ) {
           layerDescriptions.push(
-            `${i18next.t("models.webFeatureServiceCatalogItem.abstract")} - ${
+            `${i18next.t(($) => $.models.webFeatureServiceCatalogItem.abstract)} - ${
               layer.Title
             }`
           );
@@ -197,23 +203,25 @@ export class GetCapabilitiesStratum extends LoadableStratum(
     }
 
     return [
-      i18next.t("preview.disclaimer"),
-      i18next.t("description.name"),
+      i18next.t(($) => $.preview.disclaimer),
+      i18next.t(($) => $.description.name),
       ...layerDescriptions,
-      i18next.t("preview.datasetDescription"),
-      i18next.t("preview.serviceDescription"),
-      i18next.t("models.webFeatureServiceCatalogItem.serviceDescription"),
-      i18next.t("preview.resourceDescription"),
-      i18next.t("preview.licence"),
-      i18next.t("preview.accessConstraints"),
-      i18next.t("models.webFeatureServiceCatalogItem.accessConstraints"),
-      i18next.t("preview.author"),
-      i18next.t("preview.contact"),
-      i18next.t("models.webFeatureServiceCatalogItem.serviceContact"),
-      i18next.t("preview.created"),
-      i18next.t("preview.modified"),
-      i18next.t("preview.updateFrequency"),
-      i18next.t("models.webFeatureServiceCatalogItem.getCapabilitiesUrl")
+      i18next.t(($) => $.preview.datasetDescription),
+      i18next.t(($) => $.preview.serviceDescription),
+      i18next.t(
+        ($) => $.models.webFeatureServiceCatalogItem.serviceDescription
+      ),
+      i18next.t(($) => $.preview.resourceDescription),
+      i18next.t(($) => $.preview.licence),
+      i18next.t(($) => $.preview.accessConstraints),
+      i18next.t(($) => $.models.webFeatureServiceCatalogItem.accessConstraints),
+      i18next.t(($) => $.preview.author),
+      i18next.t(($) => $.preview.contact),
+      i18next.t(($) => $.models.webFeatureServiceCatalogItem.serviceContact),
+      i18next.t(($) => $.preview.created),
+      i18next.t(($) => $.preview.modified),
+      i18next.t(($) => $.preview.updateFrequency),
+      i18next.t(($) => $.models.webFeatureServiceCatalogItem.getCapabilitiesUrl)
     ];
   }
 
@@ -273,9 +281,9 @@ export class GetCapabilitiesStratum extends LoadableStratum(
 
     return supportsGeojson
       ? "JSON"
-      : this.capabilities.outputTypes?.find((outputFormat) =>
+      : (this.capabilities.outputTypes?.find((outputFormat) =>
           searchValue.test(outputFormat)
-        ) ?? "gml3";
+        ) ?? "gml3");
   }
 
   /** Finds the best srsName to use.
@@ -305,9 +313,10 @@ export class GetCapabilitiesStratum extends LoadableStratum(
     );
 
     return (
+      // Default to urn identifier for WGS84 if we cant find something better. Sometimes WFS service will support this even if not specified in GetCapabilities response.
       layerSrsArray?.srsArray.find((srsName) =>
         SUPPORTED_CRS_4326.includes(srsName)
-      ) ?? "urn:ogc:def:crs:EPSG::4326" // Default to urn identifier for WGS84 if we cant find something better. Sometimes WFS service will support this even if not specified in GetCapabilities response.
+      ) ?? "urn:ogc:def:crs:EPSG::4326"
     );
   }
 }
@@ -327,7 +336,7 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
 
   // hide elements in the info section which might show information about the datasource
   _sourceInfoItemNames = [
-    i18next.t("models.webFeatureServiceCatalogItem.getCapabilitiesUrl")
+    i18next.t(($) => $.models.webFeatureServiceCatalogItem.getCapabilitiesUrl)
   ];
 
   static readonly type = "wfs";
@@ -386,10 +395,11 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
     if (!this.uri) {
       throw new TerriaError({
         sender: this,
-        title: i18next.t("models.webFeatureServiceCatalogItem.missingUrlTitle"),
+        title: i18next.t(
+          ($) => $.models.webFeatureServiceCatalogItem.missingUrlTitle
+        ),
         message: i18next.t(
-          "models.webFeatureServiceCatalogItem.missingUrlMessage",
-          this
+          ($) => $.models.webFeatureServiceCatalogItem.missingUrlMessage
         )
       });
     }
@@ -403,11 +413,14 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
       throw new TerriaError({
         sender: this,
         title: i18next.t(
-          "models.webFeatureServiceCatalogItem.noLayerFoundTitle"
+          ($) => $.models.webFeatureServiceCatalogItem.noLayerFoundTitle
         ),
         message: i18next.t(
-          "models.webFeatureServiceCatalogItem.noLayerFoundMessage",
-          { name: getName(this), typeNames: missingLayers.join(", ") }
+          ($) => $.models.webFeatureServiceCatalogItem.noLayerFoundMessage,
+          {
+            name: getName(this),
+            typeNames: missingLayers.join(", ")
+          }
         )
       });
     }
@@ -450,9 +463,7 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
       let errorMessage: string | undefined;
       try {
         errorMessage = xml2json(getFeatureResponse).Exception?.ExceptionText;
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
 
       const originalError = isDefined(errorMessage)
         ? new TerriaError({
@@ -465,11 +476,13 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
       throw new TerriaError({
         sender: this,
         title: i18next.t(
-          "models.webFeatureServiceCatalogItem.missingDataTitle"
+          ($) => $.models.webFeatureServiceCatalogItem.missingDataTitle
         ),
         message: `${i18next.t(
-          "models.webFeatureServiceCatalogItem.missingDataMessage",
-          { name: getName(this) }
+          ($) => $.models.webFeatureServiceCatalogItem.missingDataMessage,
+          {
+            name: getName(this)
+          }
         )}`,
         originalError
       });
@@ -506,8 +519,10 @@ class WebFeatureServiceCatalogItem extends GetCapabilitiesMixin(
       this.readyData!.features.length >= this.maxFeatures
     ) {
       return i18next.t(
-        "models.webFeatureServiceCatalogItem.reachedMaxFeatureLimit",
-        this
+        ($) => $.models.webFeatureServiceCatalogItem.reachedMaxFeatureLimit,
+        {
+          maxFeatures: this.maxFeatures
+        }
       );
     }
     return undefined;

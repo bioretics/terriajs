@@ -1,6 +1,5 @@
-import React from "react";
-import { act } from "react-dom/test-utils";
-import TestRenderer, { ReactTestRenderer } from "react-test-renderer";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import Terria from "../../../../lib/Models/Terria";
 import Cesium3DTilesCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 
@@ -18,32 +17,27 @@ import createStratumInstance from "../../../../lib/Models/Definition/createStrat
 describe("Ideal Zoom", function () {
   let terria: Terria;
   let theItem: Cesium3DTilesCatalogItem;
-  let testRenderer: ReactTestRenderer;
   let viewState: ViewState;
-  beforeEach(async function () {
+  beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     theItem = new Cesium3DTilesCatalogItem("my3dtiles", terria);
     theItem.setTrait("definition", "url", "/test/Cesium3DTiles/tileset.json");
 
-    const options = {
-      terria: terria,
-      catalogSearchProvider: undefined
-    };
-    viewState = new ViewState(options);
+    viewState = new ViewState({
+      terria: terria
+    });
   });
 
   it("should use default camera view if no parameters are given.", async function () {
     await theItem.loadMapItems();
 
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root?.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     expect(theCameraView.direction).toBe(undefined);
@@ -78,13 +72,11 @@ describe("Ideal Zoom", function () {
     theItem.setTrait("definition", "idealZoom", idealZoom);
 
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     const directionX = 0.6595071845691584;
@@ -148,13 +140,11 @@ describe("Ideal Zoom", function () {
     theItem.setTrait("definition", "idealZoom", idealZoom);
 
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     const directionX = 0.6595071845691584;
@@ -209,13 +199,11 @@ describe("Ideal Zoom", function () {
     theItem.setTrait("definition", "idealZoom", idealZoom);
     await theItem.loadMapItems();
 
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root?.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     expect(theCameraView.direction).toBe(undefined);
@@ -252,13 +240,11 @@ describe("Ideal Zoom", function () {
 
     theItem.setTrait("definition", "idealZoom", idealZoom);
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     expect(theCameraView.direction?.x).toBeCloseTo(cameraValues.direction.x, 6);
@@ -320,13 +306,11 @@ describe("Ideal Zoom", function () {
 
     theItem.setTrait("definition", "idealZoom", idealZoom);
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     expect(theCameraView.direction).toBe(undefined);
@@ -380,13 +364,11 @@ describe("Ideal Zoom", function () {
 
     theItem.setTrait("definition", "idealZoom", idealZoom);
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     expect(theCameraView.direction).toBe(undefined);
@@ -447,13 +429,11 @@ describe("Ideal Zoom", function () {
     theItem.setTrait("definition", "idealZoom", idealZoom);
 
     await theItem.loadMapItems();
-    act(() => {
-      testRenderer = TestRenderer.create(
-        <ViewingControls item={theItem} viewState={viewState} />
-      );
-    });
+    render(<ViewingControls item={theItem} viewState={viewState} />);
 
-    testRenderer.root.findAllByType("button")[0].props.onClick();
+    await userEvent.click(
+      screen.getByRole("button", { name: "workbench.zoomTo" })
+    );
     const theCameraView = terria.currentViewer.getCurrentCameraView();
 
     const directionX = 0.6595071845691584;

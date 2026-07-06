@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { TFunction } from "i18next";
 import { action, makeObservable, observable, runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { Component } from "react";
 import { WithTranslation, withTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
@@ -12,8 +12,8 @@ import Terria from "../../../Models/Terria";
 import { Button, StyledButton } from "../../../Styled/Button";
 import Icon, { StyledIcon } from "../../../Styled/Icon";
 import UrlTraits from "../../../Traits/TraitsClasses/UrlTraits";
-import Styles from "./chart-expand-and-download-buttons.scss";
 import Dropdown from "../../Generic/Dropdown";
+import Styles from "./chart-expand-and-download-buttons.scss";
 
 interface PropsType extends WithTranslation {
   terria: Terria;
@@ -27,7 +27,7 @@ interface PropsType extends WithTranslation {
 }
 
 @observer
-class ChartExpandAndDownloadButtons extends React.Component<PropsType> {
+class ChartExpandAndDownloadButtons extends Component<PropsType> {
   @observable sourceItems: ChartableMixin.Instance[] = [];
 
   constructor(props: PropsType) {
@@ -74,9 +74,7 @@ class ChartExpandAndDownloadButtons extends React.Component<PropsType> {
 
       try {
         terria.addModel(itemToExpand);
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       (await workbench.add(itemToExpand)).raiseError(terria, undefined, true);
     });
   }
@@ -171,11 +169,11 @@ const ExpandAndDownloadDropdowns = function (props: {
         options={props.sourceNames.map((name) => ({ name }))}
         theme={expandDropdownTheme}
       >
-        {props.t("chart.expand") + " ▾"}
+        {props.t(($) => $.chart.expand) + " ▾"}
       </Dropdown>
       {props.canDownload && (
         <Dropdown options={props.downloads} theme={downloadDropdownTheme}>
-          {props.t("chart.download") + " ▾"}
+          {props.t(($) => $.chart.download) + " ▾"}
         </Dropdown>
       )}
     </ExpandAndDownloadContainer>
@@ -191,7 +189,7 @@ const ExpandAndDownloadButtons = function (props: {
   return (
     <ExpandAndDownloadContainer>
       <ButtonChartExpand type="button" onClick={props.onExpand}>
-        {props.t("chart.expand")}
+        {props.t(($) => $.chart.expand)}
       </ButtonChartExpand>
       {props.downloadUrl && (
         <DownloadLink download href={props.downloadUrl}>

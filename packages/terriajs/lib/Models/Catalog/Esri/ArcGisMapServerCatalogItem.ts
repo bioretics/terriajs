@@ -41,6 +41,7 @@ import getToken from "../../getToken";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import MinMaxLevelMixin from "./../../../ModelMixins/MinMaxLevelMixin";
 import { Extent, Layer, Legends, MapServer } from "./ArcGisInterfaces";
+// Fork (rer3d): searchable-catalog-item + extent/scale fixes.
 import CommonStrata from "../../Definition/CommonStrata";
 import GeographicProjection from "terriajs-cesium/Source/Core/GeographicProjection";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -53,11 +54,10 @@ import defined from "terriajs-cesium/Source/Core/defined";
 import SearchableCatalogItemMixin, {
   SearchableData
 } from "../../../ModelMixins/SearchableCatalogItemMixin";
-import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import { JsonObject } from "../../../Core/Json";
 import { FeatureCollection, Geometry } from "@turf/helpers";
 import bbox from "@turf/bbox";
-const proj4 = require("proj4").default;
+import proj4 from "proj4";
 
 class MapServerStratum extends LoadableStratum(
   ArcGisMapServerCatalogItemTraits
@@ -69,7 +69,7 @@ class MapServerStratum extends LoadableStratum(
     readonly mapServer: MapServer,
     readonly allLayers: Layer[],
     private readonly _legends: Legends | undefined,
-    readonly token: string | undefined
+    private readonly _token: string | undefined
   ) {
     super();
     makeObservable(this);
@@ -81,16 +81,18 @@ class MapServerStratum extends LoadableStratum(
       this.mapServer,
       this.allLayers,
       this._legends,
-      this.token
+      this._token
     ) as this;
   }
 
   static async load(item: ArcGisMapServerCatalogItem) {
     if (!isDefined(item.uri) || !isDefined(item.url)) {
       throw new TerriaError({
-        title: i18next.t("models.arcGisMapServerCatalogItem.invalidUrlTitle"),
+        title: i18next.t(
+          ($) => $.models.arcGisMapServerCatalogItem.invalidUrlTitle
+        ),
         message: i18next.t(
-          "models.arcGisMapServerCatalogItem.invalidUrlMessage"
+          ($) => $.models.arcGisMapServerCatalogItem.invalidUrlMessage
         )
       });
     }
@@ -98,6 +100,8 @@ class MapServerStratum extends LoadableStratum(
     let token: string | undefined;
     if (isDefined(item.tokenUrl)) {
       token = await getToken(item.terria, item.tokenUrl, item.url);
+    } else if (isDefined(item.token)) {
+      token = item.token;
     }
 
     let serviceUri = getBaseURI(item);
@@ -118,8 +122,8 @@ class MapServerStratum extends LoadableStratum(
 
     if (!isDefined(serviceMetadata)) {
       throw networkRequestError({
-        title: i18next.t("models.arcGisService.invalidServerTitle"),
-        message: i18next.t("models.arcGisService.invalidServerMessage")
+        title: i18next.t(($) => $.models.arcGisService.invalidServerTitle),
+        message: i18next.t(($) => $.models.arcGisService.invalidServerMessage)
       });
     }
 
@@ -149,11 +153,13 @@ class MapServerStratum extends LoadableStratum(
       if (!isDefined(layers) || layers.length === 0) {
         throw networkRequestError({
           title: i18next.t(
-            "models.arcGisMapServerCatalogItem.noLayersFoundTitle"
+            ($) => $.models.arcGisMapServerCatalogItem.noLayersFoundTitle
           ),
           message: i18next.t(
-            "models.arcGisMapServerCatalogItem.noLayersFoundMessage",
-            item
+            ($) => $.models.arcGisMapServerCatalogItem.noLayersFoundMessage,
+            {
+              name: item.name as string
+            }
           )
         });
       }
@@ -179,6 +185,10 @@ class MapServerStratum extends LoadableStratum(
     }
 
     return stratum;
+  }
+
+  get token() {
+    return this._token;
   }
 
   @computed get maximumScale() {
@@ -271,17 +281,21 @@ class MapServerStratum extends LoadableStratum(
       singleLayer
         ? createStratumInstance(InfoSectionTraits, {
             name: i18next.t(
-              "models.arcGisMapServerCatalogItem.dataDescription"
+              ($) => $.models.arcGisMapServerCatalogItem.dataDescription
             ),
             content: singleLayer.description
           })
         : undefined,
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.arcGisMapServerCatalogItem.serviceDescription"),
+        name: i18next.t(
+          ($) => $.models.arcGisMapServerCatalogItem.serviceDescription
+        ),
         content: this.mapServer.description
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.arcGisMapServerCatalogItem.copyrightText"),
+        name: i18next.t(
+          ($) => $.models.arcGisMapServerCatalogItem.copyrightText
+        ),
         content: singleLayer?.copyrightText ?? this.mapServer.copyrightText
       })
     ]);
@@ -377,7 +391,7 @@ export default class ArcGisMapServerCatalogItem extends SearchableCatalogItemMix
   }
 
   get typeName() {
-    return i18next.t("models.arcGisMapServerCatalogItem.name");
+    return i18next.t(($) => $.models.arcGisMapServerCatalogItem.name);
   }
 
   get type() {
@@ -772,7 +786,7 @@ export default class ArcGisMapServerCatalogItem extends SearchableCatalogItemMix
     )
       return Promise.resolve([]);
 
-    const filteredElements: FeatureCollection = await CesiumResource.fetchJson({
+    const filteredElements: FeatureCollection = await Resource.fetchJson({
       url: this.catalogItemWebSearch.url,
       queryParameters: {
         text: text,
@@ -890,6 +904,7 @@ export function getRectangleFromLayer(
       return;
     }
 
+    // Fork (rer3d): guard proj4 projection errors (missing-Extent layers).
     try {
       const source = Proj4Definitions[wkid];
       const dest = "EPSG:4326";
@@ -918,7 +933,9 @@ function getRectangleFromLayers(
   layers: Layer[]
 ) {
   layers.forEach(function (item) {
-    item.extent && getRectangleFromLayer(item.extent, rectangle);
+    if (item.extent) {
+      getRectangleFromLayer(item.extent, rectangle);
+    }
   });
 }
 

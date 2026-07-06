@@ -1,18 +1,20 @@
 "use strict";
-const React = require("react");
-const PropTypes = require("prop-types");
+import { Component } from "react";
+import PropTypes from "prop-types";
 import classNames from "classnames";
 import { observer } from "mobx-react";
 import { withTranslation } from "react-i18next";
-import { Category, ViewAction } from "../../Core/AnalyticEvents/analyticEvents";
-import Icon from "../../Styled/Icon";
+import { Category, ViewAction } from "../../Core/Analytics/analyticEvents";
+import Icon, { StyledIcon } from "../../Styled/Icon";
 import withControlledVisibility from "../HOCs/withControlledVisibility";
 import { withViewState } from "../Context";
 import Styles from "./full_screen_button.scss";
+import Button from "../../Styled/Button";
+import Branding from "./Branding";
 
 // The button to make the map full screen and hide the workbench.
 @observer
-class FullScreenButton extends React.Component {
+class FullScreenButton extends Component {
   static propTypes = {
     viewState: PropTypes.object.isRequired,
     btnText: PropTypes.string,
@@ -34,7 +36,7 @@ class FullScreenButton extends React.Component {
     );
 
     // log a GA event
-    this.props.viewState.terria.analytics?.logEvent(
+    this.props.viewState.terria.analytics.logEvent(
       Category.view,
       this.props.viewState.isMapFullScreen
         ? ViewAction.exitFullScreen
@@ -44,32 +46,20 @@ class FullScreenButton extends React.Component {
 
   renderButtonText() {
     const btnText = this.props.btnText ? this.props.btnText : null;
-    if (this.props.minified) {
-      if (this.props.viewState.isMapFullScreen) {
-        return <Icon glyph={Icon.GLYPHS.right} />;
-      } else {
-        return <Icon glyph={Icon.GLYPHS.closeLight} />;
-      }
+    if (this.props.viewState.isMapFullScreen) {
+      return <span>{btnText}</span>;
     }
-    return (
-      <>
-        <span>{btnText}</span>
-        <Icon glyph={Icon.GLYPHS.right} />
-      </>
-    );
   }
 
   render() {
-    const btnClassName = classNames(Styles.btn, {
-      [Styles.isActive]: this.props.viewState.isMapFullScreen,
-      [Styles.minified]: this.props.minified
-    });
     const { t } = this.props;
     return (
       <div
         className={classNames(Styles.fullScreen, {
           [Styles.minifiedFullscreenBtnWrapper]: this.props.minified,
-          [Styles.trainerBarVisible]: this.props.viewState.trainerBarVisible
+          [Styles.trainerBarVisible]: this.props.viewState.trainerBarVisible,
+          [Styles.fullScreenWrapper]:
+            this.props.viewState.isMapFullScreen && !this.props.minified
         })}
       >
         {this.props.minified && (
@@ -77,20 +67,48 @@ class FullScreenButton extends React.Component {
             {this.props.btnText}
           </label>
         )}
-        <button
-          type="button"
+        {this.props.viewState.isMapFullScreen && !this.props.minified && (
+          <Branding />
+        )}
+        <Button
           id="toggle-workbench"
+          css={`
+            border-radius: 0 4px 4px 0;
+            ${this.props.viewState.isMapFullScreen === false
+              ? `width: 16px;
+            padding: 0px;`
+              : `width: 100%; border-radius: 0;`}
+          `}
+          primary
+          textProps={{
+            medium: true
+          }}
+          onClick={() => this.toggleFullScreen()}
           aria-label={
             this.props.viewState.isMapFullScreen
-              ? t("sui.showWorkbench")
-              : t("sui.hideWorkbench")
+              ? t(($) => $.sui.showWorkbench, {
+                  count: this.props.viewState.terria.workbench.items.length
+                })
+              : t(($) => $.sui.hideWorkbench)
           }
-          onClick={() => this.toggleFullScreen()}
-          className={btnClassName}
           title={
             this.props.viewState.isMapFullScreen
-              ? t("sui.showWorkbench")
-              : t("sui.hideWorkbench")
+              ? t(($) => $.sui.showWorkbench, {
+                  count: this.props.viewState.terria.workbench.items.length
+                })
+              : t(($) => $.sui.hideWorkbench)
+          }
+          renderIcon={() =>
+            this.props.viewState.isMapFullScreen ? (
+              <StyledIcon styledWidth="12px" light glyph={Icon.GLYPHS.right} />
+            ) : (
+              <StyledIcon
+                css="margin-right: 2px;"
+                light
+                styledWidth="12px"
+                glyph={Icon.GLYPHS.left}
+              />
+            )
           }
           style={{
             backgroundColor: "#111827",
@@ -99,7 +117,7 @@ class FullScreenButton extends React.Component {
           }}
         >
           {this.renderButtonText()}
-        </button>
+        </Button>
       </div>
     );
   }

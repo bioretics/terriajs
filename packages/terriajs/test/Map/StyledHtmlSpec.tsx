@@ -1,46 +1,39 @@
-import { create } from "react-test-renderer";
-import React from "react";
+import { render, screen } from "@testing-library/react";
 import { runInAction } from "mobx";
 import { ThemeProvider } from "styled-components";
-import { act } from "react-dom/test-utils";
 import Terria from "../../lib/Models/Terria";
 import ViewState from "../../lib/ReactViewModels/ViewState";
 import { terriaTheme } from "../../lib/ReactViews/StandardUserInterface";
 import { StyledHtmlRaw } from "../../lib/ReactViews/Map/Panels/HelpPanel/StyledHtml";
-import { TooltipWithButtonLauncher } from "../../lib/ReactViews/Generic/TooltipWrapper";
 import registerCustomComponentTypes from "../../lib/ReactViews/Custom/registerCustomComponentTypes";
 
 describe("StyledHtml", function () {
   let terria: Terria;
   let viewState: ViewState;
 
-  let testRenderer: any;
-
   beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     viewState = new ViewState({
-      terria: terria,
-      catalogSearchProvider: undefined
+      terria: terria
     });
   });
 
   describe("with basic props", function () {
     it("mounts without problems", function () {
-      act(() => {
-        testRenderer = create(
-          <ThemeProvider theme={terriaTheme}>
-            <StyledHtmlRaw
-              markdown={"something something spatial data mochi"}
-              viewState={viewState}
-            />
-          </ThemeProvider>
-        );
-      });
+      render(
+        <ThemeProvider theme={terriaTheme}>
+          <StyledHtmlRaw
+            markdown={"something something spatial data mochi"}
+            viewState={viewState}
+          />
+        </ThemeProvider>
+      );
 
-      const renderer = testRenderer.root;
-      expect(renderer).toBeDefined();
+      expect(
+        screen.getByText("something something spatial data mochi")
+      ).toBeVisible();
     });
     it("creates TooltipWithButtonLauncher when there are terms to inject", function () {
       registerCustomComponentTypes();
@@ -56,21 +49,18 @@ describe("StyledHtml", function () {
           helpContentTerms: [spatialDataTerm]
         });
       });
-      act(() => {
-        testRenderer = create(
-          <ThemeProvider theme={terriaTheme}>
-            <StyledHtmlRaw
-              markdown={"something something spatial data mochi"}
-              viewState={viewState}
-            />
-          </ThemeProvider>
-        );
-      });
+      render(
+        <ThemeProvider theme={terriaTheme}>
+          <StyledHtmlRaw
+            markdown={"something something spatial data mochi"}
+            viewState={viewState}
+          />
+        </ThemeProvider>
+      );
 
-      const renderer = testRenderer.root;
-      expect(renderer).toBeDefined();
-      const tooltipWrapper = renderer.findByType(TooltipWithButtonLauncher);
-      expect(tooltipWrapper).toBeDefined();
+      expect(
+        screen.getByRole("button", { name: "spatial data" })
+      ).toBeVisible();
     });
   });
 });

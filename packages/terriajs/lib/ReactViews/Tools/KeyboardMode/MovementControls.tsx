@@ -30,7 +30,7 @@ const MovementControls: React.FC<MovementControlsProps> = (props) => {
   return (
     <Container>
       <Title>
-        <Text medium>{t("keyboardControls.header")}</Text>
+        <Text medium>{t(($) => $.keyboardControls.header)}</Text>
         <MinimizeMaximizeButton
           onClick={toggleMaximized}
           maximized={isMaximized}

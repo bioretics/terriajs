@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "target": "es2019",
-    "experimentalDecorators": true,
+    "target": "esNext",
     "module": "esNext",
-    "moduleResolution": "node",
+    "incremental": true,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
     "sourceMap": true,
     "strict": true,
     "allowJs": true,
@@ -11,7 +12,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "useDefineForClassFields": true, // required for mobx6 - https://mobx.js.org/installation.html#use-spec-compliant-transpilation-for-class-properties
+    "noUncheckedSideEffectImports": true,
+    "isolatedModules": true,
     "outDir": "ts-out",
     "resolveJsonModule": true,
     "typeRoots": [
@@ -25,12 +27,8 @@
       "../../../node_modules/",
       "../../../node_modules/@types/"
     ],
-    "types": ["terriajs-cesium"]
+    "preserveSymlinks": true,
+    "types": ["terriajs-cesium", "@testing-library/jasmine-dom"]
   },
-  "include": [
-    "./lib/**/*",
-    "./test/**/*",
-    "./buildprocess/generateDocs.ts",
-    "./buildprocess/**/*"
-  ]
+  "include": ["./lib/**/*", "./test/**/*", "./buildprocess/**/*"]
 }

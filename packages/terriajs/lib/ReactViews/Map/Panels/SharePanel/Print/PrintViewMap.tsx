@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 interface Props {
   screenshot: Promise<string>;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 const PrintViewMap = (props: Props) => {
@@ -10,6 +10,7 @@ const PrintViewMap = (props: Props) => {
   const [isError, setError] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMap(null);
     props.screenshot.then(setMap).catch(() => setError(true));
   }, [props.screenshot]);

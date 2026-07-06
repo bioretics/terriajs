@@ -1,8 +1,6 @@
-"use strict";
-var defined = require("terriajs-cesium/Source/Core/defined").default;
-var Cartesian3 = require("terriajs-cesium/Source/Core/Cartesian3").default;
-var CustomDataSource =
-  require("terriajs-cesium/Source/DataSources/CustomDataSource").default;
+import defined from "terriajs-cesium/Source/Core/defined";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 
 /**
  * Callback for when a point is moved.
@@ -19,7 +17,7 @@ var CustomDataSource =
  * @param {Terria} terria The Terria instance.
  * @param {PointMovedCallback} pointMovedCallback A function that is called when a point is moved.
  */
-var LeafletDragPoints = function (terria, pointMovedCallback) {
+const LeafletDragPoints = function (terria, pointMovedCallback) {
   this._terria = terria;
   this._setUp = false;
   this.type = "Leaflet";
@@ -76,17 +74,17 @@ LeafletDragPoints.prototype.setUp = function () {
 LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity) {
   if (
     !defined(this._draggableObjects.entities) ||
-    this._draggableObjects.entities.length === 0
+    this._draggableObjects.entities.values.length === 0
   ) {
     return;
   }
 
-  var dragEntity = this._draggableObjects.entities.values.filter(function (
-    dragObjEntity
-  ) {
-    // Not necessarily same entity, but will have same id.
-    return dragObjEntity.id === entity.id;
-  })[0];
+  var dragEntity = this._draggableObjects.entities.values.filter(
+    function (dragObjEntity) {
+      // Not necessarily same entity, but will have same id.
+      return dragObjEntity.id === entity.id;
+    }
+  )[0];
   if (defined(dragEntity)) {
     // The touch events below don't actually work because Leaflet doesn't
     // expose these events.  See here for a possible workaround:
@@ -167,4 +165,4 @@ LeafletDragPoints.prototype.destroy = function () {
   this._setUp = false;
 };
 
-module.exports = LeafletDragPoints;
+export default LeafletDragPoints;

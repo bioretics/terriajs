@@ -1,7 +1,7 @@
 import { observer } from "mobx-react";
-import React, { FC } from "react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
-import styled, { useTheme } from "styled-components";
+import styled from "styled-components";
 import defined from "terriajs-cesium/Source/Core/defined";
 import type Cesium3DTilesCatalogItem from "../../../Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 import ViewerMode from "../../../Models/ViewerMode";
@@ -12,15 +12,6 @@ import Text from "../../../Styled/Text";
 import { useViewState } from "../../Context";
 import parseCustomHtmlToReact from "../../Custom/parseCustomHtmlToReact";
 import MapIconButton from "../../MapIconButton/MapIconButton";
-
-const BottomLeftContainer = styled(Box)`
-  position: absolute;
-  bottom: 40px;
-  @media (max-width: ${(props) => props.theme.mobile}px) {
-    bottom: 35px;
-  }
-  display: flex;
-`;
 
 // Use padding to avoid other UI elements
 const AttributionsContainer = styled(Text)`
@@ -37,11 +28,12 @@ const shouldShowPlayStoryButton = (viewState: ViewState) =>
   viewState.terria.configParameters.storyEnabled &&
   defined(viewState.terria.stories) &&
   viewState.terria.stories.length > 0 &&
-  viewState.useSmallScreenInterface;
+  viewState.useSmallScreenInterface &&
+  // Don't show story button if story panel is visible
+  viewState.storyShown !== true;
 
 const BottomLeftBar: FC = observer(() => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const viewState = useViewState();
 
   const screenDataAttributions =
@@ -62,17 +54,17 @@ const BottomLeftBar: FC = observer(() => {
       );
 
   return (
-    <BottomLeftContainer theme={theme} css={"left: 2%; margin-bottom: 1%"}>
+    <Box padded>
       {shouldShowPlayStoryButton(viewState) ? (
         <Box paddedHorizontally={2}>
           <MapIconButton
-            title={t("story.playStory")}
+            title={t(($) => $.story.playStory)}
             neverCollapse
             iconElement={() => <Icon glyph={Icon.GLYPHS.playStory} />}
             onClick={() => viewState.runStories()}
             primary={!isNotificationActive}
           >
-            {t("story.playStory")}
+            {t(($) => $.story.playStory)}
           </MapIconButton>
         </Box>
       ) : null}
@@ -100,7 +92,7 @@ const BottomLeftBar: FC = observer(() => {
             .slice(0, -1)}
         </AttributionsContainer>
       )}
-    </BottomLeftContainer>
+    </Box>
   );
 });
 

@@ -1,6 +1,4 @@
-"use strict";
-
-import i18next from "i18next";
+import i18next, { keyFromSelector, SelectorKey } from "i18next";
 import { observable, makeObservable } from "mobx";
 import RequestErrorEvent from "terriajs-cesium/Source/Core/RequestErrorEvent";
 import Terria from "../Models/Terria";
@@ -14,12 +12,19 @@ import isDefined from "./isDefined";
  * This means we can create TerriaErrors before i18next has been initialised.
  */
 export interface I18nTranslateString {
-  key: string;
+  key: SelectorKey;
   parameters?: Record<string, string>;
 }
 
-function resolveI18n(i: I18nTranslateString | string) {
-  return typeof i === "string" ? i : i18next.t(i.key, i.parameters);
+function resolveI18n(i: I18nTranslateString | string): string {
+  if (typeof i === "string") return i;
+
+  // When i18next isn't initialized (e.g. Node environment), t() may return
+  // the key object or a non-string value. Fall back to the raw key.
+  const result = i18next.isInitialized
+    ? i18next.t(i.key as never, i.parameters)
+    : i.key;
+  return typeof result === "string" ? result : i.key;
 }
 
 /** `TerriaErrorSeverity` can be `Error` or `Warning`.
@@ -155,10 +160,10 @@ export default class TerriaError {
 
     // Try to find message/title from error object
     let message: string | I18nTranslateString = {
-      key: "core.terriaError.defaultMessage"
+      key: keyFromSelector(($) => $.core.terriaError.defaultMessage)
     };
     let title: string | I18nTranslateString = {
-      key: "core.terriaError.defaultTitle"
+      key: keyFromSelector(($) => $.core.terriaError.defaultTitle)
     };
     // Create original Error from `error` object
     let originalError: Error | undefined;
@@ -169,9 +174,11 @@ export default class TerriaError {
     }
     // If error is RequestErrorEvent - use networkRequestTitle and networkRequestMessage
     else if (error instanceof RequestErrorEvent) {
-      title = { key: "core.terriaError.networkRequestTitle" };
+      title = {
+        key: keyFromSelector(($) => $.core.terriaError.networkRequestTitle)
+      };
       message = {
-        key: "core.terriaError.networkRequestMessage"
+        key: keyFromSelector(($) => $.core.terriaError.networkRequestMessage)
       };
       originalError = new Error(error.toString());
     } else if (error instanceof Error) {
@@ -235,8 +242,12 @@ export default class TerriaError {
 
     return new TerriaError({
       // Set default title and message
-      title: { key: "core.terriaError.defaultCombineTitle" },
-      message: { key: "core.terriaError.defaultCombineMessage" },
+      title: {
+        key: keyFromSelector(($) => $.core.terriaError.defaultCombineTitle)
+      },
+      message: {
+        key: keyFromSelector(($) => $.core.terriaError.defaultCombineMessage)
+      },
 
       // Add original errors and overrides
       originalError: filteredErrors,
@@ -249,7 +260,9 @@ export default class TerriaError {
   constructor(options: TerriaErrorOptions) {
     makeObservable(this);
     this._message = options.message;
-    this._title = options.title ?? { key: "core.terriaError.defaultTitle" };
+    this._title = options.title ?? {
+      key: keyFromSelector(($) => $.core.terriaError.defaultTitle)
+    };
     this.sender = options.sender;
     this._raisedToUser = options.raisedToUser ?? false;
     this.overrideRaiseToUser = options.overrideRaiseToUser;
@@ -293,8 +306,8 @@ export default class TerriaError {
   get shouldRaiseToUser() {
     return (
       // Return this.overrideRaiseToUser override if it is defined
-      this.overrideRaiseToUser ??
       // Otherwise, we should raise the error if it hasn't already been raised and the severity is ERROR
+      this.overrideRaiseToUser ??
       (!this.raisedToUser &&
         (typeof this.severity === "function"
           ? this.severity()
@@ -325,10 +338,12 @@ export default class TerriaError {
   }
 
   /** Print error to console */
-  log() {
-    this.resolvedSeverity === TerriaErrorSeverity.Warning
-      ? console.warn(this.toString())
-      : console.error(this.toString());
+  log(): void {
+    if (this.resolvedSeverity === TerriaErrorSeverity.Warning) {
+      console.warn(this.toString());
+    } else {
+      console.error(this.toString());
+    }
   }
 
   /** Convert `TerriaError` to `Notification` */
@@ -378,51 +393,50 @@ export default class TerriaError {
   /**
    * Returns a plain error object for this TerriaError instance.
    *
-   * The `message` string for the returned plain error will include the
-   * messages from all the nested `originalError`s for this instance.
+   * Will return the highest importance error (as name/message), and then returns a stack trace with the messages from all the nested `originalError`s for this instance.
    */
   toError(): Error {
     // indentation required per nesting when stringifying nested error messages
     const indentChar = "  ";
-    const buildNested: (
-      prop: "message" | "stack"
-    ) => (error: TerriaError, depth: number) => string | undefined =
-      (prop) => (error, depth) => {
-        if (!Array.isArray(error.originalError)) {
-          return;
-        }
+    const buildStack: () => (
+      error: TerriaError,
+      depth: number
+    ) => string | undefined = () => (error, depth) => {
+      if (!Array.isArray(error.originalError)) {
+        return;
+      }
 
-        const indent = indentChar.repeat(depth);
-        const nestedMessage = error.originalError
-          .map((e) => {
-            if (e instanceof TerriaError) {
-              // recursively build the message for nested errors
-              return `${e[prop]
-                ?.split("\n")
-                .map((s) => indent + s)
-                .join("\n")}\n${buildNested(prop)(e, depth + 1)}`;
-            } else {
-              return `${e[prop]
-                ?.split("\n")
-                .map((s) => indent + s)
-                .join("\n")}`;
-            }
-          })
-          .join("\n");
-        return nestedMessage;
-      };
+      const indent = indentChar.repeat(depth);
+      const nestedStack = error.originalError
+        .map((e) => {
+          if (e instanceof TerriaError) {
+            // recursively build the message for nested errors
+            return `${[
+              ...(e.message?.split("\n") ?? []),
+              "Stack trace:",
+              ...(e.stack?.split("\n") ?? [])
+            ]
+              .map((s) => indent + s)
+              .join("\n")}\n${buildStack()(e, depth + 1)}`;
+          } else {
+            return `${[
+              ...e.message.split("\n"),
+              "Stack trace:",
+              ...(e.stack?.split("\n") ?? [])
+            ]
+              .map((s) => indent + s)
+              .join("\n")}`;
+          }
+        })
+        .join("\n");
+      return nestedStack;
+    };
 
-    let message = this.message;
-    const nestedMessage = buildNested("message")(this, 1);
-    if (nestedMessage) {
-      message = `${message}\nNested error:\n${nestedMessage}`;
-    }
-
-    const error = new Error(message);
-    error.name = this.title;
+    const error = new Error(this.highestImportanceError.message);
+    error.name = this.highestImportanceError.title;
 
     let stack = this.stack;
-    const nestedStack = buildNested("stack")(this, 1);
+    const nestedStack = buildStack()(this, 1);
     if (nestedStack) {
       stack = `${stack}\n${nestedStack}`;
     }
@@ -467,7 +481,7 @@ export default class TerriaError {
     terria: Terria,
     errorOverrides?: TerriaErrorOverrides,
     forceRaiseToUser?: boolean
-  ) {
+  ): void {
     terria.raiseErrorToUser(this, errorOverrides, forceRaiseToUser);
   }
 }
@@ -480,15 +494,19 @@ export function networkRequestError(error: TerriaError | TerriaErrorOptions) {
       error instanceof TerriaError ? error : new TerriaError(error),
       new TerriaError({
         message: {
-          key: "core.terriaError.networkRequestMessageDetailed"
+          key: keyFromSelector(
+            ($) => $.core.terriaError.networkRequestMessageDetailed
+          )
         }
       })
     ],
     // Override combined error with user-friendly title and message
     {
-      title: { key: "core.terriaError.networkRequestTitle" },
+      title: {
+        key: keyFromSelector(($) => $.core.terriaError.networkRequestTitle)
+      },
       message: {
-        key: "core.terriaError.networkRequestMessage"
+        key: keyFromSelector(($) => $.core.terriaError.networkRequestMessage)
       },
       importance: 1
     }

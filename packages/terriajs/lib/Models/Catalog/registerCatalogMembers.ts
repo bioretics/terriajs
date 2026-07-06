@@ -1,3 +1,4 @@
+import DefaultTimelineModel from "../DefaultTimelineModel";
 import YDYRCatalogFunction from "./CatalogFunctions/YDYRCatalogFunction";
 import YDYRCatalogFunctionJob from "./CatalogFunctions/YDYRCatalogFunctionJob";
 import CatalogGroup from "./CatalogGroup";
@@ -10,6 +11,7 @@ import CartoMapV1CatalogItem from "./CatalogItems/CartoMapV1CatalogItem";
 import CartoMapV3CatalogItem from "./CatalogItems/CartoMapV3CatalogItem";
 import Cesium3DTilesCatalogItem from "./CatalogItems/Cesium3DTilesCatalogItem";
 import CesiumTerrainCatalogItem from "./CatalogItems/CesiumTerrainCatalogItem";
+import CogCatalogItem from "./CatalogItems/CogCatalogItem";
 import CompositeCatalogItem from "./CatalogItems/CompositeCatalogItem";
 import CsvCatalogItem from "./CatalogItems/CsvCatalogItem";
 import CzmlCatalogItem from "./CatalogItems/CzmlCatalogItem";
@@ -29,10 +31,10 @@ import SenapsLocationsCatalogItem from "./CatalogItems/SenapsLocationsCatalogIte
 import ShapefileCatalogItem from "./CatalogItems/ShapefileCatalogItem";
 import SocrataMapViewCatalogItem from "./CatalogItems/SocrataMapViewCatalogItem";
 import StubCatalogItem from "./CatalogItems/StubCatalogItem";
+import TileMapServiceCatalogItem from "./CatalogItems/TileMapServiceCatalogItem";
 import UrlTemplateImageryCatalogItem from "./CatalogItems/UrlTemplateImageryCatalogItem";
 import CatalogMemberFactory from "./CatalogMemberFactory";
 import CatalogIndexReference from "./CatalogReferences/CatalogIndexReference";
-import MagdaReference from "./CatalogReferences/MagdaReference";
 import SplitItemReference from "./CatalogReferences/SplitItemReference";
 import TerriaReference from "./CatalogReferences/TerriaReference";
 import UrlReference, {
@@ -65,11 +67,14 @@ import WebProcessingServiceCatalogFunctionJob from "./Ows/WebProcessingServiceCa
 import WebProcessingServiceCatalogGroup from "./Ows/WebProcessingServiceCatalogGroup";
 import SdmxJsonCatalogGroup from "./SdmxJson/SdmxJsonCatalogGroup";
 import SdmxJsonCatalogItem from "./SdmxJson/SdmxJsonCatalogItem";
-import CogCatalogItem from "./CatalogItems/CogCatalogItem";
 
 export default function registerCatalogMembers() {
   CatalogMemberFactory.register(CatalogGroup.type, CatalogGroup);
   CatalogMemberFactory.register(StubCatalogItem.type, StubCatalogItem);
+  CatalogMemberFactory.register(
+    DefaultTimelineModel.type,
+    DefaultTimelineModel
+  );
   CatalogMemberFactory.register(
     WebMapServiceCatalogItem.type,
     WebMapServiceCatalogItem
@@ -157,7 +162,6 @@ export default function registerCatalogMembers() {
     OpenStreetMapCatalogItem.type,
     OpenStreetMapCatalogItem
   );
-  CatalogMemberFactory.register(MagdaReference.type, MagdaReference);
   CatalogMemberFactory.register(TerriaReference.type, TerriaReference);
   CatalogMemberFactory.register(KmlCatalogItem.type, KmlCatalogItem);
   CatalogMemberFactory.register(
@@ -242,6 +246,11 @@ export default function registerCatalogMembers() {
     UrlTemplateImageryCatalogItem.type,
     UrlTemplateImageryCatalogItem
   );
+  CatalogMemberFactory.register(
+    TileMapServiceCatalogItem.type,
+    TileMapServiceCatalogItem
+  );
+  // Fork (rer3d): Google Map Tiles API catalog item.
   CatalogMemberFactory.register(
     GoogleTileMapsCatalogItem.type,
     GoogleTileMapsCatalogItem

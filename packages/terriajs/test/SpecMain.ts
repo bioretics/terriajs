@@ -1,9 +1,12 @@
 /// <reference types="jasmine" />
 import "../lib/Core/prerequisites";
-import "jasmine-ajax";
 import { configure, spy } from "mobx";
 import i18next from "i18next";
 import registerCatalogMembers from "../lib/Models/Catalog/registerCatalogMembers";
+import JasmineDOM from "@testing-library/jasmine-dom";
+import { initReactI18next } from "react-i18next";
+import english from "../wwwroot/languages/en/translation.json";
+import { worker } from "./mocks/browser";
 
 configure({
   enforceActions: "always",
@@ -24,11 +27,43 @@ spy((event) => {
 });
 
 beforeAll(async function () {
-  await i18next.init({
+  jasmine.addMatchers(JasmineDOM);
+
+  // Unregister stale service workers from previous test runs,
+  // then start MSW worker for network interception.
+  const registrations = await navigator.serviceWorker.getRegistrations();
+  for (const reg of registrations) {
+    await reg.unregister();
+  }
+  await worker.start({
+    onUnhandledRequest: (request, print) => {
+      print.error();
+      fail(`Unhandled ${request.method} request to ${request.url}`);
+      throw new Error(`Unhandled ${request.method} request to ${request.url}`);
+    },
+    quiet: true
+  });
+
+  await i18next.use(initReactI18next).init({
     lng: "cimode",
     debug: false,
-    resources: {}
+    resources: {
+      en: {
+        translation: english
+      }
+    },
+    interpolation: {
+      escapeValue: false // not needed for react!!
+    }
   });
+});
+
+beforeEach(function () {
+  worker.resetHandlers();
+});
+
+afterAll(function () {
+  worker.resetHandlers();
 });
 
 jasmine.getEnv().addReporter({
@@ -38,4 +73,4 @@ jasmine.getEnv().addReporter({
     )
 });
 
-jasmine.DEFAULT_TIMEOUT_INTERVAL = 60000;
+jasmine.DEFAULT_TIMEOUT_INTERVAL = 10000;

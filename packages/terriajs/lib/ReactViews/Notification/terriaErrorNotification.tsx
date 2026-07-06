@@ -1,6 +1,5 @@
 import i18next from "i18next";
 import { runInAction } from "mobx";
-import React from "react";
 import TerriaError from "../../Core/TerriaError";
 import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
@@ -120,12 +119,13 @@ export const terriaErrorNotification = (error: TerriaError) =>
             <Spacing bottom={2} />
             <Collapsible
               btnRight
-              title={i18next.t("models.raiseError.developerDetails")}
+              title={i18next.t(($) => $.models.raiseError.developerDetails)}
               titleTextProps={{ large: true }}
               bodyBoxProps={{ padded: true }}
               isOpen={error.showDetails}
               onToggle={(show) => {
                 runInAction(() => (error.showDetails = show));
+                return false;
               }}
             >
               <ErrorsBox errors={detailedErrors} viewState={viewState} />

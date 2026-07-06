@@ -8,7 +8,7 @@ import {
 import {
   Category,
   SearchAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+} from "../../Core/Analytics/analyticEvents";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
 import CommonStrata from "../Definition/CommonStrata";
 import CreateModel from "../Definition/CreateModel";

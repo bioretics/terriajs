@@ -1,5 +1,3 @@
-"use strict";
-
 import { uniq } from "lodash-es";
 import { runInAction, toJS } from "mobx";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -17,13 +15,14 @@ import HasLocalData from "../../../../Models/HasLocalData";
 import {
   InitSourceData,
   InitSourcePickedFeatures,
-  ShareInitSourceData,
+  StartData,
   ViewModeJson
 } from "../../../../Models/InitSource";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import getDereferencedIfExists from "../../../../Core/getDereferencedIfExists";
 import CatalogMemberMixin from "../../../../ModelMixins/CatalogMemberMixin";
+import ViewerMode from "../../../../Models/ViewerMode";
 
 /** User properties (generated from URL hash parameters) to add to share link URL in PRODUCTION environment.
  * If in Dev, we add all user properties.
@@ -39,7 +38,23 @@ function buildBaseShareUrl(
   terria: Terria,
   hashParams: { [key: string]: string }
 ) {
-  const uri = new URI(document.baseURI).fragment("").search("");
+  let baseUrl = document.baseURI;
+
+  if (terria.configParameters.shareClientBaseUrl) {
+    baseUrl = terria.configParameters.shareClientBaseUrl;
+  }
+
+  const uri = new URI(baseUrl).fragment("").search("");
+
+  const fragmentsToShare = new URL(document.URL).hash
+    .split(/[#&]/)
+    .filter(
+      (elem) =>
+        elem !== "" && !elem.includes("share=") && !elem.includes("start=")
+    );
+  fragmentsToShare.forEach((sub) => {
+    uri.addSearch(sub);
+  });
 
   const usefulSubs = new URL(document.URL).hash
     .split(/[#&]/)
@@ -120,7 +135,7 @@ export function getShareData(
   terria: Terria,
   viewState?: ViewState,
   options = { includeStories: true }
-): ShareInitSourceData {
+): StartData {
   return runInAction(() => {
     const { includeStories } = options;
     const initSource: InitSourceData = {};
@@ -309,13 +324,8 @@ function addViewSettings(
 ) {
   const viewer = terria.mainViewer;
 
-  // const time = {
-  //   dayNumber: terria.timelineClock.currentTime.dayNumber,
-  //   secondsOfDay: terria.timelineClock.currentTime.secondsOfDay
-  // };
-
   let viewerMode: ViewModeJson;
-  if (terria.mainViewer.viewerMode === "cesium") {
+  if (terria.mainViewer.viewerMode === ViewerMode.Cesium) {
     if (terria.mainViewer.viewerOptions.useTerrain) {
       viewerMode = "3d";
     } else {

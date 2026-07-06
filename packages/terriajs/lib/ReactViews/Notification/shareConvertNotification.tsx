@@ -1,6 +1,5 @@
 import i18next from "i18next";
 import { runInAction } from "mobx";
-import React from "react";
 import isDefined from "../../Core/isDefined";
 import ViewState from "../../ReactViewModels/ViewState";
 import Collapsible from "../Custom/Collapsible/Collapsible";
@@ -18,9 +17,11 @@ export const shareConvertNotification = (
       let pathString = message.path?.join(": ");
       if (!pathString || pathString === null || pathString === "")
         pathString = "root";
-      isDefined(messagesForPath[pathString])
-        ? messagesForPath[pathString].push(message.message)
-        : (messagesForPath[pathString] = [message.message]);
+      if (isDefined(messagesForPath[pathString])) {
+        messagesForPath[pathString].push(message.message);
+      } else {
+        messagesForPath[pathString] = [message.message];
+      }
     });
 
     const rootMessages = messagesForPath["root"];
@@ -43,10 +44,9 @@ export const shareConvertNotification = (
       <>
         <Text>
           {parseCustomMarkdownToReact(
-            i18next.t("share.convertNotificationMessage")
+            i18next.t(($) => $.share.convertNotificationMessage)
           )}
         </Text>
-
         <RawButton
           fullWidth
           onClick={showHelp}
@@ -54,13 +54,12 @@ export const shareConvertNotification = (
             text-align: left;
           `}
         >
-          <TextSpan textLight bold medium>
+          <TextSpan textLight bold medium isLink>
             {parseCustomMarkdownToReact(
-              i18next.t("share.convertNotificationHelp")
+              i18next.t(($) => $.share.convertNotificationHelp)
             )}
           </TextSpan>
         </RawButton>
-
         <RawButton
           fullWidth
           onClick={showFeedback}
@@ -68,18 +67,16 @@ export const shareConvertNotification = (
             text-align: left;
           `}
         >
-          <TextSpan textLight bold medium>
+          <TextSpan textLight bold medium isLink>
             {parseCustomMarkdownToReact(
-              i18next.t("share.convertNotificationFeedback")
+              i18next.t(($) => $.share.convertNotificationFeedback)
             )}
           </TextSpan>
         </RawButton>
-
         <Spacing bottom={2} />
-
         <Collapsible
           btnRight
-          title={i18next.t("share.convertNotificationWarningsTitle")}
+          title={i18next.t(($) => $.share.convertNotificationWarningsTitle)}
           titleTextProps={{ large: true }}
           bodyBoxProps={{ padded: true }}
         >
@@ -102,7 +99,7 @@ export const shareConvertNotification = (
                 title={
                   path && path !== ""
                     ? path
-                    : i18next.t("share.convertNotificationWarningsTitle")
+                    : i18next.t(($) => $.share.convertNotificationWarningsTitle)
                 }
               >
                 <ul>

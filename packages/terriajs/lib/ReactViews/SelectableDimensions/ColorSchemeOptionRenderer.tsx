@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { rgb } from "d3-color";
 import * as d3Scale from "d3-scale-chromatic";
-import React from "react";
+import { VFC, ReactChild } from "react";
 import StandardCssColors from "../../Core/StandardCssColors";
 import { OptionRenderer } from "../../Models/SelectableDimensions/SelectableDimensions";
 
-const Invalid: React.VFC<object> = () => {
+const Invalid: VFC<object> = () => {
   const { t } = useTranslation();
-  return <span>{t("selectableDimensions.invalid")}</span>;
+  return <span>{t(($) => $.selectableDimensions.invalid)}</span>;
 };
 
 /* The ramp and swatches functions are adapted from https://observablehq.com/@d3/color-schemes?collection=@d3/d3-scale-chromatic
@@ -30,10 +30,7 @@ const Invalid: React.VFC<object> = () => {
 const interpolateWidth = 300;
 const height = 20;
 
-function ramp(
-  name: string | undefined,
-  n: number | undefined
-): React.ReactChild {
+function ramp(name: string | undefined, n: number | undefined): ReactChild {
   if (!name) return <Invalid />;
   let colors: string[];
 

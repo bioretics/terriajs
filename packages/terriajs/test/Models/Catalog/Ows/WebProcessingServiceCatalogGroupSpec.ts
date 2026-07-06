@@ -1,11 +1,12 @@
 import i18next from "i18next";
+import { http, HttpResponse } from "msw";
 import WebProcessingServiceCatalogFunction from "../../../../lib/Models/Catalog/Ows/WebProcessingServiceCatalogFunction";
 import WebProcessingServiceCatalogGroup from "../../../../lib/Models/Catalog/Ows/WebProcessingServiceCatalogGroup";
 import CommonStrata from "../../../../lib/Models/Definition/CommonStrata";
 import Terria from "../../../../lib/Models/Terria";
-import "../../../SpecMain";
+import { worker } from "../../../mocks/browser";
 
-const GetCapabilitiesXml = require("raw-loader!../../../../wwwroot/test/WPS/GetCapabilities.xml");
+import GetCapabilitiesXml from "../../../../wwwroot/test/WPS/GetCapabilities.xml";
 
 describe("WebProcessingServiceCatalogGroup", function () {
   let terria: Terria;
@@ -16,53 +17,55 @@ describe("WebProcessingServiceCatalogGroup", function () {
     wpsGroup = new WebProcessingServiceCatalogGroup("test", terria);
   });
 
-  beforeEach(function setupAjax() {
-    jasmine.Ajax.install();
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
-  });
-
   it("should have a type and typeName", function () {
     expect(wpsGroup.type).toBe("wps-getCapabilities");
     expect(wpsGroup.typeName).toBe(
-      i18next.t("models.webProcessingServiceCatalogGroup.typeName")
+      i18next.t(($) => $.models.webProcessingServiceCatalogGroup.typeName)
     );
   });
 
-  describe("loadMembers", async function () {
+  describe("loadMembers", function () {
     it("fetches the getCapabilities XML", async function () {
-      wpsGroup.setTrait(CommonStrata.user, "url", "http://test/wps");
-      jasmine.Ajax.stubRequest(
-        "http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
-      ).andReturn({
-        responseText: GetCapabilitiesXml
-      });
-      await wpsGroup.loadMembers();
-      const request = jasmine.Ajax.requests.mostRecent();
-      expect(request).toBeDefined(
-        "No GetCapabilities request was made when loading members"
+      wpsGroup.setTrait(CommonStrata.user, "url", "http://example.com/wps");
+      worker.use(
+        http.get("http://example.com/wps", ({ request }) => {
+          const url = new URL(request.url);
+          if (
+            url.searchParams.get("service") !== "WPS" ||
+            url.searchParams.get("request") !== "GetCapabilities" ||
+            url.searchParams.get("version") !== "1.0.0"
+          ) {
+            return HttpResponse.error();
+          }
+          return new HttpResponse(GetCapabilitiesXml, {
+            headers: { "Content-Type": "text/xml" }
+          });
+        })
       );
-      expect(request.url).toEqual(
-        "http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
-      );
-      expect(request.method).toEqual("GET");
+      const result = await wpsGroup.loadMembers();
+      expect(result.error).toBeUndefined();
     });
 
     it("proxies the request when proxy is enabled", async function () {
-      wpsGroup.setTrait(CommonStrata.user, "url", "http://test/wps");
+      wpsGroup.setTrait(CommonStrata.user, "url", "http://example.com/wps");
       wpsGroup.setTrait(CommonStrata.user, "forceProxy", true);
-      jasmine.Ajax.stubRequest(
-        "proxy/_1d/http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
-      ).andReturn({
-        responseText: GetCapabilitiesXml
-      });
-      await wpsGroup.loadMembers();
-      const request = jasmine.Ajax.requests.mostRecent();
-      expect(request.url).toEqual(
-        "proxy/_1d/http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
+      worker.use(
+        http.get(/\/proxy\/_1d\/http:\/\/example\.com\/wps/, ({ request }) => {
+          const url = new URL(request.url);
+          if (
+            url.searchParams.get("service") !== "WPS" ||
+            url.searchParams.get("request") !== "GetCapabilities" ||
+            url.searchParams.get("version") !== "1.0.0"
+          ) {
+            return HttpResponse.error();
+          }
+          return new HttpResponse(GetCapabilitiesXml, {
+            headers: { "Content-Type": "text/xml" }
+          });
+        })
       );
+      const result = await wpsGroup.loadMembers();
+      expect(result.error).toBeUndefined();
     });
 
     it("throws a TerriaError if no URL is defined", async function () {
@@ -75,12 +78,16 @@ describe("WebProcessingServiceCatalogGroup", function () {
 
   describe("after loading metadata", function () {
     beforeEach(async function () {
-      jasmine.Ajax.stubRequest(
-        "http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
-      ).andReturn({
-        responseText: GetCapabilitiesXml
-      });
-      wpsGroup.setTrait(CommonStrata.user, "url", "http://test/wps");
+      worker.use(
+        http.get(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(GetCapabilitiesXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
+      wpsGroup.setTrait(CommonStrata.user, "url", "http://example.com/wps");
       await wpsGroup.loadMetadata();
     });
 
@@ -97,7 +104,7 @@ describe("WebProcessingServiceCatalogGroup", function () {
       ).toEqual([
         {
           name: i18next.t(
-            "models.webProcessingServiceCatalogGroup.providerName"
+            ($) => $.models.webProcessingServiceCatalogGroup.providerName
           ),
           content: "CSIRO Ocean & Atmosphere"
         }
@@ -107,16 +114,20 @@ describe("WebProcessingServiceCatalogGroup", function () {
 
   describe("after loading members", function () {
     beforeEach(async function () {
-      jasmine.Ajax.stubRequest(
-        "http://test/wps?service=WPS&request=GetCapabilities&version=1.0.0"
-      ).andReturn({
-        responseText: GetCapabilitiesXml
-      });
-      wpsGroup.setTrait(CommonStrata.user, "url", "http://test/wps");
+      worker.use(
+        http.get(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(GetCapabilitiesXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
+      wpsGroup.setTrait(CommonStrata.user, "url", "http://example.com/wps");
       await wpsGroup.loadMembers();
     });
 
-    it("creates a member for every process", async function () {
+    it("creates a member for every process", function () {
       expect(wpsGroup.members.length).toEqual(12);
     });
 
@@ -129,7 +140,7 @@ describe("WebProcessingServiceCatalogGroup", function () {
       });
 
       it("has a url", function () {
-        expect(member.url).toBe("http://test/wps");
+        expect(member.url).toBe("http://example.com/wps");
       });
 
       it("has an identifier", function () {

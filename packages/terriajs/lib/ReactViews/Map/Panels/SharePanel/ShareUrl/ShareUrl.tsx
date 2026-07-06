@@ -1,8 +1,9 @@
-import React, {
+import {
+  PropsWithChildren,
+  forwardRef,
   useEffect,
   useImperativeHandle,
-  useState,
-  PropsWithChildren
+  useState
 } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
@@ -13,14 +14,17 @@ import ViewState from "../../../../../ReactViewModels/ViewState";
 import Spacing from "../../../../../Styled/Spacing";
 import { TextSpan } from "../../../../../Styled/Text";
 
-import { buildShareLink, buildShortShareLink } from "../BuildShareLink";
-import { ShareUrlWarning } from "./ShareUrlWarning";
-import Clipboard from "../../../../Clipboard";
-import Input from "../../../../../Styled/Input";
 import {
   Category,
   ShareAction
-} from "../../../../../Core/AnalyticEvents/analyticEvents";
+} from "../../../../../Core/Analytics/analyticEvents";
+import Clipboard from "../../../../Clipboard";
+import { buildShareLink, buildShortShareLink } from "../BuildShareLink";
+import { ShareUrlWarning } from "./ShareUrlWarning";
+import TerriaError, {
+  TerriaErrorSeverity
+} from "../../../../../Core/TerriaError";
+// Fork (rer3d): import/export map buttons.
 import Box from "../../../../../Styled/Box";
 import Button from "../../../../../Styled/Button";
 
@@ -29,9 +33,6 @@ interface IShareUrlProps {
   viewState: ViewState;
   includeStories: boolean;
   shouldShorten: boolean;
-  theme: "light" | "dark";
-  inputTheme?: "light" | "dark";
-  rounded?: boolean;
   callback?: () => void;
 }
 
@@ -40,21 +41,11 @@ export interface IShareUrlRef {
   shorteningInProgress: boolean;
 }
 
-export const ShareUrl = React.forwardRef<
+export const ShareUrl = forwardRef<
   IShareUrlRef,
   PropsWithChildren<IShareUrlProps>
 >(function ShareUrl(
-  {
-    terria,
-    viewState,
-    includeStories,
-    shouldShorten,
-    children,
-    theme,
-    inputTheme,
-    rounded,
-    callback
-  },
+  { terria, viewState, includeStories, shouldShorten, children, callback },
   forwardRef
 ) {
   const { t } = useTranslation();
@@ -74,21 +65,43 @@ export const ShareUrl = React.forwardRef<
   );
 
   useEffect(() => {
+    let cancelled = false;
     if (shouldShorten) {
-      setPlaceholder(t("share.shortLinkShortening"));
+      setPlaceholder(t(($) => $.share.shortLinkShortening));
       setShorteningInProgress(true);
-      buildShortShareLink(terria, viewState, {
-        includeStories
-      })
-        .then((shareUrl) => setShareUrl(shareUrl))
-        .catch(() => {
-          setShareUrl(
-            buildShareLink(terria, viewState, {
-              includeStories
-            })
-          );
+      buildShortShareLink(terria, viewState, { includeStories })
+        .then((shareUrl) => {
+          if (!cancelled) setShareUrl(shareUrl);
         })
-        .finally(() => setShorteningInProgress(false));
+        .catch((error) => {
+          let userMessage: string = t(
+            ($) => $.models.shareData.generateErrorMessage
+          );
+          if (error instanceof TerriaError) {
+            const highestImportanceError = error.highestImportanceError;
+            const highestImportanceOriginalErrorMessage =
+              highestImportanceError.originalError?.[0].message;
+            if (highestImportanceOriginalErrorMessage?.includes("413")) {
+              userMessage = t(
+                ($) => $.models.shareData.generateErrorDataExceedsLimitMessage
+              );
+              terria.raiseErrorToUser(
+                TerriaError.from(error, {
+                  message: userMessage
+                }),
+                {
+                  severity: TerriaErrorSeverity.Error
+                }
+              );
+            }
+          }
+          if (!cancelled) {
+            setShareUrl(userMessage);
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setShorteningInProgress(false);
+        });
     } else {
       setShareUrl(
         buildShareLink(terria, viewState, {
@@ -96,9 +109,13 @@ export const ShareUrl = React.forwardRef<
         })
       );
     }
+    return () => {
+      cancelled = true;
+    };
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [terria, viewState, shouldShorten, includeStories]);
 
+  // Fork (rer3d): export the current share state to a .geo3d file / import one.
   const exportMap = () => {
     const link = document.createElement("a");
     link.setAttribute(
@@ -129,43 +146,29 @@ export const ShareUrl = React.forwardRef<
     input.click();
   };
 
+  const hasStory = includeStories && terria.stories && terria.stories.length;
+
   return (
     <>
-      <Explanation textDark={theme === "light"}>
-        {t("clipboard.shareExplanation")}
+      <Explanation>
+        {hasStory
+          ? t(($) => $.clipboard.storyExplanation)
+          : t(($) => $.clipboard.shareExplanation)}
       </Explanation>
       <Spacing bottom={1} />
       <Clipboard
-        theme={theme}
         text={shareUrl}
-        source={
-          <Input
-            light={inputTheme === "light"}
-            dark={inputTheme === "dark"}
-            large
-            type="text"
-            value={shareUrl}
-            placeholder={placeholder ?? t("share.shortLinkShortening")}
-            readOnly
-            onClick={(e) => e.currentTarget.select()}
-            css={`
-              ${rounded ? `border-radius:  32px 0 0 32px;` : ""}
-            `}
-            id="share-url"
-          />
+        inputPlaceholder={placeholder}
+        createdMessage={
+          hasStory
+            ? t(($) => $.share.storyLinkCreated)
+            : t(($) => $.share.shareLinkCreated)
         }
-        id="share-url"
-        rounded={rounded}
         onCopy={(text) =>
-          terria.analytics?.logEvent(
-            Category.share,
-            ShareAction.storyCopy,
-            text
-          )
+          terria.analytics.logEvent(Category.share, ShareAction.storyCopy, text)
         }
       />
       {children}
-      <Spacing bottom={2} />
       <ShareUrlWarning
         terria={terria}
         viewState={viewState}
@@ -173,14 +176,14 @@ export const ShareUrl = React.forwardRef<
       />
       <Spacing bottom={2} />
       <Box column>
-        <TextSpan medium>{t("share.importExportMapTitle")}</TextSpan>
-        <Explanation>{t("share.importExportMapExplanation")}</Explanation>
+        <TextSpan medium>{t(($) => $.share.importExportMapTitle)}</TextSpan>
+        <Explanation>{t(($) => $.share.importExportMapExplanation)}</Explanation>
         <Box gap>
           <PrintButton primary fullWidth onClick={exportMap}>
-            {t("share.exportMapButton")}
+            {t(($) => $.share.exportMapButton)}
           </PrintButton>
           <PrintButton primary fullWidth onClick={importMap}>
-            {t("share.importMapButton")}
+            {t(($) => $.share.importMapButton)}
           </PrintButton>
         </Box>
       </Box>

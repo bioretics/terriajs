@@ -1,7 +1,7 @@
 import dateFormat from "dateformat";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import defined from "terriajs-cesium/Source/Core/defined";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
@@ -14,7 +14,7 @@ import Styles from "./timeline.scss";
 import TimelineControls from "./TimelineControls";
 
 @observer
-class Timeline extends React.Component {
+class Timeline extends Component {
   static propTypes = {
     terria: PropTypes.object.isRequired,
     locale: PropTypes.object,
@@ -89,11 +89,12 @@ class Timeline extends React.Component {
           className={Styles.textRow}
           css={`
             background: ${(p) => p.theme.dark};
+            min-height: 30px;
           `}
         >
           <div
             className={Styles.textCell}
-            title={t("dateTime.timeline.textCell")}
+            title={t(($) => $.dateTime.timeline.textCell)}
           >
             <div className={Styles.layerNameTruncated}>{catalogItem.name}</div>
             {currentTime}

@@ -1,9 +1,7 @@
-import React from "react";
+import { Component } from "react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-
 import PropTypes from "prop-types";
-
 import { addMarker } from "../../Models/LocationMarkerUtils";
 import LocationSearchResults from "../Search/LocationSearchResults";
 import SearchResult from "../Search/SearchResult";
@@ -12,7 +10,7 @@ import Styles from "./mobile-search.scss";
 
 // A Location item when doing Bing map searvh or Gazetter search
 @observer
-class MobileSearch extends React.Component {
+class MobileSearch extends Component {
   static propTypes = {
     viewState: PropTypes.object,
     terria: PropTypes.object,
@@ -69,7 +67,7 @@ class MobileSearch extends React.Component {
               clickAction={() => this.searchInDataCatalog()}
               icon={null}
               locationSearchText={searchState.locationSearchText}
-              name={t("search.search", {
+              name={t(($) => $.search.search, {
                 searchText: searchState.locationSearchText
               })}
               searchResultTheme={theme}
@@ -82,19 +80,18 @@ class MobileSearch extends React.Component {
 
   renderLocationResult(theme) {
     const searchState = this.props.viewState.searchState;
-    return searchState.locationSearchResults.map((search) => (
+    return searchState.locationSearchProviders.map((searchProvider) => (
       <LocationSearchResults
-        key={search.searchProvider.name}
+        key={searchProvider.uniqueId}
         terria={this.props.terria}
         viewState={this.props.viewState}
-        search={search}
+        searchResult={searchProvider.searchResult}
         locationSearchText={searchState.locationSearchText}
         onLocationClick={this.onLocationClick.bind(this)}
-        isWaitingForSearchToStart={searchState.isWaitingToStartLocationSearch}
         theme={theme}
       />
     ));
   }
 }
 
-module.exports = withTranslation()(MobileSearch);
+export default withTranslation()(MobileSearch);

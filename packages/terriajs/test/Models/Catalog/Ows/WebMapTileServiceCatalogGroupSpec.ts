@@ -25,7 +25,7 @@ describe("WebMapTileServiceCatalogGroup", function () {
   });
 
   describe("after loading capabilities", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       runInAction(() => {
         wmts.setTrait("definition", "url", "test/WMTS/with_tilematrix.xml");
       });
@@ -48,12 +48,14 @@ describe("WebMapTileServiceCatalogGroup", function () {
     it("defines info", async function () {
       await wmts.loadMetadata();
       const abstract = i18next.t(
-        "models.webMapTileServiceCatalogGroup.abstract"
+        ($) => $.models.webMapTileServiceCatalogGroup.abstract
       );
       const accessConstraints = i18next.t(
-        "models.webMapTileServiceCatalogGroup.accessConstraints"
+        ($) => $.models.webMapTileServiceCatalogGroup.accessConstraints
       );
-      const fees = i18next.t("models.webMapTileServiceCatalogGroup.fees");
+      const fees = i18next.t(
+        ($) => $.models.webMapTileServiceCatalogGroup.fees
+      );
       expect(wmts.info.map(({ name }) => name)).toEqual([
         abstract,
         accessConstraints,
@@ -76,7 +78,7 @@ describe("WebMapTileServiceCatalogGroup", function () {
       await wmts.loadMembers();
     });
 
-    it("loads", async function () {
+    it("loads", function () {
       expect(wmts.members.length).toEqual(3);
       expect(wmts.memberModels.length).toEqual(3);
     });

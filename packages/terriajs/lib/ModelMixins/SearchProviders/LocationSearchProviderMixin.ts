@@ -1,4 +1,4 @@
-import { action, makeObservable } from "mobx";
+import { action, makeObservable, override } from "mobx";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -31,6 +31,40 @@ function LocationSearchProviderMixin<
 
     @action
     showWarning() {}
+
+    async search(searchText: string, manuallyTriggered?: boolean) {
+      if (!this.autocompleteEnabled && !manuallyTriggered) {
+        this.searchResult.isSearching = false;
+        this.searchResult.isWaitingToStartSearch = false;
+        this.searchResult.message = {
+          content: "translate#viewModels.enterToStartSearch"
+        };
+
+        return;
+      }
+
+      await super.search(searchText, manuallyTriggered);
+    }
+
+    @override
+    get autocompleteEnabled() {
+      return super.autocompleteEnabled ?? true;
+    }
+
+    @override
+    get flightDurationSeconds() {
+      return (
+        super.flightDurationSeconds ??
+        this.terria.searchBarModel.flightDurationSeconds
+      );
+    }
+
+    get recommendedListLength() {
+      return (
+        super.recommendedListLength ??
+        this.terria.searchBarModel.recommendedListLength
+      );
+    }
   }
 
   return LocationSearchProviderMixin;
@@ -61,8 +95,9 @@ export function getMapCenter(terria: Terria): MapCenter {
 }
 
 namespace LocationSearchProviderMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof LocationSearchProviderMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof LocationSearchProviderMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model && model.hasLocationSearchProviderMixin;

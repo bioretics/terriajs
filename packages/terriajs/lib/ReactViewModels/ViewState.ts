@@ -2,19 +2,19 @@ import {
   action,
   computed,
   IReactionDisposer,
+  makeObservable,
   observable,
   reaction,
-  runInAction,
-  makeObservable
+  runInAction
 } from "mobx";
-import React, { Ref } from "react";
+import { ComponentType, MouseEvent, ReactNode, Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import addedByUser from "../Core/addedByUser";
 import {
   Category,
   HelpAction,
   StoryAction
-} from "../Core/AnalyticEvents/analyticEvents";
+} from "../Core/Analytics/analyticEvents";
 import Result from "../Core/Result";
 import triggerResize from "../Core/triggerResize";
 import PickedFeatures from "../Map/PickedFeatures/PickedFeatures";
@@ -22,9 +22,12 @@ import CatalogMemberMixin, { getName } from "../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../ModelMixins/GroupMixin";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ReferenceMixin from "../ModelMixins/ReferenceMixin";
+import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
+import CzmlCatalogItem from "../Models/Catalog/CatalogItems/CzmlCatalogItem";
 import CommonStrata from "../Models/Definition/CommonStrata";
 import { BaseModel } from "../Models/Definition/Model";
 import getAncestors from "../Models/getAncestors";
+import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 import Terria from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
@@ -39,10 +42,7 @@ import {
 import { defaultPlayPathTourPoints } from "./defaultPlayPathTourPoints";
 import { defaultMeasurableTourPoints } from "./defaultMeasurableTourPoints";
 import SearchState from "./SearchState";
-import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogItemsSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
-import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
-import CzmlCatalogItem from "../Models/Catalog/CatalogItems/CzmlCatalogItem";
 
 export const DATA_CATALOG_NAME = "data-catalog";
 export const USER_DATA_NAME = "my-data";
@@ -53,10 +53,12 @@ export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
 
 interface ViewStateOptions {
   terria: Terria;
-  catalogSearchProvider: CatalogSearchProviderMixin.Instance | undefined;
-  catalogItemsSearchProvider?:
-    | CatalogItemsSearchProviderMixin.Instance
-    | undefined;
+  /**
+   * @deprecated
+   */
+  catalogSearchProvider?: CatalogSearchProviderMixin.Instance;
+  // Fork (rer3d): provider for searching inside catalog item info.
+  catalogItemsSearchProvider?: CatalogItemsSearchProviderMixin.Instance;
   errorHandlingProvider?: any;
 }
 
@@ -97,7 +99,6 @@ export default class ViewState {
   @observable topElement: string = "FeatureInfo";
   // Map for storing react portal containers created by <Portal> component.
   @observable portals: Map<string, HTMLElement | null> = new Map();
-  @observable lastUploadedFiles: any[] = [];
   @observable storyBuilderShown: boolean = false;
   @observable microzonationPanelShown: boolean = false;
 
@@ -170,19 +171,19 @@ export default class ViewState {
     [];
 
   @action
-  setSelectedTrainerItem(trainerItem: string) {
+  setSelectedTrainerItem(trainerItem: string): void {
     this.selectedTrainerItem = trainerItem;
   }
   @action
-  setTrainerBarVisible(bool: boolean) {
+  setTrainerBarVisible(bool: boolean): void {
     this.trainerBarVisible = bool;
   }
   @action
-  setTrainerBarShowingAllSteps(bool: boolean) {
+  setTrainerBarShowingAllSteps(bool: boolean): void {
     this.trainerBarShowingAllSteps = bool;
   }
   @action
-  setTrainerBarExpanded(bool: boolean) {
+  setTrainerBarExpanded(bool: boolean): void {
     this.trainerBarExpanded = bool;
     // if collapsing trainer bar, also hide steps
     if (!bool) {
@@ -190,17 +191,17 @@ export default class ViewState {
     }
   }
   @action
-  setCurrentTrainerItemIndex(index: number) {
+  setCurrentTrainerItemIndex(index: number): void {
     this.currentTrainerItemIndex = index;
     this.currentTrainerStepIndex = 0;
   }
   @action
-  setCurrentTrainerStepIndex(index: number) {
+  setCurrentTrainerStepIndex(index: number): void {
     this.currentTrainerStepIndex = index;
   }
 
   @action
-  setActionBarVisible(visible: boolean) {
+  setActionBarVisible(visible: boolean): void {
     this.isActionBarVisible = visible;
   }
 
@@ -209,19 +210,11 @@ export default class ViewState {
    */
   @observable bottomDockHeight: number = 0;
   @action
-  setBottomDockHeight(height: number) {
+  setBottomDockHeight(height: number): void {
     if (this.bottomDockHeight !== height) {
       this.bottomDockHeight = height;
     }
   }
-
-  /**
-   * ID of the workbench item whose ViewingControls menu is currently open.
-   */
-  @observable
-  workbenchItemWithOpenControls: string | undefined = undefined;
-
-  errorProvider: any | null = null;
 
   // default value is null, because user has not made decision to show or
   // not show story
@@ -336,19 +329,27 @@ export default class ViewState {
   }
 
   @action
-  setTourIndex(index: number) {
+  setTourIndex(index: number): void {
     this.currentTourIndex = index;
   }
   @action
-  setShowTour(bool: boolean) {
-    this.showTour = bool;
+  setShowTour(bool: boolean): void {
     // If we're enabling the tour, make sure the trainer is collapsed
     if (bool) {
       this.setTrainerBarExpanded(false);
+      // Ensure workbench is shown
+      this.setIsMapFullScreen(false);
+      setTimeout(() => {
+        runInAction(() => {
+          this.showTour = bool;
+        });
+      }, animationDuration || 1);
+    } else {
+      this.showTour = bool;
     }
   }
   @action
-  closeTour() {
+  closeTour(): void {
     this.currentTourIndex = -1;
     this.showTour = false;
     this.setIsPlayPathTour(false);
@@ -356,14 +357,14 @@ export default class ViewState {
     this.tourPoints = [...defaultTourPoints];
   }
   @action
-  previousTourPoint() {
+  previousTourPoint(): void {
     const currentIndex = this.currentTourIndex;
     if (currentIndex !== 0) {
       this.currentTourIndex = currentIndex - 1;
     }
   }
   @action
-  nextTourPoint() {
+  nextTourPoint(): void {
     const totalTourPoints = this.tourPointsWithValidRefs.length;
     const currentIndex = this.currentTourIndex;
     if (currentIndex >= totalTourPoints - 1) {
@@ -373,18 +374,18 @@ export default class ViewState {
     }
   }
   @action
-  closeCollapsedNavigation() {
+  closeCollapsedNavigation(): void {
     this.showCollapsedNavigation = false;
   }
 
   @action
-  updateAppRef(refName: string, ref: Ref<HTMLElement>) {
+  updateAppRef(refName: string, ref: Ref<HTMLElement>): void {
     if (!this.appRefs.get(refName) || this.appRefs.get(refName) !== ref) {
       this.appRefs.set(refName, ref);
     }
   }
   @action
-  deleteAppRef(refName: string) {
+  deleteAppRef(refName: string): void {
     this.appRefs.delete(refName);
   }
 
@@ -484,12 +485,14 @@ export default class ViewState {
    */
   @observable retainSharePanel: boolean = false; // The large share panel accessed via Share/Print button
 
+  @observable settingsPanelIsVisible: boolean = false;
+
   /**
    * The currently open tool
    */
   @observable currentTool?: Tool;
 
-  @observable panel: React.ReactNode;
+  @observable panel: ReactNode;
 
   private _pickedFeaturesSubscription: IReactionDisposer;
   private _disclaimerVisibleSubscription: IReactionDisposer;
@@ -510,13 +513,14 @@ export default class ViewState {
     const terria = options.terria;
     this.searchState = new SearchState({
       terria,
-      catalogSearchProvider: options.catalogSearchProvider,
       catalogItemsSearchProvider: options.catalogItemsSearchProvider
     });
+    if (options.catalogSearchProvider) {
+      runInAction(() => {
+        this.terria.catalog.searchProvider = options.catalogSearchProvider;
+      });
+    }
 
-    this.errorProvider = options.errorHandlingProvider
-      ? options.errorHandlingProvider
-      : null;
     this.terria = terria;
 
     // When features are picked, show the feature info panel.
@@ -541,6 +545,7 @@ export default class ViewState {
       (disclaimerVisible) => {
         this.isMapFullScreen =
           disclaimerVisible ||
+          terria.elements.get("show-workbench")?.visible === false ||
           terria.userProperties.get("hideWorkbench") === "1" ||
           terria.userProperties.get("hideExplorerPanel") === "1";
       }
@@ -548,6 +553,7 @@ export default class ViewState {
 
     this._isMapFullScreenSubscription = reaction(
       () =>
+        terria.elements.get("show-workbench")?.visible === false ||
         terria.userProperties.get("hideWorkbench") === "1" ||
         terria.userProperties.get("hideExplorerPanel") === "1",
       (isMapFullScreen: boolean) => {
@@ -628,9 +634,10 @@ export default class ViewState {
         }
 
         try {
-          const result = await this.terria.getModelByIdShareKeyOrCatalogIndex(
-            previewedItemId
-          );
+          const result =
+            await this.terria.getModelByIdShareKeyOrCatalogIndex(
+              previewedItemId
+            );
           result.throwIfError();
           const model = result.throwIfUndefined();
           this.viewCatalogMember(model);
@@ -718,7 +725,7 @@ export default class ViewState {
     );
   }
 
-  dispose() {
+  dispose(): void {
     this._pickedFeaturesSubscription();
     this._disclaimerVisibleSubscription();
     this._mobileMenuSubscription();
@@ -736,7 +743,7 @@ export default class ViewState {
   }
 
   @action
-  triggerResizeEvent() {
+  triggerResizeEvent(): void {
     triggerResize();
   }
 
@@ -744,7 +751,7 @@ export default class ViewState {
   setIsMapFullScreen(
     bool: boolean,
     animationDuration = WORKBENCH_RESIZE_ANIMATION_DURATION
-  ) {
+  ): void {
     this.isMapFullScreen = bool;
     // Allow any animations to finish, then trigger a resize.
 
@@ -760,22 +767,22 @@ export default class ViewState {
   }
 
   @action
-  toggleStoryBuilder() {
+  toggleStoryBuilder(): void {
     this.storyBuilderShown = !this.storyBuilderShown;
   }
 
   @action
-  toggleMicrozonationPanel() {
+  toggleMicrozonationPanel(): void {
     this.microzonationPanelShown = !this.microzonationPanelShown;
   }
 
   @action
-  setTopElement(key: string) {
+  setTopElement(key: string): void {
     this.topElement = key;
   }
 
   @action
-  openQueryData(queryItem: BaseModel) {
+  openQueryData(queryItem: BaseModel): void {
     this.terria.itemToQuery = queryItem;
     if (this.useSmallScreenInterface) {
       this.switchMobileView(this.mobileViewOptions.query);
@@ -785,40 +792,51 @@ export default class ViewState {
   }
 
   @action
-  closeQuery() {
+  closeQuery(): void {
     this.queryPanelIsVisible = false;
     this.terria.itemToQuery = undefined;
   }
 
   @action
-  openAddData() {
+  openAddData(): void {
     this.explorerPanelIsVisible = true;
     this.activeTabCategory = DATA_CATALOG_NAME;
     this.switchMobileView(this.mobileViewOptions.data);
   }
 
   @action
-  openUserData() {
+  openUserData(): void {
+    if (this.terria.configParameters.disableUserAddedData) {
+      return;
+    }
     this.explorerPanelIsVisible = true;
     this.activeTabCategory = USER_DATA_NAME;
   }
 
   @action
-  closeCatalog() {
+  closeCatalog(): void {
     this.explorerPanelIsVisible = false;
     this.switchMobileView(null);
     this.clearPreviewedItem();
   }
 
   @action
-  searchInCatalog(query: string) {
+  searchInCatalog(query: string): void {
     this.openAddData();
     this.searchState.catalogSearchText = query;
     this.searchState.searchCatalog();
   }
 
+  /**
+   * Open settings panel
+   */
   @action
-  clearPreviewedItem() {
+  openSettingsPanel(): void {
+    this.settingsPanelIsVisible = true;
+  }
+
+  @action
+  clearPreviewedItem(): void {
     this.userDataPreviewedItem = undefined;
     this._previewedItem = undefined;
   }
@@ -919,13 +937,13 @@ export default class ViewState {
   }
 
   @action
-  switchMobileView(viewName: string | null) {
+  switchMobileView(viewName: string | null): void {
     this.mobileView = viewName;
   }
 
   @action
-  showHelpPanel() {
-    this.terria.analytics?.logEvent(Category.help, HelpAction.panelOpened);
+  showHelpPanel(): void {
+    this.terria.analytics.logEvent(Category.help, HelpAction.panelOpened);
     this.showHelpMenu = true;
     this.helpPanelExpanded = false;
     this.selectedHelpMenuItem = "";
@@ -934,9 +952,9 @@ export default class ViewState {
 
   @action
   openHelpPanelItemFromSharePanel(
-    evt: React.MouseEvent<HTMLDivElement>,
+    evt: MouseEvent<HTMLDivElement>,
     itemName: string
-  ) {
+  ): void {
     evt.preventDefault();
     evt.stopPropagation();
     this.setRetainSharePanel(true);
@@ -945,48 +963,48 @@ export default class ViewState {
   }
 
   @action
-  selectHelpMenuItem(key: string) {
+  selectHelpMenuItem(key: string): void {
     this.selectedHelpMenuItem = key;
     this.helpPanelExpanded = true;
   }
 
   @action
-  hideHelpPanel() {
+  hideHelpPanel(): void {
     this.showHelpMenu = false;
   }
 
   @action
-  setRetainSharePanel(retain: boolean) {
+  setRetainSharePanel(retain: boolean): void {
     this.retainSharePanel = retain;
   }
 
   @action
-  changeSearchState(newText: string) {
+  changeSearchState(newText: string): void {
     this.searchState.catalogSearchText = newText;
   }
 
   @action
-  setDisclaimerVisible(bool: boolean) {
+  setDisclaimerVisible(bool: boolean): void {
     this.disclaimerVisible = bool;
   }
 
   @action
-  hideDisclaimer() {
+  hideDisclaimer(): void {
     this.setDisclaimerVisible(false);
   }
 
   @action
-  setShowSatelliteGuidance(showSatelliteGuidance: boolean) {
+  setShowSatelliteGuidance(showSatelliteGuidance: boolean): void {
     this.showSatelliteGuidance = showSatelliteGuidance;
   }
 
   @action
-  setShowWelcomeMessage(welcomeMessageShown: boolean) {
+  setShowWelcomeMessage(welcomeMessageShown: boolean): void {
     this.showWelcomeMessage = welcomeMessageShown;
   }
 
   @action
-  setVideoGuideVisible(videoName: string) {
+  setVideoGuideVisible(videoName: string): void {
     this.videoGuideVisible = videoName;
   }
 
@@ -994,7 +1012,7 @@ export default class ViewState {
    * Removes references of a model from viewState
    */
   @action
-  removeModelReferences(model: BaseModel) {
+  removeModelReferences(model: BaseModel): void {
     if (this._previewedItem === model) this._previewedItem = undefined;
     if (this.userDataPreviewedItem === model)
       this.userDataPreviewedItem = undefined;
@@ -1005,7 +1023,7 @@ export default class ViewState {
     feature: string,
     state: boolean,
     persistent: boolean = false
-  ) {
+  ): void {
     const featureIndexInPrompts = this.featurePrompts.indexOf(feature);
     if (
       state &&
@@ -1021,27 +1039,27 @@ export default class ViewState {
     }
   }
 
-  viewingUserData() {
+  viewingUserData(): boolean {
     return this.activeTabCategory === USER_DATA_NAME;
   }
 
-  afterTerriaStarted() {
+  afterTerriaStarted(): void {
     if (this.terria.configParameters.openAddData) {
       this.openAddData();
     }
   }
 
   @action
-  openTool(tool: Tool) {
+  openTool(tool: Tool): void {
     this.currentTool = tool;
   }
 
   @action
-  closeTool() {
+  closeTool(): void {
     this.currentTool = undefined;
   }
 
-  @action setPrintWindow(window: Window | null) {
+  @action setPrintWindow(window: Window | null): void {
     if (this.printWindow) {
       this.printWindow.close();
     }
@@ -1049,13 +1067,13 @@ export default class ViewState {
   }
 
   @action
-  toggleMobileMenu() {
+  toggleMobileMenu(): void {
     this.setTopElement("mobileMenu");
     this.mobileMenuVisible = !this.mobileMenuVisible;
   }
 
   @action
-  runStories() {
+  runStories(): void {
     this.storyBuilderShown = false;
     this.storyShown = true;
 
@@ -1065,7 +1083,7 @@ export default class ViewState {
 
     this.terria.currentViewer.notifyRepaintRequired();
 
-    this.terria.analytics?.logEvent(Category.story, StoryAction.runStory);
+    this.terria.analytics.logEvent(Category.story, StoryAction.runStory);
   }
 
   @computed
@@ -1119,10 +1137,6 @@ export default class ViewState {
 
 interface Tool {
   toolName: string;
-  getToolComponent: () =>
-    | React.ComponentType<any>
-    | Promise<React.ComponentType<any>>;
-
-  showCloseButton: boolean;
+  getToolComponent: () => ComponentType<any> | Promise<ComponentType<any>>;
   params?: any;
 }

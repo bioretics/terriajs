@@ -1,4 +1,4 @@
-import i18next from "i18next";
+import i18next, { keyFromSelector } from "i18next";
 import { isEqual } from "lodash-es";
 import {
   action,
@@ -12,16 +12,15 @@ import {
   toJS
 } from "mobx";
 import { computedFn, fromPromise, IPromiseBasedObservable } from "mobx-utils";
+import ionCreditLogo from "terriajs-cesium/Source/Assets/Images/ion-credit.png";
 import AssociativeArray from "terriajs-cesium/Source/Core/AssociativeArray";
 import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import CesiumTerrainProvider from "terriajs-cesium/Source/Core/CesiumTerrainProvider";
-import Clock from "terriajs-cesium/Source/Core/Clock";
 import createWorldTerrainAsync from "terriajs-cesium/Source/Core/createWorldTerrainAsync";
 import Credit from "terriajs-cesium/Source/Core/Credit";
-import defaultValue from "terriajs-cesium/Source/Core/defaultValue";
 import defined from "terriajs-cesium/Source/Core/defined";
 import destroyObject from "terriajs-cesium/Source/Core/destroyObject";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -38,6 +37,7 @@ import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import PerspectiveFrustum from "terriajs-cesium/Source/Core/PerspectiveFrustum";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import sampleTerrain from "terriajs-cesium/Source/Core/sampleTerrain";
+import ScreenSpaceEventHandler from "terriajs-cesium/Source/Core/ScreenSpaceEventHandler";
 import ScreenSpaceEventType from "terriajs-cesium/Source/Core/ScreenSpaceEventType";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
 import Transforms from "terriajs-cesium/Source/Core/Transforms";
@@ -46,18 +46,21 @@ import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import DataSourceCollection from "terriajs-cesium/Source/DataSources/DataSourceCollection";
 import DataSourceDisplay from "terriajs-cesium/Source/DataSources/DataSourceDisplay";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import getElement from "terriajs-cesium/Source/DataSources/getElement";
 import Camera from "terriajs-cesium/Source/Scene/Camera";
 import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import CreditDisplay from "terriajs-cesium/Source/Scene/CreditDisplay";
+import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
 import ImageryLayer from "terriajs-cesium/Source/Scene/ImageryLayer";
+import ImageryLayerCollection from "terriajs-cesium/Source/Scene/ImageryLayerCollection";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
 import ImageryProvider from "terriajs-cesium/Source/Scene/ImageryProvider";
+import PrimitiveCollection from "terriajs-cesium/Source/Scene/PrimitiveCollection";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
 import SceneTransforms from "terriajs-cesium/Source/Scene/SceneTransforms";
 import SingleTileImageryProvider from "terriajs-cesium/Source/Scene/SingleTileImageryProvider";
 import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
 import CesiumWidget from "terriajs-cesium/Source/Widget/CesiumWidget";
-import getElement from "terriajs-cesium/Source/DataSources/getElement";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import flatten from "../Core/flatten";
 import isDefined from "../Core/isDefined";
@@ -67,13 +70,14 @@ import TerriaError from "../Core/TerriaError";
 import waitForDataSourceToLoad from "../Core/waitForDataSourceToLoad";
 import CesiumRenderLoopPauser from "../Map/Cesium/CesiumRenderLoopPauser";
 import CesiumSelectionIndicator from "../Map/Cesium/CesiumSelectionIndicator";
-import MapboxVectorTileImageryProvider from "../Map/ImageryProvider/MapboxVectorTileImageryProvider";
 import ProtomapsImageryProvider from "../Map/ImageryProvider/ProtomapsImageryProvider";
 import PickedFeatures, {
   ProviderCoordsMap
 } from "../Map/PickedFeatures/PickedFeatures";
+import Cesium3dTilesMixin from "../ModelMixins/Cesium3dTilesMixin";
 import FeatureInfoUrlTemplateMixin from "../ModelMixins/FeatureInfoUrlTemplateMixin";
 import MappableMixin, {
+  AbstractPrimitive,
   ImageryParts,
   isCesium3DTileset,
   isDataSource,
@@ -91,10 +95,8 @@ import GlobeOrMap from "./GlobeOrMap";
 import Terria from "./Terria";
 import UserDrawing from "./UserDrawing";
 import ViewerMode, { setViewerMode } from "./ViewerMode";
-import ScreenSpaceEventHandler from "terriajs-cesium/Source/Core/ScreenSpaceEventHandler";
 import SceneMode from "terriajs-cesium/Source/Scene/SceneMode";
 import WebMercatorProjection from "terriajs-cesium/Source/Core/WebMercatorProjection";
-import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
 import Color from "terriajs-cesium/Source/Core/Color";
 import NearFarScalar from "terriajs-cesium/Source/Core/NearFarScalar";
 
@@ -104,6 +106,12 @@ type CreditDisplayElement = {
   credit: Credit;
   count: number;
 };
+
+Ion.defaultTokenMessage =
+  '<b> \
+        This application is using Cesium\'s default ion access token. Please set "cesiumIonAccessToken" in config.json \
+        with an access token from your ion account. \
+        You can sign up for a free ion account at <a href="https://cesium.com">https://cesium.com</a>.</b>';
 
 // Intermediary
 const cartesian3Scratch = new Cartesian3();
@@ -123,14 +131,12 @@ export default class Cesium extends GlobeOrMap {
   readonly terriaViewer: TerriaViewer;
   readonly cesiumWidget: CesiumWidget;
   readonly scene: Scene;
-  readonly dataSources: DataSourceCollection = new DataSourceCollection();
-  readonly dataSourceDisplay: DataSourceDisplay;
   readonly pauser: CesiumRenderLoopPauser;
   readonly canShowSplitter = true;
   private readonly _eventHelper: EventHelper;
   private _3dTilesetEventListeners = new Map<
     Cesium3DTileset,
-    Event.RemoveCallback[]
+    Event.RemoveCallback
   >(); // eventListener reference storage
   private _pauseMapInteractionCount = 0;
   private _lastZoomTarget:
@@ -168,6 +174,20 @@ export default class Cesium extends GlobeOrMap {
   });
 
   private _terrainMessageViewed: boolean = false;
+
+  /**
+   * Initial view set when the viewer is created
+   */
+  private _initialView: CameraView | undefined;
+
+  /**
+   * Collection to add Terria primitives.
+   *
+   * We maintain a separate collection to add primitives from Terria to avoid
+   * accidentally removing primitives that Cesium might add to the scene.
+   */
+  readonly terriaPrimitives = new PrimitiveCollection();
+
   constructor(terriaViewer: TerriaViewer, container: string | HTMLElement) {
     super();
 
@@ -188,7 +208,6 @@ export default class Cesium extends GlobeOrMap {
     9TXL0Y4OHwAAAABJRU5ErkJggg==";
 
     const options = {
-      dataSources: this.dataSources,
       clock: this.terria.timelineClock,
       baseLayer: ImageryLayer.fromProviderAsync(
         SingleTileImageryProvider.fromUrl(img),
@@ -197,7 +216,8 @@ export default class Cesium extends GlobeOrMap {
       scene3DOnly: false,
       mapProjection: new WebMercatorProjection(),
       shadows: true,
-      useBrowserRecommendedResolution: !this.terria.useNativeResolution
+      useBrowserRecommendedResolution: !this.terria.useNativeResolution,
+      targetFrameRate: 30
     };
 
     // Workaround for Firefox bug with WebGL and printing:
@@ -216,10 +236,13 @@ export default class Cesium extends GlobeOrMap {
         Object.assign({}, options, firefoxBugOptions)
       );
       this.scene = this.cesiumWidget.scene;
+      this.scene.primitives.add(this.terriaPrimitives);
     } catch (error) {
       throw TerriaError.from(error, {
         message: {
-          key: "terriaViewer.slowWebGLAvailableMessageII",
+          key: keyFromSelector(
+            ($) => $.terriaViewer.slowWebGLAvailableMessageII
+          ),
           parameters: { appName: this.terria.appName, webGL: "WebGL" }
         }
       });
@@ -227,20 +250,11 @@ export default class Cesium extends GlobeOrMap {
 
     //new Cesium3DTilesInspector(document.getElementsByClassName("cesium-widget").item(0), this.scene);
 
-    this.dataSourceDisplay = new DataSourceDisplay({
-      scene: this.scene,
-      dataSourceCollection: this.dataSources
-    });
-
     this._selectionIndicator = new CesiumSelectionIndicator(this);
 
     this.supportsPolylinesOnTerrain = (this.scene as any).context.depthTexture;
 
     this._eventHelper = new EventHelper();
-
-    this._eventHelper.add(this.terria.timelineClock.onTick, ((clock: Clock) => {
-      this.dataSourceDisplay.update(clock.currentTime);
-    }) as any);
 
     // Progress
     this._eventHelper.add(
@@ -331,7 +345,9 @@ export default class Cesium extends GlobeOrMap {
             document.removeEventListener("keyup", onKeyUp);
             runInAction(() => {
               this.terria.mapInteractionModeStack.pop();
-              zoomUserDrawing && zoomUserDrawing.cleanUp();
+              if (zoomUserDrawing) {
+                zoomUserDrawing.cleanUp();
+              }
             });
             this.resumeMapInteraction();
             zoomUserDrawing = undefined;
@@ -347,7 +363,7 @@ export default class Cesium extends GlobeOrMap {
 
           zoomUserDrawing = new UserDrawing({
             terria: this.terria,
-            messageHeader: i18next.t("map.drawExtentHelper.drawExtent"),
+            messageHeader: i18next.t(($) => $.map.drawExtentHelper.drawExtent),
             onPointClicked: () => {
               pointClickCount++;
               if (
@@ -436,7 +452,7 @@ export default class Cesium extends GlobeOrMap {
 
     this._disposeWorkbenchMapItemsSubscription = this.observeModelLayer();
     this._disposeTerrainReaction = autorun(() => {
-      this.scene.globe.terrainProvider = this.terrainProvider;
+      this.cesiumWidget.terrainProvider = this.terrainProvider;
       this.scene.globe.splitDirection = this.terria.showSplitter
         ? this.terria.terrainSplitDirection
         : SplitDirection.NONE;
@@ -466,6 +482,14 @@ export default class Cesium extends GlobeOrMap {
     }
   }
 
+  get dataSources(): DataSourceCollection {
+    return this.cesiumWidget.dataSources;
+  }
+
+  get dataSourceDisplay(): DataSourceDisplay {
+    return this.cesiumWidget.dataSourceDisplay;
+  }
+
   /** Add an event listener to a TerrainProvider.
    * If we get an error when trying to load the terrain, then switch to smooth mode, and notify the user.
    * Finally, remove the listener, so failed tiles do not trigger the error as these can be common and are not a problem. */
@@ -490,8 +514,8 @@ export default class Cesium extends GlobeOrMap {
         setViewerMode("3dsmooth", this.terriaViewer);
         if (!this._terrainMessageViewed) {
           this.terria.raiseErrorToUser(err, {
-            title: i18next.t("map.cesium.terrainServerErrorTitle"),
-            message: i18next.t("map.cesium.terrainServerErrorMessage", {
+            title: i18next.t(($) => $.map.cesium.terrainServerErrorTitle),
+            message: i18next.t(($) => $.map.cesium.terrainServerErrorMessage, {
               appName: this.terria.appName,
               supportEmail: this.terria.supportEmail
             })
@@ -538,7 +562,7 @@ export default class Cesium extends GlobeOrMap {
     creditDisplay.destroy = () => {
       try {
         creditDisplayOldDestroy();
-      } catch (err) {
+      } catch (_err) {
         /* TODO: handle Error */
       }
     };
@@ -563,18 +587,18 @@ export default class Cesium extends GlobeOrMap {
     };
   }
 
-  getContainer() {
+  getContainer(): Element {
     return this.cesiumWidget.container;
   }
 
-  pauseMapInteraction() {
+  pauseMapInteraction(): void {
     ++this._pauseMapInteractionCount;
     if (this._pauseMapInteractionCount === 1) {
       this.scene.screenSpaceCameraController.enableInputs = false;
     }
   }
 
-  resumeMapInteraction() {
+  resumeMapInteraction(): void {
     --this._pauseMapInteractionCount;
     if (this._pauseMapInteractionCount === 0) {
       setTimeout(() => {
@@ -588,7 +612,7 @@ export default class Cesium extends GlobeOrMap {
   private previousRenderError: string | undefined;
 
   /** Show error message to user if Cesium stops rendering. */
-  private onRenderError(scene: Scene, error: unknown) {
+  private onRenderError(_scene: Scene, error: unknown) {
     // This function can be called many times with the same error
     // So we do a rudimentary check to only show the error message once
     // - by comparing error.toString() to this.previousRenderError
@@ -597,8 +621,8 @@ export default class Cesium extends GlobeOrMap {
       if (newError !== this.previousRenderError) {
         this.previousRenderError = error.toString();
         this.terria.raiseErrorToUser(error, {
-          title: i18next.t("map.cesium.stoppedRenderingTitle"),
-          message: i18next.t("map.cesium.stoppedRenderingMessage", {
+          title: i18next.t(($) => $.map.cesium.stoppedRenderingTitle),
+          message: i18next.t(($) => $.map.cesium.stoppedRenderingMessage, {
             appName: this.terria.appName
           })
         });
@@ -606,7 +630,7 @@ export default class Cesium extends GlobeOrMap {
     }
   }
 
-  destroy() {
+  destroy(): void {
     // Port old Cesium.prototype.destroy stuff
     // this._enableSelectExtent(cesiumWidget.scene, false);
     this.scene.renderError.removeEventListener(this.onRenderError);
@@ -643,7 +667,6 @@ export default class Cesium extends GlobeOrMap {
     this.stopObserving();
     this._eventHelper.removeAll();
     this._updateTilesLoadingIndeterminate(false); // reset progress bar loading state to false for any data sources with indeterminate progress e.g. 3DTilesets.
-    this.dataSourceDisplay.destroy();
 
     this._disposeTerrainReaction();
     this._disposeResolutionReaction();
@@ -680,8 +703,53 @@ export default class Cesium extends GlobeOrMap {
   }
 
   @computed
+  private get availablePrimitives(): AbstractPrimitive[] {
+    return this._allMapItems.filter(isPrimitive);
+  }
+
+  @computed
   private get availableDataSources(): DataSource[] {
     return this._allMapItems.filter(isDataSource);
+  }
+
+  private observeModelLayer() {
+    // Setup reaction to sync datSources collection with availableDataSources.
+    // To avoid buggy concurrent syncs, we have to ensure that even when
+    // multiple sync reactions are triggered, we run them one after the
+    // other. To do this, we make each run of the reaction wait for the
+    // previous `syncDataSourcesPromise` to finish before starting itself.
+    let syncDataSourcesPromise: Promise<void> = Promise.resolve();
+    const disposeDataSourcesSyncReaction = reaction(
+      () => this.availableDataSources,
+      () => {
+        syncDataSourcesPromise = syncDataSourcesPromise
+          .then(async () => {
+            await this.syncDataSourceCollection(
+              this.availableDataSources,
+              this.dataSources
+            );
+            this.notifyRepaintRequired();
+          })
+          .catch(console.error);
+      },
+      { fireImmediately: true }
+    );
+
+    const disposeImagerySyncReaction = autorun(() => {
+      this.syncImagery();
+      this.notifyRepaintRequired();
+    });
+
+    const disposePrimitivesSyncReaction = autorun(() => {
+      this.syncPrimitives();
+      this.notifyRepaintRequired();
+    });
+
+    return () => {
+      disposeDataSourcesSyncReaction();
+      disposeImagerySyncReaction();
+      disposePrimitivesSyncReaction();
+    };
   }
 
   /**
@@ -718,138 +786,103 @@ export default class Cesium extends GlobeOrMap {
         // careful to raiseToTop() only if the DS already exists in the collection.
         // Relevant code:
         //   https://github.com/CesiumGS/cesium/blob/dbd452328a48bfc4e192146862a9f8fa15789dc8/packages/engine/Source/DataSources/DataSourceCollection.js#L298-L299
-        dataSources.contains(ds) && dataSources.raiseToTop(ds);
+        if (dataSources.contains(ds)) {
+          dataSources.raiseToTop(ds);
+        }
       })
     );
   }
 
-  private observeModelLayer() {
-    // Setup reaction to sync datSources collection with availableDataSources
-    //
-    // To avoid buggy concurrent syncs, we have to ensure that even when
-    // multiple sync reactions are triggered, we run them one after the
-    // other. To do this, we make each run of the reaction wait for the
-    // previous `syncDataSourcesPromise` to finish before starting itself.
-    let syncDataSourcesPromise: Promise<void> = Promise.resolve();
-    const reactionDisposer = reaction(
-      () => this.availableDataSources,
-      () => {
-        syncDataSourcesPromise = syncDataSourcesPromise
-          .then(async () => {
-            await this.syncDataSourceCollection(
-              this.availableDataSources,
-              this.dataSources
-            );
-            this.notifyRepaintRequired();
-          })
-          .catch(console.error);
-      },
-      { fireImmediately: true }
-    );
-
-    let prevMapItems: MapItem[] = [];
-    const autorunDisposer = autorun(() => {
-      // TODO: Look up the type in a map and call the associated function.
-      //       That way the supported types of map items is extensible.
-
-      const allImageryParts = this._allMappables
-        .map((m) =>
-          ImageryParts.is(m.mapItem)
-            ? this._makeImageryLayerFromParts(m.mapItem, m.item)
-            : undefined
-        )
-        .filter(isDefined);
-
-      // Delete imagery layers that are no longer in the model
-      // Iterate backwards because we're removing items.
-      for (let i = this.scene.imageryLayers.length - 1; i >= 0; i--) {
-        const imageryLayer = this.scene.imageryLayers.get(i);
-        if (allImageryParts.indexOf(imageryLayer) === -1) {
-          this.scene.imageryLayers.remove(imageryLayer);
+  /**
+   * Sync imagery layers added to the viewer with Cesium Scene and Tilesets
+   */
+  private syncImagery() {
+    const topImageryLayers: ImageryLayer[] = [];
+    this._allMappables.forEach((m) => {
+      if (ImageryParts.is(m.mapItem)) {
+        const imageryLayer = this._makeImageryLayerFromParts(m.mapItem, m.item);
+        if (imageryLayer) {
+          topImageryLayers.push(imageryLayer);
         }
-      }
-      // Iterate backwards so that adding multiple layers adds them in increasing cesium index order
-      for (
-        let modelIndex = allImageryParts.length - 1;
-        modelIndex >= 0;
-        modelIndex--
+      } else if (
+        Cesium3dTilesMixin.isMixedInto(m.item) &&
+        m.mapItem instanceof Cesium3DTileset
       ) {
-        const mapItem = allImageryParts[modelIndex];
-
-        const targetCesiumIndex = allImageryParts.length - modelIndex - 1;
-        const currentCesiumIndex = this.scene.imageryLayers.indexOf(mapItem);
-        if (currentCesiumIndex === -1) {
-          this.scene.imageryLayers.add(mapItem, targetCesiumIndex);
-        } else if (currentCesiumIndex > targetCesiumIndex) {
-          for (let j = currentCesiumIndex; j > targetCesiumIndex; j--) {
-            this.scene.imageryLayers.lower(mapItem);
-          }
-        } else if (currentCesiumIndex < targetCesiumIndex) {
-          for (let j = currentCesiumIndex; j < targetCesiumIndex; j++) {
-            this.scene.imageryLayers.raise(mapItem);
-          }
-        }
+        // Drape imagery on tilesets that have draping enabled. If draping is
+        // disabled, we still need to call sync with an empty imagery array to
+        // force removal of any imagery layers that were previously added.
+        const tileset = m.mapItem;
+        syncImageryCollection(
+          tileset.imageryLayers,
+          m.item.drapeImagery ? topImageryLayers : [],
+          false
+        );
       }
-
-      const allPrimitives = this._allMapItems.filter(isPrimitive);
-      const prevPrimitives = prevMapItems.filter(isPrimitive);
-      const primitives = this.scene.primitives;
-
-      // Remove deleted primitives
-      prevPrimitives.forEach((primitive) => {
-        if (!allPrimitives.includes(primitive)) {
-          if (isCesium3DTileset(primitive)) {
-            // Remove all event listeners from any Cesium3DTilesets by running stored remover functions
-            const fnArray = this._3dTilesetEventListeners.get(primitive);
-            try {
-              fnArray?.forEach((fn) => fn()); // Run the remover functions
-            } catch (error) {
-              /* TODO: handle error */
-            }
-
-            this._3dTilesetEventListeners.delete(primitive); // Remove the item for this tileset from our eventListener reference storage array
-            this._updateTilesLoadingIndeterminate(false); // reset progress bar loading state to false. Any new tile loading event will restart it to account for multiple currently loading 3DTilesets.
-          }
-          primitives.remove(primitive);
-        }
-      });
-
-      // Add new primitives
-      allPrimitives.forEach((primitive) => {
-        if (!primitives.contains(primitive)) {
-          primitives.add(primitive);
-
-          if (isCesium3DTileset(primitive)) {
-            const startingListener = this._eventHelper.add(
-              primitive.tileLoad,
-              () => this._updateTilesLoadingIndeterminate(true)
-            );
-
-            //Add event listener for when tiles finished loading for current view. Infrequent.
-            const finishedListener = this._eventHelper.add(
-              primitive.allTilesLoaded,
-              () => this._updateTilesLoadingIndeterminate(false)
-            );
-
-            // Push new item to eventListener reference storage
-            this._3dTilesetEventListeners.set(primitive, [
-              startingListener,
-              finishedListener
-            ]);
-          }
-        }
-      });
-      prevMapItems = this._allMapItems;
-      this.notifyRepaintRequired();
     });
 
-    return () => {
-      reactionDisposer();
-      autorunDisposer();
-    };
+    // Finally add imagery layers to the global scene.
+    syncImageryCollection(this.scene.imageryLayers, topImageryLayers, true);
   }
 
-  stopObserving() {
+  /**
+   * Sync primitives added to the viewer with Cesium Scene
+   */
+  private syncPrimitives() {
+    const mapPrimitives = this.availablePrimitives.filter(isPrimitive);
+    const primitiveCollection = this.terriaPrimitives;
+
+    // Remove primitives that are no longer needed.
+    // Iterate backwards because we're removing items.
+    for (let i = primitiveCollection.length - 1; i >= 0; i--) {
+      const primitive = primitiveCollection.get(i);
+      if (mapPrimitives.indexOf(primitive) === -1) {
+        if (isCesium3DTileset(primitive)) {
+          this.unsubscribeTileLoadEvents(primitive);
+        }
+        primitiveCollection.remove(primitive);
+      }
+    }
+
+    // Add new primitives
+    mapPrimitives.forEach((primitive) => {
+      if (!primitiveCollection.contains(primitive)) {
+        primitiveCollection.add(primitive);
+        if (isCesium3DTileset(primitive)) {
+          this.subscribeTileLoadEvents(primitive);
+        }
+      }
+    });
+  }
+
+  private subscribeTileLoadEvents(primitive: Cesium3DTileset) {
+    const startingListener = this._eventHelper.add(primitive.tileLoad, () =>
+      this._updateTilesLoadingIndeterminate(true)
+    );
+
+    //Add event listener for when tiles finished loading for current view. Infrequent.
+    const finishedListener = this._eventHelper.add(
+      primitive.allTilesLoaded,
+      () => this._updateTilesLoadingIndeterminate(false)
+    );
+
+    this._3dTilesetEventListeners.set(
+      primitive,
+      function unregisterListeners() {
+        startingListener();
+        finishedListener();
+      }
+    );
+  }
+
+  private unsubscribeTileLoadEvents(primitive: Cesium3DTileset) {
+    this._3dTilesetEventListeners.get(primitive)?.();
+    this._3dTilesetEventListeners.delete(primitive);
+    // reset progress bar loading state to false. Any new tile loading event
+    // will restart it to account for multiple currently loading 3DTilesets.
+    this._updateTilesLoadingIndeterminate(false);
+  }
+
+  stopObserving(): void {
     if (this._disposeWorkbenchMapItemsSubscription !== undefined) {
       this._disposeWorkbenchMapItemsSubscription();
     }
@@ -991,7 +1024,16 @@ export default class Cesium extends GlobeOrMap {
     return _zoom().finally(() => this.notifyRepaintRequired());
   }
 
-  notifyRepaintRequired() {
+  setInitialView(view: CameraView) {
+    this.doZoomTo(view, 0);
+    this._initialView = view;
+    const removeListener = this.scene.camera.changed.addEventListener(() => {
+      this._initialView = undefined;
+      removeListener();
+    });
+  }
+
+  notifyRepaintRequired(): void {
     this.pauser.notifyRepaintRequired();
   }
 
@@ -1049,6 +1091,13 @@ export default class Cesium extends GlobeOrMap {
   }
 
   getCurrentCameraView(): CameraView {
+    // Return the initial view if the camera hasn't changed since setting it.
+    // This ensures that the view remains constant when switching between
+    // viewer modes.
+    if (this._initialView) {
+      return this._initialView;
+    }
+
     const scene = this.scene;
     const camera = scene.camera;
 
@@ -1120,6 +1169,9 @@ export default class Cesium extends GlobeOrMap {
 
     const frustrum = scene.camera.frustum as PerspectiveFrustum;
 
+    // Fork (rer3d): in Cesium SCENE2D mode the frustum is orthographic and
+    // has no fovy/aspectRatio — fall back to the home camera view instead of
+    // computing a degenerate rectangle.
     if (!frustrum.fovy || !frustrum.aspectRatio) {
       return new CameraView(
         this.terriaViewer.homeCamera.rectangle,
@@ -1267,7 +1319,7 @@ export default class Cesium extends GlobeOrMap {
       };
     } else if (this.terria.configParameters.useCesiumIonTerrain) {
       // Use Cesium ION world Terrain
-      const logo = require("terriajs-cesium/Source/Assets/Images/ion-credit.png");
+      const logo = ionCreditLogo;
       const ionCredit = new Credit(
         '<a href="https://cesium.com/" target="_blank" rel="noopener noreferrer"><img src="' +
           logo +
@@ -1364,7 +1416,7 @@ export default class Cesium extends GlobeOrMap {
   async pickFromScreenPosition(
     screenPosition: Cartesian2,
     ignoreSplitter: boolean
-  ) {
+  ): Promise<void> {
     const pickRay = this.scene.camera.getPickRay(screenPosition);
     const pickPosition = isDefined(pickRay)
       ? this.scene.globe.pick(pickRay, this.scene)
@@ -1408,7 +1460,7 @@ export default class Cesium extends GlobeOrMap {
     latLngHeight: LatLonHeight,
     providerCoords: ProviderCoordsMap,
     existingFeatures: TerriaFeature[]
-  ) {
+  ): void {
     const pickPosition = this.scene.globe.ellipsoid.cartographicToCartesian(
       Cartographic.fromDegrees(
         latLngHeight.longitude,
@@ -1687,23 +1739,26 @@ export default class Cesium extends GlobeOrMap {
                   result.pickPosition
                 );
 
-                if (!screenPosition) return;
+                // Fork (rer3d): skip splitter filtering when the picked
+                // position cannot be projected to the screen (e.g. SCENE2D).
+                if (screenPosition) {
+                  const pickedSide =
+                    this._getSplitterSideForScreenPosition(screenPosition);
 
-                const pickedSide =
-                  this._getSplitterSideForScreenPosition(screenPosition);
-
-                features = features.filter((feature) => {
-                  const splitDirection = feature.imageryLayer?.splitDirection;
-                  return (
-                    splitDirection === pickedSide ||
-                    splitDirection === SplitDirection.NONE
-                  );
-                });
+                  features = features.filter((feature) => {
+                    const splitDirection =
+                      feature.imageryLayer?.splitDirection;
+                    return (
+                      splitDirection === pickedSide ||
+                      splitDirection === SplitDirection.NONE
+                    );
+                  });
+                }
               }
 
               return resultFeaturesSoFar.concat(features);
             },
-            defaultValue(existingFeatures, [])
+            existingFeatures ?? []
           );
         });
       })
@@ -1770,14 +1825,14 @@ export default class Cesium extends GlobeOrMap {
    * @return The screen position, or undefined if the position is not on the screen.
    */
   private _computePositionOnScreen(position: Cartesian3, result?: Cartesian2) {
-    return SceneTransforms.wgs84ToWindowCoordinates(
+    return SceneTransforms.worldToWindowCoordinates(
       this.scene,
       position,
       result
     );
   }
 
-  _selectFeature() {
+  _selectFeature(): void {
     const feature = this.terria.selectedFeature;
 
     this._highlightFeature(feature);
@@ -1840,7 +1895,7 @@ export default class Cesium extends GlobeOrMap {
   }
 
   _addVectorTileHighlight(
-    imageryProvider: MapboxVectorTileImageryProvider | ProtomapsImageryProvider,
+    imageryProvider: ProtomapsImageryProvider,
     _rectangle: Rectangle
   ): () => void {
     const result = new ImageryLayer(imageryProvider, {
@@ -1883,7 +1938,7 @@ function zoomToDataSource(
             false,
             boundingSphereScratch
           );
-        } catch (e) {
+        } catch (_e) {
           /* TODO: handle error */
         }
 
@@ -1997,6 +2052,40 @@ function syncCesiumCreditsToAttributions(
         0,
         dataAttributionsObservable.splice(attributionIndex, 1)[0]
       );
+    }
+  }
+}
+
+function syncImageryCollection(
+  imageryCollection: ImageryLayerCollection,
+  imageryLayers: ImageryLayer[],
+  isOwner: boolean
+) {
+  // Delete imagery layers in the collection that are no longer needed.
+  // Iterate backwards because we're removing items.
+  for (let i = imageryCollection.length - 1; i >= 0; i--) {
+    const imageryLayer = imageryCollection.get(i);
+    if (imageryLayers.indexOf(imageryLayer) === -1) {
+      imageryCollection.remove(imageryLayer, isOwner);
+    }
+  }
+
+  // Iterate backwards so that adding multiple layers adds them in increasing cesium index order
+  for (let i = imageryLayers.length - 1; i >= 0; i--) {
+    const imageryLayer = imageryLayers[i];
+
+    const currentIndex = imageryCollection.indexOf(imageryLayer);
+    const newIndex = imageryLayers.length - i - 1;
+    if (currentIndex === -1) {
+      imageryCollection.add(imageryLayer, newIndex);
+    } else if (currentIndex > newIndex) {
+      for (let j = currentIndex; j > newIndex; j--) {
+        imageryCollection.lower(imageryLayer);
+      }
+    } else if (currentIndex < newIndex) {
+      for (let j = currentIndex; j < newIndex; j++) {
+        imageryCollection.raise(imageryLayer);
+      }
     }
   }
 }

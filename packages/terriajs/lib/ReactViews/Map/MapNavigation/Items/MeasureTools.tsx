@@ -131,7 +131,7 @@ export class MeasureLineTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measureLineTool"),
+      messageHeader: () => i18next.t(($) => $.measure.measureLineTool),
       allowPolygon: false,
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),
@@ -270,7 +270,7 @@ export class MeasurePolygonTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measurePolygonTool"),
+      messageHeader: () => i18next.t(($) => $.measure.measurePolygonTool),
       allowPolygon: true,
       autoClosePolygon: true,
       onPointClicked: this.onPointClicked.bind(this),
@@ -532,7 +532,7 @@ export class MeasureAngleTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measureAngleTool"),
+      messageHeader: () => i18next.t(($) => $.measure.measureAngleTool),
       allowPolygon: false,
       autoClosePolygon: false,
       onPointClicked: this.onPointUpdated.bind(this),
@@ -624,7 +624,7 @@ export class MeasureCircleTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measureCircleTool"),
+      messageHeader: () => i18next.t(($) => $.measure.measureCircleTool),
       allowPolygon: false,
       autoClosePolygon: false,
       onPointClicked: (pts) => this.onPointUpdated(pts, false),
@@ -769,7 +769,7 @@ export class MeasurePointTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawing({
       terria: props.terria,
-      messageHeader: () => i18next.t("measure.measurePointTool"),
+      messageHeader: () => i18next.t(($) => $.measure.measurePointTool),
       allowPolygon: false,
       onPointClicked: this.onPointClicked.bind(this),
       onPointMoved: this.onPointMoved.bind(this),

@@ -1,3 +1,4 @@
+import { keyFromSelector } from "i18next";
 import {
   action,
   computed,
@@ -5,12 +6,11 @@ import {
   makeObservable,
   observable
 } from "mobx";
-import { JsonObject } from "protomaps";
 import DeveloperError from "terriajs-cesium/Source/Core/DeveloperError";
 import RuntimeError from "terriajs-cesium/Source/Core/RuntimeError";
+import { JsonObject } from "../../Core/Json";
 import Result from "../../Core/Result";
 import TerriaError from "../../Core/TerriaError";
-import CatalogSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogItemsSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogItemsSearchProviderMixin";
 import LocationSearchProviderMixin from "../../ModelMixins/SearchProviders/LocationSearchProviderMixin";
 import { SearchBarTraits } from "../../Traits/SearchProviders/SearchBarTraits";
@@ -27,9 +27,10 @@ import upsertSearchProviderFromJson from "./upsertSearchProviderFromJson";
 export class SearchBarModel extends CreateModel(SearchBarTraits) {
   private locationSearchProviders = observable.map<string, BaseModel>();
 
-  @observable
-  catalogSearchProvider: CatalogSearchProviderMixin.Instance | undefined;
-
+  /**
+   * Fork (rer3d): provider used to search inside catalog item info
+   * (configParameters.searchInCatalogItemInfo). Assigned by SearchState.
+   */
   @observable
   catalogItemsSearchProvider:
     | CatalogItemsSearchProviderMixin.Instance
@@ -62,7 +63,9 @@ export class SearchBarModel extends CreateModel(SearchBarTraits) {
         new TerriaError({
           sender: SearchProviderFactory,
           title: "SearchProviders",
-          message: { key: "searchProvider.noSearchProviders" }
+          message: {
+            key: keyFromSelector(($) => $.searchProvider.noSearchProviders)
+          }
         })
       );
     }

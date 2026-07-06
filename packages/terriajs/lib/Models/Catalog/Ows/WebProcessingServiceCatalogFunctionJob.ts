@@ -34,8 +34,7 @@ import upsertModelFromJson from "../../Definition/upsertModelFromJson";
 import GeoJsonCatalogItem from "../CatalogItems/GeoJsonCatalogItem";
 import CatalogMemberFactory from "../CatalogMemberFactory";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-
-const executeWpsTemplate = require("./ExecuteWpsTemplate.xml");
+import executeWpsTemplate from "./ExecuteWpsTemplate.xml";
 
 class WpsLoadableStratum extends LoadableStratum(
   WebProcessingServiceCatalogFunctionJobTraits
@@ -157,7 +156,7 @@ export default class WebProcessingServiceCatalogFunctionJob extends XmlRequestMi
   }
 
   get typeName() {
-    return i18next.t("models.webProcessingService.wpsResult");
+    return i18next.t(($) => $.models.webProcessingService.wpsResult);
   }
 
   readonly proxyCacheDuration = "1d";
@@ -255,12 +254,12 @@ export default class WebProcessingServiceCatalogFunctionJob extends XmlRequestMi
       throw new TerriaError({
         sender: this,
         title: i18next.t(
-          "models.webProcessingService.invalidResponseErrorTitle"
+          ($) => $.models.webProcessingService.invalidResponseErrorTitle
         ),
         message: i18next.t(
-          "models.webProcessingService.invalidResponseErrorMessage",
+          ($) => $.models.webProcessingService.invalidResponseErrorMessage,
           {
-            name: this.name
+            name: this.name as string
           }
         )
       });

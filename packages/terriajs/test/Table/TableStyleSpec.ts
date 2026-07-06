@@ -15,64 +15,56 @@ import TableColumnTraits, {
 } from "../../lib/Traits/TraitsClasses/Table/ColumnTraits";
 import TableStyleTraits from "../../lib/Traits/TraitsClasses/Table/StyleTraits";
 
-const regionMapping = JSON.stringify(
-  require("../../wwwroot/data/regionMapping.json")
-);
+import { http, HttpResponse } from "msw";
+import { worker } from "../mocks/browser";
 
-const SedCods = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-SED_CODE18_SED_2018.json")
-);
-const Sa4Codes = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json")
-);
-const Sa4Names = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_NAME16.json")
-);
-
-const LatLonCsv = require("raw-loader!../../wwwroot/test/csv/lat_lon_enum_date_id.csv");
-const SedCsv = require("raw-loader!../../wwwroot/test/csv/SED_2018_SED_CODE18.csv");
-const YouthUnEmployCsv = require("raw-loader!../../wwwroot/test/csv/youth-unemployment-rate-2018.csv");
+import regionMapping from "../../wwwroot/data/regionMapping.json";
+import SedCods from "../../wwwroot/data/regionids/region_map-SED_CODE18_SED_2018.json";
+import Sa4Codes from "../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json";
+import Sa4Names from "../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_NAME16.json";
+import Sa4Names2021 from "../../wwwroot/data/regionids/region_map-SA4_NAME_2021_SA4_2021.json";
+import LatLonCsv from "../../wwwroot/test/csv/lat_lon_enum_date_id.csv";
+import SedCsv from "../../wwwroot/test/csv/SED_2018_SED_CODE18.csv";
+import YouthUnEmployCsv from "../../wwwroot/test/csv/youth-unemployment-rate-2018.csv";
 
 describe("TableStyle", function () {
   let terria: Terria;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     terria.configParameters.regionMappingDefinitionsUrl =
       "build/TerriaJS/data/regionMapping.json";
 
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(/.*/).andError({
-      statusText: "Unexpected request, not stubbed"
-    });
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-SED_CODE18_SED_2018.json"
-    ).andReturn({ responseText: SedCods });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json"
-    ).andReturn({ responseText: Sa4Codes });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_NAME16.json"
-    ).andReturn({ responseText: Sa4Names });
-  });
-
-  afterEach(() => {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SED_CODE18_SED_2018.json",
+        () => HttpResponse.json(SedCods)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json",
+        () => HttpResponse.json(Sa4Codes)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_NAME16.json",
+        () => HttpResponse.json(Sa4Names)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_NAME_2021_SA4_2021.json",
+        () => HttpResponse.json(Sa4Names2021)
+      ),
+      http.all("*", () => HttpResponse.error())
+    );
   });
 
   describe(" - Scalar", function () {
     let csvItem: CsvCatalogItem;
 
-    beforeEach(async function () {
+    beforeEach(function () {
       csvItem = new CsvCatalogItem("SmallCsv", terria, undefined);
     });
 
@@ -400,7 +392,7 @@ describe("TableStyle", function () {
       expect(activeStyle.colorMap instanceof EnumColorMap).toBeTruthy();
     });
 
-    describe(" - applies zScoreFilter, outlierColor and minimumValue/maximumValue correctly", async function () {
+    describe(" - applies zScoreFilter, outlierColor and minimumValue/maximumValue correctly", function () {
       beforeEach(async function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           csvString: SedCsv,
@@ -418,7 +410,7 @@ describe("TableStyle", function () {
         await csvItem.activeTableStyle.regionColumn?.regionType?.loadRegionIDs();
       });
 
-      it(" - should expect no filter applied", async function () {
+      it(" - should expect no filter applied", function () {
         expect(
           csvItem.activeTableStyle.colorColumn?.valuesAsNumbers.minimum
         ).toBe(0);
@@ -442,7 +434,7 @@ describe("TableStyle", function () {
         expect(csvItem.legends[0].items.length).toBe(7);
       });
 
-      it(" - Change zScoreFilter and rangeFilter - should also expect not to be applied", async function () {
+      it(" - Change zScoreFilter and rangeFilter - should also expect not to be applied", function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           defaultStyle: {
             color: {
@@ -468,7 +460,7 @@ describe("TableStyle", function () {
         expect(csvItem.legends[0].items.length).toBe(7);
       });
 
-      it(" - Change zScoreFilter and rangeFilter again - should be applied this time", async function () {
+      it(" - Change zScoreFilter and rangeFilter again - should be applied this time", function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           defaultStyle: {
             color: {
@@ -507,7 +499,7 @@ describe("TableStyle", function () {
         );
       });
 
-      it(" - Set colorTraits.minimumValue to disable zScoreFilter", async function () {
+      it(" - Set colorTraits.minimumValue to disable zScoreFilter", function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           defaultStyle: {
             color: {
@@ -536,7 +528,7 @@ describe("TableStyle", function () {
         );
       });
 
-      it(" - Set colorTraits.maximumValue to disable zScoreFilter", async function () {
+      it(" - Set colorTraits.maximumValue to disable zScoreFilter", function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           defaultStyle: {
             color: {
@@ -565,7 +557,7 @@ describe("TableStyle", function () {
         );
       });
 
-      it(" - Now if we set min/max outside range, then colorMap.outlierColor should be undefined", async function () {
+      it(" - Now if we set min/max outside range, then colorMap.outlierColor should be undefined", function () {
         updateModelFromJson(csvItem, CommonStrata.definition, {
           defaultStyle: {
             color: {
@@ -615,7 +607,7 @@ describe("TableStyle", function () {
   describe(" - Enum", function () {
     let csvItem: CsvCatalogItem;
 
-    beforeEach(async function () {
+    beforeEach(function () {
       csvItem = new CsvCatalogItem("SmallCsv", terria, undefined);
     });
 

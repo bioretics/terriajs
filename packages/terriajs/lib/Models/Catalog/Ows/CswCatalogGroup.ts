@@ -1,39 +1,39 @@
 import i18next from "i18next";
 import { flatten } from "lodash-es";
-import { action, computed, runInAction, makeObservable } from "mobx";
+import { action, computed, makeObservable, runInAction } from "mobx";
 import URI from "urijs";
+import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
 import isDefined from "../../../Core/isDefined";
 import loadWithXhr from "../../../Core/loadWithXhr";
 import loadXML from "../../../Core/loadXML";
 import runLater from "../../../Core/runLater";
-import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../../../ModelMixins/GroupMixin";
 import UrlMixin from "../../../ModelMixins/UrlMixin";
 import xml2json from "../../../ThirdParty/xml2json";
+import ModelReference from "../../../Traits/ModelReference";
 import { InfoSectionTraits } from "../../../Traits/TraitsClasses/CatalogMemberTraits";
 import CswCatalogGroupTraits, {
   QueryPropertyName
 } from "../../../Traits/TraitsClasses/CswCatalogGroupTraits";
-import ModelReference from "../../../Traits/ModelReference";
-import ArcGisMapServerCatalogItem from "../Esri/ArcGisMapServerCatalogItem";
-import CatalogGroup from "../CatalogGroup";
 import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
+import LoadableStratum from "../../Definition/LoadableStratum";
+import { BaseModel, ModelConstructor } from "../../Definition/Model";
+import StratumOrder from "../../Definition/StratumOrder";
+import CatalogGroup from "../CatalogGroup";
 import CsvCatalogItem from "../CatalogItems/CsvCatalogItem";
 import GeoJsonCatalogItem from "../CatalogItems/GeoJsonCatalogItem";
 import KmlCatalogItem from "../CatalogItems/KmlCatalogItem";
-import LoadableStratum from "../../Definition/LoadableStratum";
-import { BaseModel, ModelConstructor } from "../../Definition/Model";
-import { BoundingBox } from "./OwsInterfaces";
+import ArcGisMapServerCatalogItem from "../Esri/ArcGisMapServerCatalogItem";
+import defaultGetRecordsTemplate from "../Ows/CswGetRecordsTemplate.xml";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import StratumOrder from "../../Definition/StratumOrder";
+import { BoundingBox } from "./OwsInterfaces";
 import WebMapServiceCatalogItem from "./WebMapServiceCatalogItem";
 
-const defaultGetRecordsTemplate = require("../Ows/CswGetRecordsTemplate.xml");
 // WPS is disabled until wps-group support
-// const wpsGetRecordsTemplate = require("./CswGetRecordsWPSTemplate.xml");
+// import wpsGetRecordsTemplate from "./CswGetRecordsWPSTemplate.xml";
 
 type ArrayOrPrimitive<T> = T | T[];
 function toArray<T>(val: ArrayOrPrimitive<T>): T[];
@@ -156,8 +156,8 @@ class CswStratum extends LoadableStratum(CswCatalogGroupTraits) {
   static async load(catalogGroup: CswCatalogGroup): Promise<CswStratum> {
     if (catalogGroup.url === undefined) {
       throw new TerriaError({
-        title: i18next.t("models.csw.missingUrlTitle"),
-        message: i18next.t("models.csw.missingUrlMessage")
+        title: i18next.t(($) => $.models.csw.missingUrlTitle),
+        message: i18next.t(($) => $.models.csw.missingUrlMessage)
       });
     }
 
@@ -211,16 +211,16 @@ class CswStratum extends LoadableStratum(CswCatalogGroupTraits) {
         console.log(error);
         throw networkRequestError({
           sender: catalogGroup,
-          title: i18next.t("models.csw.notUseableTitle"),
-          message: i18next.t("models.csw.notUseableMessage")
+          title: i18next.t(($) => $.models.csw.notUseableTitle),
+          message: i18next.t(($) => $.models.csw.notUseableMessage)
         });
       }
 
       if (!domainResponse) {
         throw networkRequestError({
           sender: catalogGroup,
-          title: i18next.t("models.csw.errorLoadingTitle"),
-          message: i18next.t("models.csw.checkCORSDomain")
+          title: i18next.t(($) => $.models.csw.errorLoadingTitle),
+          message: i18next.t(($) => $.models.csw.checkCORSDomain)
         });
       }
 
@@ -278,23 +278,23 @@ class CswStratum extends LoadableStratum(CswCatalogGroupTraits) {
       if (!isDefined(xml)) {
         throw networkRequestError({
           sender: catalogGroup,
-          title: i18next.t("models.csw.errorLoadingRecordsTitle"),
-          message: i18next.t("models.csw.errorLoadingRecordsMessage")
+          title: i18next.t(($) => $.models.csw.errorLoadingRecordsTitle),
+          message: i18next.t(($) => $.models.csw.errorLoadingRecordsMessage)
         });
       }
 
       const json = xml2json(xml) as GetRecordsResponse;
 
       if (json.Exception) {
-        let errorMessage = i18next.t("models.csw.unknownError");
+        let errorMessage: string = i18next.t(($) => $.models.csw.unknownError);
         if (json.Exception.ExceptionText) {
-          errorMessage = i18next.t("models.csw.exceptionMessage", {
+          errorMessage = i18next.t(($) => $.models.csw.exceptionMessage, {
             exceptionText: json.Exception.ExceptionText
           });
         }
         throw new TerriaError({
           sender: catalogGroup,
-          title: i18next.t("models.csw.errorLoadingTitle"),
+          title: i18next.t(($) => $.models.csw.errorLoadingTitle),
           message: errorMessage
         });
       }
@@ -509,13 +509,13 @@ class CswStratum extends LoadableStratum(CswCatalogGroupTraits) {
 
       if (record.contributor && toArray(record.contributor).length > 0) {
         infoSections.push({
-          name: i18next.t("models.csw.dataResponsibility"),
+          name: i18next.t(($) => $.models.csw.dataResponsibility),
           content: toArray(record.contributor)?.join("\n\n")
         });
       }
 
       infoSections.push({
-        name: i18next.t("models.csw.links"),
+        name: i18next.t(($) => $.models.csw.links),
         content: downloadUrls
           .map((d) => `[${d.description}](${d.url})`)
           .join("\n\n")
@@ -525,7 +525,7 @@ class CswStratum extends LoadableStratum(CswCatalogGroupTraits) {
 
       model.setTrait(CommonStrata.definition, "metadataUrls", [
         {
-          title: i18next.t("models.csw.metadataURL"),
+          title: i18next.t(($) => $.models.csw.metadataURL),
           url: new URI(
             proxyCatalogItemUrl(this.catalogGroup, this.catalogGroup.url!)
           )

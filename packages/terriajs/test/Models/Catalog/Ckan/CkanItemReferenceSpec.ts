@@ -1,63 +1,63 @@
 import i18next from "i18next";
 import { runInAction } from "mobx";
+import { http, HttpResponse } from "msw";
 import CkanItemReference from "../../../../lib/Models/Catalog/Ckan/CkanItemReference";
 import WebMapServiceCatalogItem from "../../../../lib/Models/Catalog/Ows/WebMapServiceCatalogItem";
 import Terria from "../../../../lib/Models/Terria";
 import WebMapServiceCatalogGroup from "../../../../lib/Models/Catalog/Ows/WebMapServiceCatalogGroup";
+import { worker } from "../../../mocks/browser";
 
-const taxationStatisticsPackage = require("../../../../wwwroot/test/CKAN/taxation-statistics-package.json");
-const taxationStatisticsWmsResource = require("../../../../wwwroot/test/CKAN/taxation-statistics-wms-resource.json");
-const vicWmsLayerResource = require("../../../../wwwroot/test/CKAN/vic-wms-layer-resource.json");
-const wmsNoLayerResource = require("../../../../wwwroot/test/CKAN/wms-no-layer-resource.json");
+import taxationStatisticsPackage from "../../../../wwwroot/test/CKAN/taxation-statistics-package.json";
+import taxationStatisticsWmsResource from "../../../../wwwroot/test/CKAN/taxation-statistics-wms-resource.json";
+import vicWmsLayerResource from "../../../../wwwroot/test/CKAN/vic-wms-layer-resource.json";
+import wmsNoLayerResource from "../../../../wwwroot/test/CKAN/wms-no-layer-resource.json";
 
 describe("CkanItemReference", function () {
   let terria: Terria;
   let ckanItemReference: CkanItemReference;
   let ckanItemTarget: any;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     ckanItemReference = new CkanItemReference("test", terria);
 
-    jasmine.Ajax.install();
-    // Fail and log requests by default.
-    jasmine.Ajax.stubRequest(/.*/).andCallFunction((request) => {
-      console.dir(request);
-      request.respondWith({ status: 404 });
-    });
-
-    jasmine.Ajax.stubRequest(
-      "https://example.com/api/3/action/package_show?id=tax-stats-package"
-    ).andReturn({ responseText: JSON.stringify(taxationStatisticsPackage) });
-
-    jasmine.Ajax.stubRequest(
-      "https://example.com/api/3/action/resource_show?id=tax-stats-wms-resource"
-    ).andReturn({
-      responseText: JSON.stringify(taxationStatisticsWmsResource)
-    });
-
-    jasmine.Ajax.stubRequest(
-      "https://example.com/api/3/action/resource_show?id=wms-no-layers-resource"
-    ).andReturn({
-      responseText: JSON.stringify(wmsNoLayerResource)
-    });
-
-    jasmine.Ajax.stubRequest(
-      "https://example.com/api/3/action/resource_show?id=vic-wms-resource"
-    ).andReturn({
-      responseText: JSON.stringify(vicWmsLayerResource)
-    });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get(
+        "https://example.com/api/3/action/package_show",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("id") !== "tax-stats-package")
+            throw new Error(`Unexpected query params: ${url.search}`);
+          return HttpResponse.json(taxationStatisticsPackage);
+        }
+      ),
+      http.get(
+        "https://example.com/api/3/action/resource_show",
+        ({ request }) => {
+          const url = new URL(request.url);
+          const id = url.searchParams.get("id");
+          if (id === "tax-stats-wms-resource")
+            return HttpResponse.json(taxationStatisticsWmsResource);
+          if (id === "wms-no-layers-resource")
+            return HttpResponse.json(wmsNoLayerResource);
+          if (id === "vic-wms-resource")
+            return HttpResponse.json(vicWmsLayerResource);
+          throw new Error(`Unexpected resource id: ${id}`);
+        }
+      ),
+      http.all("*", () => {
+        return new HttpResponse(null, { status: 404 });
+      })
+    );
   });
 
   it("has a type and typeName", function () {
     expect(ckanItemReference.type).toBe("ckan-item");
-    expect(ckanItemReference.typeName).toBe(i18next.t("models.ckan.name"));
+    expect(ckanItemReference.typeName).toBe(
+      i18next.t(($) => $.models.ckan.name)
+    );
   });
 
   describe("Can load an item by datasetId - ", function () {
@@ -95,53 +95,54 @@ describe("CkanItemReference", function () {
       expect(ckanItemTarget.rectangle.north).toBe(-9.142175977);
 
       const licenceInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.licence")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.licence)
       )[0];
       expect(licenceInfo.content).toBe(
         "[Creative Commons Attribution 3.0 Australia](http://creativecommons.org/licenses/by/3.0/au/)"
       );
 
       const contactInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.contact_point")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.contact_point)
       )[0];
       expect(contactInfo.content).toBe("taxstats@ato.gov.au");
 
       const datasetInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.datasetDescription")
+        (i: any) =>
+          i.name === i18next.t(($) => $.models.ckan.datasetDescription)
       )[0];
       expect(datasetInfo.content).toBe(
         "Taxation statistics: an overview of the income and tax status of Australian individuals, companies, partnerships, trusts and funds for 2011-12. "
       );
 
       const authorInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.author")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.author)
       )[0];
       expect(authorInfo.content).toBe("Australian Taxation Office");
 
       const createdInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.metadata_created")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.metadata_created)
       )[0];
       expect(createdInfo.content).toBe("2014-04-24");
 
       const modifiedInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.metadata_modified")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.metadata_modified)
       )[0];
       expect(modifiedInfo.content).toBe("2015-08-25");
 
       const updateInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.update_freq")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.update_freq)
       )[0];
       expect(updateInfo.content).toBe("daily");
 
       const custodianInfo = ckanItemTarget.info.filter(
-        (i: any) => i.name === i18next.t("models.ckan.datasetCustodian")
+        (i: any) => i.name === i18next.t(($) => $.models.ckan.datasetCustodian)
       )[0];
       expect(custodianInfo.content).toBe("Australian Taxation Office");
     });
   });
 
   describe("Can load an item by resourceId - ", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       runInAction(() => {
         ckanItemReference.setTrait("definition", "url", "https://example.com");
         ckanItemReference.setTrait("definition", "name", "Taxation Statistics");
@@ -196,8 +197,6 @@ describe("CkanItemReference", function () {
         "http://data.gov.au/geoserver/taxation-statistics-2011-12/wms?request=GetCapabilities"
       );
       expect(ckanItemTarget.info.length).toBe(0);
-
-      console.log(ckanItemTarget);
     });
   });
 

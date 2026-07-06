@@ -1,24 +1,24 @@
 import { action, computed, makeObservable } from "mobx";
 import DeveloperError from "terriajs-cesium/Source/Core/DeveloperError";
-import isDefined from "../../Core/isDefined";
-import { isJsonObject, JsonObject } from "../../Core/Json";
+import { JsonObject, isJsonObject } from "../../Core/Json";
 import Result from "../../Core/Result";
 import TerriaError from "../../Core/TerriaError";
+import isDefined from "../../Core/isDefined";
+import MappableMixin from "../../ModelMixins/MappableMixin";
 import ModelReference from "../../Traits/ModelReference";
 import {
-  BaseMapsTraits,
-  BaseMapTraits
+  BaseMapTraits,
+  BaseMapsTraits
 } from "../../Traits/TraitsClasses/BaseMapTraits";
 import BingMapsCatalogItem from "../Catalog/CatalogItems/BingMapsCatalogItem";
 import CommonStrata from "../Definition/CommonStrata";
 import CreateModel from "../Definition/CreateModel";
-import { BaseModel } from "../Definition/Model";
+import { BaseModel, ModelConstructorParameters } from "../Definition/Model";
 import ModelPropertiesFromTraits from "../Definition/ModelPropertiesFromTraits";
 import updateModelFromJson from "../Definition/updateModelFromJson";
 import Terria from "../Terria";
 import { defaultBaseMaps } from "./defaultBaseMaps";
-import { ModelConstructorParameters } from "../Definition/Model";
-import MappableMixin from "../../ModelMixins/MappableMixin";
+import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
 
 export class BaseMapModel extends CreateModel(BaseMapTraits) {}
 
@@ -36,6 +36,7 @@ export type BaseMapsJson = Partial<
 export interface BaseMapItem {
   image?: string;
   contrastColor?: string;
+  backgroundColor?: string;
   item: MappableMixin.Instance;
 }
 
@@ -52,21 +53,26 @@ export class BaseMapsModel extends CreateModel(BaseMapsTraits) {
   get baseMapItems(): BaseMapItem[] {
     const enabledBaseMaps: BaseMapItem[] = [];
 
-    if (this.enabledBaseMaps) {
-      this.enabledBaseMaps.forEach((baseMapItem) => {
-        const item = this.items.find((item) => item.item === baseMapItem);
-        if (item && !ModelReference.isRemoved(baseMapItem)) {
-          const itemModel = this.terria.getModelById(BaseModel, baseMapItem);
-          if (MappableMixin.isMixedInto(itemModel)) {
-            enabledBaseMaps.push({
-              image: item.image,
-              contrastColor: item.contrastColor,
-              item: itemModel
-            });
-          }
+    const baseMapItems =
+      this.enabledBaseMaps
+        ?.map((enabledBaseMapId) => {
+          return this.items.find((item) => item.item === enabledBaseMapId);
+        })
+        .filter(isDefined) ?? this.items;
+
+    baseMapItems.forEach((baseMapItem) => {
+      if (baseMapItem.item && !ModelReference.isRemoved(baseMapItem.item)) {
+        const itemModel = this.terria.getModelById(BaseModel, baseMapItem.item);
+        if (MappableMixin.isMixedInto(itemModel)) {
+          enabledBaseMaps.push({
+            image: baseMapItem.image,
+            contrastColor: baseMapItem.contrastColor,
+            backgroundColor: baseMapItem.backgroundColor,
+            item: itemModel
+          });
         }
-      });
-    }
+      }
+    });
 
     return enabledBaseMaps;
   }
@@ -110,17 +116,19 @@ export class BaseMapsModel extends CreateModel(BaseMapsTraits) {
     if (items !== undefined) {
       const { items: itemsTrait } = this.traits;
       const newItemsIds = itemsTrait.fromJson(this, stratumId, items);
-      newItemsIds.pushErrorTo(errors)?.forEach((member: BaseMapModel) => {
-        const existingItem = this.items.find(
-          (baseMap) => baseMap.item === member.item
-        );
-        if (existingItem) {
-          // object array trait doesn't automatically update model item
-          existingItem.setTrait(stratumId, "image", member.image);
-        } else {
-          this.add(stratumId, member);
-        }
-      });
+      newItemsIds
+        .pushErrorTo(errors)
+        ?.forEach((member: BaseMapModel, i: number) => {
+          const existingItem = this.items.find(
+            (baseMap) => baseMap.item === member.item
+          );
+          if (existingItem) {
+            // object array trait doesn't automatically update model item
+            updateModelFromJson(existingItem, stratumId, items[i]);
+          } else {
+            this.add(stratumId, member);
+          }
+        });
     }
 
     if (isJsonObject(rest))
@@ -134,6 +142,23 @@ export class BaseMapsModel extends CreateModel(BaseMapsTraits) {
         `Failed to add members from JSON for model \`${this.uniqueId}\``
       )
     );
+  }
+
+  findBaseMapById(id: string | undefined): BaseMapItem | undefined {
+    if (!id) return undefined;
+    return this.baseMapItems.find((baseMapItem) => {
+      return baseMapItem.item.uniqueId === id;
+    });
+  }
+
+  findBaseMapByName(name: string | undefined): BaseMapItem | undefined {
+    if (!name) return undefined;
+    return this.baseMapItems.find((baseMapItem) => {
+      if (CatalogMemberMixin.isMixedInto(baseMapItem.item)) {
+        return baseMapItem.item.name === name;
+      }
+      return false;
+    });
   }
 }
 

@@ -19,7 +19,6 @@ import {
   AugmentedVirtualityHoverController,
   AugmentedVirtualityRealign,
   AugmentedVirtualityRealignController,
-  CloseToolButton,
   Compass,
   COMPASS_TOOL_ID,
   MyLocation,
@@ -40,8 +39,6 @@ import {
   MeasureCircleTool
 } from "./Items/MeasureTools";
 import MeasureTools from "../../../Models/MeasureTools";
-
-export const CLOSE_TOOL_ID = "close-tool";
 
 export const registerMapNavigations = (viewState: ViewState) => {
   const terria = viewState.terria;
@@ -337,23 +334,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 7
   });
 
-  const closeToolButtonController = new GenericMapNavigationItemController({
-    handleClick: () => {
-      viewState.closeTool();
-    },
-    icon: GLYPHS.closeLight
-  });
-  mapNavigationModel.addItem({
-    id: CLOSE_TOOL_ID,
-    name: "translate#close",
-    location: "TOP",
-    screenSize: undefined,
-    controller: closeToolButtonController,
-    render: <CloseToolButton />,
-    order: 7
-  });
-  closeToolButtonController.setVisible(false);
-
+  // Note: upstream removed the CloseToolButton map-navigation item.
   const augmentedVirtuality = new AugmentedVirtuality(terria);
   const arController = new AugmentedVirtualityController({
     terria: terria,

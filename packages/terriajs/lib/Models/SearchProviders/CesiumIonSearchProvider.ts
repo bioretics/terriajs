@@ -2,17 +2,14 @@ import i18next from "i18next";
 import { makeObservable, override, runInAction } from "mobx";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 
-import {
-  Category,
-  SearchAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+import { Category, SearchAction } from "../../Core/Analytics/analyticEvents";
 import loadJson from "../../Core/loadJson";
 import { applyTranslationIfExists } from "../../Language/languageHelpers";
 import LocationSearchProviderMixin from "../../ModelMixins/SearchProviders/LocationSearchProviderMixin";
 import CesiumIonSearchProviderTraits from "../../Traits/SearchProviders/CesiumIonSearchProviderTraits";
 import CreateModel from "../Definition/CreateModel";
 import Terria from "../Terria";
-import SearchProviderResults from "./SearchProviderResults";
+import SearchProviderResult from "./SearchProviderResults";
 import SearchResult from "./SearchResult";
 import CommonStrata from "../Definition/CommonStrata";
 
@@ -62,7 +59,7 @@ export default class CesiumIonSearchProvider extends LocationSearchProviderMixin
   }
 
   protected logEvent(searchText: string): void {
-    this.terria.analytics?.logEvent(
+    this.terria.analytics.logEvent(
       Category.search,
       SearchAction.cesium,
       searchText
@@ -71,7 +68,7 @@ export default class CesiumIonSearchProvider extends LocationSearchProviderMixin
 
   protected async doSearch(
     searchText: string,
-    searchResults: SearchProviderResults
+    searchResults: SearchProviderResult
   ): Promise<void> {
     searchResults.results.length = 0;
     searchResults.message = undefined;
@@ -81,7 +78,7 @@ export default class CesiumIonSearchProvider extends LocationSearchProviderMixin
       response = await loadJson<CesiumIonGeocodeResult>(
         `${this.url}?text=${searchText}&access_token=${this.key}`
       );
-    } catch (e) {
+    } catch (_e) {
       searchResults.message = {
         content: "translate#viewModels.searchErrorOccurred"
       };

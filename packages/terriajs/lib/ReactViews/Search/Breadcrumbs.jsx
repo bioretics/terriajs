@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component, Fragment } from "react";
 import { withTranslation } from "react-i18next";
 import { withTheme } from "styled-components";
 import Box from "../../Styled/Box";
@@ -9,21 +9,15 @@ import Text, { TextSpan } from "../../Styled/Text";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import Spacing from "../../Styled/Spacing";
 import { RawButton } from "../../Styled/Button";
-import styled from "styled-components";
 import getAncestors from "../../Models/getAncestors";
 import getDereferencedIfExists from "../../Core/getDereferencedIfExists";
 import { runInAction } from "mobx";
 import CommonStrata from "../../Models/Definition/CommonStrata";
 
-const RawButtonAndUnderline = styled(RawButton)`
-  ${(props) => `
-  &:hover, &:focus {
-    text-decoration: underline ${props.theme.textDark};
-  }`}
-`;
+const RawButtonAndUnderline = RawButton;
 
 @observer
-class Breadcrumbs extends React.Component {
+class Breadcrumbs extends Component {
   static propTypes = {
     terria: PropTypes.object,
     viewState: PropTypes.object,
@@ -63,7 +57,7 @@ class Breadcrumbs extends React.Component {
           type="button"
           onClick={() => this.openInCatalog(ancestors.slice(i, i + 1))}
         >
-          <TextSpan small textDark>
+          <TextSpan small textDark isLink>
             {parent}
           </TextSpan>
         </RawButtonAndUnderline>
@@ -102,10 +96,10 @@ class Breadcrumbs extends React.Component {
           glyph={Icon.GLYPHS.globe}
         />
         <Spacing right={1.2} />
-        <Box flexWrap>
+        <Box flexWrap alignItemsFlexEnd>
           {parentGroups &&
             parentGroups.map((parent, i) => (
-              <React.Fragment key={i}>
+              <Fragment key={i}>
                 {this.renderCrumb(parent, i, parentGroups)}
                 {i !== parentGroups.length - 1 && (
                   <Box paddedHorizontally={1}>
@@ -114,7 +108,7 @@ class Breadcrumbs extends React.Component {
                     </Text>
                   </Box>
                 )}
-              </React.Fragment>
+              </Fragment>
             ))}
         </Box>
       </Box>

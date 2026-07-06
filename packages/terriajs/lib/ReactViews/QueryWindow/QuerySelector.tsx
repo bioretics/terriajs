@@ -40,7 +40,7 @@ const QuerySelector = observer(
                   `}
                 >
                   {opt.label.startsWith("sum-")
-                    ? `${t("queryTab.sum")} "${opt.label.slice(4)}"`
+                    ? `${t(($) => $.queryTab.sum)} "${opt.label.slice(4)}"`
                     : t(opt.label)}
                 </option>
               );

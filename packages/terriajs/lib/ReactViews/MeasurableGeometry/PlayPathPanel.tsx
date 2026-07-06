@@ -125,7 +125,7 @@ const PlayPathPanel = observer((props: Props) => {
             flex: 1
           }}
         >
-          <b>{i18next.t("playPath.title")}</b>
+          <b>{i18next.t(($) => $.playPath.title)}</b>
         </span>
         {renderCompactHelp()}
         <button
@@ -137,7 +137,7 @@ const PlayPathPanel = observer((props: Props) => {
             });
           }}
           className={Styles.btnCloseFeature}
-          title={i18next.t("general.close")}
+          title={i18next.t(($) => $.general.close)}
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>
@@ -177,7 +177,7 @@ const PlayPathPanel = observer((props: Props) => {
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("playPath.tour.preface.start")}
+            {i18next.t(($) => $.playPath.tour.preface.start)}
           </Button>
           <Button
             primary
@@ -189,7 +189,7 @@ const PlayPathPanel = observer((props: Props) => {
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("general.skip", "Skip")}
+            {i18next.t(($) => $.general.skip, "Skip")}
           </Button>
         </Box>
       </Box>
@@ -202,7 +202,7 @@ const PlayPathPanel = observer((props: Props) => {
       <button
         onClick={startPlayPathTour}
         className={Styles.btnCloseFeature}
-        title={i18next.t("playPath.tour.helpButton", "Open Play Path tour")}
+        title={i18next.t(($) => $.playPath.tour.helpButton, "Open Play Path tour")}
         style={{ marginRight: 25 }}
       >
         <Icon glyph={Icon.GLYPHS.helpThick} />
@@ -225,7 +225,7 @@ const PlayPathPanel = observer((props: Props) => {
       >
         {isPitchTooLow() && !playingPath && (
           <div style={{ color: "red", marginBottom: 4 }}>
-            {i18next.t("playPath.tooltip.pitchTooLow")}
+            {i18next.t(($) => $.playPath.tooltip.pitchTooLow)}
           </div>
         )}
         <div
@@ -252,7 +252,7 @@ const PlayPathPanel = observer((props: Props) => {
             `}
             title={
               isPitchTooLow() && !playingPath
-                ? i18next.t("playPath.tooltip.pitchTooLow")
+                ? i18next.t(($) => $.playPath.tooltip.pitchTooLow)
                 : playingPath
             }
           >
@@ -264,7 +264,7 @@ const PlayPathPanel = observer((props: Props) => {
           <Button
             ref={stopButtonRef}
             onClick={onStop}
-            title={i18next.t("playPath.tooltip.stop")}
+            title={i18next.t(($) => $.playPath.tooltip.stop)}
             disabled={
               !playingPath &&
               !(currentPointIndex > 0 && currentPointIndex < pointsSize!! - 1)
@@ -279,7 +279,7 @@ const PlayPathPanel = observer((props: Props) => {
           </Button>
         </div>
         <div
-          title={`${i18next.t("playPath.tooltip.speedSliderTitle")}`}
+          title={`${i18next.t(($) => $.playPath.tooltip.speedSliderTitle)}`}
           className="no-drag"
           style={{
             display: "flex",
@@ -290,7 +290,7 @@ const PlayPathPanel = observer((props: Props) => {
           }}
         >
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
-            {i18next.t("playPath.speed")}:
+            {i18next.t(($) => $.playPath.speed)}:
           </label>
           <Slider
             min={0.5}

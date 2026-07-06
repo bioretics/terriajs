@@ -1,6 +1,8 @@
+import { action } from "mobx";
 import styled from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
+// Fork (rer3d): draggable/resizable workbench panel.
 import { Rnd } from "react-rnd";
 import React from "react";
 
@@ -27,11 +29,16 @@ const StyledPanel = styled.div<PropsType>`
   opacity: ${(p) => (p.show ? 1 : 0)};
 `;
 
+// Fork (rer3d): the workbench side panel is a draggable/resizable panel
+// (react-rnd) whose default height comes from
+// configParameters.workbenchPanelDefaultHeight. Upstream's top-element and
+// resize-event wiring is preserved below.
 const SidePanelContainer: React.FC<PropsType> = (props) => {
+  const { viewState } = props;
   if (!props.show) return null;
 
   const defaultPanelHeight =
-    props.viewState.terria.configParameters.workbenchPanelDefaultHeight ??
+    viewState.terria.configParameters.workbenchPanelDefaultHeight ??
     DEFAULT_PANEL_HEIGHT;
   const initialHeight = Math.max(defaultPanelHeight, MIN_PANEL_HEIGHT);
 
@@ -55,7 +62,18 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
       style={{ zIndex: 1 }}
       cancel=".no-drag"
     >
-      <StyledPanel {...props}>{props.children}</StyledPanel>
+      <StyledPanel
+        {...props}
+        className={
+          viewState.topElement === "SidePanel" ? "top-element" : undefined
+        }
+        onClick={action(() => {
+          viewState.topElement = "SidePanel";
+        })}
+        onTransitionEnd={() => viewState.triggerResizeEvent()}
+      >
+        {props.children}
+      </StyledPanel>
     </Rnd>
   );
 };

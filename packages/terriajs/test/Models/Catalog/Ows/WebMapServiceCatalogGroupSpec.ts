@@ -33,7 +33,7 @@ describe("WebMapServiceCatalogGroup", function () {
   });
 
   describe("after loading capabilities", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       runInAction(() => {
         wms.setTrait("definition", "url", "test/WMS/single_metadata_url.xml");
       });
@@ -55,11 +55,13 @@ describe("WebMapServiceCatalogGroup", function () {
 
     it("defines info", async function () {
       await wms.loadMetadata();
-      const abstract = i18next.t("models.webMapServiceCatalogGroup.abstract");
-      const accessConstraints = i18next.t(
-        "models.webMapServiceCatalogGroup.accessConstraints"
+      const abstract = i18next.t(
+        ($) => $.models.webMapServiceCatalogGroup.abstract
       );
-      const fees = i18next.t("models.webMapServiceCatalogGroup.fees");
+      const accessConstraints = i18next.t(
+        ($) => $.models.webMapServiceCatalogGroup.accessConstraints
+      );
+      const fees = i18next.t(($) => $.models.webMapServiceCatalogGroup.fees);
 
       expect(wms.info.map(({ name }) => name)).toEqual([
         abstract,
@@ -88,12 +90,12 @@ describe("WebMapServiceCatalogGroup", function () {
       await wms.loadMembers();
     });
 
-    it("loads", async function () {
+    it("loads", function () {
       expect(wms.members.length).toEqual(1);
       expect(wms.memberModels.length).toEqual(1);
     });
 
-    it("item properties are passed down", async function () {
+    it("item properties are passed down", function () {
       const member: any = wms.memberModels[0];
       expect(member.parameters.foo).toEqual("baa");
     });
@@ -108,7 +110,7 @@ describe("WebMapServiceCatalogGroup", function () {
       await wms.loadMembers();
     });
 
-    it("addsShareKeys", async function () {
+    it("addsShareKeys", function () {
       expect(wms.members.length).toEqual(1);
       expect(wms.memberModels.length).toEqual(1);
       const wmsItem = wms.memberModels[0] as WebMapServiceCatalogItem;
@@ -131,7 +133,7 @@ describe("WebMapServiceCatalogGroup", function () {
       await wms.loadMembers();
     });
 
-    it("loads", async function () {
+    it("loads", function () {
       expect(wms.members.length).toEqual(2);
       expect(wms.memberModels.length).toEqual(2);
 
@@ -201,7 +203,7 @@ describe("WebMapServiceCatalogGroup", function () {
       await wms.loadMembers();
     });
 
-    it("sets traits correctly", async function () {
+    it("sets traits correctly", function () {
       const wmsItem = (
         (wms.memberModels[0] as WebMapServiceCatalogGroup)
           .memberModels[0] as WebMapServiceCatalogGroup

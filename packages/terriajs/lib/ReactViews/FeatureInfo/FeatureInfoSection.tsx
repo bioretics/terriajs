@@ -1,6 +1,5 @@
 import classNames from "classnames";
-import { TFunction } from "i18next";
-import { merge } from "lodash-es";
+import { isEmpty, merge } from "lodash-es";
 import {
   action,
   computed,
@@ -12,38 +11,46 @@ import {
 import { observer } from "mobx-react";
 import { IDisposer } from "mobx-utils";
 import Mustache from "mustache";
-import React from "react";
+import { Component } from "react";
+import { TFunction } from "i18next";
 import { withTranslation } from "react-i18next";
+import styled from "styled-components";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import TerriaError from "../../Core/TerriaError";
+import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import DiscretelyTimeVaryingMixin from "../../ModelMixins/DiscretelyTimeVaryingMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
+import TableMixin from "../../ModelMixins/TableMixin";
 import TimeVarying from "../../ModelMixins/TimeVarying";
 import TerriaFeature from "../../Models/Feature/Feature";
 import FeatureInfoContext from "../../Models/Feature/FeatureInfoContext";
+// Fork (rer3d): user-profile-gated feature info fields.
+import Terria from "../../Models/Terria";
+import CesiumResource from "terriajs-cesium/Source/Core/Resource";
+import type ViewState from "../../ReactViewModels/ViewState";
 import Icon from "../../Styled/Icon";
-import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
+import { TimeSeriesContext } from "../../Table/tableFeatureInfoContext";
+import { FeatureInfoPanelButton as FeatureInfoPanelButtonModel } from "../../ViewModels/FeatureInfoPanel";
 import { WithViewState, withViewState } from "../Context";
-import Styles from "./feature-info-section.scss";
+import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
 import FeatureInfoDownload from "./FeatureInfoDownload";
+import FeatureInfoPanelButton from "./FeatureInfoPanelButton";
+import Styles from "./feature-info-section.scss";
 import { generateCesiumInfoHTMLFromProperties } from "./generateCesiumInfoHTMLFromProperties";
 import getFeatureProperties from "./getFeatureProperties";
 import {
+  MustacheFunction,
   mustacheFormatDateTime,
   mustacheFormatNumberFunction,
-  MustacheFunction,
   mustacheRenderPartialByName,
   mustacheURLEncodeText,
   mustacheURLEncodeTextComponent
 } from "./mustacheExpressions";
-import ExportableMixin from "../../ModelMixins/ExportableMixin";
-import Terria from "../../Models/Terria";
-import CesiumResource from "terriajs-cesium/Source/Core/Resource";
-import { TimeSeriesContext } from "../../Table/tableFeatureInfoContext";
 
 // We use Mustache templates inside React views, where React does the escaping; don't escape twice, or eg. " => &quot;
 Mustache.escape = function (string) {
@@ -57,21 +64,15 @@ interface FeatureInfoProps extends WithViewState {
   isOpen: boolean;
   onClickHeader?: (feature: TerriaFeature) => void;
   printView?: boolean;
-  t: TFunction;
+  // Fork (rer3d): needed for the per-profile info fields auth check.
   terria?: Terria;
+  t: TFunction;
 }
 
 @observer
-export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
+export class FeatureInfoSection extends Component<FeatureInfoProps> {
   private templateReactionDisposer: IDisposer | undefined;
   private removeFeatureChangedSubscription: (() => void) | undefined;
-
-  constructor(props: FeatureInfoProps) {
-    super(props);
-    makeObservable(this);
-  }
-
-  @observable private fields?: string[];
 
   /** Rendered feature info template - this is set using reaction.
    * We can't use `@computed` values for custom templates - as CustomComponents may cause side-effects.
@@ -79,25 +80,49 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
    * - A CsvChartCustomComponent will create a new CsvCatalogItem and set traits
    * See `rawDataReactNode` for rendered raw data
    */
-  @observable private templatedFeatureInfoReactNode:
+  @observable.ref private templatedFeatureInfoReactNode:
     | React.ReactNode
     | undefined = undefined;
+
+  noInfoRef: HTMLDivElement | null = null;
 
   @observable
   private showRawData: boolean = false;
 
+  @observable observableFeature: TerriaFeature;
+  @observable observablePosition?: Cartesian3;
+  @observable observableCatalogItem: MappableMixin.Instance; // Note this may not be known (eg. WFS).
+  @observable observableViewState: ViewState;
+
   /** See `setFeatureChangedCounter` */
   @observable featureChangedCounter = 0;
 
+  // Fork (rer3d): restricted set of feature-info fields for the current
+  // user profile (undefined = show everything).
+  @observable private fields?: string[];
+
+  constructor(props: FeatureInfoProps) {
+    super(props);
+    makeObservable(this);
+
+    this.observableFeature = props.feature;
+    this.observablePosition = props.position;
+    this.observableCatalogItem = props.catalogItem;
+    this.observableViewState = props.viewState;
+  }
+
   componentDidMount() {
+    // Fork (rer3d): resolve per-profile fields for this feature.
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     this.checkAuth;
 
     this.templateReactionDisposer = reaction(
       () => [
-        this.props.feature,
-        this.props.catalogItem.featureInfoTemplate.template,
-        this.props.catalogItem.featureInfoTemplate.partials,
-        this.props.catalogItem.featureInfoTemplate.perProfileInfoFields,
+        this.observableFeature,
+        this.observableCatalogItem.featureInfoTemplate.template,
+        this.observableCatalogItem.featureInfoTemplate.partials,
+        // Fork (rer3d): re-render when profile-restricted fields change
+        this.observableCatalogItem.featureInfoTemplate.perProfileInfoFields,
         // Note `mustacheContextData` will trigger update when `currentTime` changes (through this.featureProperties)
         this.mustacheContextData
       ],
@@ -105,10 +130,11 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         if (this.template && this.mustacheContextData) {
           this.templatedFeatureInfoReactNode = parseCustomMarkdownToReact(
             Mustache.render(
-              //this.props.catalogItem.featureInfoTemplate.template,
+              // Fork (rer3d): this.template falls back to the catalog item's
+              // featureInfoTemplate.template when no profile fields are set.
               this.template,
               this.mustacheContextData,
-              this.props.catalogItem.featureInfoTemplate.partials
+              this.observableCatalogItem.featureInfoTemplate.partials
             ),
             this.parseMarkdownContextData
           );
@@ -119,10 +145,17 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
       { fireImmediately: true }
     );
 
-    this.setFeatureChangedCounter(this.props.feature);
+    this.setFeatureChangedCounter(this.observableFeature);
   }
 
   componentDidUpdate(prevProps: FeatureInfoProps) {
+    runInAction(() => {
+      this.observableFeature = this.props.feature;
+      this.observablePosition = this.props.position;
+      this.observableCatalogItem = this.props.catalogItem;
+      this.observableViewState = this.props.viewState;
+    });
+
     if (prevProps.feature !== this.props.feature) {
       this.setFeatureChangedCounter(this.props.feature);
     }
@@ -152,26 +185,30 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
   }
 
   @computed get currentTimeIfAvailable() {
-    return TimeVarying.is(this.props.catalogItem)
-      ? this.props.catalogItem.currentTimeAsJulianDate
+    return TimeVarying.is(this.observableCatalogItem)
+      ? this.observableCatalogItem.currentTimeAsJulianDate
       : undefined;
   }
 
   @computed get featureProperties() {
     // Force computed to re-calculate when cesium feature properties change
+    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
     this.featureChangedCounter;
 
     return getFeatureProperties(
-      this.props.feature,
+      this.observableFeature,
       this.currentTimeIfAvailable ?? JulianDate.now(),
-      MappableMixin.isMixedInto(this.props.catalogItem) &&
-        this.props.catalogItem.featureInfoTemplate.formats
-        ? this.props.catalogItem.featureInfoTemplate.formats
+      MappableMixin.isMixedInto(this.observableCatalogItem) &&
+        this.observableCatalogItem.featureInfoTemplate.formats
+        ? this.observableCatalogItem.featureInfoTemplate.formats
         : undefined,
+      // Fork (rer3d): restrict to the profile-allowed fields when set.
       this.fields
     );
   }
 
+  // Fork (rer3d): when profile fields are set, build a table template showing
+  // only those fields; otherwise use the catalog item's own template.
   @computed get template() {
     if (this.fields && this.fields.length > 0) {
       return `<table><tbody><tr><td>
@@ -182,214 +219,20 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
           .join("</td></tr><tr><td>")}
       </td></tr></tbody></table>`;
     } else {
-      return this.props.catalogItem.featureInfoTemplate.template;
+      return this.observableCatalogItem.featureInfoTemplate.template;
     }
   }
 
-  /** This monstrosity contains properties which can be used by Mustache templates:
-   * - All feature properties
-   * - `properties` = array of key:value from feature properties
-   * - `terria` magical object
-   *     - a bunch of custom mustache expressions
-   *       - `partialByName`
-   *       - `formatNumber`
-   *       - `formatDateTime`
-   *       - `urlEncodeComponent`
-   *       - `urlEncode`
-   *     - `coords` with `latitude` and `longitude`
-   *     - `currentTime`
-   *     - `rawDataTable` contains markdown table
-   *  - properties provided by catalog item through `featureInfoContext` function
-   */
-  @computed
-  get mustacheContextData() {
-    const propertyValues = Object.assign({}, this.featureProperties);
-
-    // Properties accessible as {name, value} array; useful when you want
-    // to iterate anonymous property values in the mustache template.
-    const properties = Object.entries(propertyValues).map(([name, value]) => ({
-      name,
-      value
-    }));
-
-    const propertyData = {
-      ...propertyValues,
-      properties,
-      feature: this.props.feature
-    };
-
-    const terria: {
-      partialByName: MustacheFunction;
-      formatNumber: MustacheFunction;
-      formatDateTime: MustacheFunction;
-      urlEncodeComponent: MustacheFunction;
-      urlEncode: MustacheFunction;
-      coords?: {
-        latitude: number;
-        longitude: number;
-      };
-      currentTime?: Date;
-      timeSeries?: TimeSeriesContext;
-      rawDataTable?: string;
-    } = {
-      partialByName: mustacheRenderPartialByName(
-        this.props.catalogItem.featureInfoTemplate?.partials ?? {},
-        propertyData
-      ),
-      formatNumber: mustacheFormatNumberFunction,
-      formatDateTime: mustacheFormatDateTime,
-      urlEncodeComponent: mustacheURLEncodeTextComponent,
-      urlEncode: mustacheURLEncodeText,
-      rawDataTable: this.rawDataMarkdown
-    };
-
-    if (this.props.position) {
-      const latLngInRadians = Ellipsoid.WGS84.cartesianToCartographic(
-        this.props.position
-      );
-      terria.coords = {
-        latitude: CesiumMath.toDegrees(latLngInRadians.latitude),
-        longitude: CesiumMath.toDegrees(latLngInRadians.longitude)
-      };
-    }
-
-    // Add currentTime property
-    // if discrete - use current discrete time
-    // otherwise - use current (continuous) time
-    if (
-      DiscretelyTimeVaryingMixin.isMixedInto(this.props.catalogItem) &&
-      this.props.catalogItem.currentDiscreteJulianDate
-    ) {
-      terria.currentTime = JulianDate.toDate(
-        this.props.catalogItem.currentDiscreteJulianDate
-      );
-    } else if (
-      TimeVarying.is(this.props.catalogItem) &&
-      this.props.catalogItem.currentTimeAsJulianDate
-    ) {
-      terria.currentTime = JulianDate.toDate(
-        this.props.catalogItem.currentTimeAsJulianDate
-      );
-    }
-
-    // If catalog item has featureInfoContext function
-    // Merge it into other properties
-    if (FeatureInfoContext.is(this.props.catalogItem)) {
-      return merge(
-        { ...propertyData, terria },
-        this.props.catalogItem.featureInfoContext(this.props.feature) ?? {}
-      );
-    }
-
-    return { ...propertyData, terria };
-  }
-
-  clickHeader() {
-    if (isDefined(this.props.onClickHeader)) {
-      this.props.onClickHeader(this.props.feature);
-    }
-  }
-
-  /** Context object passed into "parseCustomMarkdownToReact"
-   * These will get passed to CustomComponents (eg CsvChartCustomComponent)
-   */
-  @computed get parseMarkdownContextData() {
-    return {
-      terria: this.props.viewState.terria,
-      catalogItem: this.props.catalogItem,
-      feature: this.props.feature
-    };
-  }
-
-  /** Get raw data table as markdown string
-   *
-   * Will use feature.description if defined
-   * Otherwise, will generate cesium info HTML table from feature properties
-   */
-  @computed get rawDataMarkdown() {
-    const feature = this.props.feature;
-
-    const currentTime = this.currentTimeIfAvailable ?? JulianDate.now();
-    const description: string | undefined =
-      feature.description?.getValue(currentTime);
-
-    if (this.fields && this.fields.length > 0) {
-      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><td>${this.fields
-        .map((fieldName) => {
-          return `${fieldName}</td><td>${feature.properties?.[fieldName]}`;
-        })
-        .join("</td></tr><tr><td>")}</td></tr></tbody></table>`;
-    }
-
-    if (isDefined(description)) return description;
-
-    if (isDefined(feature.properties)) {
-      return generateCesiumInfoHTMLFromProperties(
-        feature.properties,
-        currentTime,
-        MappableMixin.isMixedInto(this.props.catalogItem)
-          ? this.props.catalogItem.showStringIfPropertyValueIsNull
-          : undefined
-      );
-    }
-  }
-
-  /** Get Raw data as ReactNode.
-   * Note: this can be computed - as no custom components are used which cause side-effects (eg CSVChartCustomComponent)
-   * See `templatedFeatureInfoReactNode` for rendered feature info template
-   */
-  @computed
-  get rawFeatureInfoReactNode(): React.ReactNode | undefined {
-    if (this.rawDataMarkdown)
-      return parseCustomMarkdownToReact(
-        this.rawDataMarkdown,
-        this.parseMarkdownContextData
-      );
-  }
-
-  @action
-  toggleRawData() {
-    this.showRawData = !this.showRawData;
-  }
-
-  @computed get downloadableData() {
-    let fileName = getName(this.props.catalogItem);
-
-    // Add the Lat, Lon to the baseFilename if it is possible and not already present.
-    if (this.props.position) {
-      const position = Ellipsoid.WGS84.cartesianToCartographic(
-        this.props.position
-      );
-      const latitude = CesiumMath.toDegrees(position.latitude);
-      const longitude = CesiumMath.toDegrees(position.longitude);
-      const precision = 5;
-      // Check that baseFilename doesn't already contain the lat, lon with the similar or better precision.
-      if (
-        !contains(fileName, latitude, precision) ||
-        !contains(fileName, longitude, precision)
-      ) {
-        fileName +=
-          " - Lat " +
-          latitude.toFixed(precision) +
-          " Lon " +
-          longitude.toFixed(precision);
-      }
-    }
-
-    return {
-      data:
-        this.featureProperties && Object.keys(this.featureProperties).length > 0
-          ? this.featureProperties
-          : undefined,
-      fileName
-    };
-  }
-
+  // Fork (rer3d): update the profile-allowed fields.
   @action
   setFields = (newFields: string[] | undefined) => {
     this.fields = newFields;
   };
 
+  // Fork (rer3d): when user profiles are configured, check whether the
+  // current user may see all fields of this feature (via the optional
+  // webServiceUrlProfileCheck endpoint) or only the per-profile subset.
+  // Runs once at construction.
   checkAuth = runInAction(async () => {
     const feature = this.props.feature;
 
@@ -422,7 +265,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
           } else {
             throw "Request failed";
           }
-        } catch (error) {
+        } catch (_error) {
           this.setFields(
             this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
               String(this.props.terria?.userProfile)
@@ -441,34 +284,280 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
     }
   });
 
+  /** This monstrosity contains properties which can be used by Mustache templates:
+   * - All feature properties
+   * - `properties` = array of key:value from feature properties
+   * - `terria` magical object
+   *     - a bunch of custom mustache expressions
+   *       - `partialByName`
+   *       - `formatNumber`
+   *       - `formatDateTime`
+   *       - `urlEncodeComponent`
+   *       - `urlEncode`
+   *     - `coords` with `latitude` and `longitude`
+   *     - `currentTime`
+   *     - `rawDataTable` contains markdown table
+   *  - properties provided by catalog item through `featureInfoContext` function
+   */
+  @computed
+  get mustacheContextData() {
+    const propertyValues = Object.assign({}, this.featureProperties);
+
+    // Properties accessible as {name, value} array; useful when you want
+    // to iterate anonymous property values in the mustache template.
+    const properties = Object.entries(propertyValues).map(([name, value]) => ({
+      name,
+      value
+    }));
+
+    const propertyData = {
+      ...propertyValues,
+      properties,
+      feature: this.observableFeature
+    };
+
+    const terria: {
+      partialByName: MustacheFunction;
+      formatNumber: MustacheFunction;
+      formatDateTime: MustacheFunction;
+      urlEncodeComponent: MustacheFunction;
+      urlEncode: MustacheFunction;
+      coords?: {
+        latitude: number;
+        longitude: number;
+      };
+      currentTime?: Date;
+      timeSeries?: TimeSeriesContext;
+      rawDataTable?: string;
+      activeStyle?: { id: string | undefined } | undefined;
+    } = {
+      partialByName: mustacheRenderPartialByName(
+        this.observableCatalogItem.featureInfoTemplate?.partials ?? {},
+        propertyData
+      ),
+      formatNumber: mustacheFormatNumberFunction,
+      formatDateTime: mustacheFormatDateTime,
+      urlEncodeComponent: mustacheURLEncodeTextComponent,
+      urlEncode: mustacheURLEncodeText,
+      rawDataTable: this.rawDataMarkdown
+    };
+
+    if (this.observablePosition) {
+      const latLngInRadians = Ellipsoid.WGS84.cartesianToCartographic(
+        this.observablePosition
+      );
+      terria.coords = {
+        latitude: CesiumMath.toDegrees(latLngInRadians.latitude),
+        longitude: CesiumMath.toDegrees(latLngInRadians.longitude)
+      };
+    }
+
+    // Add currentTime property
+    // if discrete - use current discrete time
+    // otherwise - use current (continuous) time
+    if (
+      DiscretelyTimeVaryingMixin.isMixedInto(this.observableCatalogItem) &&
+      this.observableCatalogItem.currentDiscreteJulianDate
+    ) {
+      terria.currentTime = JulianDate.toDate(
+        this.observableCatalogItem.currentDiscreteJulianDate
+      );
+    } else if (
+      TimeVarying.is(this.observableCatalogItem) &&
+      this.observableCatalogItem.currentTimeAsJulianDate
+    ) {
+      terria.currentTime = JulianDate.toDate(
+        this.observableCatalogItem.currentTimeAsJulianDate
+      );
+    }
+
+    // Add activeStyle property
+    if (TableMixin.isMixedInto(this.observableCatalogItem)) {
+      terria.activeStyle = { id: this.observableCatalogItem.activeStyle };
+    }
+
+    // If catalog item has featureInfoContext function
+    // Merge it into other properties
+    if (FeatureInfoContext.is(this.observableCatalogItem)) {
+      return merge(
+        { ...propertyData, terria },
+        this.observableCatalogItem.featureInfoContext(this.observableFeature) ??
+          {}
+      );
+    }
+
+    return { ...propertyData, terria };
+  }
+
+  clickHeader() {
+    if (isDefined(this.props.onClickHeader)) {
+      this.props.onClickHeader(this.observableFeature);
+    }
+  }
+
+  /** Context object passed into "parseCustomMarkdownToReact"
+   * These will get passed to CustomComponents (eg CsvChartCustomComponent)
+   */
+  @computed get parseMarkdownContextData() {
+    return {
+      terria: this.observableViewState.terria,
+      catalogItem: this.observableCatalogItem,
+      feature: this.observableFeature
+    };
+  }
+
+  /** Get raw data table as markdown string
+   *
+   * Will use feature.description if defined
+   * Otherwise, will generate cesium info HTML table from feature properties
+   */
+  @computed get rawDataMarkdown() {
+    const feature = this.observableFeature;
+
+    const currentTime = this.currentTimeIfAvailable ?? JulianDate.now();
+    const description: string | undefined =
+      feature.description?.getValue(currentTime);
+
+    // Fork (rer3d): raw data table limited to the profile-allowed fields.
+    if (this.fields && this.fields.length > 0) {
+      return `<table class="cesium-infoBox-defaultTable"><tbody><tr><td>${this.fields
+        .map((fieldName) => {
+          return `${fieldName}</td><td>${feature.properties?.[fieldName]}`;
+        })
+        .join("</td></tr><tr><td>")}</td></tr></tbody></table>`;
+    }
+
+    if (isDefined(description)) return description;
+
+    if (isDefined(feature.properties)) {
+      return generateCesiumInfoHTMLFromProperties(
+        feature.properties,
+        currentTime,
+        MappableMixin.isMixedInto(this.observableCatalogItem)
+          ? this.observableCatalogItem.showStringIfPropertyValueIsNull
+          : undefined
+      );
+    }
+  }
+
+  /** Get Raw data as ReactNode.
+   * Note: this can be computed - as no custom components are used which cause side-effects (eg CSVChartCustomComponent)
+   * See `templatedFeatureInfoReactNode` for rendered feature info template
+   */
+  @computed
+  get rawFeatureInfoReactNode(): React.ReactNode | undefined {
+    if (this.rawDataMarkdown)
+      return parseCustomMarkdownToReact(
+        this.rawDataMarkdown,
+        this.parseMarkdownContextData
+      );
+  }
+
+  @action
+  toggleRawData() {
+    this.showRawData = !this.showRawData;
+  }
+
+  @computed get downloadableData() {
+    let fileName = getName(this.observableCatalogItem);
+
+    // Add the Lat, Lon to the baseFilename if it is possible and not already present.
+    if (this.observablePosition) {
+      const position = Ellipsoid.WGS84.cartesianToCartographic(
+        this.observablePosition
+      );
+      const latitude = CesiumMath.toDegrees(position.latitude);
+      const longitude = CesiumMath.toDegrees(position.longitude);
+      const precision = 5;
+      // Check that baseFilename doesn't already contain the lat, lon with the similar or better precision.
+      if (
+        !contains(fileName, latitude, precision) ||
+        !contains(fileName, longitude, precision)
+      ) {
+        fileName +=
+          " - Lat " +
+          latitude.toFixed(precision) +
+          " Lon " +
+          longitude.toFixed(precision);
+      }
+    }
+
+    return {
+      data:
+        this.featureProperties && !isEmpty(this.featureProperties)
+          ? this.featureProperties
+          : undefined,
+      fileName
+    };
+  }
+
+  @computed
+  get generatedButtons(): FeatureInfoPanelButtonModel[] {
+    const buttons = filterOutUndefined(
+      this.observableViewState.featureInfoPanelButtonGenerators.map(
+        (generator) => {
+          try {
+            const dim = generator({
+              feature: this.observableFeature,
+              item: this.observableCatalogItem
+            });
+            return dim;
+          } catch (error) {
+            TerriaError.from(error).log();
+          }
+        }
+      )
+    );
+    return buttons;
+  }
+
+  renderButtons() {
+    const { t } = this.props;
+    return (
+      <ButtonsContainer>
+        {/* If we have templated feature info (and not in print mode) - render "show raw data" button */}
+        {!this.props.printView && this.templatedFeatureInfoReactNode && (
+          <FeatureInfoPanelButton
+            onClick={this.toggleRawData.bind(this)}
+            text={
+              this.showRawData
+                ? t(($) => $.featureInfo.showCuratedData)
+                : t(($) => $.featureInfo.showRawData)
+            }
+          />
+        )}
+        {this.generatedButtons.map((button, i) => (
+          <FeatureInfoPanelButton key={i} {...button} />
+        ))}
+      </ButtonsContainer>
+    );
+  }
+
   render() {
     const { t } = this.props;
 
     let title: string;
 
-    if (this.props.catalogItem.featureInfoTemplate.name) {
+    if (this.observableCatalogItem.featureInfoTemplate.name) {
       title = Mustache.render(
-        this.props.catalogItem.featureInfoTemplate.name,
-        this.featureProperties
+        this.observableCatalogItem.featureInfoTemplate.name,
+        this.mustacheContextData,
+        this.observableCatalogItem.featureInfoTemplate.partials
       );
     } else
       title =
-        getName(this.props.catalogItem) +
+        getName(this.observableCatalogItem) +
         " - " +
-        (this.props.feature.name || this.props.t("featureInfo.siteData"));
+        (this.observableFeature.name || t(($) => $.featureInfo.siteData));
 
     /** Show feature info download if showing raw data - or showing template and `showFeatureInfoDownloadWithTemplate` is true
      */
-    const canExport = ExportableMixin.isMixedInto(this.props.catalogItem)
-      ? !(this.props.catalogItem as ExportableMixin.Instance).disableExport
-      : true;
     const showFeatureInfoDownload =
-      (this.showRawData ||
-        !this.templatedFeatureInfoReactNode ||
-        (this.templatedFeatureInfoReactNode &&
-          this.props.catalogItem.featureInfoTemplate
-            .showFeatureInfoDownloadWithTemplate)) &&
-      canExport;
+      this.showRawData ||
+      !this.templatedFeatureInfoReactNode ||
+      (this.templatedFeatureInfoReactNode &&
+        this.observableCatalogItem.featureInfoTemplate
+          .showFeatureInfoDownloadWithTemplate);
 
     const titleElement = this.props.printView ? (
       <h2>{title}</h2>
@@ -489,17 +578,24 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
 
     // If feature is unavailable (or not showing) - show no info message
     if (
-      !this.props.feature.isAvailable(
+      !this.observableFeature.isAvailable(
         this.currentTimeIfAvailable ?? JulianDate.now()
       ) ||
-      !this.props.feature.isShowing
+      !this.observableFeature.isShowing
     ) {
       return (
         <li className={classNames(Styles.section)}>
           {titleElement}
           {this.props.isOpen ? (
             <section className={Styles.content}>
-              <div key="no-info">{t("featureInfo.noInfoAvailable")}</div>
+              <div
+                ref={(r) => {
+                  this.noInfoRef = r;
+                }}
+                key="no-info"
+              >
+                {t(($) => $.featureInfo.noInfoAvailable)}
+              </div>
             </section>
           ) : null}
         </li>
@@ -511,70 +607,37 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         {titleElement}
         {this.props.isOpen ? (
           <section className={Styles.content}>
-            {/* If we have templated feature info (and not in print mode) - render "show raw data" button */}
-            {!this.props.printView && this.templatedFeatureInfoReactNode ? (
-              <button
-                type="button"
-                className={Styles.rawDataButton}
-                onClick={this.toggleRawData.bind(this)}
-              >
-                {this.showRawData
-                  ? t("featureInfo.showCuratedData")
-                  : t("featureInfo.showRawData")}
-              </button>
-            ) : null}
+            {this.renderButtons()}
             <div>
-              {this.props.feature.loadingFeatureInfoUrl ? (
+              {this.observableFeature.loadingFeatureInfoUrl ? (
                 "Loading"
               ) : this.showRawData || !this.templatedFeatureInfoReactNode ? (
                 this.rawFeatureInfoReactNode ? (
                   this.rawFeatureInfoReactNode
                 ) : (
-                  <div key="no-info">{t("featureInfo.noInfoAvailable")}</div>
+                  <div
+                    ref={(r) => {
+                      this.noInfoRef = r;
+                    }}
+                    key="no-info"
+                  >
+                    {t(($) => $.featureInfo.noInfoAvailable)}
+                  </div>
                 )
               ) : (
                 // Show templated feature info
                 this.templatedFeatureInfoReactNode
               )}
-              {this.props.feature.properties &&
-                this.props.feature.properties.hasProperty(
-                  "percentuale_avanzamento"
-                ) &&
-                this.props.feature.properties[
-                  "percentuale_avanzamento"
-                ].getValue() > 0 &&
-                this.props.feature.properties[
-                  "tipo_stato_avanzamento"
-                ].getValue() === "Lavori in corso" && (
-                  <span>
-                    <img
-                      style={{ marginTop: "10px" }}
-                      src={`https://progress-bar.xyz/${Math.round(
-                        this.props.feature.properties[
-                          "percentuale_avanzamento"
-                        ].getValue()
-                      )}?width=${280}&title=${"Avanzamento &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}`}
-                    />
-                  </span>
-                )}
               {
                 // Show FeatureInfoDownload
                 !this.props.printView &&
                 showFeatureInfoDownload &&
                 isDefined(this.downloadableData.data) ? (
-                  <>
-                    <FeatureInfoDownload
-                      key="download"
-                      data={this.downloadableData.data}
-                      name={this.downloadableData.fileName}
-                    />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                  </>
+                  <FeatureInfoDownload
+                    key="download"
+                    data={this.downloadableData.data}
+                    name={this.downloadableData.fileName}
+                  />
                 ) : null
               }
             </div>
@@ -597,5 +660,11 @@ function contains(text: string, number: number, precision: number) {
     text.indexOf(fixed(Math.ceil, number)) !== -1
   );
 }
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  padding: 7px 0 10px 0;
+`;
 
 export default withTranslation()(withViewState(FeatureInfoSection));

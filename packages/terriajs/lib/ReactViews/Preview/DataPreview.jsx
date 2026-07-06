@@ -3,11 +3,10 @@
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { Trans, withTranslation } from "react-i18next";
 import CatalogFunctionMixin from "../../ModelMixins/CatalogFunctionMixin";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
-import { Icon } from "../../Styled/Icon";
 import InvokeFunction from "../Analytics/InvokeFunction";
 import Loader from "../Loader";
 import Description from "./Description";
@@ -15,17 +14,20 @@ import GroupPreview from "./GroupPreview";
 import MappablePreview from "./MappablePreview";
 import WarningBox from "./WarningBox";
 import Styles from "./data-preview.scss";
+import Icon from "../../Styled/Icon";
 
 /**
  * Data preview section, for the preview map see DataPreviewMap
  */
 @observer
-class DataPreview extends React.Component {
+class DataPreview extends Component {
   static propTypes = {
     terria: PropTypes.object.isRequired,
     viewState: PropTypes.object,
     previewed: PropTypes.object,
-    t: PropTypes.func.isRequired
+    t: PropTypes.func.isRequired,
+    onToggleItemOnMap: PropTypes.func,
+    hideToggleItemOnMap: PropTypes.bool
   };
 
   backToMap() {
@@ -65,6 +67,8 @@ class DataPreview extends React.Component {
             previewed={previewed}
             terria={this.props.terria}
             viewState={this.props.viewState}
+            onToggleItemOnMap={this.props.onToggleItemOnMap}
+            hideToggleItemOnMap={this.props.hideToggleItemOnMap}
           />
         </div>
       );
@@ -72,7 +76,7 @@ class DataPreview extends React.Component {
       return (
         <div className={Styles.previewInner}>
           <h3 className={Styles.h3}>{previewed.name}</h3>
-          <p>{t("preview.doesNotContainGeospatialData")}</p>
+          <p>{t(($) => $.preview.doesNotContainGeospatialData)}</p>
           <div className={Styles.previewChart}>
             {/* TODO: Show a preview chart
                 <Chart
@@ -103,12 +107,14 @@ class DataPreview extends React.Component {
           />
         </div>
       );
+    } else if (this.props.terria.configParameters.keepCatalogOpen) {
+      return null;
     } else {
       return (
         <div className={Styles.placeholder}>
-          <p>{t("preview.selectToPreviewDataset")}</p>
+          <p>{t(($) => $.preview.selectToPreviewDataset)}</p>
           <p>
-            <Trans i18nKey="preview.selectMultipleDatasets">
+            <Trans i18nKey={($) => $.preview.selectMultipleDatasets}>
               <span>
                 Press <strong>Shift</strong> and click
               </span>
@@ -125,12 +131,12 @@ class DataPreview extends React.Component {
               <span>to add multiple datasets</span>
             </Trans>
           </p>
-          <p>- {t("preview.selectToPreviewSeparator")} -</p>
+          <p>- {t(($) => $.preview.selectToPreviewSeparator)} -</p>
           <button
             className={Styles.btnBackToMap}
             onClick={() => this.backToMap()}
           >
-            {t("preview.goToTheMap")}
+            {t(($) => $.preview.goToTheMap)}
           </button>
         </div>
       );
@@ -173,4 +179,4 @@ class DataPreview extends React.Component {
   }
 }
 
-module.exports = withTranslation()(DataPreview);
+export default withTranslation()(DataPreview);

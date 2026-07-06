@@ -58,9 +58,9 @@ describe("UserDrawing", function () {
 
     expect(userDrawing.getDialogMessage()).toEqual(
       `<div><strong>${i18next.t(
-        "models.userDrawing.messageHeader"
+        ($) => $.models.userDrawing.messageHeader
       )}</strong></br><i>${i18next.t(
-        "models.userDrawing.clickToAddFirstPoint"
+        ($) => $.models.userDrawing.clickToAddFirstPoint
       )}</i></div>`
     );
   });
@@ -76,9 +76,9 @@ describe("UserDrawing", function () {
 
     expect(userDrawing.getDialogMessage()).toEqual(
       `<div><strong>${i18next.t(
-        "models.userDrawing.messageHeader"
+        ($) => $.models.userDrawing.messageHeader
       )}</strong></br>HELLO</br><i>${i18next.t(
-        "models.userDrawing.clickToAddFirstPoint"
+        ($) => $.models.userDrawing.clickToAddFirstPoint
       )}</i></div>`
     );
   });
@@ -126,7 +126,7 @@ describe("UserDrawing", function () {
     expect(pointEntities.entities.values.length).toEqual(1);
   });
 
-  it("ensures graphics are added when point is picked by user", async function () {
+  it("ensures graphics are added when point is picked by user", function () {
     const userDrawing = new UserDrawing({ terria });
     expect(userDrawing.pointEntities.entities.values.length).toEqual(0);
     expect(userDrawing.otherEntities.entities.values.length).toEqual(0);
@@ -240,15 +240,15 @@ describe("UserDrawing", function () {
     const userDrawing = new UserDrawing(options);
 
     expect(userDrawing.getButtonText()).toEqual(
-      i18next.t("models.userDrawing.btnCancel")
+      i18next.t(($) => $.models.userDrawing.btnCancel)
     );
     userDrawing.pointEntities.entities.values.push(new Entity());
     expect(userDrawing.getButtonText()).toEqual(
-      i18next.t("models.userDrawing.btnCancel")
+      i18next.t(($) => $.models.userDrawing.btnCancel)
     );
     userDrawing.pointEntities.entities.values.push(new Entity());
     expect(userDrawing.getButtonText()).toEqual(
-      i18next.t("models.userDrawing.btnDone")
+      i18next.t(($) => $.models.userDrawing.btnDone)
     );
   });
 

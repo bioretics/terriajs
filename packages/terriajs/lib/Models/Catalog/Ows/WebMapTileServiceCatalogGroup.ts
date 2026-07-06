@@ -35,11 +35,10 @@ class GetCapabilitiesStratum extends LoadableStratum(
     if (catalogItem.getCapabilitiesUrl === undefined) {
       throw networkRequestError({
         title: i18next.t(
-          "models.webMapTileServiceCatalogGroup.invalidWMTSServerTitle"
+          ($) => $.models.webMapTileServiceCatalogGroup.invalidWMTSServerTitle
         ),
         message: i18next.t(
-          "models.webMapTileServiceCatalogGroup.invalidWMTSServerMessage",
-          this
+          ($) => $.models.webMapTileServiceCatalogGroup.invalidWMTSServerMessage
         )
       });
     }
@@ -104,7 +103,9 @@ class GetCapabilitiesStratum extends LoadableStratum(
     ) {
       result.push(
         createStratumInstance(InfoSectionTraits, {
-          name: i18next.t("models.webMapTileServiceCatalogGroup.abstract"),
+          name: i18next.t(
+            ($) => $.models.webMapTileServiceCatalogGroup.abstract
+          ),
           content: service.Abstract
         })
       );
@@ -117,7 +118,7 @@ class GetCapabilitiesStratum extends LoadableStratum(
       result.push(
         createStratumInstance(InfoSectionTraits, {
           name: i18next.t(
-            "models.webMapTileServiceCatalogGroup.accessConstraints"
+            ($) => $.models.webMapTileServiceCatalogGroup.accessConstraints
           ),
           content: service.AccessConstraints
         })
@@ -128,7 +129,7 @@ class GetCapabilitiesStratum extends LoadableStratum(
     if (service.Fees && !/^none$/i.test(service.Fees)) {
       result.push(
         createStratumInstance(InfoSectionTraits, {
-          name: i18next.t("models.webMapTileServiceCatalogGroup.fees"),
+          name: i18next.t(($) => $.models.webMapTileServiceCatalogGroup.fees),
           content: service.Fees
         })
       );

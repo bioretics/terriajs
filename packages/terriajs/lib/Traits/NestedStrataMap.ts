@@ -7,9 +7,10 @@ import createStratumInstance from "../Models/Definition/createStratumInstance";
  * A strata map where the strata are obtained from a sub-property of another
  * parent strata map.
  */
-export default class NestedStrataMap<T extends ModelTraits>
-  implements Map<string, T>
-{
+export default class NestedStrataMap<T extends ModelTraits> implements Map<
+  string,
+  T
+> {
   constructor(
     readonly parentTraitsClass: TraitsConstructor<ModelTraits>,
     readonly parent: Map<string, StratumFromTraits<ModelTraits>>,
@@ -60,10 +61,10 @@ export default class NestedStrataMap<T extends ModelTraits>
   get size(): number {
     return this.parent.size;
   }
-  [Symbol.iterator](): IterableIterator<[string, T]> {
+  [Symbol.iterator](): MapIterator<[string, T]> {
     return this.entries();
   }
-  *entries(): IterableIterator<[string, T]> {
+  *entries(): MapIterator<[string, T]> {
     for (const entry of this.parent.entries()) {
       const parentValue: any = entry[1];
       const value = parentValue[this.parentProperty];
@@ -73,13 +74,13 @@ export default class NestedStrataMap<T extends ModelTraits>
       yield [entry[0], value];
     }
   }
-  *keys(): IterableIterator<string> {
+  *keys(): MapIterator<string> {
     // Only return keys that have a value.
     for (const entry of this.entries()) {
       yield entry[0];
     }
   }
-  *values(): IterableIterator<T> {
+  *values(): MapIterator<T> {
     for (const entry of this.parent.entries()) {
       const parentValue: any = entry[1];
       const value = parentValue[this.parentProperty];

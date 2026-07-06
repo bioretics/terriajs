@@ -1,7 +1,7 @@
 import i18next from "i18next";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { FC } from "react";
 import ReactSelect from "react-select";
 import ReactSelectCreatable from "react-select/creatable";
 import { useTheme } from "styled-components";
@@ -12,7 +12,7 @@ import {
   SelectableDimensionMultiEnum as SelectableDimensionEnumMultiModel
 } from "../../Models/SelectableDimensions/SelectableDimensions";
 
-export const SelectableDimensionEnum: React.FC<{
+export const SelectableDimensionEnum: FC<{
   id: string;
   dim: SelectableDimensionEnumModel;
 }> = observer(({ dim }) => {
@@ -21,7 +21,8 @@ export const SelectableDimensionEnum: React.FC<{
   const undefinedOption = {
     value: undefined,
     label:
-      dim.undefinedLabel ?? i18next.t("selectableDimensions.undefinedLabel")
+      dim.undefinedLabel ??
+      i18next.t(($) => $.selectableDimensions.undefinedLabel)
   };
 
   let options = dim.options?.map((option) => ({
@@ -42,8 +43,18 @@ export const SelectableDimensionEnum: React.FC<{
   return dim.allowCustomInput ? (
     <ReactSelectCreatable
       css={`
-        color: ${theme.dark};
+        color: white;
       `}
+      styles={{
+        control: (baseStyles) => ({
+          ...baseStyles,
+          borderColor: theme.darkLighter
+        }),
+        option: (baseStyles) => ({
+          ...baseStyles,
+          color: "white"
+        })
+      }}
       options={options}
       value={selectedOption}
       onChange={(evt) => {
@@ -57,7 +68,11 @@ export const SelectableDimensionEnum: React.FC<{
         ...selectTheme,
         colors: {
           ...selectTheme.colors,
-          primary25: theme.greyLighter,
+          neutral0: theme.darkLighter,
+          neutral10: theme.grey,
+          neutral20: theme.grey,
+          neutral80: "white",
+          primary25: theme.grey,
           primary50: theme.colorPrimary,
           primary75: theme.colorPrimary,
           primary: theme.colorPrimary
@@ -67,8 +82,18 @@ export const SelectableDimensionEnum: React.FC<{
   ) : (
     <ReactSelect
       css={`
-        color: ${theme.dark};
+        color: white;
       `}
+      styles={{
+        control: (baseStyles) => ({
+          ...baseStyles,
+          borderColor: theme.darkLighter
+        }),
+        option: (baseStyles) => ({
+          ...baseStyles,
+          color: "white"
+        })
+      }}
       options={options}
       value={selectedOption}
       onChange={(evt) => {
@@ -82,7 +107,11 @@ export const SelectableDimensionEnum: React.FC<{
         ...selectTheme,
         colors: {
           ...selectTheme.colors,
-          primary25: theme.greyLighter,
+          neutral0: theme.darkLighter,
+          neutral10: theme.grey,
+          neutral20: theme.grey,
+          neutral80: "white",
+          primary25: theme.grey,
           primary50: theme.colorPrimary,
           primary75: theme.colorPrimary,
           primary: theme.colorPrimary
@@ -93,7 +122,7 @@ export const SelectableDimensionEnum: React.FC<{
 });
 
 /** Similar to SelectableDimensionEnum, but allows multiple values to be selected */
-export const SelectableDimensionEnumMulti: React.FC<{
+export const SelectableDimensionEnumMulti: FC<{
   id: string;
   dim: SelectableDimensionEnumMultiModel;
 }> = observer(({ dim }) => {
@@ -114,6 +143,7 @@ export const SelectableDimensionEnumMulti: React.FC<{
     <ReactSelect
       css={`
         color: ${theme.dark};
+        border: none;
       `}
       options={options}
       value={selectedOptions}

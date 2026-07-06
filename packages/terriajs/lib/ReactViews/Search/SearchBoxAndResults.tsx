@@ -1,0 +1,287 @@
+import { action, runInAction } from "mobx";
+import { observer } from "mobx-react";
+import PropTypes from "prop-types";
+import { useCallback, useEffect, useRef, type FC } from "react";
+import { useTranslation } from "react-i18next";
+import styled, { useTheme } from "styled-components";
+import { addMarker, removeMarker } from "../../Models/LocationMarkerUtils";
+import Box from "../../Styled/Box";
+import { RawButton } from "../../Styled/Button";
+import Icon, { StyledIcon } from "../../Styled/Icon";
+import Spacing from "../../Styled/Spacing";
+import Text from "../../Styled/Text";
+import { useViewState } from "../Context";
+import LocationSearchResults from "./LocationSearchResults";
+import SearchBox from "./SearchBox";
+// Fork (rer3d): search inside catalog item info + feature-highlight cleanup.
+import CatalogItemsSearchProvider from "../../Models/SearchProviders/CatalogItemsSearchProvider";
+import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import GlobeOrMap from "../../Models/GlobeOrMap";
+
+export function SearchInDataCatalog({
+  handleClick
+}: {
+  handleClick: () => void;
+}) {
+  const viewState = useViewState();
+  const locationSearchText = viewState.searchState.locationSearchText;
+  const { t } = useTranslation();
+  return (
+    <RawButton
+      fullWidth
+      onClick={() => {
+        const { searchState } = viewState;
+        viewState.searchInCatalog(searchState.locationSearchText);
+        if (handleClick) {
+          handleClick();
+        }
+      }}
+    >
+      <Box paddedRatio={2} rounded charcoalGreyBg>
+        <StyledIcon styledWidth={"14px"} glyph={Icon.GLYPHS["dataCatalog"]} />
+        <Spacing right={2} />
+        <Text textAlignLeft textLight large fullWidth>
+          {t(($) => $.search.searchInDataCatalog, {
+            locationSearchText
+          })}
+        </Text>
+        <StyledIcon glyph={Icon.GLYPHS.right2} styledWidth={"14px"} light />
+      </Box>
+    </RawButton>
+  );
+}
+
+SearchInDataCatalog.propTypes = {
+  handleClick: PropTypes.func.isRequired,
+  viewState: PropTypes.object.isRequired
+};
+
+// Fork (rer3d): trigger a search inside catalog item info
+// (configParameters.searchInCatalogItemInfo).
+export function SearchInCatalogItems({
+  handleClick
+}: {
+  handleClick: () => void;
+}) {
+  const viewState = useViewState();
+  const locationSearchText = viewState.searchState.locationSearchText;
+  const { t } = useTranslation();
+  return (
+    <RawButton
+      fullWidth
+      onClick={() => {
+        const { searchState } = viewState;
+        searchState.catalogItemsSearchText = searchState.locationSearchText;
+        if (handleClick) {
+          handleClick();
+        }
+      }}
+    >
+      <Box paddedRatio={2} rounded charcoalGreyBg>
+        <StyledIcon styledWidth={"14px"} glyph={Icon.GLYPHS["dataCatalog"]} />
+        <Spacing right={2} />
+        <Text textAlignLeft textLight large fullWidth>
+          {t(($) => $.search.searchInCatalogItems, {
+            locationSearchText
+          })}
+        </Text>
+        <StyledIcon glyph={Icon.GLYPHS.right2} styledWidth={"14px"} light />
+      </Box>
+    </RawButton>
+  );
+}
+
+const PresentationBox = styled(Box).attrs({
+  fullWidth: true
+})<{ highlightBottom: boolean }>`
+  ${(props) =>
+    props.highlightBottom &&
+    `
+      // styled-components doesn't seem to prefix linear-gradient.. soo
+      background-image: linear-gradient(bottom, ${props.theme.greyLightest} 50%, transparent 50%);
+      background-image: -o-linear-gradient(bottom, ${props.theme.greyLightest} 50%, transparent 50%);
+      background-image: -moz-linear-gradient(bottom, ${props.theme.greyLightest} 50%, transparent 50%);
+      background-image: -webkit-linear-gradient(bottom, ${props.theme.greyLightest} 50%, transparent 50%);
+      background-image: -ms-linear-gradient(bottom, ${props.theme.greyLightest} 50%, transparent 50%);
+    `}
+`;
+
+export const LOCATION_SEARCH_INPUT_NAME = "LocationSearchInput";
+
+interface SearchBoxAndResultsProps {
+  placeholder: string;
+}
+
+export const SearchBoxAndResults: FC<SearchBoxAndResultsProps> = observer(
+  ({ placeholder }) => {
+    const locationSearchRef = useRef(null);
+
+    const viewState = useViewState();
+    const theme = useTheme();
+
+    useEffect(() => {
+      viewState.updateAppRef(LOCATION_SEARCH_INPUT_NAME, locationSearchRef);
+    }, [viewState]);
+
+    const toggleShowLocationSearchResults = action((bool: boolean) => {
+      viewState.searchState.showLocationSearchResults = bool;
+    });
+
+    const changeSearchText = (newText: string) => {
+      runInAction(() => {
+        viewState.searchState.locationSearchText = newText;
+      });
+
+      if (newText.length === 0) {
+        removeMarker(viewState.terria);
+        // Fork (rer3d): also remove the feature-highlight overlay.
+        const highlightItem = viewState.terria.getModelById(
+          GeoJsonCatalogItem,
+          GlobeOrMap.featureHighlightID
+        );
+        if (highlightItem) {
+          viewState.terria.overlays.remove(highlightItem);
+        }
+        runInAction(() => {
+          toggleShowLocationSearchResults(false);
+        });
+      }
+      if (
+        newText.length > 0 &&
+        !viewState.searchState.showLocationSearchResults
+      ) {
+        runInAction(() => {
+          toggleShowLocationSearchResults(true);
+        });
+      }
+    };
+
+    const search = useCallback(() => {
+      viewState.searchState.searchLocations();
+    }, [viewState]);
+
+    const showLocationSearchResults = () => {
+      toggleShowLocationSearchResults(true);
+    };
+
+    const searchState = viewState.searchState;
+    const locationSearchText = searchState.locationSearchText;
+
+    const shouldShowResults =
+      searchState.locationSearchText.length > 0 &&
+      searchState.showLocationSearchResults;
+
+    return (
+      <Text textDarker className="search-box-and-results">
+        <Box fullWidth>
+          <PresentationBox highlightBottom={shouldShowResults}>
+            <SearchBox
+              ref={locationSearchRef}
+              onSearchTextChanged={changeSearchText}
+              onDoSearch={search}
+              onFocus={showLocationSearchResults}
+              searchText={searchState.locationSearchText}
+              placeholder={placeholder}
+            />
+          </PresentationBox>
+          {/* Results */}
+          {shouldShowResults && (
+            <Box
+              position="absolute"
+              fullWidth
+              column
+              css={`
+                top: 100%;
+                background-color: ${theme.greyLightest};
+                max-height: calc(100vh - 200px);
+                border-radius: 0 0 ${theme.radiusLarge} ${theme.radiusLarge};
+                overflow: hidden;
+              `}
+            >
+              {viewState.terria.searchBarModel.showSearchInCatalog &&
+                searchState.catalogSearchProvider && (
+                  <Box column paddedRatio={2}>
+                    <SearchInDataCatalog
+                      viewState={viewState}
+                      handleClick={() => {
+                        toggleShowLocationSearchResults(false);
+                      }}
+                    />
+                  </Box>
+                )}
+              {/* Fork (rer3d): search inside catalog item info */}
+              {(
+                searchState.catalogItemsSearchProvider as
+                  | CatalogItemsSearchProvider
+                  | undefined
+              )?.canUse && (
+                <Box column paddedRatio={2}>
+                  <SearchInCatalogItems
+                    handleClick={() => {
+                      searchState.searchCatalogItems();
+                    }}
+                  />
+                </Box>
+              )}
+              <Box
+                column
+                css={`
+                  overflow-y: auto;
+                `}
+              >
+                {searchState.locationSearchProviders.map((searchProvider) => (
+                  <LocationSearchResults
+                    key={searchProvider.uniqueId}
+                    terria={viewState.terria}
+                    viewState={viewState}
+                    searchResult={searchProvider.searchResult}
+                    locationSearchText={locationSearchText}
+                    onLocationClick={(result) => {
+                      if (!result.location) return;
+                      addMarker(viewState.terria, {
+                        name: result.name,
+                        location: result.location
+                      });
+                      result.clickAction?.();
+                      runInAction(() => {
+                        searchState.showLocationSearchResults = false;
+                      });
+                    }}
+                  />
+                ))}
+                {/* Fork (rer3d): catalog-items search results */}
+                {searchState.catalogItemsSearchProvider && (
+                  <LocationSearchResults
+                    key={searchState.catalogItemsSearchProvider.uniqueId}
+                    terria={viewState.terria}
+                    viewState={viewState}
+                    searchResult={
+                      searchState.catalogItemsSearchProvider.searchResult
+                    }
+                    locationSearchText={locationSearchText}
+                    onLocationClick={(result) => {
+                      if (result.location) {
+                        addMarker(viewState.terria, {
+                          name: result.name,
+                          location: result.location
+                        });
+                      }
+                      result.clickAction?.();
+                      runInAction(() => {
+                        searchState.showLocationSearchResults = false;
+                      });
+                    }}
+                  />
+                )}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Text>
+    );
+  }
+);
+
+SearchBoxAndResults.displayName = "SearchBoxAndResults";
+
+export default SearchBoxAndResults;

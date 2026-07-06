@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import Mustache from "mustache";
-import React, { useRef, useState } from "react";
+import { FC, MouseEventHandler, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useVirtual } from "react-virtual";
 import styled from "styled-components";
@@ -19,7 +19,7 @@ export interface SearchResultsProps {
 
 type ResultClickHandler = (result: ItemSearchResult) => void;
 
-const SearchResults: React.FC<SearchResultsProps> = (props) => {
+const SearchResults: FC<SearchResultsProps> = (props) => {
   const { item, results } = props;
   const [currentMapEffect, setCurrentMapEffect] = useState<MapEffect>({
     is: "highlightAll"
@@ -32,15 +32,19 @@ const SearchResults: React.FC<SearchResultsProps> = (props) => {
   const list = useVirtual({
     size: results.length,
     parentRef,
-    estimateSize: React.useCallback(() => 50, [])
+    estimateSize: useCallback(() => 50, [])
   });
   const [t] = useTranslation();
 
   const toggleSelection = (newSelection: MapEffect) => {
-    currentMapEffect.is === newSelection.is &&
-    (currentMapEffect as any).result === (newSelection as any).result
-      ? setCurrentMapEffect({ is: "none" })
-      : setCurrentMapEffect(newSelection);
+    if (
+      currentMapEffect.is === newSelection.is &&
+      (currentMapEffect as any).result === (newSelection as any).result
+    ) {
+      setCurrentMapEffect({ is: "none" });
+    } else {
+      setCurrentMapEffect(newSelection);
+    }
   };
 
   return (
@@ -51,13 +55,13 @@ const SearchResults: React.FC<SearchResultsProps> = (props) => {
           selected={currentMapEffect.is === "highlightAll"}
           onClick={() => toggleSelection({ is: "highlightAll" })}
         >
-          {t("itemSearchTool.actions.highlightAll")}
+          {t(($) => $.itemSearchTool.actions.highlightAll)}
         </ActionButton>
         <ActionButton
           selected={currentMapEffect.is === "showMatchingOnly"}
           onClick={() => toggleSelection({ is: "showMatchingOnly" })}
         >
-          {t("itemSearchTool.actions.showMatchingOnly")}
+          {t(($) => $.itemSearchTool.actions.showMatchingOnly)}
         </ActionButton>
       </ActionMenu>
       <List ref={parentRef} height={`250px`}>
@@ -101,12 +105,12 @@ type ResultProps = {
   style: any;
 };
 
-export const Result: React.FC<ResultProps> = observer((props) => {
+export const Result: FC<ResultProps> = observer((props) => {
   const { result, template, isEven, isSelected, style } = props;
   const content = template
     ? parseCustomMarkdownToReact(Mustache.render(template, result.properties))
     : result.id;
-  const onClick: React.MouseEventHandler<HTMLAnchorElement> = (e) => {
+  const onClick: MouseEventHandler<HTMLAnchorElement> = (e) => {
     try {
       props.onClick(result);
     } finally {
@@ -136,8 +140,8 @@ const ClickableItem = styled.a<{ isEven: boolean; isSelected: boolean }>`
       p.isSelected
         ? p.theme.toolPrimaryColor
         : p.isEven
-        ? p.theme.dark
-        : p.theme.darkLighter
+          ? p.theme.dark
+          : p.theme.darkLighter
     };`}
 `;
 
@@ -161,7 +165,7 @@ const Wrapper = styled(Box).attrs({ column: true, flex: 1 })`
   }
 `;
 
-export const ResultsCount: React.FC<{ count: number }> = ({ count }) => {
+export const ResultsCount: FC<{ count: number }> = ({ count }) => {
   const [t] = useTranslation();
   return (
     <Box
@@ -170,7 +174,7 @@ export const ResultsCount: React.FC<{ count: number }> = ({ count }) => {
         ${count === 0 ? "align-self: center;" : ""}
       `}
     >
-      {t(`itemSearchTool.resultsCount`, { count })}
+      {t(($) => $.itemSearchTool.resultsCount, { count })}
     </Box>
   );
 };

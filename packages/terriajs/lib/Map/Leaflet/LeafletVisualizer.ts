@@ -18,7 +18,7 @@ import PolylineDashMaterialProperty from "terriajs-cesium/Source/DataSources/Pol
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import Property from "terriajs-cesium/Source/DataSources/Property";
 import isDefined from "../../Core/isDefined";
-import { getLineStyleLeaflet } from "../../Models/Catalog/Esri/esriLineStyle";
+import { convertCesiumDashNumberToDashArray } from "../../Models/Catalog/Esri/esriStyleToTableStyle";
 import LeafletScene from "./LeafletScene";
 
 interface PointDetails {
@@ -103,7 +103,7 @@ let prevBoundsType = 0;
  **/
 class LeafletGeomVisualizer {
   private readonly _featureGroup: L.FeatureGroup;
-  private readonly _entitiesToVisualize: AssociativeArray;
+  private readonly _entitiesToVisualize: AssociativeArray<Entity>;
   private readonly _entityHash: EntityHash;
 
   constructor(
@@ -203,7 +203,7 @@ class LeafletGeomVisualizer {
       const entity = entities[i];
       const entityDetails = entityHash[entity.id];
 
-      if (isDefined(entity._point)) {
+      if (isDefined(entity.point)) {
         this._updatePoint(
           entity,
           time,
@@ -511,6 +511,16 @@ class LeafletGeomVisualizer {
           img.crossOrigin = "anonymous";
         }
       }
+    }
+
+    const rotation = getValueOrDefault(
+      markerGraphics.rotation,
+      time,
+      undefined
+    );
+
+    if (rotation !== undefined) {
+      rotateBillboardIcon(marker, rotation);
     }
   }
 
@@ -1119,7 +1129,7 @@ function getDashArray(
     ? material.dashPattern.getValue(time)
     : undefined;
 
-  return getLineStyleLeaflet(dashPattern);
+  return convertCesiumDashNumberToDashArray(dashPattern);
 }
 
 function cleanEntity(
@@ -1283,6 +1293,25 @@ function recolorBillboard(
 
   context.putImageData(image, 0, 0);
   return canvas.toDataURL();
+}
+
+/**
+ * Use CSS transform to rotate the billboard icon
+ */
+function rotateBillboardIcon(marker: L.Marker, rotation: number) {
+  const el: HTMLElement | undefined = marker.getElement();
+  if (!isDefined(el)) {
+    return;
+  }
+
+  // Rotate w.r.t to center point of the element
+  el.style.transformOrigin = "center center";
+
+  const pos = L.DomUtil.getPosition(el);
+  const translate = isDefined(pos)
+    ? `translate3d(${pos.x}px, ${pos.y}px, 0)`
+    : "";
+  el.style.transform = `${translate} rotateZ(${rotation}rad)`;
 }
 
 function featureClicked(

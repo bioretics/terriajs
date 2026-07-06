@@ -1,7 +1,8 @@
-var RuntimeError = require("terriajs-cesium/Source/Core/RuntimeError").default;
-var i18next = require("i18next").default;
-var defined = require("terriajs-cesium/Source/Core/defined").default;
-var gmlNamespace = "http://www.opengis.net/gml";
+import RuntimeError from "terriajs-cesium/Source/Core/RuntimeError";
+import i18next from "i18next";
+import defined from "terriajs-cesium/Source/Core/defined";
+
+const gmlNamespace = "http://www.opengis.net/gml";
 
 function createLineStringFromGmlGeometry(geometry) {
   var coordinates = [];
@@ -22,8 +23,8 @@ function createLineStringFromGmlGeometry(geometry) {
 
 function createPointFromGmlGeometry(geometry) {
   var posNodes = geometry.getElementsByTagNameNS(gmlNamespace, "pos");
-  if (posNodes < 1) {
-    throw new RuntimeError(i18next.t("map.gmlToGeoJson.missingPos"));
+  if (posNodes.length < 1) {
+    throw new RuntimeError(i18next.t(($) => $.map.gmlToGeoJson.missingPos));
   }
 
   return {
@@ -86,7 +87,9 @@ function createMultiPolygonFromGmlGeomtry(geometry) {
       "exterior"
     );
     if (exteriorNodes.length < 1) {
-      throw new RuntimeError(i18next.t("map.gmlToGeoJson.missingExteriorRing"));
+      throw new RuntimeError(
+        i18next.t(($) => $.map.gmlToGeoJson.missingExteriorRing)
+      );
     }
 
     var polygonCoordinates = [];
@@ -94,7 +97,9 @@ function createMultiPolygonFromGmlGeomtry(geometry) {
     var exterior = exteriorNodes[0];
     var posListNodes = exterior.getElementsByTagNameNS(gmlNamespace, "posList");
     if (posListNodes.length < 1) {
-      throw new RuntimeError(i18next.t("map.gmlToGeoJson.missingPosList"));
+      throw new RuntimeError(
+        i18next.t(($) => $.map.gmlToGeoJson.missingPosList)
+      );
     }
 
     polygonCoordinates.push(gml2coord(posListNodes[0].textContent));
@@ -127,12 +132,14 @@ function createPolygonFromGmlGeometry(geometry) {
 
   var exteriorNodes = geometry.getElementsByTagNameNS(gmlNamespace, "exterior");
   if (exteriorNodes.length < 1) {
-    throw new RuntimeError(i18next.t("map.gmlToGeoJson.missingExteriorRing"));
+    throw new RuntimeError(
+      i18next.t(($) => $.map.gmlToGeoJson.missingExteriorRing)
+    );
   }
   var exterior = exteriorNodes[0];
   var posListNodes = exterior.getElementsByTagNameNS(gmlNamespace, "posList");
   if (posListNodes.length < 1) {
-    throw new RuntimeError(i18next.t("map.gmlToGeoJson.missingPosList"));
+    throw new RuntimeError(i18next.t(($) => $.map.gmlToGeoJson.missingPosList));
   }
 
   polygonCoordinates.push(gml2coord(posListNodes[0].textContent));
@@ -188,8 +195,8 @@ function geoJsonGeometryFeatureFromGmlGeometry(geometry) {
   var creator = featureCreators[type];
   if (!defined(creator)) {
     throw new RuntimeError(
-      i18next.t("map.gmlToGeoJson.containsUnsupportedFeatureType", {
-        type: type
+      i18next.t(($) => $.map.gmlToGeoJson.containsUnsupportedFeatureType, {
+        type
       })
     );
   }
@@ -211,4 +218,4 @@ function gml2coord(posList) {
   return coords;
 }
 
-module.exports = geoJsonGeometryFeatureFromGmlGeometry;
+export default geoJsonGeometryFeatureFromGmlGeometry;

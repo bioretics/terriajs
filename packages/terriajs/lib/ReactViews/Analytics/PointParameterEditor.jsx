@@ -1,7 +1,5 @@
 "use strict";
 
-import React from "react";
-
 import createReactClass from "create-react-class";
 
 import PropTypes from "prop-types";
@@ -36,7 +34,7 @@ const PointParameterEditor = createReactClass({
       PointParameterEditor.setValueFromText(e, this.props.parameter);
   },
 
-  inputOnBlur(e) {
+  inputOnBlur(_e) {
     const isCurrentlyInvalid = !this.props.parameterViewModel.isValueValid;
     this.props.parameterViewModel.wasEverBlurredWhileInvalid =
       this.props.parameterViewModel.wasEverBlurredWhileInvalid ||
@@ -48,7 +46,7 @@ const PointParameterEditor = createReactClass({
       this.props.previewed.terria,
       this.props.viewState,
       this.props.parameter,
-      this.props.t("analytics.selectLocation")
+      this.props.t(($) => $.analytics.selectLocation)
     );
   },
 
@@ -73,7 +71,7 @@ const PointParameterEditor = createReactClass({
       <div>
         {showErrorMessage && (
           <div className={Styles.warningText}>
-            {t("analytics.enterValidCoords")}
+            {t(($) => $.analytics.enterValidCoords)}
           </div>
         )}
         <input
@@ -89,7 +87,7 @@ const PointParameterEditor = createReactClass({
           onClick={this.selectPointOnMap}
           className={Styles.btnSelector}
         >
-          {t("analytics.selectLocation")}
+          {t(($) => $.analytics.selectLocation)}
         </button>
       </div>
     );

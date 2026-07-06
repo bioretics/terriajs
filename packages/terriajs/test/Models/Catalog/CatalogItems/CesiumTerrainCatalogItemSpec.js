@@ -1,10 +1,10 @@
 "use strict";
 
-var CesiumTerrainCatalogItem = require("../../../../lib/Models/Catalog/CatalogItems/CesiumTerrainCatalogItem");
-var CesiumTerrainProvider =
-  require("terriajs-cesium/Source/Core/CesiumTerrainProvider").default;
-var loadWithXhr = require("../../../../lib/Core/loadWithXhr");
-var Terria = require("../../../../lib/Models/Terria");
+import { http, HttpResponse } from "msw";
+import CesiumTerrainCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/CesiumTerrainCatalogItem";
+import CesiumTerrainProvider from "terriajs-cesium/Source/Core/CesiumTerrainProvider";
+import Terria from "../../../../lib/Models/Terria";
+import { worker } from "../../../mocks/browser";
 
 describe("CesiumTerrainCatalogItem", function () {
   var terria;
@@ -22,37 +22,22 @@ describe("CesiumTerrainCatalogItem", function () {
     expect(item.typeName).toContain("Cesium");
   });
 
-  it("creates imagery provider with correct URL", function (done) {
-    spyOn(loadWithXhr, "load").and.callFake(function (
-      url,
-      responseType,
-      method,
-      data,
-      headers,
-      deferred,
-      overrideMimeType,
-      preferText,
-      timeout
-    ) {
-      expect(url.indexOf("http://example.com/foo/bar")).toBe(0);
-      deferred.resolve(
-        JSON.stringify({
+  it("creates imagery provider with correct URL", async function () {
+    worker.use(
+      http.get("http://example.com/foo/bar/layer.json", () =>
+        HttpResponse.json({
           tilejson: "2.1.0",
           format: "heightmap-1.0",
           version: "1.0.0",
           scheme: "tms",
           tiles: ["{z}/{x}/{y}.terrain?v={version}"]
         })
-      );
-    });
+      )
+    );
 
     item.url = "http://example.com/foo/bar";
     var terrainProvider = item._createTerrainProvider();
     expect(terrainProvider instanceof CesiumTerrainProvider).toBe(true);
-    terrainProvider.readyPromise
-      .then(function () {
-        expect(loadWithXhr.load.calls.any()).toBe(true);
-      })
-      .then(done);
+    await terrainProvider.readyPromise;
   });
 });

@@ -1,9 +1,10 @@
+import { http, HttpResponse } from "msw";
 import { reaction, runInAction } from "mobx";
 import GeographicTilingScheme from "terriajs-cesium/Source/Core/GeographicTilingScheme";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import Request from "terriajs-cesium/Source/Core/Request";
 import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
-import loadWithXhr from "../../../../lib/Core/loadWithXhr";
 import ArcGisImageServerImageryProvider from "../../../../lib/Map/ImageryProvider/ArcGisImageServerImageryProvider";
 import ArcGisImageServerCatalogItem from "../../../../lib/Models/Catalog/Esri/ArcGisImageServerCatalogItem";
 import CommonStrata from "../../../../lib/Models/Definition/CommonStrata";
@@ -11,94 +12,60 @@ import createStratumInstance from "../../../../lib/Models/Definition/createStrat
 import { SelectableDimensionEnum } from "../../../../lib/Models/SelectableDimensions/SelectableDimensions";
 import Terria from "../../../../lib/Models/Terria";
 import { ArcGisImageServerRenderingRule } from "../../../../lib/Traits/TraitsClasses/ArcGisImageServerCatalogItemTraits";
+import { worker } from "../../../mocks/browser";
 
-const rasterFnImageServer = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/rasterFns/imageserver.json")
-);
-
-const rasterFnLegend = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/rasterFns/legend.json")
-);
-
-const timeImageServer = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/time/imageserver.json")
-);
-
-const timeLegend = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/time/legend.json")
-);
-
-const timeIdentify = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/time/identify.json")
-);
-
-const tileImageServer = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/tile/imageserver.json")
-);
-
-const tileLegend = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/tile/legend.json")
-);
-
-const tileIdentify = JSON.stringify(
-  require("../../../../wwwroot/test/ArcGisImageServer/tile/identify.json")
-);
-
-let spyOnLoad: any;
+import rasterFnImageServer from "../../../../wwwroot/test/ArcGisImageServer/rasterFns/imageserver.json";
+import rasterFnLegend from "../../../../wwwroot/test/ArcGisImageServer/rasterFns/legend.json";
+import timeImageServer from "../../../../wwwroot/test/ArcGisImageServer/time/imageserver.json";
+import timeLegend from "../../../../wwwroot/test/ArcGisImageServer/time/legend.json";
+import timeIdentify from "../../../../wwwroot/test/ArcGisImageServer/time/identify.json";
+import tileImageServer from "../../../../wwwroot/test/ArcGisImageServer/tile/imageserver.json";
+import tileLegend from "../../../../wwwroot/test/ArcGisImageServer/tile/legend.json";
+import tileIdentify from "../../../../wwwroot/test/ArcGisImageServer/tile/identify.json";
 
 describe("ArcGisImageServer", function () {
   let terria: Terria;
   let imageServerItem: ArcGisImageServerCatalogItem;
 
-  beforeEach(async function () {
-    spyOnLoad = spyOn(loadWithXhr as any, "load").and.callThrough();
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(/.*/).andCallFunction((r) => {
-      console.error(r);
-      throw new Error("Unhandled request: " + r.url);
-    });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/rasterfns\/ImageServer\?.+/
-    ).andReturn({ responseText: rasterFnImageServer });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/rasterfns\/ImageServer\/legend\?.+/
-    ).andReturn({ responseText: rasterFnLegend });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/time\/ImageServer\?.+/
-    ).andReturn({ responseText: timeImageServer });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/time\/ImageServer\/legend\?.+/
-    ).andReturn({ responseText: timeLegend });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/tile\/ImageServer\?.+/
-    ).andReturn({ responseText: tileImageServer });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example\.com\/agsimage\/rest\/services\/tile\/ImageServer\/legend\?.+/
-    ).andReturn({ responseText: tileLegend });
-
-    jasmine.Ajax.stubRequest("http://example.com/token").andReturn({
-      responseText: JSON.stringify({
-        token: "fakeToken"
-      })
-    });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example.com\/agsimage\/rest\/services\/.+\/ImageServer\/exportImage\?.+/
-    ).andReturn({
-      responseText: "fakeImage"
-    });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example.com\/agsimage\/rest\/services\/.+\/ImageServer\/tile.+/
-    ).andReturn({
-      responseText: "fakeImage"
-    });
+  beforeEach(function () {
+    worker.use(
+      http.get(
+        "http://example.com/agsimage/rest/services/rasterfns/ImageServer",
+        () => HttpResponse.json(rasterFnImageServer)
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/rasterfns/ImageServer/legend",
+        () => HttpResponse.json(rasterFnLegend)
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/time/ImageServer",
+        () => HttpResponse.json(timeImageServer)
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/time/ImageServer/legend",
+        () => HttpResponse.json(timeLegend)
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/tile/ImageServer",
+        () => HttpResponse.json(tileImageServer)
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/tile/ImageServer/legend",
+        () => HttpResponse.json(tileLegend)
+      ),
+      http.post(
+        "http://example.com/token",
+        () => new HttpResponse(JSON.stringify({ token: "fakeToken" }))
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/:service/ImageServer/exportImage",
+        () => new HttpResponse("fakeImage")
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/:service/ImageServer/tile/:z/:x/:y",
+        () => new HttpResponse("fakeImage")
+      )
+    );
 
     terria = new Terria();
     imageServerItem = new ArcGisImageServerCatalogItem(
@@ -111,10 +78,6 @@ describe("ArcGisImageServer", function () {
       "url",
       "http://example.com/agsimage/rest/services/time/ImageServer"
     );
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
   });
 
   it("has a type", function () {
@@ -140,19 +103,35 @@ describe("ArcGisImageServer", function () {
         "tokenUrl",
         "http://example.com/token"
       );
+
+      worker.use(
+        http.get(
+          "http://example.com/agsimage/rest/services/time/ImageServer",
+          ({ request }) => {
+            if (new URL(request.url).searchParams.get("token") !== "fakeToken")
+              return HttpResponse.error();
+            return HttpResponse.json(timeImageServer);
+          }
+        ),
+        http.get(
+          "http://example.com/agsimage/rest/services/time/ImageServer/legend",
+          ({ request }) => {
+            if (new URL(request.url).searchParams.get("token") !== "fakeToken")
+              return HttpResponse.error();
+            return HttpResponse.json(timeLegend);
+          }
+        )
+      );
     });
 
     it("fetches the token", async function () {
       await imageServerItem.loadMapItems();
-      expect(spyOnLoad.calls.argsFor(0)[0]).toBe("http://example.com/token");
       expect(imageServerItem.token).toBe("fakeToken");
     });
 
     it("adds the token to subsequent requests", async function () {
       await imageServerItem.loadMapItems();
-      const tokenre = /token=fakeToken/;
-      expect(tokenre.test(spyOnLoad.calls.argsFor(1)[0])).toBeTruthy();
-      expect(tokenre.test(spyOnLoad.calls.argsFor(2)[0])).toBeTruthy();
+      expect(imageServerItem.legends.length).toBe(1);
     });
 
     it("passes the token to the imageryProvider", async function () {
@@ -162,6 +141,56 @@ describe("ArcGisImageServer", function () {
 
       expect(imageryProvider.baseResource.queryParameters.token).toBe(
         "fakeToken"
+      );
+    });
+  });
+
+  describe("when token is set", function () {
+    beforeEach(() => {
+      imageServerItem.setTrait(
+        CommonStrata.definition,
+        "token",
+        "some-token-in-config"
+      );
+
+      worker.use(
+        http.get(
+          "http://example.com/agsimage/rest/services/time/ImageServer",
+          ({ request }) => {
+            if (
+              new URL(request.url).searchParams.get("token") !==
+              "some-token-in-config"
+            )
+              return HttpResponse.error();
+            return HttpResponse.json(timeImageServer);
+          }
+        ),
+        http.get(
+          "http://example.com/agsimage/rest/services/time/ImageServer/legend",
+          ({ request }) => {
+            if (
+              new URL(request.url).searchParams.get("token") !==
+              "some-token-in-config"
+            )
+              return HttpResponse.error();
+            return HttpResponse.json(timeLegend);
+          }
+        )
+      );
+    });
+
+    it("uses the token in url when loading metadata", async function () {
+      await imageServerItem.loadMapItems();
+      expect(imageServerItem.legends.length).toBe(1);
+    });
+
+    it("passes the token to the imageryProvider", async function () {
+      await imageServerItem.loadMapItems();
+      const imageryProvider = imageServerItem.mapItems[0]
+        .imageryProvider as ArcGisImageServerImageryProvider;
+
+      expect(imageryProvider.baseResource.queryParameters.token).toBe(
+        "some-token-in-config"
       );
     });
   });
@@ -191,12 +220,19 @@ describe("ArcGisImageServer", function () {
         bandIds: "2,3"
       });
 
-      await imageServerItem.loadMapItems();
-
-      // Check legend URL
-      expect(spyOnLoad.calls.argsFor(1)[0]).toEqual(
-        "http://example.com/agsimage/rest/services/time/ImageServer/legend?bandIds=2%2C3&f=json"
+      worker.use(
+        http.get(
+          "http://example.com/agsimage/rest/services/time/ImageServer/legend",
+          ({ request }) => {
+            const params = new URL(request.url).searchParams;
+            if (params.get("bandIds") !== "2,3") return HttpResponse.error();
+            if (params.get("f") !== "json") return HttpResponse.error();
+            return HttpResponse.json(timeLegend);
+          }
+        )
       );
+
+      await imageServerItem.loadMapItems();
 
       // Check imagery provider
       const imageryProvider = imageServerItem.mapItems[0]
@@ -219,8 +255,7 @@ describe("ArcGisImageServer", function () {
       await imageServerItem.loadMetadata();
     });
 
-    it("sets basic traits", async function () {
-      console.log(imageServerItem);
+    it("sets basic traits", function () {
       expect(imageServerItem.name).toBe("Some name");
       expect(imageServerItem.description).toBe("Some description");
       expect(imageServerItem.rectangle.east).toBe(179.6875);
@@ -240,7 +275,7 @@ describe("ArcGisImageServer", function () {
       expect(imageServerItem.wkid).toBe(102100);
     });
 
-    it("creates legend", async function () {
+    it("creates legend", function () {
       expect(imageServerItem.legends.length).toBe(1);
       expect(imageServerItem.legends[0].items.length).toBe(3);
       expect(imageServerItem.legends[0].items[0].imageUrl).toBe(
@@ -262,7 +297,7 @@ describe("ArcGisImageServer", function () {
       );
     });
 
-    it("creates time intervals", async function () {
+    it("creates time intervals", function () {
       expect(imageServerItem.startTime).toBe("1981-12-31T00:00:00.000000000Z");
       expect(imageServerItem.stopTime).toBe("2021-12-30T16:48:00.000000000Z");
       expect(imageServerItem.currentDiscreteTimeTag).toBe(
@@ -271,7 +306,7 @@ describe("ArcGisImageServer", function () {
       expect(imageServerItem.discreteTimes?.length).toBe(482);
     });
 
-    it("Sets `time` parameter", async function () {
+    it("Sets `time` parameter", function () {
       let imageryProvider = imageServerItem.mapItems[0]
         .imageryProvider as ArcGisImageServerImageryProvider;
 
@@ -298,7 +333,7 @@ describe("ArcGisImageServer", function () {
       });
     });
 
-    it("creates next imagery provider", async function () {
+    it("creates next imagery provider", function () {
       const time = imageServerItem.discreteTimes?.[100]?.time ?? "";
       const nextTime = imageServerItem.discreteTimes?.[101]?.time ?? "";
 
@@ -334,7 +369,7 @@ describe("ArcGisImageServer", function () {
       await imageServerItem.loadMetadata();
     });
 
-    it("sets basic traits", async function () {
+    it("sets basic traits", function () {
       expect(imageServerItem.name).toBe("Some name");
       expect(imageServerItem.description).toBe("Some description");
       expect(imageServerItem.rectangle.east).toBe(-116.43027039325061);
@@ -379,17 +414,29 @@ describe("ArcGisImageServer", function () {
 
     it("adds to rasterFn to legend URL - and reloads correctly", async function () {
       await imageServerItem.loadMapItems();
+      expect(imageServerItem.legends.length).toBe(1);
 
-      expect(spyOnLoad.calls.argsFor(1)[0]).toEqual(
-        "http://example.com/agsimage/rest/services/rasterfns/ImageServer/legend?f=json"
+      // Override legend handler to require renderingRule param
+      worker.use(
+        http.get(
+          "http://example.com/agsimage/rest/services/rasterfns/ImageServer/legend",
+          ({ request }) => {
+            const params = new URL(request.url).searchParams;
+            if (
+              params.get("renderingRule") !==
+              '{"rasterFunction":"RFTAspectColor"}'
+            )
+              return HttpResponse.error();
+            if (params.get("f") !== "json") return HttpResponse.error();
+            return HttpResponse.json(rasterFnLegend);
+          }
+        )
       );
 
       // By observing mapItems, we can trigger a reload when the renderingRule changes
       const disposer = reaction(
         () => imageServerItem.mapItems,
-        () => {
-          console.log("woo");
-        }
+        () => 1
       );
 
       runInAction(() => {
@@ -402,14 +449,16 @@ describe("ArcGisImageServer", function () {
         );
       });
 
-      expect(spyOnLoad.calls.argsFor(4)[0]).toEqual(
-        "http://example.com/agsimage/rest/services/rasterfns/ImageServer/legend?renderingRule={%22rasterFunction%22%3A%22RFTAspectColor%22}&f=json"
+      const imageryProvider = imageServerItem.mapItems[0]
+        .imageryProvider as ArcGisImageServerImageryProvider;
+      expect(imageryProvider.baseResource.queryParameters.renderingRule).toBe(
+        '{"rasterFunction":"RFTAspectColor"}'
       );
 
       disposer();
     });
 
-    it("has raster functions", async function () {
+    it("has raster functions", function () {
       expect(imageServerItem.availableRasterFunctions.length).toBe(3);
       expect(imageServerItem.availableRasterFunctions[0].name).toBe(
         "RFTAspectColor"
@@ -489,7 +538,7 @@ describe("ArcGisImageServer", function () {
       await imageServerItem.loadMetadata();
     });
 
-    it("sets basic traits", async function () {
+    it("sets basic traits", function () {
       expect(imageServerItem.name).toBe("Some name");
       expect(imageServerItem.description).toBe("Some description");
       expect(imageServerItem.rectangle.east).toBe(-116.43027039325061);
@@ -509,7 +558,7 @@ describe("ArcGisImageServer", function () {
       expect(imageServerItem.wkid).toBe(102100);
     });
 
-    it("disables tile if parameters", async function () {
+    it("disables tile if parameters", function () {
       runInAction(() =>
         imageServerItem.setTrait(CommonStrata.definition, "parameters", {
           foo: "bar"
@@ -518,7 +567,7 @@ describe("ArcGisImageServer", function () {
       expect(imageServerItem.usePreCachedTiles).toBe(false);
     });
 
-    it("disables tile if renderRule", async function () {
+    it("disables tile if renderRule", function () {
       runInAction(() =>
         imageServerItem.setTrait(
           CommonStrata.user,
@@ -545,39 +594,30 @@ describe("ArcGisImageServerImageryProvider", function () {
   let imageryProvider: ArcGisImageServerImageryProvider;
 
   beforeEach(function () {
-    spyOnLoad = spyOn(loadWithXhr as any, "load").and.callThrough();
-    jasmine.Ajax.install();
-
-    jasmine.Ajax.stubRequest(/.*/).andCallFunction((r) => {
-      console.error(r);
-      throw new Error("Unhandled request: " + r.url);
-    });
-
-    jasmine.Ajax.stubRequest(
-      /http:\/\/example.com\/agsimage\/rest\/services\/.+\/ImageServer.+/
-    ).andReturn({
-      responseText: "fakeImage"
-    });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/agsimage/rest/services/time/ImageServer/identify?f=json&geometryType=esriGeometryPoint&geometry={x%3A%2057.29577951308232%2C%20y%3A%2057.29577951308232%2C%20spatialReference%3A%20{wkid%3A%204326}}&returnCatalogItems=false&token=fakeToken&foo=bar"
-    ).andReturn({
-      responseText: timeIdentify
-    });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/agsimage/rest/services/tile/ImageServer/identify?f=json&geometryType=esriGeometryPoint&geometry={x%3A%206378137%2C%20y%3A%207820815.276085484%2C%20spatialReference%3A%20{wkid%3A%203857}}&returnCatalogItems=false&token=fakeToken&foo=bar"
-    ).andReturn({
-      responseText: tileIdentify
-    });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get(
+        "http://example.com/agsimage/rest/services/:service/ImageServer/identify",
+        ({ request }) => {
+          const url = new URL(request.url);
+          const service = url.pathname.split("/services/")[1]?.split("/")[0];
+          if (service === "time") return HttpResponse.json(timeIdentify);
+          if (service === "tile") return HttpResponse.json(tileIdentify);
+          return new HttpResponse("fakeImage");
+        }
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/:service/ImageServer/exportImage",
+        () => new HttpResponse("fakeImage")
+      ),
+      http.get(
+        "http://example.com/agsimage/rest/services/:service/ImageServer/tile/:z/:x/:y",
+        () => new HttpResponse("fakeImage")
+      )
+    );
   });
 
   describe("dynamic web mercator", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       imageryProvider = new ArcGisImageServerImageryProvider({
         url: "http://example.com/agsimage/rest/services/time/ImageServer",
         token: "fakeToken",
@@ -635,11 +675,32 @@ describe("ArcGisImageServerImageryProvider", function () {
       expect(testResource.url).toBe(
         "http://example.com/agsimage/rest/services/time/ImageServer/exportImage?bbox=-20037508.342789244%2C10018754.171394622%2C-10018754.171394622%2C20037508.342789244&size=256%2C256&format=png32&transparent=true&f=image&bboxSR=3857&imageSR=3857&token=fakeToken&foo=bar"
       );
+
+      expect(testResource.request).toEqual(
+        imageryProvider.baseResource.request
+      );
+    });
+
+    it("passes request parameter through to image resource", function () {
+      expect(imageryProvider.usePreCachedTiles).toBe(false);
+
+      const testRequest = new Request();
+      const testResource = imageryProvider.buildImageResource(
+        0,
+        0,
+        2,
+        testRequest
+      );
+      expect(testResource.url).toBe(
+        "http://example.com/agsimage/rest/services/time/ImageServer/exportImage?bbox=-20037508.342789244%2C10018754.171394622%2C-10018754.171394622%2C20037508.342789244&size=256%2C256&format=png32&transparent=true&f=image&bboxSR=3857&imageSR=3857&token=fakeToken&foo=bar"
+      );
+
+      expect(testResource.request).toEqual(testRequest);
     });
   });
 
   describe("dynamic wgs84", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       imageryProvider = new ArcGisImageServerImageryProvider({
         url: "http://example.com/agsimage/rest/services/time/ImageServer",
         token: "fakeToken",
@@ -709,7 +770,7 @@ describe("ArcGisImageServerImageryProvider", function () {
   });
 
   describe("tiled web mercator", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       imageryProvider = new ArcGisImageServerImageryProvider({
         url: "http://example.com/agsimage/rest/services/tile/ImageServer",
         token: "fakeToken",

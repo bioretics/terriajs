@@ -1,52 +1,50 @@
+import { http, HttpResponse } from "msw";
 import { runInAction } from "mobx";
 import Terria from "../../../../lib/Models/Terria";
 import SdmxCatalogGroup from "../../../../lib/Models/Catalog/SdmxJson/SdmxJsonCatalogGroup";
 import CatalogGroup from "../../../../lib/Models/Catalog/CatalogGroup";
 import SdmxJsonCatalogItem from "../../../../lib/Models/Catalog/SdmxJson/SdmxJsonCatalogItem";
+import { worker } from "../../../mocks/browser";
 
-const agencyScheme = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/agency-scheme.json")
-);
-
-const categoryScheme = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/category-scheme.json")
-);
-
-const dataflowNoRegion = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/dataflow-noregion.json")
-);
-
-const dataflowRegion = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/dataflow-region.json")
-);
+import agencyScheme from "../../../../wwwroot/test/SDMX-JSON/agency-scheme.json";
+import categoryScheme from "../../../../wwwroot/test/SDMX-JSON/category-scheme.json";
+import dataflowNoRegion from "../../../../wwwroot/test/SDMX-JSON/dataflow-noregion.json";
+import dataflowRegion from "../../../../wwwroot/test/SDMX-JSON/dataflow-region.json";
 
 describe("SdmxCatalogGroup", function () {
   let terria: Terria;
   let sdmxGroup: SdmxCatalogGroup;
 
   beforeEach(function () {
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest("http://www.example.com/agencyscheme/").andReturn({
-      responseText: agencyScheme
-    });
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/categoryscheme?references=parentsandsiblings"
-    ).andReturn({ responseText: categoryScheme });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/dataflow/SPC/DF_COMMODITY_PRICES?references=all"
-    ).andReturn({ responseText: dataflowNoRegion });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/dataflow/SPC/DF_CPI?references=all"
-    ).andReturn({ responseText: dataflowRegion });
+    worker.use(
+      http.get("http://www.example.com/agencyscheme/", () =>
+        HttpResponse.json(agencyScheme)
+      ),
+      http.get("http://www.example.com/categoryscheme", ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("references") !== "parentsandsiblings")
+          throw new Error(`Unexpected query params: ${url.search}`);
+        return HttpResponse.json(categoryScheme);
+      }),
+      http.get(
+        "http://www.example.com/dataflow/SPC/DF_COMMODITY_PRICES",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("references") !== "all")
+            throw new Error(`Unexpected query params: ${url.search}`);
+          return HttpResponse.json(dataflowNoRegion);
+        }
+      ),
+      http.get("http://www.example.com/dataflow/SPC/DF_CPI", ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("references") !== "all")
+          throw new Error(`Unexpected query params: ${url.search}`);
+        return HttpResponse.json(dataflowRegion);
+      })
+    );
 
     terria = new Terria();
     sdmxGroup = new SdmxCatalogGroup("test", terria);
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
   });
 
   it("has a type", function () {
@@ -54,7 +52,7 @@ describe("SdmxCatalogGroup", function () {
   });
 
   describe("after loading agency + category schemes", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       runInAction(() => {
         sdmxGroup.setTrait("definition", "url", "http://www.example.com");
       });

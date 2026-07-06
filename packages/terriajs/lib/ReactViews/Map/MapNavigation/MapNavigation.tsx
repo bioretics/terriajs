@@ -1,4 +1,3 @@
-import { TFunction } from "i18next";
 import { debounce } from "lodash-es";
 import {
   action,
@@ -10,7 +9,8 @@ import {
   makeObservable
 } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { createRef, Component } from "react";
+import { TFunction } from "i18next";
 import { WithTranslation, withTranslation } from "react-i18next";
 import styled, { DefaultTheme, withTheme } from "styled-components";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -44,11 +44,11 @@ const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
   position: absolute;
   right: 5px;
   z-index: 1;
-  bottom: 25px;
+  top: 25px;
   @media (min-width: ${(props) => props.theme.sm}px) {
     top: 80px;
     bottom: 50px;
-    right: 16px;
+    right: 21px;
   }
   @media (max-width: ${(props) => props.theme.mobile}px) {
     & > div {
@@ -88,9 +88,9 @@ enum Orientation {
 }
 
 @observer
-class MapNavigationBase extends React.Component<PropTypes> {
+class MapNavigationBase extends Component<PropTypes> {
   static displayName = "MapNavigation";
-  private navigationRef = React.createRef<HTMLDivElement>();
+  private navigationRef = createRef<HTMLDivElement>();
   private readonly resizeListener: () => any;
   private readonly viewState: ViewState;
   private itemSizeInBar: Map<string, number>;
@@ -193,7 +193,6 @@ class MapNavigationBase extends React.Component<PropTypes> {
       .reverse();
 
     // Ensure we are not showing more composites than we have height for
-    let overflows = false;
     let maxVisible = itemsToShow.length;
     let size = 0;
     if (this.overflows) {
@@ -203,9 +202,9 @@ class MapNavigationBase extends React.Component<PropTypes> {
       this.orientation === Orientation.VERTICAL
         ? this.navigationRef.current.clientHeight
         : this.navigationRef.current.parentElement?.parentElement
-        ? this.navigationRef.current.parentElement?.parentElement?.clientWidth -
-          100
-        : this.navigationRef.current.clientWidth;
+          ? this.navigationRef.current.parentElement?.parentElement
+              ?.clientWidth - 100
+          : this.navigationRef.current.clientWidth;
 
     for (let i = 0; i < itemsToShow.length; i++) {
       size += this.itemSizeInBar.get(itemsToShow[i].id) || 0;
@@ -221,7 +220,7 @@ class MapNavigationBase extends React.Component<PropTypes> {
       //there is nothing else we can do, we have to show the rest of items as it is.
       return;
     }
-    overflows = itemsToShow.length > maxVisible;
+    const overflows = itemsToShow.length > maxVisible;
     const itemsToCollapseId: string[] = [];
     const activeCollapsible: string[] = [];
     if (overflows) {
@@ -230,7 +229,6 @@ class MapNavigationBase extends React.Component<PropTypes> {
         size += OVERFLOW_ACTION_SIZE;
         this.overflows = true;
       }
-      maxVisible = maxVisible - pinnedItems.length;
       // first try to collapse inactive items and then active ones if needed
       for (let i = 0; i < possibleToCollapse.length; i++) {
         const item = possibleToCollapse[i];
@@ -315,14 +313,14 @@ class MapNavigationBase extends React.Component<PropTypes> {
                 <MapIconButton
                   expandInPlace
                   iconElement={() => <Icon glyph={GLYPHS.moreItems} />}
-                  title={t("mapNavigation.additionalToolsTitle")}
+                  title={t(($) => $.mapNavigation.additionalToolsTitle)}
                   onClick={() =>
                     runInAction(() => {
                       viewState.showCollapsedNavigation = true;
                     })
                   }
                 >
-                  {t("mapNavigation.additionalTools")}
+                  {t(($) => $.mapNavigation.additionalTools)}
                 </MapIconButton>
               </Control>
             )}

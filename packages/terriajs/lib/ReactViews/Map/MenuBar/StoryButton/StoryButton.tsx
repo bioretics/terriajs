@@ -1,4 +1,4 @@
-import React, { Ref } from "react";
+import { Ref } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { DefaultTheme } from "styled-components";
 
@@ -11,12 +11,13 @@ import Prompt from "../../../Generic/Prompt";
 import { useRefForTerria } from "../../../Hooks/useRefForTerria";
 
 import Styles from "./story-button.scss";
+import withControlledVisibility from "../../../HOCs/withControlledVisibility";
 
 interface Props {
   terria: Terria;
   theme: DefaultTheme;
   viewState: ViewState;
-  animationDuration: number;
+  animationDuration?: number;
 }
 
 interface ButtonProps extends Props {
@@ -38,13 +39,13 @@ export const onStoryButtonClick = (props: Props) => () => {
 const promptHtml = (hasStories: boolean) => (
   <Text textLight textAlignCenter>
     {hasStories ? (
-      <Trans i18nKey="story.promptHtml1">
+      <Trans i18nKey={($) => $.story.promptHtml1}>
         <Text extraLarge>
           You can view and create stories at any time by clicking here.
         </Text>
       </Trans>
     ) : (
-      <Trans i18nKey="story.promptHtml2">
+      <Trans i18nKey={($) => $.story.promptHtml2}>
         <div>
           <Text>INTRODUCING</Text>
           <Text bold extraExtraLarge styledLineHeight={"32px"}>
@@ -95,7 +96,7 @@ const StoryButton = (props: Props) => {
         `}
       >
         <Icon glyph={Icon.GLYPHS.story} />
-        <span>{t("story.story")}</span>
+        <span>{t(($) => $.story.story)}</span>
       </button>
       <Prompt
         centered
@@ -104,10 +105,10 @@ const StoryButton = (props: Props) => {
         }
         content={promptHtml(props.terria.stories.length > 0)}
         displayDelay={delayTime}
-        dismissText={t("story.dismissText")}
+        dismissText={t(($) => $.story.dismissText)}
         dismissAction={dismissAction}
       />
     </div>
   );
 };
-export default StoryButton;
+export default withControlledVisibility(StoryButton);

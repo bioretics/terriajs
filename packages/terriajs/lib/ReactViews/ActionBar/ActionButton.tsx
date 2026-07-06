@@ -1,15 +1,14 @@
-import React from "react";
+import { HTMLProps, FC } from "react";
 import { useTheme } from "styled-components";
 import AnimatedSpinnerIcon from "../../Styled/AnimatedSpinnerIcon";
 import { ButtonProps } from "../../Styled/Button";
 import { IconGlyph, StyledIcon } from "../../Styled/Icon";
 import StyledButton from "./StyledButton";
 
-export interface ActionButtonProps
-  extends Omit<
-    ButtonProps & React.HTMLProps<HTMLButtonElement>,
-    "iconProps" | "renderIcon"
-  > {
+export interface ActionButtonProps extends Omit<
+  ButtonProps & HTMLProps<HTMLButtonElement>,
+  "iconProps" | "renderIcon"
+> {
   className?: string;
   icon?: IconGlyph;
   showProcessingIcon?: boolean;
@@ -18,7 +17,7 @@ export interface ActionButtonProps
 /**
  * A themed button to use inside {@link ActionBar}
  */
-export const ActionButton: React.FC<ActionButtonProps> = ({
+export const ActionButton: FC<ActionButtonProps> = ({
   className,
   icon,
   showProcessingIcon,
@@ -36,15 +35,15 @@ export const ActionButton: React.FC<ActionButtonProps> = ({
         showProcessingIcon
           ? () => <AnimatedSpinnerIcon styledWidth="20px" styledHeight="20px" />
           : icon
-          ? () => (
-              <StyledIcon
-                light
-                styledWidth="20px"
-                styledHeight="20px"
-                glyph={icon}
-              />
-            )
-          : undefined
+            ? () => (
+                <StyledIcon
+                  light
+                  styledWidth="20px"
+                  styledHeight="20px"
+                  glyph={icon}
+                />
+              )
+            : undefined
       }
       {...(props as any)}
     />

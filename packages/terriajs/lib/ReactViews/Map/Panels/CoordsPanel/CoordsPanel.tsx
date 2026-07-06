@@ -578,9 +578,9 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     return (
       <MenuPanel
         theme={dropdownTheme}
-        btnText={t("coordsPanel.header")}
+        btnText={t(($) => $.coordsPanel.header)}
         viewState={this.props.viewState}
-        btnTitle={t("coordsPanel.btnConvertTitle")}
+        btnTitle={t(($) => $.coordsPanel.btnConvertTitle)}
         isOpen={this.state.isOpen}
         onOpenChanged={this.changeOpenState}
         modalWidth={modalWidth}
@@ -597,8 +597,8 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           moveTo={() => {
             this.moveToA(this.inputX, this.inputY);
           }}
-          message={t("coordsPanel.coordsInputMessage")}
-          tooltip={t("coordsPanel.coordsInputTooltip")}
+          message={t(($) => $.coordsPanel.coordsInputMessage)}
+          tooltip={t(($) => $.coordsPanel.coordsInputTooltip)}
           readonly={false}
         />
         <SrsSelection
@@ -613,7 +613,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           }}
           conversionList={this.filteredConversionList}
           selectedSrs={this.srs}
-          tooltip={t("coordsPanel.srsSelectionTooltip")}
+          tooltip={t(($) => $.coordsPanel.srsSelectionTooltip)}
           isOpen={this.state.isOpen}
         />
         <CoordsText
@@ -628,7 +628,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
             this.moveToA(this.outputY, this.outputX);
           }}
           readonly
-          message={t("coordsPanel.coordsInputMessage")}
+          message={t(($) => $.coordsPanel.coordsInputMessage)}
           tooltip=""
         />
       </MenuPanel>

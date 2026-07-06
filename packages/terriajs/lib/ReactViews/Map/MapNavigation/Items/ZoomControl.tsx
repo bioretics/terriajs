@@ -1,5 +1,5 @@
+import { Component } from "react";
 import { TFunction } from "i18next";
-import React from "react";
 import { withTranslation, WithTranslation } from "react-i18next";
 import styled, { DefaultTheme, withTheme } from "styled-components";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -11,7 +11,7 @@ import Scene from "terriajs-cesium/Source/Scene/Scene";
 import {
   Category,
   ViewAction
-} from "../../../../Core/AnalyticEvents/analyticEvents";
+} from "../../../../Core/Analytics/analyticEvents";
 import isDefined from "../../../../Core/isDefined";
 import Box from "../../../../Styled/Box";
 import { RawButton } from "../../../../Styled/Button";
@@ -30,12 +30,8 @@ interface PropTypes extends WithTranslation {
 
 export const ZOOM_CONTROL_ID = "zoom";
 
-class ZoomControlBase extends React.Component<PropTypes> {
+class ZoomControlBase extends Component<PropTypes> {
   static displayName = "ZoomControl";
-
-  constructor(props: PropTypes) {
-    super(props);
-  }
 
   flyToPosition(
     scene: Scene,
@@ -110,7 +106,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
 
   zoomIn() {
     const cartesian3Scratch = new Cartesian3();
-    this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomIn);
+    this.props.terria.analytics.logEvent(Category.view, ViewAction.zoomIn);
 
     if (isDefined(this.props.terria.leaflet)) {
       this.props.terria.leaflet.map.zoomIn();
@@ -143,7 +139,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
 
   zoomOut() {
     const cartesian3Scratch = new Cartesian3();
-    this.props.terria.analytics?.logEvent(Category.view, ViewAction.zoomOut);
+    this.props.terria.analytics.logEvent(Category.view, ViewAction.zoomOut);
 
     if (isDefined(this.props.terria.leaflet)) {
       this.props.terria.leaflet.map.zoomOut();
@@ -174,7 +170,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
   }
 
   zoomReset() {
-    this.props.terria.analytics?.logEvent(Category.view, ViewAction.reset);
+    this.props.terria.analytics.logEvent(Category.view, ViewAction.reset);
     this.props.terria.currentViewer.zoomTo(
       this.props.terria.mainViewer.homeCamera,
       1.5
@@ -191,12 +187,13 @@ class ZoomControlBase extends React.Component<PropTypes> {
             padding: 0;
           `}
         >
+          {/* Fork (rer3d): hide zoom buttons on small screens */}
           {!this.props.viewState.useSmallScreenInterface && (
             <Li>
               <RawButton
                 type="button"
                 onClick={this.zoomIn.bind(this)}
-                title={t("zoomControl.zoomIn")}
+                title={t(($) => $.zoomControl.zoomIn)}
               >
                 <Icon glyph={Icon.GLYPHS.zoomIn} />
               </RawButton>
@@ -206,7 +203,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
             <RawButton
               type="button"
               onClick={this.zoomReset.bind(this)}
-              title={t("zoomControl.zoomReset")}
+              title={t(($) => $.zoomControl.zoomReset)}
             >
               <Icon glyph={Icon.GLYPHS.zoomReset} />
             </RawButton>
@@ -216,7 +213,7 @@ class ZoomControlBase extends React.Component<PropTypes> {
               <RawButton
                 type="button"
                 onClick={this.zoomOut.bind(this)}
-                title={t("zoomControl.zoomOut")}
+                title={t(($) => $.zoomControl.zoomOut)}
               >
                 <Icon glyph={GLYPHS.zoomOut} />
               </RawButton>
@@ -229,16 +226,17 @@ class ZoomControlBase extends React.Component<PropTypes> {
 }
 
 const StyledZoomControl = styled(Box).attrs((props) => ({
-  backgroundColor: props.theme.textLight,
+  backgroundColor: props.theme.dark,
   centered: true,
   column: true,
   styledWidth: "32px"
 }))`
   border-radius: 100px;
+  border: 1px solid ${(props) => props.theme.darkLighter};
   svg {
     height: 20px;
     width: 20px;
-    fill: ${(props) => props.theme.darkWithOverlay};
+    fill: ${(props) => props.theme.grey};
   }
   ${Li} {
     margin: 5px 0;

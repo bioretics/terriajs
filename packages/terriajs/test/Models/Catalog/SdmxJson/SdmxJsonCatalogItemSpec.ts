@@ -1,91 +1,80 @@
+import { http, HttpResponse } from "msw";
 import { runInAction } from "mobx";
 import SdmxJsonCatalogItem from "../../../../lib/Models/Catalog/SdmxJson/SdmxJsonCatalogItem";
 import createStratumInstance from "../../../../lib/Models/Definition/createStratumInstance";
 import Terria from "../../../../lib/Models/Terria";
 import TableColumnType from "../../../../lib/Table/TableColumnType";
 import { ModelOverrideTraits } from "../../../../lib/Traits/TraitsClasses/SdmxCommonTraits";
+import { worker } from "../../../mocks/browser";
 
-const regionMapping = JSON.stringify(
-  require("../../../../wwwroot/data/regionMapping.json")
-);
-
-const steCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-STE_2016_AUST_STE_CODE16.json")
-);
-
-const isoCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-FID_TM_WORLD_BORDERS_ISO2.json")
-);
-
-const dataflowNoRegionData = require("raw-loader!../../../../wwwroot/test/SDMX-JSON/data-noregion.csv");
-const dataflowRegionData = require("raw-loader!../../../../wwwroot/test/SDMX-JSON/data-region.csv");
-const dataflowRegionTimeData = require("raw-loader!../../../../wwwroot/test/SDMX-JSON/data-region-time.csv");
-const dataflowSingleRegionTimeData = require("raw-loader!../../../../wwwroot/test/SDMX-JSON/data-single-region-time.csv");
-
-const dataflowNoRegion = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/dataflow-noregion.json")
-);
-
-const dataflowRegion = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/dataflow-region.json")
-);
-
-const dataflowRegionTime = JSON.stringify(
-  require("../../../../wwwroot/test/SDMX-JSON/dataflow-region-time.json")
-);
+import regionMapping from "../../../../wwwroot/data/regionMapping.json";
+import steCodes from "../../../../wwwroot/data/regionids/region_map-STE_2016_AUST_STE_CODE16.json";
+import isoCodes from "../../../../wwwroot/data/regionids/region_map-FID_TM_WORLD_BORDERS_ISO2.json";
+import dataflowNoRegionData from "../../../../wwwroot/test/SDMX-JSON/data-noregion.csv";
+import dataflowRegionData from "../../../../wwwroot/test/SDMX-JSON/data-region.csv";
+import dataflowRegionTimeData from "../../../../wwwroot/test/SDMX-JSON/data-region-time.csv";
+import dataflowSingleRegionTimeData from "../../../../wwwroot/test/SDMX-JSON/data-single-region-time.csv";
+import dataflowNoRegion from "../../../../wwwroot/test/SDMX-JSON/dataflow-noregion.json";
+import dataflowRegion from "../../../../wwwroot/test/SDMX-JSON/dataflow-region.json";
+import dataflowRegionTime from "../../../../wwwroot/test/SDMX-JSON/dataflow-region-time.json";
 
 describe("SdmxJsonCatalogItem", function () {
   let terria: Terria;
   let sdmxItem: SdmxJsonCatalogItem;
 
   beforeEach(async function () {
-    jasmine.Ajax.install();
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-STE_2016_AUST_STE_CODE16.json"
-    ).andReturn({ responseText: steCodes });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_TM_WORLD_BORDERS_ISO2.json"
-    ).andReturn({ responseText: isoCodes });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/dataflow/SPC/DF_COMMODITY_PRICES?references=all"
-    ).andReturn({ responseText: dataflowNoRegion });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/dataflow/SPC/DF_CPI?references=all"
-    ).andReturn({ responseText: dataflowRegion });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/data/DF_COMMODITY_PRICES/A.COCOA.COMPRICE"
-    ).andReturn({ responseText: dataflowNoRegionData });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/data/DF_CPI/A..INF._T"
-    ).andReturn({ responseText: dataflowRegionData });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/dataflow/ABS/RT?references=all"
-    ).andReturn({ responseText: dataflowRegionTime });
-
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/data/RT/M1.20.10..M"
-    ).andReturn({ responseText: dataflowRegionTimeData });
+    worker.use(
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-STE_2016_AUST_STE_CODE16.json",
+        () => HttpResponse.json(steCodes)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_TM_WORLD_BORDERS_ISO2.json",
+        () => HttpResponse.json(isoCodes)
+      ),
+      http.get(
+        "http://www.example.com/dataflow/SPC/DF_COMMODITY_PRICES",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("references") !== "all")
+            throw new Error(`Unexpected query params: ${url.search}`);
+          return HttpResponse.json(dataflowNoRegion);
+        }
+      ),
+      http.get("http://www.example.com/dataflow/SPC/DF_CPI", ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("references") !== "all")
+          throw new Error(`Unexpected query params: ${url.search}`);
+        return HttpResponse.json(dataflowRegion);
+      }),
+      http.get(
+        "http://www.example.com/data/DF_COMMODITY_PRICES/A.COCOA.COMPRICE",
+        () => new HttpResponse(dataflowNoRegionData)
+      ),
+      http.get(
+        "http://www.example.com/data/DF_CPI/A..INF._T",
+        () => new HttpResponse(dataflowRegionData)
+      ),
+      http.get("http://www.example.com/dataflow/ABS/RT", ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("references") !== "all")
+          throw new Error(`Unexpected query params: ${url.search}`);
+        return HttpResponse.json(dataflowRegionTime);
+      }),
+      http.get(
+        "http://www.example.com/data/RT/M1.20.10..M",
+        () => new HttpResponse(dataflowRegionTimeData)
+      )
+    );
 
     terria = new Terria();
     sdmxItem = new SdmxJsonCatalogItem("test", terria, undefined);
     sdmxItem.setTrait("definition", "url", "http://www.example.com");
 
     await sdmxItem.loadRegionProviderList();
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
   });
 
   it("has a type", function () {
@@ -293,9 +282,12 @@ describe("SdmxJsonCatalogItem", function () {
   });
 
   it("handles single region gracefully", async function () {
-    jasmine.Ajax.stubRequest(
-      "http://www.example.com/data/RT/M1.20.10..M"
-    ).andReturn({ responseText: dataflowSingleRegionTimeData });
+    worker.use(
+      http.get(
+        "http://www.example.com/data/RT/M1.20.10..M",
+        () => new HttpResponse(dataflowSingleRegionTimeData)
+      )
+    );
 
     runInAction(() => {
       sdmxItem.setTrait("definition", "agencyId", "ABS");

@@ -52,7 +52,7 @@ const MicrozonationButton = (props: Props) => {
         `}
       >
         <Icon glyph={Icon.GLYPHS.data} />
-        <span>{t("microzonation.menuButton")}</span>
+        <span>{t(($) => $.microzonation.menuButton)}</span>
       </button>
     </div>
   );

@@ -1,15 +1,16 @@
-import "../../../SpecMain";
-import { reaction, runInAction } from "mobx";
 import i18next from "i18next";
-import Cesium3DTileColorBlendMode from "terriajs-cesium/Source/Scene/Cesium3DTileColorBlendMode";
-import ShadowMode from "terriajs-cesium/Source/Scene/ShadowMode";
-import Terria from "../../../../lib/Models/Terria";
-import I3SCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
-import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
-import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
-import Resource from "terriajs-cesium/Source/Core/Resource";
-import Cesium3DTileFeature from "terriajs-cesium/Source/Scene/Cesium3DTileFeature";
+import { reaction, runInAction } from "mobx";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import Resource from "terriajs-cesium/Source/Core/Resource";
+import Cesium3DTileColorBlendMode from "terriajs-cesium/Source/Scene/Cesium3DTileColorBlendMode";
+import Cesium3DTileContent from "terriajs-cesium/Source/Scene/Cesium3DTileContent";
+import Cesium3DTileFeature from "terriajs-cesium/Source/Scene/Cesium3DTileFeature";
+import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
+import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
+import ShadowMode from "terriajs-cesium/Source/Scene/ShadowMode";
+import I3SCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
+import Terria from "../../../../lib/Models/Terria";
+import "../../../SpecMain";
 
 const mockLayerData = {
   href: "layers/0/",
@@ -32,7 +33,7 @@ describe("I3SCatalogItemSpec", function () {
   const testUrl = "/test/Cesium3DTiles/tileset.json";
 
   beforeAll(function () {
-    spyOn(Resource.prototype, "fetchJson").and.callFake(function fetch() {
+    spyOn(Resource.prototype, "fetchJson").and.callFake(() => {
       return Promise.resolve(mockProviderData);
     });
     spyOn(Cesium3DTileset, "fromUrl").and.callFake(async () => {
@@ -54,7 +55,7 @@ describe("I3SCatalogItemSpec", function () {
   it("should have a type and a typeName", function () {
     expect(I3SCatalogItem.type).toBe("i3s");
     expect(item.type).toBe("i3s");
-    expect(item.typeName).toBe(i18next.t("core.dataType.i3s"));
+    expect(item.typeName).toBe(i18next.t(($) => $.core.dataType.i3s));
   });
 
   it("supports zooming", function () {
@@ -69,14 +70,18 @@ describe("I3SCatalogItemSpec", function () {
     expect(item.isMappable).toBeTruthy();
   });
 
+  it("adds token to i3s provider resource", async function () {
+    item.setTrait("definition", "token", "test-token");
+    await item.loadMapItems();
+    expect(item.mapItems[0].resource.url).toContain("token=test-token");
+  });
+
   describe("after loading", function () {
     let dispose: () => void;
     beforeEach(async function () {
       try {
         await item.loadMapItems();
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       dispose = reaction(
         () => item.mapItems,
         () => {}
@@ -127,7 +132,7 @@ describe("I3SCatalogItemSpec", function () {
             });
           });
 
-          it("sets the shadow mode", function () {
+          it("sets the shadow mode after blend", function () {
             runInAction(() => item.setTrait("definition", "shadows", "CAST"));
             const tileset = item.mapItems[0].layers[0].tileset;
             expect(tileset?.shadows).toBe(ShadowMode.CAST_ONLY);
@@ -146,7 +151,10 @@ describe("I3SCatalogItemSpec", function () {
       });
     });
     it("correctly builds `Feature` from picked Cesium3DTileFeature", async function () {
-      const picked = new Cesium3DTileFeature();
+      const picked = new Cesium3DTileFeature(
+        {} as unknown as Cesium3DTileContent,
+        0
+      );
       /* @ts-expect-error - mock i3sNode */
       picked._content = {
         tile: {

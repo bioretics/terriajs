@@ -44,7 +44,7 @@ export default class MeasurableDownload {
 
     allLinks.push({
       key: "",
-      label: i18next.t("downloadData.formatPlaceholder")
+      label: i18next.t(($) => $.downloadData.formatPlaceholder)
     });
 
     try {

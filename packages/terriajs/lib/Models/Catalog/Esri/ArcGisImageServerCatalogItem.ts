@@ -70,9 +70,11 @@ class ImageServerStratum extends LoadableStratum(
   static async load(item: ArcGisImageServerCatalogItem) {
     if (!isDefined(item.uri)) {
       throw new TerriaError({
-        title: i18next.t("models.arcGisImageServerCatalogItem.invalidUrlTitle"),
+        title: i18next.t(
+          ($) => $.models.arcGisImageServerCatalogItem.invalidUrlTitle
+        ),
         message: i18next.t(
-          "models.arcGisImageServerCatalogItem.invalidUrlMessage"
+          ($) => $.models.arcGisImageServerCatalogItem.invalidUrlMessage
         )
       });
     }
@@ -80,6 +82,8 @@ class ImageServerStratum extends LoadableStratum(
     let token: string | undefined;
     if (isDefined(item.tokenUrl) && isDefined(item.url)) {
       token = await getToken(item.terria, item.tokenUrl, item.url);
+    } else if (isDefined(item.token)) {
+      token = item.token;
     }
 
     let serviceUri = getBaseURI(item);
@@ -95,18 +99,18 @@ class ImageServerStratum extends LoadableStratum(
 
     if (!isDefined(serviceMetadata)) {
       throw new TerriaError({
-        title: i18next.t("models.arcGisService.invalidServerTitle"),
-        message: i18next.t("models.arcGisService.invalidServerMessage")
+        title: i18next.t(($) => $.models.arcGisService.invalidServerTitle),
+        message: i18next.t(($) => $.models.arcGisService.invalidServerMessage)
       });
     }
 
     if (!serviceMetadata.capabilities?.includes("Image"))
       throw new TerriaError({
         title: i18next.t(
-          "models.arcGisImageServerCatalogItem.invalidServiceTitle"
+          ($) => $.models.arcGisImageServerCatalogItem.invalidServiceTitle
         ),
         message: i18next.t(
-          "models.arcGisImageServerCatalogItem.invalidServiceMessage"
+          ($) => $.models.arcGisImageServerCatalogItem.invalidServiceMessage
         )
       });
 
@@ -288,9 +292,11 @@ class ImageServerLegendStratum extends LoadableStratum(
   static async load(item: ArcGisImageServerCatalogItem) {
     if (!isDefined(item.uri)) {
       throw new TerriaError({
-        title: i18next.t("models.arcGisImageServerCatalogItem.invalidUrlTitle"),
+        title: i18next.t(
+          ($) => $.models.arcGisImageServerCatalogItem.invalidUrlTitle
+        ),
         message: i18next.t(
-          "models.arcGisImageServerCatalogItem.invalidUrlMessage"
+          ($) => $.models.arcGisImageServerCatalogItem.invalidUrlMessage
         )
       });
     }
@@ -299,6 +305,7 @@ class ImageServerLegendStratum extends LoadableStratum(
 
     legendUri.addQuery(item.flattenedParameters);
 
+    // Note we don't need to fetch token from tokenUrl here - as ImageServerStratum handles that, and will populate `token` trait with the response
     if (isDefined(item.token)) {
       legendUri = legendUri.addQuery("token", item.token);
     }
@@ -366,7 +373,7 @@ export default class ArcGisImageServerCatalogItem extends UrlMixin(
   }
 
   get typeName() {
-    return i18next.t("models.arcGisImageServerCatalogItem.name");
+    return i18next.t(($) => $.models.arcGisImageServerCatalogItem.name);
   }
 
   get type() {
@@ -553,7 +560,9 @@ export default class ArcGisImageServerCatalogItem extends UrlMixin(
     if (this.disableRasterFunctionSelectors) return undefined;
     return {
       id: "raster-functions",
-      name: i18next.t("models.arcGisImageServerCatalogItem.rasterFunction"),
+      name: i18next.t(
+        ($) => $.models.arcGisImageServerCatalogItem.rasterFunction
+      ),
       options: this.availableRasterFunctions.map((rasterFn) => ({
         id: rasterFn.name,
         name: rasterFn.name,
@@ -588,7 +597,7 @@ function getBaseURI(item: ArcGisImageServerCatalogItem) {
   return uri;
 }
 
-async function getJson(item: ArcGisImageServerCatalogItem, uri: uri.URI) {
+async function getJson(item: ArcGisImageServerCatalogItem, uri: URI) {
   try {
     const response = await loadJson(
       proxyCatalogItemUrl(item, uri.addQuery("f", "json").toString())

@@ -1,40 +1,29 @@
 import { runInAction } from "mobx";
+import { http, HttpResponse } from "msw";
 import CatalogGroup from "../../../../lib/Models/Catalog/CatalogGroup";
 import OpenDataSoftCatalogGroup from "../../../../lib/Models/Catalog/CatalogGroups/OpenDataSoftCatalogGroup";
 import OpenDataSoftCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/OpenDataSoftCatalogItem";
 import Terria from "../../../../lib/Models/Terria";
-import fetchMock from "fetch-mock";
+import { worker } from "../../../mocks/browser";
 
-const facets = JSON.stringify(
-  require("../../../../wwwroot/test/ods/facets.json")
-);
-
-const datasets = JSON.stringify(
-  require("../../../../wwwroot/test/ods/datasets.json")
-);
-
-const datasetsCount101Response1 = JSON.stringify(
-  require("../../../../wwwroot/test/ods/datasets-over-100-1.json")
-);
-const datasetsCount101Response2 = JSON.stringify(
-  require("../../../../wwwroot/test/ods/datasets-over-100-2.json")
-);
+import facets from "../../../../wwwroot/test/ods/facets.json";
+import datasets from "../../../../wwwroot/test/ods/datasets.json";
+import datasetsCount101Response1 from "../../../../wwwroot/test/ods/datasets-over-100-1.json";
+import datasetsCount101Response2 from "../../../../wwwroot/test/ods/datasets-over-100-2.json";
 
 describe("OpenDataSoftCatalogGroup", function () {
   let terria: Terria;
   let odsGroup: OpenDataSoftCatalogGroup;
 
   beforeEach(function () {
-    fetchMock.mock("https://example.com/api/v2/catalog/facets/", {
-      body: facets
-    });
+    worker.use(
+      http.get("https://example.com/api/v2/catalog/facets/", () =>
+        HttpResponse.json(facets)
+      )
+    );
 
     terria = new Terria();
     odsGroup = new OpenDataSoftCatalogGroup("test", terria);
-  });
-
-  afterEach(function () {
-    fetchMock.restore();
   });
 
   it("has a type", function () {
@@ -42,10 +31,11 @@ describe("OpenDataSoftCatalogGroup", function () {
   });
 
   describe("loads facets", function () {
-    beforeEach(async function () {
-      fetchMock.mock(
-        "https://example.com/api/v2/catalog/datasets/?limit=100&offset=0&order_by=title+asc&refine=features%3Ageo&where=features+%3D+%22geo%22+OR+features+%3D+%22timeserie%22",
-        { body: datasets }
+    beforeEach(function () {
+      worker.use(
+        http.get("https://example.com/api/v2/catalog/datasets/", () =>
+          HttpResponse.json(datasets)
+        )
       );
       runInAction(() => {
         odsGroup.setTrait("definition", "url", "https://example.com");
@@ -74,21 +64,32 @@ describe("OpenDataSoftCatalogGroup", function () {
   });
 
   describe("loads over 100 datasets (in multiple requests)", function () {
-    beforeEach(async function () {
-      // Note these two responses don't actually return over 100 datasest
+    beforeEach(function () {
+      // Note these two responses don't actually return over 100 datasets
       // Both JSON files have "total_count": 101 - and 6 different datasets each
       // So we expect total 12 datasets
+      worker.use(
+        http.get(
+          "https://example.com/api/v2/catalog/datasets/",
+          ({ request }) => {
+            const url = new URL(request.url);
 
-      // Offset = 0
-      fetchMock.mock(
-        "https://example.com/api/v2/catalog/datasets/?limit=100&offset=0&order_by=title+asc&refine=features%3Ageo&where=features+%3D+%22geo%22+OR+features+%3D+%22timeserie%22",
-        { body: datasetsCount101Response1 }
-      );
+            if (
+              url.searchParams.get("limit") !== "100" ||
+              url.searchParams.get("order_by") !== "title asc" ||
+              url.searchParams.get("refine") !== "features:geo" ||
+              url.searchParams.get("where") !==
+                'features = "geo" OR features = "timeserie"'
+            ) {
+              return HttpResponse.error();
+            }
+            const offset = url.searchParams.get("offset");
 
-      // Offset = 100
-      fetchMock.mock(
-        "https://example.com/api/v2/catalog/datasets/?limit=100&offset=100&order_by=title+asc&refine=features%3Ageo&where=features+%3D+%22geo%22+OR+features+%3D+%22timeserie%22",
-        { body: datasetsCount101Response2 }
+            if (offset === "100")
+              return HttpResponse.json(datasetsCount101Response2);
+            return HttpResponse.json(datasetsCount101Response1);
+          }
+        )
       );
       runInAction(() => {
         odsGroup.setTrait("definition", "url", "https://example.com");

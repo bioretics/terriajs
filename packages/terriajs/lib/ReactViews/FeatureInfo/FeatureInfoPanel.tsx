@@ -2,13 +2,14 @@ import classNames from "classnames";
 import { TFunction } from "i18next";
 import {
   action,
+  makeObservable,
+  observable,
   reaction,
   runInAction,
-  makeObservable,
-  observable
+  type IReactionDisposer
 } from "mobx";
-import { disposeOnUnmount, observer } from "mobx-react";
-import React from "react";
+import { observer } from "mobx-react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -32,8 +33,9 @@ import Terria from "../../Models/Terria";
 import Workbench from "../../Models/Workbench";
 import ViewState from "../../ReactViewModels/ViewState";
 import Icon, { StyledIcon } from "../../Styled/Icon";
-import Loader from "../Loader";
 import { withViewState } from "../Context";
+import DragWrapper from "../Drag/DragWrapper";
+import Loader from "../Loader";
 import Styles from "./feature-info-panel.scss";
 import FeatureInfoCatalogItem from "./FeatureInfoCatalogItem";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -43,8 +45,7 @@ import { StyledHr } from "../Map/Panels/SharePanel/StyledHr";
 import { TextSpan } from "../../Styled/Text";
 import clipboard from "clipboard";
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
-
-const DragWrapper = require("../DragWrapper");
+import geoidFile from "../../../wwwroot/data/WW15MGH.DAC";
 
 interface Props {
   viewState: ViewState;
@@ -53,7 +54,11 @@ interface Props {
 }
 
 @observer
-class FeatureInfoPanel extends React.Component<Props> {
+class FeatureInfoPanel extends Component<Props> {
+  pickedFeaturesReactionDisposer?: IReactionDisposer = undefined;
+
+  // Fork (rer3d): whereAmI reverse-geocode text + EGM96 geoid model for
+  // MSL height correction of the picked position.
   @observable whereAmI?: string = "";
   @observable whereAmIDetailed?: string = "";
 
@@ -62,76 +67,79 @@ class FeatureInfoPanel extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
     makeObservable(this);
-    this.geoidModel = new EarthGravityModel1996(
-      require("file-loader!../../../wwwroot/data/WW15MGH.DAC")
-    );
+    this.geoidModel = new EarthGravityModel1996(geoidFile);
   }
 
   componentDidMount() {
     const { t } = this.props;
     const terria = this.props.viewState.terria;
 
+    // Fork (rer3d): copy-to-clipboard button for the coordinates block.
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const clipboardBtn = new clipboard(`.btn-copy-featureinfopanel`);
 
-    disposeOnUnmount(
-      this,
-      reaction(
-        () => terria.pickedFeatures,
-        (pickedFeatures) => {
-          if (!isDefined(pickedFeatures)) {
-            terria.selectedFeature = undefined;
-          } else {
-            terria.selectedFeature = TerriaFeature.fromEntity(
-              new Entity({
-                id: t("featureInfo.pickLocation"),
-                position: pickedFeatures.pickPosition
-              })
-            );
-            this.setPicked(terria, pickedFeatures.pickPosition);
-            if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
-              pickedFeatures.allFeaturesAvailablePromise.then(() => {
-                if (this.props.viewState.featureInfoPanelIsVisible === false) {
-                  // Panel is closed, refrain from setting selectedFeature
-                  return;
-                }
+    this.pickedFeaturesReactionDisposer = reaction(
+      () => terria.pickedFeatures,
+      (pickedFeatures) => {
+        if (!isDefined(pickedFeatures)) {
+          terria.selectedFeature = undefined;
+        } else {
+          terria.selectedFeature = TerriaFeature.fromEntity(
+            new Entity({
+              id: t(($) => $.featureInfo.pickLocation),
+              position: pickedFeatures.pickPosition
+            })
+          );
+          // Fork (rer3d): resolve whereAmI + geoid-corrected picked position.
+          this.setPicked(terria, pickedFeatures.pickPosition);
+          if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
+            pickedFeatures.allFeaturesAvailablePromise.then(() => {
+              if (this.props.viewState.featureInfoPanelIsVisible === false) {
+                // Panel is closed, refrain from setting selectedFeature
+                return;
+              }
 
-                // We only show features that are associated with a catalog item, so make sure the one we select to be
-                // open initially is one we're actually going to show.
-                const featuresShownAtAll = pickedFeatures.features.filter((x) =>
-                  isDefined(determineCatalogItem(terria.workbench, x))
-                );
+              // We only show features that are associated with a catalog item, so make sure the one we select to be
+              // open initially is one we're actually going to show.
+              const featuresShownAtAll = pickedFeatures.features.filter((x) =>
+                isDefined(determineCatalogItem(terria.workbench, x))
+              );
 
-                // Return if `terria.selectedFeatures` already showing a valid feature?
-                if (
-                  featuresShownAtAll.some(
-                    (feature) => feature === terria.selectedFeature
-                  )
+              // Return if `terria.selectedFeatures` already showing a valid feature?
+              if (
+                featuresShownAtAll.some(
+                  (feature) => feature === terria.selectedFeature
                 )
-                  return;
+              )
+                return;
 
-                // Otherwise find first feature with data to show
-                let selectedFeature = featuresShownAtAll.filter(
-                  (feature) =>
-                    isDefined(feature.properties) ||
-                    isDefined(feature.description)
-                )[0];
-                if (
-                  !isDefined(selectedFeature) &&
-                  featuresShownAtAll.length > 0
-                ) {
-                  // Handles the case when no features have info - still want something to be open.
-                  selectedFeature = featuresShownAtAll[0];
-                }
-                runInAction(() => {
-                  terria.selectedFeature = selectedFeature;
-                });
+              // Otherwise find first feature with data to show
+              let selectedFeature = featuresShownAtAll.filter(
+                (feature) =>
+                  isDefined(feature.properties) ||
+                  isDefined(feature.description)
+              )[0];
+              if (
+                !isDefined(selectedFeature) &&
+                featuresShownAtAll.length > 0
+              ) {
+                // Handles the case when no features have info - still want something to be open.
+                selectedFeature = featuresShownAtAll[0];
+              }
+              runInAction(() => {
+                terria.selectedFeature = selectedFeature;
               });
-            }
+            });
           }
         }
-      )
+      }
     );
+  }
+
+  componentWillUnmount(): void {
+    if (isDefined(this.pickedFeaturesReactionDisposer)) {
+      this.pickedFeaturesReactionDisposer();
+    }
   }
 
   renderFeatureInfoCatalogItems(
@@ -195,19 +203,19 @@ class FeatureInfoPanel extends React.Component<Props> {
         runInAction(() => {
           this.props.viewState.firstTimeAddingData = false;
         });
-        return t("featureInfo.clickMap");
+        return t(($) => $.featureInfo.clickMap);
       }
       // if clicking on somewhere that has no data
-      return t("featureInfo.noDataAvailable");
+      return t(($) => $.featureInfo.noDataAvailable);
     } else {
-      return t("featureInfo.clickToAddData");
+      return t(($) => $.featureInfo.clickToAddData);
     }
   }
 
   addManualMarker(longitude: number, latitude: number) {
     const { t } = this.props;
     addMarker(this.props.viewState.terria, {
-      name: t("featureInfo.userSelection"),
+      name: t(($) => $.featureInfo.userSelection),
       location: {
         latitude: latitude,
         longitude: longitude
@@ -330,7 +338,7 @@ class FeatureInfoPanel extends React.Component<Props> {
           )}
         {!!cartographic && (
           <div className={Styles.location}>
-            <span>{t("featureInfo.elevation")}</span>
+            <span>{t(($) => $.featureInfo.elevation)}</span>
             <span>{prettyHeight}</span>
           </div>
         )}
@@ -346,7 +354,7 @@ class FeatureInfoPanel extends React.Component<Props> {
             <span>
               <Button
                 primary
-                title={t("featureInfo.copyButtonTooltip")}
+                title={t(($) => $.featureInfo.copyButtonTooltip)}
                 css={`
                   width: 14px;
                   border-radius: 2px;
@@ -364,7 +372,7 @@ class FeatureInfoPanel extends React.Component<Props> {
               </Button>
               <Button
                 primary
-                title={t("featureInfo.pinButtonTooltip")}
+                title={t(($) => $.featureInfo.pinButtonTooltip)}
                 onClick={pinClicked}
                 css={`
                   width: 14px;
@@ -385,7 +393,7 @@ class FeatureInfoPanel extends React.Component<Props> {
               </Button>
               <Button
                 primary
-                title={t("featureInfo.downloadButtonTooltip")}
+                title={t(($) => $.featureInfo.downloadButtonTooltip)}
                 onClick={downloadLocationAsGpx}
                 css={`
                   width: 14px;
@@ -504,7 +512,7 @@ class FeatureInfoPanel extends React.Component<Props> {
     ) : null;
 
     return (
-      <DragWrapper>
+      <DragWrapper handleSelector=".drag-handle">
         <div
           className={panelClassName}
           aria-hidden={!viewState.featureInfoPanelIsVisible}
@@ -514,7 +522,7 @@ class FeatureInfoPanel extends React.Component<Props> {
               <div
                 className={classNames("drag-handle", Styles.btnPanelHeading)}
               >
-                <span>{t("featureInfo.panelHeading")}</span>
+                <span>{t(($) => $.featureInfo.panelHeading)}</span>
                 <button
                   type="button"
                   onClick={this.toggleCollapsed}
@@ -531,7 +539,7 @@ class FeatureInfoPanel extends React.Component<Props> {
                 type="button"
                 onClick={this.close}
                 className={Styles.btnCloseFeature}
-                title={t("featureInfo.btnCloseFeature")}
+                title={t(($) => $.featureInfo.btnCloseFeature)}
               >
                 <Icon glyph={Icon.GLYPHS.close} />
               </button>
@@ -546,13 +554,11 @@ class FeatureInfoPanel extends React.Component<Props> {
               viewState.featureInfoPanelIsVisible ? (
                 // Are picked features loading -> show Loader
                 isDefined(terria.pickedFeatures) &&
-                terria.pickedFeatures.isLoading ? (
+                terria.pickedFeatures.isLoading ? ( // Do we have no features/catalog items to show?
                   <li>
                     <Loader light />
                   </li>
-                ) : // Do we have no features/catalog items to show?
-
-                featureInfoCatalogItems.length === 0 ? (
+                ) : featureInfoCatalogItems.length === 0 ? (
                   <li className={Styles.noResults}>
                     {this.getMessageForNoResults()}
                   </li>
@@ -579,8 +585,8 @@ class FeatureInfoPanel extends React.Component<Props> {
                     )}
                     className={Styles.satelliteSuggestionBtn}
                   >
-                    {t("featureInfo.satelliteSuggestionBtn", {
-                      catalogItemName: pair.catalogItem.name
+                    {t(($) => $.featureInfo.satelliteSuggestionBtn, {
+                      catalogItemName: pair.catalogItem.name as string
                     })}
                   </button>
                 ) : null
@@ -609,7 +615,7 @@ const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
   return (
     <>
       <div className={Styles.location}>
-        <span>{t("featureInfo.whereAmI")}</span>
+        <span>{t(($) => $.featureInfo.whereAmI)}</span>
         <TextSpan small>{whereAmI}</TextSpan>
       </div>
       {whereAmIDetailed && (
@@ -621,7 +627,7 @@ const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
             primary
             onClick={() => {
               viewState.terria.notificationState.addNotificationToQueue({
-                title: t("featureInfo.positionDetails"),
+                title: t(($) => $.featureInfo.positionDetails),
                 message: whereAmIDetailed ?? ""
               });
             }}
@@ -631,7 +637,7 @@ const WhereAmI: React.VoidFunctionComponent<IWhereAmIProps> = ({
               border-radius: 2px;
             `}
           >
-            {t("featureInfo.details")}
+            {t(($) => $.featureInfo.details)}
           </Button>
         </div>
       )}

@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -13,7 +13,7 @@ import { runInAction, reaction } from "mobx";
 import Styles from "./satellite-imagery-time-filter-section.scss";
 
 @observer
-class SatelliteImageryTimeFilterSection extends React.Component {
+class SatelliteImageryTimeFilterSection extends Component {
   static propTypes = {
     item: PropTypes.object,
     t: PropTypes.func.isRequired
@@ -48,7 +48,7 @@ class SatelliteImageryTimeFilterSection extends React.Component {
     const terria = this.props.item.terria;
 
     const pickPointMode = new MapInteractionMode({
-      message: t("satellite.pickPoint"),
+      message: t(($) => $.satellite.pickPoint),
       onCancel: () => runInAction(() => terria.mapInteractionModeStack.pop())
     });
 
@@ -61,7 +61,7 @@ class SatelliteImageryTimeFilterSection extends React.Component {
       async (pickedFeatures) => {
         runInAction(() => {
           pickPointMode.customUi = function () {
-            return <Loader message={t("satellite.querying")} />;
+            return <Loader message={t(($) => $.satellite.querying)} />;
           };
         });
 
@@ -124,7 +124,7 @@ class SatelliteImageryTimeFilterSection extends React.Component {
       <div className={Styles.inactive}>
         <div className={Styles.btnGroup}>
           <button className={Styles.btn} onClick={() => this.newLocation()}>
-            {t("satellite.filterByLocation")}
+            {t(($) => $.satellite.filterByLocation)}
           </button>
         </div>
       </div>
@@ -147,18 +147,18 @@ class SatelliteImageryTimeFilterSection extends React.Component {
         `}
       >
         <div className={Styles.infoGroup}>
-          <div>{t("satellite.infoGroup")}</div>
+          <div>{t(($) => $.satellite.infoGroup)}</div>
           <LocationItem position={position} />
         </div>
         <div className={Styles.btnGroup}>
           <button className={Styles.btn} onClick={() => this.removeFilter()}>
-            {t("satellite.removeFilter")}
+            {t(($) => $.satellite.removeFilter)}
           </button>
           <button className={Styles.btn} onClick={() => this.zoomTo()}>
-            {t("satellite.zoomTo")}
+            {t(($) => $.satellite.zoomTo)}
           </button>
           <button className={Styles.btn} onClick={() => this.newLocation()}>
-            {t("satellite.newLocation")}
+            {t(($) => $.satellite.newLocation)}
           </button>
         </div>
       </div>

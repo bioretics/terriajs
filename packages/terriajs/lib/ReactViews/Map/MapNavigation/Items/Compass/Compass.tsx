@@ -9,33 +9,32 @@
  * styles, and will be leaving it as is for now
  */
 //
-import { TFunction } from "i18next";
-import { computed, runInAction, when } from "mobx";
 import debounce from "lodash-es/debounce";
-import React from "react";
+import { computed, runInAction, when } from "mobx";
+import { Ref, PureComponent } from "react";
+import { TFunction } from "i18next";
 import { WithTranslation, withTranslation } from "react-i18next";
 import styled, { DefaultTheme, withTheme } from "styled-components";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumEvent from "terriajs-cesium/Source/Core/Event";
-import getTimestamp from "terriajs-cesium/Source/Core/getTimestamp";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import Ray from "terriajs-cesium/Source/Core/Ray";
-import Scene from "terriajs-cesium/Source/Scene/Scene";
 import Transforms from "terriajs-cesium/Source/Core/Transforms";
+import getTimestamp from "terriajs-cesium/Source/Core/getTimestamp";
+import CameraFlightPath from "terriajs-cesium/Source/Scene/CameraFlightPath";
+import Scene from "terriajs-cesium/Source/Scene/Scene";
+import compassRotationMarker from "../../../../../../wwwroot/images/compass-rotation-marker.svg";
 import isDefined from "../../../../../Core/isDefined";
 import Terria from "../../../../../Models/Terria";
 import ViewState from "../../../../../ReactViewModels/ViewState";
 import Box from "../../../../../Styled/Box";
 import Icon, { StyledIcon } from "../../../../../Styled/Icon";
-import { GyroscopeGuidance } from "./GyroscopeGuidance";
 import { withTerriaRef } from "../../../../HOCs/withTerriaRef";
 import FadeIn from "../../../../Transitions/FadeIn/FadeIn";
-
-const CameraFlightPath =
-  require("terriajs-cesium/Source/Scene/CameraFlightPath").default;
+import { GyroscopeGuidance } from "./GyroscopeGuidance";
 
 export const COMPASS_LOCAL_PROPERTY_KEY = "CompassHelpPrompted";
 
@@ -70,6 +69,17 @@ const StyledCompass = styled.div<StyledCompassProps>`
  */
 const getCompassScaleRatio = (compassWidth: string) =>
   (Number(compassWidth) + 10) / Number(compassWidth);
+
+/**
+ * Width of the inner side of the ring. This encircles the arrows icon.
+ */
+const gyroWidth = ({
+  compassWidth,
+  ringWidth
+}: {
+  compassWidth: string;
+  ringWidth: string;
+}) => Number(compassWidth) - Number(ringWidth) - 10;
 
 /**
  * You think 0.9999 is a joke but I kid you not, it's the root of all evil in
@@ -138,7 +148,7 @@ const StyledCompassRotationMarker = styled.div`
 type PropTypes = WithTranslation & {
   terria: Terria;
   viewState: ViewState;
-  refFromHOC?: React.Ref<HTMLDivElement>;
+  refFromHOC?: Ref<HTMLDivElement>;
   theme: DefaultTheme;
   t: TFunction;
 };
@@ -152,7 +162,7 @@ type IStateTypes = {
 };
 
 // the compass on map
-class Compass extends React.PureComponent<PropTypes, IStateTypes> {
+class Compass extends PureComponent<PropTypes, IStateTypes> {
   _unsubscribeFromPostRender: any;
   _unsubscribeFromAnimationFrame: any;
   private _unsubscribeFromViewerChange?: CesiumEvent.RemoveCallback;
@@ -216,10 +226,15 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
     if (this.orbitMouseUpFunction) {
       document.removeEventListener("mouseup", this.orbitMouseUpFunction, false);
     }
-    this._unsubscribeFromAnimationFrame &&
+    if (this._unsubscribeFromAnimationFrame) {
       this._unsubscribeFromAnimationFrame();
-    this._unsubscribeFromPostRender && this._unsubscribeFromPostRender();
-    this._unsubscribeFromViewerChange && this._unsubscribeFromViewerChange();
+    }
+    if (this._unsubscribeFromPostRender) {
+      this._unsubscribeFromPostRender();
+    }
+    if (this._unsubscribeFromViewerChange) {
+      this._unsubscribeFromViewerChange();
+    }
   }
 
   handleMouseDown(e: any) {
@@ -228,7 +243,7 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
 
     const compassElement = e.currentTarget;
     const compassRectangle = e.currentTarget.getBoundingClientRect();
-    const maxDistance = compassRectangle.width / 2.0;
+    const maxDistance = gyroWidth(this.props.theme) / 2;
     const center = new Cartesian2(
       (compassRectangle.right - compassRectangle.left) / 2.0,
       (compassRectangle.bottom - compassRectangle.top) / 2.0
@@ -240,14 +255,18 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
     const vector = Cartesian2.subtract(clickLocation, center, vectorScratch);
     const distanceFromCenter = Cartesian2.magnitude(vector);
 
-    const distanceFraction = distanceFromCenter / maxDistance;
+    const distanceFraction = distanceFromCenter / (maxDistance + 10);
 
-    const nominalTotalRadius = 145;
-    const nominalGyroRadius = 50;
+    // width of the StyledCompass component
+    const nominalTotalRadius = compassRectangle.width;
+
+    // width of the inner side of the ring (encircling the arrows icon)
+    // when user drags this part we need to trigger orbit
+    const nominalGyroRadius = gyroWidth(this.props.theme);
 
     if (distanceFraction < nominalGyroRadius / nominalTotalRadius) {
       orbit(this, compassElement, vector);
-    } else if (distanceFraction < 1.0) {
+    } else if (distanceFraction < 1.4) {
       rotate(this, compassElement, vector);
     } else {
       return true;
@@ -328,7 +347,7 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
     };
     const { t } = this.props;
     const active = this.state.active;
-    const description = t("compass.description");
+    const description = t(($) => $.compass.description);
     const showGuidance = !this.props.viewState.terria.getLocalProperty(
       COMPASS_LOCAL_PROPERTY_KEY
     );
@@ -345,12 +364,8 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
           <div style={outerCircleStyle}>
             <StyledIcon
               fillColor={this.props.theme.darkWithOverlay}
-              // if it's active, show a white circle only, as we need the base layer
-              glyph={
-                active
-                  ? Icon.GLYPHS.compassOuterSkeleton
-                  : Icon.GLYPHS.compassOuter
-              }
+              // if it's active hide outer ring
+              glyph={active ? null : Icon.GLYPHS.compassOuter}
             />
           </div>
         </StyledCompassOuterRing>
@@ -371,7 +386,7 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
         </StyledCompassOuterRing>
 
         {/* "Center circle icon" */}
-        <StyledCompassInnerRing title={t("compass.title")}>
+        <StyledCompassInnerRing title={t(($) => $.compass.title)}>
           <StyledIcon
             fillColor={this.props.theme.darkWithOverlay}
             glyph={
@@ -384,7 +399,7 @@ class Compass extends React.PureComponent<PropTypes, IStateTypes> {
         <StyledCompassRotationMarker
           title={description}
           style={{
-            backgroundImage: require("../../../../../../wwwroot/images/compass-rotation-marker.svg")
+            backgroundImage: compassRotationMarker
           }}
           onMouseOver={() => this.setState({ active: true })}
           onMouseOut={() => {
@@ -536,7 +551,7 @@ function rotate(
     camera.rotateRight(newCameraAngle - currentCameraAngle);
     camera.lookAtTransform(oldTransform);
 
-    // viewModel.props.terria.cesium.notifyRepaintRequired();
+    viewModel.props.terria.cesium?.notifyRepaintRequired();
   };
 
   viewModel.rotateMouseUpFunction = function (_e) {
@@ -589,8 +604,9 @@ function orbit(
     );
   }
 
-  viewModel._unsubscribeFromAnimationFrame &&
+  if (viewModel._unsubscribeFromAnimationFrame) {
     viewModel._unsubscribeFromAnimationFrame();
+  }
   viewModel._unsubscribeFromAnimationFrame = undefined;
 
   viewModel.orbitMouseMoveFunction = undefined;
@@ -654,7 +670,7 @@ function orbit(
 
     camera.lookAtTransform(oldTransform);
 
-    // viewModel.props.terria.cesium.notifyRepaintRequired();
+    viewModel.props.terria.cesium?.notifyRepaintRequired();
 
     viewModel.orbitLastTimestamp = timestamp;
   };
@@ -673,7 +689,7 @@ function orbit(
       orbitCursorOpacity: easedOpacity
     });
 
-    // viewModel.props.terria.cesium.notifyRepaintRequired();
+    viewModel.props.terria.cesium?.notifyRepaintRequired();
   }
 
   viewModel.orbitMouseMoveFunction = function (e) {
@@ -709,8 +725,9 @@ function orbit(
       );
     }
 
-    viewModel._unsubscribeFromAnimationFrame &&
+    if (viewModel._unsubscribeFromAnimationFrame) {
       viewModel._unsubscribeFromAnimationFrame();
+    }
     viewModel._unsubscribeFromAnimationFrame = undefined;
 
     viewModel.orbitMouseMoveFunction = undefined;

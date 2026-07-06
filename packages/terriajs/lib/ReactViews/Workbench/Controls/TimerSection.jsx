@@ -1,14 +1,13 @@
-import React from "react";
+import { Component } from "react";
 import PropTypes from "prop-types";
 import { observer } from "mobx-react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import Timer from "../../Generic/Timer/Timer";
 import { withTranslation } from "react-i18next";
-
 import Styles from "./timer-section.scss";
 
 @observer
-class TimerSection extends React.Component {
+class TimerSection extends Component {
   static propTypes = {
     item: PropTypes.object.isRequired,
     t: PropTypes.func.isRequired
@@ -23,10 +22,11 @@ class TimerSection extends React.Component {
 
   isEnabled() {
     return (
+      // only show refresh timer for refresh intervals less than 30 minutes
       defined(this.props.item) &&
       this.props.item.isPolling &&
       defined(this.props.item.nextScheduledUpdateTime) &&
-      this.props.item.refreshInterval < 30 * 60 * 1000 // only show refresh timer for refresh intervals less than 30 minutes
+      this.props.item.refreshInterval < 30 * 60 * 1000
     );
   }
 
@@ -112,7 +112,7 @@ class TimerSection extends React.Component {
       <div className={Styles.section}>
         <div className={Styles.timerContainer}>
           <Timer
-            tooltipText={t("timer.nextScheduledUpdateTime", {
+            tooltipText={t(($) => $.timer.nextScheduledUpdateTime, {
               scheduledUpdateTime: this.props.item.nextScheduledUpdateTime
             })}
             radius={10}
@@ -121,7 +121,7 @@ class TimerSection extends React.Component {
           />
         </div>
         <span>
-          {t("timer.nextScheduledUpdateCountdown", {
+          {t(($) => $.timer.nextScheduledUpdateCountdown, {
             timeCountdown: this.getCountdownString()
           })}
         </span>

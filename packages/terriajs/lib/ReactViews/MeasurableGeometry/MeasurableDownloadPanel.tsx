@@ -62,7 +62,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
             );
           }}
           className={Styles.btnCloseFeature}
-          title={i18next.t("general.close")}
+          title={i18next.t(($) => $.general.close)}
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>

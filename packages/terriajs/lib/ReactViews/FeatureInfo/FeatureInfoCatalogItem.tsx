@@ -1,4 +1,4 @@
-import React from "react";
+import { observer } from "mobx-react";
 import { useTranslation } from "react-i18next";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
@@ -6,7 +6,6 @@ import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
 import Styles from "./feature-info-catalog-item.scss";
 import FeatureInfoSection from "./FeatureInfoSection";
-import { observer } from "mobx-react";
 
 interface Props {
   features: TerriaFeature[];
@@ -16,7 +15,7 @@ interface Props {
   printView?: boolean;
 }
 
-const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
+export default observer((props: Props) => {
   const { t } = useTranslation();
   const features = props.features;
   const catalogItem = props.catalogItem;
@@ -34,13 +33,13 @@ const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
         {hiddenNumber === 1 ? (
           <li className={Styles.messageItem}>
             <strong>
-              {t("featureInfo.catalogItem.moreThanMax", {
+              {t(($) => $.featureInfo.catalogItem.moreThanMax, {
                 maximum: maximumShownFeatureInfos,
                 catalogItemName: getName(catalogItem)
               })}
             </strong>
             <br />
-            {t("featureInfo.catalogItem.featureInfoShown", {
+            {t(($) => $.featureInfo.catalogItem.featureInfoShown, {
               maximum: maximumShownFeatureInfos
             })}
           </li>
@@ -49,13 +48,13 @@ const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
         {hiddenNumber > 1 ? (
           <li className={Styles.messageItem}>
             <strong>
-              {t("featureInfo.catalogItem.featuresFound", {
+              {t(($) => $.featureInfo.catalogItem.featuresFound, {
                 featCount: features.length,
                 catalogItemName: getName(catalogItem)
               })}
             </strong>
             <br />
-            {t("featureInfo.catalogItem.featureInfoShown", {
+            {t(($) => $.featureInfo.catalogItem.featureInfoShown, {
               maximum: maximumShownFeatureInfos
             })}
           </li>
@@ -71,6 +70,7 @@ const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
               isOpen={!!(feature === terria.selectedFeature || props.printView)}
               onClickHeader={props.onToggleOpen}
               printView={props.printView}
+              // Fork (rer3d): per-profile info fields auth check
               terria={terria}
             />
           );
@@ -79,5 +79,3 @@ const FeatureInfoCatalogItem: React.FC<Props> = observer((props) => {
     </li>
   );
 });
-
-export default FeatureInfoCatalogItem;

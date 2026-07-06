@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import React, { Suspense } from "react";
+import { FC, lazy, Suspense } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
@@ -8,12 +8,12 @@ import RaiseToUserErrorBoundary from "../../Errors/RaiseToUserErrorBoundary";
 import { Frame, Main } from "../ToolModal";
 import { PropsType } from "./ItemSearchTool";
 
-const ItemSearchTool = React.lazy(() => import("./ItemSearchTool"));
+const ItemSearchTool = lazy(() => import("./ItemSearchTool"));
 
 /**
  * Lazily loads the item search tool while showing a the search window and an animated spinner.
  */
-const LazyItemSearchTool: React.FC<PropsType> = (props) => {
+const LazyItemSearchTool: FC<PropsType> = (props) => {
   const { viewState, item } = props;
   const itemName = CatalogMemberMixin.isMixedInto(item) ? item.name : "Item";
   const [t] = useTranslation();
@@ -23,7 +23,9 @@ const LazyItemSearchTool: React.FC<PropsType> = (props) => {
       fallback={
         <Frame
           viewState={viewState}
-          title={t("itemSearchTool.title", { itemName })}
+          title={t(($) => $.itemSearchTool.title, {
+            itemName: itemName as string
+          })}
         >
           <Wrapper>
             <AnimatedSpinnerIcon light styledWidth="25px" styledHeight="25px" />
@@ -34,7 +36,7 @@ const LazyItemSearchTool: React.FC<PropsType> = (props) => {
       <RaiseToUserErrorBoundary
         viewState={viewState}
         terriaErrorOptions={{
-          title: i18next.t("itemSearchTool.toolLoadError")
+          title: i18next.t(($) => $.itemSearchTool.toolLoadError)
         }}
       >
         <ItemSearchTool {...props} />

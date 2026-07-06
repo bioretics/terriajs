@@ -1,24 +1,22 @@
-import * as geoJsonMerge from "@mapbox/geojson-merge";
+import { FeatureCollection } from "geojson";
 import i18next from "i18next";
-import { computed, makeObservable } from "mobx";
-import * as shp from "shpjs";
-import isDefined from "../../../Core/isDefined";
-import JsonValue, { isJsonObject, JsonArray } from "../../../Core/Json";
+import { action, computed, makeObservable } from "mobx";
+import { FeatureCollectionWithFilename, parseZip } from "shpjs";
+import { isJsonObject } from "../../../Core/Json";
 import loadBlob, { isZip } from "../../../Core/loadBlob";
 import TerriaError from "../../../Core/TerriaError";
-import GeoJsonMixin, {
-  FeatureCollectionWithCrs
-} from "../../../ModelMixins/GeojsonMixin";
+import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import ShapefileCatalogItemTraits from "../../../Traits/TraitsClasses/ShapefileCatalogItemTraits";
+import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
+import { ModelConstructorParameters } from "../../Definition/Model";
 import HasLocalData from "../../HasLocalData";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
-import { ModelConstructorParameters } from "../../Definition/Model";
 import { fileApiNotSupportedError } from "./GeoJsonCatalogItem";
 
-export function isJsonArrayOrDeepArrayOfObjects(
-  value: JsonValue | undefined
-): value is JsonArray {
+export function isJsonArrayOrDeepArrayOfObjects<T>(
+  value: T | T[]
+): value is T[] {
   return (
     Array.isArray(value) &&
     value.every(
@@ -43,28 +41,25 @@ class ShapefileCatalogItem
   }
 
   get typeName() {
-    return i18next.t("models.shapefile.name");
+    return i18next.t(($) => $.models.shapefile.name);
   }
 
-  protected _file?: File;
-
+  @action
   setFileInput(file: File) {
-    this._file = file;
+    this.setTrait(
+      CommonStrata.user,
+      "url",
+      URL.createObjectURL(file) + "#" + file.name
+    );
   }
 
   @computed get hasLocalData(): boolean {
-    return isDefined(this._file);
+    return this.url?.startsWith("blob:") ?? false;
   }
 
   protected async forceLoadGeojsonData() {
-    // ShapefileCatalogItem._file
-    if (this._file) {
-      return await parseShapefile(this._file);
-    }
-    // GeojsonTraits.url
-    else if (this.url) {
-      // URL to zipped fle
-      if (isZip(this.url)) {
+    if (this.url) {
+      if (this.hasLocalData || isZip(this.url)) {
         if (typeof FileReader === "undefined") {
           throw fileApiNotSupportedError(this.terria);
         }
@@ -83,15 +78,28 @@ class ShapefileCatalogItem
   }
 }
 
-async function parseShapefile(blob: Blob): Promise<FeatureCollectionWithCrs> {
-  let json: any;
-  const asAb = await blob.arrayBuffer();
-  json = await shp.parseZip(asAb);
-  if (isJsonArrayOrDeepArrayOfObjects(json)) {
-    // There were multiple shapefiles in this zip file. Merge them.
-    json = geoJsonMerge.merge(json);
+const mergeFeatureCollections = (items: FeatureCollectionWithFilename[]) => {
+  const output: FeatureCollection = {
+    type: "FeatureCollection",
+    features: []
+  };
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    for (let j = 0; j < item.features.length; j++) {
+      output.features.push(item.features[j] as never);
+    }
   }
-  return json;
+
+  return output;
+};
+
+async function parseShapefile(blob: Blob): Promise<FeatureCollection> {
+  const asAb = await blob.arrayBuffer();
+  const json = await parseZip(asAb);
+  if (isJsonArrayOrDeepArrayOfObjects(json)) {
+    return mergeFeatureCollections(json);
+  }
+  return json as FeatureCollection;
 }
 
 export default ShapefileCatalogItem;

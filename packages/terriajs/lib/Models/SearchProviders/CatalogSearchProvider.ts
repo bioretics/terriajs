@@ -1,18 +1,14 @@
-import { autorun, makeObservable, observable, runInAction } from "mobx";
-import {
-  Category,
-  SearchAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+import { autorun, makeObservable, runInAction } from "mobx";
+import { Category, SearchAction } from "../../Core/Analytics/analyticEvents";
 import { TerriaErrorSeverity } from "../../Core/TerriaError";
 import GroupMixin from "../../ModelMixins/GroupMixin";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
 import CatalogSearchProviderMixin from "../../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CatalogSearchProviderTraits from "../../Traits/SearchProviders/CatalogSearchProviderTraits";
-import CommonStrata from "../Definition/CommonStrata";
 import CreateModel from "../Definition/CreateModel";
 import { BaseModel } from "../Definition/Model";
 import Terria from "../Terria";
-import SearchProviderResults from "./SearchProviderResults";
+import SearchProviderResult from "./SearchProviderResults";
 import SearchResult from "./SearchResult";
 
 type UniqueIdString = string;
@@ -21,7 +17,7 @@ type ResultMap = Map<UniqueIdString, boolean>;
 export function loadAndSearchCatalogRecursively(
   models: BaseModel[],
   searchTextLowercase: string,
-  searchResults: SearchProviderResults,
+  searchResults: SearchProviderResult,
   resultMap: ResultMap,
   iteration: number = 0
 ): Promise<void> {
@@ -118,19 +114,12 @@ export default class CatalogSearchProvider extends CatalogSearchProviderMixin(
   CreateModel(CatalogSearchProviderTraits)
 ) {
   static readonly type = "catalog-search-provider";
-  @observable isSearching: boolean = false;
-  @observable debounceDurationOnceLoaded: number = 300;
+  override debounceTime = 300;
 
   constructor(id: string | undefined, terria: Terria) {
     super(id, terria);
 
     makeObservable(this);
-
-    this.setTrait(
-      CommonStrata.defaults,
-      "minCharacters",
-      terria.searchBarModel.minCharacters
-    );
   }
 
   get type() {
@@ -138,7 +127,7 @@ export default class CatalogSearchProvider extends CatalogSearchProviderMixin(
   }
 
   protected logEvent(searchText: string) {
-    this.terria.analytics?.logEvent(
+    this.terria.analytics.logEvent(
       Category.search,
       SearchAction.catalog,
       searchText
@@ -147,15 +136,15 @@ export default class CatalogSearchProvider extends CatalogSearchProviderMixin(
 
   protected async doSearch(
     searchText: string,
-    searchResults: SearchProviderResults
+    searchResults: SearchProviderResult
   ): Promise<void> {
-    runInAction(() => (this.isSearching = true));
+    runInAction(() => (searchResults.isSearching = true));
 
     searchResults.results.length = 0;
     searchResults.message = undefined;
 
     if (searchText === undefined || /^\s*$/.test(searchText)) {
-      runInAction(() => (this.isSearching = false));
+      runInAction(() => (searchResults.isSearching = false));
       return Promise.resolve();
     }
 
@@ -187,7 +176,7 @@ export default class CatalogSearchProvider extends CatalogSearchProviderMixin(
       }
 
       runInAction(() => {
-        this.isSearching = false;
+        searchResults.isSearching = false;
       });
 
       if (searchResults.isCanceled) {
@@ -205,6 +194,7 @@ export default class CatalogSearchProvider extends CatalogSearchProviderMixin(
         };
       }
     } catch (e) {
+      console.error(e);
       this.terria.raiseErrorToUser(e, {
         message: "An error occurred while searching",
         severity: TerriaErrorSeverity.Warning

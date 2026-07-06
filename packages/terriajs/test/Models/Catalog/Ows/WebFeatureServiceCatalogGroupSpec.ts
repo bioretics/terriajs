@@ -28,7 +28,7 @@ describe("WebFeatureServiceCatalogGroup", function () {
   });
 
   describe("after loading capabilities", function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       runInAction(() => {
         wfs.setTrait("definition", "url", "test/WFS/getCapabilities.xml");
       });
@@ -51,10 +51,10 @@ describe("WebFeatureServiceCatalogGroup", function () {
     it("defines info", async function () {
       (await wfs.loadMetadata()).throwIfError();
       const abstract = i18next.t(
-        "models.webFeatureServiceCatalogGroup.abstract"
+        ($) => $.models.webFeatureServiceCatalogGroup.abstract
       );
       const accessConstraints = i18next.t(
-        "models.webFeatureServiceCatalogGroup.accessConstraints"
+        ($) => $.models.webFeatureServiceCatalogGroup.accessConstraints
       );
 
       expect(wfs.info.map(({ name }) => name)).toEqual([
@@ -77,7 +77,7 @@ describe("WebFeatureServiceCatalogGroup", function () {
       (await wfs.loadMembers()).throwIfError();
     });
 
-    it("loads", async function () {
+    it("loads", function () {
       expect(wfs.members.length).toEqual(1);
       expect(wfs.memberModels.length).toEqual(1);
 

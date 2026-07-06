@@ -54,7 +54,7 @@ const EmergencyPlansButton = (props: Props) => {
         `}
       >
         <Icon glyph={Icon.GLYPHS.dataCatalog} />
-        <span>{t("microzonation.municipalEmergencyPlans")}</span>
+        <span>{t(($) => $.microzonation.municipalEmergencyPlans)}</span>
       </button>
     </div>
   );

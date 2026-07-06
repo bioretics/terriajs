@@ -17,10 +17,10 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 
 export function MyComponent() {
-    const { t, i18n } = useTranslation();
-    // or const [t, i18n] = useTranslation();
+  const { t, i18n } = useTranslation();
+  // or const [t, i18n] = useTranslation();
 
-    return <p>{t("key")}</p>; //returns corresponding translated text from translation files
+  return <p>{t(($) => $.key)}</p>; //returns corresponding translated text from translation files
 }
 ```
 
@@ -37,7 +37,7 @@ import React from "react";
 import { withTranslation } from "react-i18next";
 
 function MyComponent({ t, i18n }) {
-    return <p>{t("my translated text")}</p>;
+  return <p>{t(($) => $.my.translated.text)}</p>;
 }
 
 export default withTranslation()(MyComponent);
@@ -56,13 +56,13 @@ import React from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 function MyComponent() {
-    const { t } = useTranslation("myNamespace");
+  const { t } = useTranslation("myNamespace");
 
-    return (
-        <Trans t={t} key="keyHelloWorld">
-            Hello World
-        </Trans>
-    );
+  return (
+    <Trans t={t} key="keyHelloWorld">
+      Hello World
+    </Trans>
+  );
 }
 ```
 
@@ -76,14 +76,14 @@ Use dynamic values in translations.
 
 ```json
 {
-    "key": "{{what}} is {{how}}"
+  "key": "{{what}} is {{how}}"
 }
 ```
 
 Sample
 
 ```js
-i18next.t("key", { what: "i18next", how: "great" });
+i18next.t(($) => $.key, { what: "i18next", how: "great" });
 // -> "i18next is great"
 ```
 
@@ -99,24 +99,24 @@ i18next features automatic recognition of singular and plural forms.
 
 ```json
 {
-    "key": "item",
-    "key_plural": "items",
-    "keyWithCount": "{{count}} item",
-    "keyWithCount_plural": "{{count}} items"
+  "key": "item",
+  "key_plural": "items",
+  "keyWithCount": "{{count}} item",
+  "keyWithCount_plural": "{{count}} items"
 }
 ```
 
 **Example**
 
 ```js
-i18next.t("key", { count: 0 }); // -> "items"
-i18next.t("key", { count: 1 }); // -> "item"
-i18next.t("key", { count: 5 }); // -> "items"
-i18next.t("key", { count: 100 }); // -> "items"
-i18next.t("keyWithCount", { count: 0 }); // -> "0 items"
-i18next.t("keyWithCount", { count: 1 }); // -> "1 item"
-i18next.t("keyWithCount", { count: 5 }); // -> "5 items"
-i18next.t("keyWithCount", { count: 100 }); // -> "100 items"
+i18next.t(($) => $.key, { count: 0 }); // -> "items"
+i18next.t(($) => $.key, { count: 1 }); // -> "item"
+i18next.t(($) => $.key, { count: 5 }); // -> "items"
+i18next.t(($) => $.key, { count: 100 }); // -> "items"
+i18next.t(($) => $.keyWithCount, { count: 0 }); // -> "0 items"
+i18next.t(($) => $.keyWithCount, { count: 1 }); // -> "1 item"
+i18next.t(($) => $.keyWithCount, { count: 5 }); // -> "5 items"
+i18next.t(($) => $.keyWithCount, { count: 100 }); // -> "100 items"
 ```
 
 See the [i18next singular-plural documentation](https://www.i18next.com/translation-function/plurals#singular-plural) for more details.
@@ -129,16 +129,16 @@ Nesting allows you to reference other keys in a translation.
 
 ```json
 {
-    "nesting1": "1 $t(nesting2)",
-    "nesting2": "2 $t(nesting3)",
-    "nesting3": "3"
+  "nesting1": "1 $t(nesting2)",
+  "nesting2": "2 $t(nesting3)",
+  "nesting3": "3"
 }
 ```
 
 **Example**
 
 ```js
-i18next.t("nesting1"); // -> "1 2 3"
+i18next.t(($) => $.nesting1); // -> "1 2 3"
 ```
 
 See the [i18next nesting documentation](https://www.i18next.com/translation-function/nesting#basic) for more details.
@@ -151,22 +151,22 @@ By providing a context you can differ translations.
 
 ```json
 {
-    "friend": "A friend",
-    "friend_male": "A boyfriend",
-    "friend_female": "A girlfriend"
+  "friend": "A friend",
+  "friend_male": "A boyfriend",
+  "friend_female": "A girlfriend"
 }
 ```
 
 **Example**
 
 ```js
-i18next.t("friend"); // -> "A friend"
-i18next.t("friend", { context: "male" }); // -> "A boyfriend"
-i18next.t("friend", { context: "female" }); // -> "A girlfriend"
+i18next.t(($) => $.friend); // -> "A friend"
+i18next.t(($) => $.friend, { context: "male" }); // -> "A boyfriend"
+i18next.t(($) => $.friend, { context: "female" }); // -> "A girlfriend"
 ```
 
 See the [react-i18next context documentation](https://www.i18next.com/translation-function/context) for more details.
 
 ## Future work
 
--   Support internationalization of catalog content.
+- Support internationalization of catalog content.

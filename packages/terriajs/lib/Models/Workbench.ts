@@ -12,6 +12,7 @@ import LayerOrderingTraits from "../Traits/TraitsClasses/LayerOrderingTraits";
 import CommonStrata from "./Definition/CommonStrata";
 import hasTraits from "./Definition/hasTraits";
 import { BaseModel } from "./Definition/Model";
+import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 
 const keepOnTop = (model: BaseModel) =>
   hasTraits(model, LayerOrderingTraits, "keepOnTop") && model.keepOnTop;
@@ -77,7 +78,7 @@ export default class Workbench {
    * @param item The model.
    */
   @action
-  remove(item: BaseModel) {
+  remove(item: BaseModel): void {
     const index = this.indexOf(item);
     if (index >= 0) {
       this._items.splice(index, 1);
@@ -88,7 +89,7 @@ export default class Workbench {
    * Removes all models from the workbench.
    */
   @action
-  removeAll() {
+  removeAll(): void {
     this._items.clear();
   }
 
@@ -96,7 +97,7 @@ export default class Workbench {
    * Collapses all models from the workbench.
    */
   @action
-  collapseAll() {
+  collapseAll(): void {
     this.items.map((item) => {
       item.setTrait(CommonStrata.user, "isOpenInWorkbench", false);
     });
@@ -106,9 +107,30 @@ export default class Workbench {
    * Expands all models from the workbench.
    */
   @action
-  expandAll() {
+  expandAll(): void {
     this.items.map((item) => {
       item.setTrait(CommonStrata.user, "isOpenInWorkbench", true);
+    });
+  }
+
+  /**
+   * Disable all items in the workbench.
+   */
+  @action
+  disableAll() {
+    this.items.forEach((item) => {
+      if (hasTraits(item, MappableTraits, "show")) {
+        item.setTrait(CommonStrata.user, "show", false);
+      }
+    });
+  }
+
+  @action
+  enableAll() {
+    this.items.forEach((item) => {
+      if (hasTraits(item, MappableTraits, "show")) {
+        item.setTrait(CommonStrata.user, "show", true);
+      }
     });
   }
 
@@ -183,10 +205,14 @@ export default class Workbench {
     if (Array.isArray(item)) {
       const results = await Promise.all(item.reverse().map((i) => this.add(i)));
       return Result.combine(results, {
-        title: i18next.t("workbench.addItemErrorTitle"),
-        message: i18next.t("workbench.addItemErrorMessage"),
+        title: i18next.t(($) => $.workbench.addItemErrorTitle),
+        message: i18next.t(($) => $.workbench.addItemErrorMessage),
         importance: -1
       });
+    }
+
+    if (MappableMixin.isMixedInto(item) && item.shouldShowInitialMessage) {
+      await item.showInitialMessage();
     }
 
     this.insertItem(item);
@@ -229,8 +255,8 @@ export default class Workbench {
     }
 
     return Result.none(error, {
-      title: i18next.t("workbench.addItemErrorTitle"),
-      message: i18next.t("workbench.addItemErrorMessage"),
+      title: i18next.t(($) => $.workbench.addItemErrorTitle),
+      message: i18next.t(($) => $.workbench.addItemErrorMessage),
       importance: -1
     });
   }
@@ -240,7 +266,7 @@ export default class Workbench {
    * @param item The model.
    * @returns True if the model or its dereferenced equivalent exists on the workbench; otherwise, false.
    */
-  contains(item: BaseModel) {
+  contains(item: BaseModel): boolean {
     return this.indexOf(item) >= 0;
   }
 
@@ -249,7 +275,7 @@ export default class Workbench {
    * @param item The model.
    * @returns The index of the model or its dereferenced equivalent, or -1 if neither exist on the workbench.
    */
-  indexOf(item: BaseModel) {
+  indexOf(item: BaseModel): number {
     return this.items.findIndex(
       (model) =>
         model === item || dereferenceModel(model) === dereferenceModel(item)
@@ -262,7 +288,7 @@ export default class Workbench {
    * @param newIndex The new index to shift the model to.
    */
   @action
-  moveItemToIndex(item: BaseModel, newIndex: number) {
+  moveItemToIndex(item: BaseModel, newIndex: number): void {
     if (!this.contains(item)) {
       return;
     }

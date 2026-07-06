@@ -1,5 +1,4 @@
 import i18next from "i18next";
-import { runInAction } from "mobx";
 import Result from "../../Core/Result";
 import TerriaError from "../../Core/TerriaError";
 import { applyTranslationIfExists } from "../../Language/languageHelpers";
@@ -25,8 +24,8 @@ export default function upsertSearchProviderFromJson(
     if (id === undefined) {
       return Result.error(
         new TerriaError({
-          title: i18next.t("models.catalog.idForMatchingErrorTitle"),
-          message: i18next.t("models.catalog.idForMatchingErrorMessage")
+          title: i18next.t(($) => $.models.catalog.idForMatchingErrorTitle),
+          message: i18next.t(($) => $.models.catalog.idForMatchingErrorMessage)
         })
       );
     }
@@ -40,10 +39,13 @@ export default function upsertSearchProviderFromJson(
     if (model === undefined) {
       errors.push(
         new TerriaError({
-          title: i18next.t("searchProvider.models.unsupportedTypeTitle"),
-          message: i18next.t("searchProvider.models.unsupportedTypeMessage", {
-            type: json.type
-          })
+          title: i18next.t(($) => $.searchProvider.models.unsupportedTypeTitle),
+          message: i18next.t(
+            ($) => $.searchProvider.models.unsupportedTypeMessage,
+            {
+              type: json.type
+            }
+          )
         })
       );
       model = createStubSearchProvider(terria, uniqueId);
@@ -61,8 +63,6 @@ export default function upsertSearchProviderFromJson(
     }
   }
 
-  setDefaultTraits(model);
-
   updateModelFromJson(model, stratumName, json).catchError((error) => {
     errors.push(error);
     model!.setTrait(CommonStrata.underride, "isExperiencingIssues", true);
@@ -78,28 +78,4 @@ export default function upsertSearchProviderFromJson(
       )}\``
     )
   );
-}
-
-function setDefaultTraits(model: BaseModel) {
-  const terria = model.terria;
-
-  runInAction(() => {
-    model.setTrait(
-      CommonStrata.defaults,
-      "flightDurationSeconds",
-      terria.searchBarModel.flightDurationSeconds
-    );
-
-    model.setTrait(
-      CommonStrata.defaults,
-      "minCharacters",
-      terria.searchBarModel.minCharacters
-    );
-
-    model.setTrait(
-      CommonStrata.defaults,
-      "recommendedListLength",
-      terria.searchBarModel.recommendedListLength
-    );
-  });
 }

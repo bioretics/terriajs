@@ -1,23 +1,17 @@
 import { configure, reaction } from "mobx";
+import { http, HttpResponse } from "msw";
 import YDYRCatalogFunctionJob from "../../../../lib/Models/Catalog/CatalogFunctions/YDYRCatalogFunctionJob";
 import CsvCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/CsvCatalogItem";
 import CommonStrata from "../../../../lib/Models/Definition/CommonStrata";
 import Terria from "../../../../lib/Models/Terria";
+import { worker } from "../../../mocks/browser";
 import "../../../SpecHelpers";
 
 // For more tests see - test\Models\YDYRCatalogFunctionSpec.ts
 
-const regionMapping = JSON.stringify(
-  require("../../../../wwwroot/data/regionMapping.json")
-);
-
-const sa4regionCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json")
-);
-
-const lga2011RegionCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json")
-);
+import regionMapping from "../../../../wwwroot/data/regionMapping.json";
+import sa4regionCodes from "../../../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json";
+import lga2011RegionCodes from "../../../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json";
 
 configure({
   enforceActions: "observed",
@@ -28,44 +22,44 @@ describe("YDYRCatalogFunctionJob", function () {
   let terria: Terria;
   let job: YDYRCatalogFunctionJob;
 
-  beforeEach(async function () {
-    jasmine.Ajax.install();
+  beforeEach(function () {
+    let logCounter = 0;
+    worker.use(
+      http.get(
+        "http://example.com/api/v1/download/someResultKey",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("format") !== "csv")
+            throw new Error(`Unexpected query params: ${url.search}`);
 
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/v1/download/someResultKey?format=csv"
-    ).andReturn({
-      responseText: `SA4_code_2016,Negative Binomial: Lower (10%),Negative Binomial: Upper (90%),Negative Binomial: Average
+          return new HttpResponse(`SA4_code_2016,Negative Binomial: Lower (10%),Negative Binomial: Upper (90%),Negative Binomial: Average
 313,0,1,0
 316,0,1,0
-`
-    });
-
-    let logCounter = 0;
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/v1/status/someStatusId"
-    ).andCallFunction((req) => {
-      if (logCounter < 1) {
-        req.respondWith({ responseText: `"Some Log ${logCounter}"` });
-
-        logCounter++;
-      } else {
-        req.respondWith({
-          responseText: `{"key":"someResultKey","report":{"Quality Control":"OK (Model is performing better than baseline), providing full result"}}`
-        });
-      }
-    });
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json"
-    ).andReturn({ responseText: sa4regionCodes });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json"
-    ).andReturn({ responseText: lga2011RegionCodes });
+`);
+        }
+      ),
+      http.get("http://example.com/api/v1/status/someStatusId", () => {
+        if (logCounter < 1) {
+          const msg = `"Some Log ${logCounter}"`;
+          logCounter++;
+          return new HttpResponse(msg);
+        }
+        return new HttpResponse(
+          `{"key":"someResultKey","report":{"Quality Control":"OK (Model is performing better than baseline), providing full result"}}`
+        );
+      }),
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json",
+        () => HttpResponse.json(sa4regionCodes)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json",
+        () => HttpResponse.json(lga2011RegionCodes)
+      )
+    );
 
     terria = new Terria();
 
@@ -81,10 +75,9 @@ describe("YDYRCatalogFunctionJob", function () {
     job.setTrait(CommonStrata.user, "jobStatus", "running");
     job.setTrait(CommonStrata.user, "refreshEnabled", true);
     job.setTrait(CommonStrata.definition, "jobId", "someStatusId");
-  });
 
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    // Override the 2-second polling interval to speed up tests
+    Object.defineProperty(job, "refreshInterval", { get: () => 0.01 });
   });
 
   it("has a type & typeName", function () {
@@ -92,10 +85,10 @@ describe("YDYRCatalogFunctionJob", function () {
     expect(job.typeName).toBe("YourDataYourRegions Job");
   });
 
-  describe("start polling after added to workbench", async function () {
+  describe("start polling after added to workbench", function () {
     let dispose: () => void;
-    beforeEach(() => {
-      terria.workbench.add(job);
+    beforeEach(async () => {
+      await terria.workbench.add(job);
       dispose = reaction(
         () => job.mapItems,
         () => {}
@@ -105,7 +98,7 @@ describe("YDYRCatalogFunctionJob", function () {
       dispose();
     });
 
-    it("should be in workbench", async function () {
+    it("should be in workbench", function () {
       expect(job.inWorkbench).toBeTruthy();
     });
 

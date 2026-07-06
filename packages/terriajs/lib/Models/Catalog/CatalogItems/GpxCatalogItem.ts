@@ -1,22 +1,20 @@
+import toGeoJSON from "@mapbox/togeojson";
 import i18next from "i18next";
-import { computed, makeObservable, override } from "mobx";
+import { action, computed, makeObservable, override } from "mobx";
 import getFilenameFromUri from "terriajs-cesium/Source/Core/getFilenameFromUri";
+import { FeatureCollectionWithCrs } from "../../../Core/GeoJson";
 import isDefined from "../../../Core/isDefined";
 import loadText from "../../../Core/loadText";
-import readText from "../../../Core/readText";
 import { networkRequestError } from "../../../Core/TerriaError";
-import GeoJsonMixin, {
-  FeatureCollectionWithCrs
-} from "../../../ModelMixins/GeojsonMixin";
+import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import GpxCatalogItemTraits from "../../../Traits/TraitsClasses/GpxCatalogItemTraits";
 import CreateModel from "../../Definition/CreateModel";
-import { BaseModel, ModelConstructorParameters } from "../../Definition/Model";
-import { ModelId } from "../../../Traits/ModelReference";
+import CommonStrata from "../../Definition/CommonStrata";
+import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
+// Fork (rer3d): GPX -> measurable-path sampling.
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-
-const toGeoJSON = require("@mapbox/togeojson");
 
 class GpxCatalogItem extends GeoJsonMixin(CreateModel(GpxCatalogItemTraits)) {
   static readonly type = "gpx";
@@ -31,26 +29,21 @@ class GpxCatalogItem extends GeoJsonMixin(CreateModel(GpxCatalogItemTraits)) {
   }
 
   get typeName() {
-    return i18next.t("models.gpx.name");
+    return i18next.t(($) => $.models.gpx.name);
   }
 
-  private _gpxFile?: File;
-
+  @action
   setFileInput(file: File) {
-    this._gpxFile = file;
-  }
-
-  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
-    const newModel = super.duplicateModel(newId, sourceReference);
-    if (this._gpxFile) {
-      newModel.setFileInput(this._gpxFile);
-    }
-    return newModel;
+    this.setTrait(
+      CommonStrata.user,
+      "url",
+      URL.createObjectURL(file) + "#" + file.name
+    );
   }
 
   @computed
   get hasLocalData(): boolean {
-    return isDefined(this._gpxFile);
+    return this.url?.startsWith("blob:") ?? false;
   }
 
   private loadGpxText(text: string) {
@@ -62,8 +55,6 @@ class GpxCatalogItem extends GeoJsonMixin(CreateModel(GpxCatalogItemTraits)) {
     let data: string | undefined;
     if (isDefined(this.gpxString)) {
       data = this.gpxString;
-    } else if (isDefined(this._gpxFile)) {
-      data = await readText(this._gpxFile);
     } else if (isDefined(this.url)) {
       data = await loadText(proxyCatalogItemUrl(this, this.url));
     }
@@ -71,8 +62,8 @@ class GpxCatalogItem extends GeoJsonMixin(CreateModel(GpxCatalogItemTraits)) {
     if (!data) {
       throw networkRequestError({
         sender: this,
-        title: i18next.t("models.gpx.errorLoadingTitle"),
-        message: i18next.t("models.gpx.errorLoadingMessage", {
+        title: i18next.t(($) => $.models.gpx.errorLoadingTitle),
+        message: i18next.t(($) => $.models.gpx.errorLoadingMessage, {
           appName: this.terria.appName
         })
       });
@@ -81,6 +72,8 @@ class GpxCatalogItem extends GeoJsonMixin(CreateModel(GpxCatalogItemTraits)) {
     return this.loadGpxText(data);
   }
 
+  // Fork (rer3d): sample the GPX path into the measurable-geometry manager
+  // (elevation profile from track points, terrain-sampled when heights ~0).
   public async sampleFromGpxData(): Promise<void> {
     const fc = await this.forceLoadGeojsonData();
     if (!fc) return;

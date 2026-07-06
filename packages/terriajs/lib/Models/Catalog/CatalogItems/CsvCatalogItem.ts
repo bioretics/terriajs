@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { computed, makeObservable, override, runInAction } from "mobx";
+import { action, computed, makeObservable, override, runInAction } from "mobx";
 import isDefined from "../../../Core/isDefined";
 import TerriaError from "../../../Core/TerriaError";
 import AutoRefreshingMixin from "../../../ModelMixins/AutoRefreshingMixin";
@@ -8,6 +8,7 @@ import UrlMixin from "../../../ModelMixins/UrlMixin";
 import Csv from "../../../Table/Csv";
 import TableAutomaticStylesStratum from "../../../Table/TableAutomaticStylesStratum";
 import CsvCatalogItemTraits from "../../../Traits/TraitsClasses/CsvCatalogItemTraits";
+import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
 import { BaseModel } from "../../Definition/Model";
 import StratumOrder from "../../Definition/StratumOrder";
@@ -37,8 +38,6 @@ export default class CsvCatalogItem
     return "csv";
   }
 
-  private _csvFile?: File;
-
   constructor(
     id: string | undefined,
     terria: Terria,
@@ -56,13 +55,18 @@ export default class CsvCatalogItem
     return CsvCatalogItem.type;
   }
 
+  @action
   setFileInput(file: File) {
-    this._csvFile = file;
+    this.setTrait(
+      CommonStrata.user,
+      "url",
+      URL.createObjectURL(file) + "#" + file.name
+    );
   }
 
   @computed
   get hasLocalData(): boolean {
-    return isDefined(this._csvFile);
+    return this.url?.startsWith("blob:") ?? false;
   }
 
   @override
@@ -72,20 +76,10 @@ export default class CsvCatalogItem
 
   @override
   get _canExportData() {
-    return (
-      isDefined(this._csvFile) ||
-      isDefined(this.csvString) ||
-      isDefined(this.url)
-    );
+    return isDefined(this.csvString) || isDefined(this.url);
   }
 
   protected async _exportData() {
-    if (isDefined(this._csvFile)) {
-      return {
-        name: (this.name || this.uniqueId)!,
-        file: this._csvFile
-      };
-    }
     if (isDefined(this.csvString)) {
       return {
         name: (this.name || this.uniqueId)!,
@@ -166,14 +160,6 @@ export default class CsvCatalogItem
         true,
         this.ignoreRowsStartingWithComment
       );
-    } else if (this._csvFile !== undefined) {
-      const text = await this._csvFile.text();
-      const normalized = this.normalizeContent(text);
-      return Csv.parseString(
-        normalized,
-        true,
-        this.ignoreRowsStartingWithComment
-      );
     } else if (this.url !== undefined) {
       const response = await fetch(proxyCatalogItemUrl(this, this.url));
       const text = await response.text();
@@ -187,8 +173,8 @@ export default class CsvCatalogItem
       return Promise.reject(
         new TerriaError({
           sender: this,
-          title: i18next.t("models.csv.unableToLoadItemTitle"),
-          message: i18next.t("models.csv.unableToLoadItemMessage")
+          title: i18next.t(($) => $.models.csv.unableToLoadItemTitle),
+          message: i18next.t(($) => $.models.csv.unableToLoadItemMessage)
         })
       );
     }

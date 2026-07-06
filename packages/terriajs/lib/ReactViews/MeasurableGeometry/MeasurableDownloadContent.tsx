@@ -141,7 +141,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
       {terria.measurableGeomList.length > 1 && (
         <div style={{ marginBottom: "10px" }}>
           <Select
-            title={i18next.t("measurableGeometry.changePath")}
+            title={i18next.t(($) => $.measurableGeometry.changePath)}
             value={isSelectAll ? "all" : selectedElementIndex.toString()}
             onChange={handleElementChange}
             onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
@@ -149,7 +149,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
             }
             disabled={isLoading}
           >
-            <option value="all">{i18next.t("downloadData.selectAll")}</option>
+            <option value="all">{i18next.t(($) => $.downloadData.selectAll)}</option>
             {terria.measurableGeomList.map((geom, index) => {
               const hasValidPoints =
                 geom.stopPoints && geom.stopPoints.length > 0;
@@ -159,7 +159,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
                   value={index.toString()}
                   disabled={!hasValidPoints}
                 >
-                  {`${i18next.t("measurableGeometry.elementPlaceholder")} ${
+                  {`${i18next.t(($) => $.measurableGeometry.elementPlaceholder)} ${
                     index + 1
                   }`}
                 </option>
@@ -173,8 +173,8 @@ const MeasurableDownloadContent = observer((props: Props) => {
         <Input
           dark
           type="text"
-          title={i18next.t("downloadData.filenamePlaceholderTitle")}
-          placeholder={i18next.t("downloadData.filenamePlaceholder")}
+          title={i18next.t(($) => $.downloadData.filenamePlaceholderTitle)}
+          placeholder={i18next.t(($) => $.downloadData.filenamePlaceholder)}
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
@@ -182,7 +182,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
 
       <div style={{ display: "flex", alignItems: "center" }}>
         <Select
-          title={i18next.t("downloadData.formatPlaceholder")}
+          title={i18next.t(($) => $.downloadData.formatPlaceholder)}
           css={`
             padding-top: 5px;
           `}
@@ -202,7 +202,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
           ))}
         </Select>
         <Button
-          title={i18next.t("downloadData.downloadButtonTitle")}
+          title={i18next.t(($) => $.downloadData.downloadButtonTitle)}
           css={`
             color: ${theme.textLight};
             background: ${theme.colorPrimary};
@@ -212,7 +212,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
           disabled={isDownloadDisabled}
         >
           {isLoading
-            ? i18next.t("loader.loadingMessage")
+            ? i18next.t(($) => $.loader.loadingMessage)
             : i18next.t("Download")}
         </Button>
       </div>

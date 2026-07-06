@@ -1,12 +1,8 @@
-"use strict";
-
-const {
-  default: Cartographic
-} = require("terriajs-cesium/Source/Core/Cartographic");
-
-var CesiumMath = require("terriajs-cesium/Source/Core/Math").default;
-var defined = require("terriajs-cesium/Source/Core/defined").default;
-var loadArrayBuffer = require("../../Core/loadArrayBuffer").default;
+// Fork (rer3d): Cartographic used by the height sampling additions below.
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import defined from "terriajs-cesium/Source/Core/defined";
+import loadArrayBuffer from "../../Core/loadArrayBuffer";
 
 /**
  * The Earth Gravity Model 1996 (EGM96) geoid.
@@ -138,4 +134,4 @@ function getHeightValue(data, recordIndex, heightIndex) {
   return data[recordIndex * 1440 + heightIndex];
 }
 
-module.exports = EarthGravityModel1996;
+export default EarthGravityModel1996;

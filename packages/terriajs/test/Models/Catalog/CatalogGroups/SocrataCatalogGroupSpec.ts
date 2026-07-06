@@ -1,32 +1,40 @@
 import { runInAction } from "mobx";
+import { http, HttpResponse } from "msw";
 import Terria from "../../../../lib/Models/Terria";
 import SocrataCatalogGroup from "../../../../lib/Models/Catalog/CatalogGroups/SocrataCatalogGroup";
 import CatalogGroup from "../../../../lib/Models/Catalog/CatalogGroup";
 import SocrataMapViewCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/SocrataMapViewCatalogItem";
+import { worker } from "../../../mocks/browser";
 
-const facets = JSON.stringify(
-  require("../../../../wwwroot/test/Socrata/facets.json")
-);
-
-const search = JSON.stringify(
-  require("../../../../wwwroot/test/Socrata/search.json")
-);
+import facets from "../../../../wwwroot/test/Socrata/facets.json";
+import search from "../../../../wwwroot/test/Socrata/search.json";
 
 describe("SocrataCatalogGroup", function () {
   let terria: Terria;
   let socrataGroup: SocrataCatalogGroup;
 
   beforeEach(function () {
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/catalog/v1/domains/example.com/facets?only=dataset%2Cmap"
-    ).andReturn({
-      responseText: facets
-    });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/catalog/v1?search_context=example.com&only=dataset%2Cmap&categories=Environment"
-    ).andReturn({ responseText: search });
+    worker.use(
+      http.get(
+        "http://example.com/api/catalog/v1/domains/example.com/facets",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("only") !== "dataset,map")
+            throw new Error(`Unexpected query params: ${url.search}`);
+          return HttpResponse.json(facets);
+        }
+      ),
+      http.get("http://example.com/api/catalog/v1", ({ request }) => {
+        const url = new URL(request.url);
+        if (
+          url.searchParams.get("search_context") !== "example.com" ||
+          url.searchParams.get("only") !== "dataset,map" ||
+          url.searchParams.get("categories") !== "Environment"
+        )
+          throw new Error(`Unexpected query params: ${url.search}`);
+        return HttpResponse.json(search);
+      })
+    );
 
     terria = new Terria();
     socrataGroup = new SocrataCatalogGroup("test", terria);
@@ -34,10 +42,6 @@ describe("SocrataCatalogGroup", function () {
     runInAction(() => {
       socrataGroup.setTrait("definition", "url", "http://example.com");
     });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
   });
 
   it("has a type", function () {

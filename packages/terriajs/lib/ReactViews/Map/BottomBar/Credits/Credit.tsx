@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { ExternalLinkIcon } from "../../../Custom/ExternalLink";
 import { ICredit } from "./Credit.type";
@@ -18,7 +18,7 @@ export const Credit: FC<{
         rel="noopener noreferrer"
         href={credit.url}
       >
-        {t(credit.text)} <ExternalLinkIcon />
+        {t(credit.text as never)} <ExternalLinkIcon />
       </a>
       {!lastElement ? <Spacer /> : null}
     </>

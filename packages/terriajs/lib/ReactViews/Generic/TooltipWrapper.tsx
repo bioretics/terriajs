@@ -1,10 +1,9 @@
 /**
  * base tooltipwrapperraw repurposed from magda, with some a11y modifications
  */
-import React from "react";
+import { ReactNode, FC, createRef, Component, useId } from "react";
 import ReactDOM from "react-dom";
 import { withTheme, DefaultTheme } from "styled-components";
-import { useUID } from "react-uid";
 import { BoxSpan } from "../../Styled/Box";
 import { RawButton } from "../../Styled/Button";
 import { TextSpan } from "../../Styled/Text";
@@ -30,11 +29,11 @@ type Props = {
     state: State;
     launch: () => void;
     forceSetState: (bool?: boolean) => void;
-  }) => React.ReactNode;
+  }) => ReactNode;
   /** Styles to apply to the  actual tooltip */
   innerElementStyles?: object;
   /** The tooltip content itself, as higher-order function that provides a function to dismiss the tooltip */
-  children: (applyAriaId: boolean, dismiss: () => void) => React.ReactNode;
+  children: (applyAriaId: boolean, dismiss: () => void) => ReactNode;
 };
 
 type State = {
@@ -45,9 +44,9 @@ type State = {
 /**
  * @description Return a information tooltip, on hover show calculation method.
  */
-class TooltipWrapperRaw extends React.Component<Props, State> {
-  rootRef = React.createRef<HTMLDivElement>();
-  tooltipTextElementRef = React.createRef<HTMLSpanElement>();
+class TooltipWrapperRaw extends Component<Props, State> {
+  rootRef = createRef<HTMLDivElement>();
+  tooltipTextElementRef = createRef<HTMLSpanElement>();
   state = {
     offset: 0,
     open: !!this.props.startOpen
@@ -74,7 +73,9 @@ class TooltipWrapperRaw extends React.Component<Props, State> {
   }
 
   dismiss = () => {
-    this.props.onDismiss && this.props.onDismiss();
+    if (this.props.onDismiss) {
+      this.props.onDismiss();
+    }
     this.setState({ open: false });
   };
 
@@ -229,21 +230,19 @@ class TooltipWrapperRaw extends React.Component<Props, State> {
 export const TooltipWrapper = withTheme(TooltipWrapperRaw);
 
 type ButtonLauncherProps = {
-  launcherComponent: () => React.ReactNode;
-  children: (idForAria: string) => React.ReactNode;
+  launcherComponent: () => ReactNode;
+  children: (idForAria: string) => ReactNode;
   dismissOnLeave?: boolean;
   orientation?: "below" | "above";
   [spread: string]: any;
 };
 
-export const TooltipWithButtonLauncher: React.SFC<ButtonLauncherProps> = (
-  props
-) => {
+export const TooltipWithButtonLauncher: FC<ButtonLauncherProps> = (props) => {
   const { launcherComponent, children, dismissOnLeave, orientation, ...rest } =
     props;
 
-  const idForAria = `ButtonLauncher-${useUID()}`;
-  const idForChildAria = `ButtonLauncher-child-${useUID()}`;
+  const idForAria = useId();
+  const idForChildAria = useId();
 
   return (
     <TooltipWrapper

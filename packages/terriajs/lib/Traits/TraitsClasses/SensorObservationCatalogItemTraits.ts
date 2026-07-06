@@ -101,7 +101,9 @@ export default class SensorObservationCatalogItemTraits extends mixTraits(
     description:
       "Gets or sets the name seen by the user for the list of procedures. Defaults to `Procedure`, but eg. for BoM, `Frequency` would be better."
   })
-  proceduresName = i18next.t("models.sensorObservationService.procedure");
+  proceduresName: string = i18next.t(
+    ($) => $.models.sensorObservationService.procedure
+  );
 
   @primitiveTrait({
     name: "Observable properties name",
@@ -109,8 +111,8 @@ export default class SensorObservationCatalogItemTraits extends mixTraits(
     description:
       "Gets or sets the name seen by the user for the list of observable properties. Defaults to `Property`, but eg. for BoM, `Observation type` would be better."
   })
-  observablePropertiesName = i18next.t(
-    "models.sensorObservationService.property"
+  observablePropertiesName: string = i18next.t(
+    ($) => $.models.sensorObservationService.property
   );
 
   @primitiveArrayTrait({
@@ -166,5 +168,7 @@ export default class SensorObservationCatalogItemTraits extends mixTraits(
     type: "string",
     description: "The identifier of the selected observable property"
   })
-  selectedObservableId?: string;
+  get selectedObservableId(): string | undefined {
+    return;
+  }
 }

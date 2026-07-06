@@ -146,8 +146,8 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         if (isMounted) {
           const status = Number(error?.message);
           const msg = !Number.isNaN(status)
-            ? t("microzonation.errorApiStatus", { status })
-            : error?.message || t("microzonation.errorLoadingList");
+            ? t(($) => $.microzonation.errorApiStatus, { status })
+            : error?.message || t(($) => $.microzonation.errorLoadingList);
           setListError(msg);
         }
       } finally {
@@ -175,13 +175,13 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     return uniqueSorted(filtered.map((r) => r.municipality));
   }, [records, filters.province]);
   const microzonationLabels: Record<string, string> = {
-    "2": t("microzonation.level2"),
-    "3": t("microzonation.level3")
+    "2": t(($) => $.microzonation.level2),
+    "3": t(($) => $.microzonation.level3)
   };
 
   const cleLabels: Record<string, string> = {
-    done: t("microzonation.cleDone"),
-    no: t("microzonation.cleNo")
+    done: t(($) => $.microzonation.cleDone),
+    no: t(($) => $.microzonation.cleNo)
   };
 
   const applyFilters = () => {
@@ -370,20 +370,20 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         scroll
       >
         <Text bold extraExtraLarge textLight>
-          {t("microzonation.panelTitle")}
+          {t(($) => $.microzonation.panelTitle)}
         </Text>
         <Text medium color={theme.textLightDimmed}>
-          {t("microzonation.panelBody")}
+          {t(($) => $.microzonation.panelBody)}
         </Text>
 
         <div className={Styles.sectionTitle}>
-          {t("microzonation.searchTitle")}
+          {t(($) => $.microzonation.searchTitle)}
         </div>
 
         <div className={Styles.filterGrid}>
           <div className={Styles.field}>
             <label className={Styles.fieldLabel}>
-              {t("microzonation.province")}
+              {t(($) => $.microzonation.province)}
             </label>
             <Select
               value={filters.province}
@@ -393,7 +393,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
               }}
               light
             >
-              <option value="">{t("microzonation.allFeminine")}</option>
+              <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {provinceOptions.map((value) => (
                 <option key={value} value={value}>
                   {value}
@@ -403,7 +403,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           </div>
           <div className={Styles.field}>
             <label className={Styles.fieldLabel}>
-              {t("microzonation.municipality")}
+              {t(($) => $.microzonation.municipality)}
             </label>
             <Select
               value={filters.municipality}
@@ -413,7 +413,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
               }}
               light
             >
-              <option value="">{t("microzonation.allMasculine")}</option>
+              <option value="">{t(($) => $.microzonation.allMasculine)}</option>
               {municipalityOptions.map((value) => (
                 <option key={value} value={value}>
                   {value}
@@ -423,7 +423,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           </div>
           <div className={Styles.field}>
             <label className={Styles.fieldLabel}>
-              {t("microzonation.microzonation")}
+              {t(($) => $.microzonation.microzonation)}
             </label>
             <Select
               value={filters.microzonation}
@@ -433,7 +433,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
               }}
               light
             >
-              <option value="">{t("microzonation.allFeminine")}</option>
+              <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {Object.entries(microzonationLabels).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -443,7 +443,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           </div>
           <div className={Styles.field}>
             <label className={Styles.fieldLabel}>
-              {t("microzonation.cle")}
+              {t(($) => $.microzonation.cle)}
             </label>
             <Select
               value={filters.cle}
@@ -453,7 +453,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
               }}
               light
             >
-              <option value="">{t("microzonation.allFeminine")}</option>
+              <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {Object.entries(cleLabels).map(([value, label]) => (
                 <option key={value} value={value}>
                   {label}
@@ -469,41 +469,41 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             onClick={applyFilters}
             disabled={loadingList || !records.length}
           >
-            {t("microzonation.searchButton")}
+            {t(($) => $.microzonation.searchButton)}
           </Button>
           <Button secondary onClick={clearFilters}>
-            {t("microzonation.clearButton")}
+            {t(($) => $.microzonation.clearButton)}
           </Button>
         </div>
 
         {loadingList && (
-          <div className={Styles.notice}>{t("microzonation.loadingList")}</div>
+          <div className={Styles.notice}>{t(($) => $.microzonation.loadingList)}</div>
         )}
         {listError && <div className={Styles.error}>{listError}</div>}
 
         {hasSearched && (
           <>
             <div className={Styles.sectionTitle}>
-              {t("microzonation.listTitle")}
+              {t(($) => $.microzonation.listTitle)}
             </div>
             <div className={Styles.tableWrapper}>
               <table className={Styles.table}>
                 <thead>
                   <tr>
-                    <th>{t("microzonation.province")}</th>
-                    <th>{t("microzonation.municipality")}</th>
-                    <th>{t("microzonation.microzonation")}</th>
-                    <th>{t("microzonation.msOrdinance")}</th>
-                    <th>{t("microzonation.cle")}</th>
-                    <th>{t("microzonation.cleOrdinance")}</th>
-                    <th>{t("microzonation.municipalPlan")}</th>
+                    <th>{t(($) => $.microzonation.province)}</th>
+                    <th>{t(($) => $.microzonation.municipality)}</th>
+                    <th>{t(($) => $.microzonation.microzonation)}</th>
+                    <th>{t(($) => $.microzonation.msOrdinance)}</th>
+                    <th>{t(($) => $.microzonation.cle)}</th>
+                    <th>{t(($) => $.microzonation.cleOrdinance)}</th>
+                    <th>{t(($) => $.microzonation.municipalPlan)}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRecords.length === 0 && (
                     <tr>
                       <td colSpan={7} className={Styles.emptyState}>
-                        {t("microzonation.noResults")}
+                        {t(($) => $.microzonation.noResults)}
                       </td>
                     </tr>
                   )}
@@ -545,7 +545,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
         {detail && (
           <div className={Styles.sectionTitle}>
-            {t("microzonation.detailTitle")}
+            {t(($) => $.microzonation.detailTitle)}
           </div>
         )}
 
@@ -553,20 +553,20 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
           <div className={Styles.detailWrapper}>
             <div className={Styles.detailSection}>
               <div className={Styles.detailHeading}>
-                {t("microzonation.generalInfo")}
+                {t(($) => $.microzonation.generalInfo)}
               </div>
               <table className={Styles.detailTable}>
                 <tbody>
                   <tr>
-                    <td>{t("microzonation.province")}</td>
+                    <td>{t(($) => $.microzonation.province)}</td>
                     <td>{formatValue(detail.generalInfo.province)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.municipality")}</td>
+                    <td>{t(($) => $.microzonation.municipality)}</td>
                     <td>{formatValue(detail.generalInfo.municipality)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.notes")}</td>
+                    <td>{t(($) => $.microzonation.notes)}</td>
                     <td>
                       <span style={{ whiteSpace: "pre-line" }}>
                         {formatValue(detail.generalInfo.notes)}
@@ -579,12 +579,12 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
             <div className={Styles.detailSection}>
               <div className={Styles.detailHeading}>
-                {t("microzonation.microzonation")}
+                {t(($) => $.microzonation.microzonation)}
               </div>
               <table className={Styles.detailTable}>
                 <tbody>
                   <tr>
-                    <td>{t("microzonation.microzonation")}</td>
+                    <td>{t(($) => $.microzonation.microzonation)}</td>
                     <td>
                       {microzonationLabels[
                         detail.microzonation.microzonation ?? ""
@@ -592,15 +592,15 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                     </td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.msOrdinance")}</td>
+                    <td>{t(($) => $.microzonation.msOrdinance)}</td>
                     <td>{formatValue(detail.microzonation.msOrdinance)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.msValidation")}</td>
+                    <td>{t(($) => $.microzonation.msValidation)}</td>
                     <td>{formatValue(detail.microzonation.msValidation)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.msStandard")}</td>
+                    <td>{t(($) => $.microzonation.msStandard)}</td>
                     <td>{formatValue(detail.microzonation.msStandard)}</td>
                   </tr>
                 </tbody>
@@ -609,27 +609,27 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
             <div className={Styles.detailSection}>
               <div className={Styles.detailHeading}>
-                {t("microzonation.cle")}
+                {t(($) => $.microzonation.cle)}
               </div>
               <table className={Styles.detailTable}>
                 <tbody>
                   <tr>
-                    <td>{t("microzonation.cle")}</td>
+                    <td>{t(($) => $.microzonation.cle)}</td>
                     <td>
                       {cleLabels[detail.cle.cle ?? ""] ??
                         formatValue(detail.cle.cle)}
                     </td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.cleOrdinance")}</td>
+                    <td>{t(($) => $.microzonation.cleOrdinance)}</td>
                     <td>{formatValue(detail.cle.cleOrdinance)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.cleValidation")}</td>
+                    <td>{t(($) => $.microzonation.cleValidation)}</td>
                     <td>{formatValue(detail.cle.cleValidation)}</td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.cleStandard")}</td>
+                    <td>{t(($) => $.microzonation.cleStandard)}</td>
                     <td>{formatValue(detail.cle.cleStandard)}</td>
                   </tr>
                 </tbody>
@@ -638,18 +638,18 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
             <div className={Styles.detailSection}>
               <div className={Styles.detailHeading}>
-                {t("microzonation.civilProtectionPlan")}
+                {t(($) => $.microzonation.civilProtectionPlan)}
               </div>
               <table className={Styles.detailTable}>
                 <tbody>
                   <tr>
-                    <td>{t("microzonation.municipalPlan")}</td>
+                    <td>{t(($) => $.microzonation.municipalPlan)}</td>
                     <td>
                       {formatValue(detail.civilProtectionPlan.municipalPlan)}
                     </td>
                   </tr>
                   <tr>
-                    <td>{t("microzonation.planLink")}</td>
+                    <td>{t(($) => $.microzonation.planLink)}</td>
                     <td>
                       {detail.civilProtectionPlan.link ? (
                         <a
@@ -657,7 +657,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                           target="_blank"
                           rel="noopener noreferrer"
                         >
-                          {t("microzonation.open")}
+                          {t(($) => $.microzonation.open)}
                         </a>
                       ) : (
                         "-"
@@ -671,7 +671,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         )}
         {detail && (
           <div className={Styles.sectionTitle}>
-            {t("microzonation.documents")}
+            {t(($) => $.microzonation.documents)}
           </div>
         )}
 
@@ -685,7 +685,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
 
             {!loadingDocs && documents.length === 0 && (
               <div className={Styles.emptyState}>
-                {t("microzonation.noDocuments")}
+                {t(($) => $.microzonation.noDocuments)}
               </div>
             )}
 
@@ -698,31 +698,31 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                         onClick={() => onSort("typeDoc")}
                         style={{ cursor: "pointer" }}
                       >
-                        {t("microzonation.typeDoc")}
+                        {t(($) => $.microzonation.typeDoc)}
                       </th>
                       <th
                         onClick={() => onSort("desc")}
                         style={{ cursor: "pointer" }}
                       >
-                        {t("microzonation.description")}
+                        {t(($) => $.microzonation.description)}
                       </th>
                       <th
                         onClick={() => onSort("docFormat")}
                         style={{ cursor: "pointer" }}
                       >
-                        {t("microzonation.docFormat")}
+                        {t(($) => $.microzonation.docFormat)}
                       </th>
                       <th
                         onClick={() => onSort("startDate")}
                         style={{ cursor: "pointer" }}
                       >
-                        {t("microzonation.startDate")}
+                        {t(($) => $.microzonation.startDate)}
                       </th>
                       <th
                         onClick={() => onSort("endDate")}
                         style={{ cursor: "pointer" }}
                       >
-                        {t("microzonation.endDate")}
+                        {t(($) => $.microzonation.endDate)}
                       </th>
                       <th />
                     </tr>
@@ -742,7 +742,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                             rel="noopener noreferrer"
                             download
                           >
-                            {t("microzonation.download")}
+                            {t(($) => $.microzonation.download)}
                           </a>
                         </td>
                       </tr>
@@ -759,7 +759,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
             target="_blank"
             rel="noopener noreferrer"
           >
-            {t("microzonation.municipalEmergencyPlans")}
+            {t(($) => $.microzonation.municipalEmergencyPlans)}
           </a>
         </div>
       </Box>

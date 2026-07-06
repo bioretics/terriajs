@@ -5,8 +5,6 @@ import CzmlCatalogItem from "./Catalog/CatalogItems/CzmlCatalogItem";
 import Terria from "./Terria";
 import LatLonHeight from "../Core/LatLonHeight";
 import { toJS } from "mobx";
-
-// @ts-expect-error image import
 import markerIcon from "../../wwwroot/images/map-pin.png";
 
 export const LOCATION_MARKER_DATA_SOURCE_NAME =
@@ -60,7 +58,7 @@ export function addMarker(
         location.height || 0.0
       ]
     },
-    description: `<table><tr><td>${i18next.t("featureInfo.latLon")}</td><td>${
+    description: `<table><tr><td>${i18next.t(($) => $.featureInfo.latLon)}</td><td>${
       displayCoords.latitude
     }, ${displayCoords.longitude}</td></tr></table>`,
     billboard: billboard

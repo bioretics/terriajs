@@ -40,6 +40,9 @@ export interface MagdaReferenceHeaders {
   [key: string]: string;
 }
 
+/**
+ * @deprecated - MagdaReference model is deprecated and will be removed in a future release. If you need this model please reach out to the Terria team to discuss your use case and alternatives.
+ */
 export default class MagdaReference extends AccessControlMixin(
   UrlMixin(ReferenceMixin(CreateModel(MagdaReferenceTraits)))
 ) {
@@ -144,7 +147,7 @@ export default class MagdaReference extends AccessControlMixin(
   }
 
   @computed
-  get registryUri(): uri.URI | undefined {
+  get registryUri(): URI | undefined {
     const uri = this.uri;
     if (uri === undefined) {
       return undefined;
@@ -258,7 +261,7 @@ export default class MagdaReference extends AccessControlMixin(
     terria: Terria,
     sourceReference: BaseModel | undefined,
     distributionFormats: readonly PreparedDistributionFormat[],
-    magdaUri: uri.URI | undefined,
+    magdaUri: URI | undefined,
     id: string | undefined,
     record: JsonObject | undefined,
     override: JsonObject | undefined,
@@ -374,7 +377,7 @@ export default class MagdaReference extends AccessControlMixin(
     terria: Terria,
     sourceReference: BaseModel | undefined,
     distributionFormats: readonly PreparedDistributionFormat[],
-    magdaUri: uri.URI | undefined,
+    magdaUri: URI | undefined,
     id: string | undefined,
     record: JsonObject,
     override: JsonObject | undefined,
@@ -395,8 +398,10 @@ export default class MagdaReference extends AccessControlMixin(
     if (ModelClass === undefined) {
       throw new TerriaError({
         sender: this,
-        title: i18next.t("models.catalog.unsupportedTypeTitle"),
-        message: i18next.t("models.catalog.unsupportedTypeMessage", { type })
+        title: i18next.t(($) => $.models.catalog.unsupportedTypeTitle),
+        message: i18next.t(($) => $.models.catalog.unsupportedTypeMessage, {
+          type
+        })
       });
     }
 
@@ -559,7 +564,7 @@ export default class MagdaReference extends AccessControlMixin(
   private static createMemberFromTerriaAspect(
     terria: Terria,
     sourceReference: BaseModel | undefined,
-    magdaUri: uri.URI | undefined,
+    _magdaUri: URI | undefined,
     id: string | undefined,
     record: JsonObject,
     terriaAspect: JsonObject,
@@ -634,7 +639,7 @@ export default class MagdaReference extends AccessControlMixin(
   private static createMemberFromDistributionFormat(
     terria: Terria,
     sourceReference: BaseModel | undefined,
-    magdaUri: uri.URI | undefined,
+    _magdaUri: URI | undefined,
     id: string | undefined,
     datasetRecord: JsonObject,
     distributionRecord: JsonObject,
@@ -664,8 +669,8 @@ export default class MagdaReference extends AccessControlMixin(
       if (newMember === undefined) {
         throw new TerriaError({
           sender: this,
-          title: i18next.t("models.catalog.unsupportedTypeTitle"),
-          message: i18next.t("models.catalog.unsupportedTypeMessage", {
+          title: i18next.t(($) => $.models.catalog.unsupportedTypeTitle),
+          message: i18next.t(($) => $.models.catalog.unsupportedTypeMessage, {
             type: format.definition.type
           })
         });
@@ -839,8 +844,8 @@ export default class MagdaReference extends AccessControlMixin(
       return Promise.reject(
         new TerriaError({
           sender: this,
-          title: i18next.t("models.magda.idsNotSpecifiedTitle"),
-          message: i18next.t("models.magda.idsNotSpecifiedMessage")
+          title: i18next.t(($) => $.models.magda.idsNotSpecifiedTitle),
+          message: i18next.t(($) => $.models.magda.idsNotSpecifiedMessage)
         })
       );
     }
@@ -849,7 +854,7 @@ export default class MagdaReference extends AccessControlMixin(
     return loadJson(proxiedUrl, options.magdaReferenceHeaders);
   }
 
-  protected buildMagdaRecordUri(options: RecordOptions): uri.URI | undefined {
+  protected buildMagdaRecordUri(options: RecordOptions): URI | undefined {
     const registryUri = this.registryUri;
     if (options.id === undefined || registryUri === undefined) {
       return undefined;

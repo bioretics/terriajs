@@ -1,4 +1,4 @@
-import React from "react";
+import { Component } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import { observer } from "mobx-react";
 
@@ -14,10 +14,10 @@ import Styles from "./mobile-menu.scss";
 import { runInAction } from "mobx";
 import LangPanel from "../Map/Panels/LangPanel/LangPanel";
 import { applyTranslationIfExists } from "../../Language/languageHelpers";
-import { Category, HelpAction } from "../../Core/AnalyticEvents/analyticEvents";
+import { Category, HelpAction } from "../../Core/Analytics/analyticEvents";
 
 @observer
-class MobileMenu extends React.Component {
+class MobileMenu extends Component {
   static propTypes = {
     menuItems: PropTypes.arrayOf(PropTypes.element),
     menuLeftItems: PropTypes.arrayOf(PropTypes.element),
@@ -87,7 +87,7 @@ class MobileMenu extends React.Component {
       href: mapUserGuideItem.url,
       caption: title,
       onClick: () => {
-        this.props.terria.analytics?.logEvent(
+        this.props.terria.analytics.logEvent(
           Category.help,
           HelpAction.itemSelected,
           title
@@ -128,12 +128,16 @@ class MobileMenu extends React.Component {
             <SettingPanel
               terria={this.props.terria}
               viewState={this.props.viewState}
+              elementConfig={this.props.terria.elements.get(
+                "menu-bar-settings"
+              )}
             />
           </div>
           <div onClick={() => this.hideMenu()}>
             <SharePanel
               terria={this.props.terria}
               viewState={this.props.viewState}
+              elementConfig={this.props.terria.elements.get("menu-bar-share")}
             />
           </div>
           {this.props.menuItems.map((menuItem) => (
@@ -144,20 +148,28 @@ class MobileMenu extends React.Component {
               {menuItem}
             </div>
           ))}
-          {mapUserGuide && <MobileMenuItem {...mapUserGuide} />}
+          {mapUserGuide && (
+            <MobileMenuItem>
+              <MobileMenuItem.Link {...mapUserGuide}>
+                {mapUserGuide.caption}
+              </MobileMenuItem.Link>
+            </MobileMenuItem>
+          )}
           {this.props.showFeedback && (
-            <MobileMenuItem
-              onClick={() => this.onFeedbackFormClick()}
-              caption={t("feedback.feedbackBtnText")}
-            />
+            <MobileMenuItem>
+              <MobileMenuItem.Button onClick={() => this.onFeedbackFormClick()}>
+                {t(($) => $.feedback.feedbackBtnText)}
+              </MobileMenuItem.Button>
+            </MobileMenuItem>
           )}
           {hasStories && (
-            <MobileMenuItem
-              onClick={() => this.runStories()}
-              caption={t("story.mobileViewStory", {
-                storiesLength: this.props.terria.stories.length
-              })}
-            />
+            <MobileMenuItem>
+              <MobileMenuItem.Button onClick={() => this.runStories()}>
+                {t(($) => $.story.mobileViewStory, {
+                  storiesLength: this.props.terria.stories.length
+                })}
+              </MobileMenuItem.Button>
+            </MobileMenuItem>
           )}
           {this.props.terria.configParameters.languageConfiguration
             ?.enabled && (
@@ -165,6 +177,7 @@ class MobileMenu extends React.Component {
               <LangPanel
                 terria={this.props.terria}
                 smallScreen={this.props.viewState.useSmallScreenInterface}
+                elementConfig={this.props.terria.elements.get("menu-bar-lang")}
               />
             </div>
           )}

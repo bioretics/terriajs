@@ -2,7 +2,6 @@ import i18next from "i18next";
 import isDefined from "../../Core/isDefined";
 import TerriaError from "../../Core/TerriaError";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
-import ViewState from "../../ReactViewModels/ViewState";
 import CommonStrata from "../Definition/CommonStrata";
 import { BaseModel } from "../Definition/Model";
 import upsertModelFromJson from "../Definition/upsertModelFromJson";
@@ -13,7 +12,6 @@ import createUrlReferenceFromUrl from "./CatalogReferences/createUrlReferenceFro
 
 export default function createCatalogItemFromFileOrUrl(
   terria: Terria,
-  viewState: ViewState,
   fileOrUrl: File | string,
   dataType?: string
 ): Promise<BaseModel | undefined> {
@@ -33,11 +31,14 @@ export default function createCatalogItemFromFileOrUrl(
       if (!isDefined(newItem)) {
         terria.raiseErrorToUser(
           new TerriaError({
-            title: i18next.t("models.catalog.unsupportedFileTypeTitle"),
-            message: i18next.t("models.catalog.unsupportedFileTypeMessage", {
-              appName: terria.appName,
-              link: '<a href="https://github.com/TerriaJS/nationalmap/wiki/csv-geo-au">csv-geo-au format</a>'
-            })
+            title: i18next.t(($) => $.models.catalog.unsupportedFileTypeTitle),
+            message: i18next.t(
+              ($) => $.models.catalog.unsupportedFileTypeMessage,
+              {
+                appName: terria.appName,
+                link: '<a href="https://github.com/TerriaJS/nationalmap/wiki/csv-geo-au">csv-geo-au format</a>'
+              }
+            )
           })
         );
         return undefined;

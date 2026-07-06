@@ -2,11 +2,11 @@ import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import Box from "../../Styled/Box";
 import Icon from "../../Styled/Icon";
-import DataCatalog from "../DataCatalog/DataCatalog";
+import { ExplorerWindowComponents } from "../ExplorerWindow/ExplorerWindowComponents";
 import DataPreview from "../Preview/DataPreview";
 import WorkbenchList from "../Workbench/WorkbenchList";
 import Styles from "./mobile-modal-window.scss";
@@ -15,7 +15,7 @@ import MappableMixin from "../../ModelMixins/MappableMixin";
 import MyDataTab from "../ExplorerWindow/Tabs/MyDataTab/MyDataTab.jsx";
 
 @observer
-class MobileModalWindow extends React.Component {
+class MobileModalWindow extends Component {
   static propTypes = {
     terria: PropTypes.object,
     viewState: PropTypes.object.isRequired,
@@ -58,8 +58,9 @@ class MobileModalWindow extends React.Component {
         // No multiple catalogue tabs in mobile
         return (
           <div>
+            {/* Fork (rer3d): show user-added data above the catalog */}
             <div>
-              <DataCatalog
+              <ExplorerWindowComponents.DataCatalog
                 items={this.props.terria.catalog.userAddedDataGroup.items}
                 removable
                 viewState={this.props.viewState}
@@ -67,7 +68,7 @@ class MobileModalWindow extends React.Component {
               />
             </div>
             <div>
-              <DataCatalog
+              <ExplorerWindowComponents.DataCatalog
                 terria={this.props.terria}
                 viewState={this.props.viewState}
                 items={this.props.terria.catalog.group.memberModels}
@@ -75,6 +76,7 @@ class MobileModalWindow extends React.Component {
             </div>
           </div>
         );
+      // Fork (rer3d): dedicated mobile add-data view.
       case viewState.mobileViewOptions.addData:
         return (
           <MyDataTab
@@ -113,7 +115,6 @@ class MobileModalWindow extends React.Component {
     });
   }
 
-  /* eslint-disable-next-line camelcase */
   UNSAFE_componentWillReceiveProps() {
     const numItems = this.props.terria.workbench.items.length;
     if (
@@ -153,7 +154,7 @@ class MobileModalWindow extends React.Component {
                 className={Styles.doneButton}
                 onClick={() => this.onClearMobileUI()}
               >
-                {t("mobile.doneBtnText")}
+                {t(($) => $.mobile.doneBtnText)}
               </button>
             )}
             <button
@@ -177,4 +178,5 @@ class MobileModalWindow extends React.Component {
     );
   }
 }
-module.exports = withTranslation()(MobileModalWindow);
+
+export default withTranslation()(MobileModalWindow);

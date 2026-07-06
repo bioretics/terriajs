@@ -65,12 +65,15 @@ export default class WebProcessingServiceCapabilities {
       if (capabilitiesXml === undefined || capabilities === undefined) {
         throw networkRequestError({
           title: i18next.t(
-            "models.webProcessingServiceCatalogGroup.invalidCapabilitiesTitle"
+            ($) =>
+              $.models.webProcessingServiceCatalogGroup.invalidCapabilitiesTitle
           ),
           message: i18next.t(
-            "models.webProcessingServiceCatalogGroup.invalidCapabilitiesMessage",
+            ($) =>
+              $.models.webProcessingServiceCatalogGroup
+                .invalidCapabilitiesMessage,
             {
-              url: url
+              url
             }
           )
         });
@@ -123,10 +126,10 @@ function parseServiceIdentification(
   const ServiceTypeVersion = isJsonString(json.ServiceTypeVersion)
     ? [json.ServiceTypeVersion]
     : Array.isArray(json.ServiceTypeVersion)
-    ? filterOutUndefined(
-        json.ServiceTypeVersion.map((s) => (isJsonString(s) ? s : undefined))
-      )
-    : undefined;
+      ? filterOutUndefined(
+          json.ServiceTypeVersion.map((s) => (isJsonString(s) ? s : undefined))
+        )
+      : undefined;
 
   if (
     ServiceType === undefined ||
@@ -174,8 +177,8 @@ function parseProcessOfferings(json: any): Process[] | undefined {
   const processes: any[] = Array.isArray(json.Process)
     ? json.Process
     : isJsonObject(json.Process)
-    ? [json.Process]
-    : [];
+      ? [json.Process]
+      : [];
   const ProcessOfferings = filterOutUndefined(processes.map(parseProcess));
   return ProcessOfferings;
 }

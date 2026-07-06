@@ -1,3 +1,4 @@
+import { http, HttpResponse } from "msw";
 import { configure, reaction, runInAction } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
@@ -18,23 +19,20 @@ import PolygonParameter from "../../../../lib/Models/FunctionParameters/PolygonP
 import RectangleParameter from "../../../../lib/Models/FunctionParameters/RectangleParameter";
 import StringParameter from "../../../../lib/Models/FunctionParameters/StringParameter";
 import Terria from "../../../../lib/Models/Terria";
+import { worker } from "../../../mocks/browser";
 import "../../../SpecHelpers";
 
-const regionMapping = JSON.stringify(
-  require("../../../../wwwroot/data/regionMapping.json")
-);
+import regionMapping from "../../../../wwwroot/data/regionMapping.json";
+
 configure({
   enforceActions: "observed",
   computedRequiresReaction: true
 });
 
-const processDescriptionsXml = require("raw-loader!../../../../wwwroot/test/WPS/ProcessDescriptions.xml");
-
-const executeResponseXml = require("raw-loader!../../../../wwwroot/test/WPS/ExecuteResponse.xml");
-
-const failedExecuteResponseXml = require("raw-loader!../../../../wwwroot/test/WPS/FailedExecuteResponse.xml");
-
-const pendingExecuteResponseXml = require("raw-loader!../../../../wwwroot/test/WPS/PendingExecuteResponse.xml");
+import processDescriptionsXml from "../../../../wwwroot/test/WPS/ProcessDescriptions.xml";
+import executeResponseXml from "../../../../wwwroot/test/WPS/ExecuteResponse.xml";
+import failedExecuteResponseXml from "../../../../wwwroot/test/WPS/FailedExecuteResponse.xml";
+import pendingExecuteResponseXml from "../../../../wwwroot/test/WPS/PendingExecuteResponse.xml";
 
 describe("WebProcessingServiceCatalogFunction", function () {
   let wps: WebProcessingServiceCatalogFunction;
@@ -46,29 +44,34 @@ describe("WebProcessingServiceCatalogFunction", function () {
       wps.setTrait("definition", "url", "http://example.com/wps");
       wps.setTrait("definition", "identifier", "someId");
     });
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(
-      "http://example.com/wps?service=WPS&request=DescribeProcess&version=1.0.0&Identifier=someId"
-    ).andReturn({
-      responseText: processDescriptionsXml,
-      contentType: "text/xml"
-    });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/wps?service=WPS&request=Execute&version=1.0.0"
-    ).andReturn({ responseText: executeResponseXml, contentType: "text/xml" });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/wps?service=WPS&request=Execute&version=1.0.0&Identifier=someId&DataInputs=geometry%3D%7B%22type%22%3A%22FeatureCollection%22%2C%22features%22%3A%5B%7B%22type%22%3A%22Feature%22%2C%22geometry%22%3A%7B%22type%22%3A%22Point%22%2C%22coordinates%22%3A%5B144.97227858979468%2C-37.771379205590165%2C-1196.8235676901866%5D%7D%2C%22properties%22%3A%7B%7D%7D%5D%7D&storeExecuteResponse=true&status=true"
-    ).andReturn({ responseText: executeResponseXml, contentType: "text/xml" });
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get("http://example.com/wps", ({ request }) => {
+        const url = new URL(request.url);
+        const wpsRequest = url.searchParams.get("request");
+        if (wpsRequest === "DescribeProcess") {
+          return new HttpResponse(processDescriptionsXml, {
+            headers: { "Content-Type": "text/xml" }
+          });
+        }
+        if (wpsRequest === "Execute") {
+          return new HttpResponse(executeResponseXml, {
+            headers: { "Content-Type": "text/xml" }
+          });
+        }
+        throw new Error(`Unexpected WPS GET request: ${url.search}`);
+      }),
+      http.post("http://example.com/wps", ({ request }) => {
+        const url = new URL(request.url);
+        if (url.searchParams.get("request") !== "Execute")
+          throw new Error(`Unexpected WPS POST request: ${url.search}`);
+        return new HttpResponse(executeResponseXml, {
+          headers: { "Content-Type": "text/xml" }
+        });
+      }),
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      )
+    );
   });
 
   it("has a type & typeName", function () {
@@ -122,13 +125,13 @@ describe("WebProcessingServiceCatalogFunction", function () {
       disposeMapItems();
     });
 
-    it("makes a POST request to the Execute endpoint", async function () {
+    it("makes a POST request to the Execute endpoint", function () {
       expect(job.identifier).toBe("someId");
       // expect(job.).toMatch(/geometry=/);
       expect(job.jobStatus).toBe("finished");
     });
 
-    it("makes a GET request to the Execute endpoint when `executeWithHttpGet` is true", async function () {
+    it("makes a GET request to the Execute endpoint when `executeWithHttpGet` is true", function () {
       runInAction(() => wps.setTrait("definition", "executeWithHttpGet", true));
 
       expect(job.identifier).toBe("someId");
@@ -137,7 +140,7 @@ describe("WebProcessingServiceCatalogFunction", function () {
       expect(job.jobStatus).toBe("finished");
     });
 
-    it("adds a ResultPendingCatalogItem to the workbench", async function () {
+    it("adds a ResultPendingCatalogItem to the workbench", function () {
       expect(job.inWorkbench).toBeTruthy();
     });
   });
@@ -161,11 +164,11 @@ describe("WebProcessingServiceCatalogFunction", function () {
       dispose();
     });
 
-    it("adds a WebProcessingServiceCatalogFunctionJob to workbench", async function () {
+    it("adds a WebProcessingServiceCatalogFunctionJob to workbench", function () {
       expect(job.inWorkbench).toBeTruthy();
     });
 
-    it("adds result to workbench", async function () {
+    it("adds result to workbench", function () {
       expect(job.results.length).toBe(2);
       expect(MappableMixin.isMixedInto(job.results[0])).toBeTruthy();
       expect(MappableMixin.isMixedInto(job.results[1])).toBeTruthy();
@@ -173,40 +176,43 @@ describe("WebProcessingServiceCatalogFunction", function () {
       expect(job.results[1].inWorkbench).toBeTruthy();
     });
 
-    it("adds a new catalog member for the output", async function () {
+    it("adds a new catalog member for the output", function () {
       expect(job.results[0].type).toBe(CsvCatalogItem.type);
     });
 
-    it("adds a short report", async function () {
+    it("adds a short report", function () {
       expect(job.shortReportSections[0].content).toBe(
         "Chart Vegetation Cover generated."
       );
     });
-    it("returns mapItems", async function () {
+    it("returns mapItems", function () {
       expect(job.mapItems.length).toBe(1);
       expect(job.mapItems[0]).toEqual(jasmine.any(GeoJsonDataSource));
     });
 
-    it("defines a rectangle", async function () {
+    it("defines a rectangle", function () {
       expect(job.rectangle).toBeDefined();
     });
   });
 
   describe("otherwise if `statusLocation` is set", function () {
     it("polls the statusLocation for the result", async function () {
-      jasmine.Ajax.stubRequest(
-        "http://example.com/wps?service=WPS&request=Execute&version=1.0.0"
-      ).andReturn({
-        responseText: pendingExecuteResponseXml,
-        contentType: "text/xml"
-      });
-
-      jasmine.Ajax.stubRequest(
-        "http://example.com/ows?check_status/123"
-      ).andReturn({
-        responseText: executeResponseXml,
-        contentType: "text/xml"
-      });
+      worker.use(
+        http.post(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(pendingExecuteResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        ),
+        http.get(
+          "http://example.com/ows",
+          () =>
+            new HttpResponse(executeResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
 
       const job = await wps.submitJob();
 
@@ -226,7 +232,7 @@ describe("WebProcessingServiceCatalogFunction", function () {
           () => {
             if (!job.refreshEnabled) {
               expect(job.jobStatus).toBe("finished");
-              resolve();
+              return job.downloadResults().then(() => resolve());
             }
           },
           { fireImmediately: true }
@@ -238,15 +244,18 @@ describe("WebProcessingServiceCatalogFunction", function () {
     });
 
     it("stops polling if pendingItem is removed from the workbench", async function () {
-      spyOn(wps.terria.workbench, "add").and.returnValue(
+      spyOn(wps.terria.workbench, "add").and.callFake(() =>
         Promise.resolve(Result.none())
       ); // do nothing
-      jasmine.Ajax.stubRequest(
-        "http://example.com/wps?service=WPS&request=Execute&version=1.0.0"
-      ).andReturn({
-        responseText: pendingExecuteResponseXml,
-        contentType: "text/xml"
-      });
+      worker.use(
+        http.post(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(pendingExecuteResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
 
       // Note: we don't stubRequest "http://example.com/ows?check_status/123" here - so an error will be thrown if the job polls for a result
 
@@ -282,19 +291,22 @@ describe("WebProcessingServiceCatalogFunction", function () {
     });
 
     it("marks the ResultPendingCatalogItem as failed - for polling results", async function () {
-      jasmine.Ajax.stubRequest(
-        "http://example.com/wps?service=WPS&request=Execute&version=1.0.0"
-      ).andReturn({
-        responseText: pendingExecuteResponseXml,
-        contentType: "text/xml"
-      });
-
-      jasmine.Ajax.stubRequest(
-        "http://example.com/ows?check_status/123"
-      ).andReturn({
-        responseText: failedExecuteResponseXml,
-        contentType: "text/xml"
-      });
+      worker.use(
+        http.post(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(pendingExecuteResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        ),
+        http.get(
+          "http://example.com/ows",
+          () =>
+            new HttpResponse(failedExecuteResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
 
       const job =
         (await wps.submitJob()) as WebProcessingServiceCatalogFunctionJob;
@@ -328,12 +340,15 @@ describe("WebProcessingServiceCatalogFunction", function () {
     });
 
     it("marks the ResultPendingCatalogItem as failed", async function () {
-      jasmine.Ajax.stubRequest(
-        "http://example.com/wps?service=WPS&request=Execute&version=1.0.0"
-      ).andReturn({
-        responseText: failedExecuteResponseXml,
-        contentType: "text/xml"
-      });
+      worker.use(
+        http.post(
+          "http://example.com/wps",
+          () =>
+            new HttpResponse(failedExecuteResponseXml, {
+              headers: { "Content-Type": "text/xml" }
+            })
+        )
+      );
 
       try {
         const job = await wps.submitJob();

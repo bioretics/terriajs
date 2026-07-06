@@ -95,10 +95,7 @@ export class CkanServerStratum extends LoadableStratum(CkanCatalogGroupTraits) {
     ) as this;
   }
 
-  static addFilterQuery(
-    uri: uri.URI,
-    filterQuery: JsonObject | string
-  ): uri.URI {
+  static addFilterQuery(uri: URI, filterQuery: JsonObject | string): URI {
     if (typeof filterQuery === "string") {
       // An encoded filterQuery may look like "fq=+(res_format%3Awms%20OR%20res_format%3AWMS)".
       // An unencoded filterQuery may look like "fq=(res_format:wms OR res_format:WMS)".
@@ -237,7 +234,7 @@ export class CkanServerStratum extends LoadableStratum(CkanCatalogGroupTraits) {
   @action
   addCatalogItemToCatalogGroup(
     catalogItem: any,
-    dataset: CkanDataset,
+    _dataset: CkanDataset,
     groupId: string
   ) {
     const group: CatalogGroup | undefined =
@@ -490,7 +487,7 @@ export default class CkanCatalogGroup extends UrlMixin(
   }
 
   get typeName() {
-    return i18next.t("models.ckan.nameServer");
+    return i18next.t(($) => $.models.ckan.nameServer);
   }
 
   @override
@@ -610,8 +607,8 @@ async function paginateThroughResults(
     !ckanServerResponse.help
   ) {
     throw networkRequestError({
-      title: i18next.t("models.ckan.errorLoadingTitle"),
-      message: i18next.t("models.ckan.errorLoadingMessage")
+      title: i18next.t(($) => $.models.ckan.errorLoadingTitle),
+      message: i18next.t(($) => $.models.ckan.errorLoadingMessage)
     });
   }
   let nextResultStart = 1001;

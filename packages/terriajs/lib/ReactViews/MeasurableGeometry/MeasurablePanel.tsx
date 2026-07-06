@@ -442,7 +442,7 @@ const MeasurablePanel = observer((props: Props) => {
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("measurableGeometry.tour.preface.start")}
+            {i18next.t(($) => $.measurableGeometry.tour.preface.start)}
           </Button>
           <Button
             primary
@@ -453,7 +453,7 @@ const MeasurablePanel = observer((props: Props) => {
             }}
             style={{ fontSize: "0.8em", padding: "2px 10px" }}
           >
-            {i18next.t("general.skip", "Skip")}
+            {i18next.t(($) => $.general.skip, "Skip")}
           </Button>
         </Box>
       </Box>
@@ -542,7 +542,7 @@ const MeasurablePanel = observer((props: Props) => {
               cursor: "move"
             }}
           >
-            <b>{i18next.t("measurableGeometry.header")}</b>
+            <b>{i18next.t(($) => $.measurableGeometry.header)}</b>
           </span>
           {!isMobile && (
             <button
@@ -571,7 +571,7 @@ const MeasurablePanel = observer((props: Props) => {
             close();
           })}
           className={Styles.btnCloseFeature}
-          title={i18next.t("general.close")}
+          title={i18next.t(($) => $.general.close)}
         >
           <Icon glyph={Icon.GLYPHS.close} />
         </button>
@@ -593,7 +593,7 @@ const MeasurablePanel = observer((props: Props) => {
           styledMargin="5px"
         >
           <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
-            {i18next.t("measurableGeometry.samplingStepHeader")}
+            {i18next.t(($) => $.measurableGeometry.samplingStepHeader)}
             {":"}
           </Text>
           <Text textLight style={{ whiteSpace: "nowrap" }} title="">
@@ -617,7 +617,7 @@ const MeasurablePanel = observer((props: Props) => {
                     ? theme.textLight
                     : "red"};
                 `}
-                title={i18next.t("measurableGeometry.samplingStepHeader")}
+                title={i18next.t(($) => $.measurableGeometry.samplingStepHeader)}
                 light={false}
                 dark
                 type="number"
@@ -644,14 +644,14 @@ const MeasurablePanel = observer((props: Props) => {
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
                   ?.stopPoints.length
               }
-              title={i18next.t("measurableGeometry.samplingStepButtonTitle")}
+              title={i18next.t(($) => $.measurableGeometry.samplingStepButtonTitle)}
               onClick={() => {
                 if (isValidSamplingPathStep) {
                   changeSamplingPathStep(samplingPathStep);
                 }
               }}
             >
-              {i18next.t("measurableGeometry.samplingStepButtonText")}
+              {i18next.t(($) => $.measurableGeometry.samplingStepButtonText)}
             </Button>
           </Box>
         </Box>
@@ -662,7 +662,7 @@ const MeasurablePanel = observer((props: Props) => {
   const renderToggleDistanceLabels = () => (
     <label style={{ display: "flex", alignItems: "center", margin: "10px" }}>
       <Checkbox
-        title={i18next.t("measurableGeometry.showDistanceCheckboxTitle")}
+        title={i18next.t(($) => $.measurableGeometry.showDistanceCheckboxTitle)}
         isChecked={showDistances}
         isDisabled={
           !terria.measurableGeomList[terria.measurableGeometryIndex]?.stopPoints
@@ -677,7 +677,7 @@ const MeasurablePanel = observer((props: Props) => {
           });
         }}
       />
-      {i18next.t("measurableGeometry.showDistanceCheckbox")}
+      {i18next.t(($) => $.measurableGeometry.showDistanceCheckbox)}
     </label>
   );
 
@@ -704,7 +704,7 @@ const MeasurablePanel = observer((props: Props) => {
       return (
         <>
           <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+            {i18next.t(($) => $.measurableGeometry.geometrySummaryHeader)}
           </Text>
           <small>
             <table className={Styles.elevation}>
@@ -717,7 +717,7 @@ const MeasurablePanel = observer((props: Props) => {
                         text-align: center;
                       `}
                     >
-                      {i18next.t("measurableGeometry.circleRadius")}
+                      {i18next.t(($) => $.measurableGeometry.circleRadius)}
                     </th>
                   )}
                   <th
@@ -726,7 +726,7 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                     `}
                   >
-                    {i18next.t("measurableGeometry.circleDiameter")}
+                    {i18next.t(($) => $.measurableGeometry.circleDiameter)}
                   </th>
                   <th
                     css={`
@@ -734,7 +734,7 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                     `}
                   >
-                    {i18next.t("measurableGeometry.circlePerimeter")}
+                    {i18next.t(($) => $.measurableGeometry.circlePerimeter)}
                   </th>
                 </tr>
               </thead>
@@ -796,7 +796,7 @@ const MeasurablePanel = observer((props: Props) => {
                           }}
                         >
                           <Input
-                            title={i18next.t("measurableGeometry.circleRadius")}
+                            title={i18next.t(($) => $.measurableGeometry.circleRadius)}
                             type="number"
                             min={0}
                             step={0.1}
@@ -835,7 +835,7 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                     `}
                   >
-                    {i18next.t("measurableGeometry.circleAreaM2")}
+                    {i18next.t(($) => $.measurableGeometry.circleAreaM2)}
                   </th>
                   <th
                     css={`
@@ -843,7 +843,7 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                     `}
                   >
-                    {i18next.t("measurableGeometry.circleAreaHa")}
+                    {i18next.t(($) => $.measurableGeometry.circleAreaHa)}
                   </th>
                 </tr>
               </thead>
@@ -876,8 +876,8 @@ const MeasurablePanel = observer((props: Props) => {
         <>
           {!isMobile && (
             <StyledTextArea
-              title={i18next.t("measurableGeometry.pathNotesTitle")}
-              placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+              title={i18next.t(($) => $.measurableGeometry.pathNotesTitle)}
+              placeholder={i18next.t(($) => $.measurableGeometry.textareaPlaceholder)}
               dark
               value={currentGeom.pathNotes}
               onChange={(e) => {
@@ -898,11 +898,11 @@ const MeasurablePanel = observer((props: Props) => {
             }}
           >
             <Text textLight style={{ marginLeft: 1 }} title="">
-              {i18next.t("measurableGeometry.geometrySummaryHeader")}
+              {i18next.t(($) => $.measurableGeometry.geometrySummaryHeader)}
             </Text>
             <Button
               primary
-              title={i18next.t("measurableGeometry.downloadLayerTitle")}
+              title={i18next.t(($) => $.measurableGeometry.downloadLayerTitle)}
               onClick={downloadPathSummaryTxt}
               disabled={!currentGeom.stopPoints?.length}
               css={`
@@ -937,7 +937,7 @@ const MeasurablePanel = observer((props: Props) => {
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
                   >
-                    {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
+                    {i18next.t(($) => $.measurableGeometry.geometrySummaryAreaGeo)}
                   </th>
                   <th
                     colSpan={2}
@@ -947,7 +947,7 @@ const MeasurablePanel = observer((props: Props) => {
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
                   >
-                    {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
+                    {i18next.t(($) => $.measurableGeometry.geometrySummaryAreaAir)}
                   </th>
                 </tr>
               </thead>
@@ -1038,8 +1038,8 @@ const MeasurablePanel = observer((props: Props) => {
       <>
         {!isMobile && (
           <StyledTextArea
-            title={i18next.t("measurableGeometry.pathNotesTitle")}
-            placeholder={i18next.t("measurableGeometry.textareaPlaceholder")}
+            title={i18next.t(($) => $.measurableGeometry.pathNotesTitle)}
+            placeholder={i18next.t(($) => $.measurableGeometry.textareaPlaceholder)}
             dark
             value={currentGeom.pathNotes}
             onChange={(e) => {
@@ -1060,11 +1060,11 @@ const MeasurablePanel = observer((props: Props) => {
           }}
         >
           <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.geometrySummaryHeader")}
+            {i18next.t(($) => $.measurableGeometry.geometrySummaryHeader)}
           </Text>
           <Button
             primary
-            title={i18next.t("measurableGeometry.downloadLayerTitle")}
+            title={i18next.t(($) => $.measurableGeometry.downloadLayerTitle)}
             onClick={downloadPathSummaryTxt}
             disabled={!currentGeom.stopPoints?.length}
             css={`
@@ -1144,7 +1144,7 @@ const MeasurablePanel = observer((props: Props) => {
                   style={{ display: "flex", alignItems: "center" }}
                 >
                   <Select
-                    title={i18next.t("measurableGeometry.changePath")}
+                    title={i18next.t(($) => $.measurableGeometry.changePath)}
                     value={terria.measurableGeometryIndex}
                     disabled={isCurrentlyPointAdding || currentGeomIsEmpty}
                     onChange={(e: any) => {
@@ -1222,7 +1222,7 @@ const MeasurablePanel = observer((props: Props) => {
                                 terria.measurableGeomList.length - 1;
                             });
                           }}
-                          title={i18next.t("measurableGeometry.addPath")}
+                          title={i18next.t(($) => $.measurableGeometry.addPath)}
                         >
                           <StyledIcon
                             light
@@ -1257,7 +1257,7 @@ const MeasurablePanel = observer((props: Props) => {
                               }
                             });
                           }}
-                          title={i18next.t("measurableGeometry.removePath")}
+                          title={i18next.t(($) => $.measurableGeometry.removePath)}
                         >
                           <StyledIcon
                             light
@@ -1290,7 +1290,7 @@ const MeasurablePanel = observer((props: Props) => {
                       !terria.measurableGeomList[terria.measurableGeometryIndex]
                         ?.stopPoints.length
                     }
-                    title={i18next.t("measurableGeometry.showElevationChart")}
+                    title={i18next.t(($) => $.measurableGeometry.showElevationChart)}
                   >
                     <StyledIcon
                       light
@@ -1314,11 +1314,11 @@ const MeasurablePanel = observer((props: Props) => {
                       ?.stopPoints.length
                   }
                   onClick={toggleLineClampToGround}
-                  title={i18next.t("measurableGeometry.clampLineButtonTitle")}
+                  title={i18next.t(($) => $.measurableGeometry.clampLineButtonTitle)}
                 >
                   {terria.clampMeasureLineToGround
-                    ? i18next.t("measurableGeometry.clampLineToGround")
-                    : i18next.t("measurableGeometry.dontClampLineToGround")}
+                    ? i18next.t(($) => $.measurableGeometry.clampLineToGround)
+                    : i18next.t(($) => $.measurableGeometry.dontClampLineToGround)}
                 </Button>
               )}
             </Box>
@@ -1347,7 +1347,7 @@ const MeasurablePanel = observer((props: Props) => {
                   flex: "1",
                   padding: "8px"
                 }}
-                placeholder={i18next.t("measurableGeometry.tempLayerName")}
+                placeholder={i18next.t(($) => $.measurableGeometry.tempLayerName)}
               />
               <div ref={transformButtonRef}>
                 <MeasurableTransform
@@ -1363,7 +1363,7 @@ const MeasurablePanel = observer((props: Props) => {
         {terria.measurableGeomList &&
           terria.measurableGeomList[terria.measurableGeometryIndex] && (
             <Text textLight style={{ marginLeft: 1, marginBottom: 10 }}>
-              {i18next.t("measurableGeometry.tempLayerInfo")}
+              {i18next.t(($) => $.measurableGeometry.tempLayerInfo)}
             </Text>
           )}
         {!terria?.measurableGeomList[terria.measurableGeometryIndex]?.hasArea &&
@@ -1499,11 +1499,11 @@ const MeasurablePanel = observer((props: Props) => {
           }}
         >
           <Text textLight style={{ marginLeft: 1 }} title="">
-            {i18next.t("measurableGeometry.geometrySummaryStopSummary")}
+            {i18next.t(($) => $.measurableGeometry.geometrySummaryStopSummary)}
           </Text>
           <Button
             primary
-            title={i18next.t("measurableGeometry.downloadStopPointsTitle")}
+            title={i18next.t(($) => $.measurableGeometry.downloadStopPointsTitle)}
             onClick={downloadStopPointsCsv}
             disabled={!stopPoints.length}
             css={`
@@ -1533,7 +1533,7 @@ const MeasurablePanel = observer((props: Props) => {
                 <th>#</th>
                 {!is2dMode && (
                   <th>
-                    {i18next.t("measurableGeometry.geometrySummaryElevation")}
+                    {i18next.t(($) => $.measurableGeometry.geometrySummaryElevation)}
                   </th>
                 )}
                 {!onlyPoints && (
@@ -1546,10 +1546,10 @@ const MeasurablePanel = observer((props: Props) => {
                       </th>
                     )}
                     <th>
-                      {i18next.t("measurableGeometry.geometrySummaryDistGeo")}
+                      {i18next.t(($) => $.measurableGeometry.geometrySummaryDistGeo)}
                     </th>
                     <th>
-                      {i18next.t("measurableGeometry.geometrySummaryDistAir")}
+                      {i18next.t(($) => $.measurableGeometry.geometrySummaryDistAir)}
                     </th>
                     {showGroundDistance && (
                       <th>
@@ -1560,7 +1560,7 @@ const MeasurablePanel = observer((props: Props) => {
                     )}
                     {!is2dMode && (
                       <th>
-                        {i18next.t("measurableGeometry.geometrySummarySlope")}
+                        {i18next.t(($) => $.measurableGeometry.geometrySummarySlope)}
                       </th>
                     )}
                   </>
@@ -1748,7 +1748,7 @@ const MeasurablePanel = observer((props: Props) => {
           <td>
             <StyledTextArea
               placeholder="Note..."
-              title={i18next.t("measurableGeometry.pointNotesTitle")}
+              title={i18next.t(($) => $.measurableGeometry.pointNotesTitle)}
               value={localText}
               dark
               onChange={(e) => setLocalText(e.target.value)}

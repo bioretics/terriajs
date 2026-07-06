@@ -12,7 +12,7 @@
 import { autorun } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme, withTheme } from "styled-components";
 import Box from "../../Styled/Box";
@@ -32,10 +32,10 @@ import {
 } from "./tour-helpers.ts";
 import TourExplanationBox, {
   TourExplanationBoxZIndex
-} from "./TourExplanationBox.jsx";
-import TourIndicator from "./TourIndicator.jsx";
+} from "./TourExplanationBox";
+import TourIndicator from "./TourIndicator";
 import TourOverlay from "./TourOverlay.jsx";
-import TourPrefaceBox from "./TourPrefaceBox.jsx";
+import TourPrefaceBox from "./TourPrefaceBox";
 import TourProgressDot from "./TourProgressDot.jsx";
 
 /**
@@ -43,7 +43,7 @@ import TourProgressDot from "./TourProgressDot.jsx";
  * Fill in indicator dot depending on progress determined from count & max count
  */
 const TourProgress = ({ max, step, setTourIndex }) => {
-  const countArray = Array.from(Array(max).keys()).map((e) => e++);
+  const countArray = Array.from(Array(max).keys()).map((e) => e + 1);
   const countStep = step;
   return (
     <Box centered>
@@ -153,18 +153,18 @@ export const TourExplanation = ({
             {!isFirstTourPoint && (
               <>
                 <Button secondary shortMinHeight onClick={() => onPrevious?.()}>
-                  {t("general.back")}
+                  {t(($) => $.general.back)}
                 </Button>
                 <Spacing right={2} />
               </>
             )}
             {isLastTourPoint ? (
               <Button primary shortMinHeight onClick={() => onSkip?.()}>
-                {t("tour.finish")}
+                {t(($) => $.tour.finish)}
               </Button>
             ) : (
               <Button primary shortMinHeight onClick={() => onNext?.()}>
-                {t("general.next")}
+                {t(($) => $.general.next)}
               </Button>
             )}
           </Box>
@@ -310,11 +310,11 @@ export const TourPreface = () => {
         />
         <Spacing bottom={2} />
         <Text extraExtraLarge bold textDarker>
-          {t("tour.preface.title")}
+          {t(($) => $.tour.preface.title)}
         </Text>
         <Spacing bottom={3} />
         <Text light medium textDarker>
-          {t("tour.preface.content")}
+          {t(($) => $.tour.preface.content)}
         </Text>
         <Spacing bottom={4} />
         <Text medium>
@@ -327,7 +327,7 @@ export const TourPreface = () => {
                 viewState.closeTour();
               }}
             >
-              {t("tour.preface.close")}
+              {t(($) => $.tour.preface.close)}
             </Button>
             <Spacing right={3} />
             <Button
@@ -339,7 +339,7 @@ export const TourPreface = () => {
                 viewState.setShowTour(true);
               }}
             >
-              {t("tour.preface.start")}
+              {t(($) => $.tour.preface.start)}
             </Button>
           </Box>
         </Text>

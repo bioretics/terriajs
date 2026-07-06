@@ -29,8 +29,8 @@ interface ThreddsCatalog {
   datasets: ThreddsDataset[];
   catalogs: ThreddsCatalog[];
   getAllChildDatasets: () => void;
-  loadAllNestedCatalogs: () => void;
-  loadNestedCatalogById: () => void;
+  loadAllNestedCatalogs: () => Promise<void>;
+  loadNestedCatalogById: () => Promise<void>;
   parentCatalog: ThreddsCatalog;
 }
 
@@ -43,7 +43,7 @@ export interface ThreddsDataset {
   isParentDataset: boolean;
   datasets: ThreddsDataset[];
   catalogs: ThreddsCatalog[];
-  loadAllNestedCatalogs: () => void;
+  loadAllNestedCatalogs: () => Promise<void>;
 }
 
 export class ThreddsStratum extends LoadableStratum(ThreddsCatalogGroupTraits) {
@@ -194,7 +194,7 @@ export default class ThreddsCatalogGroup extends UrlMixin(
   }
 
   get typeName() {
-    return i18next.t("models.thredds.nameGroup");
+    return i18next.t(($) => $.models.thredds.nameGroup);
   }
 
   @override

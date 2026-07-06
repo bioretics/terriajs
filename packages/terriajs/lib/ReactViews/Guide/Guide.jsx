@@ -24,7 +24,7 @@
 
  *
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import PropTypes from "prop-types";
 import classNames from "classnames";
 import Styles from "./guide.scss";
@@ -37,10 +37,7 @@ import Text from "../../Styled/Text";
 import { useTranslation } from "react-i18next";
 import Button from "../../Styled/Button";
 import Box from "../../Styled/Box";
-import {
-  Category,
-  GuideAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+import { Category, GuideAction } from "../../Core/Analytics/analyticEvents";
 
 const GuideProgress = (props) => {
   // doesn't work for IE11
@@ -85,10 +82,10 @@ export const analyticsSetShowGuide = (
       ? GuideAction.openInModal
       : GuideAction.closeInModal
     : isOpen
-    ? GuideAction.open
-    : GuideAction.close;
+      ? GuideAction.open
+      : GuideAction.close;
 
-  terria.analytics?.logEvent(
+  terria.analytics.logEvent(
     Category.guide,
     action,
     `At index: ${index}, Guide: ${guideKey}`
@@ -107,7 +104,7 @@ export const GuidePure = ({
 
   const handlePrev = () => {
     const newIndex = currentGuideIndex - 1;
-    terria.analytics?.logEvent(
+    terria.analytics.logEvent(
       Category.guide,
       GuideAction.navigatePrev,
       `New index: ${newIndex}, Guide: ${guideKey}`
@@ -123,7 +120,7 @@ export const GuidePure = ({
     const newIndex = currentGuideIndex + 1;
 
     if (guideData[newIndex]) {
-      terria.analytics?.logEvent(
+      terria.analytics.logEvent(
         Category.guide,
         GuideAction.navigateNext,
         `New index: ${newIndex}, Guide: ${guideKey}`
@@ -145,8 +142,8 @@ export const GuidePure = ({
   const currentGuide = guideData[currentGuideIndex] || {};
   const hidePrev = currentGuide.hidePrev || false;
   const hideNext = currentGuide.hideNext || false;
-  const prevButtonText = currentGuide.prevText || t("general.prev");
-  const nextButtonText = currentGuide.nextText || t("general.next");
+  const prevButtonText = currentGuide.prevText || t(($) => $.general.prev);
+  const nextButtonText = currentGuide.nextText || t(($) => $.general.next);
   const maxStepCount = hasIntroSlide ? guideData.length - 1 : guideData.length;
   const currentStepCount = hasIntroSlide
     ? currentGuideIndex

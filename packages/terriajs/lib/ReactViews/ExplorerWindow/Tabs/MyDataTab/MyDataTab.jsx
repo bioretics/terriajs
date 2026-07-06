@@ -1,6 +1,5 @@
-import React from "react";
+import { Component } from "react";
 import { observer } from "mobx-react";
-
 import classNames from "classnames";
 import Icon from "../../../../Styled/Icon";
 import Box from "../../../../Styled/Box";
@@ -8,13 +7,12 @@ import PropTypes from "prop-types";
 import DataPreview from "../../../Preview/DataPreview.jsx";
 import AddData from "./AddData.jsx";
 import { withTranslation, Trans } from "react-i18next";
-
 import Styles from "./my-data-tab.scss";
 import DataCatalogMember from "../../../DataCatalog/DataCatalogMember";
 
 // My data tab include Add data section and preview section
 @observer
-class MyDataTab extends React.Component {
+class MyDataTab extends Component {
   static propTypes = {
     terria: PropTypes.object,
     viewState: PropTypes.object,
@@ -54,11 +52,11 @@ class MyDataTab extends React.Component {
     const tabs = [
       {
         id: "local",
-        caption: t("addData.localTitle")
+        caption: t(($) => $.addData.localTitle)
       },
       {
         id: "web",
-        caption: t("addData.webTitle")
+        caption: t(($) => $.addData.webTitle)
       }
     ];
     return (
@@ -99,7 +97,7 @@ class MyDataTab extends React.Component {
         <div className={Styles.dataTypeTab}>
           <div className={Styles.dndBox}>
             <Icon glyph={Icon.GLYPHS.upload} />
-            {t("addData.dragDrop")}
+            {t(($) => $.addData.dragDrop)}
           </div>
         </div>
       );
@@ -108,7 +106,7 @@ class MyDataTab extends React.Component {
     return (
       <div className={Styles.dataTypeTab}>
         <div className={Styles.dndBoxInfo}>
-          <Trans i18nKey="addData.infoText">
+          <Trans i18nKey={($) => $.addData.infoText}>
             <div>Drag and drop a file here to view it locally on the map</div>
             <div>(it won’t be saved or uploaded to the internet)</div>
           </Trans>
@@ -155,7 +153,7 @@ class MyDataTab extends React.Component {
                 `}
               >
                 <Icon glyph={Icon.GLYPHS.left} />
-                {t("addData.back")}
+                {t(($) => $.addData.back)}
               </button>
               <AddData
                 terria={this.props.terria}
@@ -172,7 +170,7 @@ class MyDataTab extends React.Component {
           {showTwoColumn && (
             <Box flexShrinkZero column>
               <p className={Styles.explanation}>
-                <Trans i18nKey="addData.note">
+                <Trans i18nKey={($) => $.addData.note}>
                   <strong>Note: </strong>Data added in this way is not saved or
                   made visible to others.
                 </Trans>
@@ -211,4 +209,4 @@ class MyDataTab extends React.Component {
   }
 }
 
-module.exports = withTranslation()(MyDataTab);
+export default withTranslation()(MyDataTab);

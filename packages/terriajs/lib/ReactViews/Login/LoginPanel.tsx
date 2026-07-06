@@ -13,8 +13,7 @@ import Input from "../../Styled/Input";
 import Text from "../../Styled/Text";
 import Icon from "../../Styled/Icon";
 import Styles from "./login-panel.scss";
-
-const DragWrapper = require("../DragWrapper");
+import DragWrapper from "../../ReactViews/Drag/DragWrapper";
 
 interface Props {
   terria: Terria;
@@ -130,7 +129,7 @@ const LoginPanel = observer((props: Props) => {
           <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
             <span className={Styles.headerContent}>
               <Icon glyph={Icon.GLYPHS.lock} className={Styles.headerIcon} />
-              <b>{t("login.loginPanelHeader")}</b>
+              <b>{t(($) => $.login.loginPanelHeader)}</b>
             </span>
           </div>
         </div>
@@ -143,12 +142,12 @@ const LoginPanel = observer((props: Props) => {
                 marginBottom: "4px",
                 fontSize: "0.85em"
               }}
-              title={t("login.loginPanelUsernameTitle")}
+              title={t(($) => $.login.loginPanelUsernameTitle)}
             >
-              {t("login.loginPanelUsername")}
+              {t(($) => $.login.loginPanelUsername)}
             </Text>
             <Input
-              title={t("login.loginPanelUsernameTitle")}
+              title={t(($) => $.login.loginPanelUsernameTitle)}
               required
               dark
               disabled={isLoading}
@@ -168,12 +167,12 @@ const LoginPanel = observer((props: Props) => {
                 marginBottom: "4px",
                 fontSize: "0.85em"
               }}
-              title={t("login.loginPanelPasswordTitle")}
+              title={t(($) => $.login.loginPanelPasswordTitle)}
             >
-              {t("login.loginPanelPassword")}
+              {t(($) => $.login.loginPanelPassword)}
             </Text>
             <Input
-              title={t("login.loginPanelPasswordTitle")}
+              title={t(($) => $.login.loginPanelPasswordTitle)}
               required
               dark
               type="password"
@@ -204,7 +203,7 @@ const LoginPanel = observer((props: Props) => {
                 textLight
                 style={{ textAlign: "center", fontSize: "0.8em" }}
               >
-                {t("login.loginPanelLoading")}
+                {t(($) => $.login.loginPanelLoading)}
               </Text>
             </div>
           )}
@@ -221,7 +220,7 @@ const LoginPanel = observer((props: Props) => {
                 margin: "0 4px 0 0"
               }}
             >
-              {t("login.loginPanelOk")}
+              {t(($) => $.login.loginPanelOk)}
             </Button>
             <Button
               secondary
@@ -235,7 +234,7 @@ const LoginPanel = observer((props: Props) => {
                 margin: "0 0 0 4px"
               }}
             >
-              {t("login.loginPanelCancel")}
+              {t(($) => $.login.loginPanelCancel)}
             </Button>
           </Box>
         </div>

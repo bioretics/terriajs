@@ -2,15 +2,14 @@ import classNames from "classnames";
 import "inobounce";
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import React, { ReactNode, useEffect } from "react";
+import { FC, DragEvent, ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DefaultTheme } from "styled-components";
 import combine from "terriajs-cesium/Source/Core/combine";
 import ViewState from "../../ReactViewModels/ViewState";
 import Disclaimer from "../Disclaimer";
 import DragDropFile from "../DragDropFile";
-import DragDropNotification from "../DragDropNotification";
-import ExplorerWindow from "../ExplorerWindow/ExplorerWindow";
+import { ExplorerWindowComponents } from "../ExplorerWindow/ExplorerWindowComponents";
 import FeatureInfoPanel from "../FeatureInfo/FeatureInfoPanel";
 import FeedbackForm from "../Feedback/FeedbackForm";
 import { Medium, Small } from "../Generic/Responsive";
@@ -62,8 +61,8 @@ interface StandardUserInterfaceProps {
   children?: ReactNode;
 }
 
-const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
-  observer((props) => {
+const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
+  (props) => {
     const { t } = useTranslation();
 
     const acceptDragDropFile = action(() => {
@@ -74,7 +73,10 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
       }
     });
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+      if (props.terria.configParameters.disableUserAddedData) {
+        return;
+      }
       if (!e.dataTransfer.types || !e.dataTransfer.types.includes("Files")) {
         return;
       }
@@ -85,6 +87,8 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
     };
 
     const shouldUseMobileInterface = () =>
+      !props.terria.configParameters.disableMobileInterface &&
+      // Fork (rer3d): wider small-screen breakpoint (1100px).
       document.body.clientWidth < (props.minimumLargeScreenWidth ?? 1100);
 
     const resizeListener = action(() => {
@@ -110,10 +114,10 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
         !props.viewState.storyShown
       ) {
         props.terria.notificationState.addNotificationToQueue({
-          title: t("sui.notifications.title"),
-          message: t("sui.notifications.message"),
-          confirmText: t("sui.notifications.confirmText"),
-          denyText: t("sui.notifications.denyText"),
+          title: t(($) => $.sui.notifications.title),
+          message: t(($) => $.sui.notifications.message),
+          confirmText: t(($) => $.sui.notifications.confirmText),
+          denyText: t(($) => $.sui.notifications.denyText),
           confirmAction: action(() => {
             props.viewState.storyShown = true;
           }),
@@ -180,13 +184,15 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
               <div className={Styles.uiInner}>
                 {!props.viewState.hideMapUi && (
                   <>
-                    <Small>
-                      <MobileHeader
-                        menuItems={customElements.menu}
-                        menuLeftItems={customElements.menuLeft}
-                        version={props.version}
-                      />
-                    </Small>
+                    {!props.terria.configParameters.disableMobileInterface && (
+                      <Small>
+                        <MobileHeader
+                          menuItems={customElements.menu}
+                          menuLeftItems={customElements.menuLeft}
+                          version={props.version}
+                        />
+                      </Small>
+                    )}
                     <Medium>
                       <>
                         <WorkflowPanelPortal
@@ -201,7 +207,7 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                           <FullScreenButton
                             minified
                             animationDuration={250}
-                            btnText={t("addData.btnHide")}
+                            btnText={t(($) => $.addData.btnHide)}
                           />
                           <Branding version={props.version} />
                           <SidePanel />
@@ -223,7 +229,9 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                   >
                     <FullScreenButton
                       minified={false}
-                      btnText={t("sui.showWorkbench")}
+                      btnText={t(($) => $.sui.showWorkbench, {
+                        count: props.viewState.terria.workbench.items.length
+                      })}
                       animationDuration={animationDuration}
                       elementConfig={props.terria.elements.get(
                         "show-workbench"
@@ -232,14 +240,20 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                   </div>
                 </Medium>
 
-                <section className={Styles.map}>
+                <section
+                  className={classNames(Styles.map, {
+                    [Styles.disableMobileInterface]:
+                      props.terria.configParameters.disableMobileInterface
+                  })}
+                >
                   <MapColumn
                     customElements={customElements}
                     animationDuration={animationDuration}
                   />
                   <div id="map-data-attribution" />
                   <main>
-                    <ExplorerWindow />
+                    <ExplorerWindowComponents.ExplorerWindow />
+                    {/* Fork (rer3d): query-data window + message modal */}
                     <QueryWindow />
                     {props.terria.messageModal?.isVisible && (
                       <MessageModal
@@ -275,7 +289,7 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
             <Notification />
             <MapInteractionWindow />
             {!customElements.feedback.length &&
-              props.terria.configParameters.feedbackUrl &&
+              props.terria.feedbackService &&
               !props.viewState.hideMapUi &&
               props.viewState.feedbackFormIsVisible && <FeedbackForm />}
             <div
@@ -290,7 +304,7 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
                 }
               )}
               tabIndex={0}
-              onClick={action(() => {
+              onPointerDown={action(() => {
                 props.viewState.topElement = "FeatureInfo";
               })}
             >
@@ -314,8 +328,26 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
               <LoginPanel terria={props.terria} viewState={props.viewState} />
             </div>
             <DragDropFile />
-            <DragDropNotification />
-            {showStoryPanel && <StoryPanel />}
+            {showStoryPanel && (
+              <div
+                className={classNames(
+                  Styles.storyPanel,
+                  props.viewState.topElement === "StoryPanel"
+                    ? "top-element"
+                    : "",
+                  {
+                    [Styles.storyPanelFullScreen]:
+                      props.viewState.isMapFullScreen
+                  }
+                )}
+                tabIndex={0}
+                onPointerDown={action(() => {
+                  props.viewState.topElement = "StoryPanel";
+                })}
+              >
+                <StoryPanel />
+              </div>
+            )}
           </div>
           {props.terria.configParameters.storyEnabled && showStoryBuilder && (
             <StoryBuilder
@@ -342,7 +374,8 @@ const StandardUserInterfaceBase: React.FC<StandardUserInterfaceProps> =
         <ClippingBoxToolLauncher viewState={props.viewState} />
       </ContextProviders>
     );
-  });
+  }
+);
 
 export const StandardUserInterface = withFallback(StandardUserInterfaceBase);
 export default withFallback(StandardUserInterfaceBase);

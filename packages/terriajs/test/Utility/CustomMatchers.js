@@ -1,16 +1,12 @@
 "use strict";
 
-var defined = require("terriajs-cesium/Source/Core/defined").default;
-
-function equals(util, customEqualityTesters, a, b) {
-  return util.equals(a, b, customEqualityTesters);
-}
+import defined from "terriajs-cesium/Source/Core/defined";
 
 module.exports = {
-  toEqualEpsilon: function (util, customEqualityTesters) {
+  toEqualEpsilon: function (matchersUtil) {
     return {
       compare: function (actual, expected, epsilon) {
-        function equalityTester(a, b) {
+        function epsilonCompare(a, b) {
           var to_run;
           if (defined(a)) {
             if (typeof a.equalsEpsilon === "function") {
@@ -43,7 +39,10 @@ module.exports = {
           return undefined;
         }
 
-        var result = equals(util, [equalityTester], actual, expected);
+        var result = epsilonCompare(actual, expected);
+        if (result === undefined) {
+          result = matchersUtil.equals(actual, expected);
+        }
 
         return { pass: result };
       }

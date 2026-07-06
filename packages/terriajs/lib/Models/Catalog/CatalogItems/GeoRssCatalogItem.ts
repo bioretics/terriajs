@@ -1,11 +1,10 @@
 import i18next from "i18next";
-import { computed, runInAction, makeObservable } from "mobx";
+import { action, computed, runInAction, makeObservable } from "mobx";
 import getFilenameFromUri from "terriajs-cesium/Source/Core/getFilenameFromUri";
 import RuntimeError from "terriajs-cesium/Source/Core/RuntimeError";
 import isDefined from "../../../Core/isDefined";
 import { JsonObject } from "../../../Core/Json";
 import loadXML from "../../../Core/loadXML";
-import readXml from "../../../Core/readXml";
 import replaceUnderscores from "../../../Core/replaceUnderscores";
 import { networkRequestError } from "../../../Core/TerriaError";
 import {
@@ -21,6 +20,7 @@ import LoadableStratum from "../../Definition/LoadableStratum";
 import { BaseModel } from "../../Definition/Model";
 import StratumOrder from "../../Definition/StratumOrder";
 import HasLocalData from "../../HasLocalData";
+import CommonStrata from "../../Definition/CommonStrata";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 
@@ -87,31 +87,31 @@ class GeoRssStratum extends LoadableStratum(GeoRssCatalogItemTraits) {
     }
     return [
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.subtitle"),
+        name: i18next.t(($) => $.models.georss.subtitle),
         content: this._feed.subtitle
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.updated"),
+        name: i18next.t(($) => $.models.georss.updated),
         content: this._feed.updated?.toString()
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.category"),
+        name: i18next.t(($) => $.models.georss.category),
         content: this._feed.category?.join(", ")
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.description"),
+        name: i18next.t(($) => $.models.georss.description),
         content: this._feed.description
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.copyrightText"),
+        name: i18next.t(($) => $.models.georss.copyrightText),
         content: this._feed.copyright
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.author"),
+        name: i18next.t(($) => $.models.georss.author),
         content: this._feed.author?.name
       }),
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.georss.link"),
+        name: i18next.t(($) => $.models.georss.link),
         content:
           typeof this._feed.link === "string"
             ? this._feed.link
@@ -139,18 +139,21 @@ export default class GeoRssCatalogItem
   }
 
   get typeName() {
-    return i18next.t("models.georss.name");
+    return i18next.t(($) => $.models.georss.name);
   }
 
-  private _georssFile?: File;
-
+  @action
   setFileInput(file: File) {
-    this._georssFile = file;
+    this.setTrait(
+      CommonStrata.user,
+      "url",
+      URL.createObjectURL(file) + "#" + file.name
+    );
   }
 
   @computed
   get hasLocalData(): boolean {
-    return isDefined(this._georssFile);
+    return this.url?.startsWith("blob:") ?? false;
   }
 
   private parseGeorss(xmlData: Document): JsonObject | never {
@@ -181,8 +184,6 @@ export default class GeoRssCatalogItem
     if (isDefined(this.geoRssString)) {
       const parser = new DOMParser();
       data = parser.parseFromString(this.geoRssString, "text/xml");
-    } else if (isDefined(this._georssFile)) {
-      data = await readXml(this._georssFile);
     } else if (isDefined(this.url)) {
       data = await loadXML(proxyCatalogItemUrl(this, this.url));
     }
@@ -190,8 +191,8 @@ export default class GeoRssCatalogItem
     if (!data) {
       throw networkRequestError({
         sender: this,
-        title: i18next.t("models.georss.errorLoadingTitle"),
-        message: i18next.t("models.georss.errorLoadingMessage", {
+        title: i18next.t(($) => $.models.georss.errorLoadingTitle),
+        message: i18next.t(($) => $.models.georss.errorLoadingMessage, {
           appName: this.terria.appName
         })
       });

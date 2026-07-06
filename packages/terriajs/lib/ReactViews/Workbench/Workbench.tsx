@@ -1,7 +1,7 @@
-import { TFunction } from "i18next";
 import { action, runInAction, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { Component } from "react";
+import { TFunction } from "i18next";
 import { withTranslation, WithTranslation } from "react-i18next";
 import getPath from "../../Core/getPath";
 import Terria from "../../Models/Terria";
@@ -15,7 +15,8 @@ import WorkbenchList from "./WorkbenchList";
 import {
   Category,
   DataSourceAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+} from "../../Core/Analytics/analyticEvents";
+import MappableMixin from "../../ModelMixins/MappableMixin";
 
 interface IProps extends WithTranslation {
   terria: Terria;
@@ -24,10 +25,18 @@ interface IProps extends WithTranslation {
 }
 
 @observer
-class Workbench extends React.Component<IProps> {
+class Workbench extends Component<IProps> {
   constructor(props: IProps) {
     super(props);
     makeObservable(this);
+  }
+
+  disableAll() {
+    this.props.terria.workbench.disableAll();
+  }
+
+  enableAll() {
+    this.props.terria.workbench.enableAll();
   }
 
   @action.bound
@@ -47,7 +56,7 @@ class Workbench extends React.Component<IProps> {
   @action.bound
   removeAll() {
     this.props.terria.workbench.items.forEach((item) => {
-      this.props.terria.analytics?.logEvent(
+      this.props.terria.analytics.logEvent(
         Category.dataSource,
         DataSourceAction.removeAllFromWorkbench,
         getPath(item)
@@ -61,34 +70,63 @@ class Workbench extends React.Component<IProps> {
   render() {
     const { t } = this.props;
     const shouldExpandAll = this.props.terria.workbench.shouldExpandAll;
+
+    // show enable all button if all items are disabled
+    const showEnableAll = this.props.terria.workbench.items
+      .filter((it): it is MappableMixin.Instance =>
+        MappableMixin.isMixedInto(it)
+      )
+      .every((it) => !it.show);
+
     return (
-      <Box column fullWidth styledMinHeight={"0"}>
+      <Box column fullWidth styledMinHeight={"0"} flex={1}>
         <BadgeBar
-          label={t("workbench.label")}
+          label={t(($) => $.workbench.label)}
           badge={this.props.terria.workbench.items.length}
         >
-          <RawButton
-            onClick={this.removeAll}
-            css={`
-              display: flex;
-              align-items: center;
-              padding: 0 5px;
-              svg {
-                vertical-align: middle;
-                padding-right: 4px;
-              }
-            `}
-          >
-            <StyledIcon
-              glyph={Icon.GLYPHS.remove}
-              light
-              styledWidth={"12px"}
-              displayInline
-            />
-            <TextSpan textLight small>
-              {t("workbench.removeAll")}
-            </TextSpan>
-          </RawButton>
+          {showEnableAll ? (
+            <RawButton
+              onClick={() => this.enableAll()}
+              css={`
+                display: flex;
+                align-items: center;
+                padding-left: 5px;
+                min-width: 90px;
+                justify-content: space-evenly;
+              `}
+            >
+              <StyledIcon
+                glyph={Icon.GLYPHS.enable}
+                light
+                styledWidth={"12px"}
+                displayInline
+              />
+              <TextSpan textLight small isLink>
+                {t(($) => $.workbench.enableAll)}
+              </TextSpan>
+            </RawButton>
+          ) : (
+            <RawButton
+              onClick={() => this.disableAll()}
+              css={`
+                display: flex;
+                align-items: center;
+                padding-left: 5px;
+                min-width: 90px;
+                justify-content: space-evenly;
+              `}
+            >
+              <StyledIcon
+                glyph={Icon.GLYPHS.disable}
+                light
+                styledWidth={"12px"}
+                displayInline
+              />
+              <TextSpan textLight small isLink>
+                {t(($) => $.workbench.disableAll)}
+              </TextSpan>
+            </RawButton>
+          )}
           {shouldExpandAll ? (
             <RawButton
               onClick={this.expandAll}
@@ -96,10 +134,18 @@ class Workbench extends React.Component<IProps> {
                 display: flex;
                 align-items: center;
                 padding-left: 5px;
+                min-width: 90px;
+                justify-content: space-evenly;
               `}
             >
-              <TextSpan textLight small>
-                {t("workbench.expandAll")}
+              <StyledIcon
+                glyph={Icon.GLYPHS.expandAll}
+                light
+                styledWidth={"12px"}
+                displayInline
+              />
+              <TextSpan textLight small isLink>
+                {t(($) => $.workbench.expandAll)}
               </TextSpan>
             </RawButton>
           ) : (
@@ -109,13 +155,45 @@ class Workbench extends React.Component<IProps> {
                 display: flex;
                 align-items: center;
                 padding-left: 5px;
+                min-width: 90px;
+                justify-content: space-evenly;
               `}
             >
-              <TextSpan textLight small>
-                {t("workbench.collapseAll")}
+              <StyledIcon
+                glyph={Icon.GLYPHS.collapse}
+                light
+                styledWidth={"12px"}
+                displayInline
+              />
+              <TextSpan textLight small isLink>
+                {t(($) => $.workbench.collapseAll)}
               </TextSpan>
             </RawButton>
           )}
+          <RawButton
+            onClick={this.removeAll}
+            css={`
+              display: flex;
+              align-items: center;
+              padding: 0 5px;
+              min-width: 90px;
+              justify-content: space-evenly;
+              svg {
+                vertical-align: middle;
+                padding-right: 4px;
+              }
+            `}
+          >
+            <StyledIcon
+              glyph={Icon.GLYPHS.cancel}
+              light
+              styledWidth={"12px"}
+              displayInline
+            />
+            <TextSpan textLight small isLink>
+              {t(($) => $.workbench.removeAll)}
+            </TextSpan>
+          </RawButton>
         </BadgeBar>
         <WorkbenchList
           viewState={this.props.viewState}

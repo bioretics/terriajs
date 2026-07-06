@@ -11,8 +11,7 @@ import Input from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import Styles from "./viewshed-panel.scss";
-
-const DragWrapper = require("../DragWrapper");
+import DragWrapper from "../../ReactViews/Drag/DragWrapper";
 
 interface Props {
   viewState: ViewState;
@@ -37,7 +36,7 @@ const ViewshedPanel = observer((props: Props) => {
       <div className={Styles.header}>
         <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
           <span style={{ display: "flex", justifyContent: "center" }}>
-            <b>{t("viewshed.parameters")}</b>
+            <b>{t(($) => $.viewshed.parameters)}</b>
           </span>
         </div>
       </div>
@@ -51,9 +50,9 @@ const ViewshedPanel = observer((props: Props) => {
           <Text
             textLight
             style={{ textAlign: "center" }}
-            title={t("viewshed.observerHeightInputTitle")}
+            title={t(($) => $.viewshed.observerHeightInputTitle)}
           >
-            {t("viewshed.observerHeightInput")}
+            {t(($) => $.viewshed.observerHeightInput)}
           </Text>
           <Box>
             <Input
@@ -64,7 +63,7 @@ const ViewshedPanel = observer((props: Props) => {
                 border-width: 1px;
                 border-color: ${theme.textLight};
               `}
-              title={t("viewshed.observerHeightInputTitle")}
+              title={t(($) => $.viewshed.observerHeightInputTitle)}
               light={false}
               dark
               required
@@ -82,9 +81,9 @@ const ViewshedPanel = observer((props: Props) => {
           <Text
             textLight
             style={{ textAlign: "center" }}
-            title={t("viewshed.targetHeightInputTitle")}
+            title={t(($) => $.viewshed.targetHeightInputTitle)}
           >
-            {t("viewshed.targetHeightInput")}
+            {t(($) => $.viewshed.targetHeightInput)}
           </Text>
           <Box>
             <Input
@@ -95,7 +94,7 @@ const ViewshedPanel = observer((props: Props) => {
                 border-width: 1px;
                 border-color: ${theme.textLight};
               `}
-              title={t("viewshed.targetHeightInputTitle")}
+              title={t(($) => $.viewshed.targetHeightInputTitle)}
               light={false}
               dark
               required

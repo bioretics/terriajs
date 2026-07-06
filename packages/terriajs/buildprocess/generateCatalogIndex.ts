@@ -1,7 +1,7 @@
 import Bottleneck from "bottleneck";
-import * as fse from "fs-extra";
 import { shuffle } from "lodash-es";
-import { join, parse } from "path";
+import fs from "node:fs";
+import { join, parse, dirname } from "node:path";
 import TerriaError from "../lib/Core/TerriaError";
 import filterOutUndefined from "../lib/Core/filterOutUndefined";
 import timeout from "../lib/Core/timeout";
@@ -18,10 +18,20 @@ import { BaseModel } from "../lib/Models/Definition/Model";
 import hasTraits from "../lib/Models/Definition/hasTraits";
 import { CatalogIndexFile } from "../lib/Models/SearchProviders/CatalogIndex";
 import registerSearchProviders from "../lib/Models/SearchProviders/registerSearchProviders";
-import Terria from "../lib/Models/Terria";
+import Terria, { defaultLoadConfig } from "../lib/Models/Terria";
 import CatalogMemberReferenceTraits from "../lib/Traits/TraitsClasses/CatalogMemberReferenceTraits";
 import patchNetworkRequests from "./patchNetworkRequests";
 import { program } from "commander";
+
+const writeFileSync = (...args: Parameters<typeof fs.writeFileSync>) => {
+  const path = args[0];
+  const dir = dirname(path.toString());
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFileSync(...args);
+};
 
 /** Add model to index */
 function indexModel(
@@ -39,6 +49,7 @@ function indexModel(
       ? member.nameInCatalog
       : undefined;
 
+    // eslint-disable-next-line prefer-const
     let description = "";
     // Remove description from CatalogIndex - as it makes files too large
     // if (CatalogMemberMixin.isMixedInto(member)) {
@@ -142,7 +153,7 @@ export default async function generateCatalogIndex(
   basicAuth: string | undefined,
   timeoutMs: number
 ) {
-  let debug = false;
+  const debug = false;
 
   let speed = speedString ? parseFloat(speedString) : 1;
   if (speed < 1) speed = 1;
@@ -180,7 +191,7 @@ export default async function generateCatalogIndex(
    */
   async function loadAndIndexMember(terria: Terria, member: BaseModel) {
     let name = getName(member);
-    let path = getPath(terria, member);
+    const path = getPath(terria, member);
 
     if (member.uniqueId && excludeIds && excludeIds.includes(member.uniqueId)) {
       console.log(`Excluding model \`${member.uniqueId}\`:"${name}" (${path}`);
@@ -211,6 +222,7 @@ export default async function generateCatalogIndex(
               ? groupPriority
               : memberPriority;
 
+          // eslint-disable-next-line @typescript-eslint/no-unused-expressions
           debug
             ? console.log(
                 "\x1b[32m%s\x1b[0m",
@@ -226,7 +238,7 @@ export default async function generateCatalogIndex(
             member,
             errors
           );
-        } catch (timeout) {
+        } catch (_timeout) {
           errors.push(
             TerriaError.from(
               `TIMEOUT FAILED to load Reference ${name} (${path})`
@@ -248,6 +260,7 @@ export default async function generateCatalogIndex(
     }
 
     if (GroupMixin.isMixedInto(member)) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       debug
         ? console.log("\x1b[36m%s\x1b[0m", `Adding Group ${name} (${path})`)
         : null;
@@ -267,7 +280,7 @@ export default async function generateCatalogIndex(
             member,
             errors
           );
-        } catch (timeout) {
+        } catch (_timeout) {
           errors.push(
             TerriaError.from(
               `TIMEOUT FAILED to load GROUP ${name} (${path}) = ${groupPriority}`
@@ -313,7 +326,7 @@ export default async function generateCatalogIndex(
   try {
     terria.configParameters.serverConfigUrl = `${baseUrl}serverconfig`;
     terria.configParameters.corsProxyBaseUrl = `${baseUrl}proxy/`;
-    await terria.start({ configUrl });
+    await terria.start({ loadConfig: () => defaultLoadConfig(configUrl) });
 
     await terria.loadInitSources();
   } catch (e) {
@@ -345,29 +358,26 @@ export default async function generateCatalogIndex(
     }, {});
 
   // Save index to file
-  fse.writeFileSync(
-    outPath ?? "catalog-index.json",
-    JSON.stringify(sortedIndex)
-  );
+  writeFileSync(outPath ?? "catalog-index.json", JSON.stringify(sortedIndex));
 
   // Save errors to file
   const terriaError = TerriaError.combine(errors, "Errors")?.toError();
 
   if (terriaError?.stack) {
-    fse.writeFileSync(
+    writeFileSync(
       join(outPathResolved.dir, outPathResolved.name + "errors.json"),
       terriaError.message
     );
-    fse.writeFileSync(
+    writeFileSync(
       join(outPathResolved.dir, outPathResolved.name + "errors-stack.json"),
       terriaError.stack
     );
   } else {
-    fse.writeFileSync(
+    writeFileSync(
       join(outPathResolved.dir, outPathResolved.name + "errors.json"),
       "No errors"
     );
-    fse.writeFileSync(
+    writeFileSync(
       join(outPathResolved.dir, outPathResolved.name + "errors-stack.json"),
       "No errors"
     );

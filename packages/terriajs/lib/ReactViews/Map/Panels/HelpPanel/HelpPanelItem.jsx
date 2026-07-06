@@ -1,12 +1,12 @@
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import styled, { withTheme } from "styled-components";
 import {
   Category,
   HelpAction
-} from "../../../../Core/AnalyticEvents/analyticEvents";
+} from "../../../../Core/Analytics/analyticEvents";
 import { isJsonString } from "../../../../Core/Json";
 import Icon, { StyledIcon } from "../../../../Styled/Icon";
 import Text from "../../../../Styled/Text";
@@ -14,7 +14,7 @@ import { applyTranslationIfExists } from "../../../../Language/languageHelpers";
 import HelpVideoPanel from "./HelpVideoPanel";
 
 @observer
-class HelpPanelItem extends React.Component {
+class HelpPanelItem extends Component {
   static displayName = "HelpPanelItem";
 
   static propTypes = {
@@ -25,10 +25,6 @@ class HelpPanelItem extends React.Component {
     t: PropTypes.func.isRequired,
     i18n: PropTypes.object.isRequired
   };
-
-  constructor(props) {
-    super(props);
-  }
 
   render() {
     const { i18n } = this.props;
@@ -52,7 +48,7 @@ class HelpPanelItem extends React.Component {
           isSelected={itemSelected}
           role={paneMode === "externalLink" ? "link" : undefined}
           onClick={() => {
-            this.props.terria.analytics?.logEvent(
+            this.props.terria.analytics.logEvent(
               Category.help,
               HelpAction.itemSelected,
               title

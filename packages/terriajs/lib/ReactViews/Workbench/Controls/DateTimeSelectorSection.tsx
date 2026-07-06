@@ -2,9 +2,9 @@ import dateFormat from "dateformat";
 import { TFunction } from "i18next";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { Component } from "react";
 import { WithTranslation, withTranslation } from "react-i18next";
-import styled from "styled-components";
+import styled, { DefaultTheme, withTheme } from "styled-components";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import isDefined from "../../../Core/isDefined";
 import DiscretelyTimeVaryingMixin from "../../../ModelMixins/DiscretelyTimeVaryingMixin";
@@ -24,10 +24,11 @@ interface IState {
 interface IProps extends WithTranslation {
   item: DiscretelyTimeVaryingMixin.Instance;
   t: TFunction;
+  theme: DefaultTheme;
 }
 
 @observer
-class DateTimeSelectorSection extends React.Component<IProps, IState> {
+class DateTimeSelectorSection extends Component<IProps, IState> {
   state: IState = {
     isOpen: false
   };
@@ -158,12 +159,12 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
     return (
       <Box column paddedVertically>
         <Text medium textLight id={"dateTimeSelectorLabel"}>
-          {item.timeLabel ?? t("dateTime.selectorLabel")}
+          {item.timeLabel ?? t(($) => $.dateTime.selectorLabel)}
         </Text>
         <Spacing bottom={1} />
-        <Box fullWidth justifySpaceBetween styledHeight={"30px"} gap>
+        <Box fullWidth justifySpaceBetween styledHeight={"40px"} gap>
           <Box
-            backgroundColor="rgba(250, 250, 250, 0.2)"
+            backgroundColor={this.props.theme.darkLighter}
             css={`
               border-radius: 2px;
               flex-grow: 1;
@@ -172,33 +173,37 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
             <StyledButton
               disabled={!item.isPreviousDiscreteTimeAvailable}
               onClick={this.onPreviousButtonClicked}
-              title={t("dateTime.previous")}
+              title={t(($) => $.dateTime.previous)}
               css={`
                 border-right: 1px solid rgba(255, 255, 255, 0.15);
                 border-radius: 2px 0 0 2px;
               `}
             >
-              <StyledIcon glyph={GLYPHS.previous} styledWidth={"8px"} />
+              <StyledIcon
+                fillColor={this.props.theme.grey}
+                glyph={GLYPHS.previous}
+                styledWidth={"8px"}
+              />
             </StyledButton>
             <StyledButton
               onClick={this.toggleOpen}
-              title={t("dateTime.selectTime")}
+              title={t(($) => $.dateTime.selectTime)}
               id="current-date-btn"
               css={`
                 flex-grow: 1;
                 padding: 0 10px;
               `}
             >
-              <TextSpan large textLight id="current-date">
+              <TextSpan textLight id="current-date">
                 {isDefined(discreteTime)
                   ? discreteTime
-                  : t("dateTime.outOfRange")}
+                  : t(($) => $.dateTime.outOfRange)}
               </TextSpan>
             </StyledButton>
             <StyledButton
               disabled={!item.isNextDiscreteTimeAvailable}
               onClick={this.onNextButtonClicked}
-              title={t("dateTime.next")}
+              title={t(($) => $.dateTime.next)}
               css={`
                 border-left: 1px solid rgba(255, 255, 255, 0.15);
                 border-radius: 0 2px 2px 0;
@@ -211,7 +216,7 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
                 width: 0;
                 height: 0;
               `}
-              title={t("dateTime.selectTime")}
+              title={t(($) => $.dateTime.selectTime)}
             >
               <DateTimePicker
                 currentDate={
@@ -223,7 +228,6 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
                 onChange={this.changeDateTime}
                 openDirection="down"
                 isOpen={this.state.isOpen}
-                onOpen={this.onOpen}
                 onClose={this.onClose}
                 dateFormat={format}
               />
@@ -233,7 +237,7 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
             active={attachedToTimeline}
             type="button"
             onClick={this.onTimelineButtonClicked}
-            title={t("dateTime.useTimeline")}
+            title={t(($) => $.dateTime.useTimeline)}
           >
             <StyledIcon light styledWidth={"20px"} glyph={GLYPHS.timeline} />
           </TimelineButton>
@@ -241,7 +245,7 @@ class DateTimeSelectorSection extends React.Component<IProps, IState> {
             active={item.showInChartPanel}
             type="button"
             onClick={this.onShowOnChartButtonClicked}
-            title={t("dateTime.availableTimeChart")}
+            title={t(($) => $.dateTime.availableTimeChart)}
           >
             <StyledIcon light styledWidth={"20px"} glyph={GLYPHS.lineChart} />
           </TimelineButton>
@@ -282,4 +286,4 @@ const TimelineButton = styled(RawButton)<{ active: boolean }>`
   `}
 `;
 
-export default withTranslation()(DateTimeSelectorSection);
+export default withTranslation()(withTheme(DateTimeSelectorSection));

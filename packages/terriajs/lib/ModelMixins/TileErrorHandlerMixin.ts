@@ -19,6 +19,9 @@ import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import DiscretelyTimeVaryingMixin from "./DiscretelyTimeVaryingMixin";
 import MappableMixin from "./MappableMixin";
 
+const LEAFLET_EMPTY_IMAGE_URL =
+  "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=";
+
 type ModelType = Model<
   MappableTraits & ImageryProviderTraits & CatalogMemberTraits
 > &
@@ -113,7 +116,6 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
         tileProviderError.retry = false;
         return;
       }
-
       /** Helper methods **/
 
       // Give up loading this (definitively, unexpectedly bad) tile and
@@ -132,12 +134,14 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
               new TerriaError({
                 sender: this,
                 title: i18next.t(
-                  "models.imageryLayer.accessingBaseMapErrorTitle"
+                  ($) => $.models.imageryLayer.accessingBaseMapErrorTitle
                 ),
                 message:
                   i18next.t(
-                    "models.imageryLayer.accessingBaseMapErrorMessage",
-                    { name: this.name }
+                    ($) => $.models.imageryLayer.accessingBaseMapErrorMessage,
+                    {
+                      name: this.name as string
+                    }
                   ) +
                   "<pre>" +
                   formatError(e) +
@@ -149,12 +153,15 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
               new TerriaError({
                 sender: this,
                 title: i18next.t(
-                  "models.imageryLayer.accessingCatalogItemErrorTitle"
+                  ($) => $.models.imageryLayer.accessingCatalogItemErrorTitle
                 ),
                 message:
                   i18next.t(
-                    "models.imageryLayer.accessingCatalogItemErrorMessage",
-                    { name: this.name }
+                    ($) =>
+                      $.models.imageryLayer.accessingCatalogItemErrorMessage,
+                    {
+                      name: this.name as string
+                    }
                   ) +
                   "<pre>" +
                   formatError(e) +
@@ -174,7 +181,9 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
       };
 
       const retryWithBackoff = (e: Error) => {
-        operation.retry(e) || failTile(e);
+        if (!operation.retry(e)) {
+          failTile(e);
+        }
       };
 
       const tellMapToRetry = () => {
@@ -195,8 +204,8 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
         return this === (baseMap as any)
           ? true
           : baseMap instanceof CompositeCatalogItem
-          ? baseMap.memberModels.includes(this)
-          : false;
+            ? baseMap.memberModels.includes(this)
+            : false;
       };
       /** End helper methods **/
 
@@ -249,15 +258,18 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
               // stuck repeating the request forever in that scenario. Instead,
               // we should give up after a few attempts.
               failTile({
-                name: i18next.t("models.imageryLayer.tileErrorTitle"),
-                message: i18next.t("models.imageryLayer.tileErrorMessage", {
-                  url: getUrlForImageryTile(
-                    imageryProvider,
-                    tileProviderError.x,
-                    tileProviderError.y,
-                    tileProviderError.level
-                  )
-                })
+                name: i18next.t(($) => $.models.imageryLayer.tileErrorTitle),
+                message: i18next.t(
+                  ($) => $.models.imageryLayer.tileErrorMessage,
+                  {
+                    url: getUrlForImageryTile(
+                      imageryProvider,
+                      tileProviderError.x,
+                      tileProviderError.y,
+                      tileProviderError.level
+                    ) as string
+                  }
+                )
               });
             } else {
               // Either:
@@ -269,37 +281,53 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
           } catch (error: any) {
             // This attempt failed. We'll either retry (for 500s) or give up
             // depending on the status code.
-            const e: Error & { statusCode?: number } = error || {};
+            const e: Error & {
+              statusCode?: number;
+              target?: HTMLImageElement;
+            } = error || {};
+
             if (e.statusCode === undefined) {
               if (runInAction(() => ignoreUnknownTileErrors)) {
                 tellMapToSilentlyGiveUp();
-              } else if ((e as any).target !== undefined) {
+              } else if (e.target !== undefined) {
                 // This is a failed image element, which means we got a 200 response but
                 // could not load it as an image.
+
+                // If image element is Leaflet's empty pixel ignore this error (See: https://github.com/Leaflet/Leaflet/issues/9311)
+                if (e.target.src === LEAFLET_EMPTY_IMAGE_URL) {
+                  tellMapToSilentlyGiveUp();
+                  return;
+                }
+
                 failTile({
-                  name: i18next.t("models.imageryLayer.tileErrorTitle"),
-                  message: i18next.t("models.imageryLayer.tileErrorMessageII", {
-                    url: getUrlForImageryTile(
-                      imageryProvider,
-                      tile.x,
-                      tile.y,
-                      tile.level
-                    )
-                  })
-                });
-              } else {
-                // Unknown error
-                failTile({
-                  name: i18next.t("models.imageryLayer.unknownTileErrorTitle"),
+                  name: i18next.t(($) => $.models.imageryLayer.tileErrorTitle),
                   message: i18next.t(
-                    "models.imageryLayer.unknownTileErrorMessage",
+                    ($) => $.models.imageryLayer.tileErrorMessageII,
                     {
                       url: getUrlForImageryTile(
                         imageryProvider,
                         tile.x,
                         tile.y,
                         tile.level
-                      )
+                      ) as string
+                    }
+                  )
+                });
+              } else {
+                // Unknown error
+                failTile({
+                  name: i18next.t(
+                    ($) => $.models.imageryLayer.unknownTileErrorTitle
+                  ),
+                  message: i18next.t(
+                    ($) => $.models.imageryLayer.unknownTileErrorMessage,
+                    {
+                      url: getUrlForImageryTile(
+                        imageryProvider,
+                        tile.x,
+                        tile.y,
+                        tile.level
+                      ) as string
                     }
                   )
                 });
@@ -368,8 +396,9 @@ function TileErrorHandlerMixin<T extends AbstractConstructor<ModelType>>(
 }
 
 namespace TileErrorHandlerMixin {
-  export interface Instance
-    extends InstanceType<ReturnType<typeof TileErrorHandlerMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof TileErrorHandlerMixin>
+  > {}
 
   export function isMixedInto(model: any): model is Instance {
     return model?.hasTileErrorHandlerMixin;

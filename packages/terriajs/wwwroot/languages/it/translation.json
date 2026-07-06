@@ -55,33 +55,19 @@
     "resetAlignmentMessage": "Ripristino dell'allineamento della bussola. Se l'allineamento non corrisponde al mondo reale, prova a muovere il dispositivo con un movimento a 8 per ricalibrarlo. Questo può essere fatto in qualsiasi momento.<br /> <br />Evitare luoghi con campi magnetici o oggetti metallici, poiché questi possono disorientare la bussola del dispositivo.",
     "experimentalFeatureMessage": "La modalità Realtà Aumentata è attualmente in beta. Questa modalità è progettata solo per l'uso sui più recenti dispositivi mobili di fascia alta. <br /><br />ATTENZIONE: Questa modalità può consumare molti dati, fai attenzione ai costi di utilizzo dei dati da parte del tuo provider di rete. <br /><br />La precisione di questa modalità dipende dalla precisione della bussola interna del tuo dispositivo mobile."
   },
-  "viewshed": {
-    "toolButton": "Linea di vista",
-    "toolButtonTitle": "Linea di vista",
-    "messageHeader": "Linea di vista",
-    "distance": "Distanza:",
-    "distanceVisible": "Distanza visibile:",
-    "resultOk": "VISIBILE",
-    "resultKo": "COPERTO",
-    "parameters": "Parametri Linea di vista",
-    "observerHeightInput": "Altezza dell'osservatore rispetto al suolo in metri (punto arancione)",
-    "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
-    "targetHeightInput": "Altezza del bersaglio<br/>rispetto al suolo in metri<br/>(punto viola)",
-    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)"
-  },
   "measure": {
+    "measureDistance": "Misura la lunghezza di una linea",
     "measureTool": "Apri strumento di misura",
+    "measureToolTitle": "Strumenti di misura",
     "measurePointTool": "Strumento di misura di punti",
     "measureLineTool": "Strumento di misura di linee",
     "measurePolygonTool": "Strumento di misura di aree",
     "measureCircleTool": "Strumento di misura circolare",
-    "measureToolTitle": "Strumenti di misura",
     "measureAngleTool": "Strumento di misura degli angoli",
     "measurePointToolTitle": "Misuratore di punti",
     "measureLineToolTitle": "Misuratore lineare",
     "measurePolygonToolTitle": "Misuratore di area",
     "measureCircleToolTitle": "Misuratore circolare",
-    "measureDistance": "Misura la lunghezza di una linea",
     "measureAngleToolTitle": "Misuratore di angoli",
     "measureArea": "Misura l'area di un poligono",
     "measureCircle": "Misura l'area di un cerchio",
@@ -90,124 +76,6 @@
     "measurePolygonToolMessagePerimeter": "perimetro",
     "measurePolygonToolMessageArea": "area",
     "measureAngleToolMessage": "angolo"
-  },
-  "measurableGeometry": {
-    "header": "MISURE",
-    "clampLineToGround": "ancorato al terreno",
-    "dontClampLineToGround": "non ancorato",
-    "clampLineButtonTitle": "cambia la modalità di disegno delle geometrie sulla mappa, da ancorato a libero e viceversa",
-    "samplingStepHeader": "Passo di campionamento del terreno (m)",
-    "samplingStepButtonText": "Cambia",
-    "samplingStepButtonTitle": "Cambia passo di campionamento",
-    "showElevationChart": "Mostra/nascondi il grafico altimetrico",
-    "geometrySummaryHeader": "Dettaglio",
-    "geometrySummaryElevationMin": "Alt. min",
-    "geometrySummaryElevationMax": "Alt. max",
-    "geometrySummaryElevationDiff": "Disl.",
-    "geometrySummaryElevationBear": "Rotta",
-    "geometrySummaryElevation": "Alt.",
-    "geometrySummaryStopSummary": "Dettaglio tappe",
-    "geometrySummaryDistGeo": "Dist. geodetica",
-    "geometrySummaryDistAir": "Dist. in aria",
-    "geometrySummaryDistGround": "Dist. al suolo",
-    "geometrySummaryPerimeterGeo": "Perimetro geodetico",
-    "geometrySummaryPerimeterAir": "Perimetro in aria",
-    "geometrySummaryPerimeterGround": "Perimetro al suolo",
-    "geometrySummaryAreaGeo": "Area geodetica",
-    "geometrySummaryAreaAir": "Area in aria",
-    "geometrySummarySlope": "Pendenza %",
-    "textareaPlaceholder": "Inserisci le tue note...",
-    "pathNotesTitle": "Aggiungi una descrizione del percorso",
-    "pointNotesTitle": "Aggiungi una descrizione del punto",
-    "elementPlaceholder": "Elemento num.",
-    "changePath": "Cambia il percorso",
-    "addPath": "Aggiungi un nuovo percorso",
-    "removePath": "Rimuovi il percorso attuale",
-    "showDistanceCheckbox": "Mostra etichette distanze",
-    "showDistanceCheckboxTitle": "Attiva/disattiva etichette distanze nella mappa",
-    "tempLayerName": "Inserisci il nome del layer temporaneo",
-    "circleRadius": "Raggio",
-    "circleDiameter": "Diametro",
-    "circlePerimeter": "Circonferenza",
-    "circleAreaM2": "Area (m\u00B2)",
-    "circleAreaHa": "Area (ha)",
-    "downloadSummaryInfo": "Scarica info",
-    "downloadSummaryInfoTitle": "Scarica informazioni di riepilogo",
-    "downloadLayer": "Scarica il layer",
-    "downloadLayerTitle": "Scarica il riepilogo del layer in formato TXT",
-    "downloadStopPoints": "Scarica dati tappe",
-    "downloadStopPointsTitle": "Scarica i dati delle tappe in formato CSV",
-    "tempLayerInfo": "Trasforma in \"layer temporaneo\" per spostare questi dati nel workbench ed usarli come layer (trasparenza, esporta, confronta, cambia stile, volo, ...).",
-    "tourPrompt": "Prima volta con le Misure? Fai un tour veloce!",
-    "tour": {
-      "helpButton": "Apri tour Misure",
-      "preface": {
-        "start": "Avvia tour"
-      },
-      "panel": "## Pannello Misure\n\nQui trovi tutti gli strumenti e i risultati delle misure. Segui i passaggi per capire ogni sezione.",
-      "summaryTable": "## Tabella di dettaglio\n\nMostra i valori riepilogativi (altitudine min/max, rotta, distanze o aree totali) della misura corrente.",
-      "stopSummaryTable": "## Tabella dettaglio tappe\n\nElenca ogni tappa/vertice con altitudine, distanze, pendenza e note. Se consentito puoi riordinare i punti trascinandoli.",
-      "samplingStep": "## Passo di campionamento\n\nImposta ogni quanto campionare il terreno lungo il percorso. Passi più piccoli danno più dettaglio ma richiedono più calcoli.",
-      "chartButton": "## Grafico altimetrico\n\nApre il profilo altimetrico del percorso (se disponibile).",
-      "clampButton": "## Ancoraggio al terreno\n\nPassa tra distanze ancorate al terreno e distanze libere (in aria).",
-      "transformButton": "## Trasforma\n\nTrasforma la misura in un layer temporaneo che puoi stilizzare, esportare o presentare in modalità volo.",
-      "multiPathControls": "## Gestione multipercorsi\n\nCambia percorso, aggiungine uno nuovo o rimuovi quello corrente per creare misure multi-tratta."
-    }
-  },
-  "elevationChart": {
-    "header": "Profilo altimetrico",
-    "measure": "Misura",
-    "measureAir": "in aria",
-    "measureGround": "al suolo"
-  },
-  "transformLayer": {
-    "transform": "Trasforma in un layer temporaneo",
-    "transformation": "Trasformazione a un layer temporaneo, un layer locale creato dalle tue misurazioni quindi non viene salvato nel dispositivo finché non lo si esporta con uno dei formati supportati."
-  },
-  "downloadData": {
-    "downloadPanel": "Esporta",
-    "filenamePlaceholder": "Inserisci il nome del file...",
-    "filenamePlaceholderTitle": "Inserisci il nome del file da scaricare",
-    "formatPlaceholder": "Seleziona il formato",
-    "lines": "Linee",
-    "points": "Punti",
-    "polygon": "Poligono",
-    "singlepath": "Percorso singolo",
-    "selectAll": "Seleziona tutti",
-    "downloadCurrent": "solo elemento corrente",
-    "downloadButtonTitle": "Salva il file utilizzando questo nome e formato"
-  },
-  "playPath": {
-    "title": "Play Path",
-    "speed": "Velocità",
-    "tooltip": {
-      "play": "Avvia percorso",
-      "pause": "Pausa percorso",
-      "stop": "Arresta e reimposta",
-      "speedLabel": "Etichetta velocità",
-      "speedSlider": "Regola velocità di riproduzione",
-      "speedSliderTitle": "Modifica la velocità di riproduzione del percorso",
-      "currentSpeed": "Velocità corrente",
-      "pitchTooLow": "L'inclinazione della camera è troppo bassa"
-    },
-    "tour": {
-      "helpButton": "Guida",
-      "preface": {
-        "title": "Guida PlayPath",
-        "content": "Scopri come utilizzare lo strumento PlayPath per creare animazioni fluide lungo i percorsi misurati. Questa guida ti mostrerà le funzionalità principali.",
-        "start": "Inizia la guida",
-        "skip": "Salta"
-      },
-      "playButton": "## Pulsante Play/Pausa\n\nClicca questo pulsante per avviare o mettere in pausa l'animazione lungo il percorso. Durante la riproduzione, la camera seguirà automaticamente il percorso tracciato.",
-      "stopButton": "## Pulsante Stop\n\nUtilizza questo pulsante per fermare l'animazione e tornare al punto di partenza. Utile per ricominciare dall'inizio e resettare la vista.",
-      "speedSlider": "## Controllo Velocità\n\nRegola la velocità dell'animazione trascinando il cursore. Puoi impostare velocità da 0.5x (più lenta) fino a 3x (più veloce).",
-      "playPathPanel": "## Pannello Play Path\n\nQuesto pannello permette di visualizzare mediante lo scorrimento della camera sulla mappa un percorso disegnato manualmente o caricato da file. Il pannello può essere spostato trascinandolo e anche chiuso per avere una visuale completa.",
-      "cameraPosition": "## Posizione della Camera\n\nLa camera seguirà il percorso prestabilito. All'inizio sarà necessario posizionarla in prossimità del punto di partenza (che può coincidere con l’inizio effettivo del percorso o con il punto finale). È inoltre importante impostare lo zoom e l'inclinazione della camera in modo coerente con le caratteristiche del tracciato: ad esempio, in presenza di zone montuose è preferibile evitare un’inclinazione troppo bassa."
-    }
-  },
-  "pickInfo": {
-    "toolName": "Info",
-    "title": "Attiva la funzione Info quando si clicca in un punto della mappa"
   },
   "general": {
     "cancel": "Annulla",
@@ -255,52 +123,6 @@
     "email": "Indirizzo email (opzionale)<br/><em>Non possiamo proseguire senza!</em>",
     "feedbackPreamble": "Ci piacerebbe sentire la tua opinione!"
   },
-  "coordsPanel": {
-    "header": "Coordinate",
-    "btnConvert": "Converti",
-    "btnConvertTitle": "Converti coordinate",
-    "btnReset": "Reset",
-    "btnResetTitle": "Pulisci i campi",
-    "coordsInputMessage": "Lat, Lon (in gradi decimali) oppure X, Y oppure Est, Nord",
-    "coordsInputTooltip": "Se la finestra 'Informazioni' è aperta le coordinate sono lette da lì e non sono modificabili",
-    "srsSelectionTooltip": "Clicca per scegliere la conversione da utilizzare (se le coordinate sono geografiche l'elenco delle conversioni è filtrato con solo quelle ammissibili)",
-    "coordsResultMessage": "Lat, Lon (in gradi decimali) oppure X, Y oppure Est, Nord",
-    "copyTooltip": "Copia le coordinate negli Appunti",
-    "centerMaptooltip": "Centra la mappa alle coordinate indicate (attivo solo se sono cartografiche)"
-  },
-  "colorPanel": {
-    "header": "Colora",
-    "headerTitle": "Colora il terreno in base all'altitudine",
-    "title": "Range di altitudine da colorare",
-    "explanation": "range min - max (in metri)",
-    "warning": "Dopo aver premuto il bottone Applica, clicca sulla mappa per aggiornarla.",
-    "transparency": "Trasparenza",
-    "addButtonTitle": "Aggiungi un nuovo range",
-    "removeButtonTitle": "Rimuovi il range",
-    "fromPlaceholder": "Da",
-    "toPlaceholder": "A",
-    "applyButton": "Applica"
-  },
-  "login": {
-    "loginTitle": "Login",
-    "logoutTitle": "Logout",
-    "logoutConfirmTitle": "Conferma logout",
-    "logoutConfirmMessage": "Vuoi effettuare il logout?",
-    "logoutConfirmOk": "Logout",
-    "logoutConfirmCancel": "Annulla",
-    "loginPanelHeader": "Autenticazione utente",
-    "loginPanelUsername": "Username",
-    "loginPanelUsernameTitle": "Inserisci il nome utente",
-    "loginPanelPassword": "Password",
-    "loginPanelPasswordTitle": "Inserisci la password",
-    "loginPanelOk": "Login",
-    "loginPanelCancel": "Cancella",
-    "loginPanelLoading": "Autenticazione in corso...",
-    "loginPanelInvalidCredentials": "Nome utente o password non validi. Controlla le credenziali e riprova.",
-    "loginPanelConnectionProblem": "Impossibile raggiungere il servizio di autenticazione. Verifica la connessione internet e riprova.",
-    "loginPanelGenericError": "Si è verificato un errore imprevisto durante il login. Riprova più tardi.",
-    "loginPanelMissingFields": "Inserisci sia il nome utente che la password."
-  },
   "settingPanel": {
     "performanceLabel": "Prestazioni",
     "qualityLabel": "Qualità",
@@ -315,9 +137,9 @@
     },
     "viewerModeLabels": {
       "Leaflet": "2D",
-      "Cesium2D": "2D Cesium",
       "CesiumTerrain": "Terreno 3D",
-      "CesiumEllipsoid": "3D Regolare"
+      "CesiumEllipsoid": "3D Regolare",
+      "Cesium2D": "2D Cesium"
     },
     "none": "(Nessuno)",
     "mapQuality": "Qualità della mappa raster:",
@@ -337,13 +159,13 @@
       "both": "Entrambi",
       "left": "Sinistra",
       "sideLabel": "Mostra il terreno sul",
+      "hideUnderground": "Il terreno nasconde caratteristiche sotterranee",
+      "hideUndergroundFeatures": "Premere per iniziare a nascondere le caratteristiche che si trovano sotto la superficie del terreno",
+      "showUndergroundFeatures": "Premere per iniziare a mostrare le caratteristiche che si trovano sotto la superficie del terreno",
       "globeTranslucencyEnabled": "Da vicino il terreno è trasparente",
       "globeTranslucencyEnabledTitle": "Se attivo, il terreno diventa trasparente man mano che la camera gli si avvicina, permettendo di vedere le caratteristiche sottostanti",
       "enableCollisionDetection": "Evita che la camera vada sotto il terreno",
-      "enableCollisionDetectionTitle": "Se attivo, evita che la camera possa andare sotto il terreno. In casi particolari, in presenza di elementi nel sottosuolo, può essere utile scendere con la visualizzazione sotto il terreno.",
-      "hideUnderground": "Il terreno nasconde caratteristiche sotterranee",
-      "hideUndergroundFeatures": "Premere per iniziare a nascondere le caratteristiche che si trovano sotto la superficie del terreno",
-      "showUndergroundFeatures": "Premere per iniziare a mostrare le caratteristiche che si trovano sotto la superficie del terreno"
+      "enableCollisionDetectionTitle": "Se attivo, evita che la camera possa andare sotto il terreno. In casi particolari, in presenza di elementi nel sottosuolo, può essere utile scendere con la visualizzazione sotto il terreno."
     }
   },
   "toolsPanel": {
@@ -384,7 +206,7 @@
     "importMapButton": "Carica",
     "exportMapButton": "Salva"
   },
-  "zoomCotrol": {
+  "zoomControl": {
     "zoomReset": "Ripristina lo zoom",
     "zoomOut": "Zoom indietro",
     "zoomIn": "Zoom in"
@@ -753,9 +575,6 @@
           "outside": "Taglia l'esterno del box"
         }
       }
-    },
-    "globeClipping": {
-      "enableMessage": "Taglia il globo attorno ai dati"
     },
     "webMapTileServiceCatalogItem": {
       "noUsableTileMatrixTitle": "Avvertimento",
@@ -1151,6 +970,9 @@
       "exportUserStyle": "Esporta stile utente",
       "importUserStyle": "Importa stile utente",
       "importUserStyleFailed": "Importazione dello stile utente JSON non riuscita"
+    },
+    "globeClipping": {
+      "enableMessage": "Taglia il globo attorno ai dati"
     }
   },
   "map": {
@@ -1530,10 +1352,6 @@
     "colorScaleRangeMin": "Il valore minimo deve essere un numero.",
     "searchItemTitle": "Cerca",
     "searchItem": "Cerca",
-    "circleItem": "Cerchio",
-    "pathItem": "Misure",
-    "pointsItem": "Punti",
-    "playPath": "Volo",
     "dimensionsSelector": {
       "undefinedLabel": "Non specificato"
     },
@@ -1547,14 +1365,19 @@
     "previewItem": "Informazioni",
     "zoomTo": "Zoom ideale",
     "splitItemTitle": "Duplicare e mostrare lo splitter",
-    "copyItem": "Copia",
-    "copyItemTitle": "Copia",
     "colorScaleRangeTitle": "Gamma di scala di colore non valida",
     "addItemErrorMessage": "Si è verificato un errore durante il caricamento dell'elemento del catalogo.",
     "addItemErrorTitle": "L'articolo del catalogo non può essere aggiunto alla workbench.",
     "diffImageTitle": "Visualizza le differenze nelle immagini tra le due date",
     "displayPercent": "Visualizzazione come percentuale del totale della regione",
-    "splitScreenMode": "MODALITA' SCHERMO DIVISO"
+    "splitScreenMode": "MODALITA' SCHERMO DIVISO",
+    "circleItem": "Cerchio",
+    "pathItem": "Misure",
+    "pointsItem": "Punti",
+    "playPath": "Volo",
+    "copyItem": "Copia",
+    "copyItemTitle": "Copia",
+    "pathItemTitle": "Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
   },
   "mobile": {
     "toggleNavigation": "Attiva/disattiva la navigazione",
@@ -1572,24 +1395,6 @@
     "search": "Cerca '{{searchText}}' nel catalogo dei dati",
     "searchInDataCatalog": "Cerca '{{locationSearchText}}' nel catalogo dei dati",
     "searchInCatalogItems": "Cerca '{{locationSearchText}}' nei layer aperti"
-  },
-  "queryTab": {
-    "charts": "Grafici",
-    "table": "Tabella",
-    "aggregateBy": "Aggrega per",
-    "represent": "Rappresenta",
-    "graphModel": "Modello di grafo",
-    "percentage": "Percentuale",
-    "value": "Valore",
-    "category": "Categoria",
-    "sum": "Somma",
-    "count": "Conta",
-    "pivotTable": "Tabella pivot",
-    "horizontalBars": "Barre orizzontali",
-    "verticalBars": "Barre verticali",
-    "pie": "Torta",
-    "changeColors": "Cambia colori",
-    "aggregationNotPossible": "La combinazione di filtri non permette di generare grafici di aggregazione"
   },
   "addData": {
     "back": "Indietro",
@@ -1689,59 +1494,6 @@
     "expand": "Espandi",
     "collapse": "Collassa"
   },
-  "microzonation": {
-    "menuButton": "Microzonazione sismica",
-    "panelTitle": "Microzonazione sismica",
-    "panelBody": "Ricerca e consulta i dati di microzonazione.",
-    "searchTitle": "Ricerca",
-    "province": "Provincia",
-    "municipality": "Comune",
-    "microzonation": "Microzonazione",
-    "cle": "CLE",
-    "allFeminine": "Tutte",
-    "allMasculine": "Tutti",
-    "searchButton": "Cerca",
-    "clearButton": "Pulisci",
-    "loadingList": "Caricamento dati...",
-    "loadingDetail": "Caricamento dettaglio...",
-    "listTitle": "Elenco",
-    "detailTitle": "Dettaglio",
-    "noResults": "Nessun risultato",
-    "noDocuments": "Nessun documento disponibile",
-    "open": "Apri",
-    "download": "Scarica",
-    "errorApiStatus": "Errore API: {{status}}",
-    "errorLoadingList": "Errore durante il caricamento dati",
-    "errorLoadingDetail": "Errore durante il caricamento",
-    "generalInfo": "Info generali",
-    "notes": "Note",
-    "msOrdinance": "Ordinanza MS",
-    "msValidation": "Convalida MS",
-    "msStandard": "Standard MS",
-    "cleOrdinance": "Ordinanza CLE",
-    "cleValidation": "Convalida CLE",
-    "cleStandard": "Standard CLE",
-    "level1": "Livello 1",
-    "level2": "Livello 2",
-    "level3": "Livello 3",
-    "cleDone": "Eseguita",
-    "cleNo": "No",
-    "civilProtectionPlan": "Piano di Protezione Civile",
-    "municipalPlan": "Piano comunale",
-    "planLink": "Link del piano",
-    "documents": "Documenti",
-    "docType": "Tipo",
-    "docDescription": "Descrizione",
-    "docStart": "Inizio",
-    "docEnd": "Fine",
-    "docDownload": "Scarica allegato",
-    "municipalEmergencyPlans": "Piani Emergenza Comunali",
-    "typeDoc": "Tipo",
-    "docFormat": "Formato",
-    "description": "Descrizione",
-    "startDate": "Inizio",
-    "endDate": "Fine"
-  },
   "dragDrop": {
     "not": "<0>bbbb</0>",
     "text": "<0>Trascina e rilascia</0><1>I tuoi dati ovunque per visualizzarli sulla mappa<1>"
@@ -1771,10 +1523,6 @@
     },
     "toolButtonTitle": "Modalità pedonale",
     "dropPedestrianTooltipMessage": "<b>Clic sinistro</b> per selezionare la posizione della goccia<br /><b>Clic destro / Esc</b> per annullare"
-  },
-  "keyboardControls": {
-    "toolButtonTitle": "Navigazione da tastiera",
-    "header": "Controlli mappa da tastiera"
   },
   "itemSearchTool": {
     "resetBtnText": "Cancella input",
@@ -1979,13 +1727,6 @@
   "term": {
     "missingContent": "contenuto mancante"
   },
-  "emptyWorkbench": {
-    "helpfulHints": "Suggerimenti utili",
-    "emptyArea": "La tua workbench è vuota",
-    "helpfulHintsOne": "Sfoglia i dati disponibili selezionando 'Esplora i dati della mappa' o clicca su 'Carica' per aggiungere i tuoi dati alla mappa.",
-    "helpfulHintsThree": "Nella workbench puoi attivare e disattivare i set di dati, cambiare la loro opacità, attivare il confronto a schermo diviso, cambiare gli stili e navigare attraverso date e orari, se i dati supportano questa funzionalità.",
-    "helpfulHintsTwo": "Una volta aggiunti i dati alla mappa, i tuoi set di dati attivi sono elencati qui nella tua workbench. La workbench ti aiuterà a interagire con i dati."
-  },
   "trainer": {
     "collapseTrainer": "Nascondi i dettagli del passaggio",
     "expandTrainer": "Mostra altri dettagli del passaggio",
@@ -1999,7 +1740,6 @@
   "toast": {
     "mapIsZooming": "Caricamento dello zoom ideale..."
   },
-  "emptyWorkbenchMessage": "<0><0>Il tuo workbench è vuoto</0><1><strong>Fai clic su \"$t(addData.addDataBtnText)\" sopra per </strong></1><2><0>Sfogliare il Catalogo dati</0> <1>Caricare i tuoi dati sulla mappa</1></2><3><0></0><strong>SUGGERIMENTO.</strong><2>Tutti i tuoi set di dati attivi verranno elencati qui< /2></3></0>",
   "timer": {
     "nextScheduledUpdateCountdown": "Prossimo aggiornamento dati tra {{timeCountdown}}",
     "nextScheduledUpdateTime": "Prossimo aggiornamento dei dati a {{scheduledUpdateTime}}"
@@ -2014,6 +1754,273 @@
   "includeStory": {
     "message": "Includi Storia in Condividi"
   },
+  "viewshed": {
+    "toolButton": "Linea di vista",
+    "toolButtonTitle": "Linea di vista",
+    "messageHeader": "Linea di vista",
+    "distance": "Distanza:",
+    "distanceVisible": "Distanza visibile:",
+    "resultOk": "VISIBILE",
+    "resultKo": "COPERTO",
+    "parameters": "Parametri Linea di vista",
+    "observerHeightInput": "Altezza dell'osservatore rispetto al suolo in metri (punto arancione)",
+    "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
+    "targetHeightInput": "Altezza del bersaglio<br/>rispetto al suolo in metri<br/>(punto viola)",
+    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)"
+  },
+  "measurableGeometry": {
+    "header": "MISURE",
+    "clampLineToGround": "ancorato al terreno",
+    "dontClampLineToGround": "non ancorato",
+    "clampLineButtonTitle": "cambia la modalità di disegno delle geometrie sulla mappa, da ancorato a libero e viceversa",
+    "samplingStepHeader": "Passo di campionamento del terreno (m)",
+    "samplingStepButtonText": "Cambia",
+    "samplingStepButtonTitle": "Cambia passo di campionamento",
+    "showElevationChart": "Mostra/nascondi il grafico altimetrico",
+    "geometrySummaryHeader": "Dettaglio",
+    "geometrySummaryElevationMin": "Alt. min",
+    "geometrySummaryElevationMax": "Alt. max",
+    "geometrySummaryElevationDiff": "Disl.",
+    "geometrySummaryElevationBear": "Rotta",
+    "geometrySummaryElevation": "Alt.",
+    "geometrySummaryStopSummary": "Dettaglio tappe",
+    "geometrySummaryDistGeo": "Dist. geodetica",
+    "geometrySummaryDistAir": "Dist. in aria",
+    "geometrySummaryDistGround": "Dist. al suolo",
+    "geometrySummaryPerimeterGeo": "Perimetro geodetico",
+    "geometrySummaryPerimeterAir": "Perimetro in aria",
+    "geometrySummaryPerimeterGround": "Perimetro al suolo",
+    "geometrySummaryAreaGeo": "Area geodetica",
+    "geometrySummaryAreaAir": "Area in aria",
+    "geometrySummarySlope": "Pendenza %",
+    "textareaPlaceholder": "Inserisci le tue note...",
+    "pathNotesTitle": "Aggiungi una descrizione del percorso",
+    "pointNotesTitle": "Aggiungi una descrizione del punto",
+    "elementPlaceholder": "Elemento num.",
+    "changePath": "Cambia il percorso",
+    "addPath": "Aggiungi un nuovo percorso",
+    "removePath": "Rimuovi il percorso attuale",
+    "showDistanceCheckbox": "Mostra etichette distanze",
+    "showDistanceCheckboxTitle": "Attiva/disattiva etichette distanze nella mappa",
+    "tempLayerName": "Inserisci il nome del layer temporaneo",
+    "circleRadius": "Raggio",
+    "circleDiameter": "Diametro",
+    "circlePerimeter": "Circonferenza",
+    "circleAreaM2": "Area (m²)",
+    "circleAreaHa": "Area (ha)",
+    "downloadSummaryInfo": "Scarica info",
+    "downloadSummaryInfoTitle": "Scarica informazioni di riepilogo",
+    "downloadLayer": "Scarica il layer",
+    "downloadLayerTitle": "Scarica il riepilogo del layer in formato TXT",
+    "downloadStopPoints": "Scarica dati tappe",
+    "downloadStopPointsTitle": "Scarica i dati delle tappe in formato CSV",
+    "tempLayerInfo": "Trasforma in \"layer temporaneo\" per spostare questi dati nel workbench ed usarli come layer (trasparenza, esporta, confronta, cambia stile, volo, ...).",
+    "tourPrompt": "Prima volta con le Misure? Fai un tour veloce!",
+    "tour": {
+      "helpButton": "Apri tour Misure",
+      "preface": {
+        "start": "Avvia tour"
+      },
+      "panel": "## Pannello Misure\n\nQui trovi tutti gli strumenti e i risultati delle misure. Segui i passaggi per capire ogni sezione.",
+      "summaryTable": "## Tabella di dettaglio\n\nMostra i valori riepilogativi (altitudine min/max, rotta, distanze o aree totali) della misura corrente.",
+      "stopSummaryTable": "## Tabella dettaglio tappe\n\nElenca ogni tappa/vertice con altitudine, distanze, pendenza e note. Se consentito puoi riordinare i punti trascinandoli.",
+      "samplingStep": "## Passo di campionamento\n\nImposta ogni quanto campionare il terreno lungo il percorso. Passi più piccoli danno più dettaglio ma richiedono più calcoli.",
+      "chartButton": "## Grafico altimetrico\n\nApre il profilo altimetrico del percorso (se disponibile).",
+      "clampButton": "## Ancoraggio al terreno\n\nPassa tra distanze ancorate al terreno e distanze libere (in aria).",
+      "transformButton": "## Trasforma\n\nTrasforma la misura in un layer temporaneo che puoi stilizzare, esportare o presentare in modalità volo.",
+      "multiPathControls": "## Gestione multipercorsi\n\nCambia percorso, aggiungine uno nuovo o rimuovi quello corrente per creare misure multi-tratta."
+    }
+  },
+  "elevationChart": {
+    "header": "Profilo altimetrico",
+    "measure": "Misura",
+    "measureAir": "in aria",
+    "measureGround": "al suolo"
+  },
+  "transformLayer": {
+    "transform": "Trasforma in un layer temporaneo",
+    "transformation": "Trasformazione a un layer temporaneo, un layer locale creato dalle tue misurazioni quindi non viene salvato nel dispositivo finché non lo si esporta con uno dei formati supportati."
+  },
+  "downloadData": {
+    "downloadPanel": "Esporta",
+    "filenamePlaceholder": "Inserisci il nome del file...",
+    "filenamePlaceholderTitle": "Inserisci il nome del file da scaricare",
+    "formatPlaceholder": "Seleziona il formato",
+    "lines": "Linee",
+    "points": "Punti",
+    "polygon": "Poligono",
+    "singlepath": "Percorso singolo",
+    "selectAll": "Seleziona tutti",
+    "downloadCurrent": "solo elemento corrente",
+    "downloadButtonTitle": "Salva il file utilizzando questo nome e formato"
+  },
+  "playPath": {
+    "title": "Play Path",
+    "speed": "Velocità",
+    "tooltip": {
+      "play": "Avvia percorso",
+      "pause": "Pausa percorso",
+      "stop": "Arresta e reimposta",
+      "speedLabel": "Etichetta velocità",
+      "speedSlider": "Regola velocità di riproduzione",
+      "speedSliderTitle": "Modifica la velocità di riproduzione del percorso",
+      "currentSpeed": "Velocità corrente",
+      "pitchTooLow": "L'inclinazione della camera è troppo bassa"
+    },
+    "tour": {
+      "helpButton": "Guida",
+      "preface": {
+        "title": "Guida PlayPath",
+        "content": "Scopri come utilizzare lo strumento PlayPath per creare animazioni fluide lungo i percorsi misurati. Questa guida ti mostrerà le funzionalità principali.",
+        "start": "Inizia la guida",
+        "skip": "Salta"
+      },
+      "playButton": "## Pulsante Play/Pausa\n\nClicca questo pulsante per avviare o mettere in pausa l'animazione lungo il percorso. Durante la riproduzione, la camera seguirà automaticamente il percorso tracciato.",
+      "stopButton": "## Pulsante Stop\n\nUtilizza questo pulsante per fermare l'animazione e tornare al punto di partenza. Utile per ricominciare dall'inizio e resettare la vista.",
+      "speedSlider": "## Controllo Velocità\n\nRegola la velocità dell'animazione trascinando il cursore. Puoi impostare velocità da 0.5x (più lenta) fino a 3x (più veloce).",
+      "playPathPanel": "## Pannello Play Path\n\nQuesto pannello permette di visualizzare mediante lo scorrimento della camera sulla mappa un percorso disegnato manualmente o caricato da file. Il pannello può essere spostato trascinandolo e anche chiuso per avere una visuale completa.",
+      "cameraPosition": "## Posizione della Camera\n\nLa camera seguirà il percorso prestabilito. All'inizio sarà necessario posizionarla in prossimità del punto di partenza (che può coincidere con l’inizio effettivo del percorso o con il punto finale). È inoltre importante impostare lo zoom e l'inclinazione della camera in modo coerente con le caratteristiche del tracciato: ad esempio, in presenza di zone montuose è preferibile evitare un’inclinazione troppo bassa."
+    }
+  },
+  "pickInfo": {
+    "toolName": "Info",
+    "title": "Attiva la funzione Info quando si clicca in un punto della mappa"
+  },
+  "coordsPanel": {
+    "header": "Coordinate",
+    "btnConvert": "Converti",
+    "btnConvertTitle": "Converti coordinate",
+    "btnReset": "Reset",
+    "btnResetTitle": "Pulisci i campi",
+    "coordsInputMessage": "Lat, Lon (in gradi decimali) oppure X, Y oppure Est, Nord",
+    "coordsInputTooltip": "Se la finestra 'Informazioni' è aperta le coordinate sono lette da lì e non sono modificabili",
+    "srsSelectionTooltip": "Clicca per scegliere la conversione da utilizzare (se le coordinate sono geografiche l'elenco delle conversioni è filtrato con solo quelle ammissibili)",
+    "coordsResultMessage": "Lat, Lon (in gradi decimali) oppure X, Y oppure Est, Nord",
+    "copyTooltip": "Copia le coordinate negli Appunti",
+    "centerMaptooltip": "Centra la mappa alle coordinate indicate (attivo solo se sono cartografiche)"
+  },
+  "colorPanel": {
+    "header": "Colora",
+    "headerTitle": "Colora il terreno in base all'altitudine",
+    "title": "Range di altitudine da colorare",
+    "explanation": "range min - max (in metri)",
+    "warning": "Dopo aver premuto il bottone Applica, clicca sulla mappa per aggiornarla.",
+    "transparency": "Trasparenza",
+    "addButtonTitle": "Aggiungi un nuovo range",
+    "removeButtonTitle": "Rimuovi il range",
+    "fromPlaceholder": "Da",
+    "toPlaceholder": "A",
+    "applyButton": "Applica"
+  },
+  "login": {
+    "loginTitle": "Login",
+    "logoutTitle": "Logout",
+    "logoutConfirmTitle": "Conferma logout",
+    "logoutConfirmMessage": "Vuoi effettuare il logout?",
+    "logoutConfirmOk": "Logout",
+    "logoutConfirmCancel": "Annulla",
+    "loginPanelHeader": "Autenticazione utente",
+    "loginPanelUsername": "Username",
+    "loginPanelUsernameTitle": "Inserisci il nome utente",
+    "loginPanelPassword": "Password",
+    "loginPanelPasswordTitle": "Inserisci la password",
+    "loginPanelOk": "Login",
+    "loginPanelCancel": "Cancella",
+    "loginPanelLoading": "Autenticazione in corso...",
+    "loginPanelInvalidCredentials": "Nome utente o password non validi. Controlla le credenziali e riprova.",
+    "loginPanelConnectionProblem": "Impossibile raggiungere il servizio di autenticazione. Verifica la connessione internet e riprova.",
+    "loginPanelGenericError": "Si è verificato un errore imprevisto durante il login. Riprova più tardi.",
+    "loginPanelMissingFields": "Inserisci sia il nome utente che la password."
+  },
+  "zoomCotrol": {
+    "zoomReset": "Ripristina lo zoom",
+    "zoomOut": "Zoom indietro",
+    "zoomIn": "Zoom in"
+  },
+  "queryTab": {
+    "charts": "Grafici",
+    "table": "Tabella",
+    "aggregateBy": "Aggrega per",
+    "represent": "Rappresenta",
+    "graphModel": "Modello di grafo",
+    "percentage": "Percentuale",
+    "value": "Valore",
+    "category": "Categoria",
+    "sum": "Somma",
+    "count": "Conta",
+    "pivotTable": "Tabella pivot",
+    "horizontalBars": "Barre orizzontali",
+    "verticalBars": "Barre verticali",
+    "pie": "Torta",
+    "changeColors": "Cambia colori",
+    "aggregationNotPossible": "La combinazione di filtri non permette di generare grafici di aggregazione"
+  },
+  "microzonation": {
+    "menuButton": "Microzonazione sismica",
+    "panelTitle": "Microzonazione sismica",
+    "panelBody": "Ricerca e consulta i dati di microzonazione.",
+    "searchTitle": "Ricerca",
+    "province": "Provincia",
+    "municipality": "Comune",
+    "microzonation": "Microzonazione",
+    "cle": "CLE",
+    "allFeminine": "Tutte",
+    "allMasculine": "Tutti",
+    "searchButton": "Cerca",
+    "clearButton": "Pulisci",
+    "loadingList": "Caricamento dati...",
+    "loadingDetail": "Caricamento dettaglio...",
+    "listTitle": "Elenco",
+    "detailTitle": "Dettaglio",
+    "noResults": "Nessun risultato",
+    "noDocuments": "Nessun documento disponibile",
+    "open": "Apri",
+    "download": "Scarica",
+    "errorApiStatus": "Errore API: {{status}}",
+    "errorLoadingList": "Errore durante il caricamento dati",
+    "errorLoadingDetail": "Errore durante il caricamento",
+    "generalInfo": "Info generali",
+    "notes": "Note",
+    "msOrdinance": "Ordinanza MS",
+    "msValidation": "Convalida MS",
+    "msStandard": "Standard MS",
+    "cleOrdinance": "Ordinanza CLE",
+    "cleValidation": "Convalida CLE",
+    "cleStandard": "Standard CLE",
+    "level1": "Livello 1",
+    "level2": "Livello 2",
+    "level3": "Livello 3",
+    "cleDone": "Eseguita",
+    "cleNo": "No",
+    "civilProtectionPlan": "Piano di Protezione Civile",
+    "municipalPlan": "Piano comunale",
+    "planLink": "Link del piano",
+    "documents": "Documenti",
+    "docType": "Tipo",
+    "docDescription": "Descrizione",
+    "docStart": "Inizio",
+    "docEnd": "Fine",
+    "docDownload": "Scarica allegato",
+    "municipalEmergencyPlans": "Piani Emergenza Comunali",
+    "typeDoc": "Tipo",
+    "docFormat": "Formato",
+    "description": "Descrizione",
+    "startDate": "Inizio",
+    "endDate": "Fine",
+    "loadingDocuments": "Caricamento documenti…"
+  },
+  "keyboardControls": {
+    "toolButtonTitle": "Navigazione da tastiera",
+    "header": "Controlli mappa da tastiera"
+  },
+  "emptyWorkbench": {
+    "helpfulHints": "Suggerimenti utili",
+    "emptyArea": "La tua workbench è vuota",
+    "helpfulHintsOne": "Sfoglia i dati disponibili selezionando 'Esplora i dati della mappa' o clicca su 'Carica' per aggiungere i tuoi dati alla mappa.",
+    "helpfulHintsThree": "Nella workbench puoi attivare e disattivare i set di dati, cambiare la loro opacità, attivare il confronto a schermo diviso, cambiare gli stili e navigare attraverso date e orari, se i dati supportano questa funzionalità.",
+    "helpfulHintsTwo": "Una volta aggiunti i dati alla mappa, i tuoi set di dati attivi sono elencati qui nella tua workbench. La workbench ti aiuterà a interagire con i dati."
+  },
+  "emptyWorkbenchMessage": "<0><0>Il tuo workbench è vuoto</0><1><strong>Fai clic su \"$t(addData.addDataBtnText)\" sopra per </strong></1><2><0>Sfogliare il Catalogo dati</0> <1>Caricare i tuoi dati sulla mappa</1></2><3><0></0><strong>SUGGERIMENTO.</strong><2>Tutti i tuoi set di dati attivi verranno elencati qui< /2></3></0>",
   "relatedMaps": {
     "buttonText": "Collegamenti",
     "buttonTitle": "Vedi i collegamenti",

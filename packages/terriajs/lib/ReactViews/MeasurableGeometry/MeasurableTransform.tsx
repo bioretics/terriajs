@@ -43,19 +43,19 @@ const MeasurableTransform = observer((props: Props) => {
         key: "jsonPolygon",
         href: DataUri.make("json", generateJsonPolygon(geom)),
         download: `${layerName}_polygon.geojson`,
-        label: `${i18next.t("downloadData.polygon")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.polygon)} GEOJSON`
       },
       {
         key: "jsonLines",
         href: DataUri.make("json", generateJsonLineStrings(geom)),
         download: `${layerName}_lines.geojson`,
-        label: `${i18next.t("downloadData.lines")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.lines)} GEOJSON`
       },
       {
         key: "jsonPoints",
         href: DataUri.make("json", generateJsonPoints(geom)),
         download: `${layerName}_points.geojson`,
-        label: `${i18next.t("downloadData.points")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.points)} GEOJSON`
       }
     ];
 
@@ -67,7 +67,7 @@ const MeasurableTransform = observer((props: Props) => {
           generateMultiPathJsonPolygon(terria.measurableGeomList)
         ),
         download: `${layerName}_polygon_multipath.geojson`,
-        label: `${i18next.t("downloadData.polygon")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.polygon)} GEOJSON`
       },
       {
         key: "jsonMultiPathLines",
@@ -76,7 +76,7 @@ const MeasurableTransform = observer((props: Props) => {
           generateMultiPathJsonLineStrings(terria.measurableGeomList)
         ),
         download: `${layerName}_lines_multipath.geojson`,
-        label: `${i18next.t("downloadData.lines")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.lines)} GEOJSON`
       }
     ];
 
@@ -366,7 +366,7 @@ const MeasurableTransform = observer((props: Props) => {
   return (
     <div style={{ display: "flex", alignItems: "center" }}>
       <Button
-        title={i18next.t("transformLayer.transformation")}
+        title={i18next.t(($) => $.transformLayer.transformation)}
         css={`
           color: ${theme.textLight};
           background: ${theme.colorPrimary};
@@ -382,7 +382,7 @@ const MeasurableTransform = observer((props: Props) => {
           viewState.measurableDownloadPanelIsVisible === true
         }
       >
-        {i18next.t("transformLayer.transform")}
+        {i18next.t(($) => $.transformLayer.transform)}
       </Button>
     </div>
   );

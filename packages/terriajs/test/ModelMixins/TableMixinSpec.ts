@@ -1,3 +1,4 @@
+import { http, HttpResponse } from "msw";
 import { runInAction } from "mobx";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
@@ -11,6 +12,7 @@ import updateModelFromJson from "../../lib/Models/Definition/updateModelFromJson
 import TerriaFeature from "../../lib/Models/Feature/Feature";
 import { TerriaFeatureData } from "../../lib/Models/Feature/FeatureData";
 import Terria from "../../lib/Models/Terria";
+import { worker } from "../mocks/browser";
 import TableColorStyleTraits from "../../lib/Traits/TraitsClasses/Table/ColorStyleTraits";
 import TableLabelStyleTraits, {
   EnumLabelSymbolTraits,
@@ -31,40 +33,27 @@ import TableTrailStyleTraits, {
   BinTrailSymbolTraits,
   EnumTrailSymbolTraits
 } from "../../lib/Traits/TraitsClasses/Table/TrailStyleTraits";
-
 import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import ScaleByDistanceTraits from "../../lib/Traits/TraitsClasses/ScaleByDistanceTraits";
+import LatLonValCsv from "../../wwwroot/test/csv/lat_lon_val.csv";
+import LatLonEnumCsv from "../../wwwroot/test/csv/lat_lon_enum.csv";
+import LatLonValCsvDuplicate from "../../wwwroot/test/csv/lat_lon_val_with_duplicate_row.csv";
+import LatLonEnumDateIdCsv from "../../wwwroot/test/csv/lat_lon_enum_date_id.csv";
+import LatLonEnumDateIdWithRegionCsv from "../../wwwroot/test/csv/lat_lon_enum_date_id_with_regions.csv";
 
-const LatLonValCsv = require("raw-loader!../../wwwroot/test/csv/lat_lon_val.csv");
-const LatLonEnumCsv = require("raw-loader!../../wwwroot/test/csv/lat_lon_enum.csv");
-const LatLonValCsvDuplicate = require("raw-loader!../../wwwroot/test/csv/lat_lon_val_with_duplicate_row.csv");
-const LatLonEnumDateIdCsv = require("raw-loader!../../wwwroot/test/csv/lat_lon_enum_date_id.csv");
-const LatLonEnumDateIdWithRegionCsv = require("raw-loader!../../wwwroot/test/csv/lat_lon_enum_date_id_with_regions.csv");
-const LgaWithDisambigCsv = require("raw-loader!../../wwwroot/test/csv/lga_state_disambig.csv");
-const ParkingSensorDataCsv = require("raw-loader!../../wwwroot/test/csv/parking-sensor-data.csv");
-const LegendDecimalPlacesCsv = require("raw-loader!../../wwwroot/test/csv/legend-decimal-places.csv");
-const BadDatesCsv = require("raw-loader!../../wwwroot/test/csv/bad-dates.csv");
-const regionMapping = JSON.stringify(
-  require("../../wwwroot/data/regionMapping.json")
-);
-const additionalRegionMapping = JSON.stringify(
-  require("../../wwwroot/test/regionMapping/additionalRegion.json")
-);
-const regionIdsSte = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-STE_2016_AUST_STE_NAME16.json")
-);
-const regionIdsLgaName = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json")
-);
-const regionIdsLgaCode = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-FID_LGA_2015_AUST_LGA_CODE15.json")
-);
-const regionIdsLgaNameStates = JSON.stringify(
-  require("../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json")
-);
+import LgaWithDisambigCsv from "../../wwwroot/test/csv/lga_state_disambig.csv";
+import ParkingSensorDataCsv from "../../wwwroot/test/csv/parking-sensor-data.csv";
+import LegendDecimalPlacesCsv from "../../wwwroot/test/csv/legend-decimal-places.csv";
+import BadDatesCsv from "../../wwwroot/test/csv/bad-dates.csv";
+import regionMapping from "../../wwwroot/data/regionMapping.json";
+import additionalRegionMapping from "../../wwwroot/test/regionMapping/additionalRegion.json";
+import regionIdsSte from "../../wwwroot/data/regionids/region_map-STE_2016_AUST_STE_NAME16.json";
+import regionIdsLgaName from "../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json";
+import regionIdsLgaCode from "../../wwwroot/data/regionids/region_map-FID_LGA_2015_AUST_LGA_CODE15.json";
+import regionIdsLgaNameStates from "../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json";
 
-const NUMBER_OF_REGION_MAPPING_TYPES = 144;
+const NUMBER_OF_REGION_MAPPING_TYPES = 155;
 
 describe("TableMixin", function () {
   let item: CsvCatalogItem;
@@ -76,32 +65,27 @@ describe("TableMixin", function () {
     });
     item = new CsvCatalogItem("test", terria, undefined);
 
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(/.*/).andError({});
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-STE_2016_AUST_STE_NAME16.json"
-    ).andReturn({ responseText: regionIdsSte });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json"
-    ).andReturn({ responseText: regionIdsLgaName });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2015_AUST_LGA_CODE15.json"
-    ).andReturn({ responseText: regionIdsLgaCode });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json"
-    ).andReturn({ responseText: regionIdsLgaNameStates });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-STE_2016_AUST_STE_NAME16.json",
+        () => HttpResponse.json(regionIdsSte)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json",
+        () => HttpResponse.json(regionIdsLgaName)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2015_AUST_LGA_CODE15.json",
+        () => HttpResponse.json(regionIdsLgaCode)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json",
+        () => HttpResponse.json(regionIdsLgaNameStates)
+      )
+    );
   });
 
   describe("when the table has time, lat/lon and id columns", function () {
@@ -113,18 +97,18 @@ describe("TableMixin", function () {
       expect(dataSource instanceof CustomDataSource).toBe(true);
     });
 
-    it("creates one entity per id", async function () {
+    it("creates one entity per id", function () {
       expect(item.activeTableStyle.rowGroups.length).toBe(4);
       if (dataSource instanceof CustomDataSource) {
         expect(dataSource.entities.values.length).toBe(4);
       }
     });
 
-    it("sets showInChartPanel to false - as is mappable", async function () {
+    it("sets showInChartPanel to false - as is mappable", function () {
       expect(item.showInChartPanel).toBeFalsy();
     });
 
-    it("sets showInChartPanel to true - when lat/lon is disabled", async function () {
+    it("sets showInChartPanel to true - when lat/lon is disabled", function () {
       updateModelFromJson(item, CommonStrata.definition, {
         columns: [
           { name: "lat", type: "scalar" },
@@ -136,7 +120,7 @@ describe("TableMixin", function () {
 
     it("doesn't show regions - even if empty region column is detected", () => {});
 
-    it("calculates rectangle", async function () {
+    it("calculates rectangle", function () {
       expect(item.rectangle.north).toEqual(-20);
       expect(item.rectangle.south).toEqual(-37);
       expect(item.rectangle.east).toEqual(155);
@@ -167,7 +151,7 @@ describe("TableMixin", function () {
     });
 
     describe("when timeColumn is `null`", function () {
-      it("returns an empty `discreteTimes`", async function () {
+      it("returns an empty `discreteTimes`", function () {
         expect(item.discreteTimes?.length).toBe(6);
         item.defaultStyle.time.setTrait(CommonStrata.user, "timeColumn", null);
         expect(item.discreteTimes).toBe(undefined);
@@ -201,18 +185,18 @@ describe("TableMixin", function () {
       expect(dataSource instanceof CustomDataSource).toBe(true);
     });
 
-    it("creates one entity per id", async function () {
+    it("creates one entity per id", function () {
       expect(item.activeTableStyle.rowGroups.length).toBe(4);
       if (dataSource instanceof CustomDataSource) {
         expect(dataSource.entities.values.length).toBe(4);
       }
     });
 
-    it("sets showInChartPanel to false - as is mappable", async function () {
+    it("sets showInChartPanel to false - as is mappable", function () {
       expect(item.showInChartPanel).toBeFalsy();
     });
 
-    it("shows regions when lat/lon is disabled", async function () {
+    it("shows regions when lat/lon is disabled", function () {
       updateModelFromJson(item, CommonStrata.definition, {
         columns: [
           { name: "lat", type: "scalar" },
@@ -231,7 +215,7 @@ describe("TableMixin", function () {
       expect(item.showingRegions).toBeFalsy();
     });
 
-    it("calculates rectangle", async function () {
+    it("calculates rectangle", function () {
       expect(item.rectangle.north).toEqual(-20);
       expect(item.rectangle.south).toEqual(-37);
       expect(item.rectangle.east).toEqual(155);
@@ -262,7 +246,7 @@ describe("TableMixin", function () {
     });
 
     describe("when timeColumn is `null`", function () {
-      it("returns an empty `discreteTimes`", async function () {
+      it("returns an empty `discreteTimes`", function () {
         expect(item.discreteTimes?.length).toBe(6);
         item.defaultStyle.time.setTrait(CommonStrata.user, "timeColumn", null);
         expect(item.discreteTimes).toBe(undefined);
@@ -354,11 +338,11 @@ describe("TableMixin", function () {
       expect(dataSource instanceof CustomDataSource).toBe(true);
     });
 
-    it("creates one entity per id", async function () {
+    it("creates one entity per id", function () {
       expect(dataSource.entities.values.length).toBe(21);
     });
 
-    it("creates correct intervals", async function () {
+    it("creates correct intervals", function () {
       expect(item.activeTableStyle.timeIntervals?.length).toBe(21);
       expect(item.disableDateTimeSelector).toBeFalsy();
       expect(
@@ -391,7 +375,7 @@ describe("TableMixin", function () {
       ]);
     });
 
-    it("creates correct intervals if spreadStartTime", async function () {
+    it("creates correct intervals if spreadStartTime", function () {
       runInAction(() =>
         item.setTrait(
           CommonStrata.user,
@@ -435,7 +419,7 @@ describe("TableMixin", function () {
       ]);
     });
 
-    it("creates correct intervals if spreadStartTime and spreadFinishTime", async function () {
+    it("creates correct intervals if spreadStartTime and spreadFinishTime", function () {
       runInAction(() =>
         item.setTrait(
           CommonStrata.user,
@@ -453,7 +437,7 @@ describe("TableMixin", function () {
       expect(item.activeTableStyle.moreThanOneTimeInterval).toBe(false);
     });
 
-    it("creates correct intervals if spreadFinishTime", async function () {
+    it("creates correct intervals if spreadFinishTime", function () {
       runInAction(() =>
         item.setTrait(
           CommonStrata.user,
@@ -496,11 +480,11 @@ describe("TableMixin", function () {
       ]);
     });
 
-    it("creates disable time dimension by default for this dataset", async function () {
+    it("creates disable time dimension by default for this dataset", function () {
       expect(item.timeDisableDimension).toBeDefined();
     });
 
-    it("doesn't disable time dimension if `showDisableTimeOption = false`", async function () {
+    it("doesn't disable time dimension if `showDisableTimeOption = false`", function () {
       runInAction(() =>
         item.setTrait(CommonStrata.user, "showDisableTimeOption", false)
       );
@@ -603,9 +587,19 @@ describe("TableMixin", function () {
       // We add "additionalRegion.json" - which defines two region types
       // - "SOME_OTHER_REGION" - which is just another region type
       // - "SOME_OVERRIDDEN_REGION" - which will override "LGA_NAME_2011" in "build/TerriaJS/data/regionMapping.json"
-      jasmine.Ajax.stubRequest("additionalRegion.json").andReturn({
-        responseText: additionalRegionMapping
-      });
+      worker.use(
+        http.get("*/additionalRegion.json", () =>
+          HttpResponse.json(additionalRegionMapping)
+        ),
+        http.get(
+          "build/TerriaJS/data/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json",
+          () => HttpResponse.json(regionIdsLgaNameStates)
+        ),
+        http.get(
+          "build/TerriaJS/data/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json",
+          () => HttpResponse.json(regionIdsLgaName)
+        )
+      );
 
       terria.updateParameters({
         regionMappingDefinitionsUrls: [
@@ -639,9 +633,19 @@ describe("TableMixin", function () {
       // We add "additionalRegion.json" - which defines two region types
       // - "SOME_OTHER_REGION" - which is just another region type
       // - "SOME_OVERRIDDEN_REGION" - which will override "LGA_NAME_2011" in "build/TerriaJS/data/regionMapping.json"
-      jasmine.Ajax.stubRequest("additionalRegion.json").andReturn({
-        responseText: additionalRegionMapping
-      });
+      worker.use(
+        http.get("*/additionalRegion.json", () =>
+          HttpResponse.json(additionalRegionMapping)
+        ),
+        http.get(
+          "build/TerriaJS/data/regionids/region_map-FID_LGA_2011_AUST_LGA_NAME11.json",
+          () => HttpResponse.json(regionIdsLgaNameStates)
+        ),
+        http.get(
+          "build/TerriaJS/data/regionids/region_map-FID_LGA_2011_AUST_STE_NAME11.json",
+          () => HttpResponse.json(regionIdsLgaName)
+        )
+      );
 
       terria.updateParameters({
         regionMappingDefinitionsUrl: "build/TerriaJS/data/regionMapping.json",
@@ -776,11 +780,11 @@ describe("TableMixin", function () {
         ?.loadRegionIDs();
     });
 
-    it("creates imagery parts", async function () {
+    it("creates imagery parts", function () {
       expect(ImageryParts.is(item.mapItems[0])).toBeTruthy();
     });
 
-    it("with state", async function () {
+    it("with state", function () {
       updateModelFromJson(item, CommonStrata.user, {
         columns: [
           {
@@ -807,7 +811,7 @@ describe("TableMixin", function () {
       ).toBe(3);
     });
 
-    it("with lga_name", async function () {
+    it("with lga_name", function () {
       updateModelFromJson(item, CommonStrata.user, {
         columns: [
           {
@@ -852,7 +856,7 @@ describe("TableMixin", function () {
       );
     });
 
-    it("shows region shortReportSection", async function () {
+    it("shows region shortReportSection", function () {
       const regionCol = item.activeTableStyle.regionColumn;
 
       const regionType = regionCol?.regionType;
@@ -864,7 +868,7 @@ describe("TableMixin", function () {
       );
     });
 
-    it("doesn't show region shortReportSection if region is disabled", async function () {
+    it("doesn't show region shortReportSection if region is disabled", function () {
       updateModelFromJson(item, CommonStrata.user, {
         defaultStyle: {
           regionColumn: "Something else"
@@ -1683,6 +1687,7 @@ describe("TableMixin", function () {
           ).timeIntervalCollection;
 
           if (!featureData)
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             `Failed to find featureData for feature ID: ${feature.id}`;
 
           // If feature data doesn't contain current discrete time - we can safely continue
@@ -1837,6 +1842,7 @@ describe("TableMixin", function () {
           ).timeIntervalCollection;
 
           if (!featureData)
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             `Failed to find featureData for feature ID: ${feature.id}`;
 
           // If feature data doesn't contain current discrete time - we can safely continue
@@ -1999,6 +2005,7 @@ describe("TableMixin", function () {
           ).timeIntervalCollection;
 
           if (!featureData)
+            // eslint-disable-next-line @typescript-eslint/no-unused-expressions
             `Failed to find featureData for feature ID: ${feature.id}`;
 
           const featureIdColumnValue = featureData?.getValue(time)?.id;

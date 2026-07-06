@@ -1,10 +1,10 @@
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { MouseEvent } from "react";
 import { useTranslation } from "react-i18next";
 import defined from "terriajs-cesium/Source/Core/defined";
 import addedByUser from "../../Core/addedByUser";
-import { DataSourceAction } from "../../Core/AnalyticEvents/analyticEvents";
+import { DataSourceAction } from "../../Core/Analytics/analyticEvents";
 import getPath from "../../Core/getPath";
 import CatalogFunctionMixin from "../../ModelMixins/CatalogFunctionMixin";
 import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
@@ -21,6 +21,7 @@ interface Props {
   viewState: ViewState;
   removable: boolean;
   terria: Terria;
+  hideActionButton?: boolean;
   onActionButtonClicked?: (item: Props["item"]) => void;
 }
 
@@ -30,15 +31,16 @@ export default observer(function DataCatalogItem({
   item,
   viewState,
   onActionButtonClicked,
-  removable
+  removable,
+  hideActionButton
 }: Props) {
   const { t } = useTranslation();
   const STATE_TO_TITLE = {
-    [ButtonState.Loading]: t("catalogItem.loading"),
-    [ButtonState.Remove]: t("catalogItem.removeFromMap"),
-    [ButtonState.Add]: t("catalogItem.add"),
-    [ButtonState.Trash]: t("catalogItem.trash"),
-    [ButtonState.Preview]: t("catalogItem.preview")
+    [ButtonState.Loading]: t(($) => $.catalogItem.loading),
+    [ButtonState.Remove]: t(($) => $.catalogItem.removeFromMap),
+    [ButtonState.Add]: t(($) => $.catalogItem.add),
+    [ButtonState.Trash]: t(($) => $.catalogItem.trash),
+    [ButtonState.Preview]: t(($) => $.catalogItem.preview)
   };
 
   const isSelected = addedByUser(item)
@@ -50,14 +52,17 @@ export default observer(function DataCatalogItem({
       .viewCatalogMember(item)
       .then((result) => result.raiseError(viewState.terria));
 
-  const toggleEnable = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    const keepCatalogOpen = event.shiftKey || event.ctrlKey;
+  const toggleEnable = async (event: MouseEvent<HTMLButtonElement>) => {
+    const keepCatalogOpen =
+      viewState.terria.configParameters.keepCatalogOpen ||
+      event.shiftKey ||
+      event.ctrlKey;
     await toggleItemOnMapFromCatalog(viewState, item, keepCatalogOpen, {
       [ToggleOnMapOp.Add]: DataSourceAction.addFromCatalogue,
       [ToggleOnMapOp.Remove]: DataSourceAction.removeFromCatalogue
     });
   };
-  const onBtnClicked = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const onBtnClicked = (event: MouseEvent<HTMLButtonElement>) => {
     runInAction(() => {
       if (onActionButtonClicked) {
         onActionButtonClicked(item);
@@ -102,6 +107,7 @@ export default observer(function DataCatalogItem({
       title={getPath(item, " -> ")}
       btnState={btnState}
       onBtnClick={onBtnClicked}
+      hideBtn={hideActionButton}
       // All things are "removable" - meaning add and remove from workbench,
       //    but only user data is "trashable"
       trashable={removable}

@@ -287,7 +287,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
         !aggregationProperty ||
         !aggregationFunction
       ) {
-        return <h3>{t("queryTab.aggregationNotPossible")}</h3>;
+        return <h3>{t(($) => $.queryTab.aggregationNotPossible)}</h3>;
       }
 
       return (
@@ -354,7 +354,7 @@ const QueryTabPanel: React.FC<TabPropsType> = observer(
                 `}
                 onClick={changeColors}
               >
-                {t("queryTab.changeColors")}
+                {t(($) => $.queryTab.changeColors)}
               </Button>
               {terria?.isFeatureAllowedByProfile("DownloadQueryData") && (
                 <Button

@@ -1,6 +1,6 @@
 "use strict";
 
-var CorsProxy = require("../../lib/Core/CorsProxy");
+import CorsProxy from "../../lib/Core/CorsProxy";
 
 describe("CorsProxy", function () {
   var corsProxy, loadDeferred, loadJson;
@@ -14,7 +14,7 @@ describe("CorsProxy", function () {
     });
     loadJson = jasmine
       .createSpy("loadJson")
-      .and.returnValue(loadDeferred.promise);
+      .and.resolveTo(loadDeferred.promise);
     corsProxy = new CorsProxy(loadJson);
 
     originalPageIsHttps = corsProxy.pageIsHttps;

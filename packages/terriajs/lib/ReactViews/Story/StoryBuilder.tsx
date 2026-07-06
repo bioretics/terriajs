@@ -1,20 +1,33 @@
-import { action, toJS, makeObservable } from "mobx";
+import {
+  action,
+  computed,
+  makeObservable,
+  observable,
+  runInAction,
+  toJS
+} from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import {
+  RefObject,
+  ComponentPropsWithoutRef,
+  FC,
+  ReactNode,
+  ReactElement,
+  createRef,
+  Component
+} from "react";
 import Sortable from "react-anything-sortable";
 import {
   Trans,
+  WithTranslation,
   useTranslation,
-  withTranslation,
-  WithTranslation
+  withTranslation
 } from "react-i18next";
 import styled, { DefaultTheme, withTheme } from "styled-components";
 import combine from "terriajs-cesium/Source/Core/combine";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
-import {
-  Category,
-  StoryAction
-} from "../../Core/AnalyticEvents/analyticEvents";
+import dataStoriesImg from "../../../wwwroot/images/data-stories-getting-started.jpg";
+import { Category, StoryAction } from "../../Core/Analytics/analyticEvents";
 import triggerResize from "../../Core/triggerResize";
 import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
@@ -22,16 +35,14 @@ import Button, { RawButton } from "../../Styled/Button";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import Spacing from "../../Styled/Spacing";
 import Text, { TextSpan } from "../../Styled/Text";
-import BadgeBar from "../BadgeBar";
+import { WithViewState, withViewState } from "../Context";
 import measureElement, { MeasureElementProps } from "../HOCs/measureElement";
 import VideoGuide from "../Map/Panels/HelpPanel/VideoGuide";
 import { getShareData } from "../Map/Panels/SharePanel/BuildShareLink";
 import SharePanel from "../Map/Panels/SharePanel/SharePanel";
-import { WithViewState, withViewState } from "../Context";
 import Story from "./Story";
-import Styles from "./story-builder.scss";
 import StoryEditor from "./StoryEditor";
-const dataStoriesImg = require("../../../wwwroot/images/data-stories-getting-started.jpg");
+import Styles from "./story-builder.scss";
 
 const STORY_VIDEO = "storyVideo";
 
@@ -57,11 +68,11 @@ interface IState {
 }
 
 @observer
-class StoryBuilder extends React.Component<
+class StoryBuilder extends Component<
   IProps & MeasureElementProps & WithTranslation & WithViewState,
   IState
 > {
-  storiesWrapperRef = React.createRef<HTMLElement>();
+  storiesWrapperRef = createRef<HTMLElement>();
 
   refToMeasure: any;
 
@@ -135,7 +146,7 @@ class StoryBuilder extends React.Component<
       id: _story.id ? _story.id : createGuid()
     };
 
-    this.props.viewState.terria.analytics?.logEvent(
+    this.props.viewState.terria.analytics.logEvent(
       Category.story,
       StoryAction.saveStory,
       JSON.stringify(story)
@@ -203,7 +214,7 @@ class StoryBuilder extends React.Component<
       const timeout = setTimeout(this.resetReCaptureStatus, 2000);
       this.clearRecaptureSuccessTimeout = () => clearTimeout(timeout);
     } else {
-      throw new Error(t("story.doesNotExist"));
+      throw new Error(t(($) => $.story.doesNotExist));
     }
   }
 
@@ -251,6 +262,40 @@ class StoryBuilder extends React.Component<
     this.props.viewState.terria.stories = sortedArray;
   }
 
+  @observable
+  viewState: ViewState | undefined;
+
+  @computed
+  get shareDataStringSize() {
+    if (!this.viewState) return undefined;
+    const terria = this.viewState.terria;
+    const stories = terria.stories;
+
+    const validStories = stories.filter(
+      (story) => story.shareData.initSources.length > 0
+    ).length;
+
+    return JSON.stringify(
+      getShareData(terria, this.viewState, {
+        includeStories: validStories > 0
+      })
+    ).length;
+  }
+
+  componentDidMount() {
+    runInAction(() => {
+      this.viewState = this.props.viewState;
+    });
+  }
+
+  componentDidUpdate(prevProps: { viewState: ViewState }) {
+    if (prevProps.viewState !== this.props.viewState) {
+      runInAction(() => {
+        this.viewState = this.props.viewState;
+      });
+    }
+  }
+
   componentWillUnmount() {
     this.clearRecaptureSuccessTimeout?.();
   }
@@ -269,8 +314,8 @@ class StoryBuilder extends React.Component<
           videoName={STORY_VIDEO}
         />
         <StoryButton
-          title={t("story.gettingStartedTitle")}
-          btnText={t("story.gettingStarted")}
+          title={t(($) => $.story.gettingStartedTitle)}
+          btnText={t(($) => $.story.gettingStarted)}
           onClick={() => {
             this.props.viewState.setVideoGuideVisible(STORY_VIDEO);
           }}
@@ -300,8 +345,8 @@ class StoryBuilder extends React.Component<
         <StoryButton
           fullWidth
           disabled={this.state.editingMode}
-          title={t("story.preview")}
-          btnText={t("story.play")}
+          title={t(($) => $.story.preview)}
+          btnText={t(($) => $.story.play)}
           onClick={this.runStories}
         >
           <StyledIcon
@@ -332,26 +377,59 @@ class StoryBuilder extends React.Component<
   renderStories() {
     const { t, i18n } = this.props;
     const stories = this.props.viewState.terria.stories || [];
-    const storyName = this.state.storyToRemove
+    const storyName: string = this.state.storyToRemove
       ? this.state.storyToRemove.title.length
         ? this.state.storyToRemove.title
-        : t("story.untitledScene")
+        : t(($) => $.story.untitledScene)
       : "";
     return (
       <>
-        <BadgeBar
-          label={t("story.badgeBarLabel")}
-          badge={this.props.viewState.terria.stories.length}
+        <Box
+          justifySpaceBetween
+          verticalCenter
+          paddedRatio={2}
+          css={`
+            border-top: 1px solid ${this.props.theme.darkLighter};
+            border-bottom: 1px solid ${this.props.theme.darkLighter};
+          `}
         >
+          <TextSpan textLight uppercase overflowHide overflowEllipsis>
+            {t(($) => $.story.badgeBarLabel)}{" "}
+            {`(${this.props.viewState.terria.stories.length})`}
+          </TextSpan>
           <RawButton
             type="button"
             onClick={this.toggleRemoveDialog}
             textLight
             className={Styles.removeButton}
           >
-            <Icon glyph={Icon.GLYPHS.remove} /> {t("story.removeAllStories")}
+            <Icon glyph={Icon.GLYPHS.cancel} />
+            <TextSpan isLink>{t(($) => $.story.removeAllStories)}</TextSpan>
           </RawButton>
-        </BadgeBar>
+        </Box>
+        {this.props.viewState.terria.configParameters
+          .showStorySaveInstructions && (
+          <Box
+            verticalCenter
+            paddedRatio={2}
+            css={`
+              border-bottom: 1px solid ${this.props.theme.darkLighter};
+            `}
+          >
+            <StyledIcon
+              glyph={Icon.GLYPHS.info}
+              styledWidth={"16px"}
+              fillColor={this.props.theme.infoColor}
+              css={`
+                flex-shrink: 0;
+              `}
+            />
+            <Spacing right={1} />
+            <TextSpan medium color={this.props.theme.infoColor}>
+              <Trans i18nKey={($) => $.story.saveInstructions} />
+            </TextSpan>
+          </Box>
+        )}
         <Spacing bottom={2} />
         <Box column paddedHorizontally={2} flex={1} styledMinHeight="0">
           {this.state.isRemoving && (
@@ -360,7 +438,10 @@ class StoryBuilder extends React.Component<
               text={
                 this.state.storyToRemove ? (
                   <Text textLight large>
-                    <Trans i18nKey="story.removeStoryDialog" i18n={i18n}>
+                    <Trans
+                      i18nKey={($) => $.story.removeStoryDialog}
+                      i18n={i18n}
+                    >
                       Are you sure you wish to delete
                       <TextSpan textLight large bold>
                         {{ storyName }}
@@ -370,7 +451,9 @@ class StoryBuilder extends React.Component<
                   </Text>
                 ) : (
                   <Text textLight large>
-                    {t("story.removeAllStoriesDialog", {
+                    {t(($) => $.story.removeAllStoriesDialog, {
+                      defaultValue:
+                        "Are you sure you wish to delete {{ count }} scene?",
                       count: this.props.viewState.terria.stories.length
                     })}
                   </Text>
@@ -393,8 +476,9 @@ class StoryBuilder extends React.Component<
               scroll
               overflowY={"auto"}
               styledMaxHeight="100%"
-              ref={this.storiesWrapperRef as React.RefObject<HTMLDivElement>}
+              ref={this.storiesWrapperRef as RefObject<HTMLDivElement>}
               css={`
+                min-height: 130px;
                 margin-right: -10px;
               `}
             >
@@ -422,6 +506,7 @@ class StoryBuilder extends React.Component<
                     closeMenu={() => this.openMenu(undefined)}
                     editStory={() => this.editStory(story)}
                     parentRef={this.storiesWrapperRef}
+                    index={index}
                   />
                 ))}
               </Sortable>
@@ -458,12 +543,24 @@ class StoryBuilder extends React.Component<
   render() {
     const { t } = this.props;
     const hasStories = this.props.viewState.terria.stories.length > 0;
+    const shareDataSize = this.shareDataStringSize;
+    const shareMaxRequestSize =
+      this.props.viewState.terria.shareDataService?.shareMaxRequestSize;
+    const shareMaxRequestSizeBytes =
+      this.props.viewState.terria.shareDataService?.shareMaxRequestSizeBytes;
+    // Disable the warning if map owners use custom server that does not return shareMaxRequestSize:
+    const shareDataTooLong =
+      shareDataSize && shareMaxRequestSizeBytes
+        ? shareDataSize > shareMaxRequestSizeBytes
+        : false;
     return (
       <Panel
         ref={(component: HTMLElement) => (this.refToMeasure = component)}
         isVisible={this.props.isVisible}
         isHidden={!this.props.isVisible}
-        charcoalGreyBg
+        styledWidth={"320px"}
+        styledMinWidth={"320px"}
+        backgroundColor={this.props.theme.dark}
         column
       >
         <Box right>
@@ -483,17 +580,30 @@ class StoryBuilder extends React.Component<
         </Box>
         <Box centered paddedHorizontally={2} displayInlineBlock>
           <Text bold extraExtraLarge textLight>
-            {t("story.panelTitle")}
+            {t(($) => $.story.panelTitle)}
           </Text>
           <Spacing bottom={2} />
           <Text medium color={this.props.theme.textLightDimmed} highlightLinks>
-            {t("story.panelBody")}
+            {`${t(($) => $.story.panelBody)}${
+              shareMaxRequestSize
+                ? ` ${t(($) => $.story.panelBodyCapped, {
+                    shareMaxRequestSize
+                  })}`
+                : ""
+            }`}
           </Text>
           <Spacing bottom={3} />
           {!hasStories && this.renderIntro()}
           {hasStories && this.renderPlayShare()}
         </Box>
         <Spacing bottom={2} />
+        {shareDataTooLong && (
+          <Box paddedHorizontally={2}>
+            <Text small color={this.props.theme.textWarning} highlightLinks>
+              {t(($) => $.story.storiesTooLong)}
+            </Text>
+          </Box>
+        )}
         {hasStories && this.renderStories()}
         {this.state.editingMode && (
           <StoryEditor
@@ -509,7 +619,7 @@ class StoryBuilder extends React.Component<
   }
 }
 
-type PanelProps = React.ComponentPropsWithoutRef<typeof Box> & {
+type PanelProps = ComponentPropsWithoutRef<typeof Box> & {
   isVisible?: boolean;
   isHidden?: boolean;
 };
@@ -539,12 +649,12 @@ interface CaptureSceneProps {
   disabled?: boolean;
 }
 
-const CaptureScene: React.FC<CaptureSceneProps> = (props) => {
+const CaptureScene: FC<CaptureSceneProps> = (props) => {
   const { t } = useTranslation();
   return (
     <StoryButton
-      title={t("story.captureSceneTitle")}
-      btnText={t("story.captureScene")}
+      title={t(($) => $.story.captureSceneTitle)}
+      btnText={t(($) => $.story.captureScene)}
       onClick={props.onClickCapture}
       disabled={props.disabled}
       fullWidth
@@ -554,12 +664,12 @@ const CaptureScene: React.FC<CaptureSceneProps> = (props) => {
   );
 };
 
-type StoryButtonProps = React.ComponentPropsWithoutRef<typeof Button> & {
+type StoryButtonProps = ComponentPropsWithoutRef<typeof Button> & {
   btnText: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
-export const StoryButton: React.FC<StoryButtonProps> = (props) => {
+export const StoryButton: FC<StoryButtonProps> = (props) => {
   const { btnText, ...rest } = props;
   return (
     <Button
@@ -577,16 +687,16 @@ export const StoryButton: React.FC<StoryButtonProps> = (props) => {
 
 interface RemoveDialogProps {
   theme: DefaultTheme;
-  text: React.ReactElement;
+  text: ReactElement;
   onConfirm: () => void;
   closeDialog: () => void;
 }
 
-const RemoveDialog: React.FC<RemoveDialogProps> = (props) => {
+const RemoveDialog: FC<RemoveDialogProps> = (props) => {
   const { t } = useTranslation();
   return (
     <Box
-      backgroundColor={props.theme.darkWithOverlay}
+      backgroundColor={props.theme.darkLighter}
       position="absolute"
       rounded
       paddedVertically={3}
@@ -601,7 +711,6 @@ const RemoveDialog: React.FC<RemoveDialogProps> = (props) => {
       <Box>
         <Button
           denyButton
-          rounded
           fullWidth
           textProps={{
             large: true,
@@ -609,7 +718,7 @@ const RemoveDialog: React.FC<RemoveDialogProps> = (props) => {
           }}
           onClick={props.closeDialog}
         >
-          {t("general.cancel")}
+          {t(($) => $.general.cancel)}
         </Button>
         <Spacing right={2} />
         <Button
@@ -624,7 +733,7 @@ const RemoveDialog: React.FC<RemoveDialogProps> = (props) => {
             props.closeDialog();
           }}
         >
-          {t("general.confirm")}
+          {t(($) => $.general.confirm)}
         </Button>
       </Box>
     </Box>

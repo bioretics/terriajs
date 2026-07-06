@@ -1,5 +1,3 @@
-"use strict";
-
 import { when } from "mobx";
 import { addOrReplaceRemoteFileUploadType } from "../../Core/getDataType";
 import Terria from "../../Models/Terria";
@@ -10,7 +8,9 @@ import CsvChartCustomComponent from "./CsvChartCustomComponent";
 import CustomComponent from "./CustomComponent";
 import FeedbackLinkCustomComponent from "./FeedbackLinkCustomComponent";
 import SOSChartCustomComponent from "./SOSChartCustomComponent";
+import SettingsPanelLinkCustomComponent from "./SettingsPanelLinkCustomComponent";
 import TerriaTooltipCustomComponent from "./TerriaTooltip";
+import { keyFromSelector } from "i18next";
 
 /**
  * Registers custom component types.
@@ -25,6 +25,7 @@ export default function registerCustomComponentTypes(terria?: Terria) {
   CustomComponent.register(new ApiTableChartCustomComponent());
   CustomComponent.register(new CollapsibleCustomComponent());
   CustomComponent.register(new FeedbackLinkCustomComponent());
+  CustomComponent.register(new SettingsPanelLinkCustomComponent());
   CustomComponent.register(new TerriaTooltipCustomComponent());
 
   // At the time this is called `cesiumIonOAuth2ApplicationID` won't be populated yet.
@@ -36,7 +37,7 @@ export default function registerCustomComponentTypes(terria?: Terria) {
       () => {
         addOrReplaceRemoteFileUploadType("cesium-ion", {
           value: "cesium-ion",
-          name: "core.dataType.cesium-ion",
+          name: keyFromSelector(($) => $.core.dataType["cesium-ion"]),
           customComponent: CesiumIonConnector
         });
       }

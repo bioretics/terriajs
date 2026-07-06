@@ -64,6 +64,11 @@ class ArcGisServerStratum extends LoadableStratum(ArcGisCatalogGroupTraits) {
     catalogGroup: ArcGisCatalogGroup
   ): Promise<ArcGisServerStratum> {
     const uri = new URI(catalogGroup.url).addQuery("f", "json");
+
+    if (catalogGroup.token) {
+      uri.addQuery("token", catalogGroup.token);
+    }
+
     return loadJson(proxyCatalogItemUrl(catalogGroup, uri.toString()))
       .then((arcgisServer: ArcGisServer) => {
         // Is this really a ArcGisServer REST response?
@@ -72,8 +77,10 @@ class ArcGisServerStratum extends LoadableStratum(ArcGisCatalogGroupTraits) {
           (!arcgisServer.folders && !arcgisServer.services)
         ) {
           throw networkRequestError({
-            title: i18next.t("models.arcGisService.invalidServiceTitle"),
-            message: i18next.t("models.arcGisService.invalidServiceMessage")
+            title: i18next.t(($) => $.models.arcGisService.invalidServerTitle),
+            message: i18next.t(
+              ($) => $.models.arcGisService.invalidServerMessage
+            )
           });
         }
 
@@ -83,8 +90,12 @@ class ArcGisServerStratum extends LoadableStratum(ArcGisCatalogGroupTraits) {
       .catch(() => {
         throw networkRequestError({
           sender: catalogGroup,
-          title: i18next.t("models.arcGisService.groupNotAvailableTitle"),
-          message: i18next.t("models.arcGisService.groupNotAvailableMessage")
+          title: i18next.t(
+            ($) => $.models.arcGisService.groupNotAvailableTitle
+          ),
+          message: i18next.t(
+            ($) => $.models.arcGisService.groupNotAvailableMessage
+          )
         });
       });
   }
@@ -165,6 +176,14 @@ class ArcGisServerStratum extends LoadableStratum(ArcGisCatalogGroupTraits) {
 
     const uri = new URI(this._catalogGroup.url).segment(folder);
     model.setTrait(CommonStrata.definition, "url", uri.toString());
+
+    if (this._catalogGroup.token) {
+      model.setTrait(
+        CommonStrata.definition,
+        "token",
+        this._catalogGroup.token
+      );
+    }
   }
 
   @action
@@ -228,6 +247,14 @@ class ArcGisServerStratum extends LoadableStratum(ArcGisCatalogGroupTraits) {
       .segment(localName)
       .segment(service.type);
     model.setTrait(CommonStrata.definition, "url", uri.toString());
+
+    if (this._catalogGroup.token) {
+      model.setTrait(
+        CommonStrata.definition,
+        "token",
+        this._catalogGroup.token
+      );
+    }
   }
 }
 
@@ -248,7 +275,7 @@ export default class ArcGisCatalogGroup extends UrlMixin(
   }
 
   get typeName() {
-    return i18next.t("models.arcGisService.name");
+    return i18next.t(($) => $.models.arcGisService.name);
   }
 
   @override

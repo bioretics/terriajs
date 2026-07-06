@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { FC, useEffect, useRef } from "react";
 import styled from "styled-components";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
@@ -9,7 +9,7 @@ type MouseTooltipProps = {
   text: string;
 };
 
-const MouseTooltip: React.FC<MouseTooltipProps> = (props) => {
+const MouseTooltip: FC<MouseTooltipProps> = (props) => {
   const { scene, text } = props;
   const tooltipText = useRef<typeof TooltipText>(null);
 
@@ -34,6 +34,7 @@ const MouseTooltip: React.FC<MouseTooltipProps> = (props) => {
   });
 
   useEffect(function setCursor() {
+    // eslint-disable-next-line react-hooks/immutability
     scene.canvas.style.cursor = `crosshair`;
     return () => {
       scene.canvas.style.cursor = `auto`;

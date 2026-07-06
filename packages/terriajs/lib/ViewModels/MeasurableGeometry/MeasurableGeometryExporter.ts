@@ -82,7 +82,7 @@ export default class MeasurableGeometryExporter {
             )
           : false,
         download: `${name}${SUFFIX_POLYGON}${SUFFIX_MULTIPATH}.kml`,
-        label: `Multi ${i18next.t("downloadData.polygon")} KML`
+        label: `Multi ${i18next.t(($) => $.downloadData.polygon)} KML`
       },
       {
         key: "kmlMultiPathLines",
@@ -93,7 +93,7 @@ export default class MeasurableGeometryExporter {
             )
           : false,
         download: `${name}${SUFFIX_LINES}${SUFFIX_MULTIPATH}.kml`,
-        label: `Multi ${i18next.t("downloadData.lines")} KML`
+        label: `Multi ${i18next.t(($) => $.downloadData.lines)} KML`
       }
     ];
   }
@@ -117,7 +117,7 @@ export default class MeasurableGeometryExporter {
             )
           : false,
         download: `${name}${SUFFIX_POLYGON}.kml`,
-        label: `${i18next.t("downloadData.polygon")} KML`
+        label: `${i18next.t(($) => $.downloadData.polygon)} KML`
       },
       {
         key: "kmlLines",
@@ -128,7 +128,7 @@ export default class MeasurableGeometryExporter {
             )
           : false,
         download: `${name}${SUFFIX_LINES}.kml`,
-        label: `${i18next.t("downloadData.lines")} KML`
+        label: `${i18next.t(($) => $.downloadData.lines)} KML`
       },
       {
         key: "kmlPoints",
@@ -139,7 +139,7 @@ export default class MeasurableGeometryExporter {
             )
           : false,
         download: `${name}${SUFFIX_POINTS}.kml`,
-        label: `${i18next.t("downloadData.points")} KML`
+        label: `${i18next.t(($) => $.downloadData.points)} KML`
       }
     ];
   }
@@ -467,13 +467,13 @@ export default class MeasurableGeometryExporter {
         key: "gpxTracks",
         href: DataUri.make("xml", this.generateGpxTracks(geom, name)),
         download: `${name}${SUFFIX_LINES}.gpx`,
-        label: `${i18next.t("downloadData.lines")} GPX`
+        label: `${i18next.t(($) => $.downloadData.lines)} GPX`
       },
       {
         key: "gpxWaypoints",
         href: DataUri.make("xml", this.generateGpxWaypoints(geom, name)),
         download: `${name}${SUFFIX_POINTS}.gpx`,
-        label: `${i18next.t("downloadData.points")} GPX`
+        label: `${i18next.t(($) => $.downloadData.points)} GPX`
       }
     ];
   }
@@ -548,7 +548,7 @@ export default class MeasurableGeometryExporter {
           this.generateMultiPathJsonPolygon(geomList, name)
         ),
         download: `${name}${SUFFIX_POLYGON}${SUFFIX_MULTIPATH}.geojson`,
-        label: `Multi ${i18next.t("downloadData.polygon")} GEOJSON`
+        label: `Multi ${i18next.t(($) => $.downloadData.polygon)} GEOJSON`
       },
       {
         key: "jsonMultiPathLines",
@@ -557,7 +557,7 @@ export default class MeasurableGeometryExporter {
           this.generateMultiPathJsonLineStrings(geomList, name, ellipsoid)
         ),
         download: `${name}${SUFFIX_LINES}${SUFFIX_MULTIPATH}.geojson`,
-        label: `Multi ${i18next.t("downloadData.lines")} GEOJSON`
+        label: `Multi ${i18next.t(($) => $.downloadData.lines)} GEOJSON`
       }
     ];
   }
@@ -572,7 +572,7 @@ export default class MeasurableGeometryExporter {
         key: "jsonPolygon",
         href: DataUri.make("json", this.generateJsonPolygon(geom, name)),
         download: `${name}${SUFFIX_POLYGON}.geojson`,
-        label: `${i18next.t("downloadData.polygon")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.polygon)} GEOJSON`
       },
       {
         key: "jsonLines",
@@ -581,7 +581,7 @@ export default class MeasurableGeometryExporter {
           this.generateJsonLineStrings(geom, name, ellipsoid)
         ),
         download: `${name}${SUFFIX_LINES}.geojson`,
-        label: `${i18next.t("downloadData.lines")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.lines)} GEOJSON`
       },
       {
         key: "jsonPoints",
@@ -590,7 +590,7 @@ export default class MeasurableGeometryExporter {
           this.generateJsonPoints(geom, name, ellipsoid)
         ),
         download: `${name}${SUFFIX_POINTS}.geojson`,
-        label: `${i18next.t("downloadData.points")} GEOJSON`
+        label: `${i18next.t(($) => $.downloadData.points)} GEOJSON`
       }
     ];
   }

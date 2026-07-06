@@ -6,8 +6,7 @@ import ChartCustomComponent, {
 } from "./ChartCustomComponent";
 import { ProcessNodeContext } from "./CustomComponent";
 
-interface ApiTableCustomChartComponentAttributes
-  extends ChartCustomComponentAttributes {
+interface ApiTableCustomChartComponentAttributes extends ChartCustomComponentAttributes {
   /**
    * The catalog JSON for an ApiTableCatalogItem as a string
    */
@@ -69,7 +68,7 @@ export default class ApiTableChartCustomComponent extends ChartCustomComponent<A
 
     try {
       parsed.apiTableCatalogItemJson = JSON.parse(jsonAttr);
-    } catch (e) {
+    } catch (_e) {
       console.error("Couldn't parse json for ApiTableChartCustomComponent");
     }
 

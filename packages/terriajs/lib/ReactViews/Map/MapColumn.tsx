@@ -1,5 +1,5 @@
 import { observer } from "mobx-react";
-import React, { FC } from "react";
+import { FC, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import Box from "../../Styled/Box";
 import ActionBarPortal from "../ActionBar/ActionBarPortal";
@@ -14,6 +14,7 @@ import MenuBar from "./MenuBar/MenuBar";
 import { ProgressBar } from "./ProgressBar";
 import { TerriaViewerWrapper } from "./TerriaViewerWrapper";
 import Toast from "./Toast";
+import { useTheme } from "styled-components";
 
 interface IMapColumnProps {
   animationDuration: number;
@@ -27,7 +28,9 @@ interface IMapColumnProps {
 export const MapColumn: FC<IMapColumnProps> = observer(
   ({ customElements, animationDuration }) => {
     const viewState = useViewState();
+    const theme = useTheme();
     const { t } = useTranslation();
+    const loaderRef = useRef(null);
 
     return (
       <Box
@@ -81,12 +84,14 @@ export const MapColumn: FC<IMapColumnProps> = observer(
           </Box>
           {!viewState.hideMapUi && (
             <>
-              <BottomLeftBar />
               <ActionBarPortal show={viewState.isActionBarVisible} />
-              <SlideUpFadeIn isVisible={viewState.isMapZooming}>
-                <Toast>
+              <SlideUpFadeIn
+                isVisible={viewState.isMapZooming}
+                nodeRef={loaderRef}
+              >
+                <Toast ref={loaderRef}>
                   <Loader
-                    message={t("toast.mapIsZooming")}
+                    message={t(($) => $.toast.mapIsZooming)}
                     textProps={{
                       style: {
                         padding: "0 5px"
@@ -95,13 +100,38 @@ export const MapColumn: FC<IMapColumnProps> = observer(
                   />
                 </Toast>
               </SlideUpFadeIn>
-              <Box
-                position="absolute"
-                fullWidth
-                css={{ bottom: "1%", left: "0", justifyContent: "center" }}
+              <div
+                css={`
+                  position: absolute;
+                  margin-left: ${viewState.useSmallScreenInterface ||
+                  viewState.terria.elements.get("show-workbench")?.visible ===
+                    false
+                    ? `0px`
+                    : viewState.isMapFullScreen
+                      ? `${theme.workbenchMargin}px`
+                      : `calc(${theme.workbenchWidth}px + 2 * ${theme.workbenchMargin}px)`};
+                  margin-right: ${viewState.useSmallScreenInterface ||
+                  viewState.terria.elements.get("show-workbench")?.visible ===
+                    false
+                    ? `0px`
+                    : `calc(34px + 2 *${theme.workbenchMargin}px)`};
+                  bottom: ${viewState.useSmallScreenInterface ||
+                  viewState.terria.elements.get("show-workbench")?.visible ===
+                    false
+                    ? `0px`
+                    : `${theme.workbenchMargin}px`};
+                  left: 0;
+                  right: 0;
+                `}
               >
+                <BottomLeftBar />
+                <BottomDock
+                  terria={viewState.terria}
+                  viewState={viewState}
+                  elementConfig={viewState.terria.elements.get("bottom-dock")}
+                />
                 <BottomBar />
-              </Box>
+              </div>
 
               {viewState.terria.configParameters.printDisclaimer && (
                 <a
@@ -121,15 +151,6 @@ export const MapColumn: FC<IMapColumnProps> = observer(
             </>
           )}
         </Box>
-        <div>
-          {!viewState.hideMapUi && (
-            <BottomDock
-              terria={viewState.terria}
-              viewState={viewState}
-              elementConfig={viewState.terria.elements.get("bottom-dock")}
-            />
-          )}
-        </div>
       </Box>
     );
   }

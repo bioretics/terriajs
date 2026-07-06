@@ -1,9 +1,9 @@
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { MouseEvent } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import addedByUser from "../../Core/addedByUser";
-import { DataSourceAction } from "../../Core/AnalyticEvents/analyticEvents";
+import { DataSourceAction } from "../../Core/Analytics/analyticEvents";
 import getPath from "../../Core/getPath";
 import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
@@ -23,6 +23,7 @@ interface Props {
     Model<CatalogMemberReferenceTraits>;
   viewState: ViewState;
   terria: Terria;
+  hideActionButton?: boolean;
   onActionButtonClicked?: (item: Props["reference"]) => void;
   isTopLevel: boolean;
 }
@@ -31,14 +32,15 @@ export default observer(function DataCatalogReference({
   reference,
   viewState,
   onActionButtonClicked,
-  isTopLevel
+  isTopLevel,
+  hideActionButton
 }: Props) {
   const setPreviewedItem = () =>
     viewState
       .viewCatalogMember(reference)
       .then((result) => result.raiseError(viewState.terria));
 
-  const add = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const add = async (event: MouseEvent<HTMLButtonElement>) => {
     const keepCatalogOpen = event.shiftKey || event.ctrlKey;
 
     if (onActionButtonClicked) {
@@ -75,6 +77,8 @@ export default observer(function DataCatalogReference({
     btnState = ButtonState.Preview;
   } else if (reference.isFunction) {
     btnState = ButtonState.Stats;
+  } else if (reference.terria.workbench.contains(reference)) {
+    btnState = ButtonState.Remove;
   } else {
     btnState = ButtonState.Add;
   }
@@ -98,6 +102,7 @@ export default observer(function DataCatalogReference({
       title={path}
       btnState={btnState}
       onBtnClick={reference.isFunction ? setPreviewedItem : add}
+      hideBtn={hideActionButton}
     />
   );
 });

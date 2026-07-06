@@ -4,7 +4,6 @@
 /* eslint react/prop-types:0*/
 
 import createReactClass from "create-react-class";
-import React from "react";
 import Button from "../../../../Styled/Button";
 import Icon from "../../../../Styled/Icon";
 import BaseOuterPanel from "../BaseOuterPanel";
@@ -37,7 +36,6 @@ const StorySharePanel = createReactClass({
     }
   },
 
-  /* eslint-disable-next-line camelcase */
   UNSAFE_componentWillReceiveProps(nextProps) {
     if (nextProps.forceClosed) {
       this.onDismissed();
@@ -62,7 +60,6 @@ const StorySharePanel = createReactClass({
     return (
       <>
         <Button
-          fullWidth
           disabled={this.props.btnDisabled}
           title={this.props.btnTitle}
           primary
@@ -72,6 +69,9 @@ const StorySharePanel = createReactClass({
           textProps={{
             large: true
           }}
+          css={`
+            flex-shrink: 0;
+          `}
           onClick={this.openWithUserClick}
         >
           {this.props.btnText ? this.props.btnText : ""}

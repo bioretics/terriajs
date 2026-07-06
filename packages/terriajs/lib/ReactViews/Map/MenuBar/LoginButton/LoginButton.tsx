@@ -124,7 +124,7 @@ const LoginButton = observer((props: Props) => {
               }
             }`}
         `}
-        title={!isLoggedIn ? t("login.loginTitle") : t("login.logoutTitle")}
+        title={!isLoggedIn ? t(($) => $.login.loginTitle) : t(($) => $.login.logoutTitle)}
       >
         <Icon glyph={isLoggedIn ? Icon.GLYPHS.logout : Icon.GLYPHS.user} />
       </button>
@@ -133,10 +133,10 @@ const LoginButton = observer((props: Props) => {
           className={Styles.logoutConfirmPanel}
           role="dialog"
           aria-modal={false}
-          aria-label={t("login.logoutConfirmTitle")}
+          aria-label={t(($) => $.login.logoutConfirmTitle)}
         >
           <div className={Styles.logoutConfirmMessage}>
-            {t("login.logoutConfirmMessage")}
+            {t(($) => $.login.logoutConfirmMessage)}
           </div>
           <div className={Styles.logoutConfirmActions}>
             <button
@@ -144,14 +144,14 @@ const LoginButton = observer((props: Props) => {
               className={Styles.logoutConfirmBtn}
               onClick={onConfirmLogout}
             >
-              {t("login.logoutConfirmOk")}
+              {t(($) => $.login.logoutConfirmOk)}
             </button>
             <button
               type="button"
               className={Styles.logoutCancelBtn}
               onClick={() => setIsLogoutConfirmVisible(false)}
             >
-              {t("login.logoutConfirmCancel")}
+              {t(($) => $.login.logoutConfirmCancel)}
             </button>
           </div>
         </div>

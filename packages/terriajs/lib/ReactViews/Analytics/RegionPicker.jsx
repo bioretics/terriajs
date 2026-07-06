@@ -1,7 +1,6 @@
 "use strict";
 
 import classNames from "classnames";
-import React from "react";
 
 import createReactClass from "create-react-class";
 
@@ -44,7 +43,6 @@ const RegionPicker = createReactClass({
     };
   },
 
-  /* eslint-disable-next-line camelcase */
   UNSAFE_componentWillMount() {
     this._loadingRegionProvider = undefined;
     this._selectedRegionCatalogItem = undefined;
@@ -222,7 +220,9 @@ const RegionPicker = createReactClass({
           that._selectedRegionCatalogItem = new GeoJsonCatalogItem(
             that.props.previewed.terria
           );
-          that._selectedRegionCatalogItem.name = t("analytics.selectedPolygon");
+          that._selectedRegionCatalogItem.name = t(
+            ($) => $.analytics.selectedPolygon
+          );
           that._selectedRegionCatalogItem.data = feature;
           that._selectedRegionCatalogItem.isEnabled = true;
           that._selectedRegionCatalogItem.zoomTo();
@@ -317,7 +317,7 @@ const RegionPicker = createReactClass({
             getDisplayValue(this.regionValue, this.props.parameter)
           }
           onChange={this.textChange}
-          placeholder={t("analytics.regionName")}
+          placeholder={t(($) => $.analytics.regionName)}
         />
         {this.renderOptions()}
       </div>
@@ -358,7 +358,7 @@ export function getDisplayValue(region, parameter) {
     return "";
   }
   const regionProvider = parameter.regionProvider;
-  let val = "";
+  let val;
   const index = regionProvider.regions.indexOf(region);
   if (index >= 0 && regionProvider.regionNames[index]) {
     val = regionProvider.regionNames[index];

@@ -1,8 +1,10 @@
-import { featureCollection, Geometry, GeometryCollection } from "@turf/helpers";
+import { featureCollection } from "@turf/helpers";
+import { Geometry, GeometryCollection } from "geojson";
 import i18next from "i18next";
-import { computed, observable, runInAction } from "mobx";
+import { computed, makeObservable, observable, runInAction } from "mobx";
 import RequestErrorEvent from "terriajs-cesium/Source/Core/RequestErrorEvent";
 import URI from "urijs";
+import { toFeatureCollection } from "../../../Core/GeoJson";
 import JsonValue, {
   isJsonNumber,
   isJsonObject,
@@ -13,9 +15,7 @@ import JsonValue, {
 import loadJson from "../../../Core/loadJson";
 import Result from "../../../Core/Result";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
-import GeoJsonMixin, {
-  toFeatureCollection
-} from "../../../ModelMixins/GeojsonMixin";
+import GeoJsonMixin from "../../../ModelMixins/GeojsonMixin";
 import CartoMapV3CatalogItemTraits from "../../../Traits/TraitsClasses/CartoMapV3CatalogItemTraits";
 import { GeoJsonTraits } from "../../../Traits/TraitsClasses/GeoJsonTraits";
 import TableStyleTraits from "../../../Traits/TraitsClasses/Table/StyleTraits";
@@ -89,7 +89,7 @@ export default class CartoMapV3CatalogItem extends GeoJsonMixin(
   }
 
   get typeName() {
-    return i18next.t("models.carto-v3.name");
+    return i18next.t(($) => $.models["carto-v3"].name);
   }
 
   protected async forceLoadMetadata() {
@@ -286,9 +286,7 @@ async function callCartoApi(url: string, auth?: string, body?: JsonObject) {
             )
           );
         }
-      } catch (e) {
-        console.log(e);
-      }
+      } catch {}
     }
     return Result.error(e);
   }

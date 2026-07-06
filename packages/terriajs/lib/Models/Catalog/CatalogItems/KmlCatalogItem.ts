@@ -1,5 +1,6 @@
 import i18next from "i18next";
-import { computed, makeObservable, override } from "mobx";
+import { action, computed, makeObservable, override } from "mobx";
+// Fork (rer3d): KML measurable-geometry / clamp-to-ground processing.
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -19,12 +20,13 @@ import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
 import UrlMixin from "../../../ModelMixins/UrlMixin";
 import KmlCatalogItemTraits from "../../../Traits/TraitsClasses/KmlCatalogItemTraits";
+import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
-import { BaseModel, ModelConstructorParameters } from "../../Definition/Model";
-import { ModelId } from "../../../Traits/ModelReference";
+import { ModelConstructorParameters } from "../../Definition/Model";
 import HasLocalData from "../../HasLocalData";
 import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
+// Fork (rer3d) mixins: measurable / exportable / searchable KML items.
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
@@ -67,23 +69,22 @@ class KmlCatalogItem
 
   private _dataSource: KmlDataSource | undefined;
 
+  // Fork (rer3d): keep the original File for the export-data fallback.
   private _kmlFile?: File;
 
+  @action
   setFileInput(file: File) {
     this._kmlFile = file;
-  }
-
-  duplicateModel(newId: ModelId, sourceReference?: BaseModel): this {
-    const newModel = super.duplicateModel(newId, sourceReference);
-    if (this._kmlFile) {
-      newModel.setFileInput(this._kmlFile);
-    }
-    return newModel;
+    this.setTrait(
+      CommonStrata.user,
+      "url",
+      URL.createObjectURL(file) + "#" + file.name
+    );
   }
 
   @computed
   get hasLocalData(): boolean {
-    return isDefined(this._kmlFile);
+    return this.url?.startsWith("blob:") ?? false;
   }
 
   @override
@@ -94,49 +95,54 @@ class KmlCatalogItem
     return "1d";
   }
 
-  protected forceLoadMapItems(): Promise<void> {
-    return new Promise<string | Resource | Document | Blob | undefined>(
-      (resolve) => {
-        if (isDefined(this.kmlString)) {
-          const parser = new DOMParser();
-          resolve(parser.parseFromString(this.kmlString, "text/xml"));
-        } else if (isDefined(this._kmlFile)) {
-          if (this._kmlFile.name && this._kmlFile.name.match(kmzRegex)) {
-            resolve(this._kmlFile);
-          } else {
-            resolve(readXml(this._kmlFile));
-          }
-        } else if (isDefined(this.ionResource)) {
-          resolve(this.ionResource);
-        } else if (isDefined(this.url)) {
-          resolve(proxyCatalogItemUrl(this, this.url));
+  protected async forceLoadMapItems(): Promise<void> {
+    try {
+      let kmlLoadInput: undefined | string | Resource | Document | Blob =
+        undefined;
+
+      if (isDefined(this.kmlString)) {
+        const parser = new DOMParser();
+        kmlLoadInput = parser.parseFromString(this.kmlString, "text/xml");
+      } else if (isDefined(this._kmlFile)) {
+        // Fork (rer3d): load directly from the original File when available
+        // (kmz passes through; kml is parsed as XML).
+        if (this._kmlFile.name && this._kmlFile.name.match(kmzRegex)) {
+          kmlLoadInput = this._kmlFile;
         } else {
-          throw networkRequestError({
-            sender: this,
-            title: i18next.t("models.kml.unableToLoadItemTitle"),
-            message: i18next.t("models.kml.unableToLoadItemMessage")
-          });
+          kmlLoadInput = await readXml(this._kmlFile);
         }
+      } else if (isDefined(this.ionResource)) {
+        kmlLoadInput = this.ionResource;
+      } else if (isDefined(this.url)) {
+        kmlLoadInput = proxyCatalogItemUrl(this, this.url);
       }
-    )
-      .then((kmlLoadInput) => {
-        return KmlDataSource.load(kmlLoadInput!);
-      })
-      .then((dataSource) => {
-        this._dataSource = dataSource;
-        this.doneLoading(dataSource); // Unsure if this is necessary
-      })
-      .catch((e) => {
-        throw networkRequestError(
-          TerriaError.from(e, {
-            sender: this,
-            title: i18next.t("models.kml.errorLoadingTitle"),
-            message: i18next.t("models.kml.errorLoadingMessage", {
-              appName: this.terria.appName
-            })
+
+      if (!kmlLoadInput) {
+        throw networkRequestError({
+          sender: this,
+          title: i18next.t(($) => $.models.kml.unableToLoadItemTitle),
+          message: i18next.t(($) => $.models.kml.unableToLoadItemMessage)
+        });
+      }
+      this._dataSource = await KmlDataSource.load(kmlLoadInput, {
+        clampToGround: this.clampToGround,
+        sourceUri: this.dataSourceUri
+          ? proxyCatalogItemUrl(this, this.dataSourceUri, "1d")
+          : undefined
+      } as any);
+      // Fork (rer3d): post-process entities for measurable geometry.
+      this.doneLoading(this._dataSource);
+    } catch (e) {
+      throw networkRequestError(
+        TerriaError.from(e, {
+          sender: this,
+          title: i18next.t(($) => $.models.kml.errorLoadingTitle),
+          message: i18next.t(($) => $.models.kml.errorLoadingMessage, {
+            appName: this.terria.appName
           })
-        );
-      });
+        })
+      );
+    }
   }
 
   @computed
@@ -192,6 +198,7 @@ class KmlCatalogItem
     return this.loadIonResource();
   }
 
+  // Fork (rer3d): clamp KML features to terrain + measurable-geometry support.
   private doneLoading(kmlDataSource: KmlDataSource) {
     // Clamp features to terrain.
     if (isDefined(this.terria.cesium)) {

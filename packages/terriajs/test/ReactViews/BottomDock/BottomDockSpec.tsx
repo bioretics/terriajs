@@ -1,45 +1,35 @@
-import React from "react";
-import { act, create, ReactTestRenderer } from "react-test-renderer";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import BottomDock from "../../../lib/ReactViews/BottomDock/BottomDock";
+import { renderWithContexts } from "../withContext";
 
 describe("BottomDock", function () {
   let terria: Terria;
   let viewState: ViewState;
-  let testRenderer: ReactTestRenderer;
 
   beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     viewState = new ViewState({
-      terria: terria,
-      catalogSearchProvider: undefined
+      terria: terria
     });
   });
 
   it("must create TJS-BottomDockFirstPortal", function () {
-    act(() => {
-      testRenderer = create(
-        <BottomDock terria={terria} viewState={viewState} />
-      );
-    });
-    const firstPortal = testRenderer.root.findByProps({
-      id: "TJS-BottomDockFirstPortal"
-    });
-    expect(firstPortal).toBeDefined();
+    const { container } = renderWithContexts(
+      <BottomDock terria={terria} viewState={viewState} />,
+      viewState
+    );
+
+    expect(container.querySelector("#TJS-BottomDockFirstPortal")).toBeVisible();
   });
 
   it("must create TJS-BottomDockLastPortal", function () {
-    act(() => {
-      testRenderer = create(
-        <BottomDock terria={terria} viewState={viewState} />
-      );
-    });
-    const lastPortal = testRenderer.root.findByProps({
-      id: "TJS-BottomDockLastPortal"
-    });
-    expect(lastPortal).toBeDefined();
+    const { container } = renderWithContexts(
+      <BottomDock terria={terria} viewState={viewState} />,
+      viewState
+    );
+    expect(container.querySelector("#TJS-BottomDockLastPortal")).toBeVisible();
   });
 });

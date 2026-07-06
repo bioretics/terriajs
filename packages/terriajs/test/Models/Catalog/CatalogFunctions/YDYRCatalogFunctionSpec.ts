@@ -1,30 +1,24 @@
 import { configure, reaction, toJS } from "mobx";
+import { http, HttpResponse } from "msw";
 import addUserCatalogMember from "../../../../lib/Models/Catalog/addUserCatalogMember";
 import CommonStrata from "../../../../lib/Models/Definition/CommonStrata";
 import CsvCatalogItem from "../../../../lib/Models/Catalog/CatalogItems/CsvCatalogItem";
 import Terria from "../../../../lib/Models/Terria";
 import YDYRCatalogFunction from "../../../../lib/Models/Catalog/CatalogFunctions/YDYRCatalogFunction";
 import YDYRCatalogFunctionJob from "../../../../lib/Models/Catalog/CatalogFunctions/YDYRCatalogFunctionJob";
+import { worker } from "../../../mocks/browser";
 import "../../../SpecHelpers";
 
-const regionMapping = JSON.stringify(
-  require("../../../../wwwroot/data/regionMapping.json")
-);
-
-const sa4regionCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json")
-);
-
-const lga2011RegionCodes = JSON.stringify(
-  require("../../../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json")
-);
+import regionMapping from "../../../../wwwroot/data/regionMapping.json";
+import sa4regionCodes from "../../../../wwwroot/data/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json";
+import lga2011RegionCodes from "../../../../wwwroot/data/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json";
 
 configure({
   enforceActions: "observed",
   computedRequiresReaction: true
 });
 
-const lga11Csv = require("raw-loader!../../../../wwwroot/test/csv/lga_code_2011.csv");
+import lga11Csv from "../../../../wwwroot/test/csv/lga_code_2011.csv";
 
 describe("YDYRCatalogFunction", function () {
   let terria: Terria;
@@ -32,46 +26,46 @@ describe("YDYRCatalogFunction", function () {
   let ydyr: YDYRCatalogFunction;
 
   beforeEach(async function () {
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/v1/disaggregate.json"
-    ).andReturn({ responseText: `"someStatusId"` });
-
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/v1/download/someResultKey?format=csv"
-    ).andReturn({
-      responseText: `SA4_code_2016,Negative Binomial: Lower (10%),Negative Binomial: Upper (90%),Negative Binomial: Average
+    let logCounter = 0;
+    worker.use(
+      http.all(
+        "http://example.com/api/v1/disaggregate.json",
+        () => new HttpResponse(`"someStatusId"`)
+      ),
+      http.get(
+        "http://example.com/api/v1/download/someResultKey",
+        ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get("format") !== "csv")
+            throw new Error(`Unexpected query params: ${url.search}`);
+          return new HttpResponse(`SA4_code_2016,Negative Binomial: Lower (10%),Negative Binomial: Upper (90%),Negative Binomial: Average
 313,0,1,0
 316,0,1,0
-`
-    });
-
-    let logCounter = 0;
-    jasmine.Ajax.stubRequest(
-      "http://example.com/api/v1/status/someStatusId"
-    ).andCallFunction((req) => {
-      if (logCounter < 1) {
-        req.respondWith({ responseText: `"Some Log ${logCounter}"` });
-
-        logCounter++;
-      } else {
-        req.respondWith({
-          responseText: `{"key":"someResultKey","report":{"Quality Control":"OK (Model is performing better than baseline), providing full result"}}`
-        });
-      }
-    });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json"
-    ).andReturn({ responseText: sa4regionCodes });
-
-    jasmine.Ajax.stubRequest(
-      "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json"
-    ).andReturn({ responseText: lga2011RegionCodes });
-
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
+`);
+        }
+      ),
+      http.get("http://example.com/api/v1/status/someStatusId", () => {
+        if (logCounter < 1) {
+          const msg = `"Some Log ${logCounter}"`;
+          logCounter++;
+          return new HttpResponse(msg);
+        }
+        return new HttpResponse(
+          `{"key":"someResultKey","report":{"Quality Control":"OK (Model is performing better than baseline), providing full result"}}`
+        );
+      }),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-SA4_2016_AUST_SA4_CODE16.json",
+        () => HttpResponse.json(sa4regionCodes)
+      ),
+      http.get(
+        "https://tiles.terria.io/region-mapping/regionids/region_map-FID_LGA_2011_AUST_LGA_CODE11.json",
+        () => HttpResponse.json(lga2011RegionCodes)
+      ),
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      )
+    );
 
     terria = new Terria();
     csv = new CsvCatalogItem("test", terria, undefined);
@@ -102,16 +96,12 @@ describe("YDYRCatalogFunction", function () {
     });
   });
 
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
-  });
-
   it("has a type & typeName", function () {
     expect(YDYRCatalogFunction.type).toBe("ydyr");
     expect(ydyr.typeName).toBe("YourDataYourRegions");
   });
 
-  describe("when loading", async function () {
+  describe("when loading", function () {
     it("should correctly render functionParameters", function () {
       expect(ydyr.functionParameters.map(({ type }) => type)).toEqual([
         "string",
@@ -141,11 +131,13 @@ describe("YDYRCatalogFunction", function () {
     });
   });
 
-  describe("when submitted", async function () {
+  describe("when submitted", function () {
     let job: YDYRCatalogFunctionJob;
     let dispose: () => void;
     beforeEach(async () => {
       job = (await ydyr.submitJob()) as YDYRCatalogFunctionJob;
+      // Override the 2-second polling interval to speed up tests
+      Object.defineProperty(job, "refreshInterval", { get: () => 0.01 });
       dispose = reaction(
         () => job.mapItems,
         () => {}
@@ -154,15 +146,15 @@ describe("YDYRCatalogFunction", function () {
     afterEach(() => {
       dispose();
     });
-    it("should correctly set parameters", async function () {
+    it("should correctly set parameters", function () {
       expect(toJS(job.parameters)).toEqual(toJS(ydyr.parameters));
     });
 
-    it("should be in workbench", async function () {
+    it("should be in workbench", function () {
       expect(job.inWorkbench).toBeTruthy();
     });
 
-    it("calls YDYR api and sets status id", async function () {
+    it("calls YDYR api and sets status id", function () {
       expect(job.jobId).toEqual("someStatusId");
     });
 

@@ -1,15 +1,15 @@
 import i18next from "i18next";
 import { configure, runInAction } from "mobx";
+import { http, HttpResponse } from "msw";
 import isDefined from "../../../../lib/Core/isDefined";
 import CommonStrata from "../../../../lib/Models/Definition/CommonStrata";
 import Terria from "../../../../lib/Models/Terria";
 import WebProcessingServiceCatalogFunctionJob from "../../../../lib/Models/Catalog/Ows/WebProcessingServiceCatalogFunctionJob";
+import { worker } from "../../../mocks/browser";
 
 // For more tests see - test\Models\WebProcessingServiceCatalogFunctionSpec.ts
 
-const regionMapping = JSON.stringify(
-  require("../../../../wwwroot/data/regionMapping.json")
-);
+import regionMapping from "../../../../wwwroot/data/regionMapping.json";
 
 configure({
   enforceActions: "observed",
@@ -39,20 +39,17 @@ describe("WebProcessingServiceCatalogFunctionJob", function () {
       ]);
       item.setTrait(CommonStrata.user, "jobStatus", "finished");
     });
-    jasmine.Ajax.install();
-    jasmine.Ajax.stubRequest(
-      "build/TerriaJS/data/regionMapping.json"
-    ).andReturn({ responseText: regionMapping });
-  });
-
-  afterEach(function () {
-    jasmine.Ajax.uninstall();
+    worker.use(
+      http.get("*/build/TerriaJS/data/regionMapping.json", () =>
+        HttpResponse.json(regionMapping)
+      )
+    );
   });
 
   it("has a type & typeName", function () {
     expect(WebProcessingServiceCatalogFunctionJob.type).toBe("wps-result");
     expect(item.typeName).toBe(
-      i18next.t("models.webProcessingService.wpsResult")
+      i18next.t(($) => $.models.webProcessingService.wpsResult)
     );
   });
 

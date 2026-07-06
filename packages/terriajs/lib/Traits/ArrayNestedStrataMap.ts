@@ -10,9 +10,10 @@ import TraitsConstructor from "./TraitsConstructor";
  * A strata map where the strata are obtained from a sub-property of another
  * parent strata map.
  */
-export default class ArrayNestedStrataMap<T extends ModelTraits>
-  implements Map<string, StratumFromTraits<T>>
-{
+export default class ArrayNestedStrataMap<T extends ModelTraits> implements Map<
+  string,
+  StratumFromTraits<T>
+> {
   constructor(
     readonly parentModel: Stratified<ModelTraits>,
     readonly parentProperty: string,
@@ -25,7 +26,7 @@ export default class ArrayNestedStrataMap<T extends ModelTraits>
   }
 
   clear(): void {
-    this.parentModel.strata.forEach((value: any, key: string) => {
+    this.parentModel.strata.forEach((_value: any, key: string) => {
       this.delete(key);
     });
   }
@@ -102,19 +103,19 @@ export default class ArrayNestedStrataMap<T extends ModelTraits>
     return this.strata.size;
   }
 
-  [Symbol.iterator](): IterableIterator<[string, StratumFromTraits<T>]> {
+  [Symbol.iterator](): MapIterator<[string, StratumFromTraits<T>]> {
     return this.strata.entries();
   }
 
-  entries(): IterableIterator<[string, StratumFromTraits<T>]> {
+  entries(): MapIterator<[string, StratumFromTraits<T>]> {
     return this.strata.entries();
   }
 
-  keys(): IterableIterator<string> {
+  keys(): MapIterator<string> {
     return this.strata.keys();
   }
 
-  values(): IterableIterator<StratumFromTraits<T>> {
+  values(): MapIterator<StratumFromTraits<T>> {
     return this.strata.values();
   }
 
@@ -166,8 +167,9 @@ export default class ArrayNestedStrataMap<T extends ModelTraits>
   }
 }
 
-export interface TraitsConstructorWithRemoval<T extends ModelTraits>
-  extends TraitsConstructor<T> {
+export interface TraitsConstructorWithRemoval<
+  T extends ModelTraits
+> extends TraitsConstructor<T> {
   isRemoval?: (instance: StratumFromTraits<T>) => boolean;
 }
 

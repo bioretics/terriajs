@@ -1,7 +1,7 @@
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React, { useState } from "react";
+import { Component, useState, useRef } from "react";
 import { Trans, useTranslation, withTranslation } from "react-i18next";
 import styled, { withTheme } from "styled-components";
 import Box from "../../Styled/Box";
@@ -51,7 +51,7 @@ WelcomeMessageButton.propTypes = {
 };
 
 @observer
-class WelcomeMessage extends React.Component {
+class WelcomeMessage extends Component {
   static displayName = "WelcomeMessage";
 
   static propTypes = {
@@ -95,6 +95,8 @@ export const WelcomeMessagePure = (props) => {
   const [shouldExploreData, setShouldExploreData] = useState(false);
   const [shouldOpenHelp, setShouldOpenHelp] = useState(false);
   const [shouldOpenSearch, setShouldOpenSearch] = useState(false);
+  const modalRef = useRef(null);
+  const welcomeMessageRef = useRef(null);
   // const {
   //   WelcomeMessagePrimaryBtnClick,
   //   WelcomeMessageSecondaryBtnClick
@@ -118,6 +120,7 @@ export const WelcomeMessagePure = (props) => {
     <FadeIn
       isVisible={showWelcomeMessage}
       onEnter={() => setWelcomeVisible(true)}
+      nodeRef={modalRef}
       transitionProps={{
         onExiting: () => setWelcomeVisible(false),
         onExited: () => {
@@ -178,8 +181,9 @@ export const WelcomeMessagePure = (props) => {
             }
             videoName={WELCOME_MESSAGE_VIDEO}
           />
-          <SlideUpFadeIn isVisible={welcomeVisible}>
+          <SlideUpFadeIn isVisible={welcomeVisible} nodeRef={welcomeMessageRef}>
             <Box
+              ref={welcomeMessageRef}
               styledWidth={"667px"}
               styledMinHeight={"504px"}
               displayInlineBlock
@@ -217,7 +221,7 @@ export const WelcomeMessagePure = (props) => {
                   textAlignCenter={viewState.useSmallScreenInterface}
                   styledLineHeight={"49px"}
                 >
-                  {t("welcomeMessage.title")}
+                  {t(($) => $.welcomeMessage.title)}
                 </Text>
                 <Spacing bottom={3} />
                 <Text
@@ -226,7 +230,7 @@ export const WelcomeMessagePure = (props) => {
                   textAlignCenter={viewState.useSmallScreenInterface}
                 >
                   {viewState.useSmallScreenInterface === false && (
-                    <Trans i18nKey="welcomeMessage.welcomeMessage">
+                    <Trans i18nKey={($) => $.welcomeMessage.welcomeMessage}>
                       Interested in data discovery and exploration?
                       <br />
                       Dive right in and get started or check the following help
@@ -234,7 +238,9 @@ export const WelcomeMessagePure = (props) => {
                     </Trans>
                   )}
                   {viewState.useSmallScreenInterface === true && (
-                    <Trans i18nKey="welcomeMessage.welcomeMessageOnMobile">
+                    <Trans
+                      i18nKey={($) => $.welcomeMessage.welcomeMessageOnMobile}
+                    >
                       Interested in data discovery and exploration?
                     </Trans>
                   )}
@@ -303,12 +309,12 @@ export const WelcomeMessagePure = (props) => {
                           viewState.setShowTour(true);
                           viewState.setTopElement(TourPortalDisplayName);
                         }}
-                        buttonText={t("welcomeMessage.tourBtnText")}
+                        buttonText={t(($) => $.welcomeMessage.tourBtnText)}
                         buttonIcon={Icon.GLYPHS.tour}
                       />
                       <Spacing bottom={4} />
                       <WelcomeMessageButton
-                        buttonText={t("welcomeMessage.helpBtnText")}
+                        buttonText={t(($) => $.welcomeMessage.helpBtnText)}
                         buttonIcon={Icon.GLYPHS.newHelp}
                         onClick={() => {
                           handleClose(false);
@@ -319,7 +325,7 @@ export const WelcomeMessagePure = (props) => {
                   )}
                   <Spacing bottom={4} />
                   <WelcomeMessageButton
-                    buttonText={t("welcomeMessage.exploreDataBtnText")}
+                    buttonText={t(($) => $.welcomeMessage.exploreDataBtnText)}
                     buttonIcon={Icon.GLYPHS.add}
                     onClick={() => {
                       handleClose(false);
@@ -330,7 +336,7 @@ export const WelcomeMessagePure = (props) => {
                     <>
                       <Spacing bottom={4} />
                       <WelcomeMessageButton
-                        buttonText={t("welcomeMessage.searchBtnText")}
+                        buttonText={t(($) => $.welcomeMessage.searchBtnText)}
                         buttonIcon={Icon.GLYPHS.search}
                         onClick={() => {
                           handleClose(false);
@@ -345,7 +351,7 @@ export const WelcomeMessagePure = (props) => {
               <Box fullWidth centered>
                 <RawButton onClick={handleClose.bind(null, true)}>
                   <TextSpan textLight isLink>
-                    {t("welcomeMessage.dismissText")}
+                    {t(($) => $.welcomeMessage.dismissText)}
                   </TextSpan>
                 </RawButton>
               </Box>

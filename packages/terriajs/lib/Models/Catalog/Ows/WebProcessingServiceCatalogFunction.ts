@@ -149,10 +149,10 @@ class WpsLoadableStratum extends LoadableStratum(
       throw networkRequestError({
         sender: this,
         title: i18next.t(
-          "models.webProcessingService.processDescriptionErrorTitle"
+          ($) => $.models.webProcessingService.processDescriptionErrorTitle
         ),
         message: i18next.t(
-          "models.webProcessingService.processDescriptionErrorMessage"
+          ($) => $.models.webProcessingService.processDescriptionErrorMessage
         )
       });
     }
@@ -172,9 +172,11 @@ class WpsLoadableStratum extends LoadableStratum(
     if (!isDefined(dataInputs) || !isDefined(dataInputs.Input)) {
       throw networkRequestError({
         sender: this,
-        title: i18next.t("models.webProcessingService.processInputErrorTitle"),
+        title: i18next.t(
+          ($) => $.models.webProcessingService.processInputErrorTitle
+        ),
         message: i18next.t(
-          "models.webProcessingService.processInputErrorMessage"
+          ($) => $.models.webProcessingService.processInputErrorMessage
         )
       });
     }
@@ -274,7 +276,7 @@ export default class WebProcessingServiceCatalogFunction extends XmlRequestMixin
       throw new TerriaError({
         sender: this,
         title: "Unsupported parameter type",
-        message: `The parameter ${input.Identifier} is not a supported type of parameter.`
+        message: `The parameter '${input.Identifier}' is not a supported type of parameter.`
       });
     });
   }
@@ -760,10 +762,15 @@ function throwInvalidWpsServerError(
   endpoint: string
 ) {
   throw networkRequestError({
-    title: i18next.t("models.webProcessingService.invalidWPSServerTitle"),
-    message: i18next.t("models.webProcessingService.invalidWPSServerMessage", {
-      name: wps.name,
-      endpoint
-    })
+    title: i18next.t(
+      ($) => $.models.webProcessingService.invalidWPSServerTitle
+    ),
+    message: i18next.t(
+      ($) => $.models.webProcessingService.invalidWPSServerMessage,
+      {
+        name: wps.name as string,
+        endpoint
+      }
+    )
   });
 }

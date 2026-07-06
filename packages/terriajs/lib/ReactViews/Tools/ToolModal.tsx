@@ -1,6 +1,6 @@
-import { TFunction } from "i18next";
 import { observer } from "mobx-react";
-import React, { useState } from "react";
+import { FC, useState } from "react";
+import { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
@@ -9,13 +9,15 @@ import { RawButton } from "../../Styled/Button";
 import Spacing from "../../Styled/Spacing";
 import Text from "../../Styled/Text";
 import { GLYPHS, StyledIcon } from "../../Styled/Icon";
+import { scrollBars } from "../../Styled/mixins";
 
 export interface FrameProps {
   title: string;
   viewState: ViewState;
+  children: React.ReactNode;
 }
 
-export const Frame: React.FC<FrameProps> = observer((props) => {
+export const Frame: FC<FrameProps> = observer((props) => {
   const theme = useTheme();
   const [t] = useTranslation();
   const [showChildren, setShowChildren] = useState(true);
@@ -60,7 +62,8 @@ export const Main = styled(Text)`
   flex-direction: column;
   padding: 15px;
   overflow-y: auto;
-  ${({ theme }) => theme.borderRadiusBottom(theme.radius40Button)}
+  ${({ theme }) => scrollBars({ theme })}
+  border-radius: ${({ theme }) => `0 0 ${theme.radiusXL} ${theme.radiusXL}`};
   background-color: ${(p) => p.theme.darkWithOverlay};
   min-height: 350px;
 `;
@@ -84,7 +87,7 @@ const Wrapper = styled(Box).attrs({
 `;
 
 const Toggle = styled(Box)`
-  ${({ theme }) => theme.borderRadiusTop(theme.radius40Button)}
+  border-radius: ${({ theme }) => `${theme.radiusXL} ${theme.radiusXL} 0 0`};
 `;
 
 interface ToolCloseButtonProps {
@@ -92,11 +95,11 @@ interface ToolCloseButtonProps {
   t: TFunction;
 }
 
-const ToolCloseButton: React.FC<ToolCloseButtonProps> = (props) => {
+const ToolCloseButton: FC<ToolCloseButtonProps> = (props) => {
   return (
     <RawButton onClick={() => props.viewState.closeTool()}>
       <Text textLight small semiBold uppercase>
-        {props.t("tool.exitBtnTitle")}
+        {props.t(($) => $.tool.exitBtnTitle)}
       </Text>
     </RawButton>
   );
@@ -107,7 +110,7 @@ interface TitleProps {
   icon?: { id: string };
 }
 
-const Title: React.FC<TitleProps> = (props) => {
+const Title: FC<TitleProps> = (props) => {
   return (
     <Box centered>
       <Box>

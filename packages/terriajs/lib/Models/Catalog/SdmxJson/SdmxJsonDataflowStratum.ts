@@ -90,9 +90,13 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
     // Check response
     if (!isDefined(dataflowStructure.data)) {
       throw networkRequestError({
-        title: i18next.t("models.sdmxJsonDataflowStratum.loadDataErrorTitle"),
+        title: i18next.t(
+          ($) => $.models.sdmxJsonDataflowStratum.loadDataErrorTitle
+        ),
         message: i18next.t(
-          "models.sdmxJsonDataflowStratum.loadDataErrorMessage.invalidResponse"
+          ($) =>
+            $.models.sdmxJsonDataflowStratum.loadDataErrorMessage
+              .invalidResponse
         )
       });
     }
@@ -101,10 +105,17 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
       dataflowStructure.data.dataflows.length === 0
     ) {
       throw networkRequestError({
-        title: i18next.t("models.sdmxJsonDataflowStratum.loadDataErrorTitle"),
+        title: i18next.t(
+          ($) => $.models.sdmxJsonDataflowStratum.loadDataErrorTitle
+        ),
         message: i18next.t(
-          "models.sdmxJsonDataflowStratum.loadDataErrorMessage.noDataflow",
-          this
+          ($) =>
+            $.models.sdmxJsonDataflowStratum.loadDataErrorMessage.noDataflow,
+          {
+            catalogItem: {
+              dataflowId: catalogItem.dataflowId as string
+            }
+          }
         )
       });
     }
@@ -113,10 +124,18 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
       dataflowStructure.data.dataStructures.length === 0
     ) {
       throw networkRequestError({
-        title: i18next.t("models.sdmxJsonDataflowStratum.loadDataErrorTitle"),
+        title: i18next.t(
+          ($) => $.models.sdmxJsonDataflowStratum.loadDataErrorTitle
+        ),
         message: i18next.t(
-          "models.sdmxJsonDataflowStratum.loadDataErrorMessage.noDatastructure",
-          this
+          ($) =>
+            $.models.sdmxJsonDataflowStratum.loadDataErrorMessage
+              .noDatastructure,
+          {
+            catalogItem: {
+              dataflowId: catalogItem.dataflowId as string
+            }
+          }
         )
       });
     }
@@ -289,8 +308,6 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
               }, new Set())
             : new Set();
 
-          let options: StratumFromTraits<DimensionOptionTraits>[] = [];
-
           // Get codes by merging allowedOptionIds with codelist
           const filteredCodesList =
             (allowedOptionIds.size > 0
@@ -304,7 +321,7 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
           // If modelOverride `options` has been defined -> use it
           // Other wise use filteredCodesList
           const overrideOptions = modelOverride?.options;
-          options =
+          const options: StratumFromTraits<DimensionOptionTraits>[] =
             isDefined(overrideOptions) && overrideOptions.length > 0
               ? overrideOptions.map((option) => {
                   return {
@@ -430,7 +447,7 @@ export class SdmxJsonDataflowStratum extends LoadableStratum(
 
     return `${
       unitMeasure ||
-      i18next.t("models.sdmxJsonDataflowStratum.defaultUnitMeasure")
+      i18next.t(($) => $.models.sdmxJsonDataflowStratum.defaultUnitMeasure)
     }${frequency ? ` (${frequency})` : ""}`;
   }
 

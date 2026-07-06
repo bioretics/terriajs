@@ -1,10 +1,20 @@
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import React, { useEffect, useRef } from "react";
+import {
+  ChangeEvent,
+  FormEvent,
+  FC,
+  ReactNode,
+  Component,
+  Children,
+  isValidElement,
+  cloneElement,
+  useEffect,
+  useRef,
+  useId
+} from "react";
 import { withTranslation, WithTranslation } from "react-i18next";
-import { useUID } from "react-uid";
 import styled, { DefaultTheme, withTheme } from "styled-components";
-import sendFeedback from "../../Models/sendFeedback";
 import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
 import Button, { RawButton } from "../../Styled/Button";
@@ -33,7 +43,7 @@ interface IState {
 }
 
 @observer
-class FeedbackForm extends React.Component<IProps, IState> {
+class FeedbackForm extends Component<IProps, IState> {
   static displayName = "FeedbackForm";
 
   state: IState = {
@@ -94,19 +104,19 @@ class FeedbackForm extends React.Component<IProps, IState> {
     this.resetState();
   }
 
-  updateName(e: React.ChangeEvent<HTMLInputElement>) {
+  updateName(e: ChangeEvent<HTMLInputElement>) {
     this.setState({
       name: e.target.value
     });
   }
 
-  updateEmail(e: React.ChangeEvent<HTMLInputElement>) {
+  updateEmail(e: ChangeEvent<HTMLInputElement>) {
     this.setState({
       email: e.target.value
     });
   }
 
-  updateComment(e: React.ChangeEvent<HTMLTextAreaElement>) {
+  updateComment(e: ChangeEvent<HTMLTextAreaElement>) {
     this.setState({
       comment: e.target.value
     });
@@ -124,13 +134,13 @@ class FeedbackForm extends React.Component<IProps, IState> {
     }
   }
 
-  changeSendShareUrl(_e: React.ChangeEvent<HTMLInputElement>) {
+  changeSendShareUrl(_e: ChangeEvent<HTMLInputElement>) {
     this.setState((prevState: IState) => ({
       sendShareURL: !prevState.sendShareURL
     }));
   }
 
-  onSubmit(e: React.FormEvent<HTMLFormElement | HTMLDivElement>) {
+  onSubmit(e: FormEvent<HTMLFormElement | HTMLDivElement>) {
     e.preventDefault();
 
     if (
@@ -140,27 +150,36 @@ class FeedbackForm extends React.Component<IProps, IState> {
       this.setState({
         isSending: true
       });
-      sendFeedback({
-        terria: this.props.viewState.terria,
-        name: this.state.name,
-        email: this.state.email,
-        sendShareURL: this.state.sendShareURL,
-        comment: this.state.comment
-      })!.then((succeeded: boolean) => {
-        if (succeeded) {
-          this.setState({
-            isSending: false,
-            comment: ""
-          });
-          runInAction(() => {
-            this.props.viewState.feedbackFormIsVisible = false;
-          });
-        } else {
-          this.setState({
-            isSending: false
-          });
-        }
-      });
+      this.props.viewState.terria.feedbackService
+        ?.sendFeedback({
+          name: this.state.name,
+          email: this.state.email,
+          sendShareURL: this.state.sendShareURL,
+          comment: this.state.comment
+        })!
+        .then((response) => {
+          if (response.result === "SUCCESS") {
+            if (response.notification) {
+              this.props.viewState.terria.notificationState.addNotificationToQueue(
+                response.notification
+              );
+            }
+            this.setState({
+              isSending: false,
+              comment: ""
+            });
+            runInAction(() => {
+              this.props.viewState.feedbackFormIsVisible = false;
+            });
+          } else {
+            this.setState({
+              isSending: false
+            });
+            if (response.error) {
+              this.props.viewState.terria.raiseErrorToUser(response.error);
+            }
+          }
+        });
     }
   }
 
@@ -204,9 +223,12 @@ class FeedbackForm extends React.Component<IProps, IState> {
               margin: 0;
             `}
           >
-            {t("feedback.title")}
+            {t(($) => $.feedback.title)}
           </Text>
-          <RawButton onClick={this.onDismiss} title={t("feedback.close")}>
+          <RawButton
+            onClick={this.onDismiss}
+            title={t(($) => $.feedback.close)}
+          >
             <StyledIcon styledWidth={"15px"} light glyph={GLYPHS.close} />
           </RawButton>
         </Box>
@@ -217,7 +239,7 @@ class FeedbackForm extends React.Component<IProps, IState> {
             textProps={{
               textDarker: true
             }}
-            label={t("feedback.yourName")}
+            label={t(($) => $.feedback.yourName)}
             spacingBottom
           >
             <Input
@@ -238,7 +260,7 @@ class FeedbackForm extends React.Component<IProps, IState> {
             textProps={{
               textDarker: true
             }}
-            label={t("feedback.email")}
+            label={t(($) => $.feedback.email)}
             spacingBottom
           >
             <Input
@@ -259,7 +281,7 @@ class FeedbackForm extends React.Component<IProps, IState> {
             textProps={{
               textDarker: true
             }}
-            label={t("feedback.commentQuestion")}
+            label={t(($) => $.feedback.commentQuestion)}
             spacingBottom
           >
             <TextArea
@@ -275,13 +297,15 @@ class FeedbackForm extends React.Component<IProps, IState> {
               onChange={this.updateComment}
               autoComplete="off"
             />
-            {!this.state.commentIsValid && (
-              <WarningText>
-                {t("feedback.minLength", {
-                  minLength: viewState.terria.configParameters.feedbackMinLength
-                })}
-              </WarningText>
-            )}
+            {!this.state.commentIsValid &&
+              viewState.terria.configParameters.feedbackMinLength && (
+                <WarningText>
+                  {t(($) => $.feedback.minLength, {
+                    minLength:
+                      viewState.terria.configParameters.feedbackMinLength
+                  })}
+                </WarningText>
+              )}
           </StyledLabel>
           <Checkbox
             isChecked={this.state.sendShareURL}
@@ -290,7 +314,7 @@ class FeedbackForm extends React.Component<IProps, IState> {
           >
             <Text>
               {
-                t("feedback.shareWithDevelopers", {
+                t(($) => $.feedback.shareWithDevelopers, {
                   appName: this.props.viewState.terria.appName
                 })!
               }
@@ -302,12 +326,11 @@ class FeedbackForm extends React.Component<IProps, IState> {
             <Button
               type="button"
               denyButton
-              rounded
               shortMinHeight
               styledMinWidth={"80px"}
               onClick={this.onDismiss}
             >
-              {t("feedback.cancel")}
+              {t(($) => $.feedback.cancel)}
             </Button>
             <Spacing right={1} />
             <Button
@@ -322,8 +345,8 @@ class FeedbackForm extends React.Component<IProps, IState> {
               }
             >
               {this.state.isSending
-                ? t("feedback.sending")
-                : t("feedback.send")}
+                ? t(($) => $.feedback.sending)
+                : t(($) => $.feedback.send)}
             </Button>
           </Box>
         </Form>
@@ -339,13 +362,13 @@ const WarningText = styled(Text)`
 interface TextAreaProps {
   value: string;
   valueIsValid: boolean;
-  onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
   styledMinHeight: string;
   styledMaxHeight?: string;
   [spread: string]: any;
 }
 
-const TextArea: React.FC<TextAreaProps> = (props: TextAreaProps) => {
+const TextArea: FC<TextAreaProps> = (props: TextAreaProps) => {
   const {
     value,
     onChange,
@@ -387,17 +410,17 @@ interface StyledLabelProps {
   viewState: ViewState;
   label: string;
   textProps?: any;
-  children: React.ReactNode;
+  children: ReactNode;
   spacingBottom?: boolean;
 }
 
-const StyledLabel: React.FC<StyledLabelProps> = (props: StyledLabelProps) => {
+const StyledLabel: FC<StyledLabelProps> = (props: StyledLabelProps) => {
   const { viewState, label, textProps } = props;
-  const id = useUID();
-  const childrenWithId = React.Children.map(props.children, (child) => {
+  const id = useId();
+  const childrenWithId = Children.map(props.children, (child) => {
     // checking isValidElement is the safe way and avoids a typescript error too
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child, { id: id } as any);
+    if (isValidElement(child)) {
+      return cloneElement(child, { id: id } as any);
     }
     return child;
   });

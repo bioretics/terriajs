@@ -1,25 +1,20 @@
+import { screen } from "@testing-library/react";
 import { runInAction } from "mobx";
-import React from "react";
-import { act } from "react-dom/test-utils";
 import Terria from "../../lib/Models/Terria";
 import ViewState from "../../lib/ReactViewModels/ViewState";
-import Box from "../../lib/Styled/Box";
-import { createWithContexts } from "./withContext";
-const Disclaimer: any = require("../../lib/ReactViews/Disclaimer").default;
+import Disclaimer from "../../lib/ReactViews/Disclaimer";
+import { renderWithContexts } from "./withContext";
 
 describe("Disclaimer", function () {
   let terria: Terria;
   let viewState: ViewState;
-
-  let testRenderer: any;
 
   beforeEach(function () {
     terria = new Terria({
       baseUrl: "./"
     });
     viewState = new ViewState({
-      terria: terria,
-      catalogSearchProvider: undefined
+      terria: terria
     });
   });
 
@@ -34,14 +29,9 @@ describe("Disclaimer", function () {
         };
         viewState.disclaimerVisible = true;
       });
-      act(() => {
-        testRenderer = createWithContexts(
-          viewState,
-          <Disclaimer viewState={viewState} />
-        );
-      });
-      const disclaimerContent = testRenderer.root.findAllByType(Box);
-      expect(disclaimerContent.length).toBeTruthy();
+      renderWithContexts(<Disclaimer />, viewState);
+
+      expect(screen.getByRole("button", { name: "Ok" })).toBeVisible();
     });
   });
 
@@ -51,14 +41,8 @@ describe("Disclaimer", function () {
         viewState.disclaimerSettings = {};
         viewState.disclaimerVisible = true;
       });
-      act(() => {
-        testRenderer = createWithContexts(
-          viewState,
-          <Disclaimer viewState={viewState} />
-        );
-      });
-      const disclaimerContent = testRenderer.root.findAllByType(Box);
-      expect(disclaimerContent.length).toBeTruthy();
+      renderWithContexts(<Disclaimer />, viewState);
+      expect(screen.getByRole("button", { name: "Ok" })).toBeVisible();
     });
   });
 
@@ -68,14 +52,10 @@ describe("Disclaimer", function () {
         terria.configParameters.globalDisclaimer = undefined;
         viewState.disclaimerVisible = false;
       });
-      act(() => {
-        testRenderer = createWithContexts(
-          viewState,
-          <Disclaimer viewState={viewState} />
-        );
-      });
-      const disclaimerContent = testRenderer.root.findAllByType(Box);
-      expect(disclaimerContent.length).toBeFalsy();
+      renderWithContexts(<Disclaimer />, viewState);
+      expect(
+        screen.queryByRole("button", { name: "Ok" })
+      ).not.toBeInTheDocument();
     });
   });
 });

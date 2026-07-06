@@ -73,8 +73,31 @@ export function extractBottomModel(model: BaseModel): BaseModel | undefined {
   return undefined;
 }
 
+/** Combines the strata of a model into a single stratum. */
+export function combineModelStrata(
+  model: BaseModel,
+  strataTopToBottom: readonly string[]
+): StratumFromTraits<ModelTraits> | undefined {
+  let combined: StratumFromTraits<ModelTraits> | undefined;
+
+  for (const stratumId of strataTopToBottom) {
+    const stratum = model.strata.get(stratumId);
+    if (stratum === undefined) continue;
+
+    combined =
+      combined === undefined
+        ? stratum
+        : createCombinedStratum(model.TraitsClass, combined, stratum);
+  }
+
+  return combined;
+}
+
 class CombinedStrata implements Map<string, StratumFromTraits<ModelTraits>> {
-  constructor(readonly top: BaseModel, readonly bottom: BaseModel) {
+  constructor(
+    readonly top: BaseModel,
+    readonly bottom: BaseModel
+  ) {
     makeObservable(this);
   }
 
@@ -109,18 +132,16 @@ class CombinedStrata implements Map<string, StratumFromTraits<ModelTraits>> {
   get size(): number {
     return this.strata.size;
   }
-  [Symbol.iterator](): IterableIterator<
-    [string, StratumFromTraits<ModelTraits>]
-  > {
+  [Symbol.iterator](): MapIterator<[string, StratumFromTraits<ModelTraits>]> {
     return this.strata.entries();
   }
-  entries(): IterableIterator<[string, StratumFromTraits<ModelTraits>]> {
+  entries(): MapIterator<[string, StratumFromTraits<ModelTraits>]> {
     return this.strata.entries();
   }
-  keys(): IterableIterator<string> {
+  keys(): MapIterator<string> {
     return this.strata.keys();
   }
-  values(): IterableIterator<StratumFromTraits<ModelTraits>> {
+  values(): MapIterator<StratumFromTraits<ModelTraits>> {
     return this.strata.values();
   }
   get [Symbol.toStringTag](): string {

@@ -119,9 +119,9 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
     return (
       <MenuPanel
         theme={dropdownTheme}
-        btnText={t("colorPanel.header")}
+        btnText={t(($) => $.colorPanel.header)}
         viewState={this.props.viewState}
-        btnTitle={t("colorPanel.headerTitle")}
+        btnTitle={t(($) => $.colorPanel.headerTitle)}
         isOpen={this.state.isOpen}
         onOpenChanged={this.changeOpenState}
         modalWidth={modalWidth}
@@ -129,16 +129,16 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
       >
         <>
           <Box>
-            <TextSpan medium>{t("colorPanel.title")}</TextSpan>
+            <TextSpan medium>{t(($) => $.colorPanel.title)}</TextSpan>
           </Box>
           <Box>
-            <Explanation>{t("colorPanel.explanation")}</Explanation>
+            <Explanation>{t(($) => $.colorPanel.explanation)}</Explanation>
           </Box>
           <Box
             styledMargin="10px 8px 8px 0"
             style={{ display: "flex", alignItems: "center" }}
           >
-            {t("colorPanel.transparency")}
+            {t(($) => $.colorPanel.transparency)}
             <Input
               style={{ marginLeft: "8px" }}
               styledWidth="100px"
@@ -154,7 +154,7 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
             />
           </Box>
           <ColorPanelButton
-            title={t("colorPanel.addButtonTitle")}
+            title={t(($) => $.colorPanel.addButtonTitle)}
             onClick={() => {
               this.addLayer();
             }}
@@ -171,7 +171,7 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
               <Box key={index}>
                 <Box>
                   <InputElevation
-                    placeholder={t("colorPanel.fromPlaceholder")}
+                    placeholder={t(($) => $.colorPanel.fromPlaceholder)}
                     value={layer.fromHeight}
                     changeFunc={action((e) => {
                       layer.fromHeight = Number(e.target.value);
@@ -187,7 +187,7 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
                     })}
                   />
                   <InputElevation
-                    placeholder={t("colorPanel.toPlaceholder")}
+                    placeholder={t(($) => $.colorPanel.toPlaceholder)}
                     value={layer.toHeight}
                     changeFunc={action((e) => {
                       layer.toHeight = Number(e.target.value);
@@ -202,7 +202,7 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
                     })}
                   />
                   <ColorPanelButton
-                    title={t("colorPanel.removeButtonTitle")}
+                    title={t(($) => $.colorPanel.removeButtonTitle)}
                     onClick={() => {
                       this.removeLayer(index);
                     }}
@@ -225,11 +225,11 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
                 this.apply();
               }}
             >
-              {t("colorPanel.applyButton")}
+              {t(($) => $.colorPanel.applyButton)}
             </ColorPanelButton>
           </Box>
           <Box>
-            <Explanation>{t("colorPanel.warning")}</Explanation>
+            <Explanation>{t(($) => $.colorPanel.warning)}</Explanation>
           </Box>
         </>
       </MenuPanel>

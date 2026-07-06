@@ -47,7 +47,7 @@ class FunctionJobStratum extends LoadableStratum(CatalogFunctionJobTraits) {
 
   @computed
   get shortReport() {
-    let content = "";
+    let content: string;
     if (this.catalogFunctionJob.jobStatus === "inactive") {
       content = "Job is inactive";
     } else if (this.catalogFunctionJob.jobStatus === "running") {
@@ -313,8 +313,9 @@ function CatalogFunctionJobMixin<
 
 namespace CatalogFunctionJobMixin {
   StratumOrder.addLoadStratum(FunctionJobStratum.name);
-  export interface Instance
-    extends InstanceType<ReturnType<typeof CatalogFunctionJobMixin>> {}
+  export interface Instance extends InstanceType<
+    ReturnType<typeof CatalogFunctionJobMixin>
+  > {}
   export function isMixedInto(model: any): model is Instance {
     return model && model.hasCatalogFunctionJobMixin;
   }

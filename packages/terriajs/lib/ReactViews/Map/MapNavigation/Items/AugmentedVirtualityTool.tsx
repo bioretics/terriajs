@@ -1,7 +1,7 @@
 import i18next from "i18next";
 import { action, computed, observable, makeObservable } from "mobx";
 import { observer } from "mobx-react";
-import React from "react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import AugmentedVirtuality from "../../../../Models/AugmentedVirtuality";
@@ -93,9 +93,9 @@ export class AugmentedVirtualityController extends MapNavigationItemController {
     if (experimentalWarning !== false && !this.experimentalWarningShown) {
       this.experimentalWarningShown = true;
       this.props.viewState.terria.notificationState.addNotificationToQueue({
-        title: i18next.t("AR.title"),
-        message: i18next.t("AR.experimentalFeatureMessage"),
-        confirmText: i18next.t("AR.confirmText")
+        title: i18next.t(($) => $.AR.title),
+        message: i18next.t(($) => $.AR.experimentalFeatureMessage),
+        confirmText: i18next.t(($) => $.AR.confirmText)
       });
     }
     this.props.augmentedVirtuality.activate();
@@ -148,11 +148,11 @@ export class AugmentedVirtualityRealignController extends MapNavigationItemContr
       this.realignHelpShown = true;
 
       this.props.viewState.terria.notificationState.addNotificationToQueue({
-        title: i18next.t("AR.manualAlignmentTitle"),
-        message: i18next.t("AR.manualAlignmentMessage", {
+        title: i18next.t(($) => $.AR.manualAlignmentTitle),
+        message: i18next.t(($) => $.AR.manualAlignmentMessage, {
           img: '<img width="100%" src="./build/TerriaJS/images/ar-realign-guide.gif" />'
         }),
-        confirmText: i18next.t("AR.confirmText")
+        confirmText: i18next.t(($) => $.AR.confirmText)
       });
     }
 
@@ -164,9 +164,9 @@ export class AugmentedVirtualityRealignController extends MapNavigationItemContr
     if (!this.resetRealignHelpShown) {
       this.resetRealignHelpShown = true;
       this.props.viewState.terria.notificationState.addNotificationToQueue({
-        title: i18next.t("AR.resetAlignmentTitle"),
-        message: i18next.t("AR.resetAlignmentMessage"),
-        confirmText: i18next.t("AR.confirmText")
+        title: i18next.t(($) => $.AR.resetAlignmentTitle),
+        message: i18next.t(($) => $.AR.resetAlignmentMessage),
+        confirmText: i18next.t(($) => $.AR.confirmText)
       });
     }
 
@@ -174,7 +174,7 @@ export class AugmentedVirtualityRealignController extends MapNavigationItemContr
   }
 }
 
-export const AugmentedVirtualityRealign: React.FC<{
+export const AugmentedVirtualityRealign: FC<{
   arRealignController: AugmentedVirtualityRealignController;
 }> = observer(
   (props: { arRealignController: AugmentedVirtualityRealignController }) => {
@@ -186,14 +186,14 @@ export const AugmentedVirtualityRealign: React.FC<{
         noExpand
         blink={realignment}
         iconElement={() => <Icon glyph={GLYPHS.arRealign} />}
-        title={t("AR.btnRealign")}
+        title={t(($) => $.AR.btnRealign)}
         onClick={props.arRealignController.handleClickRealign}
       />
     ) : (
       <MapIconButton
         noExpand
         iconElement={() => <Icon glyph={GLYPHS.arResetAlignment} />}
-        title={t("AR.btnResetRealign")}
+        title={t(($) => $.AR.btnResetRealign)}
         onClick={props.arRealignController.handleClickResetRealign}
       />
     );

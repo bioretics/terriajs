@@ -1,4 +1,4 @@
-import React from "react";
+import { FC } from "react";
 import styled from "styled-components";
 import { useTranslation } from "react-i18next";
 import CommonStrata from "../../Models/Definition/CommonStrata";
@@ -17,7 +17,7 @@ import SelectableDimension from "./SelectableDimension";
 /**
  * Component to render a SelectableDimensionGroup or DimensionSelectorCheckboxGroup.
  */
-export const SelectableDimensionGroup: React.FC<{
+export const SelectableDimensionGroup: FC<{
   id: string;
   dim: SelectableDimensionGroupModel | SelectableDimensionCheckboxGroupModel;
 }> = ({ id, dim }) => {
@@ -33,12 +33,13 @@ export const SelectableDimensionGroup: React.FC<{
       <Collapsible
         title={
           dim.type === "group"
-            ? dim.name ?? dim.id ?? ""
-            : dim.options?.find((opt) => opt.id === dim.selectedId)?.name ??
+            ? (dim.name ?? dim.id ?? "")
+            : (dim.options?.find((opt) => opt.id === dim.selectedId)?.name ??
               (dim.selectedId === "true"
-                ? t("selectableDimensions.enabled")
-                : t("selectableDimensions.disabled"))
+                ? t(($) => $.selectableDimensions.enabled)
+                : t(($) => $.selectableDimensions.disabled)))
         }
+        titleTextProps={{ bold: false }}
         bodyBoxProps={{
           displayInlineBlock: true,
           fullWidth: true
@@ -48,11 +49,13 @@ export const SelectableDimensionGroup: React.FC<{
         onToggle={
           dim.type === "group"
             ? dim.onToggle
-            : (isOpen) =>
+            : (isOpen) => {
                 dim.setDimensionValue(
                   CommonStrata.user,
                   isOpen ? "true" : "false"
-                )
+                );
+                return false;
+              }
         }
         btnStyle={dim.type === "checkbox-group" ? "checkbox" : undefined}
         btnRight={dim.type === "group"}

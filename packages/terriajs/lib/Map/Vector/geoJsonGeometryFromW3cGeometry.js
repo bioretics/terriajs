@@ -1,6 +1,6 @@
-var defined = require("terriajs-cesium/Source/Core/defined").default;
-var RuntimeError = require("terriajs-cesium/Source/Core/RuntimeError").default;
-var i18next = require("i18next").default;
+import defined from "terriajs-cesium/Source/Core/defined";
+import RuntimeError from "terriajs-cesium/Source/Core/RuntimeError";
+import i18next from "i18next";
 
 var featureCreators = {
   Point: createPointGeometry
@@ -11,8 +11,8 @@ function geoJsonGeometryFromW3cGeometry(geometry) {
   var creator = featureCreators[type];
   if (!defined(creator)) {
     throw new RuntimeError(
-      i18next.t("map.w3cToGeoJson.containsUnsupportedFeatureType", {
-        type: type
+      i18next.t(($) => $.map.w3cToGeoJson.containsUnsupportedFeatureType, {
+        type
       })
     );
   }
@@ -30,8 +30,8 @@ function createPointGeometry(geometry) {
   var longitude = geometry.getElementsByTagNameNS("*", "long")[0].textContent;
   return {
     type: "Point",
-    coordinates: [longitude, latitude]
+    coordinates: [parseFloat(longitude), parseFloat(latitude)]
   };
 }
 
-module.exports = geoJsonGeometryFromW3cGeometry;
+export default geoJsonGeometryFromW3cGeometry;

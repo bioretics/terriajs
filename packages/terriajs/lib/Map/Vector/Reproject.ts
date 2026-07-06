@@ -64,7 +64,20 @@ export default {
     if (!source || !dest) {
       return;
     }
-    return proj4(source, dest, coordinates) ?? {};
+    // proj4 2.19's bundled types require ProjectionDefinition, but the
+    // runtime accepts proj strings (as upstream's original code relies on).
+    type ProjArg = Parameters<typeof proj4.transform>[0];
+    const result = proj4.transform(
+      source as unknown as ProjArg,
+      dest as unknown as ProjArg,
+      coordinates,
+      false
+    );
+    if (result) {
+      const { x, y } = result;
+      return [x, y];
+    }
+    return undefined;
   },
 
   /**

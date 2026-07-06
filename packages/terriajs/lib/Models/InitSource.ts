@@ -33,15 +33,16 @@ export interface ModelJson extends JsonObject {
   type?: string;
   shareKeys?: string[];
   members?: (string | JsonObject)[];
+  strata?: { [stratumName: string]: Partial<ModelJson> };
 }
 
 export interface StoryData {
   title: string;
   text: string;
   id: string;
-  shareData: ShareInitSourceData;
+  shareData: StartData;
 }
-export interface ShareInitSourceData {
+export interface StartData {
   version: string;
   /** Share data initSources can be a mix of initUrls (string) and initData (InitDataSource/JsonObject) */
   initSources: (InitSourceData | string)[];
@@ -108,7 +109,7 @@ export interface InitSourceData {
     baseMapId?: string;
     terrainSplitDirection?: number;
     depthTestAgainstTerrainEnabled?: boolean;
-    /** Check or uncheck "Share/Print -> Advanced options -> Shorten the share URL using a web service".
+    /** Check or uncheck "Share/Print -> Shorten the share URL using a web service".
      * See https://github.com/TerriaJS/terriajs/discussions/6848#discussioncomment-6798623 for a typical use case.
      * To disable the shortening url service, set it to false.
      */

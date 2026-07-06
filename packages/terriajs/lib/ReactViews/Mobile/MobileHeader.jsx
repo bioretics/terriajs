@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import styled, { withTheme } from "styled-components";
 import { applyTranslationIfExists } from "../../Language/languageHelpers";
@@ -19,7 +19,7 @@ import MobileModalWindow from "./MobileModalWindow";
 import ViewerMode, { setViewerMode } from "../../Models/ViewerMode";
 
 @observer
-class MobileHeader extends React.Component {
+class MobileHeader extends Component {
   static displayName = "MobileHeader";
 
   showSearch() {
@@ -174,7 +174,7 @@ class MobileHeader extends React.Component {
             searchText={searchState.catalogSearchText}
             onSearchTextChanged={this.changeCatalogSearchText.bind(this)}
             onDoSearch={this.searchCatalog.bind(this)}
-            placeholder={t("search.searchCatalogue")}
+            placeholder={t(($) => $.search.searchCatalogue)}
             onClear={this.closeCatalogSearch.bind(this)}
             autoFocus
           />
@@ -214,7 +214,7 @@ class MobileHeader extends React.Component {
                   onClick={this.props.viewState.toggleMobileMenu.bind(
                     this.props.viewState
                   )}
-                  title={t("mobile.toggleNavigation")}
+                  title={t(($) => $.mobile.toggleNavigation)}
                 >
                   <StyledIcon
                     light
@@ -268,6 +268,7 @@ class MobileHeader extends React.Component {
                   className={Styles.btnAdd}
                   onClick={this.onMobileDataCatalogClicked.bind(this)}
                 >
+                  {/* Fork (rer3d): icon-only add-data button on mobile */}
                   <StyledIcon
                     glyph={Icon.GLYPHS.increase}
                     styledWidth="20px"

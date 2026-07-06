@@ -45,8 +45,7 @@ import WebMapServiceCapabilities, {
   getRectangleFromLayer
 } from "./WebMapServiceCapabilities";
 import WebMapServiceCatalogItem from "./WebMapServiceCatalogItem";
-
-const dateFormat = require("dateformat");
+import dateFormat from "dateformat";
 
 /** Transforms WMS GetCapabilities XML into WebMapServiceCatalogItemTraits */
 export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
@@ -58,8 +57,12 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
   ): Promise<WebMapServiceCapabilitiesStratum> {
     if (!isDefined(catalogItem.getCapabilitiesUrl)) {
       throw new TerriaError({
-        title: i18next.t("models.webMapServiceCatalogItem.missingUrlTitle"),
-        message: i18next.t("models.webMapServiceCatalogItem.missingUrlMessage")
+        title: i18next.t(
+          ($) => $.models.webMapServiceCatalogItem.missingUrlTitle
+        ),
+        message: i18next.t(
+          ($) => $.models.webMapServiceCatalogItem.missingUrlMessage
+        )
       });
     }
 
@@ -104,9 +107,12 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
 
     Array.from(this.capabilitiesLayers.values()).forEach((layer) => {
       if (!layer?.MetadataURL) return;
-      Array.isArray(layer?.MetadataURL)
-        ? metadataUrls.push(...layer?.MetadataURL)
-        : metadataUrls.push(layer?.MetadataURL as MetadataURL);
+      if (Array.isArray(layer?.MetadataURL)) {
+        // eslint-disable-next-line no-unsafe-optional-chaining
+        metadataUrls.push(...layer?.MetadataURL);
+      } else {
+        metadataUrls.push(layer?.MetadataURL as MetadataURL);
+      }
     });
 
     return metadataUrls
@@ -173,7 +179,7 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
       const layer = layers[i];
       const style = i < styles.length ? styles[i] : undefined;
 
-      let legendUri: uri.URI | undefined;
+      let legendUri: URI | undefined;
       let legendUrlMimeType: string | undefined;
       let legendScaling: number | undefined;
 
@@ -213,7 +219,7 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
         legendUri = URI(
           proxyCatalogItemUrl(
             this.catalogItem,
-            this.catalogItem.url.split("?")[0]
+            this.catalogItem.getLegendBaseUrl()
           )
         );
         legendUri
@@ -455,7 +461,9 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
 
     result.push(
       createStratumInstance(InfoSectionTraits, {
-        name: i18next.t("models.webMapServiceCatalogItem.serviceDescription"),
+        name: i18next.t(
+          ($) => $.models.webMapServiceCatalogItem.serviceDescription
+        ),
         contentAsObject: this.capabilities.Service as JsonObject,
         // Hide big ugly table by default
         show: false
@@ -490,7 +498,7 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
           result.push(
             createStratumInstance(InfoSectionTraits, {
               name: i18next.t(
-                "models.webMapServiceCatalogItem.dataDescription"
+                ($) => $.models.webMapServiceCatalogItem.dataDescription
               ),
               contentAsObject: out as JsonObject,
               // Hide big ugly table by default
@@ -533,7 +541,9 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
       if (service.ContactInformation !== undefined) {
         result.push(
           createStratumInstance(InfoSectionTraits, {
-            name: i18next.t("models.webMapServiceCatalogItem.serviceContact"),
+            name: i18next.t(
+              ($) => $.models.webMapServiceCatalogItem.serviceContact
+            ),
             content: getServiceContactInformation(service.ContactInformation)
           })
         );
@@ -541,7 +551,9 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
 
       result.push(
         createStratumInstance(InfoSectionTraits, {
-          name: i18next.t("models.webMapServiceCatalogItem.getCapabilitiesUrl"),
+          name: i18next.t(
+            ($) => $.models.webMapServiceCatalogItem.getCapabilitiesUrl
+          ),
           content: this.catalogItem.getCapabilitiesUrl
         })
       );
@@ -558,7 +570,7 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
         result.push(
           createStratumInstance(InfoSectionTraits, {
             name: i18next.t(
-              "models.webMapServiceCatalogItem.serviceDescription"
+              ($) => $.models.webMapServiceCatalogItem.serviceDescription
             ),
             content: service.Abstract
           })
@@ -573,7 +585,7 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
         result.push(
           createStratumInstance(InfoSectionTraits, {
             name: i18next.t(
-              "models.webMapServiceCatalogItem.accessConstraints"
+              ($) => $.models.webMapServiceCatalogItem.accessConstraints
             ),
             content: service.AccessConstraints
           })
@@ -608,23 +620,23 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
     }
 
     return [
-      i18next.t("preview.disclaimer"),
-      i18next.t("description.name"),
+      i18next.t(($) => $.preview.disclaimer),
+      i18next.t(($) => $.description.name),
       ...layerDescriptions,
-      i18next.t("preview.datasetDescription"),
-      i18next.t("preview.serviceDescription"),
-      i18next.t("models.webMapServiceCatalogItem.serviceDescription"),
-      i18next.t("preview.resourceDescription"),
-      i18next.t("preview.licence"),
-      i18next.t("preview.accessConstraints"),
-      i18next.t("models.webMapServiceCatalogItem.accessConstraints"),
-      i18next.t("preview.author"),
-      i18next.t("preview.contact"),
-      i18next.t("models.webMapServiceCatalogItem.serviceContact"),
-      i18next.t("preview.created"),
-      i18next.t("preview.modified"),
-      i18next.t("preview.updateFrequency"),
-      i18next.t("models.webMapServiceCatalogItem.getCapabilitiesUrl")
+      i18next.t(($) => $.preview.datasetDescription),
+      i18next.t(($) => $.preview.serviceDescription),
+      i18next.t(($) => $.models.webMapServiceCatalogItem.serviceDescription),
+      i18next.t(($) => $.preview.resourceDescription),
+      i18next.t(($) => $.preview.licence),
+      i18next.t(($) => $.preview.accessConstraints),
+      i18next.t(($) => $.models.webMapServiceCatalogItem.accessConstraints),
+      i18next.t(($) => $.preview.author),
+      i18next.t(($) => $.preview.contact),
+      i18next.t(($) => $.models.webMapServiceCatalogItem.serviceContact),
+      i18next.t(($) => $.preview.created),
+      i18next.t(($) => $.preview.modified),
+      i18next.t(($) => $.preview.updateFrequency),
+      i18next.t(($) => $.models.webMapServiceCatalogItem.getCapabilitiesUrl)
     ];
   }
 
@@ -884,8 +896,8 @@ export default class WebMapServiceCapabilitiesStratum extends LoadableStratum(
     const formatsArray = isJsonArray(formats)
       ? formats
       : isJsonString(formats)
-      ? [formats]
-      : [];
+        ? [formats]
+        : [];
 
     if (this.catalogItem.supportsGetTimeseries) {
       return { format: "text/csv", type: "text" };

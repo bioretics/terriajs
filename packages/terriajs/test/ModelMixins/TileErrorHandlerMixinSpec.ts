@@ -1,4 +1,5 @@
 import i18next from "i18next";
+import L from "leaflet";
 import RequestErrorEvent from "terriajs-cesium/Source/Core/RequestErrorEvent";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import TileProviderError from "terriajs-cesium/Source/Core/TileProviderError";
@@ -110,9 +111,7 @@ describe("TileErrorHandlerMixin", function () {
     });
     try {
       await onTileLoadError(item, newError(400));
-    } catch {
-      /* eslint-disable-line no-empty */
-    }
+    } catch {}
     expect(item.tileFailures).toBe(0);
   });
 
@@ -125,9 +124,7 @@ describe("TileErrorHandlerMixin", function () {
           false
         );
         await onTileLoadError(item, newError(403));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(0);
     });
 
@@ -139,9 +136,7 @@ describe("TileErrorHandlerMixin", function () {
           false
         );
         await onTileLoadError(item, newError(404));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(0);
     });
 
@@ -162,9 +157,7 @@ describe("TileErrorHandlerMixin", function () {
           onTileLoadError(item, newError(404, 1)),
           onTileLoadError(item, newError(randomIntBetween(400, 499), 2))
         ]);
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(3);
     });
   });
@@ -173,13 +166,9 @@ describe("TileErrorHandlerMixin", function () {
     it("retries fetching the tile using xhr", async function () {
       try {
         const error = newError(randomIntBetween(500, 599));
-        spyOn(Resource, "fetchImage").and.returnValue(
-          Promise.reject(error.error)
-        );
+        spyOn(Resource, "fetchImage").and.rejectWith(error.error);
         await onTileLoadError(item, error);
-      } catch (e) {
-        /* eslint-disable-line no-empty */
-      }
+      } catch (_e) {}
       expect(Resource.fetchImage).toHaveBeenCalled();
     });
   });
@@ -204,9 +193,7 @@ describe("TileErrorHandlerMixin", function () {
       );
       try {
         await onTileLoadError(item, newError(undefined));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(0);
       expect(raiseEvent.calls.count()).toBe(0);
     });
@@ -220,26 +207,35 @@ describe("TileErrorHandlerMixin", function () {
           target: {}
         } as Error;
         await onTileLoadError(item, tileProviderError);
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(1);
       expect(raiseEvent.calls.count()).toBe(1);
       expect(raiseEvent.calls.argsFor(0)[0]?.message).toContain(
-        i18next.t("models.imageryLayer.tileErrorMessageII")
+        i18next.t(($) => $.models.imageryLayer.tileErrorMessageII)
       );
+    });
+
+    it("ignores error if target src is Leaflet's empty image URL", async function () {
+      try {
+        const tileProviderError: TileProviderError = newError(undefined);
+        tileProviderError.error = {
+          ...tileProviderError.error,
+          target: { src: L.Util.emptyImageUrl }
+        } as Error;
+        await onTileLoadError(item, tileProviderError);
+      } catch {}
+      expect(item.tileFailures).toBe(0);
+      expect(raiseEvent.calls.count()).toBe(0);
     });
 
     it("otherwise, it fails with unknown error", async function () {
       try {
         await onTileLoadError(item, newError(undefined));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(1);
       expect(raiseEvent.calls.count()).toBe(1);
       expect(raiseEvent.calls.argsFor(0)[0]?.message).toContain(
-        i18next.t("models.imageryLayer.unknownTileErrorMessage")
+        i18next.t(($) => $.models.imageryLayer.unknownTileErrorMessage)
       );
     });
   });
@@ -248,54 +244,44 @@ describe("TileErrorHandlerMixin", function () {
     it("it fails after retrying a maximum of specified number of times", async function () {
       try {
         const error = newError(randomIntBetween(500, 599));
-        spyOn(Resource, "fetchImage").and.returnValue(
-          Promise.reject(error.error)
-        );
+        spyOn(Resource, "fetchImage").and.rejectWith(error.error);
         await onTileLoadError(item, error);
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(Resource.fetchImage).toHaveBeenCalledTimes(
         !Array.isArray(item.tileRetryOptions)
-          ? item.tileRetryOptions.retries ?? 0
+          ? (item.tileRetryOptions.retries ?? 0)
           : 0
       );
       expect(item.tileFailures).toBe(1);
     });
 
     it("tells the map to reload the tile again if an xhr attempt succeeds", async function () {
-      spyOn(Resource, "fetchImage").and.returnValue(Promise.resolve());
+      spyOn(Resource, "fetchImage").and.resolveTo();
       await onTileLoadError(item, newError(randomIntBetween(500, 599)));
       expect(item.tileFailures).toBe(0);
     });
 
     it("fails if the xhr succeeds but the map fails to load the tile for more than 5 times", async function () {
       try {
-        spyOn(Resource, "fetchImage").and.returnValue(Promise.resolve());
+        spyOn(Resource, "fetchImage").and.resolveTo();
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 0));
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 1));
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 2));
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 3));
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 4));
         await onTileLoadError(item, newError(randomIntBetween(500, 599), 5));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toEqual(1);
     });
 
     it("gives up silently if the item is hidden", async function () {
       try {
         const error = newError(randomIntBetween(500, 599));
-        spyOn(Resource, "fetchImage").and.returnValue(
-          Promise.reject(error.error)
-        );
+        spyOn(Resource, "fetchImage").and.rejectWith(error.error);
         const result = onTileLoadError(item, error);
         item.setTrait(CommonStrata.user, "show", false);
         await result;
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toEqual(0);
     });
   });
@@ -313,14 +299,10 @@ describe("TileErrorHandlerMixin", function () {
       spyOn(item.terria, "raiseErrorToUser");
       try {
         await onTileLoadError(item, newError(undefined));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       try {
         await onTileLoadError(item, newError(undefined, 1));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.tileFailures).toBe(2);
       expect(item.terria.raiseErrorToUser).toHaveBeenCalled();
     });
@@ -329,14 +311,10 @@ describe("TileErrorHandlerMixin", function () {
       expect(item.show).toBe(true);
       try {
         await onTileLoadError(item, newError(undefined));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       try {
         await onTileLoadError(item, newError(undefined, 1));
-      } catch {
-        /* eslint-disable-line no-empty */
-      }
+      } catch {}
       expect(item.show).toBe(false);
     });
   });
@@ -347,36 +325,29 @@ describe("TileErrorHandlerMixin", function () {
 
     try {
       await onTileLoadError(item, error);
-    } catch {
-      /* eslint-disable-line no-empty */
-    }
+    } catch {}
     expect(item.tileFailures).toBe(1);
 
     try {
       error.timesRetried = 1;
       await onTileLoadError(item, error);
-    } catch {
-      /* eslint-disable-line no-empty */
-    }
+    } catch {}
     expect(item.tileFailures).toBe(2);
 
     try {
       error.timesRetried = 0;
       await onTileLoadError(item, error);
-    } catch {
-      /* eslint-disable-line no-empty */
-    }
+    } catch {}
     expect(item.tileFailures).toBe(1);
   });
 
   it("calls `handleTileError` if the item defines it", async function () {
     item.handleTileError = (promise) => promise;
+    // @ts-expect-error: aaa
     spyOn(item, "handleTileError");
     try {
       await onTileLoadError(item, newError(400));
-    } catch {
-      /* eslint-disable-line no-empty */
-    }
+    } catch {}
     expect(item.handleTileError).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import React from "react";
+import { Component } from "react";
 import { withTranslation } from "react-i18next";
 import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
 import {
@@ -18,7 +18,7 @@ import WarningBox from "./WarningBox";
  * A "preview" for CatalogGroup.
  */
 @observer
-class GroupPreview extends React.Component {
+class GroupPreview extends Component {
   static propTypes = {
     previewed: PropTypes.object.isRequired,
     terria: PropTypes.object.isRequired,
@@ -62,16 +62,18 @@ class GroupPreview extends React.Component {
                   this.props.previewed.members,
                   this.props.terria
                 )
-                  ? t("models.catalog.removeAll")
-                  : t("models.catalog.addAll")}
+                  ? t(($) => $.models.catalog.removeAll)
+                  : t(($) => $.models.catalog.addAll)}
               </button>
             )}
-            <SharePanel
-              catalogShare
-              modalWidth={this.props.widthFromMeasureElementHOC}
-              terria={this.props.terria}
-              viewState={this.props.viewState}
-            />
+            {!this.props.terria.configParameters.disableSharePanel && (
+              <SharePanel
+                catalogShare
+                modalWidth={this.props.widthFromMeasureElementHOC}
+                terria={this.props.terria}
+                viewState={this.props.viewState}
+              />
+            )}
           </div>
         </div>
         {this.props.previewed.loadMetadataResult?.error && (
@@ -91,7 +93,7 @@ class GroupPreview extends React.Component {
             {this.props.previewed.description &&
               this.props.previewed.description.length > 0 && (
                 <div>
-                  <h4 className={Styles.h4}>{t("description.name")}</h4>
+                  <h4 className={Styles.h4}>{t(($) => $.description.name)}</h4>
                   {parseCustomMarkdownToReact(
                     this.props.previewed.description,
                     { catalogItem: this.props.previewed }
@@ -102,7 +104,9 @@ class GroupPreview extends React.Component {
 
             {metadataItem.dataCustodian && (
               <div>
-                <h4 className={Styles.h4}>{t("preview.dataCustodian")}</h4>
+                <h4 className={Styles.h4}>
+                  {t(($) => $.preview.dataCustodian)}
+                </h4>
                 {parseCustomMarkdownToReact(metadataItem.dataCustodian, {
                   catalogItem: metadataItem
                 })}

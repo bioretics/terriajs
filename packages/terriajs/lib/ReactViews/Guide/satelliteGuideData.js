@@ -1,33 +1,31 @@
+import satelliteLocation from "../../../wwwroot/images/guides/satellite-location.jpg";
+import satelliteStyles from "../../../wwwroot/images/guides/satellite-styles.jpg";
+import satelliteTime from "../../../wwwroot/images/guides/satellite-time.jpg";
+import satelliteZoom from "../../../wwwroot/images/guides/satellite-zoom.jpg";
+
 // Pass i18next.t from React component to re-render on language change
 function satelliteGuideData(t) {
   return [
-    // {
-    //   imageSrc: require("../../../wwwroot/images/guides/satellite-feature.jpg"),
-    //   title: t("satelliteGuidance.titleI"),
-    //   body: t("satelliteGuidance.bodyI"),
-    //   prevText: t("satelliteGuidance.prevI"),
-    //   nextText: t("satelliteGuidance.nextI")
-    // },
     {
-      imageSrc: require("../../../wwwroot/images/guides/satellite-zoom.jpg"),
-      title: t("satelliteGuidance.titleII"),
-      body: t("satelliteGuidance.bodyII"),
+      imageSrc: satelliteZoom,
+      title: t(($) => $.satelliteGuidance.titleII),
+      body: t(($) => $.satelliteGuidance.bodyII),
       hidePrev: true
     },
     {
-      imageSrc: require("../../../wwwroot/images/guides/satellite-time.jpg"),
-      title: t("satelliteGuidance.titleIII"),
-      body: t("satelliteGuidance.bodyIII")
+      imageSrc: satelliteTime,
+      title: t(($) => $.satelliteGuidance.titleIII),
+      body: t(($) => $.satelliteGuidance.bodyIII)
     },
     {
-      imageSrc: require("../../../wwwroot/images/guides/satellite-location.jpg"),
-      title: t("satelliteGuidance.titleIV"),
-      body: t("satelliteGuidance.bodyIV")
+      imageSrc: satelliteLocation,
+      title: t(($) => $.satelliteGuidance.titleIV),
+      body: t(($) => $.satelliteGuidance.bodyIV)
     },
     {
-      imageSrc: require("../../../wwwroot/images/guides/satellite-styles.jpg"),
-      title: t("satelliteGuidance.titleV"),
-      body: t("satelliteGuidance.bodyV"),
+      imageSrc: satelliteStyles,
+      title: t(($) => $.satelliteGuidance.titleV),
+      body: t(($) => $.satelliteGuidance.bodyV),
       hideNext: true
     }
   ];

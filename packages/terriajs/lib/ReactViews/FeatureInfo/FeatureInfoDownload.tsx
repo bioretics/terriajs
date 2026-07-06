@@ -1,5 +1,5 @@
+import { Component } from "react";
 import { TFunction } from "i18next";
-import React from "react";
 import { withTranslation } from "react-i18next";
 import DataUri from "../../Core/DataUri";
 import filterOutUndefined from "../../Core/filterOutUndefined";
@@ -10,7 +10,7 @@ import { withViewState } from "../Context";
 import Styles from "./feature-info-download.scss";
 import Dropdown from "../Generic/Dropdown";
 
-class FeatureInfoDownload extends React.Component<{
+class FeatureInfoDownload extends Component<{
   data: JsonObject;
   name: string;
   viewState: ViewState;
@@ -55,7 +55,7 @@ class FeatureInfoDownload extends React.Component<{
           icon: icon
         }}
       >
-        {t("featureInfo.download")}
+        {t(($) => $.featureInfo.download)}
       </Dropdown>
     );
   }

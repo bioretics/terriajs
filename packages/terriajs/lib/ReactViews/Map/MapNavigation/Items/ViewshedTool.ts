@@ -30,7 +30,7 @@ export class ViewshedTool extends MapNavigationItemController {
     this.terria = props.terria;
     this.userDrawing = new UserDrawingViewshed({
       terria: props.terria,
-      messageHeader: i18next.t("viewshed.messageHeader"),
+      messageHeader: i18next.t(($) => $.viewshed.messageHeader),
       numMaxPoints: 2,
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
       onCleanUp: this.onCleanUp.bind(this)
@@ -106,19 +106,19 @@ export class ViewshedTool extends MapNavigationItemController {
             <td>${
               distOrig && distInter
                 ? Math.abs(distOrig - distInter) < 0.01
-                  ? i18next.t("viewshed.resultOk")
-                  : i18next.t("viewshed.resultKo")
+                  ? i18next.t(($) => $.viewshed.resultOk)
+                  : i18next.t(($) => $.viewshed.resultKo)
                 : ""
             }</td>
           </tr>
           <tr/>
           <tr>
-            <td>${i18next.t("viewshed.distance")}</td>
+            <td>${i18next.t(($) => $.viewshed.distance)}</td>
             <td>${distOrig ? this.prettifyNumber(distOrig) : ""}</td>
           </tr>
           <tr/>
           <tr>
-            <td>${i18next.t("viewshed.distanceVisible")}</td>
+            <td>${i18next.t(($) => $.viewshed.distanceVisible)}</td>
             <td>${distInter ? this.prettifyNumber(distInter) : ""}</td>
           </tr>
         </tbody>

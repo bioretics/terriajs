@@ -4,46 +4,46 @@ Model dimensions can be used to define dropdown menus in the workbench that upda
 
 ## Basic example
 
-For example - this renders a new drop down called "Color" that changes the `colorPalette` trait - [test link](http://ci.terria.io/main/#clean&start={%22initSources%22%3A[{%22homeCamera%22%3A{%22north%22%3A-8%2C%22east%22%3A158%2C%22south%22%3A-45%2C%22west%22%3A109}%2C%22workbench%22%3A[%22test%22]%2C%22catalog%22%3A[{%22type%22%3A%22csv%22%2C%22url%22%3A%22test%2FNSW_LGA_NEXIS_201212.csv%22%2C%22name%22%3A%22NSWLGANEXIS2012%22%2C%22id%22%3A%22test%22%2C%22modelDimensions%22%3A[{%22id%22%3A%22cols%22%2C%22name%22%3A%22Color%22%2C%22selectedId%22%3A%22Red%22%2C%22options%22%3A[{%22id%22%3A%22Red%22%2C%22value%22%3A{%22defaultStyle%22%3A{%22color%22%3A{%22colorPalette%22%3A%22Reds%22}}}}%2C{%22id%22%3A%22Blue%22%2C%22value%22%3A{%22defaultStyle%22%3A{%22color%22%3A{%22colorPalette%22%3A%22Blues%22}}}}]}]}]}]})
+For example - this renders a new drop down called "Color" that changes the `colorPalette` trait - [test link](http://ci.terria.io/main/#clean&start={%22initSources%22%3A[{%22homeCamera%22%3A{%22north%22%3A-8%2C%22east%22%3A158%2C%22south%22%3A-45%2C%22west%22%3A109}%2C%22workbench%22%3A[%22test%22]%2C%22catalog%22%3A[{%22type%22%3A%22csv%22%2C%22url%22%3A%22build%2FTerriaJS%2Ftest%2Fcsv%2FLGA_2025_LGA_2025.csv%22%2C%22name%22%3A%22AustralianLGA2025%22%2C%22id%22%3A%22test%22%2C%22modelDimensions%22%3A[{%22id%22%3A%22cols%22%2C%22name%22%3A%22Color%22%2C%22selectedId%22%3A%22Red%22%2C%22options%22%3A[{%22id%22%3A%22Red%22%2C%22value%22%3A{%22defaultStyle%22%3A{%22color%22%3A{%22colorPalette%22%3A%22Reds%22}}}}%2C{%22id%22%3A%22Blue%22%2C%22value%22%3A{%22defaultStyle%22%3A{%22color%22%3A{%22colorPalette%22%3A%22Blues%22}}}}]}]}]}]})
 
 ```json
 {
-    "type": "csv",
-    "url": "test/NSW_LGA_NEXIS_201212.csv",
-    "name": "NSW LGA NEXIS 2012",
-    "modelDimensions": [
+  "type": "csv",
+  "url": "test/csv/LGA_2025_LGA_2025.csv",
+  "name": "Australian LGA 2025",
+  "modelDimensions": [
+    {
+      "id": "cols",
+      "name": "Color",
+      "selectedId": "Red",
+      "options": [
         {
-            "id": "cols",
-            "name": "Color",
-            "selectedId": "Red",
-            "options": [
-                {
-                    "id": "Red",
-                    "value": {
-                        "defaultStyle": {
-                            "color": {
-                                "colorPalette": "Reds"
-                            }
-                        }
-                    }
-                },
-                {
-                    "id": "Blue",
-                    "value": {
-                        "defaultStyle": {
-                            "color": {
-                                "colorPalette": "Blues"
-                            }
-                        }
-                    }
-                }
-            ]
+          "id": "Red",
+          "value": {
+            "defaultStyle": {
+              "color": {
+                "colorPalette": "Reds"
+              }
+            }
+          }
+        },
+        {
+          "id": "Blue",
+          "value": {
+            "defaultStyle": {
+              "color": {
+                "colorPalette": "Blues"
+              }
+            }
+          }
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 
-<img src="../img/model-dim.jpeg">
+![Model dimensions](./img/img-dim-2.png)
 
 ## Example with Mustache template
 
@@ -51,37 +51,37 @@ Model dimensions also supports the use of [Mustache templates](https://mustache.
 
 ```json
 {
-    "type": "csv",
-    "url": "test/NSW_LGA_NEXIS_201212.csv",
-    "name": "NSW LGA NEXIS 2012",
-    "modelDimensions": [
+  "type": "csv",
+  "url": "test/csv/LGA_2025_LGA_2025.csv",
+  "name": "Australian LGA 2025",
+  "modelDimensions": [
+    {
+      "id": "Cols",
+      "selectedId": "Red",
+      "options": [
         {
-            "id": "Cols",
-            "selectedId": "Red",
-            "options": [
-                {
-                    "id": "Red",
-                    "value": {
-                        "defaultStyle": {
-                            "color": {
-                                "colorPalette": "{{modelDimensions.0.selectedId}}"
-                            }
-                        }
-                    }
-                },
-                {
-                    "id": "Blue",
-                    "value": {
-                        "defaultStyle": {
-                            "color": {
-                                "colorPalette": "{{modelDimensions.0.selectedId}}"
-                            }
-                        }
-                    }
-                }
-            ]
+          "id": "Red",
+          "value": {
+            "defaultStyle": {
+              "color": {
+                "colorPalette": "{{modelDimensions.0.selectedId}}"
+              }
+            }
+          }
+        },
+        {
+          "id": "Blue",
+          "value": {
+            "defaultStyle": {
+              "color": {
+                "colorPalette": "{{modelDimensions.0.selectedId}}"
+              }
+            }
+          }
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 

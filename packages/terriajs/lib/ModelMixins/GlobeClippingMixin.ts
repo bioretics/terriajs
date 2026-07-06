@@ -48,11 +48,11 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               options: [
                 {
                   id: "true",
-                  name: `${i18next.t("models.globeClipping.enableMessage")}`
+                  name: i18next.t(($) => $.models.globeClipping.enableMessage)
                 },
                 {
                   id: "false",
-                  name: i18next.t("models.globeClipping.enableMessage")
+                  name: i18next.t(($) => $.models.globeClipping.enableMessage)
                 }
               ],
               setDimensionValue: action((stratumId, value) => {

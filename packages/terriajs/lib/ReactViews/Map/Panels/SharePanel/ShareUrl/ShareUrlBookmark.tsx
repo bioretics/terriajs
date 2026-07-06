@@ -1,4 +1,4 @@
-import React, { FC } from "react";
+import { FC } from "react";
 import { useTranslation } from "react-i18next";
 
 import ViewState from "../../../../../ReactViewModels/ViewState";
@@ -25,7 +25,7 @@ export const ShareUrlBookmark: FC<IShareUrlBookmarkProps> = ({ viewState }) => {
         viewState.openHelpPanelItemFromSharePanel(evt, bookMarkHelpItemName)
       }
     >
-      {t("share.getShareSaveHelpMessage")}
+      {t(($) => $.share.getShareSaveHelpMessage)}
     </Text>
   ) : null;
 };

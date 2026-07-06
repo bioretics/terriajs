@@ -1,6 +1,5 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
-import styled, { useTheme } from "styled-components";
+import styled from "styled-components";
 import { constVoid } from "../../../Core/types";
 import Box from "../../../Styled/Box";
 import { RawButton } from "../../../Styled/Button";
@@ -44,7 +43,6 @@ const FooterBar = ({
 }: FooterBarProps) => {
   const isEnd = currentHumanIndex === totalStories;
   const { t } = useTranslation();
-  const theme = useTheme();
 
   return (
     <>
@@ -54,21 +52,20 @@ const FooterBar = ({
             <StoryIcon
               displayInline
               styledWidth="15px"
-              fillColor={theme.grey}
+              fillColor={"white"}
               glyph={Icon.GLYPHS.left}
             />
-            <Text medium>{t("story.prev")}</Text>
+            <Text medium>{t(($) => $.story.prev)}</Text>
           </NavigationButton>
         )}
       </Box>
-
       <Box flex={1} centered>
         <FooterButton onClick={listStories}>
           <StoryIcon
             displayInline
             styledWidth="15px"
             glyph={Icon.GLYPHS.menu}
-            fillColor={theme.grey}
+            fillColor={"white"}
           />
         </FooterButton>
         <Box paddedRatio={3}>
@@ -77,7 +74,7 @@ const FooterBar = ({
           </Text>
         </Box>
 
-        <FooterButton onClick={zoomTo} title={t("story.locationBtn")}>
+        <FooterButton onClick={zoomTo} title={t(($) => $.story.locationBtn)}>
           <StoryIcon styledWidth={"16px"} glyph={Icon.GLYPHS.location} />
         </FooterButton>
       </Box>
@@ -91,22 +88,22 @@ const FooterBar = ({
           >
             {isEnd ? (
               <>
-                <Text>{t("story.restart")}</Text>
+                <Text>{t(($) => $.story.restart)}</Text>
                 <StoryIcon
                   displayInline
                   styledWidth="15px"
                   glyph={Icon.GLYPHS.revert}
-                  fillColor={theme.grey}
+                  fillColor={"white"}
                 />
               </>
             ) : (
               <>
-                <Text medium>{t("story.next")}</Text>
+                <Text medium>{t(($) => $.story.next)}</Text>
                 <StoryIcon
                   displayInline
                   styledWidth="15px"
                   glyph={Icon.GLYPHS.right}
-                  fillColor={theme.grey}
+                  fillColor={"white"}
                 />
               </>
             )}

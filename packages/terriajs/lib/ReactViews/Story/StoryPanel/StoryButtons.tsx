@@ -1,4 +1,3 @@
-import React from "react";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import { RawButton } from "../../../Styled/Button";
@@ -15,11 +14,17 @@ export const CollapseBtn = ({
   const { t } = useTranslation();
   return (
     <RawButton
-      title={isCollapsed ? t("story.expand") : t("story.collapse")}
+      title={
+        isCollapsed ? t(($) => $.story.expand) : t(($) => $.story.collapse)
+      }
       onClick={onClick}
     >
       {isCollapsed ? (
-        <StoryIcon styledWidth={"20px"} glyph={Icon.GLYPHS.info} />
+        <StoryIcon
+          styledWidth={"12px"}
+          glyph={Icon.GLYPHS.arrowDown}
+          rotation={180}
+        />
       ) : (
         <StoryIcon styledWidth={"12px"} glyph={Icon.GLYPHS.arrowDown} />
       )}
@@ -31,13 +36,13 @@ export const ExitBtn = ({ onClick }: BtnProp) => {
   const { t } = useTranslation();
   const theme = useTheme();
   return (
-    <RawButton onClick={onClick} title={t("story.exitBtn")}>
+    <RawButton onClick={onClick} title={t(($) => $.story.exitBtn)}>
       <StoryIcon
         styledWidth={"12px"}
         glyph={Icon.GLYPHS.close}
         css={`
           border-radius: 50%;
-          border: 2px solid ${theme.textDark};
+          border: 2px solid white;
           padding: 2px;
           &:hover {
             border-color: ${theme.colorPrimary};
@@ -48,8 +53,8 @@ export const ExitBtn = ({ onClick }: BtnProp) => {
   );
 };
 
-export const StoryIcon = styled(StyledIcon).attrs((props) => ({
-  fillColor: props.theme.textDark,
+export const StoryIcon = styled(StyledIcon).attrs(() => ({
+  fillColor: "white",
   opacity: 0.5
 }))`
   &:hover {
