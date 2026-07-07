@@ -7,6 +7,7 @@
       "moreThanMax": "Sono state trovate più di {{maximum}} {{catalogItemName}} caratteristiche."
     },
     "download": "Scarica la tabella",
+    "downloadGeometry": "Scarica la geometria",
     "locationMarker": "Posizione del marker",
     "siteData": "Posizione Dati",
     "latLon": "Lat / Lon ",

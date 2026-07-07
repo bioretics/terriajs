@@ -30,6 +30,7 @@ import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
 import { WithViewState, withViewState } from "../Context";
 import Styles from "./feature-info-section.scss";
 import FeatureInfoDownload from "./FeatureInfoDownload";
+import FeatureInfoGeometryDownload from "./FeatureInfoGeometryDownload";
 import { generateCesiumInfoHTMLFromProperties } from "./generateCesiumInfoHTMLFromProperties";
 import getFeatureProperties from "./getFeatureProperties";
 import {
@@ -79,7 +80,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
    * - A CsvChartCustomComponent will create a new CsvCatalogItem and set traits
    * See `rawDataReactNode` for rendered raw data
    */
-  @observable private templatedFeatureInfoReactNode:
+  @observable.ref private templatedFeatureInfoReactNode:
     | React.ReactNode
     | undefined = undefined;
 
@@ -567,6 +568,12 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                       key="download"
                       data={this.downloadableData.data}
                       name={this.downloadableData.fileName}
+                    />
+                    <FeatureInfoGeometryDownload
+                      key="download-geometry"
+                      name={this.downloadableData.fileName}
+                      feature={this.props.feature}
+                      catalogItem={this.props.catalogItem}
                     />
                     <br />
                     <br />
