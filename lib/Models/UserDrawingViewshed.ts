@@ -26,6 +26,13 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import Ray from "terriajs-cesium/Source/Core/Ray";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import EllipsoidTerrainProvider from "terriajs-cesium/Source/Core/EllipsoidTerrainProvider";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
+import ImageryLayer from "terriajs-cesium/Source/Scene/ImageryLayer";
+import SingleTileImageryProvider from "terriajs-cesium/Source/Scene/SingleTileImageryProvider";
 
 interface Options {
   terria: Terria;
@@ -58,8 +65,15 @@ export default class UserDrawingViewshed extends MappableMixin(
   private inDrawMode: boolean;
   private disposePickedFeatureSubscription?: () => void;
   private disposeViewshedHeight?: () => void;
+  private disposeAreaMode?: IReactionDisposer;
+  private disposeAreaParams?: IReactionDisposer;
 
   private mouseMoveDispose?: IReactionDisposer;
+
+  private areaImageryLayer?: ImageryLayer;
+  private areaComputationId = 0;
+  private areaRecomputeTimer?: ReturnType<typeof setTimeout>;
+  private lastAreaComputeKey?: string;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -109,6 +123,9 @@ export default class UserDrawingViewshed extends MappableMixin(
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, () => {
       this.computeLineOfSight();
+      if (this.terria.viewshedAreaMode) {
+        this.scheduleAreaViewshed();
+      }
       this.prepareToAddNewPoint();
     });
 
@@ -116,6 +133,32 @@ export default class UserDrawingViewshed extends MappableMixin(
       () => this.terria.viewshedDistances?.[1],
       () => {
         this.addMapInteractionMode();
+      }
+    );
+
+    this.disposeAreaMode = reaction(
+      () => this.terria.viewshedAreaMode,
+      (areaMode) => {
+        if (!this.inDrawMode) return;
+        if (areaMode) {
+          this.scheduleAreaViewshed();
+        } else {
+          this.cancelAreaViewshed();
+        }
+      }
+    );
+
+    this.disposeAreaParams = reaction(
+      () =>
+        [
+          this.terria.viewshedAreaRadius,
+          this.terria.viewshedObserverHeight,
+          this.terria.viewshedTargetHeight
+        ] as const,
+      () => {
+        if (this.inDrawMode && this.terria.viewshedAreaMode) {
+          this.scheduleAreaViewshed();
+        }
       }
     );
   }
@@ -268,6 +311,9 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.dragHelper.updateDraggableObjects(this.pointEntities);
 
     this.computeLineOfSight();
+    if (this.terria.viewshedAreaMode) {
+      this.scheduleAreaViewshed();
+    }
   }
 
   endDrawing() {
@@ -329,7 +375,7 @@ export default class UserDrawingViewshed extends MappableMixin(
               this.dragHelper.getDragCount() < 10 &&
               !this.clickedExistingPoint(pickedFeatures.features) &&
               (this.numMaxPoints === undefined ||
-                this.pointEntities.entities.values.length !== this.numMaxPoints)
+                this.pointEntities.entities.values.length < this.numMaxPoints)
             ) {
               // No existing point was picked, so add a new point
               this.addPointToPointEntities("Target", pickedPoint, false);
@@ -389,6 +435,7 @@ export default class UserDrawingViewshed extends MappableMixin(
    * User has finished or cancelled; restore initial state.
    */
   cleanUp() {
+    this.cancelAreaViewshed();
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
     this.otherEntities.entities.removeAll();
@@ -453,6 +500,158 @@ export default class UserDrawingViewshed extends MappableMixin(
         ? i18next.t("models.userDrawing.btnDone")
         : i18next.t("models.userDrawing.btnCancel")
     );
+  }
+
+  scheduleAreaViewshed() {
+    if (this.areaRecomputeTimer) clearTimeout(this.areaRecomputeTimer);
+    this.areaRecomputeTimer = setTimeout(() => {
+      this.computeAreaViewshed();
+    }, 300);
+  }
+
+  cancelAreaViewshed() {
+    if (this.areaRecomputeTimer) clearTimeout(this.areaRecomputeTimer);
+    this.areaComputationId++;
+    this.lastAreaComputeKey = undefined;
+    this.removeAreaLayer();
+    runInAction(() => {
+      this.terria.viewshedAreaComputing = false;
+    });
+  }
+
+  private removeAreaLayer() {
+    if (this.areaImageryLayer && this.terria.cesium) {
+      this.terria.cesium.scene.imageryLayers.remove(
+        this.areaImageryLayer,
+        true
+      );
+      this.areaImageryLayer = undefined;
+      this.terria.currentViewer.notifyRepaintRequired();
+    }
+  }
+
+  private getObserverCartographic(): Cartographic | undefined {
+    const entity = this.pointEntities.entities.values[0];
+    const position = entity?.position?.getValue(
+      this.terria.timelineClock.currentTime
+    );
+    return position ? Cartographic.fromCartesian(position) : undefined;
+  }
+
+  async computeAreaViewshed() {
+    const cesium = this.terria.cesium;
+    if (!cesium) return;
+    const observer = this.getObserverCartographic();
+    if (!observer) return;
+
+    const computeKey = [
+      observer.longitude,
+      observer.latitude,
+      this.terria.viewshedAreaRadius,
+      this.terria.viewshedObserverHeight,
+      this.terria.viewshedTargetHeight
+    ].join(",");
+    if (this.areaImageryLayer && computeKey === this.lastAreaComputeKey) {
+      return;
+    }
+
+    const computationId = ++this.areaComputationId;
+    runInAction(() => {
+      this.terria.viewshedAreaComputing = true;
+    });
+
+    try {
+      const radius = Math.max(100, this.terria.viewshedAreaRadius || 0);
+      const gridSize = 101;
+      const half = (gridSize - 1) / 2;
+      const cellSize = (2 * radius) / (gridSize - 1); // metres
+
+      const earthRadius = Ellipsoid.WGS84.maximumRadius;
+      const deltaLat = radius / earthRadius;
+      const deltaLon =
+        radius / (earthRadius * Math.max(0.01, Math.cos(observer.latitude)));
+      const north = Math.min(
+        observer.latitude + deltaLat,
+        CesiumMath.PI_OVER_TWO
+      );
+      const south = Math.max(
+        observer.latitude - deltaLat,
+        -CesiumMath.PI_OVER_TWO
+      );
+      const west = observer.longitude - deltaLon;
+      const east = observer.longitude + deltaLon;
+
+      const positions: Cartographic[] = [];
+      for (let row = 0; row < gridSize; row++) {
+        const lat = north - ((north - south) * row) / (gridSize - 1);
+        for (let col = 0; col < gridSize; col++) {
+          const lon = west + ((east - west) * col) / (gridSize - 1);
+          positions.push(new Cartographic(lon, lat, 0));
+        }
+      }
+
+      const terrainProvider = cesium.scene.terrainProvider;
+      if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
+        await sampleTerrainMostDetailed(terrainProvider, positions);
+      }
+      if (computationId !== this.areaComputationId) return;
+
+      const heights = positions.map((p) => p.height || 0);
+      const observerHeight =
+        heights[half * gridSize + half] + this.terria.viewshedObserverHeight;
+
+      const visible = computeViewshedVisibilityGrid({
+        heights,
+        gridSize,
+        cellSize,
+        radius,
+        observerHeight,
+        targetHeight: this.terria.viewshedTargetHeight,
+        earthRadius
+      });
+
+      const maskCanvas = document.createElement("canvas");
+      maskCanvas.width = gridSize;
+      maskCanvas.height = gridSize;
+      const maskContext = maskCanvas.getContext("2d")!;
+      const imageData = maskContext.createImageData(gridSize, gridSize);
+      for (let i = 0; i < visible.length; i++) {
+        if (visible[i] === 1) {
+          imageData.data[i * 4] = 0;
+          imageData.data[i * 4 + 1] = 200;
+          imageData.data[i * 4 + 2] = 255;
+          imageData.data[i * 4 + 3] = 140;
+        }
+      }
+      maskContext.putImageData(imageData, 0, 0);
+
+      const outputCanvas = document.createElement("canvas");
+      outputCanvas.width = 512;
+      outputCanvas.height = 512;
+      const outputContext = outputCanvas.getContext("2d")!;
+      outputContext.imageSmoothingEnabled = true;
+      outputContext.drawImage(maskCanvas, 0, 0, 512, 512);
+
+      const provider = await SingleTileImageryProvider.fromUrl(
+        outputCanvas.toDataURL("image/png"),
+        { rectangle: new Rectangle(west, south, east, north) }
+      );
+      if (computationId !== this.areaComputationId) return;
+
+      this.removeAreaLayer();
+      this.areaImageryLayer =
+        cesium.scene.imageryLayers.addImageryProvider(provider);
+      this.lastAreaComputeKey = computeKey;
+      this.terria.currentViewer.notifyRepaintRequired();
+    } catch (error) {
+      console.error("Unable to compute the visible-area viewshed:", error);
+    } finally {
+      if (computationId === this.areaComputationId) {
+        runInAction(() => {
+          this.terria.viewshedAreaComputing = false;
+        });
+      }
+    }
   }
 
   computeLineOfSight() {
@@ -526,4 +725,80 @@ export default class UserDrawingViewshed extends MappableMixin(
     ];
     this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
   }
+}
+
+interface ViewshedGridParameters {
+  heights: number[];
+  gridSize: number;
+  cellSize: number;
+  radius: number;
+  observerHeight: number;
+  targetHeight: number;
+  earthRadius: number;
+}
+
+export function computeViewshedVisibilityGrid(
+  params: ViewshedGridParameters
+): Uint8Array {
+  const {
+    heights,
+    gridSize,
+    cellSize,
+    radius,
+    observerHeight,
+    targetHeight,
+    earthRadius
+  } = params;
+  const half = (gridSize - 1) / 2;
+  const curvatureFactor = (1 - 0.13) / (2 * earthRadius);
+
+  const heightAt = (x: number, y: number) => {
+    const x0 = Math.min(Math.floor(x), gridSize - 2);
+    const y0 = Math.min(Math.floor(y), gridSize - 2);
+    const fx = x - x0;
+    const fy = y - y0;
+    const h00 = heights[y0 * gridSize + x0];
+    const h10 = heights[y0 * gridSize + x0 + 1];
+    const h01 = heights[(y0 + 1) * gridSize + x0];
+    const h11 = heights[(y0 + 1) * gridSize + x0 + 1];
+    return (
+      h00 * (1 - fx) * (1 - fy) +
+      h10 * fx * (1 - fy) +
+      h01 * (1 - fx) * fy +
+      h11 * fx * fy
+    );
+  };
+
+  const visible = new Uint8Array(gridSize * gridSize);
+  visible[half * gridSize + half] = 1;
+
+  const castRay = (boundaryX: number, boundaryY: number) => {
+    const dx = boundaryX - half;
+    const dy = boundaryY - half;
+    const steps = Math.max(Math.abs(dx), Math.abs(dy));
+    if (steps === 0) return;
+    let maxTan = -Infinity;
+    for (let s = 1; s <= steps; s++) {
+      const x = half + (dx * s) / steps;
+      const y = half + (dy * s) / steps;
+      const distance = Math.hypot((x - half) * cellSize, (y - half) * cellSize);
+      if (distance > radius) break;
+      const height = heightAt(x, y) - distance * distance * curvatureFactor;
+      const tanToTarget = (height + targetHeight - observerHeight) / distance;
+      if (tanToTarget >= maxTan) {
+        visible[Math.round(y) * gridSize + Math.round(x)] = 1;
+      }
+      const tanToSurface = (height - observerHeight) / distance;
+      if (tanToSurface > maxTan) maxTan = tanToSurface;
+    }
+  };
+
+  for (let i = 0; i < gridSize; i++) {
+    castRay(i, 0);
+    castRay(i, gridSize - 1);
+    castRay(0, i);
+    castRay(gridSize - 1, i);
+  }
+
+  return visible;
 }

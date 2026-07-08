@@ -814,6 +814,24 @@ export default class Terria {
   @observable viewshedDistances?: (number | undefined)[];
 
   /**
+   * Gets or sets whether the viewshed tool works in "visible area" mode,
+   * coloring all terrain visible from the observer, instead of the single
+   * observer-target line of sight.
+   */
+  @observable viewshedAreaMode: boolean = false;
+
+  /**
+   * Gets or sets the radius (in metres) of the visible-area viewshed analysis
+   * around the observer.
+   */
+  @observable viewshedAreaRadius: number = 5000;
+
+  /**
+   * Whether a visible-area viewshed computation is currently running.
+   */
+  @observable viewshedAreaComputing: boolean = false;
+
+  /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
    * (highest index) handles click interactions with the map
    */

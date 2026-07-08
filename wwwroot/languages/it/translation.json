@@ -67,7 +67,12 @@
     "observerHeightInput": "Altezza dell'osservatore rispetto al suolo in metri (punto arancione)",
     "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
     "targetHeightInput": "Altezza del bersaglio<br/>rispetto al suolo in metri<br/>(punto viola)",
-    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)"
+    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)",
+    "areaCheckbox": "Mostra l'area visibile dall'osservatore",
+    "areaCheckboxTitle": "Colora il terreno visibile dall'osservatore entro il raggio di analisi",
+    "radiusInput": "Raggio di analisi in metri",
+    "radiusInputTitle": "Raggio dell'area analizzata attorno all'osservatore (m)",
+    "computing": "Calcolo dell'area visibile in corso…"
   },
   "measure": {
     "measureTool": "Apri strumento di misura",
