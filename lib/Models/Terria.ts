@@ -821,8 +821,8 @@ export default class Terria {
   @observable viewshedAreaMode: boolean = false;
 
   /**
-   * Gets or sets the radius (in metres) of the visible-area viewshed analysis
-   * around the observer.
+   * Gets or sets the size (in metres) of the visible-area viewshed analysis
+   * rectangle: the distance from the observer to each side of the rectangle.
    */
   @observable viewshedAreaRadius: number = 5000;
 

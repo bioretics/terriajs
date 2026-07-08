@@ -6,6 +6,7 @@ import {
   reaction,
   runInAction
 } from "mobx";
+
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
@@ -67,6 +68,8 @@ export default class UserDrawingViewshed extends MappableMixin(
   private disposeViewshedHeight?: () => void;
   private disposeAreaMode?: IReactionDisposer;
   private disposeAreaParams?: IReactionDisposer;
+  /** ID of the rectangle-border polyline entity of the visible-area overlay */
+  private areaBorderEntityId?: string;
 
   private mouseMoveDispose?: IReactionDisposer;
 
@@ -520,6 +523,10 @@ export default class UserDrawingViewshed extends MappableMixin(
   }
 
   private removeAreaLayer() {
+    if (this.areaBorderEntityId) {
+      this.otherEntities.entities.removeById(this.areaBorderEntityId);
+      this.areaBorderEntityId = undefined;
+    }
     if (this.areaImageryLayer && this.terria.cesium) {
       this.terria.cesium.scene.imageryLayers.remove(
         this.areaImageryLayer,
@@ -604,7 +611,6 @@ export default class UserDrawingViewshed extends MappableMixin(
         heights,
         gridSize,
         cellSize,
-        radius,
         observerHeight,
         targetHeight: this.terria.viewshedTargetHeight,
         earthRadius
@@ -641,6 +647,29 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.removeAreaLayer();
       this.areaImageryLayer =
         cesium.scene.imageryLayers.addImageryProvider(provider);
+
+      // Rectangle border outline, so the analysed extent is always visible
+      const corners = [
+        Cartesian3.fromRadians(west, north),
+        Cartesian3.fromRadians(east, north),
+        Cartesian3.fromRadians(east, south),
+        Cartesian3.fromRadians(west, south),
+        Cartesian3.fromRadians(west, north)
+      ];
+      const borderEntity = this.otherEntities.entities.add({
+        name: "Viewshed area border",
+        polyline: {
+          positions: corners,
+          material: new PolylineGlowMaterialProperty({
+            color: new Color(0.0, 0.78, 1.0, 0.9),
+            glowPower: 0.2
+          }),
+          width: 3,
+          clampToGround: true
+        }
+      });
+      this.areaBorderEntityId = borderEntity.id;
+
       this.lastAreaComputeKey = computeKey;
       this.terria.currentViewer.notifyRepaintRequired();
     } catch (error) {
@@ -718,12 +747,12 @@ export default class UserDrawingViewshed extends MappableMixin(
         distOrig,
         useInter ? distInter : distOrig
       ];
+      this.visibleLinePoints = [
+        pos0Updated,
+        useInter ? intersection! : pos1Updated
+      ];
+      this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
     });
-    this.visibleLinePoints = [
-      pos0Updated,
-      useInter ? intersection! : pos1Updated
-    ];
-    this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
   }
 }
 
@@ -731,7 +760,6 @@ interface ViewshedGridParameters {
   heights: number[];
   gridSize: number;
   cellSize: number;
-  radius: number;
   observerHeight: number;
   targetHeight: number;
   earthRadius: number;
@@ -744,7 +772,6 @@ export function computeViewshedVisibilityGrid(
     heights,
     gridSize,
     cellSize,
-    radius,
     observerHeight,
     targetHeight,
     earthRadius
@@ -782,7 +809,6 @@ export function computeViewshedVisibilityGrid(
       const x = half + (dx * s) / steps;
       const y = half + (dy * s) / steps;
       const distance = Math.hypot((x - half) * cellSize, (y - half) * cellSize);
-      if (distance > radius) break;
       const height = heightAt(x, y) - distance * distance * curvatureFactor;
       const tanToTarget = (height + targetHeight - observerHeight) / distance;
       if (tanToTarget >= maxTan) {

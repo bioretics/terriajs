@@ -66,9 +66,9 @@
     "targetHeightInput": "Target height above ground in meters (the purple point)",
     "targetHeightInputTitle": "Height of target above ground (m)",
     "areaCheckbox": "Show the area visible from the observer",
-    "areaCheckboxTitle": "Colours the terrain visible from the observer within the analysis radius",
-    "radiusInput": "Analysis radius in meters",
-    "radiusInputTitle": "Radius of the analysed area around the observer (m)",
+    "areaCheckboxTitle": "Colours the terrain visible from the observer within the analysis rectangle",
+    "radiusInput": "Size of the analysis rectangle in meters",
+    "radiusInputTitle": "Distance from the observer to the sides of the analysis rectangle (m)",
     "computing": "Computing visible area…"
   },
   "measure": {
