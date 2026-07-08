@@ -29,8 +29,8 @@ const PrintCompassContainer = styled.div<{ $size: number }>`
 
 const CompassRing = styled.div`
   position: absolute;
-  top: 5px;
-  left: 5px;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 `;
