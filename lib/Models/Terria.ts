@@ -814,6 +814,11 @@ export default class Terria {
   @observable viewshedDistances?: (number | undefined)[];
 
   /**
+   * Whether to highlight the visible area in the viewshed with a green corridor.
+   */
+  @observable viewshedHighlightVisible: boolean = false;
+
+  /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
    * (highest index) handles click interactions with the map
    */

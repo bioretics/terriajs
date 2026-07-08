@@ -64,7 +64,8 @@
     "observerHeightInput": "Observer height above ground in meters (the orange point)",
     "observerHeightInputTitle": "Height of observer above ground (m)",
     "targetHeightInput": "Target height above ground in meters (the purple point)",
-    "targetHeightInputTitle": "Height of target above ground (m)"
+    "targetHeightInputTitle": "Height of target above ground (m)",
+    "highlightVisible": "Highlight visible area"
   },
   "measure": {
     "measurePointTool": "Measure Point Tool",

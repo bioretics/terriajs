@@ -6,6 +6,7 @@ import {
   reaction,
   runInAction
 } from "mobx";
+
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
@@ -26,6 +27,7 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import Ray from "terriajs-cesium/Source/Core/Ray";
+import Material from "terriajs-cesium/Source/Scene/Material";
 
 interface Options {
   terria: Terria;
@@ -58,6 +60,15 @@ export default class UserDrawingViewshed extends MappableMixin(
   private inDrawMode: boolean;
   private disposePickedFeatureSubscription?: () => void;
   private disposeViewshedHeight?: () => void;
+  private disposeHighlightReaction?: IReactionDisposer;
+  /** The globe material that was active before we set our highlight; restored on cleanUp. */
+  private previousGlobeMaterial?: any;
+  /** ID of the rectangle-border polyline entity, so we can remove it on rebuild/cleanup. */
+  private rectBorderEntityId?: string;
+  /** Trailing cooldown timer so rapid computeLineOfSight calls don't rebuild at 60 fps. */
+  private _rebuildCooldown?: ReturnType<typeof setTimeout>;
+  /** Timestamp of the last rebuild, used to skip rebuilds when pts haven't changed. */
+  private _lastRebuildKey = "";
 
   private mouseMoveDispose?: IReactionDisposer;
 
@@ -224,6 +235,24 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     });
 
+    // Visible-area highlight: a GroundPrimitive with createElevationBandMaterial (same as
+    // ColorPanel), rebuilt reactively whenever the viewshed points or toggle changes.
+    // The material paints terrain GREEN only above the observer's ground elevation,
+    // and only within the rectangle bounded by the observer and the obstruction point.
+    this.disposeHighlightReaction = reaction(
+      () => this.terria.viewshedHighlightVisible,
+      (on) => {
+        // When toggling off, clear immediately.
+        // When toggling on, trigger a rebuild with the current points.
+        if (!on) {
+          this.rebuildHighlightPrimitive([], false);
+        } else {
+          this.triggerHighlightRebuild();
+        }
+      },
+      { fireImmediately: true }
+    );
+
     this.terria.overlays.add(this);
 
     // Listen for user clicks on map
@@ -386,6 +415,275 @@ export default class UserDrawingViewshed extends MappableMixin(
   }
 
   /**
+   * Schedules a highlight rebuild using a trailing 200ms cooldown.
+   * Called directly from computeLineOfSight so the material updates whenever
+   * the points change (drag, click, etc.) without flooding at 60 fps.
+   */
+  private triggerHighlightRebuild() {
+    if (!this.terria.viewshedHighlightVisible) return;
+
+    // Build a key from current point positions. Skip rebuild if nothing moved.
+    const pts = this.visibleLinePoints;
+    const key = pts
+      .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`)
+      .join("|");
+    if (key === this._lastRebuildKey && key !== "") return; // unchanged
+
+    // Cancel any pending cooldown and schedule a new one
+    if (this._rebuildCooldown) clearTimeout(this._rebuildCooldown);
+    this._rebuildCooldown = setTimeout(() => {
+      this._rebuildCooldown = undefined;
+      const current = this.visibleLinePoints;
+      const currentKey = current
+        .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`)
+        .join("|");
+      this._lastRebuildKey = currentKey;
+      this.rebuildHighlightPrimitive(current, true);
+    }, 200);
+  }
+
+  /**
+   * Applies (or removes) the viewshed visible-area highlight.
+   *
+   * Behaviour:
+   *  - Starts green at the observer and expands forward until blocked by terrain
+   *    that rises above the observer's ground elevation ("altitude walls").
+   *  - Uses scene.globe.getHeight() to sample 64 angular rays × 64 steps,
+   *    baking blocker distances as GLSL float constants (avoids Cesium's
+   *    uniform auto-renaming breaking dynamic lookup).
+   *  - Draws a green rectangle border outline so the area is always visible.
+   */
+  private rebuildHighlightPrimitive(pts: Cartesian3[], on: boolean) {
+    const scene = this.terria.cesium?.scene;
+    if (!scene) return;
+
+    // --- Always restore previous globe material first ---
+    if (this.previousGlobeMaterial !== undefined) {
+      scene.globe.material = this.previousGlobeMaterial;
+      this.previousGlobeMaterial = undefined;
+    }
+
+    // --- Remove previous rectangle border entity ---
+    if (this.rectBorderEntityId) {
+      this.otherEntities.entities.removeById(this.rectBorderEntityId);
+      this.rectBorderEntityId = undefined;
+    }
+
+    if (!on || pts.length < 2) return;
+
+    const observer = pts[0];
+    const obstruction = pts[1];
+
+    // --- Compute rectangle geometry ---
+    const rawDir = Cartesian3.subtract(obstruction, observer, new Cartesian3());
+    const dist = Cartesian3.magnitude(rawDir);
+    if (dist < 1) return;
+    const direction = Cartesian3.normalize(rawDir, new Cartesian3());
+
+    const up = Cartesian3.normalize(observer, new Cartesian3());
+    const right = Cartesian3.normalize(
+      Cartesian3.cross(direction, up, new Cartesian3()),
+      new Cartesian3()
+    );
+    const halfWidth = dist;
+
+    // Observer ground elevation (strips the observer-height offset)
+    const observerCarto = Cartographic.fromCartesian(observer);
+    const observerGroundHeight =
+      observerCarto.height - this.terria.viewshedObserverHeight;
+
+    // --- Fan-based shadow sampling (90° per side, 64 rays) ---
+    //
+    // For each ray we step outward from the observer and record the first
+    // forward distance where terrain >= observerGroundHeight (the "wall").
+    // Blocker distances are stored as plain vec4 uniforms (4 values per vec4,
+    // 16 uniforms = 64 values total) — avoids all texture/image loading complexity.
+    const N_RAYS = 64;
+    const N_STEPS = 64;
+    // maxHalfAngle = atan2(halfWidth, dist) = 45° for the square rectangle.
+    // Rays span exactly the angular range of the rectangle's far corners as seen
+    // from the observer, giving the correct fan/triangular shape.
+    const maxHalfAngle = Math.atan2(halfWidth, dist); // ≈ π/4 for square rect
+    const maxRayDist = Math.sqrt(dist * dist + halfWidth * halfWidth); // rect diagonal
+    const blockers = new Float32Array(N_RAYS).fill(maxRayDist);
+
+    for (let ri = 0; ri < N_RAYS; ri++) {
+      const angle = (ri / (N_RAYS - 1) - 0.5) * 2.0 * maxHalfAngle;
+      const cosA = Math.cos(angle);
+      const sinA = Math.sin(angle);
+      const rdx = cosA * direction.x + sinA * right.x;
+      const rdy = cosA * direction.y + sinA * right.y;
+      const rdz = cosA * direction.z + sinA * right.z;
+
+      for (let si = 1; si <= N_STEPS; si++) {
+        const d = (si / N_STEPS) * maxRayDist;
+        const terrainH = scene.globe.getHeight(
+          Cartographic.fromCartesian(
+            new Cartesian3(
+              observer.x + rdx * d,
+              observer.y + rdy * d,
+              observer.z + rdz * d
+            )
+          )
+        );
+        if (terrainH !== undefined && terrainH >= observerGroundHeight) {
+          blockers[ri] = d;
+          break;
+        }
+      }
+    }
+
+    // --- Bake blocker distances as GLSL constants ---
+    // Cesium's Material renames every uniform (u_b0 → u_b0_0, etc.) which breaks
+    // any dynamic lookup function that uses the original name. We sidestep this
+    // entirely by emitting the 64 blocker distances directly into the shader source
+    // as a const float array — zero uniforms, zero renaming problems.
+    const glslBlockers = Array.from(blockers)
+      .map((v) => v.toFixed(4))
+      .join(", ");
+
+    // --- Custom Fabric GLSL globe material ---
+    // Only simple scalar/vector uniforms are declared here — these are referenced
+    // once each in the GLSL, so Cesium's rename (u_minHeight → u_minHeight_0) is
+    // handled correctly by the replaceToken pass in Material.js.
+    let material: any;
+    try {
+      material = new Material({
+        fabric: {
+          uniforms: {
+            u_minHeight: observerGroundHeight,
+            u_observerWC: new Cartesian3(observer.x, observer.y, observer.z),
+            u_forward: new Cartesian3(direction.x, direction.y, direction.z),
+            u_right: new Cartesian3(right.x, right.y, right.z),
+            u_dist: dist,
+            u_maxHalfAngle: maxHalfAngle,
+            u_maxRayDist: maxRayDist,
+            u_color: new Color(0.0, 1.0, 0.2, 0.45)
+          },
+          source: `
+            // Blocker distances baked as constants — no Cesium uniform renaming issues.
+            const int   N_RAYS   = ${N_RAYS};
+            const float blockers[${N_RAYS}] = float[${N_RAYS}](${glslBlockers});
+
+            czm_material czm_getMaterial(czm_materialInput materialInput) {
+              czm_material material = czm_getDefaultMaterial(materialInput);
+
+              // Fragment ECEF world position.
+              vec4 fragEC = vec4(-materialInput.positionToEyeEC, 1.0);
+              vec3 fragWC  = (czm_inverseView * fragEC).xyz;
+
+              // Project onto observer forward / right axes.
+              vec3  rel = fragWC - u_observerWC;
+              float fwd = dot(u_forward, rel);
+              float lat = dot(u_right,   rel);
+
+              // Fan spatial check: triangle from observer.
+              // At fwd=0 → zero width.  At fwd=u_dist → full rectangle width.
+              float angle  = atan(lat, fwd);
+              float inFan  = step(0.0, fwd)
+                           * step(fwd, u_dist)
+                           * step(-u_maxHalfAngle, angle)
+                           * step(angle, u_maxHalfAngle);
+
+              // Elevation wall: terrain above observer ground level → transparent.
+              float notWall = step(materialInput.height, u_minHeight);
+
+              // Shadow: map angle → ray index → baked blocker distance.
+              float angFrac  = (angle + u_maxHalfAngle) / (2.0 * u_maxHalfAngle);
+              int   rayIdx   = int(clamp(angFrac * float(N_RAYS - 1) + 0.5,
+                                         0.0, float(N_RAYS - 1)));
+              float bDist    = blockers[rayIdx];
+              float fragD    = sqrt(fwd * fwd + lat * lat);
+              float notShadowed = step(fragD, bDist);
+
+              material.diffuse = u_color.rgb;
+              material.alpha   = u_color.a * inFan * notWall * notShadowed;
+              return material;
+            }
+          `
+        },
+        translucent: true
+      });
+    } catch (e) {
+      console.error("[Viewshed] Failed to create highlight material:", e);
+      // Fallback: simple fan with elevation gate, no shadow
+      material = new Material({
+        fabric: {
+          uniforms: {
+            u_observerWC: new Cartesian3(observer.x, observer.y, observer.z),
+            u_forward: new Cartesian3(direction.x, direction.y, direction.z),
+            u_right: new Cartesian3(right.x, right.y, right.z),
+            u_dist: dist,
+            u_maxHalfAngle: maxHalfAngle,
+            u_minHeight: observerGroundHeight,
+            u_color: new Color(0.0, 1.0, 0.2, 0.45)
+          },
+          source: `
+            czm_material czm_getMaterial(czm_materialInput materialInput) {
+              czm_material material = czm_getDefaultMaterial(materialInput);
+              vec4 fragEC = vec4(-materialInput.positionToEyeEC, 1.0);
+              vec3 fragWC  = (czm_inverseView * fragEC).xyz;
+              vec3  rel = fragWC - u_observerWC;
+              float fwd = dot(u_forward, rel);
+              float lat = dot(u_right,   rel);
+              float angle = atan(lat, fwd);
+              float inFan  = step(0.0, fwd) * step(fwd, u_dist)
+                           * step(-u_maxHalfAngle, angle) * step(angle, u_maxHalfAngle);
+              float notWall = step(materialInput.height, u_minHeight);
+              material.diffuse = u_color.rgb;
+              material.alpha   = u_color.a * inFan * notWall;
+              return material;
+            }
+          `
+        },
+        translucent: true
+      });
+    }
+
+    this.previousGlobeMaterial = scene.globe.material;
+    scene.globe.material = material;
+
+    // --- Rectangle border outline ---
+    //
+    // A closed green polyline at the 4 corners of the highlight rectangle so
+    // the user can always see the area extent regardless of elevation filtering.
+    const halfOffset = Cartesian3.multiplyByScalar(
+      right,
+      halfWidth,
+      new Cartesian3()
+    );
+    const backLeft = Cartesian3.add(observer, halfOffset, new Cartesian3());
+    const backRight = Cartesian3.subtract(
+      observer,
+      halfOffset,
+      new Cartesian3()
+    );
+    const frontLeft = Cartesian3.add(obstruction, halfOffset, new Cartesian3());
+    const frontRight = Cartesian3.subtract(
+      obstruction,
+      halfOffset,
+      new Cartesian3()
+    );
+
+    const borderEntity = this.otherEntities.entities.add({
+      name: "Viewshed Highlight Border",
+      polyline: {
+        positions: new CallbackProperty(
+          () => [backLeft, backRight, frontRight, frontLeft, backLeft],
+          true // isConstant
+        ),
+        material: new PolylineGlowMaterialProperty({
+          color: new Color(0.0, 1.0, 0.2, 0.9),
+          glowPower: 0.2
+        }),
+        width: 3,
+        clampToGround: true
+      }
+    });
+    this.rectBorderEntityId = borderEntity.id;
+  }
+
+  /**
    * User has finished or cancelled; restore initial state.
    */
   cleanUp() {
@@ -395,8 +693,29 @@ export default class UserDrawingViewshed extends MappableMixin(
 
     this.terria.allowFeatureInfoRequests = true;
 
+    if (this.disposeHighlightReaction) {
+      this.disposeHighlightReaction();
+      this.disposeHighlightReaction = undefined;
+    }
+
+    // Cancel any pending highlight rebuild
+    if (this._rebuildCooldown) {
+      clearTimeout(this._rebuildCooldown);
+      this._rebuildCooldown = undefined;
+    }
+
+    this.rectBorderEntityId = undefined;
+
+    // Restore the globe material we replaced when the highlight was enabled
+    const scene = this.terria.cesium?.scene;
+    if (this.previousGlobeMaterial !== undefined && scene) {
+      scene.globe.material = this.previousGlobeMaterial;
+      this.previousGlobeMaterial = undefined;
+    }
+
     runInAction(() => {
       this.inDrawMode = false;
+      this.terria.viewshedHighlightVisible = false;
     });
 
     // Return cursor to original state
@@ -519,11 +838,13 @@ export default class UserDrawingViewshed extends MappableMixin(
         distOrig,
         useInter ? distInter : distOrig
       ];
+      this.visibleLinePoints = [
+        pos0Updated,
+        useInter ? intersection! : pos1Updated
+      ];
+      this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
     });
-    this.visibleLinePoints = [
-      pos0Updated,
-      useInter ? intersection! : pos1Updated
-    ];
-    this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
+    // Update the highlight material whenever points change (drag, click, initial placement).
+    this.triggerHighlightRebuild();
   }
 }

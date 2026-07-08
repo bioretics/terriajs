@@ -1,6 +1,7 @@
 //"use strict";
 
 import classNames from "classnames";
+import React from "react";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { useTheme } from "styled-components";
@@ -108,6 +109,35 @@ const ViewshedPanel = observer((props: Props) => {
                 });
               }}
             />
+          </Box>
+          <br />
+          <Box
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              paddingLeft: "30px",
+              paddingRight: "30px"
+            }}
+          >
+            <input
+              id="viewshed-highlight-visible"
+              type="checkbox"
+              checked={terria.viewshedHighlightVisible}
+              onChange={(e) => {
+                runInAction(() => {
+                  terria.viewshedHighlightVisible = e.target.checked;
+                });
+              }}
+              style={{ cursor: "pointer", accentColor: "#00e676" }}
+            />
+            <label
+              htmlFor="viewshed-highlight-visible"
+              style={{ cursor: "pointer" }}
+            >
+              <Text textLight>{t("viewshed.highlightVisible")}</Text>
+            </label>
           </Box>
           <br />
         </div>
