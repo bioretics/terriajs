@@ -32,7 +32,8 @@ function drawScaleBar(
 ) {
   const padding = 5 * scaleFactor;
   const containerWidth = 125 * scaleFactor;
-  const barLeft = padding + (containerWidth - padding * 2 - metrics.barWidth) / 2;
+  const barLeft =
+    padding + (containerWidth - padding * 2 - metrics.barWidth) / 2;
   const labelHeight = 14 * scaleFactor;
   const barBorder = 3 * scaleFactor;
   const boxHeight = padding * 2 + labelHeight + barBorder + padding;

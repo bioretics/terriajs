@@ -1,6 +1,5 @@
 import React, { FC, useEffect, useState } from "react";
 import styled from "styled-components";
-import CesiumEvent from "terriajs-cesium/Source/Core/Event";
 import isDefined from "../../../../../Core/isDefined";
 import Terria from "../../../../../Models/Terria";
 import {

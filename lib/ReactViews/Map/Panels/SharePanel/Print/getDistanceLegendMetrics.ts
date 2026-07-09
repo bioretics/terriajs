@@ -112,7 +112,11 @@ export function getDistanceLegendMetrics(
       scale
     );
   } else if (isDefined(terria.leaflet)) {
-    return getDistanceLegendMetricsFromLeaflet(terria.leaflet.map, terria, scale);
+    return getDistanceLegendMetricsFromLeaflet(
+      terria.leaflet.map,
+      terria,
+      scale
+    );
   }
   return null;
 }

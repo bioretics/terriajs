@@ -202,10 +202,7 @@ const PrintView = observer((props: Props) => {
                   <DistanceLegend scale={mapScale} isPrintMode />
                 )}
                 {viewState.printIncludeCompass && (
-                  <PrintCompass
-                    terria={viewState.terria}
-                    scale={mapScale}
-                  />
+                  <PrintCompass terria={viewState.terria} scale={mapScale} />
                 )}
               </PrintViewMap>
             ) : (
