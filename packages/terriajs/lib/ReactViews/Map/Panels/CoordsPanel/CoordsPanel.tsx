@@ -63,8 +63,6 @@ const CoordsText = (props: ICoordsTextProps) => {
           type="text"
           value={props.value}
           readOnly={props.readonly ?? false}
-          // placeholder={this.state.placeholder}
-          // onClick={e => setValue(e)}
           onChange={(e) => props.setValue(e.target.value)}
           id={props.name}
         />
@@ -133,14 +131,19 @@ const SrsSelection = (props: ISrsSelectionProps) => {
   const { conversionList, setSrs, isOpen, selectedSrs } = props;
 
   useEffect(() => {
-    // Reset to first item when list changes (e.g., due to input type filter)
-    // or when panel opens/closes
-    if (conversionList && conversionList.length > 0) {
+    if (!conversionList || conversionList.length === 0) {
+      return;
+    }
+
+    const currentIndex = conversionList.findIndex(
+      (conv) => conv.from === selectedSrs.from && conv.to === selectedSrs.to
+    );
+
+    if (currentIndex < 0) {
       setSrs(conversionList[0]);
     }
-  }, [isOpen, setSrs, conversionList]);
+  }, [isOpen, setSrs, conversionList, selectedSrs.from, selectedSrs.to]);
 
-  // Find the index of the currently selected conversion in the filtered list
   const selectedIndex = conversionList.findIndex(
     (conv) => conv.from === selectedSrs.from && conv.to === selectedSrs.to
   );
@@ -207,16 +210,17 @@ interface SharePanelState {
 class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   static displayName = "CoordsPanel";
 
+  private terria: Terria;
+  private pickedPositionSubscription?: IReactionDisposer;
+  private coordsInputTxtSubscription?: IReactionDisposer;
+
   setSrs = action((value: ISrsConversion) => {
     this.srs = value;
   });
 
-  // Get filtered conversion list based on input type
-  // Using @computed to cache the result so the reference only changes when isInputNotCartographic changes
   @computed
   private get filteredConversionList(): ISrsConversion[] {
     if (this.isInputNotCartographic) {
-      // If input is projected, show conversions FROM projected systems (to 4326)
       return this.conversionList.filter((conv) => conv.from !== 4326);
     }
 
@@ -420,7 +424,6 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     }
   ];
 
-  //const [isOpen, setIsOpen] = useState(false);
   @observable private coordsInputTxt: string;
   @observable private coordsOutputTxt: string;
   private inputX?: number;
@@ -430,8 +433,6 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
   @observable private isInputNotCartographic: boolean;
   @observable private isOutputCartographic: boolean;
   @observable private srs: ISrsConversion;
-  private pickedPositionSubscription: IReactionDisposer;
-  private coordsInputTxtSubscription: IReactionDisposer;
 
   constructor(props: PropTypes) {
     super(props);
@@ -441,6 +442,8 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     this.state = {
       isOpen: false
     };
+
+    this.terria = props.terria;
 
     this.coordsInputTxt = "";
     this.coordsOutputTxt = "";
@@ -462,19 +465,42 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           this.isInputNotCartographic =
             isDefinitelyNotLatitude && isDefinitelyNotLongitude;
 
-          // Reset srs to first item of the newly filtered list when input type changes
           if (
             this.filteredConversionList &&
             this.filteredConversionList.length > 0
           ) {
-            this.srs = this.filteredConversionList[0];
+            const currentIndex = this.filteredConversionList.findIndex(
+              (conv) => conv.from === this.srs?.from && conv.to === this.srs?.to
+            );
+
+            if (currentIndex < 0) {
+              this.srs = this.filteredConversionList[0];
+            }
           }
         }
       })
     );
 
+    this.createPickedPositionSubscription();
+  }
+
+  componentDidUpdate(prevProps: PropTypes) {
+    if (prevProps.terria !== this.props.terria) {
+      this.terria = this.props.terria;
+      this.createPickedPositionSubscription();
+    }
+  }
+
+  componentWillUnmount() {
+    this.pickedPositionSubscription?.();
+    this.coordsInputTxtSubscription?.();
+  }
+
+  private createPickedPositionSubscription() {
+    this.pickedPositionSubscription?.();
+
     this.pickedPositionSubscription = reaction(
-      () => this.props.terria.pickedPosition,
+      () => this.terria.pickedPosition,
       (pickedPosition) => {
         if (pickedPosition) {
           const latitude = CesiumMath.toDegrees(
@@ -514,15 +540,15 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     const rectangle = createZoomToFunction(x, y, bboxSize);
 
     this.props.terria.currentViewer.zoomTo(rectangle, time);
-    //this.props.terria.cesium._selectionIndicator.animateAppear();
   }
 
   async callConverter() {
     const terria = this.props.terria;
+
     if (
       !this.srs ||
-      !this.inputX ||
-      !this.inputY ||
+      this.inputX === undefined ||
+      this.inputY === undefined ||
       !terria.configParameters.coordsConverterUrl
     ) {
       return;
@@ -532,45 +558,118 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
       terria.configParameters.coordsConverterUrl
     );
 
-    const results = await loadJson(`${url}?inSR=${this.srs.from}
-      &outSR=${this.srs.to}
-      &geometries=${
+    const parseNumeric = (value: unknown): number => {
+      if (typeof value === "number") {
+        return value;
+      }
+
+      if (typeof value === "string") {
+        return Number(value.trim().replace(",", "."));
+      }
+
+      return NaN;
+    };
+
+    const extractGeometry = (results: any) =>
+      results?.geometries?.[0] ??
+      results?.geometry ??
+      results?.features?.[0]?.geometry ??
+      null;
+
+    const extractXY = (geometry: any) => {
+      const rawX =
+        geometry?.x ??
+        geometry?.lon ??
+        geometry?.lng ??
+        geometry?.longitude ??
+        (Array.isArray(geometry) ? geometry[0] : undefined);
+
+      const rawY =
+        geometry?.y ??
+        geometry?.lat ??
+        geometry?.latitude ??
+        (Array.isArray(geometry) ? geometry[1] : undefined);
+
+      return {
+        x: parseNumeric(rawX),
+        y: parseNumeric(rawY)
+      };
+    };
+
+    const geometriesCandidates = Array.from(
+      new Set([
         this.isInputNotCartographic
-          ? this.inputX.toString() + "," + this.inputY.toString()
-          : this.inputY.toString() + "," + this.inputX.toString()
-      }
-      &transformation=${
-        this.srs.wkt ? JSON.stringify({ wkt: this.srs.wkt }) : "{}"
-      }
-      &transformForward=${this.srs.transformForward}
-      &f=json`);
+          ? `${this.inputX},${this.inputY}`
+          : `${this.inputY},${this.inputX}`,
+        `${this.inputX},${this.inputY}`,
+        `${this.inputY},${this.inputX}`
+      ])
+    );
 
-    if (results.geometries) {
-      const geom = results.geometries[0];
-      const areLatLon =
-        geom.x >= 0 && geom.x <= 360 && geom.y >= 0 && geom.y <= 360;
-      const x = geom.x.toFixed(areLatLon ? 6 : 4);
-      const y = geom.y.toFixed(areLatLon ? 6 : 4);
+    const transformationCandidates = this.srs.wkt
+      ? [JSON.stringify({ wkt: this.srs.wkt }), "{}"]
+      : ["{}"];
 
-      runInAction(() => {
-        this.outputX = parseFloat(x);
-        this.outputY = parseFloat(y);
-        this.isOutputCartographic = areLatLon;
-        this.coordsOutputTxt = areLatLon ? y + ", " + x : x + ", " + y;
-      });
-    } else {
-      runInAction(() => {
-        this.coordsOutputTxt = results.error.message;
-      });
+    const transformForwardCandidates = Array.from(
+      new Set([this.srs.transformForward, !this.srs.transformForward])
+    );
+
+    let lastErrorMessage = "";
+
+    for (const geometries of geometriesCandidates) {
+      for (const transformForward of transformForwardCandidates) {
+        for (const transformation of transformationCandidates) {
+          try {
+            const results = await loadJson(
+              `${url}?inSR=${this.srs.from}` +
+                `&outSR=${this.srs.to}` +
+                `&geometries=${geometries}` +
+                `&transformation=${transformation}` +
+                `&transformForward=${transformForward}` +
+                `&f=json`
+            );
+
+            const geometry = extractGeometry(results);
+            const { x: geomX, y: geomY } = extractXY(geometry);
+
+            if (Number.isFinite(geomX) && Number.isFinite(geomY)) {
+              const areLatLon =
+                geomX >= -360 && geomX <= 360 && geomY >= -90 && geomY <= 90;
+              const x = geomX.toFixed(areLatLon ? 6 : 4);
+              const y = geomY.toFixed(areLatLon ? 6 : 4);
+
+              runInAction(() => {
+                this.outputX = parseFloat(x);
+                this.outputY = parseFloat(y);
+                this.isOutputCartographic = areLatLon;
+                this.coordsOutputTxt = areLatLon ? `${y}, ${x}` : `${x}, ${y}`;
+              });
+
+              return;
+            }
+
+            lastErrorMessage =
+              results?.error?.message ??
+              `Invalid converter response: ${JSON.stringify(
+                geometry ?? results
+              )}`;
+          } catch (e: any) {
+            lastErrorMessage =
+              e?.message ?? "Conversion failed due to an unexpected error.";
+          }
+        }
+      }
     }
+
+    runInAction(() => {
+      this.coordsOutputTxt = lastErrorMessage || "Conversion failed.";
+    });
   }
 
   render() {
     const { t } = this.props;
     const { modalWidth } = this.props;
     const dropdownTheme = {
-      //btn: classNames(Styles.dropdownInner),
-      //outer: classNames(Styles.sharePanel),
       inner: classNames(Styles.dropdownInner)
     };
 
