@@ -61,13 +61,12 @@ export default class UserDrawingViewshed extends MappableMixin(
   private disposePickedFeatureSubscription?: () => void;
   private disposeViewshedHeight?: () => void;
   private disposeHighlightReaction?: IReactionDisposer;
+
   /** The globe material that was active before we set our highlight; restored on cleanUp. */
   private previousGlobeMaterial?: any;
   /** ID of the rectangle-border polyline entity, so we can remove it on rebuild/cleanup. */
   private rectBorderEntityId?: string;
-  /** Trailing cooldown timer so rapid computeLineOfSight calls don't rebuild at 60 fps. */
-  private _rebuildCooldown?: ReturnType<typeof setTimeout>;
-  /** Timestamp of the last rebuild, used to skip rebuilds when pts haven't changed. */
+  /** Timestamp/key of the last rebuild, used to skip rebuilds when pts haven't changed. */
   private _lastRebuildKey = "";
 
   private mouseMoveDispose?: IReactionDisposer;
@@ -140,10 +139,6 @@ export default class UserDrawingViewshed extends MappableMixin(
   }
 
   get svgObserverPoint() {
-    /**
-     * SVG element for point drawn when user clicks.
-     * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
-     */
     const svgDataDeclare = "data:image/svg+xml,";
     const svgPrefix =
       '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
@@ -152,15 +147,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     const svgSuffix = "</svg>";
     const svgString = svgPrefix + svgCircle + svgSuffix;
 
-    // create the cesium entity
     return svgDataDeclare + svgString;
   }
 
   get svgTargetPoint() {
-    /**
-     * SVG element for point drawn when user clicks.
-     * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
-     */
     const svgDataDeclare = "data:image/svg+xml,";
     const svgPrefix =
       '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
@@ -169,7 +159,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     const svgSuffix = "</svg>";
     const svgString = svgPrefix + svgCircle + svgSuffix;
 
-    // create the cesium entity
     return svgDataDeclare + svgString;
   }
 
@@ -177,7 +166,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.dragHelper.setUp();
 
     if (this.inDrawMode) {
-      // Do nothing
       return;
     }
 
@@ -197,14 +185,12 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     }
 
-    // Cancel any feature picking already in progress and disable feature info requests.
     runInAction(() => {
       this.terria.pickedFeatures = undefined;
       this.terria.allowFeatureInfoRequests = false;
     });
     const that = this;
 
-    // Line will show up once user has drawn some points. Vertices of line are user points.
     this.otherEntities.entities.add({
       name: "Line visible",
       polyline: {
@@ -212,7 +198,6 @@ export default class UserDrawingViewshed extends MappableMixin(
           that.computeLineOfSight();
           return that.visibleLinePoints;
         }, false),
-
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 1.0, 0.0, 0.3),
           glowPower: 0.25
@@ -220,13 +205,13 @@ export default class UserDrawingViewshed extends MappableMixin(
         width: 20
       }
     });
+
     this.otherEntities.entities.add({
       name: "Line Invisible",
       polyline: {
         positions: new CallbackProperty(function () {
           return that.hiddenLinePoints;
         }, false),
-
         material: new PolylineGlowMaterialProperty({
           color: new Color(1.0, 0.0, 0.0, 0.3),
           glowPower: 0.25
@@ -235,18 +220,25 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     });
 
-    // Visible-area highlight: a GroundPrimitive with createElevationBandMaterial (same as
-    // ColorPanel), rebuilt reactively whenever the viewshed points or toggle changes.
-    // The material paints terrain GREEN only above the observer's ground elevation,
-    // and only within the rectangle bounded by the observer and the obstruction point.
     this.disposeHighlightReaction = reaction(
-      () => this.terria.viewshedHighlightVisible,
-      (on) => {
-        // When toggling off, clear immediately.
-        // When toggling on, trigger a rebuild with the current points.
-        if (!on) {
+      () => ({
+        visible: this.terria.viewshedHighlightVisible,
+        pointsKey: this.visibleLinePoints
+          .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`)
+          .join("|")
+      }),
+      (state, prev) => {
+        if (!state.visible) {
+          this._lastRebuildKey = "";
           this.rebuildHighlightPrimitive([], false);
-        } else {
+          return;
+        }
+
+        const currentKey = state.pointsKey;
+        const prevVisible = prev?.visible ?? false;
+        const justEnabled = !prevVisible && state.visible;
+
+        if (justEnabled || currentKey !== this._lastRebuildKey) {
           this.triggerHighlightRebuild();
         }
       },
@@ -255,7 +247,6 @@ export default class UserDrawingViewshed extends MappableMixin(
 
     this.terria.overlays.add(this);
 
-    // Listen for user clicks on map
     const pickPointMode = this.addMapInteractionMode();
     this.disposePickedFeatureSubscription = reaction(
       () => pickPointMode.pickedFeatures,
@@ -276,9 +267,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
   }
 
-  /**
-   * Add new point to list of pointEntities
-   */
   private addPointToPointEntities(
     name: string,
     position: Cartesian3,
@@ -311,9 +299,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     });
   }
 
-  /**
-   * Updates the MapInteractionModeStack with a listener for a new point.
-   */
   private addMapInteractionMode() {
     const pickPointMode = new MapInteractionMode({
       message: this.getDialogMessage(),
@@ -332,9 +317,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     return pickPointMode;
   }
 
-  /**
-   * Called after a point has been added, prepares to add and draw another point, as well as updating the dialog.
-   */
   private prepareToAddNewPoint() {
     runInAction(() => {
       this.terria.mapInteractionModeStack.pop();
@@ -351,16 +333,12 @@ export default class UserDrawingViewshed extends MappableMixin(
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
 
-            // If existing point was picked, _clickedExistingPoint handles that, and returns true.
-            // getDragCount helps us determine if the point was actually dragged rather than clicked. If it was
-            // dragged, we shouldn't treat it as a clicked-existing-point scenario.
             if (
               this.dragHelper.getDragCount() < 10 &&
               !this.clickedExistingPoint(pickedFeatures.features) &&
               (this.numMaxPoints === undefined ||
                 this.pointEntities.entities.values.length !== this.numMaxPoints)
             ) {
-              // No existing point was picked, so add a new point
               this.addPointToPointEntities("Target", pickedPoint, false);
             } else {
               this.dragHelper.resetDragCount();
@@ -376,9 +354,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
   }
 
-  /**
-   * Find out if user clicked an existing point and handle appropriately.
-   */
   private clickedExistingPoint(features: Entity[]) {
     let userClickedExistingPoint = false;
 
@@ -397,12 +372,10 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
 
       if (index === -1) {
-        // Probably a layer or feature that has nothing to do with what we're drawing.
         return;
       } else if (index === 0) {
         userClickedExistingPoint = true;
       } else {
-        // User clicked on a point that's not the end of the loop. Remove it.
         this.pointEntities.entities.removeById(feature.id);
         userClickedExistingPoint = true;
         return;
@@ -414,56 +387,33 @@ export default class UserDrawingViewshed extends MappableMixin(
     return userClickedExistingPoint;
   }
 
-  /**
-   * Schedules a highlight rebuild using a trailing 200ms cooldown.
-   * Called directly from computeLineOfSight so the material updates whenever
-   * the points change (drag, click, etc.) without flooding at 60 fps.
-   */
   private triggerHighlightRebuild() {
     if (!this.terria.viewshedHighlightVisible) return;
 
-    // Build a key from current point positions. Skip rebuild if nothing moved.
     const pts = this.visibleLinePoints;
     const key = pts
       .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`)
       .join("|");
-    if (key === this._lastRebuildKey && key !== "") return; // unchanged
 
-    // Cancel any pending cooldown and schedule a new one
-    if (this._rebuildCooldown) clearTimeout(this._rebuildCooldown);
-    this._rebuildCooldown = setTimeout(() => {
-      this._rebuildCooldown = undefined;
-      const current = this.visibleLinePoints;
-      const currentKey = current
-        .map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)},${p.z.toFixed(1)}`)
-        .join("|");
-      this._lastRebuildKey = currentKey;
-      this.rebuildHighlightPrimitive(current, true);
-    }, 200);
+    if (key === this._lastRebuildKey && key !== "") return;
+
+    this._lastRebuildKey = key;
+    this.rebuildHighlightPrimitive(pts, true);
   }
 
   /**
-   * Applies (or removes) the viewshed visible-area highlight.
-   *
-   * Behaviour:
-   *  - Starts green at the observer and expands forward until blocked by terrain
-   *    that rises above the observer's ground elevation ("altitude walls").
-   *  - Uses scene.globe.getHeight() to sample 64 angular rays × 64 steps,
-   *    baking blocker distances as GLSL float constants (avoids Cesium's
-   *    uniform auto-renaming breaking dynamic lookup).
-   *  - Draws a green rectangle border outline so the area is always visible.
+   * Applies (or removes) the viewshed highlight using the original globe-material approach.
+   * This preserves the altitude-blocking logic and the green area fill.
    */
   private rebuildHighlightPrimitive(pts: Cartesian3[], on: boolean) {
     const scene = this.terria.cesium?.scene;
     if (!scene) return;
 
-    // --- Always restore previous globe material first ---
     if (this.previousGlobeMaterial !== undefined) {
       scene.globe.material = this.previousGlobeMaterial;
       this.previousGlobeMaterial = undefined;
     }
 
-    // --- Remove previous rectangle border entity ---
     if (this.rectBorderEntityId) {
       this.otherEntities.entities.removeById(this.rectBorderEntityId);
       this.rectBorderEntityId = undefined;
@@ -474,7 +424,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     const observer = pts[0];
     const obstruction = pts[1];
 
-    // --- Compute rectangle geometry ---
     const rawDir = Cartesian3.subtract(obstruction, observer, new Cartesian3());
     const dist = Cartesian3.magnitude(rawDir);
     if (dist < 1) return;
@@ -487,24 +436,14 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
     const halfWidth = dist;
 
-    // Observer ground elevation (strips the observer-height offset)
     const observerCarto = Cartographic.fromCartesian(observer);
     const observerGroundHeight =
       observerCarto.height - this.terria.viewshedObserverHeight;
 
-    // --- Fan-based shadow sampling (90° per side, 64 rays) ---
-    //
-    // For each ray we step outward from the observer and record the first
-    // forward distance where terrain >= observerGroundHeight (the "wall").
-    // Blocker distances are stored as plain vec4 uniforms (4 values per vec4,
-    // 16 uniforms = 64 values total) — avoids all texture/image loading complexity.
     const N_RAYS = 64;
     const N_STEPS = 64;
-    // maxHalfAngle = atan2(halfWidth, dist) = 45° for the square rectangle.
-    // Rays span exactly the angular range of the rectangle's far corners as seen
-    // from the observer, giving the correct fan/triangular shape.
-    const maxHalfAngle = Math.atan2(halfWidth, dist); // ≈ π/4 for square rect
-    const maxRayDist = Math.sqrt(dist * dist + halfWidth * halfWidth); // rect diagonal
+    const maxHalfAngle = Math.atan2(halfWidth, dist);
+    const maxRayDist = Math.sqrt(dist * dist + halfWidth * halfWidth);
     const blockers = new Float32Array(N_RAYS).fill(maxRayDist);
 
     for (let ri = 0; ri < N_RAYS; ri++) {
@@ -533,19 +472,10 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     }
 
-    // --- Bake blocker distances as GLSL constants ---
-    // Cesium's Material renames every uniform (u_b0 → u_b0_0, etc.) which breaks
-    // any dynamic lookup function that uses the original name. We sidestep this
-    // entirely by emitting the 64 blocker distances directly into the shader source
-    // as a const float array — zero uniforms, zero renaming problems.
     const glslBlockers = Array.from(blockers)
       .map((v) => v.toFixed(4))
       .join(", ");
 
-    // --- Custom Fabric GLSL globe material ---
-    // Only simple scalar/vector uniforms are declared here — these are referenced
-    // once each in the GLSL, so Cesium's rename (u_minHeight → u_minHeight_0) is
-    // handled correctly by the replaceToken pass in Material.js.
     let material: any;
     try {
       material = new Material({
@@ -561,34 +491,27 @@ export default class UserDrawingViewshed extends MappableMixin(
             u_color: new Color(0.0, 1.0, 0.2, 0.45)
           },
           source: `
-            // Blocker distances baked as constants — no Cesium uniform renaming issues.
             const int   N_RAYS   = ${N_RAYS};
             const float blockers[${N_RAYS}] = float[${N_RAYS}](${glslBlockers});
 
             czm_material czm_getMaterial(czm_materialInput materialInput) {
               czm_material material = czm_getDefaultMaterial(materialInput);
 
-              // Fragment ECEF world position.
               vec4 fragEC = vec4(-materialInput.positionToEyeEC, 1.0);
               vec3 fragWC  = (czm_inverseView * fragEC).xyz;
 
-              // Project onto observer forward / right axes.
               vec3  rel = fragWC - u_observerWC;
               float fwd = dot(u_forward, rel);
               float lat = dot(u_right,   rel);
 
-              // Fan spatial check: triangle from observer.
-              // At fwd=0 → zero width.  At fwd=u_dist → full rectangle width.
               float angle  = atan(lat, fwd);
               float inFan  = step(0.0, fwd)
                            * step(fwd, u_dist)
                            * step(-u_maxHalfAngle, angle)
                            * step(angle, u_maxHalfAngle);
 
-              // Elevation wall: terrain above observer ground level → transparent.
               float notWall = step(materialInput.height, u_minHeight);
 
-              // Shadow: map angle → ray index → baked blocker distance.
               float angFrac  = (angle + u_maxHalfAngle) / (2.0 * u_maxHalfAngle);
               int   rayIdx   = int(clamp(angFrac * float(N_RAYS - 1) + 0.5,
                                          0.0, float(N_RAYS - 1)));
@@ -606,7 +529,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       });
     } catch (e) {
       console.error("[Viewshed] Failed to create highlight material:", e);
-      // Fallback: simple fan with elevation gate, no shadow
       material = new Material({
         fabric: {
           uniforms: {
@@ -643,10 +565,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.previousGlobeMaterial = scene.globe.material;
     scene.globe.material = material;
 
-    // --- Rectangle border outline ---
-    //
-    // A closed green polyline at the 4 corners of the highlight rectangle so
-    // the user can always see the area extent regardless of elevation filtering.
     const halfOffset = Cartesian3.multiplyByScalar(
       right,
       halfWidth,
@@ -670,7 +588,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       polyline: {
         positions: new CallbackProperty(
           () => [backLeft, backRight, frontRight, frontLeft, backLeft],
-          true // isConstant
+          true
         ),
         material: new PolylineGlowMaterialProperty({
           color: new Color(0.0, 1.0, 0.2, 0.9),
@@ -683,9 +601,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.rectBorderEntityId = borderEntity.id;
   }
 
-  /**
-   * User has finished or cancelled; restore initial state.
-   */
   cleanUp() {
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
@@ -698,15 +613,10 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.disposeHighlightReaction = undefined;
     }
 
-    // Cancel any pending highlight rebuild
-    if (this._rebuildCooldown) {
-      clearTimeout(this._rebuildCooldown);
-      this._rebuildCooldown = undefined;
-    }
+    this._lastRebuildKey = "";
 
     this.rectBorderEntityId = undefined;
 
-    // Restore the globe material we replaced when the highlight was enabled
     const scene = this.terria.cesium?.scene;
     if (this.previousGlobeMaterial !== undefined && scene) {
       scene.globe.material = this.previousGlobeMaterial;
@@ -718,7 +628,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.terria.viewshedHighlightVisible = false;
     });
 
-    // Return cursor to original state
     if (isDefined(this.terria.cesium)) {
       this.terria.cesium.cesiumWidget.canvas.setAttribute(
         "style",
@@ -735,7 +644,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.mouseMoveDispose();
     }
 
-    // Allow client to clean up too
     if (typeof this.onCleanUp === "function") {
       this.visibleLinePoints = [];
       this.hiddenLinePoints = [];
@@ -762,9 +670,6 @@ export default class UserDrawingViewshed extends MappableMixin(
     return "<div>" + message + "</div>";
   }
 
-  /**
-   * Figure out the text for the dialog button.
-   */
   getButtonText() {
     return defaultValue(
       this.buttonText,
@@ -775,11 +680,6 @@ export default class UserDrawingViewshed extends MappableMixin(
   }
 
   computeLineOfSight() {
-    /*const pos = this.pointEntities.entities.values
-      .filter((elem) => isDefined(elem.position))
-      .map((elem: Entity): Cartesian3 =>
-        elem.position.getValue(this.terria.timelineClock.currentTime)
-      );*/
     const pos = this.pointEntities.entities.values.flatMap(
       (elem): Cartesian3[] => {
         if (elem.position) {
@@ -844,7 +744,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       ];
       this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
     });
-    // Update the highlight material whenever points change (drag, click, initial placement).
+
     this.triggerHighlightRebuild();
   }
 }
