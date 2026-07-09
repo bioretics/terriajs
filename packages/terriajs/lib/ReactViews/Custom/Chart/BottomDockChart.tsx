@@ -15,7 +15,7 @@ import Legends from "./Legends";
 import Tooltip from "./Tooltip";
 import type { XScale, YScale } from "./types";
 import { Cursor, Plot, PointsOnMap, XAxis, YAxis } from "./utils";
-import { ZoomX } from "./ZoomX";
+import ZoomX from "./ZoomX";
 
 const CHART_MIN_WIDTH = 110;
 const DEFAULT_GRID_COLOR = "#efefef";

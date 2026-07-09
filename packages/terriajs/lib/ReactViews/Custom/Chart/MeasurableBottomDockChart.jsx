@@ -94,19 +94,46 @@ class Chart extends React.Component {
     margin: { left: 20, right: 30, top: 10, bottom: 50 }
   };
 
+  @observable.ref chartItemsProp;
+  @observable.ref xAxisProp;
+  @observable.ref marginProp;
+  @observable.ref terriaProp;
+  @observable.ref chartItemKeyForPointMouseNearProp;
+  @observable.ref onPointMouseNearProp;
+  @observable widthProp;
+  @observable heightProp;
+  @observable selectedStopPointIdxProp;
+  @observable selectedSampledPointIdxProp;
+
   @observable.ref zoomedXScale;
   @observable mouseCoords;
   @observable.ref forcedPoint = undefined;
+  @observable isDownloading;
+
   zoomXRef = React.createRef();
   hoverAutorunDisposer = undefined;
+  chartRef = React.createRef();
+
   constructor(props) {
     super(props);
     makeObservable(this);
+
+    this.chartItemsProp = props.chartItems;
+    this.xAxisProp = props.xAxis;
+    this.marginProp = props.margin;
+    this.terriaProp = props.terria;
+    this.chartItemKeyForPointMouseNearProp =
+      props.chartItemKeyForPointMouseNear;
+    this.onPointMouseNearProp = props.onPointMouseNear;
+    this.widthProp = props.width;
+    this.heightProp = props.height;
+    this.selectedStopPointIdxProp = props.selectedStopPointIdx;
+    this.selectedSampledPointIdxProp = props.selectedSampledPointIdx;
   }
 
   @computed
   get chartItems() {
-    return sortChartItemsByType(this.props.chartItems)
+    return sortChartItemsByType(this.chartItemsProp)
       .map((chartItem) => {
         return {
           ...chartItem,
@@ -118,19 +145,19 @@ class Chart extends React.Component {
 
   @computed
   get plotHeight() {
-    const { height, margin } = this.props;
+    const { height, margin } = this;
     return height - margin.top - margin.bottom - Legends.maxHeightPx;
   }
 
   @computed
   get plotWidth() {
-    const { width, margin } = this.props;
+    const { width, margin } = this;
     return width - margin.left - margin.right - this.estimatedYAxesWidth;
   }
 
   @computed
   get adjustedMargin() {
-    const margin = this.props.margin;
+    const margin = this.margin;
     return {
       ...margin,
       left: margin.left + this.estimatedYAxesWidth
@@ -139,7 +166,7 @@ class Chart extends React.Component {
 
   @computed
   get initialXScale() {
-    const xAxis = this.props.xAxis;
+    const xAxis = this.xAxis;
     const domain = calculateDomain(this.chartItems);
     const params = {
       domain: domain.x,
@@ -220,12 +247,12 @@ class Chart extends React.Component {
     };
 
     if (!this.mouseCoords || this.mouseCoords.x < this.plotWidth * 0.5) {
-      tooltip.right = this.props.width - (this.plotWidth + margin.right);
+      tooltip.right = this.width - (this.plotWidth + margin.right);
     } else {
       tooltip.left = margin.left;
     }
 
-    tooltip.bottom = this.props.height - (margin.top + this.plotHeight);
+    tooltip.bottom = this.height - (margin.top + this.plotHeight);
     return tooltip;
   }
 
@@ -233,15 +260,32 @@ class Chart extends React.Component {
   get estimatedYAxesWidth() {
     const numTicks = 4;
     const tickLabelFontSize = 10;
-    // We need to consider only the left most Y-axis as its label values appear
-    // outside the chart plot area. The labels of inner y-axes appear inside
-    // the plot area.
     const leftmostYAxis = this.yAxes[0];
     const maxLabelDigits = Math.max(
       0,
       ...leftmostYAxis.scale.ticks(numTicks).map((n) => n.toString().length)
     );
     return maxLabelDigits * tickLabelFontSize;
+  }
+
+  get width() {
+    return this.widthProp;
+  }
+
+  get height() {
+    return this.heightProp;
+  }
+
+  get margin() {
+    return this.marginProp;
+  }
+
+  get xAxis() {
+    return this.xAxisProp;
+  }
+
+  get terria() {
+    return this.terriaProp;
   }
 
   @action
@@ -257,6 +301,11 @@ class Chart extends React.Component {
   @action
   setForcedPoint(point) {
     this.forcedPoint = point;
+  }
+
+  @action
+  setIsDownloading(isDownloading) {
+    this.isDownloading = isDownloading;
   }
 
   setMouseCoordsFromEvent(event) {
@@ -276,11 +325,17 @@ class Chart extends React.Component {
   componentDidMount() {
     this.disposeReaction = reaction(
       () =>
-        `${this.props.selectedSampledPointIdx}:${this.props.selectedStopPointIdx}`,
+        `${this.selectedSampledPointIdxProp}:${this.selectedStopPointIdxProp}`,
       () => {
         if (MeasurablePanelManager.isPointerOverChart()) return;
 
-        const { selectedSampledPointIdx, selectedStopPointIdx } = this.props;
+        const {
+          selectedSampledPointIdx,
+          selectedStopPointIdx,
+          chartItems,
+          terria
+        } = this;
+
         const isStopPointSelected =
           (selectedSampledPointIdx === null ||
             selectedSampledPointIdx === undefined) &&
@@ -291,16 +346,13 @@ class Chart extends React.Component {
           ? selectedStopPointIdx
           : selectedSampledPointIdx;
 
-        if (typeof idx !== "number" || !this.props.chartItems) {
+        if (typeof idx !== "number" || !chartItems) {
           this.setForcedPoint(undefined);
           this.setMouseCoords(undefined);
           return;
         }
 
-        const geom =
-          this.props.terria.measurableGeomList[
-            this.props.terria.measurableGeometryIndex
-          ];
+        const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
 
         if (isStopPointSelected) {
           const stopPoint = geom?.stopPoints?.[idx];
@@ -358,10 +410,25 @@ class Chart extends React.Component {
     if (this.disposeReaction) {
       this.disposeReaction();
     }
+
+    if (this.hoverAutorunDisposer) {
+      this.hoverAutorunDisposer();
+    }
   }
 
   componentDidUpdate(prevProps) {
-    // Unset zoom scale if any chartItems are added or removed
+    this.chartItemsProp = this.props.chartItems;
+    this.xAxisProp = this.props.xAxis;
+    this.marginProp = this.props.margin;
+    this.terriaProp = this.props.terria;
+    this.chartItemKeyForPointMouseNearProp =
+      this.props.chartItemKeyForPointMouseNear;
+    this.onPointMouseNearProp = this.props.onPointMouseNear;
+    this.widthProp = this.props.width;
+    this.heightProp = this.props.height;
+    this.selectedStopPointIdxProp = this.props.selectedStopPointIdx;
+    this.selectedSampledPointIdxProp = this.props.selectedSampledPointIdx;
+
     if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
       this.setMouseCoords(undefined);
@@ -370,38 +437,27 @@ class Chart extends React.Component {
       this.chartPoint = { current: undefined };
     }
 
-    // Dispose the previous autorun so we do not stack listeners on every update
     if (this.hoverAutorunDisposer) {
       this.hoverAutorunDisposer();
       this.hoverAutorunDisposer = undefined;
     }
 
-    // Keep hover state in sync with the current mouse position.
-    // Important: also emit undefined when nothing is near the mouse.
     this.hoverAutorunDisposer = autorun(() => {
       if (this.forcedPoint) {
-        this.props.onPointMouseNear?.(this.forcedPoint);
+        this.onPointMouseNearProp?.(this.forcedPoint);
         return;
       }
 
       const pointNearMouse = this.pointsNearMouse.find(
         (elem) =>
           elem.chartItem.key ===
-            this.props.chartItemKeyForPointMouseNear.AirChart ||
+            this.chartItemKeyForPointMouseNearProp.AirChart ||
           elem.chartItem.key ===
-            this.props.chartItemKeyForPointMouseNear.GroundChart
+            this.chartItemKeyForPointMouseNearProp.GroundChart
       );
 
-      this.props.onPointMouseNear?.(pointNearMouse?.point);
+      this.onPointMouseNearProp?.(pointNearMouse?.point);
     });
-  }
-
-  @observable isDownloading;
-  chartRef = React.createRef();
-
-  @action
-  setIsDownloading(isDownloading) {
-    this.isDownloading = isDownloading;
   }
 
   downloadChart = () => {
@@ -429,7 +485,7 @@ class Chart extends React.Component {
   };
 
   render() {
-    const { height, xAxis, terria } = this.props;
+    const { height, xAxis, terria } = this;
     if (this.chartItems.length === 0)
       return <div className={Styles.empty}>No data available</div>;
     return (
@@ -481,7 +537,7 @@ class Chart extends React.Component {
               onMouseLeave={() => {
                 this.setMouseCoords(undefined);
                 this.setForcedPoint(undefined);
-                this.props.onPointMouseNear(undefined);
+                this.onPointMouseNearProp?.(undefined);
               }}
             >
               <Group
@@ -555,19 +611,19 @@ class Plot extends React.Component {
     zoomedScales: PropTypes.array.isRequired
   };
 
-  constructor(props) {
-    super(props);
-    makeObservable(this);
-  }
+  chartRefs = [];
 
-  @computed
-  get chartRefs() {
-    return this.props.chartItems.map((_) => React.createRef());
+  getChartRef(i) {
+    if (!this.chartRefs[i]) {
+      this.chartRefs[i] = React.createRef();
+    }
+    return this.chartRefs[i];
   }
 
   componentDidUpdate() {
-    Object.values(this.chartRefs).forEach(({ current: ref }, i) => {
-      if (typeof ref.doZoom === "function") {
+    this.props.chartItems.forEach((_, i) => {
+      const ref = this.getChartRef(i).current;
+      if (typeof ref?.doZoom === "function") {
         ref.doZoom(this.props.zoomedScales[i]);
       }
     });
@@ -581,15 +637,13 @@ class Plot extends React.Component {
           return (
             <LineChart
               key={chartItem.key}
-              ref={this.chartRefs[i]}
+              ref={this.getChartRef(i)}
               id={sanitizeIdString(chartItem.key)}
               chartItem={chartItem}
               scales={initialScales[i]}
             />
           );
         case "momentPoints": {
-          // Find a basis item to stick the points on, if we can't find one, we
-          // vertically center the points
           const basisItemIndex = chartItems.findIndex(
             (item) =>
               (item.type === "line" || item.type === "lineAndPoint") &&
@@ -598,7 +652,7 @@ class Plot extends React.Component {
           return (
             <MomentPointsChart
               key={chartItem.key}
-              ref={this.chartRefs[i]}
+              ref={this.getChartRef(i)}
               id={sanitizeIdString(chartItem.key)}
               chartItem={chartItem}
               scales={initialScales[i]}
@@ -612,7 +666,7 @@ class Plot extends React.Component {
           return (
             <MomentLinesChart
               key={chartItem.key}
-              ref={this.chartRefs[i]}
+              ref={this.getChartRef(i)}
               id={sanitizeIdString(chartItem.key)}
               chartItem={chartItem}
               scales={initialScales[i]}
@@ -623,7 +677,7 @@ class Plot extends React.Component {
           return (
             <LineAndPointChart
               key={chartItem.key}
-              ref={this.chartRefs[i]}
+              ref={this.getChartRef(i)}
               id={sanitizeIdString(chartItem.key)}
               chartItem={chartItem}
               scales={initialScales[i]}
@@ -631,6 +685,8 @@ class Plot extends React.Component {
             />
           );
         }
+        default:
+          return null;
       }
     });
   }
@@ -661,9 +717,6 @@ class XAxis extends React.PureComponent {
           textAnchor: "middle",
           fontFamily: "Arial"
         }}
-        // .nice() rounds the scale so that the aprox beginning and
-        // aprox end labels are shown
-        // See: https://stackoverflow.com/questions/21753126/d3-js-starting-and-ending-tick
         scale={scale.nice()}
         {...restProps}
       />
@@ -792,6 +845,5 @@ function findNearestPoint(points, coords, xScale, maxDistancePx) {
 }
 
 function sanitizeIdString(id) {
-  // delete all non-alphanum chars
   return id.replace(/[^a-zA-Z0-9_-]/g, "");
 }

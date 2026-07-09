@@ -163,6 +163,9 @@ type IStateTypes = {
 
 // the compass on map
 class Compass extends PureComponent<PropTypes, IStateTypes> {
+  private _isMounted = false;
+  private _disposeWhenCesiumLoaded?: () => void;
+
   _unsubscribeFromPostRender: any;
   _unsubscribeFromAnimationFrame: any;
   private _unsubscribeFromViewerChange?: CesiumEvent.RemoveCallback;
@@ -170,16 +173,16 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
   orbitMouseUpFunction?: (this: Document, ev: MouseEvent) => any;
   rotateMouseMoveFunction?: (this: Document, ev: MouseEvent) => any;
   rotateMouseUpFunction?: (this: Document, ev: MouseEvent) => any;
-  isRotating: boolean = false;
-  rotateInitialCursorAngle: number = 0;
+  isRotating = false;
+  rotateInitialCursorAngle = 0;
   rotateFrame?: Matrix4;
-  rotateIsLook: boolean = false;
-  rotateInitialCameraAngle: number = 0;
-  rotateInitialCameraDistance: number = 0;
+  rotateIsLook = false;
+  rotateInitialCameraAngle = 0;
+  rotateInitialCameraDistance = 0;
   orbitFrame?: Matrix4;
-  orbitIsLook: boolean = false;
-  orbitLastTimestamp: number = 0;
-  isOrbiting: boolean = false;
+  orbitIsLook = false;
+  orbitLastTimestamp = 0;
+  isOrbiting = false;
   orbitAnimationFrameFunction?: any;
   showCompass?: boolean;
 
@@ -195,27 +198,25 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
       active: false,
       activeForTransition: false
     };
+  }
 
-    when(
+  componentDidMount() {
+    this._isMounted = true;
+
+    this._disposeWhenCesiumLoaded = when(
       () => isDefined(this.cesiumViewer),
       () => this.cesiumLoaded()
     );
   }
 
-  @computed
-  get cesiumViewer() {
-    return this.props.terria.cesium;
-  }
-
-  cesiumLoaded() {
-    this._unsubscribeFromViewerChange =
-      this.props.terria.mainViewer.afterViewerChanged.addEventListener(() =>
-        viewerChange(this)
-      );
-    viewerChange(this);
-  }
-
   componentWillUnmount() {
+    this._isMounted = false;
+
+    if (this._disposeWhenCesiumLoaded) {
+      this._disposeWhenCesiumLoaded();
+      this._disposeWhenCesiumLoaded = undefined;
+    }
+
     if (this.orbitMouseMoveFunction) {
       document.removeEventListener(
         "mousemove",
@@ -226,6 +227,20 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
     if (this.orbitMouseUpFunction) {
       document.removeEventListener("mouseup", this.orbitMouseUpFunction, false);
     }
+    if (this.rotateMouseMoveFunction) {
+      document.removeEventListener(
+        "mousemove",
+        this.rotateMouseMoveFunction,
+        false
+      );
+    }
+    if (this.rotateMouseUpFunction) {
+      document.removeEventListener(
+        "mouseup",
+        this.rotateMouseUpFunction,
+        false
+      );
+    }
     if (this._unsubscribeFromAnimationFrame) {
       this._unsubscribeFromAnimationFrame();
     }
@@ -235,6 +250,27 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
     if (this._unsubscribeFromViewerChange) {
       this._unsubscribeFromViewerChange();
     }
+  }
+
+  setStateIfMounted = (nextState: Partial<IStateTypes>) => {
+    if (this._isMounted) {
+      this.setState(nextState as Pick<IStateTypes, keyof IStateTypes>);
+    }
+  };
+
+  @computed
+  get cesiumViewer() {
+    return this.props.terria.cesium;
+  }
+
+  cesiumLoaded() {
+    if (!this._isMounted) return;
+
+    this._unsubscribeFromViewerChange =
+      this.props.terria.mainViewer.afterViewerChanged.addEventListener(() =>
+        viewerChange(this)
+      );
+    viewerChange(this);
   }
 
   handleMouseDown(e: any) {
@@ -327,7 +363,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
   }
 
   resetRotater() {
-    this.setState({
+    this.setStateIfMounted({
       orbitCursorOpacity: 0,
       orbitCursorAngle: 0
     });
@@ -401,18 +437,18 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
           style={{
             backgroundImage: compassRotationMarker
           }}
-          onMouseOver={() => this.setState({ active: true })}
+          onMouseOver={() => this.setStateIfMounted({ active: true })}
           onMouseOut={() => {
             if (showGuidance) {
-              this.setState({ active: true });
+              this.setStateIfMounted({ active: true });
             } else {
-              this.setState({ active: false });
+              this.setStateIfMounted({ active: false });
             }
           }}
           // do we give focus to this? given it's purely a mouse tool
           // focus it anyway..
           tabIndex={0}
-          onFocus={() => this.setState({ active: true })}
+          onFocus={() => this.setStateIfMounted({ active: true })}
           // Gotta keep menu open if blurred, and close it with the close button
           // instead. otherwise it'll never focus on the help buttons
           // onBlur={() => this.setState({ active: false })}
@@ -441,7 +477,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
                 //   this.props.viewState.showHelpPanel();
                 //   this.props.viewState.selectHelpMenuItem("navigation");
                 // }}
-                onClose={() => this.setState({ active: false })}
+                onClose={() => this.setStateIfMounted({ active: false })}
               />
             </Box>
           </FadeIn>
@@ -677,7 +713,7 @@ function orbit(
 
   function updateAngleAndOpacity(vector: Cartesian2, compassWidth: number) {
     const angle = Math.atan2(-vector.y, vector.x);
-    viewModel.setState({
+    viewModel.setStateIfMounted({
       orbitCursorAngle: CesiumMath.zeroToTwoPi(angle - CesiumMath.PI_OVER_TWO)
     });
 
@@ -685,7 +721,7 @@ function orbit(
     const maxDistance = compassWidth / 2.0;
     const distanceFraction = Math.min(distance / maxDistance, 1.0);
     const easedOpacity = 0.5 * distanceFraction * distanceFraction + 0.5;
-    viewModel.setState({
+    viewModel.setStateIfMounted({
       orbitCursorOpacity: easedOpacity
     });
 
@@ -777,7 +813,7 @@ function viewerChange(viewModel: Compass) {
           debounce(
             function (scene: Scene) {
               if ((scene as any).view) {
-                viewModel.setState({
+                viewModel.setStateIfMounted({
                   heading: scene.camera.heading
                 });
               }
