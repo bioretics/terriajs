@@ -170,7 +170,8 @@ function configureWebpack({
     new webpack.DefinePlugin({
       "process.env.NODE_ENV": JSON.stringify(
         devMode ? "development" : "production"
-      )
+      ),
+      "process.env.DRAGGABLE_DEBUG": JSON.stringify(false)
     })
   );
 
