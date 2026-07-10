@@ -935,6 +935,7 @@ export default class Terria {
     this.forceLoadInitSources.bind(this)
   );
 
+  @observable playPathSamplingStep: number = 500;
   @observable serverConfig: any; // TODO
   @observable feedbackService: IFeedbackService | undefined;
   @observable shareDataService: ShareDataService | undefined;

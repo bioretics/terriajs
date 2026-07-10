@@ -1858,6 +1858,23 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "interpolation": {
+      "": "Interpolazione",
+      "linear": "Approssimazione lineare",
+      "lagrange": "Polinomio di Lagrange",
+      "hermite": "Polinomio di Hermite"
+    },
+    "positionMarker": "Indicatore posizione",
+    "trackingFrame": {
+      "": "Sistema di tracking",
+      "autodetect": "Auto",
+      "inertial": "Inerziale",
+      "velocity": "Velocità",
+      "enu": "Est-Nord-Su"
+    },
+    "samplingStepHeader": "Passo di campionamento",
+    "samplingStepButtonText": "Cambia",
+    "samplingStepButtonTitle": "Applica il nuovo passo di campionamento del volo, indipendente da quello del pannello Misure",
     "tooltip": {
       "play": "Avvia percorso",
       "pause": "Pausa percorso",

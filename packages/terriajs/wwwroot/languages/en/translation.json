@@ -2405,6 +2405,23 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Speed",
+    "interpolation": {
+      "name": "Interpolation",
+      "linear": "Linear approximation",
+      "lagrange": "Lagrange polynomial",
+      "hermite": "Hermite polynomial"
+    },
+    "positionMarker": "Position marker",
+    "trackingFrame": {
+      "name": "Tracking frame",
+      "autodetect": "Auto-detect",
+      "inertial": "Inertial",
+      "velocity": "Velocity",
+      "enu": "East-North-Up"
+    },
+    "samplingStepHeader": "Sampling step",
+    "samplingStepButtonText": "Change",
+    "samplingStepButtonTitle": "Apply the new flight sampling step, independent from the Measure panel's",
     "tooltip": {
       "play": "Play path",
       "pause": "Pause path",

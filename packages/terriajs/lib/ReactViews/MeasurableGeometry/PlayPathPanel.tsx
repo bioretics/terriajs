@@ -14,6 +14,9 @@ import { observer } from "mobx-react";
 import { useEffect, useState, useRef } from "react";
 import Box from "../../Styled/Box";
 import Text from "../../Styled/Text";
+import { TrackingReferenceFrame } from "terriajs-cesium";
+import Input from "../../Styled/Input";
+import ViewerMode from "../../Models/ViewerMode";
 
 interface Props {
   terria: Terria;
@@ -39,6 +42,14 @@ const PlayPathPanel = observer((props: Props) => {
   const {
     playSpeed,
     setPlaySpeed,
+    interpolationMode,
+    setInterpolationMode,
+    trackingReferenceFrame,
+    setTrackingReferenceFrame,
+    startFromLastPoint,
+    setStartFromLastPoint,
+    showPositionMarker,
+    setShowPositionMarker,
     playingPath,
     isCameraMoving,
     countdown,
@@ -48,8 +59,17 @@ const PlayPathPanel = observer((props: Props) => {
     onPause,
     onStop,
     resetPlayPath,
-    isPitchTooLow
+    playPathSamplingStep,
+    changePlayPathSamplingStep
   } = usePlayPath(props.terria, props.viewState);
+
+  const [samplingStepInput, setSamplingStepInput] =
+    useState(playPathSamplingStep);
+  const [isValidSamplingStep, setIsValidSamplingStep] = useState(true);
+
+  useEffect(() => {
+    setSamplingStepInput(playPathSamplingStep);
+  }, [playPathSamplingStep]);
 
   const currentGeom =
     props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
@@ -89,7 +109,9 @@ const PlayPathPanel = observer((props: Props) => {
       props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
 
     if (currentGeom !== lastGeom) {
-      resetPlayPath();
+      if (!props.viewState.isPlayingPath && countdown === null) {
+        resetPlayPath();
+      }
       setLastGeom(currentGeom);
     }
   }, [
@@ -97,6 +119,8 @@ const PlayPathPanel = observer((props: Props) => {
     props.terria.measurableGeomList,
     props.terria.measurableGeometryIndex,
     lastGeom,
+    props.viewState.isPlayingPath,
+    countdown,
     resetPlayPath
   ]);
 
@@ -208,6 +232,34 @@ const PlayPathPanel = observer((props: Props) => {
   };
 
   const renderBody = () => {
+    const canChangeOptions = !playingPath && countdown === null;
+    const showTrackingFrameControl =
+      props.terria.mainViewer.viewerMode === ViewerMode.Cesium;
+
+    const rowStyle: React.CSSProperties = {
+      display: "flex",
+      alignItems: "center",
+      width: "100%",
+      minWidth: 0,
+      gap: 8
+    };
+
+    const selectStyle: React.CSSProperties = {
+      flex: "1 1 0%",
+      width: "100%",
+      minWidth: 0,
+      maxWidth: "100%",
+      padding: "4px 6px",
+      borderRadius: 4,
+      border: `1px solid ${theme.textLight}`,
+      background: theme.colorPrimary,
+      color: theme.textLight,
+      opacity: canChangeOptions ? 1 : 0.6,
+      cursor: canChangeOptions ? "pointer" : "not-allowed",
+      overflow: "hidden",
+      textOverflow: "ellipsis"
+    };
+
     return (
       <div
         ref={cameraPositionRef}
@@ -217,14 +269,14 @@ const PlayPathPanel = observer((props: Props) => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 8
+          gap: 8,
+          width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
+          boxSizing: "border-box",
+          overflowX: "hidden"
         }}
       >
-        {isPitchTooLow() && !playingPath && (
-          <div style={{ color: "red", marginBottom: 4 }}>
-            {i18next.t(($) => $.playPath.tooltip.pitchTooLow)}
-          </div>
-        )}
         <div
           style={{
             display: "flex",
@@ -232,25 +284,23 @@ const PlayPathPanel = observer((props: Props) => {
             alignItems: "stretch",
             justifyContent: "center",
             gap: 8,
-            width: "100%"
+            width: "100%",
+            minWidth: 0
           }}
         >
           <Button
             ref={playButtonRef}
             onClick={playingPath ? onPause : onPlay}
-            disabled={
-              (!playingPath && isCameraMoving) ||
-              (!playingPath && isPitchTooLow())
-            }
+            disabled={!playingPath && isCameraMoving}
             css={`
               color: ${theme.textLight};
               background: ${theme.colorPrimary};
               min-width: 50px;
             `}
             title={
-              isPitchTooLow() && !playingPath
-                ? i18next.t(($) => $.playPath.tooltip.pitchTooLow)
-                : playingPath
+              playingPath
+                ? i18next.t(($) => $.playPath.tooltip.pause)
+                : i18next.t(($) => $.playPath.tooltip.play)
             }
           >
             <StyledIcon
@@ -264,7 +314,11 @@ const PlayPathPanel = observer((props: Props) => {
             title={i18next.t(($) => $.playPath.tooltip.stop)}
             disabled={
               !playingPath &&
-              !(currentPointIndex > 0 && currentPointIndex < pointsSize! - 1)
+              !(
+                pointsSize !== undefined &&
+                currentPointIndex > 0 &&
+                currentPointIndex < pointsSize - 1
+              )
             }
             css={`
               color: ${theme.textLight};
@@ -275,27 +329,150 @@ const PlayPathPanel = observer((props: Props) => {
             <StyledIcon glyph={Icon.GLYPHS.revert} styledWidth="16px" />
           </Button>
         </div>
+
+        <div className="no-drag" style={{ ...rowStyle, alignItems: "center" }}>
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {"Start from"}:
+          </label>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16,
+              flex: "1 1 0%",
+              minWidth: 0,
+              opacity: canChangeOptions ? 1 : 0.6,
+              cursor: canChangeOptions ? "pointer" : "not-allowed"
+            }}
+          >
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: "0.9em",
+                cursor: canChangeOptions ? "pointer" : "not-allowed"
+              }}
+            >
+              <input
+                type="radio"
+                name="playPathStartFrom"
+                checked={!startFromLastPoint}
+                onChange={() => setStartFromLastPoint(false)}
+                disabled={!canChangeOptions}
+              />
+              {"First point"}
+            </label>
+
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: "0.9em",
+                cursor: canChangeOptions ? "pointer" : "not-allowed"
+              }}
+            >
+              <input
+                type="radio"
+                name="playPathStartFrom"
+                checked={startFromLastPoint}
+                onChange={() => setStartFromLastPoint(true)}
+                disabled={!canChangeOptions}
+              />
+              {"Last point"}
+            </label>
+          </div>
+        </div>
+
+        <div className="no-drag" style={rowStyle}>
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t(($) => $.playPath.interpolation.name)}:
+          </label>
+          <select
+            value={interpolationMode}
+            onChange={(e) => setInterpolationMode(e.target.value as any)}
+            disabled={!canChangeOptions}
+            style={selectStyle}
+          >
+            <option value="linear">
+              {i18next.t(($) => $.playPath.interpolation.linear)}
+            </option>
+            <option value="lagrange">
+              {i18next.t(($) => $.playPath.interpolation.lagrange)}
+            </option>
+            <option value="hermite">
+              {i18next.t(($) => $.playPath.interpolation.hermite)}
+            </option>
+          </select>
+        </div>
+
+        <div className="no-drag" style={rowStyle}>
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: "0.9em",
+              cursor: "pointer",
+              whiteSpace: "nowrap"
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={showPositionMarker}
+              onChange={(e) => setShowPositionMarker(e.target.checked)}
+            />
+            {i18next.t(($) => $.playPath.positionMarker)}
+          </label>
+        </div>
+
+        {showTrackingFrameControl && (
+          <div className="no-drag" style={rowStyle}>
+            <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+              {i18next.t(($) => $.playPath.trackingFrame.name)}:
+            </label>
+            <select
+              value={trackingReferenceFrame}
+              onChange={(e) =>
+                setTrackingReferenceFrame(Number(e.target.value) as any)
+              }
+              disabled={!canChangeOptions}
+              style={selectStyle}
+            >
+              <option value={TrackingReferenceFrame.AUTODETECT}>
+                {i18next.t(($) => $.playPath.trackingFrame.autodetect)}
+              </option>
+              <option value={TrackingReferenceFrame.INERTIAL}>
+                {i18next.t(($) => $.playPath.trackingFrame.inertial)}
+              </option>
+              <option value={TrackingReferenceFrame.VELOCITY}>
+                {i18next.t(($) => $.playPath.trackingFrame.velocity)}
+              </option>
+              <option value={TrackingReferenceFrame.ENU}>
+                {i18next.t(($) => $.playPath.trackingFrame.enu)}
+              </option>
+            </select>
+          </div>
+        )}
+
         <div
           title={`${i18next.t(($) => $.playPath.tooltip.speedSliderTitle)}`}
           className="no-drag"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            maxWidth: "130%",
-            gap: 8
-          }}
+          style={{ ...rowStyle, maxWidth: "100%" }}
         >
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
             {i18next.t(($) => $.playPath.speed)}:
           </label>
           <Slider
-            min={0.5}
+            min={0.1}
             max={3}
             step={0.1}
             value={playSpeed}
             onChange={(val) => {
-              setPlaySpeed(val);
+              setPlaySpeed(val as number);
             }}
             aria-valuetext={`${i18next.t(
               ($) => $.playPath.tooltip.speedSlider
@@ -309,6 +486,61 @@ const PlayPathPanel = observer((props: Props) => {
             {playSpeed}x
           </span>
         </div>
+        <div
+          className="no-drag"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            gap: 8,
+            flexWrap: "wrap"
+          }}
+        >
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t(($) => $.playPath.samplingStepHeader)}:
+          </label>
+          <Box styledWidth="70px">
+            <Input
+              css={`
+                border: solid;
+                border-width: ${isValidSamplingStep ? 1 : 2}px;
+                border-color: ${isValidSamplingStep ? theme.textLight : "red"};
+              `}
+              title={i18next.t(($) => $.playPath.samplingStepHeader)}
+              light={false}
+              dark
+              type="number"
+              min={1}
+              max={2000}
+              step={1}
+              value={samplingStepInput}
+              disabled={playingPath}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setIsValidSamplingStep(
+                  Number.isFinite(val) && val > 0 && val <= 2000
+                );
+                setSamplingStepInput(val);
+              }}
+            />
+          </Box>
+          <Button
+            css={`
+              color: ${theme.textLight};
+              background: ${theme.colorPrimary};
+            `}
+            disabled={!isValidSamplingStep || playingPath}
+            title={i18next.t(($) => $.playPath.samplingStepButtonTitle)}
+            onClick={() => {
+              if (isValidSamplingStep) {
+                changePlayPathSamplingStep(samplingStepInput);
+                onStop();
+              }
+            }}
+          >
+            {i18next.t(($) => $.playPath.samplingStepButtonText)}
+          </Button>
+        </div>
       </div>
     );
   };
@@ -319,17 +551,24 @@ const PlayPathPanel = observer((props: Props) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.1,
+        width: Math.min(380, Math.max(300, window.innerWidth * 0.22)),
         height: "auto"
       }}
       maxWidth={window.innerWidth * 0.4}
+      minWidth={280}
       enableResizing={{ right: false, left: false }}
       cancel=".no-drag"
     >
       <div
         ref={panelRef}
         className={panelClassName}
-        style={{ pointerEvents: "auto", position: "relative" }}
+        style={{
+          pointerEvents: "auto",
+          position: "relative",
+          width: "100%",
+          maxWidth: "100%",
+          boxSizing: "border-box"
+        }}
         aria-hidden={!props.viewState.playPathPanelIsVisible}
       >
         {renderTourPrompt()}
