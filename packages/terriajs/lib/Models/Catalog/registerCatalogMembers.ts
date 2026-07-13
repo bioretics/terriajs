@@ -67,6 +67,11 @@ import WebProcessingServiceCatalogFunctionJob from "./Ows/WebProcessingServiceCa
 import WebProcessingServiceCatalogGroup from "./Ows/WebProcessingServiceCatalogGroup";
 import SdmxJsonCatalogGroup from "./SdmxJson/SdmxJsonCatalogGroup";
 import SdmxJsonCatalogItem from "./SdmxJson/SdmxJsonCatalogItem";
+import RerPoiCatalogItem from "./Esri/RerPoiCatalogItem";
+import {
+  isRerPoiUrl,
+  RER_POI_CATALOG_ITEM_TYPE
+} from "../../ModelMixins/RerPoiHelpers";
 
 export default function registerCatalogMembers() {
   CatalogMemberFactory.register(CatalogGroup.type, CatalogGroup);
@@ -118,6 +123,7 @@ export default function registerCatalogMembers() {
     ArcGisImageServerCatalogItem.type,
     ArcGisImageServerCatalogItem
   );
+  CatalogMemberFactory.register(RerPoiCatalogItem.type, RerPoiCatalogItem);
   CatalogMemberFactory.register(
     ArcGisMapServerCatalogGroup.type,
     ArcGisMapServerCatalogGroup
@@ -258,6 +264,21 @@ export default function registerCatalogMembers() {
   CatalogMemberFactory.register(AssImpCatalogItem.type, AssImpCatalogItem);
   CatalogMemberFactory.register(CogCatalogItem.type, CogCatalogItem);
 
+  UrlToCatalogMemberMapping.register(
+    isRerPoiUrl,
+    RER_POI_CATALOG_ITEM_TYPE,
+    true
+  );
+  UrlToCatalogMemberMapping.register(
+    matchesUrl(/\/arcgis\/rest\/.*\/MapServer\/\d+\b/i),
+    ArcGisFeatureServerCatalogItem.type,
+    true
+  );
+  UrlToCatalogMemberMapping.register(
+    matchesUrl(/\/rest\/.*\/MapServer\/\d+\b/i),
+    ArcGisFeatureServerCatalogItem.type,
+    true
+  );
   UrlToCatalogMemberMapping.register(
     matchesExtension("csv"),
     CsvCatalogItem.type
