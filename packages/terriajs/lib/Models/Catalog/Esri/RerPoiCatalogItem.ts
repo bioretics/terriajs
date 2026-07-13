@@ -44,6 +44,13 @@ import RerPoiCatalogItemTraits, {
 import Color from "terriajs-cesium/Source/Core/Color";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 
+type ArcGisFeatureServerCatalogItemConstructor = new (
+  ...args: ModelConstructorParameters
+) => ArcGisFeatureServerCatalogItem;
+
+const ArcGisFeatureServerCatalogItemBase =
+  ArcGisFeatureServerCatalogItem as unknown as ArcGisFeatureServerCatalogItemConstructor;
+  
 const geodesic = new EllipsoidGeodesic();
 
 interface EsriJsonQueryOptions {
@@ -93,7 +100,8 @@ interface RerPoiTraitSnapshot {
   where: string;
 }
 
-export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
+export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBase {
+  static readonly type = RER_POI_CATALOG_ITEM_TYPE;
   static readonly TraitsClass = RerPoiCatalogItemTraits;
   static readonly traits = RerPoiCatalogItemTraits.traits;
 
@@ -179,7 +187,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
   @override
   get mapItems() {
-    const items = [...super.mapItems];
+    const items = [...super.mapItems.slice()];
     if (this.debugDataSource) {
       items.push(this.debugDataSource);
     }
@@ -603,8 +611,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       resultOffset?: number
     ): Promise<EsriJsonFeatureServerResponse> => {
       const urlString = runInAction(() =>
-        this.buildRerPoiQueryUrl({ ...queryOptions, resultOffset })
-      );
+  this.buildRerPoiEsriJsonUrl({ ...queryOptions, resultOffset })
+);
       return loadJson(urlString);
     };
 
@@ -1088,30 +1096,19 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     }) as any;
   }
 
-  buildEsriJsonUrl(resultOffset?: number) {
+
+  private buildRerPoiEsriJsonUrl(options?: number | EsriJsonQueryOptions): string {
+    const queryOptions =
+      typeof options === "number" ? { resultOffset: options } : options;
+
     const url = normalizeRerPoiUrl(this.url || "0d");
 
     if (!/^(.*(?:FeatureServer|MapServer))\/(\d+)/.test(url)) {
-      return Result.error(
-        networkRequestError({
-          title: "Invalid RerPoi URL",
-          message: `URL must point to a layer on an ArcGIS FeatureServer or MapServer. Received: ${url}`
-        })
-      );
+      throw networkRequestError({
+        title: "Invalid RerPoi URL",
+        message: `URL must point to a layer on an ArcGIS FeatureServer or MapServer. Received: ${url}`
+      });
     }
-
-    return new Result(this.buildRerPoiQueryUri({ resultOffset }));
-  }
-
-  private buildRerPoiQueryUrl(queryOptions?: EsriJsonQueryOptions): string {
-    return proxyCatalogItemUrl(
-      this,
-      this.buildRerPoiQueryUri(queryOptions).toString()
-    );
-  }
-
-  private buildRerPoiQueryUri(queryOptions?: EsriJsonQueryOptions): URI {
-    const url = normalizeRerPoiUrl(this.url || "0d");
 
     const combinedWhere = [
       this.getRerPoiTrait("where"),
@@ -1164,7 +1161,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         .addQuery("resultOffset", queryOptions.resultOffset);
     }
 
-    return uri;
+    return proxyCatalogItemUrl(this, uri.toString());
   }
 
   private buildLevelFilterClause(
