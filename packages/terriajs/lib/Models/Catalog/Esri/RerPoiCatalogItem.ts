@@ -25,7 +25,6 @@ import ViewerMode from "../../ViewerMode";
 import isDefined from "../../../Core/isDefined";
 import loadJson from "../../../Core/loadJson";
 import { FeatureCollectionWithCrs } from "../../../Core/GeoJson";
-import Result from "../../../Core/Result";
 import { networkRequestError } from "../../../Core/TerriaError";
 import featureDataToGeoJson from "../../../Map/PickedFeatures/featureDataToGeoJson";
 import CommonStrata from "../../Definition/CommonStrata";
@@ -50,7 +49,7 @@ type ArcGisFeatureServerCatalogItemConstructor = new (
 
 const ArcGisFeatureServerCatalogItemBase =
   ArcGisFeatureServerCatalogItem as unknown as ArcGisFeatureServerCatalogItemConstructor;
-  
+
 const geodesic = new EllipsoidGeodesic();
 
 interface EsriJsonQueryOptions {
@@ -611,8 +610,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       resultOffset?: number
     ): Promise<EsriJsonFeatureServerResponse> => {
       const urlString = runInAction(() =>
-  this.buildRerPoiEsriJsonUrl({ ...queryOptions, resultOffset })
-);
+        this.buildRerPoiEsriJsonUrl({ ...queryOptions, resultOffset })
+      );
       return loadJson(urlString);
     };
 
@@ -1096,8 +1095,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     }) as any;
   }
 
-
-  private buildRerPoiEsriJsonUrl(options?: number | EsriJsonQueryOptions): string {
+  private buildRerPoiEsriJsonUrl(
+    options?: number | EsriJsonQueryOptions
+  ): string {
     const queryOptions =
       typeof options === "number" ? { resultOffset: options } : options;
 
