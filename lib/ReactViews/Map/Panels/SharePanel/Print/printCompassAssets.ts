@@ -9,4 +9,4 @@ const COMPASS_INNER_SVG = `<svg width="26" height="26" xmlns="http://www.w3.org/
 export const COMPASS_OUTER_DATA_URI = svgToDataUri(COMPASS_OUTER_SVG);
 export const COMPASS_INNER_DATA_URI = svgToDataUri(COMPASS_INNER_SVG);
 
-export const BASE_COMPASS_SIZE = 56;
+export const BASE_COMPASS_SIZE = 128;

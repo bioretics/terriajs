@@ -47,7 +47,7 @@ function drawScaleBar(
   ctx.fillRect(boxX, boxY, containerWidth, boxHeight);
 
   ctx.fillStyle = "black";
-  ctx.font = `${11 * scaleFactor}px monospace`;
+  ctx.font = `${16 * scaleFactor}px monospace`;
   ctx.textAlign = "center";
   ctx.fillText(
     metrics.label,
