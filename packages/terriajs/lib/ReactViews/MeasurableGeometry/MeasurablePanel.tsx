@@ -111,6 +111,7 @@ const MeasurablePanel = observer((props: Props) => {
     );
     viewState.measurablePanelIsVisible = false;
     viewState.mobileMeasureToolsButtonVisible = false;
+    MeasurablePanelManager.setPointerOverPanel(false);
     [
       MeasureToolsController.id,
       MeasureLineTool.id,
@@ -1703,6 +1704,7 @@ const MeasurablePanel = observer((props: Props) => {
 
     const handleMouseOver = React.useCallback(() => {
       setHighlightedRow(idx);
+      viewState.setSelectedSampledPointIdx(null);
       viewState.setSelectedStopPointIdx(idx);
       MeasurablePanelManager.addMarker(
         terria.measurableGeomList[terria.measurableGeometryIndex].stopPoints[
@@ -1851,6 +1853,8 @@ const MeasurablePanel = observer((props: Props) => {
   const panelContent = (
     <div
       ref={panelRef}
+      onMouseEnter={() => MeasurablePanelManager.setPointerOverPanel(true)}
+      onMouseLeave={() => MeasurablePanelManager.setPointerOverPanel(false)}
       css={`
         background: ${theme.darkTranslucent};
         width: ${isMobile ? "100%" : "auto"};
