@@ -120,10 +120,3 @@ export function getDistanceLegendMetrics(
   }
   return null;
 }
-
-export function getMapHeading(terria: Terria): number {
-  if (isDefined(terria.cesium)) {
-    return terria.cesium.scene.camera.heading;
-  }
-  return 0;
-}

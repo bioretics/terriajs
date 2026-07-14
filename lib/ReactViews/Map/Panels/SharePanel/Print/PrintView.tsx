@@ -1,17 +1,16 @@
 import DOMPurify from "dompurify";
 import { observer } from "mobx-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { StyleSheetManager, ThemeProvider } from "styled-components";
 import { terriaTheme } from "../../../../StandardUserInterface";
 import { useViewState } from "../../../../Context";
-import { DistanceLegend } from "../../../BottomBar/DistanceLegend";
 import {
   buildShareLink,
   buildShortShareLink,
   canShorten
 } from "../BuildShareLink";
-import PrintCompass from "./PrintCompass";
+import { composeMapScreenshot } from "./composeMapScreenshot";
 import PrintDatasets from "./PrintDatasets";
 import PrintSource from "./PrintSource";
 import PrintViewButtons from "./PrintViewButtons";
@@ -64,36 +63,6 @@ const styles = `
       width: 80%;
     }
 
-    .tjs-legend__distanceLegend {
-      display: inline-block;
-      text-align: center;
-      position: absolute;
-      bottom: 5px;
-      right: 10px;
-      z-index: 1;
-      background: white;
-      padding: 5px;
-    }
-
-    .tjs-legend__distanceLegend > label {
-      color: black;
-    }
-
-    .tjs-legend__distanceLegend:hover {
-      background: #fff;
-    }
-
-    .tjs-legend__bar {
-      border-bottom: 3px solid black;
-      border-right: 3px solid black;
-      border-left: 3px solid black;
-      margin: 0 auto;
-    }
-
-    .tjs-print__compass label {
-      color: black;
-    }
-
     body {
       display:flex;
       justify-content: center;
@@ -135,18 +104,14 @@ interface Props {
   closeCallback: () => void;
 }
 
-const getScale = (maybeElement: Element | undefined) =>
-  maybeElement
-    ? PRINT_MAP_WIDTH / (maybeElement as HTMLElement).offsetWidth
-    : 1;
-
 const PrintView = observer((props: Props) => {
   const viewState = useViewState();
   const rootNode = useRef(document.createElement("main"));
 
-  const [screenshot, setScreenshot] = useState<Promise<string> | null>(null);
+  const [rawScreenshot, setRawScreenshot] = useState<Promise<string> | null>(
+    null
+  );
   const [shareLink, setShareLink] = useState("");
-  const mapScale = getScale(viewState.terria.currentViewer.getContainer());
 
   useEffect(() => {
     props.window.document.title = "Print view";
@@ -157,9 +122,24 @@ const PrintView = observer((props: Props) => {
   }, [props.window]);
 
   useEffect(() => {
-    setScreenshot(viewState.terria.currentViewer.captureScreenshot());
+    setRawScreenshot(viewState.terria.currentViewer.captureScreenshot());
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [props.window]);
+
+  // Scale bar and compass are drawn onto the screenshot itself, so the
+  // preview, the printed page and the downloaded image are always identical.
+  const { printIncludeScaleBar, printIncludeCompass } = viewState;
+  const screenshot = useMemo(
+    () =>
+      rawScreenshot &&
+      rawScreenshot.then((dataString) =>
+        composeMapScreenshot(dataString, viewState.terria, {
+          includeScaleBar: printIncludeScaleBar,
+          includeCompass: printIncludeCompass
+        })
+      ),
+    [rawScreenshot, viewState.terria, printIncludeScaleBar, printIncludeCompass]
+  );
 
   useEffect(() => {
     canShorten(viewState.terria)
@@ -184,27 +164,14 @@ const PrintView = observer((props: Props) => {
   return ReactDOM.createPortal(
     <StyleSheetManager target={props.window.document.head}>
       <ThemeProvider theme={terriaTheme}>
-        <PrintViewButtons
-          window={props.window}
-          screenshot={screenshot}
-          terria={viewState.terria}
-          includeScaleBar={viewState.printIncludeScaleBar}
-          includeCompass={viewState.printIncludeCompass}
-        />
+        <PrintViewButtons window={props.window} screenshot={screenshot} />
         <section className="mapSection">
           <div className="datasets">
             <PrintWorkbench workbench={viewState.terria.workbench} />
           </div>
           <div className="map">
             {screenshot ? (
-              <PrintViewMap screenshot={screenshot}>
-                {viewState.printIncludeScaleBar && (
-                  <DistanceLegend scale={mapScale} isPrintMode />
-                )}
-                {viewState.printIncludeCompass && (
-                  <PrintCompass terria={viewState.terria} scale={mapScale} />
-                )}
-              </PrintViewMap>
+              <PrintViewMap screenshot={screenshot} />
             ) : (
               <div>Loading...</div>
             )}

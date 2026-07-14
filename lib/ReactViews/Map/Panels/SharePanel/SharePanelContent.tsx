@@ -1,5 +1,4 @@
 import React, { FC, useCallback, useMemo, useState } from "react";
-import { observer } from "mobx-react";
 import { useTranslation } from "react-i18next";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
@@ -20,62 +19,61 @@ interface ISharePanelContentProps {
   closePanel: () => void;
 }
 
-export const SharePanelContent: FC<ISharePanelContentProps> = observer(
-  ({ terria, viewState, closePanel }) => {
-    const { t } = useTranslation();
-    const canShortenUrl = useMemo(() => !!canShorten(terria), [terria]);
+export const SharePanelContent: FC<ISharePanelContentProps> = ({
+  terria,
+  viewState,
+  closePanel
+}) => {
+  const { t } = useTranslation();
+  const canShortenUrl = useMemo(() => !!canShorten(terria), [terria]);
 
-    const [includeStoryInShare, setIncludeStoryInShare] = useState(true);
-    const [shouldShorten, setShouldShorten] = useState(
-      shouldShortenDefault(terria)
-    );
+  const [includeStoryInShare, setIncludeStoryInShare] = useState(true);
+  const [shouldShorten, setShouldShorten] = useState(
+    shouldShortenDefault(terria)
+  );
 
-    const [_, update] = useState<object>();
-    const shareUrlRef = useCallbackRef<IShareUrlRef>(null, () => update({}));
+  const [_, update] = useState<object>();
+  const shareUrlRef = useCallbackRef<IShareUrlRef>(null, () => update({}));
 
-    const includeStoryInShareOnChange = useCallback(() => {
-      setIncludeStoryInShare((prevState) => !prevState);
-    }, []);
+  const includeStoryInShareOnChange = useCallback(() => {
+    setIncludeStoryInShare((prevState) => !prevState);
+  }, []);
 
-    const shouldShortenOnChange = useCallback(() => {
-      setShouldShorten((prevState) => {
-        terria.setLocalProperty("shortenShareUrls", !prevState);
-        return !prevState;
-      });
-    }, [terria]);
+  const shouldShortenOnChange = useCallback(() => {
+    setShouldShorten((prevState) => {
+      terria.setLocalProperty("shortenShareUrls", !prevState);
+      return !prevState;
+    });
+  }, [terria]);
 
-    return (
-      <Box paddedRatio={2} column>
-        <Text medium>{t("clipboard.shareURL")}</Text>
-        <Spacing bottom={1} />
-        <ShareUrl
-          theme="dark"
-          inputTheme="dark"
-          terria={terria}
-          viewState={viewState}
-          includeStories={includeStoryInShare}
-          shouldShorten={shouldShorten}
-          ref={shareUrlRef}
-          callback={closePanel}
-        >
-          <ShareUrlBookmark viewState={viewState} />
-        </ShareUrl>
-        <Spacing bottom={2} />
-        <PrintSection viewState={viewState} />
-        <StyledHr />
-        <AdvancedOptions
-          canShortenUrl={canShortenUrl}
-          shouldShorten={shouldShorten}
-          shouldShortenOnChange={shouldShortenOnChange}
-          includeStoryInShare={includeStoryInShare}
-          includeStoryInShareOnChange={includeStoryInShareOnChange}
-          includeScaleBar={viewState.printIncludeScaleBar}
-          includeScaleBarOnChange={() => viewState.togglePrintIncludeScaleBar()}
-          includeCompass={viewState.printIncludeCompass}
-          includeCompassOnChange={() => viewState.togglePrintIncludeCompass()}
-          shareUrl={shareUrlRef}
-        />
-      </Box>
-    );
-  }
-);
+  return (
+    <Box paddedRatio={2} column>
+      <Text medium>{t("clipboard.shareURL")}</Text>
+      <Spacing bottom={1} />
+      <ShareUrl
+        theme="dark"
+        inputTheme="dark"
+        terria={terria}
+        viewState={viewState}
+        includeStories={includeStoryInShare}
+        shouldShorten={shouldShorten}
+        ref={shareUrlRef}
+        callback={closePanel}
+      >
+        <ShareUrlBookmark viewState={viewState} />
+      </ShareUrl>
+      <Spacing bottom={2} />
+      <PrintSection viewState={viewState} />
+      <StyledHr />
+      <AdvancedOptions
+        viewState={viewState}
+        canShortenUrl={canShortenUrl}
+        shouldShorten={shouldShorten}
+        shouldShortenOnChange={shouldShortenOnChange}
+        includeStoryInShare={includeStoryInShare}
+        includeStoryInShareOnChange={includeStoryInShareOnChange}
+        shareUrl={shareUrlRef}
+      />
+    </Box>
+  );
+};

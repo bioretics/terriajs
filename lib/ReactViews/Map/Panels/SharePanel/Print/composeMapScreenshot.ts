@@ -1,8 +1,6 @@
+import isDefined from "../../../../../Core/isDefined";
 import Terria from "../../../../../Models/Terria";
-import {
-  getDistanceLegendMetrics,
-  getMapHeading
-} from "./getDistanceLegendMetrics";
+import { getDistanceLegendMetrics } from "./getDistanceLegendMetrics";
 import {
   BASE_COMPASS_SIZE,
   COMPASS_INNER_DATA_URI,
@@ -12,6 +10,10 @@ import {
 export interface PrintMapOverlayOptions {
   includeScaleBar: boolean;
   includeCompass: boolean;
+}
+
+function getMapHeading(terria: Terria): number {
+  return isDefined(terria.cesium) ? terria.cesium.scene.camera.heading : 0;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
