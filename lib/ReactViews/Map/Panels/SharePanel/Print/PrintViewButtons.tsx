@@ -27,9 +27,7 @@ const PrintViewButtons = (props: Props) => {
         disabled={isDisabled}
         onClick={(evt: MouseEvent) => {
           evt.preventDefault();
-          props.screenshot?.then(downloadImg).catch((error) => {
-            console.error("Failed to download map screenshot:", error);
-          });
+          props.screenshot?.then(downloadImg);
         }}
       >
         Download map
