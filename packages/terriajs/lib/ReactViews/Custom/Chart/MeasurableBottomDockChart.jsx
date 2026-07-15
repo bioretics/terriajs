@@ -329,12 +329,9 @@ class Chart extends React.Component {
       () => {
         if (MeasurablePanelManager.isPointerOverChart()) return;
 
-        const {
-          selectedSampledPointIdx,
-          selectedStopPointIdx,
-          chartItems,
-          terria
-        } = this;
+        const selectedSampledPointIdx = this.selectedSampledPointIdxProp;
+        const selectedStopPointIdx = this.selectedStopPointIdxProp;
+        const { chartItems, terria } = this;
 
         const isStopPointSelected =
           (selectedSampledPointIdx === null ||
@@ -445,6 +442,10 @@ class Chart extends React.Component {
     this.hoverAutorunDisposer = autorun(() => {
       if (this.forcedPoint) {
         this.onPointMouseNearProp?.(this.forcedPoint);
+        return;
+      }
+
+      if (!this.mouseCoords) {
         return;
       }
 

@@ -38,6 +38,7 @@ export default class MeasurablePanelManager {
   private static markerModel: MeasurablePanelMarkerModel | null = null;
   private static terria: Terria;
   private static pointerOverChart = false;
+  private static pointerOverPanel = false;
 
   static initialize(terria: Terria) {
     MeasurablePanelManager.terria = terria;
@@ -49,6 +50,14 @@ export default class MeasurablePanelManager {
 
   static isPointerOverChart() {
     return MeasurablePanelManager.pointerOverChart;
+  }
+
+  static setPointerOverPanel(value: boolean) {
+    MeasurablePanelManager.pointerOverPanel = value;
+  }
+
+  static isPointerOverPanel() {
+    return MeasurablePanelManager.pointerOverPanel;
   }
 
   private static initializeModel() {

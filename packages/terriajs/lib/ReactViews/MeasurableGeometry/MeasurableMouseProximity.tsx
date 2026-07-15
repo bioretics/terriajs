@@ -160,6 +160,8 @@ const MeasurableMouseProximity = observer((props: Props) => {
       }
 
       const isPointerOverChart = MeasurablePanelManager.isPointerOverChart();
+      const isPointerOverPanel = MeasurablePanelManager.isPointerOverPanel();
+      const canClearSelection = !isPointerOverChart && !isPointerOverPanel;
       const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
 
       const findNearestPointInRangeScreen = (
@@ -274,12 +276,6 @@ const MeasurableMouseProximity = observer((props: Props) => {
             )
           : null;
 
-      if (sampledNearby) {
-        viewState.setSelectedSampledPointIdx(sampledNearby.idx);
-      } else if (!isPointerOverChart) {
-        viewState.setSelectedSampledPointIdx(null);
-      }
-
       const stopNearby = findNearestPointInRangeScreen(
         cachedPoints.stopPoints,
         mouseCoords,
@@ -287,9 +283,15 @@ const MeasurableMouseProximity = observer((props: Props) => {
       );
 
       if (stopNearby) {
+        viewState.setSelectedSampledPointIdx(null);
         onHighlightedRowChange(stopNearby.idx);
         viewState.setSelectedStopPointIdx(stopNearby.idx);
-      } else if (!isPointerOverChart) {
+      } else if (sampledNearby) {
+        viewState.setSelectedSampledPointIdx(sampledNearby.idx);
+        onHighlightedRowChange(null);
+        viewState.setSelectedStopPointIdx(null);
+      } else if (canClearSelection) {
+        viewState.setSelectedSampledPointIdx(null);
         onHighlightedRowChange(null);
         viewState.setSelectedStopPointIdx(null);
       }
@@ -322,7 +324,7 @@ const MeasurableMouseProximity = observer((props: Props) => {
           markerCartographic.height = 0;
         }
         MeasurablePanelManager.addMarker(markerCartographic);
-      } else if (mouseDefinitelyOutside && !isPointerOverChart) {
+      } else if (mouseDefinitelyOutside && canClearSelection) {
         viewState.setSelectedStopPointIdx(null);
         MeasurablePanelManager.removeAllMarkers();
       }
