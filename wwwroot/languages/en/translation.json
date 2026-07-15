@@ -69,6 +69,8 @@
     "areaCheckboxTitle": "Colours the terrain visible from the observer within the analysis rectangle",
     "radiusInput": "Size of the analysis rectangle in meters",
     "radiusInputTitle": "Distance from the observer to the sides of the analysis rectangle (m)",
+    "dynamicSizeCheckbox": "Dynamically update size to line length",
+    "dynamicSizeCheckboxTitle": "Continuously set the analysis rectangle size to the length of the viewshed line",
     "computing": "Computing visible area…"
   },
   "measure": {

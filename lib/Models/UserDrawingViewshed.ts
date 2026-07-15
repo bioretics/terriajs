@@ -68,6 +68,7 @@ export default class UserDrawingViewshed extends MappableMixin(
   private disposeViewshedHeight?: () => void;
   private disposeAreaMode?: IReactionDisposer;
   private disposeAreaParams?: IReactionDisposer;
+  private disposeAreaDynamicSize?: IReactionDisposer;
   /** ID of the rectangle-border polyline entity of the visible-area overlay */
   private areaBorderEntityId?: string;
 
@@ -144,6 +145,13 @@ export default class UserDrawingViewshed extends MappableMixin(
       (areaMode) => {
         if (!this.inDrawMode) return;
         if (areaMode) {
+          // On area-mode toggle-on, pre-fill radius with current line length
+          const lineLen = this.getLineLengthMeters();
+          if (lineLen !== undefined) {
+            runInAction(() => {
+              this.terria.viewshedAreaRadius = lineLen;
+            });
+          }
           this.scheduleAreaViewshed();
         } else {
           this.cancelAreaViewshed();
@@ -161,6 +169,22 @@ export default class UserDrawingViewshed extends MappableMixin(
       () => {
         if (this.inDrawMode && this.terria.viewshedAreaMode) {
           this.scheduleAreaViewshed();
+        }
+      }
+    );
+
+    this.disposeAreaDynamicSize = reaction(
+      () => ({
+        dynamic: this.terria.viewshedDynamicSize,
+        dist: this.terria.viewshedDistances?.[0]
+      }),
+      ({ dynamic, dist }) => {
+        if (!this.inDrawMode) return;
+        if (dynamic && dist !== undefined) {
+          const lineLen = Math.round(dist);
+          runInAction(() => {
+            this.terria.viewshedAreaRadius = lineLen;
+          });
         }
       }
     );
@@ -324,6 +348,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.disposePickedFeatureSubscription();
     }
     if (this.disposeViewshedHeight) this.disposeViewshedHeight();
+    if (this.disposeAreaDynamicSize) this.disposeAreaDynamicSize();
 
     runInAction(() => {
       this.terria.mapInteractionModeStack.length = 0;
@@ -503,6 +528,16 @@ export default class UserDrawingViewshed extends MappableMixin(
         ? i18next.t("models.userDrawing.btnDone")
         : i18next.t("models.userDrawing.btnCancel")
     );
+  }
+
+  /**
+   * Returns the integer length (metres) of the current viewshed line, or
+   * undefined if the two points have not been placed yet.
+   */
+  private getLineLengthMeters(): number | undefined {
+    const dist = this.terria.viewshedDistances?.[0];
+    if (dist === undefined) return undefined;
+    return Math.round(dist);
   }
 
   scheduleAreaViewshed() {

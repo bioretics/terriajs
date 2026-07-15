@@ -72,11 +72,45 @@ const ViewshedPanel = observer((props: Props) => {
             const checked = e.target.checked;
             runInAction(() => {
               terria.viewshedAreaMode = checked;
+              // Clear dynamic mode when area mode is turned off
+              if (!checked) {
+                terria.viewshedDynamicSize = false;
+              }
             });
           }}
         />
         <Text textLight style={{ marginLeft: "6px" }}>
           {t("viewshed.areaCheckbox")}
+        </Text>
+      </label>
+    );
+  };
+
+  const renderDynamicSizeCheckbox = () => {
+    return (
+      <label
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "10px",
+          color: theme.textLight,
+          opacity: terria.viewshedAreaMode ? 1 : 0.5
+        }}
+      >
+        <Checkbox
+          title={t("viewshed.dynamicSizeCheckboxTitle")}
+          isChecked={terria.viewshedDynamicSize}
+          isDisabled={!terria.viewshedAreaMode}
+          onChange={(e) => {
+            const checked = e.target.checked;
+            runInAction(() => {
+              terria.viewshedDynamicSize = checked;
+            });
+          }}
+        />
+        <Text textLight style={{ marginLeft: "6px" }}>
+          {t("viewshed.dynamicSizeCheckbox")}
         </Text>
       </label>
     );
@@ -136,6 +170,7 @@ const ViewshedPanel = observer((props: Props) => {
         </Box>
         <br />
         {renderAreaCheckbox()}
+        {renderDynamicSizeCheckbox()}
         <Text
           textLight
           style={{
@@ -155,7 +190,7 @@ const ViewshedPanel = observer((props: Props) => {
             required
             type="number"
             min={100}
-            disabled={!terria.viewshedAreaMode}
+            disabled={!terria.viewshedAreaMode || terria.viewshedDynamicSize}
             value={terria.viewshedAreaRadius}
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);

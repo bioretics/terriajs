@@ -72,6 +72,8 @@
     "areaCheckboxTitle": "Colora il terreno visibile dall'osservatore all'interno del rettangolo di analisi",
     "radiusInput": "Grandezza del rettangolo di analisi in metri",
     "radiusInputTitle": "Distanza dall'osservatore ai lati del rettangolo di analisi (m)",
+    "dynamicSizeCheckbox": "Aggiorna dinamicamente la dimensione alla lunghezza della linea",
+    "dynamicSizeCheckboxTitle": "Imposta continuamente la dimensione del rettangolo di analisi pari alla lunghezza della linea di vista",
     "computing": "Calcolo dell'area visibile in corso…"
   },
   "measure": {
