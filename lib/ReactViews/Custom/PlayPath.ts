@@ -27,6 +27,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const reverseRef = useRef(false);
   const playSpeedRef = useRef(playSpeed);
   const abortPlayingPathRef = useRef(false);
+  const playIdRef = useRef(0);
   const currentPointIndexRef = useRef(currentPointIndex);
   const loadPercentageRef = useRef(loadPercentage);
 
@@ -234,6 +235,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   }, [getPoints, terria]);
 
   const playPath = useCallback(async () => {
+    playIdRef.current += 1;
+    const thisPlayId = playIdRef.current;
     abortPlayingPathRef.current = true;
     const pts = getPoints();
     if (!pts?.length) return;
@@ -245,7 +248,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const useLookAt = Boolean(camera && cartesians.length);
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
     const pitch = camera?.pitch ?? 0;
-    const initialIdx = currentPointIndexRef.current;
+    const initialIdx = Math.min(
+      currentPointIndexRef.current,
+      cartesians.length - 1
+    );
 
     let dist = 1000;
     if (camera) {
@@ -332,7 +338,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         waitForAbort()
       ]);
 
-      if (result === "abort") {
+      if (result === "abort" || playIdRef.current !== thisPlayId) {
         return false;
       }
 
@@ -340,7 +346,13 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     };
 
     const loop = async (start: number, end: number, step: number) => {
-      for (let i = start; abortPlayingPathRef.current && i !== end; i += step) {
+      for (
+        let i = start;
+        abortPlayingPathRef.current &&
+        playIdRef.current === thisPlayId &&
+        i !== end;
+        i += step
+      ) {
         if (!(isResume && i === currentPointIndexRef.current)) {
           const ok = await tryStep(i);
           if (!ok) break;
@@ -366,9 +378,11 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       await loop(Math.min(currentPointIndexRef.current, lastIdx), -1, -1);
     }
 
-    runInAction(() => {
-      viewState.isPlayingPath = false;
-    });
+    if (playIdRef.current === thisPlayId) {
+      runInAction(() => {
+        viewState.isPlayingPath = false;
+      });
+    }
   }, [getPoints, terria, viewState, indeterminate]);
 
   const onPlay = () => {
