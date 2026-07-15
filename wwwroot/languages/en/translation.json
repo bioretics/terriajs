@@ -150,6 +150,7 @@
       "transformButton": "## Transform\n\nTurns your measurement into a temporary layer you can style, export, or present it in flight mode.",
       "multiPathControls": "## Multi-path management\n\nSwitch between paths, add new paths, or remove the current one to build multi-segment measurements."
     },
+    "editButton": "Edit",
     "areaInfo": {
       "circleDesc": "The area is derived from the geodesic radius between the centre and the edge point, projected onto the ellipsoid surface. Terrain elevation is not taken into account.",
       "circleDiameterDesc": "The diameter is calculated as twice the geodesic radius between the centre and the edge point of the circle, projected onto the ellipsoid surface. As with the radius, terrain elevation is not taken into account.",
