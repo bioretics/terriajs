@@ -515,10 +515,17 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.detachCurrentViewerListener();
     const cesium = this.terria.cesium;
     if (cesium) {
-      this.removeCesiumCameraChangedListener =
-        cesium.scene.camera.changed.addEventListener(
-          this.onDynamicViewportChanged
-        );
+      const camera = cesium.scene.camera;
+      const removeChanged = camera.changed.addEventListener(
+        this.onDynamicViewportChanged
+      );
+      const removeMoveEnd = camera.moveEnd.addEventListener(
+        this.onDynamicViewportChanged
+      );
+      this.removeCesiumCameraChangedListener = () => {
+        removeChanged();
+        removeMoveEnd();
+      };
       this.onDynamicViewportChanged();
       return;
     }
