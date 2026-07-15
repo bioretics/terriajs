@@ -8,6 +8,7 @@ import Terria from "../../Models/Terria";
 import addUserFiles from "../../Models/Catalog/addUserFiles";
 import ViewState from "../../ReactViewModels/ViewState";
 import { observer } from "mobx-react";
+import makeUniqueFilename from "../../Core/makeUniqueFilename";
 
 interface Props {
   terria: Terria;
@@ -17,18 +18,6 @@ interface Props {
   onClick?: () => void;
 }
 
-const makeUniqueFilename = (filename: string, existingCount: number) => {
-  if (existingCount === 0) return filename;
-
-  const dotIndex = filename.lastIndexOf(".");
-  if (dotIndex === -1) {
-    return `${filename}_${existingCount + 1}`;
-  }
-
-  return `${filename.slice(0, dotIndex)}_${existingCount + 1}${filename.slice(
-    dotIndex
-  )}`;
-};
 const MeasurableTransform = observer((props: Props) => {
   const { terria, viewState, pathNotes, layerName, onClick } = props;
   const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
@@ -302,9 +291,12 @@ const MeasurableTransform = observer((props: Props) => {
       if (!circleJson) return;
       const href = DataUri.make("json", circleJson);
       try {
+        const existingNames = new Set(
+          terria.workbench.items.map((item: any) => item.name).filter(Boolean)
+        );
         const file = dataURItoFile(
           href as string,
-          `${layerName}_circle.geojson`
+          makeUniqueFilename(`${layerName}_circle.geojson`, existingNames)
         );
         handleUploadFile({ target: { files: [file] } });
         onClick?.();
@@ -336,25 +328,13 @@ const MeasurableTransform = observer((props: Props) => {
     }
 
     try {
-      const baseName = layerName || "";
-
-      const existingNames = terria.workbench.items
-        .map((item: any) => item.name)
-        .filter((name: string) => name?.startsWith(baseName));
-
-      const usedIndexes = existingNames.map((name: string) => {
-        const match = name.match(/_(\d+)\.geojson$/);
-        return match ? parseInt(match[1], 10) : 1; // base file = 1
-      });
-
-      let nextIndex = 1;
-      while (usedIndexes.includes(nextIndex)) {
-        nextIndex++;
-      }
+      const existingNames = new Set(
+        terria.workbench.items.map((item: any) => item.name).filter(Boolean)
+      );
 
       const file = dataURItoFile(
         linkObj.href as string,
-        makeUniqueFilename(linkObj.download!, nextIndex - 1)
+        makeUniqueFilename(linkObj.download!, existingNames)
       );
       handleUploadFile({ target: { files: [file] } });
       onClick?.();
