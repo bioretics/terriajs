@@ -2,11 +2,20 @@ function svgToDataUri(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-const COMPASS_OUTER_SVG = `<svg width="56" height="56" xmlns="http://www.w3.org/2000/svg"><g fill-rule="evenodd"><path d="M28 0c15.464 0 28 12.536 28 28S43.464 56 28 56 0 43.464 0 28 12.536 0 28 0zm0 10c-9.941 0-18 8.059-18 18s8.059 18 18 18 18-8.059 18-18-8.059-18-18-18z" fill="#FFF"/><circle opacity=".75" cx="46" cy="13" r="1"/><circle opacity=".75" cx="46" cy="43" r="1"/><circle opacity=".75" cx="10" cy="43" r="1"/><circle opacity=".75" cx="10" cy="13" r="1"/><path stroke="#000" opacity=".75" stroke-linecap="round" d="M49 28h4M3 28h4M28 49v4"/><path d="M27.35 7V4.984c0-.244-.018-.652-.055-1.224h.026L29.185 7h1.154V2.717h-.818v2.027c0 .23.015.624.044 1.18h-.02l-1.86-3.207h-1.146V7h.812z" fill-rule="nonzero" opacity=".75"/></g></svg>`;
+// Minimal north-arrow symbol: a pointed arrow with an "N" label, transparent background.
+const NORTH_ARROW_SVG = `<svg width="32" height="44" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="s" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0.5" stdDeviation="0.8" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <g filter="url(#s)">
+    <text x="16" y="12" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="13" fill="#222" stroke="#fff" stroke-width="2.5" paint-order="stroke">N</text>
+    <polygon points="16,16 10,40 16,34 22,40" fill="#222" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+    <polygon points="16,16 16,34 22,40" fill="#555"/>
+  </g>
+</svg>`;
 
-const COMPASS_INNER_SVG = `<svg width="26" height="26" xmlns="http://www.w3.org/2000/svg"><g transform="translate(-2 -2)" fill-rule="evenodd"><circle fill-rule="nonzero" cx="15" cy="15" r="13"/><g fill="none" transform="rotate(-45 19.743 5.964)" stroke="#FFF"><circle cx="10" cy="9" r="8.5"/><path d="M10 .5c-.21 0-.374.212-.54.46-.284.422-.533 1.043-.746 1.81C8.271 4.364 8 6.567 8 9c0 2.433.271 4.636.714 6.23.213.767.462 1.388.745 1.81.167.248.33.46.541.46.21 0 .374-.212.54-.46.284-.422.533-1.043.746-1.81.443-1.594.714-3.797.714-6.23 0-2.433-.271-4.636-.714-6.23-.213-.767-.462-1.388-.745-1.81C10.374.712 10.21.5 10 .5z"/><path d="M10 7c-2.433 0-4.636.271-6.23.714-.767.213-1.388.462-1.81.745-.248.167-.46.33-.46.541 0 .21.212.374.46.54.422.284 1.043.533 1.81.746C5.364 10.729 7.567 11 10 11c2.433 0 4.636-.271 6.23-.714.767-.213 1.388-.462 1.81-.745.248-.167.46-.33.46-.541 0-.21-.212-.374-.46-.54-.422-.284-1.043-.533-1.81-.746C14.636 7.271 12.433 7 10 7z"/></g><path fill="#FFF" fill-rule="nonzero" d="M6.515 23.485l.707-2.121 1.414 1.414zM23.485 6.515l-2.121.707 1.414 1.414z"/><path stroke="#FFF" stroke-linecap="round" d="M7.929 22.071l.707-.707M21.364 8.636l.707-.707"/></g></svg>`;
+export const NORTH_ARROW_DATA_URI = svgToDataUri(NORTH_ARROW_SVG);
 
-export const COMPASS_OUTER_DATA_URI = svgToDataUri(COMPASS_OUTER_SVG);
-export const COMPASS_INNER_DATA_URI = svgToDataUri(COMPASS_INNER_SVG);
-
-export const BASE_COMPASS_SIZE = 128;
+export const BASE_COMPASS_SIZE = 44;

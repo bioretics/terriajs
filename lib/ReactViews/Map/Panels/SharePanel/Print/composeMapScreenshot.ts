@@ -1,11 +1,7 @@
 import isDefined from "../../../../../Core/isDefined";
 import Terria from "../../../../../Models/Terria";
 import { getDistanceLegendMetrics } from "./getDistanceLegendMetrics";
-import {
-  BASE_COMPASS_SIZE,
-  COMPASS_INNER_DATA_URI,
-  COMPASS_OUTER_DATA_URI
-} from "./printCompassAssets";
+import { BASE_COMPASS_SIZE, NORTH_ARROW_DATA_URI } from "./printCompassAssets";
 
 export interface PrintMapOverlayOptions {
   includeScaleBar: boolean;
@@ -82,37 +78,29 @@ async function drawCompass(
   scaleFactor: number
 ) {
   const size = BASE_COMPASS_SIZE * scaleFactor;
-  const padding = 5 * scaleFactor;
   const margin = 10 * scaleFactor;
-  const totalSize = size + padding * 2;
-  const x = margin;
-  const y = margin;
 
-  ctx.fillStyle = "white";
-  ctx.fillRect(x, y, totalSize, totalSize);
+  const arrowImg = await loadImage(NORTH_ARROW_DATA_URI);
 
-  const [outerImg, innerImg] = await Promise.all([
-    loadImage(COMPASS_OUTER_DATA_URI),
-    loadImage(COMPASS_INNER_DATA_URI)
-  ]);
+  // Aspect ratio of the north-arrow SVG (32 wide × 44 tall)
+  const aspect = 32 / 44;
+  const drawHeight = size;
+  const drawWidth = size * aspect;
 
-  const centerX = x + totalSize / 2;
-  const centerY = y + totalSize / 2;
+  const centerX = margin + drawWidth / 2;
+  const centerY = margin + drawHeight / 2;
 
   ctx.save();
   ctx.translate(centerX, centerY);
   ctx.rotate(-heading);
-  ctx.drawImage(outerImg, -size / 2, -size / 2, size, size);
-  ctx.restore();
-
-  const innerSize = size * 0.7;
   ctx.drawImage(
-    innerImg,
-    centerX - innerSize / 2,
-    centerY - innerSize / 2,
-    innerSize,
-    innerSize
+    arrowImg,
+    -drawWidth / 2,
+    -drawHeight / 2,
+    drawWidth,
+    drawHeight
   );
+  ctx.restore();
 }
 
 export async function composeMapScreenshot(
