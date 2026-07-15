@@ -734,6 +734,9 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                       text-align: center;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.circleDiameterDesc"
+                    )}
                   >
                     {i18next.t("measurableGeometry.circleDiameter")}
                   </th>
@@ -849,6 +852,7 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                       text-align: center;
                     `}
+                    title={i18next.t("measurableGeometry.areaInfo.circleDesc")}
                   >
                     {i18next.t("measurableGeometry.circleAreaM2")}
                   </th>
@@ -951,6 +955,9 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.polygonGeoDesc"
+                    )}
                   >
                     {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
                   </th>
@@ -961,6 +968,9 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.polygonAirDesc"
+                    )}
                   >
                     {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
                   </th>
