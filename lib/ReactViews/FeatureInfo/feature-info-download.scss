@@ -53,4 +53,5 @@
 
 .dropdown__button {
   composes: btn--small from "../../Sass/common/_buttons.scss";
+  min-width: 200px;
 }
