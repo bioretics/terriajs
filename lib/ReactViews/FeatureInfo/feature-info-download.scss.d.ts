@@ -3,6 +3,8 @@
 interface CssExports {
   'btn': string;
   'download': string;
+  'download-wrapper': string;
+  'downloadWrapper': string;
   'dropdownButton': string;
   'dropdownList': string;
   'dropdown__button': string;

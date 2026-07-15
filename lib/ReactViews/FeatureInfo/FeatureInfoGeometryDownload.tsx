@@ -37,9 +37,23 @@ class FeatureInfoGeometryDownload extends React.Component<
 > {
   state: StateType = { links: [] };
 
+  private wrapperRef = React.createRef<HTMLDivElement>();
+
   componentDidMount() {
     this.generateLinks();
   }
+
+  private updateListMaxHeight = () => {
+    const wrapper = this.wrapperRef.current;
+    const button = wrapper?.querySelector("button");
+    if (!wrapper || !button) return;
+    const spaceBelow =
+      window.innerHeight - button.getBoundingClientRect().bottom - 10;
+    wrapper.style.setProperty(
+      "--download-dropdown-max-height",
+      `${Math.max(spaceBelow, 80)}px`
+    );
+  };
 
   componentDidUpdate(prevProps: PropsType) {
     if (
@@ -86,18 +100,24 @@ class FeatureInfoGeometryDownload extends React.Component<
     );
 
     return (
-      <Dropdown
-        options={this.state.links}
-        textProperty="label"
-        theme={{
-          dropdown: Styles.download,
-          list: Styles.dropdownList,
-          button: Styles.dropdownButton,
-          icon: icon
-        }}
+      <div
+        ref={this.wrapperRef}
+        className={Styles.downloadWrapper}
+        onClick={this.updateListMaxHeight}
       >
-        {t("featureInfo.downloadGeometry")}
-      </Dropdown>
+        <Dropdown
+          options={this.state.links}
+          textProperty="label"
+          theme={{
+            dropdown: Styles.download,
+            list: Styles.dropdownList,
+            button: Styles.dropdownButton,
+            icon: icon
+          }}
+        >
+          {t("featureInfo.downloadGeometry")}
+        </Dropdown>
+      </div>
     );
   }
 }

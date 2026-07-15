@@ -575,12 +575,6 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
                       feature={this.props.feature}
                       catalogItem={this.props.catalogItem}
                     />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
-                    <br />
                   </>
                 ) : null
               }
