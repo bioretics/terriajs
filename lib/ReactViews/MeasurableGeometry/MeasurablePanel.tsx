@@ -39,7 +39,6 @@ import {
   getSummaryKind
 } from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummary";
 import MeasurableGeometryExporter from "../../ViewModels/MeasurableGeometry/MeasurableGeometryExporter";
-import MeasurableInfoPanel from "./MeasurableInfoPanel";
 
 interface Props {
   viewState: ViewState;
@@ -726,21 +725,11 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                       text-align: center;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.circleDiameterDesc"
+                    )}
                   >
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4
-                      }}
-                    >
-                      {i18next.t("measurableGeometry.circleDiameter")}
-                      <MeasurableInfoPanel
-                        kind="circleDiameter"
-                        disabled={!currentGeom.stopPoints?.length}
-                      />
-                    </span>
+                    {i18next.t("measurableGeometry.circleDiameter")}
                   </th>
                   <th
                     css={`
@@ -848,21 +837,9 @@ const MeasurablePanel = observer((props: Props) => {
                       padding: 8px;
                       text-align: center;
                     `}
+                    title={i18next.t("measurableGeometry.areaInfo.circleDesc")}
                   >
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4
-                      }}
-                    >
-                      {i18next.t("measurableGeometry.circleAreaM2")}
-                      <MeasurableInfoPanel
-                        kind="circleArea"
-                        disabled={!currentGeom.stopPoints?.length}
-                      />
-                    </span>
+                    {i18next.t("measurableGeometry.circleAreaM2")}
                   </th>
                   <th
                     css={`
@@ -963,21 +940,11 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.polygonGeoDesc"
+                    )}
                   >
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4
-                      }}
-                    >
-                      {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
-                      <MeasurableInfoPanel
-                        kind="polygonGeo"
-                        disabled={!currentGeom.stopPoints?.length}
-                      />
-                    </span>
+                    {i18next.t("measurableGeometry.geometrySummaryAreaGeo")}
                   </th>
                   <th
                     colSpan={2}
@@ -986,21 +953,11 @@ const MeasurablePanel = observer((props: Props) => {
                       text-align: center;
                       border-bottom: 1px solid ${theme.textLight}44;
                     `}
+                    title={i18next.t(
+                      "measurableGeometry.areaInfo.polygonAirDesc"
+                    )}
                   >
-                    <span
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 4
-                      }}
-                    >
-                      {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
-                      <MeasurableInfoPanel
-                        kind="polygonAir"
-                        disabled={!currentGeom.stopPoints?.length}
-                      />
-                    </span>
+                    {i18next.t("measurableGeometry.geometrySummaryAreaAir")}
                   </th>
                 </tr>
               </thead>
