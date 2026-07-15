@@ -23,6 +23,7 @@ import FileInput from "./FileInput";
 import { parseCustomMarkdownToReactWithOptions } from "../../../Custom/parseCustomMarkdownToReact";
 import loadJson from "../../../../Core/loadJson";
 import TerriaError from "../../../../Core/TerriaError";
+import makeUniqueFilename from "../../../../Core/makeUniqueFilename";
 
 /**
  * Add data panel in modal window -> My data tab
@@ -345,34 +346,6 @@ class AddData extends React.Component {
   render() {
     return <div className={Styles.inner}>{this.renderPanels()}</div>;
   }
-}
-
-/**
- * Returns a filename that does not collide with the provided set.
- *
- * Examples:
- * - map.geojson -> map_2.geojson
- * - map_2.geojson -> map_3.geojson
- * - map -> map_2
- */
-function makeUniqueFilename(filename, existingNames) {
-  if (!existingNames.has(filename)) {
-    return filename;
-  }
-
-  const dotIndex = filename.lastIndexOf(".");
-  const baseName = dotIndex === -1 ? filename : filename.slice(0, dotIndex);
-  const extension = dotIndex === -1 ? "" : filename.slice(dotIndex);
-
-  let suffix = 2;
-  let candidate = `${baseName}_${suffix}${extension}`;
-
-  while (existingNames.has(candidate)) {
-    suffix += 1;
-    candidate = `${baseName}_${suffix}${extension}`;
-  }
-
-  return candidate;
 }
 
 /**
