@@ -398,7 +398,9 @@ export default class UserDrawing extends MappableMixin(
           const radius = this.terria.measurableGeometryManager[
             this.terria.measurableGeometryIndex
           ].getGeodesicDistance(center, edge);
-          return `${((Math.PI * radius * radius) / 1000000.0).toFixed(2)} km²`;
+          const area = Math.PI * radius * radius;
+          if (radius < 50) return `${area.toFixed(1)} m²`;
+          return `${(area / 1_000_000).toFixed(2)} km²`;
         }, false),
         font: "bold 17px sans-serif",
         style: LabelStyle.FILL_AND_OUTLINE,
