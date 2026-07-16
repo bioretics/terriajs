@@ -120,6 +120,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private currentViewportLevelId: number | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
+  /**
+   * Movement-threshold state: tracks the last committed viewport so we can
+   * skip reloads when the camera has only moved a tiny amount and the
+   * levelId hasn't changed.  This eliminates the flicker caused by rapid
+   * show/hide toggling on minor camera jitter.
+   */
+  private lastCommittedLevelId: number | undefined;
+  private lastCommittedCenter: { lon: number; lat: number } | undefined;
+  private lastCommittedExtent: { width: number; height: number } | undefined;
+  /** Fraction of viewport extent that the center must move to trigger reload (0.2 = 20%). */
+  private static readonly MOVEMENT_THRESHOLD_RATIO = 0.1;
+
   @observable private cameraTiltLimitExceeded = false;
   @observable private activeLanguage =
     i18next.resolvedLanguage ?? i18next.language;
@@ -140,6 +152,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       this.cameraTiltLimitExceeded = isPastLimit;
     });
     if (isPastLimit) return;
+
+    // ---- Movement-threshold gate ----
+    // Only trigger a full (debounced) reload when the zoom-level (levelId)
+    // changes or the viewport center has drifted more than 20% of the
+    // viewport extent.  For sub-threshold moves we do nothing at all:
+    // the existing entity visibility state is still correct and
+    // re-evaluating it against a slightly-shifted rectangle is what
+    // causes border entities to flicker in/out.
+    if (this.isMovementBelowThreshold()) {
+      return;
+    }
+
     this.queueDynamicReload();
   };
 
@@ -471,6 +495,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
+    this.lastCommittedLevelId = undefined;
+    this.lastCommittedCenter = undefined;
+    this.lastCommittedExtent = undefined;
 
     runInAction(() => {
       this.debugDataSource = undefined;
@@ -509,6 +536,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
+    this.lastCommittedLevelId = undefined;
+    this.lastCommittedCenter = undefined;
+    this.lastCommittedExtent = undefined;
   }
 
   private attachCurrentViewerListener() {
@@ -763,6 +793,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     ) {
       this.activeDynamicQuery = nextQuery;
       this.syncCachedEntityVisibility(nextQuery);
+      this.commitViewportSnapshot(nextQuery);
       return;
     }
 
@@ -790,11 +821,13 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
           this.syncCachedEntityVisibility(nextQuery);
           this.updateEnumValues();
           this.sanitizeQueryValues();
+          this.commitViewportSnapshot(nextQuery);
         }
       } else {
         await this.applyIncrementalUpdate(nextQuery);
         this.updateEnumValues();
         this.sanitizeQueryValues();
+        this.commitViewportSnapshot(nextQuery);
       }
     } finally {
       this.dynamicReloadInProgress = false;
@@ -804,6 +837,69 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         if (shouldRetry) this.queueDynamicReload(true);
       }
     }
+  }
+
+  /**
+   * Returns `true` when the camera hasn't moved enough to justify a full
+   * reload.  "Enough" is defined as:
+   *   • the levelId has NOT changed, AND
+   *   • the viewport centre has moved less than MOVEMENT_THRESHOLD_RATIO
+   *     of the last-committed viewport extent.
+   *
+   * On the very first call (no committed state yet) this always returns
+   * `false` so the initial load is never suppressed.
+   */
+  private isMovementBelowThreshold(): boolean {
+    // No committed state yet → never suppress.
+    if (
+      this.lastCommittedCenter === undefined ||
+      this.lastCommittedExtent === undefined
+    ) {
+      return false;
+    }
+
+    // Compute current levelId via the same path used by getDynamicViewportQuery.
+    const levelFilter = this.getLevelFilterForViewport();
+    const currentMaxLevel = levelFilter.maxLevelId;
+
+    // LevelId changed → always allow reload.
+    if (currentMaxLevel !== this.lastCommittedLevelId) {
+      return false;
+    }
+
+    // Compute current viewport centre.
+    const screenRect = this.getScreenBoundingBox();
+    const centerLon = (screenRect.west + screenRect.east) / 2;
+    const centerLat = (screenRect.south + screenRect.north) / 2;
+
+    const dLon = Math.abs(centerLon - this.lastCommittedCenter.lon);
+    const dLat = Math.abs(centerLat - this.lastCommittedCenter.lat);
+
+    const thresholdLon =
+      this.lastCommittedExtent.width *
+      RerPoiCatalogItem.MOVEMENT_THRESHOLD_RATIO;
+    const thresholdLat =
+      this.lastCommittedExtent.height *
+      RerPoiCatalogItem.MOVEMENT_THRESHOLD_RATIO;
+
+    return dLon < thresholdLon && dLat < thresholdLat;
+  }
+
+  /**
+   * Snapshot the current viewport so subsequent calls to
+   * `isMovementBelowThreshold()` can compare against it.
+   */
+  private commitViewportSnapshot(query: DynamicViewportQuery) {
+    const rect = query.queryRectangle;
+    this.lastCommittedLevelId = query.requestOptions.maxLevelId;
+    this.lastCommittedCenter = {
+      lon: (rect.west + rect.east) / 2,
+      lat: (rect.south + rect.north) / 2
+    };
+    this.lastCommittedExtent = {
+      width: Math.abs(rect.east - rect.west),
+      height: Math.abs(rect.north - rect.south)
+    };
   }
 
   private findGeoJsonDataSource(): GeoJsonDataSource | undefined {
@@ -865,8 +961,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     entity.show = isVisible;
     const show = new ConstantProperty(isVisible);
     if (entity.billboard) entity.billboard.show = show;
-    if (entity.point) entity.point.show = show;
-    if (entity.label) entity.label.show = show;
+    //if (entity.point) entity.point.show = show;
+    //if (entity.label) entity.label.show = show;
   }
 
   private isEntityInLevelRange(
@@ -933,9 +1029,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   filterData() {
-    this.syncCachedEntityVisibility(
-      this.activeDynamicQuery ?? this.getDynamicViewportQuery()
-    );
+    if (this.activeDynamicQuery){
+      this.syncCachedEntityVisibility(this.activeDynamicQuery);
+    }else if (this.getDynamicViewportQuery()){
+      this.syncCachedEntityVisibility(this.getDynamicViewportQuery());
+    }
   }
 
   private matchesQueryableFilters(entity: any, now: JulianDate): boolean {
@@ -1311,7 +1409,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         runInAction(() => {
           this.debugDataSource = undefined;
         });
-        this.terria.currentViewer.notifyRepaintRequired();
+        //this.terria.currentViewer.notifyRepaintRequired();
       }
       return;
     }
@@ -1349,7 +1447,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     } as any);
 
     entities.resumeEvents();
-    this.terria.currentViewer.notifyRepaintRequired();
+    //this.terria.currentViewer.notifyRepaintRequired();
   }
 
   private getDynamicViewportQuery(): DynamicViewportQuery | undefined {
