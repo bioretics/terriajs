@@ -370,6 +370,8 @@
     "printTitle": "Stampa mappa",
     "shortLinkError": "Errore durante l'accorciamento dell'URL. Verificare la connessione internet e riprovare.",
     "shortenUsingService": "Accorciate l'URL usando un servizio web",
+    "includeScaleBar": "Includi la barra di scala nella mappa esportata",
+    "includeCompass": "Includi la freccia del nord nella mappa esportata",
     "embedTitle": "Per includere questa mappa in una pagina HTML copiate questo codice:",
     "printViewButton": "Mostra anteprima di stampa",
     "browserPrint": "Per una stampa migliore, per favore usate il pulsante Stampa di {{appName}} invece di quello del browser.",

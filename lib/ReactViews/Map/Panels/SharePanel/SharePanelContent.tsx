@@ -66,6 +66,7 @@ export const SharePanelContent: FC<ISharePanelContentProps> = ({
       <PrintSection viewState={viewState} />
       <StyledHr />
       <AdvancedOptions
+        viewState={viewState}
         canShortenUrl={canShortenUrl}
         shouldShorten={shouldShorten}
         shouldShortenOnChange={shouldShortenOnChange}

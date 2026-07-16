@@ -120,6 +120,9 @@ export default class ViewState {
 
   @observable printWindow: Window | null = null;
 
+  @observable printIncludeScaleBar = false;
+  @observable printIncludeCompass = false;
+
   /**
    * The currently-selected web service type on the My Data -> Add web data panel.
    */
@@ -1046,6 +1049,14 @@ export default class ViewState {
       this.printWindow.close();
     }
     this.printWindow = window;
+  }
+
+  @action togglePrintIncludeScaleBar() {
+    this.printIncludeScaleBar = !this.printIncludeScaleBar;
+  }
+
+  @action togglePrintIncludeCompass() {
+    this.printIncludeCompass = !this.printIncludeCompass;
   }
 
   @action
