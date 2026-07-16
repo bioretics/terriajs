@@ -100,6 +100,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
   showLabels: boolean = false;
 
   @primitiveTrait({
+    type: "number",
+    name: "Label visibility threshold",
+    description:
+      "When the number of visible POIs on screen is below this threshold, labels are shown. Above this threshold, labels are hidden for performance."
+  })
+  labelVisibilityThreshold: number = 100;
+
+  @primitiveTrait({
     type: "string",
     name: "Label text color",
     description: "The color of the label text for POI markers."
