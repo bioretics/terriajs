@@ -75,6 +75,7 @@ function drawScaleBar(
 async function drawCompass(
   ctx: CanvasRenderingContext2D,
   heading: number,
+  canvasWidth: number,
   scaleFactor: number
 ) {
   const size = BASE_COMPASS_SIZE * scaleFactor;
@@ -87,7 +88,7 @@ async function drawCompass(
   const drawHeight = size;
   const drawWidth = size * aspect;
 
-  const centerX = margin + drawWidth / 2;
+  const centerX = canvasWidth - margin - drawWidth / 2;
   const centerY = margin + drawHeight / 2;
 
   ctx.save();
@@ -136,7 +137,7 @@ export async function composeMapScreenshot(
 
   if (options.includeCompass) {
     try {
-      await drawCompass(ctx, getMapHeading(terria), scaleFactor);
+      await drawCompass(ctx, getMapHeading(terria), canvas.width, scaleFactor);
     } catch {
       // If compass assets fail to load, still return the map with any scale bar.
     }
