@@ -470,31 +470,34 @@ class Chart extends React.Component {
               marginTop: 8
             }}
           >
-            <button
-              type="button"
-              className={Styles.downloadButton}
+            <div
               style={{
-                display: this.isDownloading ? "none" : "inline-block"
-              }}
-              onClick={this.downloadChart}
-              disabled={this.isDownloading}
-            >
-              Download image
-            </button>
-            <Dropdown
-              theme={{ button: Styles.downloadButton }}
-              options={[
-                { name: "GeoJSON" },
-                { name: "KML" },
-                { name: "CSV" },
-                { name: "DXF" }
-              ]}
-              selectOption={(option) => {
-                this.downloadPoints(option.name.toLowerCase());
+                display: this.isDownloading ? "none" : "contents"
               }}
             >
-              Download points ▾
-            </Dropdown>
+              <button
+                type="button"
+                className={Styles.downloadButton}
+                onClick={this.downloadChart}
+                disabled={this.isDownloading}
+              >
+                Download image
+              </button>
+              <Dropdown
+                theme={{ button: Styles.downloadButton }}
+                options={[
+                  { name: "GeoJSON" },
+                  { name: "KML" },
+                  { name: "CSV" },
+                  { name: "DXF" }
+                ]}
+                selectOption={(option) => {
+                  this.downloadPoints(option.name.toLowerCase());
+                }}
+              >
+                Download points ▾
+              </Dropdown>
+            </div>
             <Legends width={this.plotWidth} chartItems={this.chartItems} />
           </div>
           <div style={{ position: "relative" }}>
