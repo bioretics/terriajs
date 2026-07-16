@@ -1029,9 +1029,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   filterData() {
-    if (this.activeDynamicQuery){
+    if (this.activeDynamicQuery) {
       this.syncCachedEntityVisibility(this.activeDynamicQuery);
-    }else if (this.getDynamicViewportQuery()){
+    } else if (this.getDynamicViewportQuery()) {
       this.syncCachedEntityVisibility(this.getDynamicViewportQuery());
     }
   }
