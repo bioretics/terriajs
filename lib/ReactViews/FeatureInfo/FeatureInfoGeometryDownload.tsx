@@ -18,6 +18,7 @@ import { withViewState } from "../Context";
 import Styles from "./feature-info-download.scss";
 import Dropdown from "../Generic/Dropdown";
 import { propertyGetTimeValues } from "./getFeatureProperties";
+import updateDownloadDropdownPosition from "./updateDownloadDropdownPosition";
 
 interface PropsType {
   name: string;
@@ -43,16 +44,8 @@ class FeatureInfoGeometryDownload extends React.Component<
     this.generateLinks();
   }
 
-  private updateListMaxHeight = () => {
-    const wrapper = this.wrapperRef.current;
-    const button = wrapper?.querySelector("button");
-    if (!wrapper || !button) return;
-    const spaceBelow =
-      window.innerHeight - button.getBoundingClientRect().bottom - 10;
-    wrapper.style.setProperty(
-      "--download-dropdown-max-height",
-      `${Math.max(spaceBelow, 80)}px`
-    );
+  private updateListPosition = () => {
+    updateDownloadDropdownPosition(this.wrapperRef.current);
   };
 
   componentDidUpdate(prevProps: PropsType) {
@@ -103,7 +96,7 @@ class FeatureInfoGeometryDownload extends React.Component<
       <div
         ref={this.wrapperRef}
         className={Styles.downloadWrapper}
-        onClick={this.updateListMaxHeight}
+        onClick={this.updateListPosition}
       >
         <Dropdown
           options={this.state.links}

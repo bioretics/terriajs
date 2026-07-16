@@ -16,6 +16,12 @@
   max-height: var(--download-dropdown-max-height, 40vh);
 }
 
+.download-wrapper .download .dropdown__list {
+  top: auto;
+  bottom: var(--download-dropdown-bottom, auto);
+  @include transform-origin(center, bottom);
+}
+
 .btn {
   composes: btn from "./feature-info-panel.scss";
   composes: btn-primary from "../../Sass/common/_buttons.scss";
