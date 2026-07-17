@@ -89,6 +89,7 @@ interface RerPoiTraitSnapshot {
   poiDomainStyleGroups: RerPoiCatalogItemTraits["poiDomainStyleGroups"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
+  movementThresholdRatio: number;
   scaleField: string;
   showDebugBBox: boolean;
   showLabels: boolean;
@@ -134,17 +135,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private currentViewportLevelId: number | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
-  /**
-   * Movement-threshold state: tracks the last committed viewport so we can
-   * skip reloads when the camera has only moved a tiny amount and the
-   * levelId hasn't changed.  This eliminates the flicker caused by rapid
-   * show/hide toggling on minor camera jitter.
-   */
   private lastCommittedLevelId: number | undefined;
   private lastCommittedCenter: { lon: number; lat: number } | undefined;
   private lastCommittedExtent: { width: number; height: number } | undefined;
-  /** Fraction of viewport extent that the center must move to trigger reload (0.2 = 20%). */
-  private static readonly MOVEMENT_THRESHOLD_RATIO = 0.1;
 
   @observable private cameraTiltLimitExceeded = false;
   @observable private activeLanguage =
@@ -172,13 +165,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     });
     if (isPastLimit) return;
 
-    // ---- Movement-threshold gate ----
-    // Only trigger a full (debounced) reload when the zoom-level (levelId)
-    // changes or the viewport center has drifted more than 20% of the
-    // viewport extent.  For sub-threshold moves we do nothing at all:
-    // the existing entity visibility state is still correct and
-    // re-evaluating it against a slightly-shifted rectangle is what
-    // causes border entities to flicker in/out.
     if (this.isMovementBelowThreshold()) {
       return;
     }
@@ -196,16 +182,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
    * Computes the Web Mercator (EPSG:3857) tile level for the point currently
    * under the centre of the screen, matching the "Google standard" / Leaflet
    * zoom returned by `LeafletMap.getZoom()`.
-   *
-   * Derives the level analytically from the camera:
-   *   1. Pick two screen pixels a known gap apart onto the globe.
-   *   2. Project both onto EPSG:3857 metres via the Web Mercator projection.
-   *   3. resolution (metres/pixel) = projectedDistance / pixelGap.
-   *   4. zoom = log2( zeroLevelResolution / resolution ), where
-   *      zeroLevelResolution = 2*pi*R / 256 (256px Google-standard tiles).
-   *
-   * Using the projected (conformal) distance keeps this correct under camera
-   * heading/rotation, since Web Mercator is locally isotropic.
    */
   private getCesiumWebMercatorLevel(): number | undefined {
     const cesium = this.terria.cesium;
@@ -434,6 +410,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       ),
       queryBboxPaddingRatio: this.getRerPoiTraitForSnapshot(
         "queryBboxPaddingRatio"
+      ),
+      movementThresholdRatio: this.getRerPoiTraitForSnapshot(
+        "movementThresholdRatio"
       ),
       scaleField: this.getRerPoiTraitForSnapshot("scaleField"),
       showDebugBBox: this.getRerPoiTraitForSnapshot("showDebugBBox"),
@@ -935,18 +914,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     }
   }
 
-  /**
-   * Returns `true` when the camera hasn't moved enough to justify a full
-   * reload.  "Enough" is defined as:
-   *   • the levelId has NOT changed, AND
-   *   • the viewport centre has moved less than MOVEMENT_THRESHOLD_RATIO
-   *     of the last-committed viewport extent.
-   *
-   * On the very first call (no committed state yet) this always returns
-   * `false` so the initial load is never suppressed.
-   */
   private isMovementBelowThreshold(): boolean {
-    // No committed state yet → never suppress.
     if (
       this.lastCommittedCenter === undefined ||
       this.lastCommittedExtent === undefined
@@ -954,11 +922,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       return false;
     }
 
-    // Compute current levelId via the same path used by getDynamicViewportQuery.
     const levelFilter = this.getLevelFilterForViewport();
     const currentMaxLevel = levelFilter.maxLevelId;
 
-    // LevelId changed → always allow reload.
     if (currentMaxLevel !== this.lastCommittedLevelId) {
       return false;
     }
@@ -971,20 +937,17 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const dLon = Math.abs(centerLon - this.lastCommittedCenter.lon);
     const dLat = Math.abs(centerLat - this.lastCommittedCenter.lat);
 
+    const movementThresholdRatio = this.getRerPoiTrait(
+      "movementThresholdRatio"
+    );
     const thresholdLon =
-      this.lastCommittedExtent.width *
-      RerPoiCatalogItem.MOVEMENT_THRESHOLD_RATIO;
+      this.lastCommittedExtent.width * movementThresholdRatio;
     const thresholdLat =
-      this.lastCommittedExtent.height *
-      RerPoiCatalogItem.MOVEMENT_THRESHOLD_RATIO;
+      this.lastCommittedExtent.height * movementThresholdRatio;
 
     return dLon < thresholdLon && dLat < thresholdLat;
   }
 
-  /**
-   * Snapshot the current viewport so subsequent calls to
-   * `isMovementBelowThreshold()` can compare against it.
-   */
   private commitViewportSnapshot(query: DynamicViewportQuery) {
     const rect = query.queryRectangle;
     this.lastCommittedLevelId = query.requestOptions.maxLevelId;
@@ -1754,7 +1717,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         runInAction(() => {
           this.debugDataSource = undefined;
         });
-        //this.terria.currentViewer.notifyRepaintRequired();
+        this.terria.currentViewer.notifyRepaintRequired();
       }
       return;
     }
@@ -1792,7 +1755,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     } as any);
 
     entities.resumeEvents();
-    //this.terria.currentViewer.notifyRepaintRequired();
+    this.terria.currentViewer.notifyRepaintRequired();
   }
 
   private getDynamicViewportQuery(): DynamicViewportQuery | undefined {
@@ -1904,6 +1867,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     poiDomainStyleGroups: getDefaultRerPoiTrait("poiDomainStyleGroups"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
+    movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),
     scaleField: getDefaultRerPoiTrait("scaleField"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
     showLabels: getDefaultRerPoiTrait("showLabels"),

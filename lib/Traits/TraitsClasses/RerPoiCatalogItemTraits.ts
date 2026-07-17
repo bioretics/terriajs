@@ -185,6 +185,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
 
   @primitiveTrait({
     type: "number",
+    name: "Movement threshold ratio",
+    description:
+      "Fraction of the last-committed viewport extent that the center must move before a dynamic reload is triggered. A value of 0.1 means 10%. Reloads are also triggered when the zoom level ID changes."
+  })
+  movementThresholdRatio: number = 0.1;
+
+  @primitiveTrait({
+    type: "number",
     name: "Dynamic request debounce (ms)",
     description:
       "The debounce time in milliseconds for viewport change requests. Prevents excessive server requests during camera movement."
