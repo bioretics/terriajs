@@ -1,12 +1,12 @@
-@import "~terriajs-variables";
+@use "../../Sass/common/_variables";
 
 .sectionTitle {
   margin-top: 16px;
   margin-bottom: 8px;
-  font-size: $font-size-mid-mini;
-  font-weight: $font-weight-bold;
+  font-size: variables.$font-size-mid-mini;
+  font-weight: variables.$font-weight-bold;
   text-transform: uppercase;
-  color: $text-light-dimmed;
+  color: variables.$text-light-dimmed;
   letter-spacing: 0.6px;
 }
 
@@ -38,8 +38,8 @@
 }
 
 .fieldLabel {
-  font-size: $font-size-mid-mini;
-  color: $text-light;
+  font-size: variables.$font-size-mid-mini;
+  color: variables.$text-light;
 }
 
 .actionsRow {
@@ -51,14 +51,14 @@
 
 .notice {
   margin-top: 8px;
-  font-size: $font-size-mid-mini;
-  color: $text-light-dimmed;
+  font-size: variables.$font-size-mid-mini;
+  color: variables.$text-light-dimmed;
 }
 
 .error {
   margin-top: 8px;
-  font-size: $font-size-mid-mini;
-  color: $warning;
+  font-size: variables.$font-size-mid-mini;
+  color: variables.$warning;
 }
 
 .tableWrapper {
@@ -70,20 +70,20 @@
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  color: $text-light;
+  color: variables.$text-light;
 
   th,
   td {
     padding: 8px 10px;
-    border-bottom: 1px solid $overlay;
+    border-bottom: 1px solid variables.$overlay;
     text-align: left;
     white-space: nowrap;
-    color: $text-light;
+    color: variables.$text-light;
   }
 
   th {
-    color: $text-light-dimmed;
-    font-weight: $font-weight-bold;
+    color: variables.$text-light-dimmed;
+    font-weight: variables.$font-weight-bold;
   }
 }
 
@@ -101,7 +101,7 @@
 
 .emptyState {
   text-align: center;
-  color: $text-light-dimmed;
+  color: variables.$text-light-dimmed;
   padding: 12px;
 }
 
@@ -114,13 +114,13 @@
 
 .detailSection {
   padding-top: 8px;
-  border-top: 1px solid $overlay;
+  border-top: 1px solid variables.$overlay;
 }
 
 .detailHeading {
-  font-size: $font-size-mid-mini;
-  font-weight: $font-weight-bold;
-  color: $text-light;
+  font-size: variables.$font-size-mid-mini;
+  font-weight: variables.$font-weight-bold;
+  color: variables.$text-light;
   margin-bottom: 6px;
 }
 
@@ -131,19 +131,19 @@
 
   td {
     padding: 6px 8px;
-    border-bottom: 1px solid $overlay;
-    color: $text-light;
+    border-bottom: 1px solid variables.$overlay;
+    color: variables.$text-light;
   }
 
   td:first-child {
     width: 45%;
-    color: $text-light-dimmed;
+    color: variables.$text-light-dimmed;
   }
 }
 
 a {
-  font-size: $font-size-mid-mini;
-  font-weight: $font-weight-bold;
+  font-size: variables.$font-size-mid-mini;
+  font-weight: variables.$font-weight-bold;
   color: #64b5f6;
   text-decoration: none;
 
@@ -163,8 +163,8 @@ a {
   text-align: center;
 
   a {
-    font-size: $font-size-mid-mini;
-    font-weight: $font-weight-bold;
+    font-size: variables.$font-size-mid-mini;
+    font-weight: variables.$font-weight-bold;
     color: #64b5f6;
     text-decoration: none;
 

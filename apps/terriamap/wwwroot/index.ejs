@@ -9,87 +9,44 @@
       name="viewport"
       content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
     />
-    <meta name="description" content="A web map built on Terria Map" />
+    <meta
+      name="description"
+      content="Visualizzatore cartografico 3D ufficiale per la consultazione dei dati GIS della regione Emilia-Romagna"
+    />
+    <meta
+      name="keywords"
+      content="Emilia-Romagna, emiro, 3D, webgis, geoportale, GIS, Cesium, Bioretics"
+    />
+    <meta
+      name="copyright"
+      content="Copyright(c) 2012-2022 Regione Emilia-Romagna, National ICT Australia Limited (NICTA), CSIRO Data61.  All rights reserved."
+    />
     <meta name="apple-mobile-web-app-capable" content="yes" />
 
     <link
-      rel="apple-touch-icon"
-      sizes="57x57"
-      href="favicons/apple-icon-57x57.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="60x60"
-      href="favicons/apple-icon-60x60.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="72x72"
-      href="favicons/apple-icon-72x72.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="76x76"
-      href="favicons/apple-icon-76x76.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="114x114"
-      href="favicons/apple-icon-114x114.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="120x120"
-      href="favicons/apple-icon-120x120.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="144x144"
-      href="favicons/apple-icon-144x144.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="152x152"
-      href="favicons/apple-icon-152x152.png"
-    />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="favicons/apple-icon-180x180.png"
-    />
-    <link
       rel="icon"
       type="image/png"
-      sizes="192x192"
-      href="favicons/android-icon-192x192.png"
+      sizes="64x64"
+      href="images/logo_emiro_64.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="favicons/favicon-32x32.png"
-    />
-    <link
-      rel="icon"
-      type="image/png"
-      sizes="96x96"
-      href="favicons/favicon-96x96.png"
+      href="images/logo_emiro_32.png"
     />
     <link
       rel="icon"
       type="image/png"
       sizes="16x16"
-      href="favicons/favicon-16x16.png"
+      href="images/logo_emiro_16.png"
     />
     <link rel="manifest" href="favicons/manifest.json" />
     <meta name="msapplication-TileColor" content="#282D32" />
-    <meta
-      name="msapplication-TileImage"
-      content="favicons/ms-icon-144x144.png"
-    />
+    <meta name="msapplication-TileImage" content="images/logo_emiro_16.png" />
     <meta name="theme-color" content="#282D32" />
 
-    <title>Terria Map</title>
+    <title>Geoportale 3D</title>
 
     <!-- Leaflet -->
     <script>
@@ -100,5 +57,33 @@
   <body>
     <div id="svg-sprites" style="display: none"></div>
     <div id="ui"></div>
+
+    <!-- Piwik Prod New Tracking Code -->
+    <!--<script type="text/javascript">
+    var _paq = _paq || [];
+    var index1 = location.href.indexOf("applicazioni.regione.emilia-romagna.it");
+    var index2 = location.href.indexOf("applicazionitest.regione.emilia-romagna.it");
+    var index3 = location.href.indexOf("wwwservizitest.regione.emilia-romagna.it");
+    var index4 = location.href.indexOf("cm.regione.emilia-romagna.it");
+    var index5 = location.href.indexOf("test-cm.regione.emilia-romagna.it");
+    var index6 = location.href.indexOf("www2.regione.emilia-romagna.it");
+    var index7 = location.href.indexOf("localhost");
+    var index8 = location.href.indexOf("//10.");
+    var index9 = location.href.indexOf("//192.168.");
+    (function () {
+        var u = "https://statisticheweb.regione.emilia-romagna.it/analytics/";
+        if (index1 == -1 && index2 == -1 && index3 == -1 && index4 == -1 && index5 == -1 && index6 == -1 && index7 == -1 && index8 == -1 && index9 == -1) {
+            _paq.push(['setSiteId', 164]);
+            _paq.push(['setTrackerUrl', u + 'piwik.php']);
+            _paq.push(['setDocumentTitle', document.domain + "/" + document.title]);
+            _paq.push(['trackPageView']);
+            _paq.push(['enableLinkTracking']);
+            var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0]; g.type = 'text/javascript'; g.defer = true; g.async = true; g.src = u + 'piwik.js';
+            s.parentNode.insertBefore(g, s);
+        }
+    })();
+  </script>
+  <noscript><p><img src="https://statisticheweb.regione.emilia-romagna.it/analytics/piwik.php?idsite=164" style="border:0" alt="" /></p></noscript>-->
+    <!-- End Piwik Prod New Tracking Code -->
   </body>
 </html>

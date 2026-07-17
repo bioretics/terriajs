@@ -1,0 +1,11 @@
+{
+  "workbench": [],
+  "catalog": [],
+  //"corsDomains": ["servizigis.regione.emilia-romagna.it"],
+  "homeCamera": {
+    "west": 9.278,
+    "south": 43.736,
+    "east": 12.81,
+    "north": 45.325
+  }
+}

@@ -1,0 +1,211 @@
+{
+  "baseMaps": {
+    "defaultBaseMapId": "basemap-agea-2020",
+    "previewBaseMapId": "basemap-positron",
+    "enabledBaseMaps": [
+      "basemap-dbtr-web",
+      "basemap-dbtr-ctr",
+      "basemap-dbtr-orto2018",
+      "basemap-agea-2020",
+      "basemap-orto-2018",
+      "basemap-agea-2011",
+      "basemap-bing-aerial-with-labels",
+      "bing-aerial",
+      "osm",
+      "basemap-positron",
+      "basemap-darkmatter",
+      "white"
+    ],
+    "items": [
+      {
+        "item": {
+          "id": "basemap-dbtr-web",
+          "name": "DBTR webmap",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "dbtrWeb",
+              "type": "esri-mapServer",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_wgs84wm/MapServer",
+              "opacity": 1.0
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "images/basemaps/dbtrWeb.png"
+      },
+      {
+        "item": {
+          "id": "basemap-dbtr-orto2018",
+          "name": "DBTR ortomap",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "dbtrWebMap",
+              "type": "esri-mapServer",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_wgs84wm/MapServer",
+              "opacity": 0.7,
+              "attribution": "Regione Emilia-Romagna SpA © 2018"
+            },
+            {
+              "localId": "orto2018",
+              "type": "esri-mapServer",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_rgb_wgs84wm/MapServer",
+              "opacity": 1.0,
+              "attribution": "CGR SpA © 2018"
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "images/basemaps/dbtrWeb.png"
+      },
+      {
+        "item": {
+          "id": "basemap-dbtr-ctr",
+          "name": "DBTR CTR multiscala",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "dbtrCtr",
+              "type": "esri-mapServer",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_ctrmultiscala_wgs84wm/MapServer",
+              "opacity": 1.0
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "images/basemaps/dbtrCtr.png"
+      },
+      {
+        "item": {
+          "id": "basemap-agea-2020",
+          "name": "Ortofoto AGEA2020",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "orthoagea20202018",
+              "type": "wmts",
+              "isGeoServer": "false",
+              "getCapabilitiesUrl": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2020_rgb_wgs84wm/MapServer/WMTS?service=WMTS&version=1.0.0&request=GetCapabilities",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2020_rgb_wgs84wm/MapServer/WMTS",
+              "layer": "cache_agea2020_rgb_wgs84wm",
+              "opacity": 1.0,
+              "attribution": "AGEA © 2020"
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "init/basemaps/agea2020.jpg"
+      },
+      {
+        "item": {
+          "id": "basemap-orto-2018",
+          "name": "Ortofoto CGR2018",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "orto2018",
+              "type": "wmts",
+              "getCapabilitiesUrl": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_rgb_wgs84wm/MapServer/WMTS?service=WMTS&version=1.0.0&request=GetCapabilities",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_rgb_wgs84wm/MapServer/WMTS",
+              "layer": "cache_cgr2018_rgb_wgs84wm",
+              "opacity": 1.0,
+              "attribution": "CGR SpA © 2018"
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "init/basemaps/cgr2018.jpg"
+      },
+      {
+        "item": {
+          "id": "basemap-agea-2011",
+          "name": "Ortofoto AGEA2011",
+          "type": "composite",
+          "members": [
+            {
+              "localId": "AGEA2011",
+              "type": "wmts",
+              "getCapabilitiesUrl": "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2011_wgs84wm/MapServer/WMTS?service=WMTS&version=1.0.0&request=GetCapabilities",
+              "url": "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2011_wgs84wm/MapServer/WMTS",
+              "layer": "cache_agea2011_wgs84wm",
+              "opacity": 1.0,
+              "attribution": "AGEA © 2011"
+            },
+            {
+              "id": "basemap-positron",
+              "opacity": 0.7
+            }
+          ]
+        },
+        "image": "init/basemaps/AGEA2011.jpg"
+      },
+      {
+        "item": {
+          "id": "osm",
+          "type": "open-street-map",
+          "name": "OpenStreetMap",
+          "url": "https://openstreetmap.org",
+          "subdomains": ["a.tile", "b.tile", "c.tile"],
+          "opacity": 1.0
+        },
+        "image": "images/basemaps/osm.png"
+      },
+      {
+        "item": {
+          "id": "bing-aerial",
+          "name": "Bing Maps Aerial",
+          "type": "ion-imagery",
+          "ionAccessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5Y2Q0OTVlNC1kOTI3LTQzMDUtOTg1MS0zMWM1MWNhYWUxOGUiLCJpZCI6NzcyMjIsImlhdCI6MTY0MDA4NzI5Mn0.D4ZKDAENBaRw9Ui_iSdMZLVccsV9WOtKyetij1dYaLA",
+          "ionAssetId": 2,
+          "opacity": 1.0
+        },
+        "image": "init/basemaps/bingaerial.jpg"
+      },
+      {
+        "item": {
+          "id": "white",
+          "name": "All white",
+          "type": "open-street-map",
+          "url": "https://basemaps.cartocdn.com/light_all/",
+          "subdomains": ["a"],
+          "opacity": 0.0
+        },
+        "image": "images/basemaps/white.png"
+      },
+      {
+        "item": {
+          "id": "basemap-positron"
+        },
+        "image": "images/basemaps/rer_positron.png"
+      },
+      {
+        "item": {
+          "id": "basemap-darkmatter"
+        },
+        "image": "images/basemaps/dark-matter_it.png"
+      },
+      {
+        "item": {
+          "id": "basemap-bing-aerial-with-labels"
+        },
+        "image": "init/basemaps/bingmap.jpg"
+      }
+    ]
+  }
+}

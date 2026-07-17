@@ -1,48 +1,35 @@
-# Terria Map
+# RER3D-MAP
 
-[![Build Status](https://github.com/TerriaJS/TerriaMap/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/TerriaJS/TerriaMap/actions/workflows/ci.yml) [![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://docs.terria.io/)
-
+![Regione Emilia-Romagna logo](wwwroot/images/320px-Logo_orizzontale_Regione_Emilia-Romagna.jpg "Regione Emilia-Romagna logo")  
+![Bioretics logo](bioretics_logo.jpg "Bioretics logo")  
 ![Terria logo](terria-logo.png "Terria logo")
 
-This is a complete website built using the TerriaJS library. See the [TerriaJS README](https://github.com/TerriaJS/TerriaJS) for information about TerriaJS, and getting started using this repository.
+The **rer3d-map** is a website for map-based access to italian [Emilia-Romagna region](http://www.regione.emilia-romagna.it) spatial data from local government agencies.
+Customizations and improvements has been developed and customized by [Bioretics srl](http://www.bioretics.com).
 
-For instructions on how to deploy your map, see [the documentation here](doc/deploying/deploying-to-aws.md).
+**rer3d-map** is the TerriaMap application of this monorepo, built against the
+in-repo [terriajs](../../packages/terriajs) package (it previously tracked the
+separate [rer3d-terriajs](https://github.com/bioretics/rer3d-terriajs) fork).
 
-To get in touch:
+Go to the [wiki page](https://github.com/bioretics/rer3d-map/wiki) for installation guide.
 
-- Join the [TerriaJS Github Discussion](https://github.com/TerriaJS/terriajs/discussions)
-- Raise issues in the [TerriaJS Github issue tracker](https://github.com/TerriaJS/terriajs/issues/new)
+![RER3D-MAP screenshot](rer3d-map-1.14.1_screenshot.jpg "RER3D-MAP screenshot")
 
 ---
 
-## Major announcements
+## Upstream Terria Map notes
 
-Following is a list of major announcements and upgrades that may affect users maintaining a fork (copied from [TerriaJS announcements](https://github.com/TerriaJS/terriajs/discussions/categories/announcements)). For a full list of changes to TerriaMap, including the latest versions of TerriaJS included with each release please refer to [CHANGES.md](https://github.com/TerriaJS/TerriaMap/blob/main/CHANGES.md).
+This app is based on upstream [Terria Map](https://github.com/TerriaJS/TerriaMap). See the
+[TerriaJS README](https://github.com/TerriaJS/TerriaJS) for information about TerriaJS.
+For a full list of changes, including the TerriaJS version shipped with each release, see
+[CHANGES.md](CHANGES.md).
 
-### We have released TerriaJS v8.3.0 (2023-05-22)
+Major upstream announcements that affect fork maintenance (full list in
+[TerriaJS announcements](https://github.com/TerriaJS/terriajs/discussions/categories/announcements)):
 
-Terriajs version `8.3.0` includes a few breaking changes:
-
-    - Upgrade to Typescript version 4.9.x
-    - Upgrade to Mobx version 6.9.x
-
-This might affect your map only if it has local model layer modifications like your own custom data provider (aka catalog items). Otherwise you can proceed like any other normal upgrade. For instructions on upgrading your maps with local modiciations please refer to the [upgrade guide](https://github.com/TerriaJS/terriajs/discussions/6787).
-
-### PM2 no longer supported (2023-03-21)
-
-We've removed pm2 from our dependencies and no longer ship configuration for running terriajs-server with pm2.
-
-`npm start` now runs in forground because it no longer uses pm2. A new task `gulp dev` has been introduced to make development easier. It runs terriajs-server and starts `gulp watch` - which watches for changes and incrementally builds. See https://github.com/TerriaJS/terriajs/discussions/6731 for more information on why and what to do.
-
-### We just reformatted our codebase with [Prettier](https://prettier.io/) (2022-08-29)
-
-This may cause large merge conflicts when you merge `main` into your fork. See https://github.com/TerriaJS/terriajs/discussions/6517 for instructions on how to merge this formatting change.
-
-### We have released TerriaJS v8 (2021-08-13)
-
-What this means:
-
-- [Our new main branch of TerriaMap](https://github.com/TerriaJS/TerriaMap/tree/main) now uses v8+ of TerriaJS
-- [The terriajs7 branch of TerriaMap](https://github.com/TerriaJS/TerriaMap/tree/terriajs7) will use v7 TerriaJS, but will not receive further updates
-- We have a [migration guide](https://docs.terria.io/guide/contributing/migration-guide/) available for users of TerriaJS v7 to help them upgrade their applications to TerriaJS v8
-- Please chat to us and the community in our [GitHub discussions forum](https://github.com/TerriaJS/terriajs/discussions)
+- **PM2 no longer supported (2023-03-21)** — `npm start` runs terriajs-server in the
+  foreground; use `gulp dev` for development (runs the server plus incremental watch).
+- **TerriaJS v8.3.0 (2023-05-22)** — upgraded to TypeScript 4.9.x and MobX 6.9.x; affects
+  maps with local model-layer modifications.
+- **Codebase reformatted with Prettier (2022-08-29)** — see
+  https://github.com/TerriaJS/terriajs/discussions/6517 for merge guidance.

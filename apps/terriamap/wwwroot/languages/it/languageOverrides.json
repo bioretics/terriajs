@@ -1,0 +1,93 @@
+{
+  "gettingstarted": {
+    "title": "Inizia a usare Mappe",
+    "markdownText": "## Inizia a usare Mappe\n\nSe stai iniziando ora ad utilizzare le funzioni di Mappe e i dati geografici il video “Inizia con Mappe” mostra le funzionalità base che ti servono per caricare e interrogare dati e cartografie.\n\n Se non hai tempo ora per vedere il video, ti suggeriamo di esplorare le aree seguenti:\n\n1. Cerca per una località o un indirizzo per cercare un’area di interesse\n2. Utilizza ‘Esplora il catalogo’ per accedere ai cataloghi dei dati cartografici disponibili e aggiungerli alla mappa, oppure scopri come aggiungere dati dal web o dal tuo disco locale con lo strumento ‘carica’ o trascinando i tuoi file.\n3. Scopri le funzionalità della workbench per ordinare i layers, attivarli e disattivarli, renderli trasparenti, accedere alle informazioni specifiche o rimuoverli.\n4. Clicca su ‘Impostazioni mappa’ per definire i dettagli della tua mappa, modalità di visualizzazione, scegliere la mappa base, definire la qualità di visualizzazione.\n5. Interagisci con la mappa: clicca su un punto per avere ‘Info’ sulle singole features, naviga sulla mappa, agisci con lo zoom e sposta la visualizzazione, inclinazione e angolo di vista attraverso i controlli sulla destra dello schermo e il mouse.\n6. Scopri gli strumenti avanzati come gli strumenti di misura e la doppia visualizzazione per il confronto tra mappe, la navigazione su mappe temporali o la visualizzazione pedonale.",
+    "videoUrl": "https://www.youtube-nocookie.com/embed/FjSxaviSLhc",
+    "placeholderImage": "https://img.youtube.com/vi/FjSxaviSLhc/maxresdefault.jpg"
+  },
+  "stepbystepguide": {
+    "title": "Guida passo a passo",
+    "markdownText": "## Guida passo a passo\n\nLancia la guida passo-passo per le modalità di utilizzo più frequenti:",
+    "gettingstarted": {
+      "title": "Inizia con la mappa",
+      "step1": {
+        "markdownDescription": "La ricerca è in alto a sinistra sopra la tavola dei contenuti.",
+        "title": "Cerca un luogo o un indirizzo per cercare un'area di interesse"
+      },
+      "step2": {
+        "markdownDescription": "In ogni momento con il pulsante \"Esplora il catalgo\" puoi accedere ai cataloghi dei dati disponibili, ricercare un dataset o navigare l'albero dei contenuti, avere informazioni sul dato e aggiungerlo alla mappa",
+        "title": "Esplora il catalgo dei dati disponibili"
+      },
+      "step3": {
+        "markdownDescription": "In ogni momento con il pulsante \"Carica\" o \"I miei dati\" nella finestra catalogo puoi aggiungere tuoi dati ai contenuti della mappa. Puoi aggiungere altri dati provenienti da servizi esterni riconosciuti o file dal tuo computer. Puoi caricare file anche trascinandoli sulla mappa. I file devono avere formato e sistemi di riferimento compatibili.",
+        "title": "Aggiungi nuovi dati"
+      },
+      "step4": {
+        "markdownDescription": "Trova i dati che ti interessano",
+        "title": "Cerca un dato o naviga nel catalogo"
+      },
+      "step5": {
+        "markdownDescription": "Aggiungi dati alla mappa cliccando su segno + o sul pulsante \"Aggiungi alla mappa\" nella finestra di anteprima",
+        "title": "Aggiungi dati alla mappa"
+      },
+      "step6": {
+        "markdownDescription": "Vai a \"Impostazioni mappa\" per scegliere la modalità 3D o 2D, la mappa base, la qualità della mappa di sfondo",
+        "title": "Modifica le preferenze di mappa"
+      },
+      "step7": {
+        "markdownDescription": "Attraverso la tavola dei contenuti puoi riordinare gli strati informativi, modificare la trasparenza, accendere o spegnere uno strato, avere informazioni aggiuntive",
+        "title": "Agisci sulla tavola dei contenuti"
+      },
+      "step8": {
+        "markdownDescription": "Clicca sulla mappa per avere informazioni sulle singole Feature presenti nella specifica posizione",
+        "title": "Clicca sulla mappa"
+      },
+      "step9": {
+        "markdownDescription": "Con il pulsante \"Informazioni\" del singolo strato nella tavola dei contenuti puoi accedere a tutte le informazioni sul Dataset quali descrizioni, metadati, licenza d'uso, accesso al dato e al download",
+        "title": "Visualizza i metadati e i servizi"
+      },
+      "step10": {
+        "markdownDescription": "Attraverso i controlli sulla destra dello schermo, il mouse e la tastiera puoi navigare sulla mappa e modificare livello di scala, area visualizzata, inclinazione e angolo di vista",
+        "title": "Naviga sulla mappa"
+      }
+    }
+  },
+  "helpContentTerm1": {
+    "term": "dataset",
+    "aliases": ["data set", "data sets", "datasets"],
+    "content": "Uns collezione di informaziomni corrrelate, organizzate in una struttura dati omogenea, e.g. \"densità abitativa areale\" oppure \"temperature minime e massime giornaliere\""
+  },
+  "helpContentTerm2": {
+    "term": "time series",
+    "aliases": ["timeseries"],
+    "content": "Una serie di dati relativi ad una certa localizzazione riferite a tempi diversi, ad esempio le temperature rilevate da sensori o una collezione di immagini dello stesso luogo riferite a tempi diversi"
+  },
+  "helpContentTerm3": {
+    "term": "workbench",
+    "content": "Il pannello sulla sinistra dello schermo che mostra l'elenco dei dataset che hai aggiunto alla mappa"
+  },
+  "helpContentTerm4": {
+    "term": "4D",
+    "content": "Dati 3D che hanno anche un componente temporale (timeseries)"
+  },
+  "helpContentTerm5": {
+    "term": "catalogo",
+    "aliases": ["catalogue"],
+    "content": "Il repertorio dei dataset immediamente disponibili per le mappe"
+  },
+  "helpContentTerm6": {
+    "term": "base maps",
+    "aliases": ["basemap", "base map", "basemaps"],
+    "content": "Strato di base della mappa, sono presenti differenti mappe base sia regionali sia fornite da servizi di terze parti: openstreetmap, mappa bing, mappe \"light\""
+  },
+  "helpContentTerm7": {
+    "term": "dataset sorgente",
+    "aliases": ["source dataset"],
+    "content": "Il dataset aggiunto alla workbench e che permette diiverse that permette calcoli delle differenze"
+  },
+  "helpContentTerm8": {
+    "term": "preview style",
+    "aliases": ["preview style"],
+    "content": "La modalità con cui un dataset appare nella finestra di preview. Raccomandiamo la modalità a colori per individuare immagini senza nuvole"
+  }
+}

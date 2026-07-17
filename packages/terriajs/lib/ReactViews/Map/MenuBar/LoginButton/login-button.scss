@@ -1,4 +1,4 @@
-@import "~terriajs-variables";
+@use "../../../../Sass/common/_variables";
 
 .loginContainer {
   position: relative;
@@ -28,15 +28,15 @@
   z-index: 120;
   min-width: 230px;
   padding: 10px;
-  border-radius: $radius-small;
-  border: $border-style;
-  background: $dark;
-  color: $text-light;
-  box-shadow: $box-shadow;
+  border-radius: variables.$radius-small;
+  border: variables.$border-style;
+  background: variables.$dark;
+  color: variables.$text-light;
+  box-shadow: variables.$box-shadow;
 }
 
 .logoutConfirmMessage {
-  font-size: $font-size-mini;
+  font-size: variables.$font-size-mini;
   line-height: 1.4;
   margin-bottom: 10px;
 }
@@ -50,17 +50,17 @@
 .logoutConfirmBtn,
 .logoutCancelBtn {
   composes: btn from "../../../../Sass/common/_buttons.scss";
-  border-radius: $radius-small;
-  font-size: $font-size-mini;
+  border-radius: variables.$radius-small;
+  font-size: variables.$font-size-mini;
   padding: 5px 10px;
 }
 
 .logoutConfirmBtn {
-  background: $color-primary;
-  color: $text-light;
+  background: variables.$color-primary;
+  color: variables.$text-light;
 }
 
 .logoutCancelBtn {
-  background: $overlay;
-  color: $text-light;
+  background: variables.$overlay;
+  color: variables.$text-light;
 }

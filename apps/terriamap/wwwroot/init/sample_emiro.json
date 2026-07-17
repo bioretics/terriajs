@@ -1,0 +1,116 @@
+{
+  "initialCamera": {
+    "west": 11.22452713405054,
+    "south": 44.37825195748013,
+    "east": 11.491171219388113,
+    "north": 44.50038085715073,
+    "position": {
+      "x": 4489731.873993766,
+      "y": 901529.1125212174,
+      "z": 4438824.243831297
+    },
+    "direction": {
+      "x": -0.9559228112176474,
+      "y": -0.17443456387229608,
+      "z": 0.236186709872575
+    },
+    "up": {
+      "x": 0.22963153691378663,
+      "y": 0.057148107057887906,
+      "z": 0.9715984001192635
+    }
+  },
+  "homeCamera": {
+    "west": 9.278,
+    "south": 43.736,
+    "east": 12.810000000000002,
+    "north": 45.325
+  },
+  "baseMapName": "DBTR mappa Web",
+  "initialViewerMode": "3d",
+  "catalog": [
+    {
+      "name": "Regione Emilia-Romagna",
+      "type": "group",
+      "items": [
+        {
+          "name": "Terrains",
+          "type": "group",
+          "items": [
+            {
+              "name": "DTM5_Ridracoli_Ripa",
+              "type": "cesium-terrain",
+              "url": "http://192.168.1.11:8090/tilesets/dtm_emiro",
+              "isEnabled": false,
+              "isShown": false,
+              "rectangle": [9.278, 43.736, 12.81, 45.325]
+            }
+          ]
+        },
+        {
+          "name": "Layers",
+          "type": "group",
+          "items": [
+            {
+              "name": "AGEA2011_RGB",
+              "type": "wms",
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/agea2011_rgb",
+              "layers": "Agea2011_RGB",
+              "isEnabled": false,
+              "isShown": true
+            },
+            {
+              "name": "Uso del suolo",
+              "type": "group",
+              "items": [
+                {
+                  "name": "Uso del suolo",
+                  "isEnabled": false,
+                  "type": "wms-getCapabilities",
+                  "url": "https://servizigis.regione.emilia-romagna.it/wms/uso_del_suolo"
+                }
+              ]
+            },
+            {
+              "name": "Escursionismo",
+              "type": "group",
+              "items": [
+                {
+                  "name": "Rete escursionistica",
+                  "isEnabled": false,
+                  "type": "wms-getCapabilities",
+                  "url": "https://servizigis.regione.emilia-romagna.it/wms/rete_escursionistica"
+                }
+              ]
+            },
+            {
+              "name": "DBTR",
+              "type": "group",
+              "items": [
+                {
+                  "name": "DBTR",
+                  "isEnabled": false,
+                  "type": "wms-getCapabilities",
+                  "url": "https://servizigis.regione.emilia-romagna.it/wms/dbtr"
+                }
+              ]
+            },
+            {
+              "name": "Geologia",
+              "type": "group",
+              "items": [
+                {
+                  "name": "Geologia sintesi",
+                  "isEnabled": false,
+                  "type": "wms",
+                  "url": "https://servizigis.regione.emilia-romagna.it/wms/geologia_sintesi",
+                  "layers": "Domini_geologici"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

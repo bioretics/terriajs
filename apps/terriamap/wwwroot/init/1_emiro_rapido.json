@@ -1,0 +1,754 @@
+{
+  "workbench": ["ttjh8y", "ySZw6F"],
+  "catalog": [
+    {
+      "id": "yQevWE",
+      "type": "group",
+      "name": "Catalogo rapido Regione Emilia-Romagna",
+      "members": [
+        {
+          "id": "CJgy1w",
+          "type": "group",
+          "name": "0 - Prodotti recenti ",
+          "members": [
+            {
+              "type": "esri-mapServer",
+              "name": "Mappa DBTR",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/services/servizi-OGC/servizio-di-consultazione/cartografia-di-base/dbtr-cache-wms",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_wgs84wm/MapServer",
+              "opacity": 0.5,
+              "isOpenInWorkbench": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "ySZw6F",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti /Mappa DBTR"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "DBTR_CTRMultiscala",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/services/servizi-OGC/servizio-di-consultazione/cartografia-di-base/database-topografico-regionale-ctr-multiscala-wms",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_ctrmultiscala_wgs84wm/MapServer",
+              "metadataUrls": [
+                {
+                  "url": "http://servizigis.regione.emilia-romagna.it/ctwmetadatiRER/metadatoISO.ejb?stato_IdMetadato=iOrg01iEnP1idMetadato78150",
+                  "title": "metadati ISO"
+                }
+              ],
+              "isOpenInWorkbench": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "ttjh8y",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti /DBTR_CTRMultiscala"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2020 RGB",
+              "description": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+              "attribution": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "AGEA2020",
+                "content": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2020_rgb_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "AGEA2020_rgb1",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2020 rgb"
+              ]
+            },
+            {
+              "id": "rer7678wmts",
+              "name": "RER 1976-1978",
+              "description": "ortofoto 30 cm/px realizzata a partire dalla digitalizzazione dei fotogrammi del Volo aerofotogrammetrico RER dal 1976 al 1978",
+              "type": "wmts",
+              "isGeoServer": "false",
+              "getCapabilitiesUrl": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/volorer_1976_78_wgs84wm/MapServer/WMTS?service=WMTS&version=1.0.0&request=GetCapabilities",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/volorer_1976_78_wgs84wm/MapServer/WMTS",
+              "layer": "cache_volorer_1976_78_wgs84wm",
+              "opacity": 1.0,
+              "hideSource": true,
+              "attribution": "RER © 1976-1978"
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2019 RGB MONTECOPIOLO SASSOFELTRIO",
+              "description": "Ortofoto AGEA 20cm 2019 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "AGEA2019 RGB MONTECOPIOLO SASSOFELTRIO",
+                "content": "Ortofoto AGEA 20cm 2019 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2019_montecopiolo_sassofeltrio_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": true,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "AGEA2019_rgb1",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2019 rgb Montecopiolo Sassofeltrio"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "CGR2018",
+              "description": "Ortofoto RGFB 30 cm CGR2018 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "CGR2018",
+                "content": "Ortofoto 30 cm CGR@2018 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_rgb_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "N7ImhJ",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/CGR2018"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Comuni 2021",
+              "description": "https://geoportale.regione.emilia-romagna.it/catalogo/dati-cartografici/confini",
+              "shortReport": "Scala minima di visualizzazione 1:15.000",
+              "show": true,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/ambiti_amministrativi/MapServer",
+              "layers": "Comune_Ed_2021_5k",
+              "id": "Comuni2021",
+              "hideSource": true,
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti /Ambiti Amministrativi2021"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "Carta fisico-politica dell'Emilia-Romagna - 1:250.000 - Colori - Edizione del 2021",
+              "description": "https://geoportale.regione.emilia-romagna.it/catalogo/dati-cartografici/cartografia-di-base/carte-topografiche/layer-13",
+              "isEsri": true,
+              "tileWidth": 254,
+              "tileHeight": 254,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/ctr250c",
+              "layers": "Ctr250c",
+              "isOpenInWorkbench": false,
+              "id": "Ctr250c",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti/CTR250C"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Uso del Suolo dettaglio 2017",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/pianificazione-e-catasto/uso-del-suolo",
+              "shortReport": "Scala minima di visualizzazione 1:200.000",
+              "show": true,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/uso_del_suolo/MapServer",
+              "layers": "2017_uso_suolo_ed2020",
+              "id": "5Qpwhn",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti /Uso del Suolo dettaglio 2017"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/0 - Prodotti recenti "
+          ]
+        },
+        {
+          "id": "cicWrM",
+          "type": "group",
+          "name": "1 - OrtoImmagini",
+          "members": [
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2020 RGB",
+              "description": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+              "attribution": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "AGEA2020",
+                "content": "Ortofoto AGEA 20cm 2020 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2020_rgb_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "AGEA2020_rgb2",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2020 rgb"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Quadro di unione AGEA 2020",
+              "description": "https://geoportale.regione.emilia-romagna.it/catalogo/dati-cartografici/cartografia-di-base/immagini",
+              "show": true,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/metadati_raster_RDN32/MapServer",
+              "layers": "QU_Ortofoto_Agea2020",
+              "id": "QU_Ortofoto_Agea2020",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/Quadro unione AGEA2020"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "AGEA2020 NIR",
+              "description": "ortofoto 20cm AGEA2020 Nearest Infrared",
+              "isEsri": true,
+              "tileWidth": 254,
+              "tileHeight": 254,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/agea2020_nir",
+              "layers": "Agea2020_NIR",
+              "isOpenInWorkbench": false,
+              "id": "agea2020nirwms",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2020 NIR"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2019 RGB MONTECOPIOLO SASSOFELTRIO",
+              "description": "Ortofoto AGEA 20cm 2019 - TUTTI I DIRITTI RISERVATI",
+              "attribution": "Ortofoto AGEA 20cm 2019 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "AGEA2019",
+                "content": "Ortofoto AGEA 20cm 2019 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2019_montecopiolo_sassofeltrio_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "AGEA2019_rgb1",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2019 rgb Montecopiolo Sassofeltrio"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "CGR2018",
+              "description": "Ortofoto RGB 30 cm CGR2018 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "CGR2018",
+                "content": "Ortofoto 30 cm CGR@2018 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_rgb_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "YXqa3l",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/CGR2018"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Quadro di unione CGR 2018",
+              "description": "https://geoportale.regione.emilia-romagna.it/catalogo/dati-cartografici/cartografia-di-base/immagini",
+              "show": true,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/metadati_raster_RDN32/MapServer",
+              "layers": "QU_Ortofoto_CGR2018",
+              "id": "QU_Ortofoto_CGR2018",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/Quadro unione CGR2018"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "CGR2018NIR",
+              "description": "Ortofoto NIR 30 cm CGR2018 - TUTTI I DIRITTI RISERVATI",
+              "initialMessage": {
+                "title": "CGR2018",
+                "content": "Ortofoto NIR 30 cm CGR@2018 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/cgr2018_nir_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideSource": true,
+              "id": "d1CKYS",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/CGR2018NIR"
+              ]
+            },
+            {
+              "name": "TeA2017 RGB",
+              "description": "Ortofoto 20 cm TeA2017 - TUTTI I DIRITTI RISERVATI",
+              "type": "esri-mapServer",
+              "url": "http://gis.ente.regione.emr.it/arcgis/rest/services/private_moka/agea2017_wgs84wm/MapServer",
+              "initialMessage": {
+                "title": "TeA2017 RGB",
+                "content": "Ortofoto 20 cm TeA2017 - TUTTI I DIRITTI RISERVATI",
+                "confirmation": true,
+                "confirmText": "Ok",
+                "width": 500,
+                "height": 180
+              },
+              "show": false,
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "tRV7N6",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/TeA2017"
+              ]
+            },
+
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2011",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/immagini/ortofoto-multifunzione-emilia-romagna-agea-2011-digitale",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2011_wgs84wm/MapServer",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "sJjLVp",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2011"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "AGEA2008",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/immagini/ortofoto-multifunzione-emilia-romagna-agea-2008-digitale",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/agea2008_wgs84wm/MapServer",
+              "isOpenInWorkbench": false,
+              "allowFeaturePicking": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "DzTG47",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/AGEA2008"
+              ]
+            },
+            {
+              "id": "rer7678wmts",
+              "name": "RER 1976-1978",
+              "description": "ortofoto 30 cm/px realizzata a partire dalla digitalizzazione dei fotogrammi del Volo aerofotogrammetrico RER dal 1976 al 1978",
+              "type": "wmts",
+              "isGeoServer": "false",
+              "getCapabilitiesUrl": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/volorer_1976_78_wgs84wm/MapServer/WMTS?service=WMTS&version=1.0.0&request=GetCapabilities",
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/volorer_1976_78_wgs84wm/MapServer/WMTS",
+              "layer": "cache_volorer_1976_78_wgs84wm",
+              "opacity": 1.0,
+              "hideSource": true,
+              "attribution": "RER © 1976-1978"
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Quadro di unione Volo RER 1976-78",
+              "description": "https://geoportale.regione.emilia-romagna.it/catalogo/dati-cartografici/cartografia-di-base/immagini",
+              "show": true,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/metadati_raster_RDN32/MapServer",
+              "layers": "QU_VoloRER_1976_78",
+              "id": "QU_VoloRER_1976_78",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini/Quadro unione Volo RER 1976-78"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - OrtoImmagini"
+          ]
+        },
+        {
+          "id": "Uw2aKm",
+          "type": "group",
+          "name": "2 - Database Topografico Regionale",
+          "members": [
+            {
+              "type": "esri-mapServer",
+              "name": "Mappa DBTR",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/services/servizi-OGC/servizio-di-consultazione/cartografia-di-base/dbtr-cache-wms",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_wgs84wm/MapServer",
+              "opacity": 0.5,
+              "isOpenInWorkbench": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "id": "GumVvR",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/Mappa DBTR"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "DBTR_CTRMultiscala",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/services/servizi-OGC/servizio-di-consultazione/cartografia-di-base/database-topografico-regionale-ctr-multiscala-wms",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/arcgis/rest/services/cache/dbtr_ctrmultiscala_wgs84wm/MapServer",
+              "isOpenInWorkbench": false,
+              "hideLayerAfterMinScaleDenominator": false,
+              "allowFeaturePicking": false,
+              "id": "1GTu4f",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR_CTRMultiscala"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR5k WMS",
+              "info": [
+                {
+                  "name": "Keywords:",
+                  "content": "ambiente, ambiti amministrativi, cartografia tecnica regionale, ctr, ctr5, database topografico, naturali, territorio, topografia, viabilità"
+                },
+                {
+                  "name": "Descrizione:",
+                  "content": "Rappresentazione cartografica dei contenuti del Database Topografico Regionale alle grandi scale, con simbologia analoga alla Carta Tecnica Regionale alla scala 1:5000 che costituisce la nuova CTR 5k. Versione monocromatica completa, in formato raster a 600 dpi. I metadati di sezione (es. Data di acquisizione, ecc.) sono contenute nel WMS - metadati_raster."
+                },
+                {
+                  "name": "Scopo:",
+                  "content": "Rendere disponibile in modo digitale e georeferenziato il contenuto del Database Topografico Regionale con una rappresentazione e con simbologie analoghe alla CTR5, per un utilizzo tramite i sistemi cartografici e GIS."
+                },
+                {
+                  "name": "Licenza:",
+                  "content": "Creative Commons 4.0 BY"
+                },
+                {
+                  "name": "Informazioni:",
+                  "content": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/cartografia-tecnica/dbtr-carta-tecnica-regionale-1-5000"
+                },
+                {
+                  "name": "Quadro di unione:",
+                  "content": "http://servizigis.regione.emilia-romagna.it/wms/metadati_raster"
+                },
+                {
+                  "name": "Download:",
+                  "content": "https://geoportale.regione.emilia-romagna.it/it/download/prodottiraster"
+                },
+                {
+                  "name": "Metadati:",
+                  "content": "http://servizigis.regione.emilia-romagna.it/ctwmetadatiRER/metadatoISO.ejb?stato_IdMetadato=iOrg01iEnP1idMetadato7825"
+                }
+              ],
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr5",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr5",
+              "id": "DexQu5",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR5k WMS"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR5k Light WMS",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/cartografia-tecnica/carta-tecnica-regionale-1-5000-light-1",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr5_light",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr5_Light",
+              "id": "HZ3P8u",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR5k Light WMS"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR10k Light WMS",
+              "description": "Rappresentazione cartografica dei contenuti del Database Topografico Regionale alle grandi scale, con simbologia analoga alla Carta Tecnica Regionale alla scala 1:5000 che costituisce la nuova CTR 5k. Versione monocromatica nella quale non sono rappresentate le campiture degli edifici, in formato raster a 600 dpi. I metadati di sezione (es. Data di acquisizione, ecc.) sono contenute nel WMS metadati_raster",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr10_light",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr10_Light",
+              "id": "KP1HRn",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR10k Light WMS"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR25k WMS",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/carte-topografiche/dbtr-carta-topografica-regionale-1-25.000",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr25",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr25",
+              "id": "57fVE7",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR25k WMS"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR25k Light WMS",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/cartografia-di-base/carte-topografiche/dbtr-carta-topografica-regionale-1-25.000-light",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr25_light",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr25_Light",
+              "id": "sfSBHt",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR25k Light WMS"
+              ]
+            },
+            {
+              "type": "wms",
+              "name": "DBTR CTR50k WMS",
+              "description": "Rappresentazione cartografica dei contenuti del Database Topografico Regionale alle grandi scale, con simbologia analoga alla Carta Tecnica Regionale alla scala 1:50.000 che costituisce la nuova CTR 5k. I metadati di sezione (es. Data di acquisizione, ecc.) sono contenute nel WMS metadati_raster",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/wms/DBTR_Ctr50",
+              "opacity": 1,
+              "isOpenInWorkbench": false,
+              "layers": "DBTR_Ctr50",
+              "id": "k2LFqh",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR CTR50k WMS"
+              ]
+            },
+            {
+              "type": "esri-mapServer-group",
+              "name": "DBTR Layers",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/services/servizi-OGC/servizio-di-consultazione/cartografia-di-base/database-topografico-regionale-wms",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/dbtr/MapServer",
+              "isOpenInWorkbench": false,
+              "id": "bMyL8M",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR Layers"
+              ]
+            },
+            {
+              "type": "esri-mapServer-group",
+              "name": "DBTR Live Layers",
+              "description": "Database Topografico Regionale versione di gestione",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/dbtr_live/MapServer",
+              "isOpenInWorkbench": false,
+              "id": "GKnneW",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale/DBTR Live Layers"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/2 - Database Topografico Regionale"
+          ]
+        },
+        {
+          "id": "qGwlnf",
+          "type": "group",
+          "name": "3 - Uso del Suolo",
+          "members": [
+            {
+              "type": "esri-mapServer-group",
+              "name": "Uso del Suolo",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/pianificazione-e-catasto/uso-del-suolo",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/uso_del_suolo/MapServer",
+              "id": "BPxF5Y",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/3 - Uso del Suolo/Uso del Suolo"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/3 - Uso del Suolo"
+          ]
+        },
+        {
+          "id": "2KARRL",
+          "type": "group",
+          "name": "4 - Rete Escursionistica",
+          "members": [
+            {
+              "type": "esri-mapServer",
+              "name": "Rete escursionistica",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/ambiente/percorsi-escursionistici",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/rete_escursionistica/MapServer",
+              "id": "xhcgTA",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/4 - Rete Escursionistica/Rete escursionistica"
+              ]
+            },
+            {
+              "type": "esri-mapServer-group",
+              "name": "Database rete escursionistica",
+              "description": "https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/ambiente/percorsi-escursionistici",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/rete_escursionistica/MapServer",
+              "id": "meyfEh",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/4 - Rete Escursionistica/Database rete escursionistica"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/4 - Rete Escursionistica"
+          ]
+        },
+        {
+          "id": "P6Pmis",
+          "type": "group",
+          "name": "5 - Geologia",
+          "members": [
+            {
+              "type": "esri-mapServer",
+              "name": "Dissesto",
+              "description": "https://ambiente.regione.emilia-romagna.it/geologia/temi/dissesto-idrogeologico",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/dissesto/MapServer",
+              "id": "5vAZmQ",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Dissesto"
+              ]
+            },
+            {
+              "type": "esri-mapServer-group",
+              "name": "Frane e Rischio Idrogeologico ",
+              "description": "https://ambiente.regione.emilia-romagna.it/geologia/temi/dissesto-idrogeologico",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/dissesto/MapServer",
+              "id": "3ADupE",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Frane e Rischio Idrogeologico "
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "geologia map 10k",
+              "description": "Base dati georeferenziata di tipo vettoriale, contenente gli elementi rilevati, appartenenti alle risorse e alle prospezioni del territorio regionale, rilevati alla scala di acquisizione 1:10.000. L'area geografica coperta riguarda l'intero territorio regionale. https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/informazioni-geoscientifiche/geologia",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/geologia10k/MapServer",
+              "id": "ajMaT4",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/geologia map 10k"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Geologia sintesi",
+              "description": "Base dati georeferenziata, di tipo vettoriale, contenente i raggruppamenti delle formazioni e delle successioni sulla base del rispettivo dominio paleogeografico di sedimentazione, con scala di acquisizione che parte dal 50.000. L'area geografica coperta comprende i Fogli in scala 1:50.000 in cui ricade il territorio regionale.",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/geologia_sintesi/MapServer",
+              "id": "Xdq46R",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Geologia sintesi"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "geologia 50k",
+              "description": "Base dati georeferenziata di tipo vettoriale, contenente gli elementi rilevati, appartenenti alle risorse e alle prospezioni del territorio regionale, rilevati alla scala di acquisizione 1:10.000. L'area geografica coperta riguarda l'intero territorio regionale. https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/informazioni-geoscientifiche/geologia",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/geologia50k/MapServer",
+              "id": "RHQ6Fk",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/geologia 50k"
+              ]
+            },
+            {
+              "type": "esri-mapServer-group",
+              "name": "geologia 10k",
+              "description": "Base dati georeferenziata di tipo vettoriale, contenente gli elementi rilevati, appartenenti alle risorse e alle prospezioni del territorio regionale, rilevati alla scala di acquisizione 1:10.000. L'area geografica coperta riguarda l'intero territorio regionale. https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/informazioni-geoscientifiche/geologia",
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/geologia10k/MapServer",
+              "id": "TJ6Npc",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/geologia 10k"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Paesaggio geologico",
+              "description": "La Carta del Paesaggio Geologico, in scala 1:250.000. https://ambiente.regione.emilia-romagna.it/geologia/temi/geositi-paesaggio-geologico/paes-geol",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/paesaggio_geologico/MapServer",
+              "id": "FrMFR7",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Paesaggio geologico"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Cavità naturali",
+              "description": "Banca dati del catasto delle cavita naturali dell'Emilia-Romagna. Rappresenta la distribuzione degli ingressi delle cavita naturali scoperte ed esplorate. https://geoportale.regione.emilia-romagna.it/it/catalogo/dati-cartografici/informazioni-geoscientifiche/patrimonio-geologico/cavita-naturali-puntuali",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/grotte/MapServer",
+              "id": "AbiBuY",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Cavità naturali"
+              ]
+            },
+            {
+              "type": "esri-mapServer",
+              "name": "Geositi",
+              "description": "I geositi sono luoghi che presentano aspetti geologici di rarità e unicità, restituendo informazioni fondamentali per la conoscenza del territorio. https://geo.regione.emilia-romagna.it/schede/geositi/",
+              "show": false,
+              "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/geositi/MapServer",
+              "id": "VuEx4I",
+              "shareKeys": [
+                "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia/Geositi"
+              ]
+            }
+          ],
+          "shareKeys": [
+            "Root Group/Catalogo rapido Regione Emilia-Romagna/5 - Geologia"
+          ]
+        }
+      ],
+      "info": [
+        {
+          "name": "Origine:",
+          "content": "Catalogo metadati regione Emilia-Romagna"
+        },
+        {
+          "name": "Descrizione:",
+          "content": "Catalogo dei prodotti e servizi cartografici di utilizzo frequente, intesa come insieme di temi che costituiscono una rappresentazione generale alle grandi, medie e piccole scale del territorio reginale orientata ad un utilizzo generale di pianificazione, monitoraggio e gestione del territorio."
+        }
+      ],
+      "infoSectionOrder": ["Descrizione", "Origine"],
+      "shareKeys": ["Root Group/Catalogo rapido Regione Emilia-Romagna"]
+    }
+  ]
+}

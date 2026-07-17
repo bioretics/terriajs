@@ -1,5 +1,194 @@
 # Change Log
 
+### 1.17.0 - 28/04/2021
+
+- Log into console the package version.
+- Docs update and improvements.
+- Updated rer3d-terriajs to 2.9.2
+- _rer3d-terriajs can be updated without update rer3d-map_
+
+### 1.16.1 - 12/06/2020
+
+- Updated rer3d-terriajs to 2.7.3
+- Help and about translation into italian language.
+
+### 1.16.0 - 08/06/2020
+
+- Updated rer3d-terriajs to 2.7.2
+- Updated Copyright year.
+- Translated help.html into italian.
+
+### 1.15.0 - 04/06/2020
+
+- Updated rer3d-terriajs to 2.7.0
+- Updated rer3d-terriajs-server to 1.3.0
+- About button moved to rer3d-terriajs.
+- Added Rer search.
+
+### 1.14.3 - 19/12/2019
+
+- Updated rer3d-terriajs to 2.4.3
+
+### 1.14.2 - 10/12/2019
+
+- Updated rer3d-terriajs to 2.4.2
+
+### 1.14.1 - 22/11/2019
+
+- Adjusted some minor package version
+- Updated rer3d-terriajs to 2.4.1
+
+### 1.14.0 - 14/11/2019
+
+- Updated rer3d-terriajs to 2.4.0
+
+### 1.13.0 - 08/11/2019
+
+- Updated rer3d-terriajs to 2.3.0
+- Updated rer3d-terriajs-server to 1.2.3
+
+### 1.12.2 - 25/09/2019
+
+- Fixed merge error.
+
+### 1.12.1 - 25/09/2019
+
+- Changed repository owner.
+- Updated rer3d-terriajs to 2.2.2
+- Updated rer3d-terriajs-server to 1.2.2
+
+### 1.12.0 - 25/09/2019
+
+- Package renamed
+- Updated rer3d-terriajs to 2.2.0
+- Updated rer3d-terriajs-server to 1.2.1
+- Fixed merge error.
+
+### 1.11.0 - 19/09/2019
+
+- Merged with **terriajs-map**
+- Updated rer3d-terriajs to 2.1.0
+
+### 1.10.0 - 19/09/2019
+
+- Merged with **terriajs-map**
+- Updated rer3d-terriajs to 2.0.0
+- Updated rer3d-terriajs-server to 1.1.0
+
+### 1.9.4 - 09/04/2019
+
+- Pages 404.html and 500.html rebranded.
+- Regione Emilia-Romagna layers URL in samples changed from HTTP to HTTPS.
+- Changed terrain URL, from HTTP to HTTPS.
+- Updated terriajs to glughi/terriajs#rer3d_1.9.4.
+
+### 1.9.3 - 26/03/2019
+
+- Changed default RER terrain URL.
+- Removed useless domains from proxy list.
+- Updated terriajs to glughi/terriajs#rer3d_1.9.3.
+
+### 1.9.2 - 05/03/2019
+
+- Disabled Cesium ion in config.
+- Added terrain default link in config.
+- Updated terriajs to glughi/terriajs#rer3d_1.9.1 (1.9.2).
+
+### 1.9.1 - 27/02/2019
+
+- Changed culture in BingMapsSearch from en-au to it.
+- Avoid bbox too small and camera too close to the ground in NominatimSearch.
+- flightDurationSeconds default values is now 3 secontds instead of 1.5.
+
+### 1.9.0 - 17/01/2019
+
+- Updated terriajs to glughi/terriajs#rer3d_1.9.0.
+- Removed useless share-panel.scss
+- Added file to ignore to .npmignore
+
+### 1.8.0 - 17/12/2018
+
+- Updated terriajs to glughi/terriajs#rer3d_1.8.0.
+- Added some proxable domains.
+- Updated manifes.
+- "isEnabled" setted to false in sample catalog json files.
+- Changed logo, fonts and colors.
+
+### 1.7.0 - 11/07/2018
+
+- Updated terriajs to glughi/terriajs#rer3d_1.7.0.
+- Added proxable domains.
+- MouseCoords are now sent to MeasureTool.
+- Added NominatimSearchProviderViewModel for Italy locations.
+
+### 1.6.3 - 03/05/2018
+
+- Updated terriajs to glughi/terriajs#rer3d_1.6.4.
+- Fixed mistyped in global style.
+
+### 1.6.2 - 24/04/2018
+
+- Updated terriajs to glughi/terriajs#rer3d_1.6.3.
+- Removed old pics.
+
+### 1.6.1 - 24/04/2018
+
+- Updated terriajs to glughi/terriajs#rer3d_1.6.2.
+- Changed brand bar with another new (tmp) logo.
+
+### 1.6.0 - 22/03/2018
+
+- Updated package.json.
+- Upgraded glughi/terriajs#rer3d_1.6.1.
+- Changed brand bar with a new (tmp) logo.
+- Changed link color to be more readable.
+- Merge pull request pr/4 from TerriaJS/TerriaMap.
+- devserverconfig.json customization.
+
+### 1.5.1 - 02/02/2018
+
+- Updated README.md
+- Added installation guide (english and italian) to GitHub wiki.
+- Use terriajs-server 2.7.1.
+
+### 1.5.0 - 01/02/2018
+
+- Renamed to rer3d-map.
+- Updated package.json.
+- Upgraded glughi/terriajs#v1.5.0.
+- Added proxable domain.
+- Merge pull request #230 from TerriaJS/terriajs-5.6.0
+- Upgrade terriajs-cesium and terriajs-server.
+- Fixed merge bug.
+
+### 1.4.0 - 25/01/2018
+
+- Updated to TerriaMap of 10/11/2017 and terriajs v. 5.5.4.
+- Added to SharePanel new features: save screenshot to file on local disk; save/load map config from/to file on local disk.
+- Enabled coordinate conversion panel with new features: goto coordinates; grab coordinates from last picked point.
+- Some words and sentences translated to italian language.
+- Some minor layout and style changes.
+
+### 1.3.0 - 29/11/2017
+
+- Fixed packages versions.
+- Fixed a accessibility issues (link in "Condividi" panel).
+- Disabled rerAddressNormService and reenabled BingAddressNormService due to bugs in RER soap webservice.
+- Temporarily disabled coordinate conversion panel waiting for some improvements.
+- Disabled the elevation error quota.
+- RER url are no longer proxied becouse they are no longer CORS.
+- Changed "About 3D" link.
+- Translated some sentences left in English.
+- The popup with navigation info isn't show every time the Geoportale3D page is open but when user click on "Come navigare" button.
+- Changed the basemap (now many maps can be merged).
+- Fix manifest.json start_url
+
+### The Next Release
+
+**Breaking changes:**
+
+- TerriaMap no longer supports ejs templating for data sources. We suggest to use terria reference to manage a catalog in multiple files.
+
 #### next release (0.4.7)
 
 - Upgrade terriajs-server to version 5 alpha
@@ -181,6 +370,24 @@ Failed release workflow
 
 **2022-09-23**
 
+- Removed `RelatedMaps.jsx` - this is now generated from configuration in `terriajs`. See https://github.com/TerriaJS/terriajs/blob/main/doc/customizing/client-side-config.md#parameters for example configuration.
+  - **Note** `RelatedMaps` can remain unchanged if HTML/JSX file is preferred.
+
+#### 2.0.0
+
+- Pull from to TerriaMap v8
+- Review and merge customizations from rer3d v7
+  - Add Rer and Nominatim search providers
+  - Italian language translation
+  - Add custom RER images and ico
+  - UI customization and translation
+  - Add RER tracking code
+  - Add domains to allowed proxy list
+  - Print version to console
+  - Remove RelatedMaps
+
+### 2022-03-14
+
 - Removed `RelatedMaps.jsx` - this is now generated from configuration in `terriajs`. See https://github.com/TerriaJS/terriajs/blob/main/packages/terriajs/doc/customizing/client-side-config.md#parameters for example configuration.
   - **Note** `RelatedMaps` can remain unchanged if HTML/JSX file is preferred.
 
@@ -236,9 +443,39 @@ Failed release workflow
 - Change deafult mobile view mode to a configuration parameter rather then hard coded to 2D.
 - Add Augmented Reality mode for iOS and Android devices with a compass and accelerometer, activated by enabling `experimentalFeatures` in `config.json` and adding the AugmentedVirtualityTool to the ExperimentalMenu in the customisable user interface.
 
+### 1.2.0 - 29/12/2016
+
+- Fixed accessibility issues (color contrast, alt, ...).
+- Enabled keyboard map navigation.
+- Added start message with info about navigation ways.
+
+### 1.1.0 - 07/12/2016
+
+- Fixed coordinate conversion panel.
+- Changed address search to use Norm_Indirizzo call instead of Norm_Indirizzo_Unico that is bugged.
+- Renamed "Geoportale" button to "About 3D".
+- Added disclaimer with information about map navitagion.
+- Translated other texts to italian.
+- Fixed icon of a base map.
+
 ### 2016-11-15
 
 - Fixed link to NEII viewer in Related Maps.
+
+### 1.0.0 - 14/10/2016
+
+- Updated to [TerriaMap](https://github.com/TerriaJS/TerriaMap) unreleased 2016-10-14 version.
+- Updated to [TerriaJS](https://github.com/TerriaJS/terriajs) 4.5.0 version.
+- Added a coordinate conversion panel that use RER conversion REST service.
+- Added rerAddressNormService to use safely the soap library.
+- Translated to italian the TerriaMap and TerriaJS interfaces and messages.
+- Changed Base Maps that now are: 7 from RER wms, Bing Aerial with Labels, OpenStreetMap Positron.
+- Removed Related Maps and About panels.
+- Added a link to the site http://geoportale.regione.emilia-romagna.it
+- Updated favicons, logo and title.
+- Prepared configuration file .json for 5 maps.
+- Updated config.json and devserverconfig.json
+- Now TerriaJS and TerriaMap are linked with [npmgitdev] (https://github.com/TerriaJS/npmgitdev) that need libstdc++.so.6.0.20.
 
 ### 2016-07-15
 
@@ -257,6 +494,34 @@ Failed release workflow
 - Fixed an issue where the 404 error page would display incorrectly if given a non-existent path (eg, nationlmap.gov.au/nonexistent/path)
 - Added CNT3 as an alias for ISO3 as a csv column name (for three-letter country codes).
 - Updated to [TerriaJS](https://github.com/TerriaJS/terriajs) 3.3.0. Significant changes relevant to NationalMap users include:
+  - `CkanCatalogItem.createCatalogItemFromResource`'s `options.allowGroups` has been replaced with `options.allowWmsGroups` and `options.allowWfsGroups`.
+  - Added support for WFS in CKAN items.
+  - Fixed a bug that prevented the terriajs-server's `"proxyAllDomains": true` option from working.
+  - Added support in FeatureInfoTemplate for referencing CSV columns by either their name in the CSV file, or the name they are given via `TableStyle.columns...name` (if any).
+  - Improved CSV handling to ignore any blank lines, ie. those containing only commas.
+  - Fixed a bug in `CswCatalogGroup` that prevented it from working in Internet Explorer.
+  - Fixed a bug on IE9 that prevented shortened URLs from loading.
+  - Fixed a map started with smooth terrain being unable to switch to 3D terrain.
+  - Fixed a bug in `CkanCatalogItem` that prevented it from using the proxy for dataset URLs.
+  - Fixed feature picking when displaying a point-based vector and a region mapped layer at the same time.
+  - Stopped generation of WMS intervals being dependent on JS dates and hence sensitive to daylight savings time gaps.
+  - Fixed a bug that led to zero property values being considered time-varying in the Feature Info panel.
+  - Fixed a bug that prevented lat/lon injection into templates with time-varying properties.
+  - Add `parameters` property in `WebFeatureServiceCatalogItem` to allow accessing URLs that need additional parameters.
+  - Fixed a bug where visiting a shared link with a time-series layer would crash on load.
+  - Added a direct way to format numbers in feature info templates, eg. `{{#terria.formatNumber}}{"useGrouping": true, "maximumFractionDigits": 3}{{value}}{{/terria.formatNumber}}`. The quotes around the keys are optional.
+  - When the number of unique values in a CSV column exceeds the number of color bins available, the legend now displays "XX other values" as the label for the last bucket rather than simply "Other".
+  - CSV columns with up to 21 unique values can now be fully displayed in the legend. Previously, the number of bins was limited to 9.
+  - Added `cycle` option to `tableColumnStyle.colorBinMethod` for enumeration-type CSV columns. When the number of unique values in the column exceeds the number of color bins available, this option makes TerriaJS color all values by cycling through the available colors, rather than coloring only the most common values and lumping the rest into an "Other" bucket.
+  - Metadata and single data files (e.g. KML, GeoJSON) are now consistently cached for one day instead of two weeks.
+  - `WebMapServiceCatalogItem` now uses the legend for the `style` specified in `parameters` when possible. It also now includes the `parameters` when building a `GetLegendGraphic` URL.
+  - Fixed a bug that prevented switching to the 3D view after starting the application in 2D mode.
+
+* Added a prominent link to the preview of the new UI.
+* Added GNAF as a location search provider.
+* Fixed an issue where the 404 error page would display incorrectly if given a non-existent path (eg, nationlmap.gov.au/nonexistent/path)
+* Added CNT3 as an alias for ISO3 as a csv column name (for three-letter country codes).
+* Updated to [TerriaJS](https://github.com/TerriaJS/terriajs) 3.3.0. Significant changes relevant to NationalMap users include:
   - `CkanCatalogItem.createCatalogItemFromResource`'s `options.allowGroups` has been replaced with `options.allowWmsGroups` and `options.allowWfsGroups`.
   - Added support for WFS in CKAN items.
   - Fixed a bug that prevented the terriajs-server's `"proxyAllDomains": true` option from working.
@@ -374,6 +639,38 @@ Failed release workflow
 - Added Brisbane City Council group under Data Providers.
 - Added direct download links for several ABS national boundaries.
 - Updated to [TerriaJS](https://github.com/TerriaJS/terriajs) 2.2.0. Significant changes relevant to NationalMap users include:
+  - Warn user when the requested WMS layer doesn't exist, and try to provide a suggestion.
+  - Fixed the calculation of a CSV file's extent so that missing latitudes and longitudes are ignored, not treated as zero.
+  - Improved the user experience around uploading files in a format not directly supported by TerriaJS and optionally using the conversion service.
+  - Improved performance of large CSV files, especially the loading time, and the time taken to change the display variable of region-mapped files.
+  - Added support for CSV files with only location (lat/lon or region) columns, and no value columns, using a file-specific color. Revised GeoJSON display to draw from the same palette of colors.
+  - Fixed a bug that prevented GeoJSON styles from being applied correctly in some cases.
+  - Fixed an error when adding a CSV with one line of data.
+  - Fixed error when adding a CSV file with numeric column names.
+  - Polygons and polylines are now highlighted on click when the geometry is available.
+  - Improved legend and coloring of ENUM (string) columns of CSV files; only the most common values are colored differently, with the rest shown as 'Other'.
+  - Changed `tableStyle`'s `format` to only accept `useGrouping`, `maximumFractionDigits` and `styling: "percent"` options. Previously some other options may have worked in some browsers.
+  - Improved color palette for string (ENUM) columns of CSV files.
+  - Improved CSV loading to ignore any completely blank lines after the header row (ie. lines which do not even have commas).
+  - Added support for grouping catalog items retrieved from a CSW server according to criteria specified in the init file (via the `metadataGroups` property) or from a `domainSpecification` and a call to the `GetDomain` service on the CSW server.
+  - Improved ABS display (to hide the regions) when a concept is deselected.
+  - Improved readability of ArcGIS catalog items and legends by replacing underscores with spaces.
+  - `ArcGisMapServerCatalogItem` metadata is now cached by the proxy for only 24 hours.
+  - Improved the feature info panel to update the display of time-varying region-mapped CSV files for the current time.
+  - Fixed sharing of time-varying CZML files; the timeline was not showing on the shared link.
+  - Fixed sharing of user-added time-varying CSV files.
+  - Fixed a bug in `CkanCatalogItem` that made it build URLs incorrectly when given a base URL ending in a slash.
+  - Added column-specific styling to CSV files, using a new `tableStyle.columns` json parameter. This is an object whose keys are column names or indices, and whose values are objects of column-specific tableStyle parameters. See the CSV column-specific group in `wwwroot/test/init/test-tablestyle.json` for an example. [#1097](https://github.com/TerriaJS/rer3d-terriajs/issues/1097)
+  - Added the following column-specific `tableStyle` parameters:
+
+* Updated "Population Estimates" layer to point to new GA location.
+* Changed the query of the South Australian Government CKAN server to include datasets with a format of both `geojson` and `GeoJSON`, greatly increasing the number of datasets found.
+* Updated all Geoscience Australia layers to point to the new infrastructure at http://services.ga.gov.au/gis/rest/services .
+* Re-populated Western Australian Government group, now pulling directly from `catalogue.beta.data.wa.gov.au`.
+* Added pages for HTTP 404 (Not Found) and 500 (Internal Server Error). Previously, we redirected errors back to the main page without an explanation.
+* Added Brisbane City Council group under Data Providers.
+* Added direct download links for several ABS national boundaries.
+* Updated to [TerriaJS](https://github.com/TerriaJS/terriajs) 2.2.0. Significant changes relevant to NationalMap users include:
   - Warn user when the requested WMS layer doesn't exist, and try to provide a suggestion.
   - Fixed the calculation of a CSV file's extent so that missing latitudes and longitudes are ignored, not treated as zero.
   - Improved the user experience around uploading files in a format not directly supported by TerriaJS and optionally using the conversion service.
@@ -684,7 +981,43 @@ Failed release workflow
 ### 2015-05-28
 
 - To hide the Explorer Panel at startup, the url can contain the parameter `hideEplorerPanel=1`.
-- Upgraded to [TerriaJS 1.0.15](https://github.com/TerriaJS/terriajs/blob/1.0.15/CHANGES.md). Significant changes relevant to National Map users include:
+- Upgraded to [TerriaJS 1.0.15](https://github.com/TerriaJS/rer3d-terriajs/blob/1.0.15/CHANGES.md). Significant changes relevant to National Map users include:
+  - Esri ArcGIS MapServers can now be added via the "Add Data" panel.
+  - We now support discovery of ArcGIS MapServer "Raster Layers" in addition to "Feature Layers".
+  - Sharing now preserves the base map and view mode (2D/3D) selection.
+  - Improved error handling in `CzmlCatalogItem`, `GeoJsonCatalogItem`, and `KmlCatalogItem`.
+  - We now raise an error and hide the dataset when asked to show a layer in Leaflet and that layer does not use the Web Mercator (EPSG:3857) projection. Previously, the dataset would silently fail to display.
+  - Fixed a bug that caused Internet Explorer 8 users to see a blank page instead of a message saying their browser is incompatible.
+
+### 2015-05-15
+
+- Dataset changes:
+  - Added New South Wales Government
+  - Added National Data Sets -> Surface Water -> Water Observations from Space
+  - Added National Data Sets -> Social and Economic -> Housing Stress
+  - Data Providers -> Water (Bureau of Meteorology Geofabric) now has sensible groups instead of a flat list.
+- National Map is now built on [TerriaJS](http://www.github.com/TerriaJS/terriajs). See the [changelog](https://github.com/TerriaJS/rer3d-terriajs/blob/1.0.11/CHANGES.md) for the complete list of changes since TerriaJS split off from National Map. Significant changes relevant to National Map users include:
+  - The Search tab now searches the names of all datasets in the catalogue, including those in delay-loaded groups.
+  - The 2D view once again correctly shows imagery attribution.
+  - The catalog item info page now renders a much more complete set of Markdown and HTML elements.
+  - Added support for region mapping based on region names instead of region numbers (example in `wwwroot/test/countries.csv`).
+  - Added support for time-dynamic region mapping (example in `wwwroot/test/droughts.csv`).
+  - Added the ability to region-map countries (example in `wwwroot/test/countries.csv`).
+  - Esri ArcGIS MapServer datasets now show much more information when the user clicks the Info button.
+  - Improved the appearance of the legends generating with region mapping.
+  - Fixed a bug that caused features to be picked from all layers in an Esri MapServer, instead of just the visible ones.
+  - Added support for the WMS MinScaleDenominator property and the Esri MapServer maxScale property, preventing layers using these properties from disappearing when zoomed in to close to the surface.
+  - Fixed a bug that could cause the "Drop a data file anywhere" message to get stuck on when dragging a file over the application while a modal dialog was open.
+  - Elminated distracting "jumping" of the selection indicator when picking point features while zoomed in very close to the surface.
+  - The 3D viewer now shows Bing Maps imagery unmodified, matching the 2D viewer. Previously, it applied a gamma correction.
+  - Polygons loaded from KML files are now placed on the terrain surface.
+  - We no longer automatically fly to the first location when pressing Enter in the Search input box, because this was surprising and often didn't work well.
+  - Checkboxes in the Data Catalogue and Search tabs now have a larger clickable area, which is especially helpful on touch screens.
+  - The Feature Information functionality now works with servers that can only return HTML, and displays it appropriately. This is especially useful for Google Maps Engine (GME) WMS servers.
+- The Bing Maps API key can now be specified in config.json.
+
+* To hide the Explorer Panel at startup, the url can contain the parameter `hideEplorerPanel=1`.
+* Upgraded to [TerriaJS 1.0.15](https://github.com/TerriaJS/terriajs/blob/1.0.15/CHANGES.md). Significant changes relevant to National Map users include:
   - Esri ArcGIS MapServers can now be added via the "Add Data" panel.
   - We now support discovery of ArcGIS MapServer "Raster Layers" in addition to "Feature Layers".
   - Sharing now preserves the base map and view mode (2D/3D) selection.
