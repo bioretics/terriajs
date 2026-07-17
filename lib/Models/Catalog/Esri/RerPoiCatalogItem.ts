@@ -102,6 +102,7 @@ interface RerPoiEntityCache {
 }
 
 type RerPoiLabelDisplayMode = "labeled" | "unlabeled";
+type RerPoiShortReportKey = "viewingLabeled" | "viewingUnlabeled";
 
 /** Tile size of the Google-standard / Leaflet Web Mercator pyramid. */
 const WEB_MERCATOR_TILE_SIZE = 256;
@@ -160,6 +161,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private readonly serviceEnumValues = new Map<string, string[]>();
 
   @observable private debugDataSource: CustomDataSource | undefined;
+
+  @observable private transientShortReportKey: RerPoiShortReportKey | undefined;
+  private transientShortReportTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly onDynamicViewportChanged = () => {
     const isPastLimit = this.isCameraPastTiltLimit();
@@ -247,6 +251,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     if (!Number.isFinite(level)) return undefined;
     return Math.max(0, Math.round(level));
   }
+
   constructor(...args: ModelConstructorParameters) {
     super(...args);
     makeObservable(this);
@@ -276,6 +281,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.removeTraitSnapshotReaction?.();
     this.removeTraitSnapshotReaction = undefined;
     this.disposeImperativeComputedViews();
+    this.clearTransientShortReport();
   }
 
   @override
@@ -314,7 +320,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
   @override
   get shortReport(): string | undefined {
-    let report: string = "";
+    let report = "";
 
     if (this.cameraTiltLimitExceeded) {
       const tiltMessage = i18next.t(
@@ -337,7 +343,50 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         : noVisiblePointsMessage;
     }
 
-    return report;
+    if (this.transientShortReportKey) {
+      const displayModeMessage = i18next.t(
+        `models.rerPoiCatalogItem.${this.transientShortReportKey}`,
+        { lng: this.activeLanguage }
+      );
+      report = report
+        ? `${report}<br/>${displayModeMessage}`
+        : displayModeMessage;
+    }
+
+    return report || undefined;
+  }
+
+  private clearTransientShortReport() {
+    if (this.transientShortReportTimer) {
+      clearTimeout(this.transientShortReportTimer);
+      this.transientShortReportTimer = undefined;
+    }
+
+    runInAction(() => {
+      this.transientShortReportKey = undefined;
+    });
+  }
+
+  private flashLabelModeMessage(useLabeledDisplay: boolean) {
+    const nextKey: RerPoiShortReportKey = useLabeledDisplay
+      ? "viewingLabeled"
+      : "viewingUnlabeled";
+
+    if (this.transientShortReportTimer) {
+      clearTimeout(this.transientShortReportTimer);
+      this.transientShortReportTimer = undefined;
+    }
+
+    runInAction(() => {
+      this.transientShortReportKey = nextKey;
+    });
+
+    this.transientShortReportTimer = setTimeout(() => {
+      runInAction(() => {
+        this.transientShortReportKey = undefined;
+      });
+      this.transientShortReportTimer = undefined;
+    }, 10000);
   }
 
   private getRerPoiTrait<T extends keyof RerPoiTraitSnapshot>(
@@ -537,6 +586,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.lastCommittedLevelId = undefined;
     this.lastCommittedCenter = undefined;
     this.lastCommittedExtent = undefined;
+    this.clearTransientShortReport();
   }
 
   private stopDynamicViewportRequests() {
@@ -575,6 +625,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.lastCommittedLevelId = undefined;
     this.lastCommittedCenter = undefined;
     this.lastCommittedExtent = undefined;
+    this.clearTransientShortReport();
   }
 
   private attachCurrentViewerListener() {
@@ -1186,6 +1237,13 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
     const labelThreshold = this.getRerPoiTrait("labelVisibilityThreshold");
     const useLabeledDisplay = onScreenPoiCount < labelThreshold;
+
+    if (
+      this.activeLabelDisplayMode !==
+      (useLabeledDisplay ? "labeled" : "unlabeled")
+    ) {
+      this.flashLabelModeMessage(useLabeledDisplay);
+    }
     this.activeLabelDisplayMode = useLabeledDisplay ? "labeled" : "unlabeled";
 
     if (useLabeledDisplay && !this.labeledEntityCache) {
