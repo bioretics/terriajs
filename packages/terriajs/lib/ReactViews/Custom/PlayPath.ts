@@ -115,6 +115,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const timeScratchRef = useRef<JulianDate>(new JulianDate());
   const lastUiUpdatePerfRef = useRef<number>(0);
   const pausedElapsedSecondsRef = useRef<number | null>(null);
+  const lastGeometryIndexRef = useRef(terria.measurableGeometryIndex);
+  const resumeGeometryIndexRef = useRef<number | null>(null);
   const lastCameraCoordsRef = useRef<{
     position: Cartesian3;
     direction: Cartesian3;
@@ -258,7 +260,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     (elapsedOverride?: number) => {
       const markerModel = markerModelRef.current;
       const entity = markerEntityRef.current;
-      const visible = showPositionMarkerRef.current;
+      const isPlaying = viewState.isPlayingPath;
+      const visible = showPositionMarkerRef.current && isPlaying;
 
       if (!markerModel) return;
 
@@ -287,18 +290,12 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       if (!pts?.length) return;
 
       const getter = getPositionAtElapsedRef.current;
-      const pausedElapsed = pausedElapsedSecondsRef.current;
-      const isPlaying = viewState.isPlayingPath;
       let position: Cartesian3;
 
-      if (
-        getter &&
-        (elapsedOverride !== undefined || isPlaying || pausedElapsed !== null)
-      ) {
-        const elapsed =
-          elapsedOverride ??
-          (isPlaying ? elapsedSecondsRef.current : (pausedElapsed ?? 0));
-        position = getter(elapsed);
+      if (getter && elapsedOverride !== undefined) {
+        position = getter(elapsedOverride);
+      } else if (getter) {
+        position = getter(elapsedSecondsRef.current);
       } else {
         const idx = Math.max(
           0,
@@ -335,7 +332,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     void terria.overlays.add(markerModel);
     void markerModel.loadMapItems();
 
-    markerModel.markerDataSource.show = showPositionMarkerRef.current;
+    markerModel.markerDataSource.show = false;
 
     createMarkerEntity(markerModel);
     updatePositionMarker();
@@ -361,7 +358,17 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
   useEffect(() => {
     updatePositionMarker();
-  }, [showPositionMarker, currentPointIndex, updatePositionMarker]);
+  }, [
+    showPositionMarker,
+    currentPointIndex,
+    viewState.isPlayingPath,
+    updatePositionMarker
+  ]);
+
+  const clearResumeState = useCallback(() => {
+    pausedElapsedSecondsRef.current = null;
+    resumeGeometryIndexRef.current = null;
+  }, []);
 
   const resetPlayPath = useCallback(() => {
     const pts = getPoints();
@@ -380,7 +387,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     reverseRef.current = startFromLastPointRef.current;
     currentPointIndexRef.current = targetIdx;
     lastReportedPointIndexRef.current = null;
-    pausedElapsedSecondsRef.current = null;
+    clearResumeState();
 
     // Clear stale data BEFORE restoring camera
     lastCameraCoordsRef.current = null;
@@ -396,6 +403,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     setPlayingPathState,
     restoreCameraAfterTracking,
     clearAnimation,
+    clearResumeState,
     updatePositionMarker
   ]);
 
@@ -449,6 +457,56 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         trackingReferenceFrameRef.current;
     }
   }, [trackingReferenceFrame]);
+
+  // When the selected path changes: interrupt any in-progress play and drop
+  // pause/resume progress so the new path always starts from the beginning.
+  useEffect(() => {
+    const geometryIndex = terria.measurableGeometryIndex;
+
+    if (lastGeometryIndexRef.current === geometryIndex) {
+      return;
+    }
+
+    lastGeometryIndexRef.current = geometryIndex;
+
+    abortPlayingPathRef.current = false;
+    clearAnimation();
+    (terria.cesium?.scene.camera as any)?.cancelFlight?.();
+    setCountdown(null);
+    clearResumeState();
+
+    lastReportedPointIndexRef.current = null;
+    lastCameraCoordsRef.current = null;
+    getPositionAtElapsedRef.current = null;
+    playEntityRef.current = null;
+
+    const pts = getPoints();
+    const targetIdx =
+      pts?.length && startFromLastPointRef.current ? pts.length - 1 : 0;
+
+    startIdxRef.current = targetIdx;
+    reverseRef.current = startFromLastPointRef.current;
+    currentPointIndexRef.current = targetIdx;
+    setCurrentPointIndex(targetIdx);
+
+    if (viewState.isPlayingPath) {
+      skipCameraRestoreOnStopRef.current = false;
+      setPlayingPathState(false);
+    } else {
+      restoreCameraAfterTracking();
+      updatePositionMarker();
+    }
+  }, [
+    terria.measurableGeometryIndex,
+    terria,
+    viewState.isPlayingPath,
+    getPoints,
+    clearAnimation,
+    clearResumeState,
+    setPlayingPathState,
+    restoreCameraAfterTracking,
+    updatePositionMarker
+  ]);
 
   const playPath = useCallback(() => {
     abortPlayingPathRef.current = true;
@@ -869,29 +927,36 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const pts = getPoints();
     if (!pts?.length) return;
 
-    if (!viewState.isPlayingPath && pausedElapsedSecondsRef.current !== null) {
+    const geometryIndex = terria.measurableGeometryIndex;
+    const canResume =
+      !viewState.isPlayingPath &&
+      pausedElapsedSecondsRef.current !== null &&
+      resumeGeometryIndexRef.current === geometryIndex;
+
+    if (canResume) {
       setPlayingPathState(true);
       return;
     }
+
+    clearResumeState();
 
     const startIdx = startFromLastPointRef.current ? pts.length - 1 : 0;
     reverseRef.current = startFromLastPointRef.current;
     startIdxRef.current = startIdx;
     currentPointIndexRef.current = startIdx;
     setCurrentPointIndex(startIdx);
-    pausedElapsedSecondsRef.current = null;
     lastReportedPointIndexRef.current = null;
     setCountdown(3);
   };
 
   const onPause = () => {
     pausedElapsedSecondsRef.current = elapsedSecondsRef.current;
+    resumeGeometryIndexRef.current = terria.measurableGeometryIndex;
     abortPlayingPathRef.current = false;
     clearAnimation();
     (terria.cesium?.scene.camera as any)?.cancelFlight?.();
     restoreCameraAfterTracking();
     setPlayingPathState(false);
-    updatePositionMarker(pausedElapsedSecondsRef.current);
   };
 
   const onStop = () => {
@@ -903,7 +968,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     lastReportedPointIndexRef.current = null;
     lastCameraCoordsRef.current = null;
     getPositionAtElapsedRef.current = null;
-    pausedElapsedSecondsRef.current = null;
+    clearResumeState();
     setPlayingPathState(false);
 
     const pts = getPoints();
@@ -970,7 +1035,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     if (viewState.isPlayingPath) playPath();
   }, [viewState.isPlayingPath, playPath]);
 
-  // Handle stopping the playpath when isPlayingPath becomes false
+  // When playback stops (pause, stop, path change, or natural end), abort the
+  // animation loop and restore the camera. Keep the position marker so pause /
+  // resume and subsequent plays continue to work.
   useEffect(() => {
     if (!viewState.isPlayingPath) {
       abortPlayingPathRef.current = false;
@@ -981,16 +1048,6 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       }
 
       skipCameraRestoreOnStopRef.current = false;
-
-      // Remove the marker when playpath is stopped
-      const markerModel = markerModelRef.current;
-      if (markerModel) {
-        markerModel.markerDataSource.entities.removeAll();
-        terria.overlays.remove(markerModel);
-        markerModelRef.current = null;
-        markerEntityRef.current = null;
-        markerPositionRef.current = null;
-      }
     }
   }, [
     viewState.isPlayingPath,

@@ -109,9 +109,9 @@ const PlayPathPanel = observer((props: Props) => {
       props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
 
     if (currentGeom !== lastGeom) {
-      if (!props.viewState.isPlayingPath && countdown === null) {
-        resetPlayPath();
-      }
+      // Always reset when the selected path changes. If Path A was playing,
+      // this interrupts it; pressing play on Path B starts from the beginning.
+      resetPlayPath();
       setLastGeom(currentGeom);
     }
   }, [
@@ -119,8 +119,6 @@ const PlayPathPanel = observer((props: Props) => {
     props.terria.measurableGeomList,
     props.terria.measurableGeometryIndex,
     lastGeom,
-    props.viewState.isPlayingPath,
-    countdown,
     resetPlayPath
   ]);
 
