@@ -109,13 +109,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.computeLineOfSight();
       this.prepareToAddNewPoint();
     });
-
-    this.disposeViewshedHeight = reaction(
-      () => this.terria.viewshedDistances?.[1],
-      () => {
-        this.addMapInteractionMode();
-      }
-    );
   }
 
   protected forceLoadMapItems(): Promise<void> {
@@ -171,6 +164,16 @@ export default class UserDrawingViewshed extends MappableMixin(
     runInAction(() => {
       this.inDrawMode = true;
     });
+
+    this.disposeViewshedHeight?.();
+    this.disposeViewshedHeight = reaction(
+      () => this.terria.viewshedDistances?.[1],
+      () => {
+        if (this.inDrawMode) {
+          this.addMapInteractionMode();
+        }
+      }
+    );
 
     if (isDefined(this.terria.cesium)) {
       this.terria.cesium.cesiumWidget.canvas.setAttribute(
@@ -272,7 +275,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     if (this.disposePickedFeatureSubscription) {
       this.disposePickedFeatureSubscription();
     }
-    if (this.disposeViewshedHeight) this.disposeViewshedHeight();
+    if (this.disposeViewshedHeight) {
+      this.disposeViewshedHeight();
+      this.disposeViewshedHeight = undefined;
+    }
 
     runInAction(() => {
       this.terria.mapInteractionModeStack.length = 0;

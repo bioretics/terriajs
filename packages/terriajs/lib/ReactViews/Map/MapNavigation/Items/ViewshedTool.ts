@@ -56,7 +56,8 @@ export class ViewshedTool extends MapNavigationItemController {
 
   onCleanUp() {
     this.terria.viewshedDistances = undefined;
-    this.deactivate();
+    this.onClose();
+    super.deactivate();
   }
 
   /**
@@ -64,6 +65,8 @@ export class ViewshedTool extends MapNavigationItemController {
    */
   deactivate() {
     this.onClose();
+    this.userDrawing.endDrawing();
+    super.deactivate();
   }
 
   /**
@@ -72,6 +75,7 @@ export class ViewshedTool extends MapNavigationItemController {
   activate() {
     this.onOpen();
     this.userDrawing.enterDrawMode();
+    super.activate();
   }
 
   prettifyNumber(number: number) {

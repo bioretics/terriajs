@@ -28,6 +28,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const abortPlayingPathRef = useRef(false);
   const currentPointIndexRef = useRef(currentPointIndex);
   const loadPercentageRef = useRef(loadPercentage);
+  const playbackPitchRef = useRef<number | undefined>(undefined);
 
   const lastPitchCheckRef = useRef(0);
 
@@ -71,6 +72,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     startIdxRef.current = 0;
     reverseRef.current = false;
     currentPointIndexRef.current = 0;
+    playbackPitchRef.current = undefined;
 
     checkAndUpdatePitch();
   }, [viewState, checkAndUpdatePitch]);
@@ -106,6 +108,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     const onCameraMoveStart = () => {
       setIsCameraMoving(true);
+      if (!viewState.isPlayingPath) {
+        playbackPitchRef.current = undefined;
+      }
     };
 
     const onCameraMoveEnd = () => {
@@ -122,7 +127,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       camera.moveStart?.removeEventListener(onCameraMoveStart);
       camera.moveEnd.removeEventListener(onCameraMoveEnd);
     };
-  }, [terria, checkAndUpdatePitch]);
+  }, [terria, checkAndUpdatePitch, viewState]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -211,7 +216,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const cartesians = pts.map((p) => Cartographic.toCartesian(p));
     const useLookAt = Boolean(camera && cartesians.length);
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
-    const pitch = camera?.pitch ?? 0;
+    if (playbackPitchRef.current === undefined) {
+      playbackPitchRef.current = camera?.pitch ?? 0;
+    }
+    const pitch = playbackPitchRef.current;
     const initialIdx = currentPointIndexRef.current;
 
     let dist = 1000;
