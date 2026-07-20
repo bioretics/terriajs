@@ -1,5 +1,6 @@
 import { RectangleCoordinates } from "../../Models/FunctionParameters/RectangleParameter";
 import loadJson from "../../Core/loadJson";
+import CorsProxy from "../../Core/CorsProxy";
 
 export type MicrozonationRecord = {
   id?: string | number;
@@ -264,7 +265,8 @@ const buildWfsUrl = (
 };
 
 export const fetchWfsFeatures = async (
-  config: WfsConfig | undefined
+  config: WfsConfig | undefined,
+  corsProxy?: CorsProxy
 ): Promise<{
   records: MicrozonationRecord[];
   propertiesById: Map<string | number, any>;
@@ -277,7 +279,8 @@ export const fetchWfsFeatures = async (
       geometryById: new Map()
     };
   }
-  const url = buildWfsUrl(config);
+  const rawUrl = buildWfsUrl(config);
+  const url = corsProxy?.getURLProxyIfNecessary(rawUrl) ?? rawUrl;
   const json = await loadJson(url);
   const features: any[] = json?.features ?? [];
 
@@ -302,7 +305,8 @@ export const fetchWfsFeatures = async (
 
 export const fetchWfsDocuments = async (
   config: WfsConfig | undefined,
-  idStatoProgetto: string | number | undefined
+  idStatoProgetto: string | number | undefined,
+  corsProxy?: CorsProxy
 ): Promise<MicrozonationDocument[]> => {
   if (!config || idStatoProgetto === null || idStatoProgetto === undefined) {
     return [];
@@ -313,12 +317,13 @@ export const fetchWfsDocuments = async (
     return [];
   }
 
-  const url = buildWfsUrl(config, {
+  const rawUrl = buildWfsUrl(config, {
     layerName: documentsLayerName,
     extraParams: {
       CQL_FILTER: `id_stato_progetto=${String(idStatoProgetto)}`
     }
   });
+  const url = corsProxy?.getURLProxyIfNecessary(rawUrl) ?? rawUrl;
   const json = await loadJson(url);
   const features: any[] = json?.features ?? [];
 

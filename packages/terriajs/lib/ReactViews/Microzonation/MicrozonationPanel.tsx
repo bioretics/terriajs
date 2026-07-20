@@ -135,7 +135,7 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
       try {
         setLoadingList(true);
         setListError(undefined);
-        const result = await fetchWfsFeatures(wfsConfig);
+        const result = await fetchWfsFeatures(wfsConfig, terria.corsProxy);
         if (isMounted) {
           setRecords(result.records);
           setPropertiesById(result.propertiesById);
@@ -216,7 +216,11 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
     setDocuments([]);
 
     try {
-      const fetchedDocuments = await fetchWfsDocuments(wfsConfig, record.id);
+      const fetchedDocuments = await fetchWfsDocuments(
+        wfsConfig,
+        record.id,
+        terria.corsProxy
+      );
       setDocuments(fetchedDocuments);
     } catch {
       setDocuments([]);
