@@ -8,6 +8,7 @@ import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import { JsonObject } from "../../Core/Json";
 import GeoJsonMixin, { FEATURE_ID_PROP } from "../../ModelMixins/GeojsonMixin";
+import WebMapServiceCatalogItem from "../../Models/Catalog/Ows/WebMapServiceCatalogItem";
 import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
 import Icon from "../../Styled/Icon";
@@ -58,6 +59,11 @@ class FeatureInfoGeometryDownload extends React.Component<
   }
 
   private async generateLinks() {
+    if (!supportsGeometryDownload(this.props.catalogItem)) {
+      this.setState({ links: [] });
+      return;
+    }
+
     const converted = toMeasurableGeometries(
       this.props.feature,
       this.props.catalogItem
@@ -113,6 +119,10 @@ class FeatureInfoGeometryDownload extends React.Component<
       </div>
     );
   }
+}
+
+function supportsGeometryDownload(catalogItem: unknown): boolean {
+  return !(catalogItem instanceof WebMapServiceCatalogItem);
 }
 
 function toMeasurableGeometries(
