@@ -399,7 +399,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         <StyledCompassOuterRing active={false}>
           <div style={outerCircleStyle}>
             <StyledIcon
-              fillColor={this.props.theme.darkWithOverlay}
+              fillColor={this.props.theme.dark}
               // if it's active hide outer ring
               glyph={active ? null : Icon.GLYPHS.compassOuter}
             />
@@ -415,7 +415,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         >
           <div ref={this.props.refFromHOC} style={outerCircleStyle}>
             <StyledIcon
-              fillColor={this.props.theme.darkWithOverlay}
+              fillColor={this.props.theme.dark}
               glyph={Icon.GLYPHS.compassOuter}
             />
           </div>
@@ -424,7 +424,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         {/* "Center circle icon" */}
         <StyledCompassInnerRing title={t(($) => $.compass.title)}>
           <StyledIcon
-            fillColor={this.props.theme.darkWithOverlay}
+            fillColor={this.props.theme.dark}
             glyph={
               active ? Icon.GLYPHS.compassInnerArrows : Icon.GLYPHS.compassInner
             }
@@ -455,7 +455,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         >
           <div style={rotationMarkerStyle}>
             <StyledIcon
-              fillColor={this.props.theme.darkWithOverlay}
+              fillColor={this.props.theme.dark}
               glyph={Icon.GLYPHS.compassRotationMarker}
             />
           </div>

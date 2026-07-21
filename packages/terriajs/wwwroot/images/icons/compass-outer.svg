@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="56" height="56" xmlns="http://www.w3.org/2000/svg">
   <g fill-rule="evenodd">
-    <path stroke-width="0.5" stroke="#6B7280" d="M28 0c15.464 0 28 12.536 28 28S43.464 56 28 56 0 43.464 0 28 12.536 0 28 0zm0 10c-9.941 0-18 8.059-18 18s8.059 18 18 18 18-8.059 18-18-8.059-18-18-18z" fill="#11827"/>
+    <path stroke-width="0.5" stroke="#6B7280" d="M28 0c15.464 0 28 12.536 28 28S43.464 56 28 56 0 43.464 0 28 12.536 0 28 0zm0 10c-9.941 0-18 8.059-18 18s8.059 18 18 18 18-8.059 18-18-8.059-18-18-18z"/>
     <circle fill="#6B7280" stroke="#6B7280" opacity=".75" cx="46" cy="13" r="1"/>
     <circle fill="#6B7280" stroke="#6B7280" opacity=".75" cx="46" cy="43" r="1"/>
     <circle  fill="#6B7280" stroke="#6B7280" opacity=".75" cx="10" cy="43" r="1"/>
