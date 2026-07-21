@@ -6,6 +6,22 @@
   margin: 10px 1px;
 }
 
+.download-wrapper {
+  float: right;
+}
+
+.download .dropdown__list {
+  position: fixed;
+  min-width: 200px;
+  max-height: var(--download-dropdown-max-height, 40vh);
+}
+
+.download-wrapper .download .dropdown__list {
+  top: auto;
+  bottom: var(--download-dropdown-bottom, auto);
+  @include transform-origin(center, bottom);
+}
+
 .btn {
   composes: btn from "./feature-info-panel.scss";
   composes: btn-primary from "../../Sass/common/_buttons.scss";
@@ -53,4 +69,5 @@
 
 .dropdown__button {
   composes: btn--small from "../../Sass/common/_buttons.scss";
+  min-width: 200px;
 }

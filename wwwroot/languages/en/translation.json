@@ -539,6 +539,7 @@
       "featureInfoShown": "The first {{maximum}} are shown below."
     },
     "download": "Download this Table",
+    "downloadGeometry": "Download this Geometry",
     "pickLocation": "Pick Location",
     "clickMap": "Click on the map to learn more about a location",
     "noDataAvailable": "No data is available here - try another location.",
