@@ -150,6 +150,8 @@
     "btnStoryShareText": "Condividi",
     "btnCatalogShareText": "Condividi",
     "btnAdvanced": "Opzioni avanzate",
+    "includeScaleBar": "Includi la barra di scala nella mappa esportata",
+    "includeCompass": "Includi la freccia del nord nella mappa esportata",
     "printButton": "Stampa",
     "printExplanation": "Apri una versione stampabile della mappa.",
     "printTitle": "Stampa mappa",

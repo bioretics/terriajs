@@ -231,6 +231,8 @@
     "downloadMap": "Download map (png)",
     "printViewButton": "Show Print View",
     "btnAdvanced": "Advanced options",
+    "includeScaleBar": "Include scale bar on exported map",
+    "includeCompass": "Include north compass on exported map",
     "embedTitle": "Embed map",
     "embedDescription": "Copy this code to embed the map in an HTML page.",
     "shortenUsingService": "Shorten the share link",
