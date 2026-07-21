@@ -8,6 +8,10 @@ import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import { JsonObject } from "../../Core/Json";
 import GeoJsonMixin, { FEATURE_ID_PROP } from "../../ModelMixins/GeojsonMixin";
+import ArcGisImageServerCatalogItem from "../../Models/Catalog/Esri/ArcGisImageServerCatalogItem";
+import ArcGisMapServerCatalogItem from "../../Models/Catalog/Esri/ArcGisMapServerCatalogItem";
+import ArcGisFeatureServerCatalogItem from "../../Models/Catalog/Esri/ArcGisFeatureServerCatalogItem";
+import WebFeatureServiceCatalogItem from "../../Models/Catalog/Ows/WebFeatureServiceCatalogItem";
 import WebMapServiceCatalogItem from "../../Models/Catalog/Ows/WebMapServiceCatalogItem";
 import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
@@ -24,7 +28,7 @@ import updateDownloadDropdownPosition from "./updateDownloadDropdownPosition";
 interface PropsType {
   name: string;
   feature: TerriaFeature;
-  catalogItem?: unknown;
+  catalogItem?: any;
   viewState: ViewState;
   t: TFunction;
 }
@@ -121,13 +125,19 @@ class FeatureInfoGeometryDownload extends React.Component<
   }
 }
 
-function supportsGeometryDownload(catalogItem: unknown): boolean {
-  return !(catalogItem instanceof WebMapServiceCatalogItem);
+function supportsGeometryDownload(catalogItem: any): boolean {
+  return !(
+    catalogItem instanceof WebMapServiceCatalogItem ||
+    catalogItem instanceof ArcGisMapServerCatalogItem ||
+    catalogItem instanceof ArcGisImageServerCatalogItem ||
+    catalogItem instanceof ArcGisFeatureServerCatalogItem ||
+    catalogItem instanceof WebFeatureServiceCatalogItem
+  );
 }
 
 function toMeasurableGeometries(
   feature: TerriaFeature,
-  catalogItem: unknown
+  catalogItem: any
 ): { geoms: MeasurableGeometry[] } | undefined {
   const pickedProperties =
     propertyGetTimeValues(feature, JulianDate.now()) ?? {};
@@ -147,7 +157,7 @@ function toMeasurableGeometries(
 
 function getSourceGeoJsonFeature(
   pickedProperties: JsonObject,
-  catalogItem: unknown
+  catalogItem: any
 ): JsonObject | undefined {
   if (!GeoJsonMixin.isMixedInto(catalogItem) || !catalogItem.readyData) {
     return undefined;
@@ -161,7 +171,7 @@ function getSourceGeoJsonFeature(
   );
   if (!sourceFeature?.geometry) return undefined;
 
-  const copy = toJS(sourceFeature) as unknown as JsonObject;
+  const copy = toJS(sourceFeature) as any as JsonObject;
   const properties = { ...((copy.properties as JsonObject) ?? {}) };
   delete properties[FEATURE_ID_PROP];
   return { ...copy, properties };
