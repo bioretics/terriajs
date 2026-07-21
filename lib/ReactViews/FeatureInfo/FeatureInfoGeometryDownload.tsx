@@ -10,8 +10,6 @@ import { JsonObject } from "../../Core/Json";
 import GeoJsonMixin, { FEATURE_ID_PROP } from "../../ModelMixins/GeojsonMixin";
 import ArcGisImageServerCatalogItem from "../../Models/Catalog/Esri/ArcGisImageServerCatalogItem";
 import ArcGisMapServerCatalogItem from "../../Models/Catalog/Esri/ArcGisMapServerCatalogItem";
-import ArcGisFeatureServerCatalogItem from "../../Models/Catalog/Esri/ArcGisFeatureServerCatalogItem";
-import WebFeatureServiceCatalogItem from "../../Models/Catalog/Ows/WebFeatureServiceCatalogItem";
 import WebMapServiceCatalogItem from "../../Models/Catalog/Ows/WebMapServiceCatalogItem";
 import TerriaFeature from "../../Models/Feature/Feature";
 import ViewState from "../../ReactViewModels/ViewState";
@@ -129,9 +127,7 @@ function supportsGeometryDownload(catalogItem: any): boolean {
   return !(
     catalogItem instanceof WebMapServiceCatalogItem ||
     catalogItem instanceof ArcGisMapServerCatalogItem ||
-    catalogItem instanceof ArcGisImageServerCatalogItem ||
-    catalogItem instanceof ArcGisFeatureServerCatalogItem ||
-    catalogItem instanceof WebFeatureServiceCatalogItem
+    catalogItem instanceof ArcGisImageServerCatalogItem
   );
 }
 
