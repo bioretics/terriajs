@@ -1,6 +1,7 @@
 import defined from "terriajs-cesium/Source/Core/defined";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
+import L from "../LeafletPatched";
 
 /**
  * Callback for when a point is moved.
@@ -70,8 +71,9 @@ LeafletDragPoints.prototype.setUp = function () {
  * Function that is called when the user clicks and holds on a point that was previously drawn.
  *
  * @param {Entity} entity The entity that user mouse downs on.
+ * @param {Leaflet.MouseEvent} [event] The Leaflet mouse event.
  */
-LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity) {
+LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity, event) {
   if (
     !defined(this._draggableObjects.entities) ||
     this._draggableObjects.entities.values.length === 0
@@ -86,13 +88,21 @@ LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity) {
     }
   )[0];
   if (defined(dragEntity)) {
-    // The touch events below don't actually work because Leaflet doesn't
-    // expose these events.  See here for a possible workaround:
-    // https://github.com/Leaflet/Leaflet/issues/1542
-    this._terria.leaflet.map.on("mousemove", this._onMouseMove, this);
-    this._terria.leaflet.map.on("touchmove", this._onMouseMove, this);
-    this._terria.leaflet.map.on("mouseup", this._onMouseUp, this);
-    this._terria.leaflet.map.on("touchend", this._onMouseUp, this);
+    // Billboard points are rendered as <img> markers. Without preventing the
+    // default, the browser starts a native image-drag and map mousemove/mouseup
+    // never drive the point. Mirror Leaflet.Draggable: stop the event, disable
+    // image drag, and track the pointer on document.
+    if (defined(event) && defined(event.originalEvent)) {
+      L.DomEvent.preventDefault(event.originalEvent);
+      L.DomEvent.stopPropagation(event.originalEvent);
+    }
+    L.DomUtil.disableImageDrag();
+    L.DomUtil.disableTextSelection();
+
+    L.DomEvent.on(document, "mousemove", this._onMouseMove, this);
+    L.DomEvent.on(document, "touchmove", this._onMouseMove, this);
+    L.DomEvent.on(document, "mouseup", this._onMouseUp, this);
+    L.DomEvent.on(document, "touchend", this._onMouseUp, this);
 
     this._dragInProgress = true;
     this._entityDragged = dragEntity;
@@ -107,7 +117,7 @@ LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity) {
 /**
  * Function that is called when the mouse moves.
  *
- * @param {Leaflet.MouseEvent} move Information about the move such as the final position of the mouse.
+ * @param {MouseEvent|TouchEvent|Leaflet.MouseEvent} move Information about the move.
  */
 LeafletDragPoints.prototype._onMouseMove = function (move) {
   if (!this._dragInProgress) {
@@ -115,9 +125,14 @@ LeafletDragPoints.prototype._onMouseMove = function (move) {
   }
   this.dragCount = this.dragCount + 1;
   if (defined(this._entityDragged)) {
+    const map = this._terria.leaflet.map;
+    const nativeEvent = move.touches
+      ? move.touches[0]
+      : move.originalEvent || move;
+    const latlng = move.latlng || map.mouseEventToLatLng(nativeEvent);
     this._entityDragged.position = Cartesian3.fromDegrees(
-      move.latlng.lng,
-      move.latlng.lat
+      latlng.lng,
+      latlng.lat
     );
   }
 };
@@ -140,10 +155,12 @@ LeafletDragPoints.prototype._onMouseUp = function (_e) {
   ) {
     this._pointMovedCallback(this._draggableObjects);
   }
-  this._terria.leaflet.map.off("mousemove", this._onMouseMove, this);
-  this._terria.leaflet.map.off("touchmove", this._onMouseMove, this);
-  this._terria.leaflet.map.off("mouseup", this._onMouseUp, this);
-  this._terria.leaflet.map.off("touchend", this._onMouseUp, this);
+  L.DomEvent.off(document, "mousemove", this._onMouseMove, this);
+  L.DomEvent.off(document, "touchmove", this._onMouseMove, this);
+  L.DomEvent.off(document, "mouseup", this._onMouseUp, this);
+  L.DomEvent.off(document, "touchend", this._onMouseUp, this);
+  L.DomUtil.enableImageDrag();
+  L.DomUtil.enableTextSelection();
   this._dragInProgress = false;
   this._terria.currentViewer.resumeMapInteraction();
 };
@@ -162,6 +179,19 @@ LeafletDragPoints.prototype.updateDraggableObjects = function (entities) {
  * A clean up function to call when destroying the object.
  */
 LeafletDragPoints.prototype.destroy = function () {
+  if (this._dragInProgress) {
+    this._onMouseUp();
+  }
+  if (
+    this._setUp &&
+    defined(this._terria.leaflet) &&
+    defined(this._terria.leaflet.scene)
+  ) {
+    this._terria.leaflet.scene.featureMousedown.removeEventListener(
+      this._onMouseDownOnPoint,
+      this
+    );
+  }
   this._setUp = false;
 };
 
