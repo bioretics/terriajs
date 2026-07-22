@@ -9,7 +9,7 @@
     <meta name="author" content="" />
     <link rel="icon" href="../../favicon.ico" />
 
-    <title>rer3d-map - Help & FAQ - Workbench</title>
+    <title>rer3d-map - Help & FAQ - Catalogo</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet" />
@@ -62,7 +62,6 @@
           <ul class="nav navbar-nav">
             <li><a href="../about.html">About</a></li>
             <li class="active"><a href="help.html">Help & FAQ</a></li>
-            <!--<li><a href="privacy.html">Privacy</a></li>-->
             <li>
               <a href="http://rer3d.regione.emilia-romagna.it/" target="blank"
                 >Apri rer3d-map</a
@@ -101,6 +100,13 @@
               <li><a href="data-workbench.html">Workbench</a></li>
               <li><a href="path-usage.html">Misure e percorsi</a></li>
               <li><a href="coordinates.html">Coordinate</a></li>
+              <li><a href="play-path.html">Play Path</a></li>
+              <li><a href="login.html">Login</a></li>
+              <li>
+                <a href="terrain-visibility-features.html"
+                  >Visibilità del terreno</a
+                >
+              </li>
             </ul>
 
             <h4 class="nav-header">Frequently Asked Questions</h4>
@@ -113,50 +119,43 @@
         </nav>
 
         <div class="col-md-8">
-          <h1>Workbench</h1>
+          <h1>Catalogo</h1>
 
           <img
-            src="img/data-workbench_rer.png"
+            src="img/data-catalogue_rer.png"
             class="screenshot img-responsive"
-            alt="screenshot of the Workbench"
+            alt="screenshot of the Data Catalogue"
           />
 
           <p>
-            Quando un layer viene aggiunto in qualsiasi modo alla mappa, il suo
-            nome appare nel Workbench, il pannello a sinistra della mappa. Dal
-            Workbench è possibile:
+            Il Catalogo rende facilmente fruibili tantissimi dati, dell'ente e
+            non. Per aprirlo, cliccare sul bottone
+            <strong>Esplora i dati</strong> nel pannello a sinistra della mappa.
           </p>
 
-          <ul>
-            <li>
-              Riordinare i layer per modificare l'ordine in cui sono
-              visualizzati (quelli sopra coprono quelli sotto). Per farlo,
-              cliccare sul nome del layer nel Workbench e trascinarlo nella
-              posizione desiderata.
-            </li>
-            <li>
-              Abilitare/disabilitare la visualizzazione dei layer sulla mappa.
-              Per farlo, cliccare sul checkbox posto a sinistra del nome del
-              layer.
-            </li>
-            <li>
-              Zoomare sull'area del layer, se possibile, cliccando su
-              <strong>Zoom sul layer</strong>
-            </li>
-            <li>
-              Modificare l'opacità del layer, se possibile, spostando lo slider
-              a destra di <strong>Opacità</strong>.
-            </li>
-            <li>
-              Rimuovere il layer cliccando su <strong>Rimuovi</strong>. Un layer
-              rimosso può sempre essere aggiunto nuovamente. Cliccando su
-              <strong>Rimuovi tutti</strong> saranno rimossi tutti i layer.
-            </li>
-            <li>
-              Visualizzare informazioni e metadati del layer cliccando su
-              <strong>informazioni</strong>.
-            </li>
-          </ul>
+          <p>
+            I layer pubblicati nel Catalogo sono composti da dati di proprietà o
+            in uso a {customerName} oppure messi gratuitamente a disposizione da
+            altre realtà (ad esempio ARPAE). I dati non sono salvati in
+            rer3d-map.
+          </p>
+
+          <p>
+            Cliccando sul titolo di un layer, a destra compariranno i relativi
+            metadati ed un'anteprima.
+          </p>
+
+          <p>
+            Per trovare uno specifico layer è possibile, oltre che navigare
+            l'albero del catalogo, effetturare una ricerca sul nome del layer o
+            su alcune informazioni (o tag).
+          </p>
+
+          <p>
+            Cliccando sul simbolo <strong>"+"</strong> o su
+            <strong>Aggiungi alla mappa</strong> il layer sarà aggiunto alla
+            mappa e comparirà nel Workbench.
+          </p>
         </div>
       </div>
       <!-- End col-md-8 -->
@@ -165,8 +164,7 @@
 
     <footer class="footer">
       <div class="container">
-        <p class="text-muted">&copy; Regione Emilia-Romagna 2017-2024</p>
-        <!--<p><strong><a href="../about.html#terms">Terms and conditions</a></strong> – <strong><a href="privacy.html">Privacy</a></strong></p>-->
+        <p class="text-muted">&copy; {copyright}</p>
       </div>
     </footer>
 
