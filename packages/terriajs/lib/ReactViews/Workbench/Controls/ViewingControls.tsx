@@ -391,12 +391,14 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         });
 
         if (positions.length === 0) return;
-
-        if (!(item as GeoJsonCatalogItem).terria?.cesium?.scene) return;
-        const terrainProvider = item.terria.cesium?.scene.terrainProvider;
-        const resolvedPositions = positions.every((pos) => pos.height < 1)
-          ? await sampleTerrainMostDetailed(terrainProvider!, positions)
-          : positions;
+        if (!item.terria) return;
+        const terrainProvider = item.terria.cesium?.scene?.terrainProvider;
+        const canSampleTerrain =
+          !!terrainProvider && !!(terrainProvider as any).availability;
+        const resolvedPositions =
+          canSampleTerrain && positions.every((pos) => pos.height < 1)
+            ? await sampleTerrainMostDetailed(terrainProvider, positions)
+            : positions;
 
         item.terria.measurableGeometryManager[
           item.terria.measurableGeometryIndex
