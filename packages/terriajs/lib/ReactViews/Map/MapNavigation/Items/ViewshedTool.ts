@@ -39,9 +39,11 @@ export class ViewshedTool extends MapNavigationItemController {
     this.onOpen = props.onOpen;
 
     reaction(
-      () => this.terria.mainViewer,
-      (viewer) => {
-        this.setVisible(viewer.viewerMode === ViewerMode.Cesium);
+      () => this.terria.mainViewer.viewerMode,
+      (viewerMode) => {
+        if (viewerMode !== ViewerMode.Cesium && this._active) {
+          this.deactivate();
+        }
       }
     );
   }
@@ -51,7 +53,7 @@ export class ViewshedTool extends MapNavigationItemController {
   }
 
   get viewerMode(): ViewerMode | undefined {
-    return undefined;
+    return ViewerMode.Cesium;
   }
 
   onCleanUp() {
