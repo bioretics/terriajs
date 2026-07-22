@@ -3,8 +3,21 @@
 
   "allowProxyFor": [
     "githubusercontent.com",
-
-    // NOTE: The following default entries are deprecated and will be removed in a future release. If you rely ony terria proxying to any of these servers, please add them through a custom serverconfig.json. See https://docs.terria.io/guide/getting-started/#customizing-terriamap
+    "regione.marche.it",
+    "wmscartografia.regione.marche.it",
+    "wms.cartografia.agenziaentrate.gov.it",
+    "dati.emilia-romagna.it",
+    "servizigis.arpae.it",
+    "ags.unionevallesavio.it",
+    "geoportale.regione.emilia-romagna.it",
+    "mappegis.regione.emilia-romagna.it",
+    "vm449srv.ente.regione.emr.it:6443",
+    "vm448srv.ente.regione.emr.it",
+    "vm437srv.ente.regione.emr.it",
+    "vm353srv.ente.regione.emr.it:9474",
+    "vm82srv.ente.regione.emr.it:9474",
+    "servizigistest.regione.emilia-romagna.it",
+    "servizigis.regione.emilia-romagna.it",
     "nicta.com.au",
     "gov.au",
     "csiro.au",
