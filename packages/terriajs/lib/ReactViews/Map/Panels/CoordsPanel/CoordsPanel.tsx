@@ -2,8 +2,11 @@ import classNames from "classnames";
 import { TFunction } from "i18next";
 import { observer } from "mobx-react";
 import React, { useEffect } from "react";
-import { WithTranslation, withTranslation } from "react-i18next";
-import clipboard from "clipboard";
+import {
+  useTranslation,
+  WithTranslation,
+  withTranslation
+} from "react-i18next";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import Box from "../../../../Styled/Box";
@@ -40,13 +43,19 @@ interface ICoordsTextProps {
 }
 
 const CoordsText = (props: ICoordsTextProps) => {
-  useEffect(() => {
-    const clipboardBtn = new clipboard(`.btn-copy-${props.name}`);
+  const { t } = useTranslation();
 
-    return function cleanup() {
-      clipboardBtn.destroy();
-    };
-  }, [props.name]);
+  const handleCopy = async () => {
+    if (!props.value || !navigator.clipboard) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(props.value);
+    } catch {
+      // Clipboard write can fail without a secure context or permission.
+    }
+  };
 
   return (
     <div>
@@ -68,14 +77,13 @@ const CoordsText = (props: ICoordsTextProps) => {
         />
         <Button
           primary
-          title="Copia le coordinate negli Appunti"
+          title={t(($) => $.coordsPanel.copyTooltip)}
           css={`
             width: 35px;
             border-radius: 2px;
             margin: 2px;
           `}
-          className={`btn-copy-${props.name}`}
-          data-clipboard-target={`#${props.name}`}
+          onClick={handleCopy}
         >
           <StyledIcon
             light
@@ -85,7 +93,7 @@ const CoordsText = (props: ICoordsTextProps) => {
           />
         </Button>
         <Button
-          title="Centra la mappa alle coordinate indicate (attivo solo se sono cartografiche)"
+          title={t(($) => $.coordsPanel.centerMaptooltip)}
           css={`
             width: 35px;
             border-radius: 2px;
@@ -129,6 +137,7 @@ interface ISrsSelectionProps {
 
 const SrsSelection = (props: ISrsSelectionProps) => {
   const { conversionList, setSrs, isOpen, selectedSrs } = props;
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!conversionList || conversionList.length === 0) {
@@ -170,6 +179,7 @@ const SrsSelection = (props: ISrsSelectionProps) => {
       </Select>
       <Button
         primary
+        title={t(($) => $.coordsPanel.btnConvertTitle)}
         css={`
           border-radius: 2px;
           margin: 2px;
@@ -177,9 +187,10 @@ const SrsSelection = (props: ISrsSelectionProps) => {
         className={Styles.formatButton}
         onClick={props.convert}
       >
-        Converti
+        {t(($) => $.coordsPanel.btnConvert)}
       </Button>
       <Button
+        title={t(($) => $.coordsPanel.btnResetTitle)}
         css={`
           border-radius: 2px;
           margin: 2px;
@@ -187,7 +198,7 @@ const SrsSelection = (props: ISrsSelectionProps) => {
         className={Styles.formatButton}
         onClick={props.reset}
       >
-        Reset
+        {t(($) => $.coordsPanel.btnReset)}
       </Button>
     </div>
   );
@@ -687,7 +698,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
       >
         <CoordsText
           name="coordsIn"
-          title="Coordinate"
+          title={t(($) => $.coordsPanel.coordsTitle)}
           value={this.coordsInputTxt}
           setValue={action((value) => {
             this.coordsInputTxt = value;
@@ -701,7 +712,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
           readonly={false}
         />
         <SrsSelection
-          title="Conversione"
+          title={t(($) => $.coordsPanel.conversionTitle)}
           isCartographic={this.isInputNotCartographic}
           setSrs={this.setSrs}
           reset={() => {
@@ -717,7 +728,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
         />
         <CoordsText
           name="coordsOut"
-          title="Risultato"
+          title={t(($) => $.coordsPanel.resultTitle)}
           value={this.coordsOutputTxt}
           setValue={action((value) => {
             this.coordsOutputTxt = value;
@@ -727,7 +738,7 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
             this.moveToA(this.outputY, this.outputX);
           }}
           readonly
-          message={t(($) => $.coordsPanel.coordsInputMessage)}
+          message={t(($) => $.coordsPanel.coordsResultMessage)}
           tooltip=""
         />
       </MenuPanel>

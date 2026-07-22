@@ -1890,6 +1890,9 @@
   },
   "coordsPanel": {
     "header": "Coordinate",
+    "coordsTitle": "Coordinate",
+    "conversionTitle": "Conversione",
+    "resultTitle": "Risultato",
     "btnConvert": "Converti",
     "btnConvertTitle": "Converti coordinate",
     "btnReset": "Reset",
