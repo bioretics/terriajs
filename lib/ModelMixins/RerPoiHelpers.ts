@@ -1,6 +1,5 @@
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
-import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import BillboardGraphics from "terriajs-cesium/Source/DataSources/BillboardGraphics";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
@@ -43,7 +42,6 @@ export interface RerPoiStylingOptions {
   labelOutlineWidth?: number;
   labelOutlineColor?: string;
   poiDomainStyleGroups?: PoiDomainStyleGroup[];
-  scaleField?: string;
   domainIdField?: string;
   nameField?: string;
 }
@@ -214,15 +212,6 @@ function buildCompositeMarkerCanvas(
   return canvas;
 }
 
-function getVisibilityRange(
-  scaleValue: unknown
-): DistanceDisplayCondition | undefined {
-  const maxDistance = Number(scaleValue);
-  return Number.isFinite(maxDistance)
-    ? new DistanceDisplayCondition(0, maxDistance)
-    : undefined;
-}
-
 function normalizePoiDomainStyleGroup(
   group: Partial<PoiDomainStyleGroup>
 ): PoiDomainStyleGroup {
@@ -307,8 +296,6 @@ export function applyRerPoiEntityStyles(
       : getDefaultPoiDomainStyleGroups()
   ).map(normalizePoiDomainStyleGroup);
 
-  const scaleField =
-    options?.scaleField ?? defaultRerPoiCatalogItemTraits.scaleField;
   const nameField =
     options?.nameField ?? defaultRerPoiCatalogItemTraits.nameField;
   const domainIdField =
@@ -322,13 +309,6 @@ export function applyRerPoiEntityStyles(
     for (let i = 0; i < entitiesToStyle.length; i++) {
       const entity = entitiesToStyle[i];
       const properties = entity.properties;
-
-      const visibilityRange = getVisibilityRange(
-        properties?.[scaleField]?.getValue(now)
-      );
-      const visibilityProp = visibilityRange
-        ? new ConstantProperty(visibilityRange)
-        : undefined;
 
       if (!entity.position) continue;
 
@@ -366,7 +346,6 @@ export function applyRerPoiEntityStyles(
           verticalOrigin: BILLBOARD_VERTICAL_ORIGIN,
           heightReference: heightReferenceProp,
           eyeOffset: eyeOffsetProp,
-          distanceDisplayCondition: visibilityProp,
           disableDepthTestDistance: DEPTH_TEST_DISTANCE
         });
 

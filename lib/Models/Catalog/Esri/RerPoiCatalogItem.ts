@@ -38,8 +38,7 @@ import {
   RerPoiStylingOptions
 } from "../../../ModelMixins/RerPoiHelpers";
 import RerPoiCatalogItemTraits, {
-  defaultRerPoiCatalogItemTraits,
-  LevelIdCameraHeightMapping
+  defaultRerPoiCatalogItemTraits
 } from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import Color from "terriajs-cesium/Source/Core/Color";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
@@ -82,7 +81,6 @@ interface RerPoiTraitSnapshot {
   labelOutlineWidth: number;
   labelTextColor: string;
   levelIdField: string;
-  levelIdMappings: LevelIdCameraHeightMapping[];
   markerSize: number;
   minLevelId: number;
   nameField: string;
@@ -90,7 +88,6 @@ interface RerPoiTraitSnapshot {
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
   movementThresholdRatio: number;
-  scaleField: string;
   showDebugBBox: boolean;
   showLabels: boolean;
   labelVisibilityThreshold: number;
@@ -398,7 +395,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTraitForSnapshot("labelOutlineWidth"),
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
-      levelIdMappings: this.getRerPoiTraitForSnapshot("levelIdMappings"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
@@ -414,7 +410,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       movementThresholdRatio: this.getRerPoiTraitForSnapshot(
         "movementThresholdRatio"
       ),
-      scaleField: this.getRerPoiTraitForSnapshot("scaleField"),
       showDebugBBox: this.getRerPoiTraitForSnapshot("showDebugBBox"),
       showLabels: this.getRerPoiTraitForSnapshot("showLabels"),
       labelVisibilityThreshold: this.getRerPoiTraitForSnapshot(
@@ -995,7 +990,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
       poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
-      scaleField: this.getRerPoiTrait("scaleField"),
       nameField: this.getRerPoiTrait("nameField"),
       domainIdField: this.getRerPoiTrait("domainIdField")
     };
@@ -1860,7 +1854,6 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelOutlineWidth: getDefaultRerPoiTrait("labelOutlineWidth"),
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
-    levelIdMappings: getDefaultRerPoiTrait("levelIdMappings"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
@@ -1868,7 +1861,6 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
     movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),
-    scaleField: getDefaultRerPoiTrait("scaleField"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
     showLabels: getDefaultRerPoiTrait("showLabels"),
     labelVisibilityThreshold: getDefaultRerPoiTrait("labelVisibilityThreshold"),
