@@ -151,7 +151,7 @@ class KmlCatalogItem
     return isDefined(this._dataSource);
   }
 
-  private async _exportDataFallback() {
+  protected async _exportData(): Promise<ExportData | undefined> {
     if (isDefined(this._kmlFile)) {
       let name = this._kmlFile.name || this.name || this.uniqueId || "data.kml";
       if (
@@ -170,20 +170,6 @@ class KmlCatalogItem
       sender: this,
       message: "No data available to download."
     });
-  }
-
-  protected async _exportData(): Promise<ExportData | undefined> {
-    try {
-      let action;
-      if (this.canUseAsPath) {
-        action = Promise.resolve(this.computePath());
-      } else {
-        action = this.sampleFromKmlData.bind(this)();
-      }
-      await action;
-    } catch (_e) {
-      return this._exportDataFallback();
-    }
   }
 
   @computed

@@ -245,22 +245,6 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
       .then((result) => result.raiseError(viewState.terria));
   }, [item, viewState]);
 
-  const exportDataClicked = useCallback(() => {
-    if (!ExportableMixin.isMixedInto(item)) return;
-
-    // Fork (rer3d): measurable items open the download panel.
-    if (MeasurableGeometryMixin.isMixedInto(item)) {
-      runInAction(() => {
-        viewState.measurableDownloadPanelDefaultName = getName(item) || "";
-        viewState.measurableDownloadPanelIsVisible = true;
-      });
-    }
-
-    exportData(item).catch((e) => {
-      item.terria.raiseErrorToUser(e);
-    });
-  }, [item, viewState]);
-
   // Fork (rer3d): duplicate a layer (without splitting the screen).
   const copyItem = useCallback(() => {
     const terria = item.terria;
@@ -420,6 +404,34 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
       );
     }
   }, [item, viewState]);
+
+  const exportDataClicked = useCallback(async () => {
+    if (!ExportableMixin.isMixedInto(item)) return;
+
+    // Fork (rer3d): measurable items load into measurable geometry and open
+    // the download panel. Plain file download is handled below / on failure.
+    if (MeasurableGeometryMixin.isMixedInto(item)) {
+      try {
+        // Open download panel first so the measurable-panel reaction stays closed.
+        runInAction(() => {
+          viewState.measurableDownloadPanelDefaultName = getName(item) || "";
+          viewState.measurableDownloadPanelIsVisible = true;
+        });
+        if (item.canUseAsPath) {
+          await Promise.resolve(item.computePath());
+        } else {
+          await visualizePointsClicked();
+        }
+        return;
+      } catch (_e) {
+        // Fall through to plain file download if path/sampling fails.
+      }
+    }
+
+    exportData(item).catch((e) => {
+      item.terria.raiseErrorToUser(e);
+    });
+  }, [item, viewState, visualizePointsClicked]);
 
   const viewingControls = useMemo(() => {
     if (!CatalogMemberMixin.isMixedInto(item)) {

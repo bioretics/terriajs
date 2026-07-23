@@ -356,7 +356,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       return isDefined(this.readyData);
     }
 
-    private async _exportDataFallback() {
+    protected async _exportData(): Promise<ExportData | undefined> {
       if (isDefined(this.readyData)) {
         let name = this.name || this.uniqueId || "data.geojson";
         if (!isJson(name)) {
@@ -372,50 +372,6 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         sender: this,
         message: "No data available to download."
       });
-    }
-
-    private async tryGeoJsonOrGpxSampling(): Promise<void> {
-      try {
-        if (typeof (this as any).sampleFromGeojsonData === "function") {
-          await (this as any).sampleFromGeojsonData();
-          return;
-        }
-        throw new TerriaError({
-          sender: this,
-          message: "No data available to download."
-        });
-      } catch (_geoJsonError) {
-        try {
-          if (typeof (this as any).sampleFromGpxData === "function") {
-            await (this as any).sampleFromGpxData();
-            return;
-          }
-
-          throw new TerriaError({
-            sender: this,
-            message: "No data available to download."
-          });
-        } catch (_gpxError) {
-          throw new TerriaError({
-            sender: this,
-            message: "No data available to download."
-          });
-        }
-      }
-    }
-
-    protected async _exportData(): Promise<ExportData | undefined> {
-      try {
-        let action;
-        if (this.canUseAsPath) {
-          action = Promise.resolve(this.computePath());
-        } else {
-          (this as any).tryGeoJsonOrGpxSampling();
-        }
-        await action;
-      } catch (_e) {
-        return this._exportDataFallback();
-      }
     }
 
     get data(): DataSource | undefined {
