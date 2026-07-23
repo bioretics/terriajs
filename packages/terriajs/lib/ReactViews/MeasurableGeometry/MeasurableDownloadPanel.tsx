@@ -41,7 +41,14 @@ const MeasurableDownloadPanel = observer((props: Props) => {
     return (
       <div className={Styles.header}>
         <div>
-          <span style={{ display: "flex", justifyContent: "center" }}>
+          <span
+            className="drag-handle"
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              cursor: isMobile ? "default" : "move"
+            }}
+          >
             <b>DOWNLOAD</b>
           </span>
         </div>
@@ -125,6 +132,8 @@ const MeasurableDownloadPanel = observer((props: Props) => {
         height: "auto"
       }}
       maxWidth={downloadProps.maxWidth ?? window.innerWidth * 0.6}
+      dragHandleClassName="drag-handle"
+      cancel="select, input, button, textarea"
       enableResizing={{
         right: true,
         left: true

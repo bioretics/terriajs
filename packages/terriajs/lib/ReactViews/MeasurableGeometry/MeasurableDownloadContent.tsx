@@ -133,7 +133,6 @@ const MeasurableDownloadContent = observer((props: Props) => {
     }
 
     setSelectedFormat("");
-    e.target.blur();
   };
 
   return (
@@ -144,9 +143,6 @@ const MeasurableDownloadContent = observer((props: Props) => {
             title={i18next.t(($) => $.measurableGeometry.changePath)}
             value={isSelectAll ? "all" : selectedElementIndex.toString()}
             onChange={handleElementChange}
-            onBlur={(e: React.ChangeEvent<HTMLSelectElement>) =>
-              e.target.blur()
-            }
             disabled={isLoading}
           >
             <option value="all">
@@ -191,9 +187,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
           value={selectedFormat}
           onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
             setSelectedFormat(e.target.value);
-            e.target.blur();
           }}
-          onBlur={(e: React.ChangeEvent<HTMLSelectElement>) => e.target.blur()}
           className={Styles.dropdownList}
           disabled={isLoading || !name}
         >
