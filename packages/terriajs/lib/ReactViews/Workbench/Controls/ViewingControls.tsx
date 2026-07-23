@@ -15,6 +15,7 @@ import TerriaError from "../../../Core/TerriaError";
 import filterOutUndefined from "../../../Core/filterOutUndefined";
 import getDereferencedIfExists from "../../../Core/getDereferencedIfExists";
 import getPath from "../../../Core/getPath";
+import { makeUniqueName } from "../../../Core/makeUniqueFilename";
 import CatalogMemberMixin, {
   getName
 } from "../../../ModelMixins/CatalogMemberMixin";
@@ -258,12 +259,27 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
       runInAction(() => {
         const target = splitRef.target;
         if (target) {
+          const existingNames = new Set(
+            terria.workbench.items.map((i) => getName(i)).filter(Boolean)
+          );
+          const copySuffix = t(($) => $.splitterTool.workbench.copyName, {
+            name: ""
+          });
+          const escapedSuffix = copySuffix.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            "\\$&"
+          );
+          const rootName = getName(item).replace(
+            new RegExp(`${escapedSuffix}([ _]\\d+)?$`),
+            ""
+          );
+          const proposedName = t(($) => $.splitterTool.workbench.copyName, {
+            name: rootName
+          });
           target.setTrait(
             CommonStrata.user,
             "name",
-            t(($) => $.splitterTool.workbench.copyName, {
-              name: getName(item)
-            })
+            makeUniqueName(proposedName, existingNames)
           );
         }
       });

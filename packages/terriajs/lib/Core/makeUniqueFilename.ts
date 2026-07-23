@@ -1,10 +1,8 @@
 /**
  * Returns a filename that does not collide with any name in `existingNames`.
+ * Inserts `_N` before the extension (or at the end if there is none).
  *
- * Examples:
- * - map.geojson -> map_2.geojson
- * - map_2.geojson -> map_3.geojson
- * - map -> map_2
+ * For display names like "map.geojson (copy)", use {@link makeUniqueName} instead.
  */
 export default function makeUniqueFilename(
   filename: string,
@@ -24,6 +22,29 @@ export default function makeUniqueFilename(
   while (existingNames.has(candidate)) {
     suffix += 1;
     candidate = `${baseName}_${suffix}${extension}`;
+  }
+
+  return candidate;
+}
+
+/**
+ * Returns a display name that does not collide with any name in `existingNames`.
+ * Does not split on `.`; appends ` 1`, ` 2`, …
+ */
+export function makeUniqueName(
+  name: string,
+  existingNames: Set<string>
+): string {
+  if (!existingNames.has(name)) {
+    return name;
+  }
+
+  let suffix = 1;
+  let candidate = `${name} ${suffix}`;
+
+  while (existingNames.has(candidate)) {
+    suffix += 1;
+    candidate = `${name} ${suffix}`;
   }
 
   return candidate;
