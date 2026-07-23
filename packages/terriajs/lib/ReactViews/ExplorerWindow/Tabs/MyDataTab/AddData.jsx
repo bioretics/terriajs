@@ -23,6 +23,7 @@ import FileInput from "./FileInput";
 import { parseCustomMarkdownToReactWithOptions } from "../../../Custom/parseCustomMarkdownToReact";
 import loadJson from "../../../../Core/loadJson";
 import TerriaError from "../../../../Core/TerriaError";
+import makeUniqueFilename from "../../../../Core/makeUniqueFilename";
 
 /**
  * Add data panel in modal window -> My data tab
@@ -86,8 +87,27 @@ class AddData extends Component {
     this.setState({
       isLoading: true
     });
+
+    const existingNames = new Set(
+      this.props.terria.workbench.items.map((item) => item.name).filter(Boolean)
+    );
+
+    const files = Array.from(e.target.files).map((file) => {
+      const uniqueName = makeUniqueFilename(file.name, existingNames);
+      existingNames.add(uniqueName);
+
+      if (uniqueName === file.name) {
+        return file;
+      }
+
+      return new File([file], uniqueName, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+    });
+
     addUserFiles(
-      e.target.files,
+      files,
       this.props.terria,
       this.props.viewState,
       this.state.localDataType
