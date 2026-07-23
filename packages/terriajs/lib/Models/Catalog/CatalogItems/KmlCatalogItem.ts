@@ -28,6 +28,7 @@ import proxyCatalogItemUrl from "../proxyCatalogItemUrl";
 import CesiumIonMixin from "../../../ModelMixins/CesiumIonMixin";
 // Fork (rer3d) mixins: measurable / exportable / searchable KML items.
 import MeasurableGeometryMixin from "../../../ModelMixins/MeasurableGeometryMixin";
+import ViewerMode from "../../ViewerMode";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ExportableMixin, {
   ExportData
@@ -233,7 +234,9 @@ class KmlCatalogItem
           entity.polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
         } else if (isDefined(entity.billboard)) {
           entity.billboard.heightReference = new ConstantProperty(
-            HeightReference.CLAMP_TO_GROUND
+            this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+              ? HeightReference.NONE
+              : HeightReference.CLAMP_TO_GROUND
           );
         }
       }

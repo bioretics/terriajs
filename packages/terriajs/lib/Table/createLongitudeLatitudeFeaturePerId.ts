@@ -20,6 +20,7 @@ import TimeIntervalCollectionPositionProperty from "terriajs-cesium/Source/DataS
 import TimeIntervalCollectionProperty from "terriajs-cesium/Source/DataSources/TimeIntervalCollectionProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import TerriaFeature from "../Models/Feature/Feature";
+import ViewerMode from "../Models/ViewerMode";
 import { getRowValues } from "./createLongitudeLatitudeFeaturePerRow";
 import {
   getFeatureStyle,
@@ -395,6 +396,11 @@ function createFeature(
   }
 
   const show = calculateShow(availability);
+  // CLAMP_TO_GROUND is unreliable in Cesium SCENE2D (no terrain availability).
+  const heightReference =
+    style.tableModel.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+      ? HeightReference.NONE
+      : HeightReference.CLAMP_TO_GROUND;
   const feature = new TerriaFeature({
     position:
       // positionProperty is either SampledPositionProperty or PreSampledPositionProperty
@@ -406,13 +412,13 @@ function createFeature(
       ? new PointGraphics({
           ...convertPreSampledProperties(pointGraphicsTimeProperties),
           show,
-          heightReference: HeightReference.CLAMP_TO_GROUND
+          heightReference
         })
       : undefined,
     billboard: !usePointGraphicsForId
       ? new BillboardGraphics({
           ...convertPreSampledProperties(billboardGraphicsTimeProperties),
-          heightReference: HeightReference.CLAMP_TO_GROUND,
+          heightReference,
           show
         })
       : undefined,

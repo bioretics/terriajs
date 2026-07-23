@@ -8,6 +8,7 @@ import PropertyBag from "terriajs-cesium/Source/DataSources/PropertyBag";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import { JsonObject } from "../Core/Json";
 import TerriaFeature from "../Models/Feature/Feature";
+import ViewerMode from "../Models/ViewerMode";
 import { getFeatureStyle } from "./getFeatureStyle";
 import TableColumn from "./TableColumn";
 import TableStyle from "./TableStyle";
@@ -24,6 +25,11 @@ export default function createLongitudeLatitudeFeaturePerRow(
     ? (style.timeIntervals ?? [])
     : [];
   const rowIds = style.tableModel.rowIds;
+  // CLAMP_TO_GROUND is unreliable in Cesium SCENE2D (no terrain availability).
+  const heightReference =
+    style.tableModel.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+      ? HeightReference.NONE
+      : HeightReference.CLAMP_TO_GROUND;
 
   const features: TerriaFeature[] = [];
 
@@ -50,20 +56,20 @@ export default function createLongitudeLatitudeFeaturePerRow(
         pointGraphicsOptions && usePointGraphics
           ? new PointGraphics({
               ...pointGraphicsOptions,
-              heightReference: HeightReference.CLAMP_TO_GROUND
+              heightReference
             })
           : undefined,
       billboard:
         billboardGraphicsOptions && !usePointGraphics
           ? new BillboardGraphics({
               ...billboardGraphicsOptions,
-              heightReference: HeightReference.CLAMP_TO_GROUND
+              heightReference
             })
           : undefined,
       label: labelGraphicsOptions
         ? new LabelGraphics({
             ...labelGraphicsOptions,
-            heightReference: HeightReference.CLAMP_TO_GROUND
+            heightReference
           })
         : undefined
       // Note: we don't add path/PathGraphicsOptions here as it is only relevant to time-series (see `createLongitudeLatitudeFeaturePerId.ts`)

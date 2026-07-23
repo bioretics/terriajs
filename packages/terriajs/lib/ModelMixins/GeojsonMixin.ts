@@ -103,6 +103,7 @@ import SearchableCatalogItemMixin, {
 } from "./SearchableCatalogItemMixin";
 import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
 import Constructor from "../Core/Constructor";
+import ViewerMode from "../Models/ViewerMode";
 
 enum PathTypes {
   noPath = 0,
@@ -1156,13 +1157,17 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           }
         }
 
-        // Billboard
+        // Billboard / point height refs: CLAMP_TO_GROUND fails in Cesium SCENE2D.
+        const isCesium2D =
+          this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
         runInAction(() => {
           if (entity.billboard) {
             entity.billboard.heightReference = new ConstantProperty(
-              this.clampToGround
-                ? HeightReference.CLAMP_TO_GROUND
-                : HeightReference.NONE
+              isCesium2D
+                ? HeightReference.NONE
+                : this.clampToGround
+                  ? HeightReference.CLAMP_TO_GROUND
+                  : HeightReference.NONE
             );
           }
         });
@@ -1181,9 +1186,13 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
               properties && properties["marker-angle"]
                 ? new ConstantProperty(properties["marker-angle"])
                 : undefined,
-            heightReference: styles.clampToGround
-              ? new ConstantProperty(HeightReference.RELATIVE_TO_GROUND)
-              : undefined
+            heightReference: new ConstantProperty(
+              isCesium2D
+                ? HeightReference.NONE
+                : styles.clampToGround
+                  ? HeightReference.RELATIVE_TO_GROUND
+                  : HeightReference.NONE
+            )
           });
 
           /* If no marker symbol was provided but Cesium has generated one for a point, then turn it into
@@ -1212,9 +1221,11 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
               getColor(properties?.stroke?.getValue() ?? styles.polygonStroke)
             ),
             heightReference: new ConstantProperty(
-              styles.clampToGround
-                ? HeightReference.RELATIVE_TO_GROUND
-                : undefined
+              isCesium2D
+                ? HeightReference.NONE
+                : styles.clampToGround
+                  ? HeightReference.RELATIVE_TO_GROUND
+                  : HeightReference.NONE
             ),
             disableDepthTestDistance: this.disableDepthTest
               ? new ConstantProperty(Number.POSITIVE_INFINITY)
