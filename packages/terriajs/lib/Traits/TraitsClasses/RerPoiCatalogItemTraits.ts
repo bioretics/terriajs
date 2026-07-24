@@ -41,27 +41,6 @@ export class PoiDomainStyleGroup extends ModelTraits {
 }
 
 @traitClass({
-  description:
-    "Level ID to camera height mapping for progressive POI filtering."
-})
-export class LevelIdCameraHeightMapping extends ModelTraits {
-  @primitiveTrait({
-    type: "number",
-    name: "Level ID",
-    description: "The zoom level ID from the RER3D POI service."
-  })
-  levelId: number = 0;
-
-  @primitiveTrait({
-    type: "number",
-    name: "Camera height threshold (meters)",
-    description:
-      "The camera height threshold in meters at which this zoom level should be displayed. Converted from cartographic scale."
-  })
-  cameraHeightThreshold: number = 0;
-}
-
-@traitClass({
   description: `Creates a single item in the catalog from RER3D POI (Regione Emilia-Romagna 3D Points of Interest) service.
 
 This specialized feature server item provides dynamic viewport-based loading and custom styling for POI layers,
@@ -100,6 +79,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
   showLabels: boolean = false;
 
   @primitiveTrait({
+    type: "number",
+    name: "Label visibility threshold",
+    description:
+      "When the number of visible POIs on screen is below this threshold, labels are shown. Above this threshold, labels are hidden for performance."
+  })
+  labelVisibilityThreshold: number = 100;
+
+  @primitiveTrait({
     type: "string",
     name: "Label text color",
     description: "The color of the label text for POI markers."
@@ -126,14 +113,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     description: "The outline color for POI marker labels."
   })
   labelOutlineColor: string = "rgba(0, 0, 0, 0.65)";
-
-  @primitiveTrait({
-    type: "string",
-    name: "Scale field",
-    description:
-      "The name of the feature attribute field that defines the visibility scale/distance for each POI."
-  })
-  scaleField: string = "SCALA";
 
   @primitiveTrait({
     type: "string",
@@ -174,6 +153,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
       "The padding ratio to apply to the viewport rectangle when querying features. A value of 0.2 means 20% padding on each side."
   })
   queryBboxPaddingRatio: number = 0.2;
+
+  @primitiveTrait({
+    type: "number",
+    name: "Movement threshold ratio",
+    description:
+      "Fraction of the last-committed viewport extent that the center must move before a dynamic reload is triggered. A value of 0.1 means 10%. Reloads are also triggered when the zoom level ID changes."
+  })
+  movementThresholdRatio: number = 0.1;
 
   @primitiveTrait({
     type: "number",
@@ -220,29 +207,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
       "The color of the stroke around icon symbols. Accepts CSS color strings."
   })
   iconStrokeColor: string = "#000000";
-
-  @objectArrayTrait({
-    type: LevelIdCameraHeightMapping,
-    idProperty: "levelId",
-    name: "Level ID camera height mappings",
-    description:
-      "Maps zoom level IDs to camera height thresholds in meters. Used for progressive POI filtering based on camera altitude. Thresholds are derived from cartographic scales and represent the camera altitude at which each level should be displayed."
-  })
-  levelIdMappings: LevelIdCameraHeightMapping[] = [
-    { levelId: 7, cameraHeightThreshold: 46223.24 },
-    { levelId: 8, cameraHeightThreshold: 23111.62 },
-    { levelId: 9, cameraHeightThreshold: 11555.81 },
-    { levelId: 10, cameraHeightThreshold: 5777.9 },
-    { levelId: 11, cameraHeightThreshold: 2888.95 },
-    { levelId: 12, cameraHeightThreshold: 1444.47 },
-    { levelId: 13, cameraHeightThreshold: 722.23 },
-    { levelId: 14, cameraHeightThreshold: 361.11 },
-    { levelId: 15, cameraHeightThreshold: 180.55 },
-    { levelId: 16, cameraHeightThreshold: 90.27 },
-    { levelId: 17, cameraHeightThreshold: 45.13 },
-    { levelId: 18, cameraHeightThreshold: 22.56 },
-    { levelId: 19, cameraHeightThreshold: 11.28 }
-  ];
 
   @objectArrayTrait({
     type: PoiDomainStyleGroup,

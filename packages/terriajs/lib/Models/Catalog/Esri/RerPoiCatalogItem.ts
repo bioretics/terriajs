@@ -14,7 +14,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
-import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
+import WebMercatorTilingScheme from "terriajs-cesium/Source/Core/WebMercatorTilingScheme";
 import GeoJsonDataSource from "terriajs-cesium/Source/DataSources/GeoJsonDataSource";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
@@ -34,14 +34,17 @@ import ArcGisFeatureServerCatalogItem from "./ArcGisFeatureServerCatalogItem";
 import {
   applyRerPoiEntityStyles,
   RER_POI_CATALOG_ITEM_TYPE,
-  normalizeRerPoiUrl
+  normalizeRerPoiUrl,
+  RerPoiStylingOptions
 } from "../../../ModelMixins/RerPoiHelpers";
 import RerPoiCatalogItemTraits, {
-  defaultRerPoiCatalogItemTraits,
-  LevelIdCameraHeightMapping
+  defaultRerPoiCatalogItemTraits
 } from "../../../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import Color from "terriajs-cesium/Source/Core/Color";
+import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import { LEAFLET_CLUSTERING_CONFIG_KEY } from "../../../ModelMixins/GeojsonMixin";
 
 type ArcGisFeatureServerCatalogItemConstructor = new (
   ...args: ModelConstructorParameters
@@ -49,8 +52,6 @@ type ArcGisFeatureServerCatalogItemConstructor = new (
 
 const ArcGisFeatureServerCatalogItemBase =
   ArcGisFeatureServerCatalogItem as unknown as ArcGisFeatureServerCatalogItemConstructor;
-
-const geodesic = new EllipsoidGeodesic();
 
 interface EsriJsonQueryOptions {
   resultOffset?: number;
@@ -66,6 +67,7 @@ interface EsriJsonQueryOptions {
 interface DynamicViewportQuery {
   filterKey: string;
   queryRectangle: Rectangle;
+  screenRectangle: Rectangle;
   requestOptions: EsriJsonQueryOptions;
 }
 
@@ -86,18 +88,29 @@ interface RerPoiTraitSnapshot {
   labelOutlineWidth: number;
   labelTextColor: string;
   levelIdField: string;
-  levelIdMappings: LevelIdCameraHeightMapping[];
   markerSize: number;
   minLevelId: number;
   nameField: string;
   poiDomainStyleGroups: RerPoiCatalogItemTraits["poiDomainStyleGroups"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
-  scaleField: string;
+  movementThresholdRatio: number;
   showDebugBBox: boolean;
   showLabels: boolean;
+  labelVisibilityThreshold: number;
   where: string;
 }
+
+interface RerPoiEntityCache {
+  dataSource: GeoJsonDataSource;
+  liveEntityByObjectId: Map<string, any>;
+}
+
+type RerPoiLabelDisplayMode = "labeled" | "unlabeled";
+type RerPoiShortReportKey = "viewingLabeled" | "viewingUnlabeled";
+
+/** Tile size of the Google-standard / Leaflet Web Mercator pyramid. */
+const WEB_MERCATOR_TILE_SIZE = 256;
 
 export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBase {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
@@ -123,6 +136,12 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   private activeDynamicQuery: DynamicViewportQuery | undefined;
   private dynamicReloadQueued = false;
   private dynamicReloadInProgress = false;
+  private currentViewportLevelId: number | undefined;
+  private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
+
+  private lastCommittedLevelId: number | undefined;
+  private lastCommittedCenter: { lon: number; lat: number } | undefined;
+  private lastCommittedExtent: { width: number; height: number } | undefined;
 
   @observable private cameraTiltLimitExceeded = false;
   @observable private activeLanguage =
@@ -130,13 +149,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   @observable.ref private rerPoiTraitSnapshot =
     createDefaultRerPoiTraitSnapshot();
 
-  private managedDataSource: GeoJsonDataSource | undefined;
-  private liveEntityByObjectId = new Map<string, any>();
+  @observable.ref private unlabeledEntityCache: RerPoiEntityCache | undefined;
+  @observable.ref private labeledEntityCache: RerPoiEntityCache | undefined;
+  private activeLabelDisplayMode: RerPoiLabelDisplayMode = "unlabeled";
+  private labeledEntityCacheLoadPromise: Promise<void> | undefined;
   private isFirstDynamicLoad = true;
   private serviceEnumValuesLoadPromise: Promise<void> | undefined;
   private readonly serviceEnumValues = new Map<string, string[]>();
 
   @observable private debugDataSource: CustomDataSource | undefined;
+
+  @observable private transientShortReportKey: RerPoiShortReportKey | undefined;
+  private transientShortReportTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly onDynamicViewportChanged = () => {
     const isPastLimit = this.isCameraPastTiltLimit();
@@ -144,6 +168,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       this.cameraTiltLimitExceeded = isPastLimit;
     });
     if (isPastLimit) return;
+
+    if (this.isMovementBelowThreshold()) {
+      return;
+    }
+
     this.queueDynamicReload();
   };
 
@@ -152,6 +181,56 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       this.activeLanguage = language;
     });
   };
+
+  /**
+   * Computes the Web Mercator (EPSG:3857) tile level for the point currently
+   * under the centre of the screen, matching the "Google standard" / Leaflet
+   * zoom returned by `LeafletMap.getZoom()`.
+   */
+  private getCesiumWebMercatorLevel(): number | undefined {
+    const cesium = this.terria.cesium;
+    if (!cesium) return undefined;
+
+    const scene = cesium.scene;
+    const camera = scene.camera;
+    const globe = scene.globe;
+    const canvas = scene.canvas;
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    if (!(width > 0) || !(height > 0)) return undefined;
+
+    const pixelGap = Math.max(2, Math.round(width * 0.05));
+    const xCenter = width / 2;
+    const yCenter = height / 2;
+
+    const projectPixelOffset = (offsetX: number) => {
+      const ray = camera.getPickRay(new Cartesian2(xCenter + offsetX, yCenter));
+      if (!isDefined(ray)) return undefined;
+      const cartesian = globe.pick(ray, scene);
+      if (!isDefined(cartesian)) return undefined;
+      const cartographic = globe.ellipsoid.cartesianToCartographic(cartesian);
+      if (!isDefined(cartographic)) return undefined;
+      return this.webMercatorTilingScheme.projection.project(cartographic);
+    };
+
+    const left = projectPixelOffset(-pixelGap / 2);
+    const right = projectPixelOffset(pixelGap / 2);
+    if (!isDefined(left) || !isDefined(right)) return undefined;
+
+    const projectedDistance = Math.hypot(right.x - left.x, right.y - left.y);
+    if (!(projectedDistance > 0)) return undefined;
+
+    const resolution = projectedDistance / pixelGap;
+    const zeroLevelResolution =
+      (CesiumMath.TWO_PI *
+        this.webMercatorTilingScheme.ellipsoid.maximumRadius) /
+      WEB_MERCATOR_TILE_SIZE;
+
+    const level = Math.log2(zeroLevelResolution / resolution);
+    if (!Number.isFinite(level)) return undefined;
+    return Math.max(0, Math.round(level));
+  }
 
   constructor(...args: ModelConstructorParameters) {
     super(...args);
@@ -182,11 +261,28 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     this.removeTraitSnapshotReaction?.();
     this.removeTraitSnapshotReaction = undefined;
     this.disposeImperativeComputedViews();
+    this.clearTransientShortReport();
   }
 
   @override
   get mapItems() {
-    const items = [...super.mapItems.slice()];
+    const items: Array<GeoJsonDataSource | CustomDataSource> = [];
+
+    if (this.unlabeledEntityCache?.dataSource) {
+      items.push(this.unlabeledEntityCache.dataSource);
+    }
+    if (this.labeledEntityCache?.dataSource) {
+      items.push(this.labeledEntityCache.dataSource);
+    }
+
+    if (items.length === 0) {
+      const fallback = super.mapItems.slice();
+      if (this.debugDataSource) {
+        (fallback as typeof items).push(this.debugDataSource);
+      }
+      return fallback;
+    }
+
     if (this.debugDataSource) {
       items.push(this.debugDataSource);
     }
@@ -227,7 +323,54 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
         : noVisiblePointsMessage;
     }
 
-    return report;
+    if (this.transientShortReportKey) {
+      const displayModeMessage =
+        this.transientShortReportKey === "viewingLabeled"
+          ? i18next.t(($) => $.models.rerPoiCatalogItem.viewingLabeled, {
+              lng: this.activeLanguage
+            })
+          : i18next.t(($) => $.models.rerPoiCatalogItem.viewingUnlabeled, {
+              lng: this.activeLanguage
+            });
+      report = report
+        ? `${report}<br/>${displayModeMessage}`
+        : displayModeMessage;
+    }
+
+    return report || undefined;
+  }
+
+  private clearTransientShortReport() {
+    if (this.transientShortReportTimer) {
+      clearTimeout(this.transientShortReportTimer);
+      this.transientShortReportTimer = undefined;
+    }
+
+    runInAction(() => {
+      this.transientShortReportKey = undefined;
+    });
+  }
+
+  private flashLabelModeMessage(useLabeledDisplay: boolean) {
+    const nextKey: RerPoiShortReportKey = useLabeledDisplay
+      ? "viewingLabeled"
+      : "viewingUnlabeled";
+
+    if (this.transientShortReportTimer) {
+      clearTimeout(this.transientShortReportTimer);
+      this.transientShortReportTimer = undefined;
+    }
+
+    runInAction(() => {
+      this.transientShortReportKey = nextKey;
+    });
+
+    this.transientShortReportTimer = setTimeout(() => {
+      runInAction(() => {
+        this.transientShortReportKey = undefined;
+      });
+      this.transientShortReportTimer = undefined;
+    }, 10000);
   }
 
   private getRerPoiTrait<T extends keyof RerPoiTraitSnapshot>(
@@ -263,7 +406,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       labelOutlineWidth: this.getRerPoiTraitForSnapshot("labelOutlineWidth"),
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
-      levelIdMappings: this.getRerPoiTraitForSnapshot("levelIdMappings"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
@@ -276,9 +418,14 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       queryBboxPaddingRatio: this.getRerPoiTraitForSnapshot(
         "queryBboxPaddingRatio"
       ),
-      scaleField: this.getRerPoiTraitForSnapshot("scaleField"),
+      movementThresholdRatio: this.getRerPoiTraitForSnapshot(
+        "movementThresholdRatio"
+      ),
       showDebugBBox: this.getRerPoiTraitForSnapshot("showDebugBBox"),
       showLabels: this.getRerPoiTraitForSnapshot("showLabels"),
+      labelVisibilityThreshold: this.getRerPoiTraitForSnapshot(
+        "labelVisibilityThreshold"
+      ),
       where: this.getRerPoiTraitForSnapshot("where")
     };
   }
@@ -410,15 +557,21 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
 
     this.dynamicReloadQueued = false;
     this.dynamicReloadInProgress = false;
-    this.managedDataSource = undefined;
-    this.liveEntityByObjectId.clear();
+    runInAction(() => {
+      this.unlabeledEntityCache = undefined;
+      this.labeledEntityCache = undefined;
+      this.debugDataSource = undefined;
+    });
+    this.activeLabelDisplayMode = "unlabeled";
+    this.labeledEntityCacheLoadPromise = undefined;
     this.isFirstDynamicLoad = true;
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
-
-    runInAction(() => {
-      this.debugDataSource = undefined;
-    });
+    this.currentViewportLevelId = undefined;
+    this.lastCommittedLevelId = undefined;
+    this.lastCommittedCenter = undefined;
+    this.lastCommittedExtent = undefined;
+    this.clearTransientShortReport();
   }
 
   private stopDynamicViewportRequests() {
@@ -441,27 +594,40 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       this.dynamicReloadTimer = undefined;
     }
 
-    runInAction(() => {
-      this.debugDataSource = undefined;
-    });
-
     this.dynamicReloadQueued = false;
     this.dynamicReloadInProgress = false;
-    this.managedDataSource = undefined;
-    this.liveEntityByObjectId.clear();
+    runInAction(() => {
+      this.unlabeledEntityCache = undefined;
+      this.labeledEntityCache = undefined;
+      this.debugDataSource = undefined;
+    });
+    this.activeLabelDisplayMode = "unlabeled";
+    this.labeledEntityCacheLoadPromise = undefined;
     this.isFirstDynamicLoad = true;
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
+    this.currentViewportLevelId = undefined;
+    this.lastCommittedLevelId = undefined;
+    this.lastCommittedCenter = undefined;
+    this.lastCommittedExtent = undefined;
+    this.clearTransientShortReport();
   }
 
   private attachCurrentViewerListener() {
     this.detachCurrentViewerListener();
     const cesium = this.terria.cesium;
     if (cesium) {
-      this.removeCesiumCameraChangedListener =
-        cesium.scene.camera.changed.addEventListener(
-          this.onDynamicViewportChanged
-        );
+      const camera = cesium.scene.camera;
+      const removeChanged = camera.changed.addEventListener(
+        this.onDynamicViewportChanged
+      );
+      const removeMoveEnd = camera.moveEnd.addEventListener(
+        this.onDynamicViewportChanged
+      );
+      this.removeCesiumCameraChangedListener = () => {
+        removeChanged();
+        removeMoveEnd();
+      };
       this.onDynamicViewportChanged();
       return;
     }
@@ -485,12 +651,12 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     const queryableProperty = this.getRerPoiTrait("queryableProperties")?.find(
       (property) => property.propertyName === propertyName
     );
-    if (!queryableProperty || !this.managedDataSource) return [];
+    if (!queryableProperty || !this.unlabeledEntityCache) return [];
 
     const now = JulianDate.now();
     const values = new Set<string>();
 
-    for (const entity of this.managedDataSource.entities.values) {
+    for (const entity of this.unlabeledEntityCache.dataSource.entities.values) {
       const rawValue = entity.properties?.[propertyName]?.getValue(now);
       if (!isDefined(rawValue)) continue;
 
@@ -699,6 +865,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     ) {
       this.activeDynamicQuery = nextQuery;
       this.syncCachedEntityVisibility(nextQuery);
+      this.commitViewportSnapshot(nextQuery);
       return;
     }
 
@@ -709,28 +876,39 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
 
     this.dynamicReloadInProgress = true;
     try {
-      if (this.isFirstDynamicLoad || !this.managedDataSource) {
+      if (this.isFirstDynamicLoad || !this.unlabeledEntityCache) {
         this.pendingDynamicQuery = nextQuery;
         (await this.loadMapItems(true)).logError(
           "Failed to reload RerPoi dynamic viewport data"
         );
         this.pendingDynamicQuery = undefined;
 
-        const ds = this.findGeoJsonDataSource();
-        if (ds) {
-          this.managedDataSource = ds;
-          this.buildLiveEntityMap(ds);
+        const unlabeledDataSource = this.findGeoJsonDataSource();
+        if (unlabeledDataSource) {
+          runInAction(() => {
+            this.unlabeledEntityCache = {
+              dataSource: unlabeledDataSource,
+              liveEntityByObjectId:
+                this.buildLiveEntityMapFromDataSource(unlabeledDataSource)
+            };
+          });
+          this.tagEntitiesWithCatalogItem(unlabeledDataSource);
+
+          await this.ensureLabeledEntityCache(nextQuery, true);
+
           this.activeDynamicQuery = nextQuery;
           this.isFirstDynamicLoad = false;
           await this.preloadServiceQueryableValues();
           this.syncCachedEntityVisibility(nextQuery);
           this.updateEnumValues();
           this.sanitizeQueryValues();
+          this.commitViewportSnapshot(nextQuery);
         }
       } else {
         await this.applyIncrementalUpdate(nextQuery);
         this.updateEnumValues();
         this.sanitizeQueryValues();
+        this.commitViewportSnapshot(nextQuery);
       }
     } finally {
       this.dynamicReloadInProgress = false;
@@ -742,6 +920,53 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     }
   }
 
+  private isMovementBelowThreshold(): boolean {
+    if (
+      this.lastCommittedCenter === undefined ||
+      this.lastCommittedExtent === undefined
+    ) {
+      return false;
+    }
+
+    const levelFilter = this.getLevelFilterForViewport();
+    const currentMaxLevel = levelFilter.maxLevelId;
+
+    if (currentMaxLevel !== this.lastCommittedLevelId) {
+      return false;
+    }
+
+    // Compute current viewport centre.
+    const screenRect = this.getScreenBoundingBox();
+    const centerLon = (screenRect.west + screenRect.east) / 2;
+    const centerLat = (screenRect.south + screenRect.north) / 2;
+
+    const dLon = Math.abs(centerLon - this.lastCommittedCenter.lon);
+    const dLat = Math.abs(centerLat - this.lastCommittedCenter.lat);
+
+    const movementThresholdRatio = this.getRerPoiTrait(
+      "movementThresholdRatio"
+    );
+    const thresholdLon =
+      this.lastCommittedExtent.width * movementThresholdRatio;
+    const thresholdLat =
+      this.lastCommittedExtent.height * movementThresholdRatio;
+
+    return dLon < thresholdLon && dLat < thresholdLat;
+  }
+
+  private commitViewportSnapshot(query: DynamicViewportQuery) {
+    const rect = query.queryRectangle;
+    this.lastCommittedLevelId = query.requestOptions.maxLevelId;
+    this.lastCommittedCenter = {
+      lon: (rect.west + rect.east) / 2,
+      lat: (rect.south + rect.north) / 2
+    };
+    this.lastCommittedExtent = {
+      width: Math.abs(rect.east - rect.west),
+      height: Math.abs(rect.north - rect.south)
+    };
+  }
+
   private findGeoJsonDataSource(): GeoJsonDataSource | undefined {
     for (const item of this.mapItems) {
       if (item instanceof GeoJsonDataSource) return item;
@@ -749,24 +974,223 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     return undefined;
   }
 
-  private buildLiveEntityMap(ds: GeoJsonDataSource) {
+  private buildLiveEntityMapFromDataSource(ds: GeoJsonDataSource) {
     const now = JulianDate.now();
-    this.liveEntityByObjectId.clear();
+    const liveEntityByObjectId = new Map<string, any>();
     for (const entity of ds.entities.values) {
       const id = this.readObjectIdFromEntity(entity, now);
-      if (id) this.liveEntityByObjectId.set(id, entity);
+      if (id) liveEntityByObjectId.set(id, entity);
+    }
+    return liveEntityByObjectId;
+  }
+
+  private getReferenceEntityCache(): RerPoiEntityCache | undefined {
+    return this.unlabeledEntityCache ?? this.labeledEntityCache;
+  }
+
+  private getRerPoiStylingOptions(showLabels: boolean): RerPoiStylingOptions {
+    return {
+      isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
+      defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
+      markerSize: this.getRerPoiTrait("markerSize"),
+      iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
+      iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
+      showLabels,
+      labelTextColor: this.getRerPoiTrait("labelTextColor"),
+      labelFontSize: this.getRerPoiTrait("labelFontSize"),
+      labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
+      labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
+      poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
+      nameField: this.getRerPoiTrait("nameField"),
+      domainIdField: this.getRerPoiTrait("domainIdField")
+    };
+  }
+
+  private configureDataSourceClustering(dataSource: GeoJsonDataSource): void {
+    const clusteringEnabled = this.clustering.enabled;
+    if (!clusteringEnabled || dataSource.clustering.enabled) {
+      return;
+    }
+
+    const pinBuilder = new PinBuilder();
+    const pinColor = Color.fromCssColorString(
+      this.clustering.pinBackgroundColor
+    );
+    const pinSize = this.clustering.pinSize;
+    const pinCache = new Map<number, string>();
+
+    dataSource.clustering.enabled = true;
+    dataSource.clustering.pixelRange = this.clustering.pixelRange;
+    dataSource.clustering.minimumClusterSize =
+      this.clustering.minimumClusterSize;
+    dataSource.clustering.clusterEvent.addEventListener(
+      function (entities, cluster) {
+        cluster.label.show = false;
+        cluster.billboard.verticalOrigin = VerticalOrigin.BOTTOM;
+        cluster.billboard.disableDepthTestDistance = Number.POSITIVE_INFINITY;
+        cluster.billboard.show = true;
+
+        const count = entities.length;
+        let image = pinCache.get(count);
+        if (!image) {
+          image = pinBuilder
+            .fromText(count.toLocaleString(), pinColor, pinSize)
+            .toDataURL();
+          pinCache.set(count, image);
+        }
+        cluster.billboard.image = image;
+      }
+    );
+
+    (dataSource as any)[LEAFLET_CLUSTERING_CONFIG_KEY] = {
+      enabled: clusteringEnabled,
+      pixelRange: this.clustering.pixelRange,
+      minimumClusterSize: this.clustering.minimumClusterSize,
+      pinSize: this.clustering.pinSize,
+      pinBackgroundColor: this.clustering.pinBackgroundColor
+    };
+  }
+
+  private tagEntitiesWithCatalogItem(dataSource: GeoJsonDataSource): void {
+    for (const entity of dataSource.entities.values) {
+      (entity as any)._catalogItem = this;
+    }
+  }
+
+  private getReadyGeoJson():
+    | FeatureCollectionWithCrs<Geometry | GeometryCollection, GeoJsonProperties>
+    | undefined {
+    return (this as any)._readyData as
+      | FeatureCollectionWithCrs<
+          Geometry | GeometryCollection,
+          GeoJsonProperties
+        >
+      | undefined;
+  }
+
+  private cloneGeoJsonForCache(
+    geoJson: FeatureCollectionWithCrs<
+      Geometry | GeometryCollection,
+      GeoJsonProperties
+    >
+  ): FeatureCollectionWithCrs<
+    Geometry | GeometryCollection,
+    GeoJsonProperties
+  > {
+    return JSON.parse(JSON.stringify(geoJson));
+  }
+
+  private async ensureLabeledEntityCache(
+    query: DynamicViewportQuery,
+    preferReadyData = false
+  ): Promise<void> {
+    if (this.labeledEntityCache) {
+      return;
+    }
+
+    if (this.labeledEntityCacheLoadPromise) {
+      return this.labeledEntityCacheLoadPromise;
+    }
+
+    this.labeledEntityCacheLoadPromise = (async () => {
+      try {
+        const readyGeoJson = preferReadyData
+          ? this.getReadyGeoJson()
+          : undefined;
+        let geoJson = readyGeoJson?.features?.length
+          ? this.cloneGeoJsonForCache(readyGeoJson)
+          : undefined;
+
+        if (!geoJson) {
+          geoJson = await this.loadGeoJsonFromServer(query.requestOptions);
+        }
+
+        const labeledCache = await this.createEntityCacheFromGeoJson(
+          geoJson,
+          true
+        );
+        runInAction(() => {
+          this.labeledEntityCache = labeledCache;
+        });
+      } catch (error) {
+        console.warn(
+          "[RerPoiCatalogItem] Failed to create labeled POI cache",
+          error
+        );
+      } finally {
+        this.labeledEntityCacheLoadPromise = undefined;
+      }
+    })();
+
+    return this.labeledEntityCacheLoadPromise;
+  }
+
+  private async createEntityCacheFromGeoJson(
+    geoJson: FeatureCollectionWithCrs<
+      Geometry | GeometryCollection,
+      GeoJsonProperties
+    >,
+    showLabels: boolean
+  ): Promise<RerPoiEntityCache> {
+    const dataSource = await this.loadGeoJsonDataSource(geoJson, {
+      showLabels
+    });
+    if (showLabels) {
+      dataSource.clustering.enabled = false;
+    } else {
+      this.configureDataSourceClustering(dataSource);
+    }
+    this.tagEntitiesWithCatalogItem(dataSource);
+    return {
+      dataSource,
+      liveEntityByObjectId: this.buildLiveEntityMapFromDataSource(dataSource)
+    };
+  }
+
+  private applyDisplayModeToCaches(
+    useLabeledDisplay: boolean,
+    layerShown: boolean
+  ): void {
+    const activeCache = useLabeledDisplay
+      ? (this.labeledEntityCache ?? this.unlabeledEntityCache)
+      : this.unlabeledEntityCache;
+    const inactiveCache =
+      activeCache === this.labeledEntityCache
+        ? this.unlabeledEntityCache
+        : this.labeledEntityCache;
+
+    if (this.unlabeledEntityCache) {
+      this.unlabeledEntityCache.dataSource.show =
+        layerShown && this.unlabeledEntityCache === activeCache;
+    }
+    if (this.labeledEntityCache) {
+      this.labeledEntityCache.dataSource.show =
+        layerShown && this.labeledEntityCache === activeCache;
+    }
+
+    if (inactiveCache) {
+      for (const entity of inactiveCache.liveEntityByObjectId.values()) {
+        this.setEntityVisibility(entity, false);
+      }
     }
   }
 
   private syncCachedEntityVisibility(query = this.getDynamicViewportQuery()) {
-    if (!query || !this.managedDataSource) return;
+    const referenceCache = this.getReferenceEntityCache();
+    if (!query || !referenceCache) return;
+
     const now = JulianDate.now();
     const { minLevelId, maxLevelId } = query.requestOptions;
+    const visibilityByObjectId = new Map<string, boolean>();
     let visiblePoiCount = 0;
-    const totalPoiCount = this.managedDataSource.entities.values.length;
+    let onScreenPoiCount = 0;
 
-    for (const entity of this.managedDataSource.entities.values) {
-      const inRectangle = isEntityInRectangle(entity, query.queryRectangle);
+    for (const [id, entity] of referenceCache.liveEntityByObjectId) {
+      const inQueryRectangle = isEntityInRectangle(
+        entity,
+        query.queryRectangle
+      );
+      const onScreen = isEntityInRectangle(entity, query.screenRectangle);
       const inLevelRange = this.isEntityInLevelRange(
         entity,
         now,
@@ -776,17 +1200,66 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       const matchesQueryableFilters = this.matchesQueryableFilters(entity, now);
       const isVisible =
         this.isProtectedLevelId(entity, now) ||
-        (inRectangle && inLevelRange && matchesQueryableFilters);
-      this.setEntityVisibility(entity, isVisible);
+        (inQueryRectangle && inLevelRange && matchesQueryableFilters);
+      visibilityByObjectId.set(id, isVisible);
       if (isVisible) visiblePoiCount += 1;
+      if (
+        this.isProtectedLevelId(entity, now) ||
+        (onScreen && inLevelRange && matchesQueryableFilters)
+      ) {
+        onScreenPoiCount += 1;
+      }
     }
+
+    const labelThreshold = this.getRerPoiTrait("labelVisibilityThreshold");
+    const useLabeledDisplay = onScreenPoiCount < labelThreshold;
+
+    if (
+      this.activeLabelDisplayMode !==
+      (useLabeledDisplay ? "labeled" : "unlabeled")
+    ) {
+      this.flashLabelModeMessage(useLabeledDisplay);
+    }
+    this.activeLabelDisplayMode = useLabeledDisplay ? "labeled" : "unlabeled";
+
+    if (useLabeledDisplay && !this.labeledEntityCache) {
+      void this.ensureLabeledEntityCache(query).then(() => {
+        if (this.labeledEntityCache) {
+          this.syncCachedEntityVisibility(query);
+        }
+      });
+    }
+
+    const activeCache =
+      (useLabeledDisplay
+        ? (this.labeledEntityCache ?? this.unlabeledEntityCache)
+        : this.unlabeledEntityCache) ?? this.labeledEntityCache;
+
+    this.applyDisplayModeToCaches(useLabeledDisplay, this.show);
+
+    if (activeCache && this.show) {
+      for (const [id, entity] of activeCache.liveEntityByObjectId) {
+        this.setEntityVisibility(entity, visibilityByObjectId.get(id) ?? false);
+      }
+    }
+
+    const totalPoiCount = referenceCache.dataSource.entities.values.length;
+
     console.log("[RerPoiCatalogItem] POI debug", {
-      cachedPoiCount: this.liveEntityByObjectId.size,
+      cachedPoiCount: referenceCache.liveEntityByObjectId.size,
       visiblePoiCount,
+      onScreenPoiCount,
       totalPoiCount,
+      labelDisplayMode: this.activeLabelDisplayMode,
+      labelVisibilityThreshold: labelThreshold,
+      hasLabeledCache: !!this.labeledEntityCache,
+      hasUnlabeledCache: !!this.unlabeledEntityCache,
+      labeledDataSourceVisible: this.labeledEntityCache?.dataSource.show,
+      unlabeledDataSourceVisible: this.unlabeledEntityCache?.dataSource.show,
       viewerScale: this.getCurrentViewerScale(),
       minLevelId,
-      maxLevelId
+      maxLevelId,
+      imageryLevel: this.currentViewportLevelId
     });
     runInAction(() => {
       this.numberOfTotalElements = totalPoiCount;
@@ -799,8 +1272,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     entity.show = isVisible;
     const show = new ConstantProperty(isVisible);
     if (entity.billboard) entity.billboard.show = show;
-    if (entity.point) entity.point.show = show;
-    if (entity.label) entity.label.show = show;
+    //if (entity.point) entity.point.show = show;
+    //if (entity.label) entity.label.show = show;
   }
 
   private isEntityInLevelRange(
@@ -867,9 +1340,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   }
 
   filterData() {
-    this.syncCachedEntityVisibility(
-      this.activeDynamicQuery ?? this.getDynamicViewportQuery()
-    );
+    if (this.activeDynamicQuery) {
+      this.syncCachedEntityVisibility(this.activeDynamicQuery);
+    } else if (this.getDynamicViewportQuery()) {
+      this.syncCachedEntityVisibility(this.getDynamicViewportQuery());
+    }
   }
 
   private matchesQueryableFilters(entity: any, now: JulianDate): boolean {
@@ -941,8 +1416,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   }
 
   private async applyIncrementalUpdate(nextQuery: DynamicViewportQuery) {
-    const ds = this.managedDataSource!;
-
     let geoJson: FeatureCollectionWithCrs<
       Geometry | GeometryCollection,
       GeoJsonProperties
@@ -953,12 +1426,44 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       return;
     }
 
+    if (this.unlabeledEntityCache) {
+      await this.applyIncrementalUpdateToCache(
+        this.unlabeledEntityCache,
+        nextQuery,
+        geoJson,
+        false
+      );
+    }
+
+    if (this.labeledEntityCache) {
+      await this.applyIncrementalUpdateToCache(
+        this.labeledEntityCache,
+        nextQuery,
+        geoJson,
+        true
+      );
+    }
+
+    this.activeDynamicQuery = nextQuery;
+    this.syncCachedEntityVisibility(nextQuery);
+  }
+
+  private async applyIncrementalUpdateToCache(
+    cache: RerPoiEntityCache,
+    nextQuery: DynamicViewportQuery,
+    geoJson: FeatureCollectionWithCrs<
+      Geometry | GeometryCollection,
+      GeoJsonProperties
+    >,
+    showLabels: boolean
+  ) {
+    const ds = cache.dataSource;
     const newFeatures = (geoJson.features ?? []) as any[];
 
     const pruneRect = rectangleWithPadding(nextQuery.queryRectangle, 0.5);
     const now = JulianDate.now();
     const idsToRemove: string[] = [];
-    for (const [id, entity] of this.liveEntityByObjectId) {
+    for (const [id, entity] of cache.liveEntityByObjectId) {
       if (
         !isEntityInRectangle(entity, pruneRect) &&
         !this.isProtectedLevelId(entity, now)
@@ -969,15 +1474,15 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
 
     const featuresToAdd = newFeatures.filter((f) => {
       const id = this.getFeatureObjectId(f);
-      return id ? !this.liveEntityByObjectId.has(id) : false;
+      return id ? !cache.liveEntityByObjectId.has(id) : false;
     });
 
     if (idsToRemove.length > 0) {
       ds.entities.suspendEvents();
       for (const id of idsToRemove) {
-        const entity = this.liveEntityByObjectId.get(id);
+        const entity = cache.liveEntityByObjectId.get(id);
         if (entity) ds.entities.remove(entity);
-        this.liveEntityByObjectId.delete(id);
+        cache.liveEntityByObjectId.delete(id);
       }
       ds.entities.resumeEvents();
     }
@@ -993,30 +1498,17 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
         (e: any) => !idsBefore.has(e.id as string)
       );
 
-      applyRerPoiEntityStyles(ds, newEntities, {
-        isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
-        defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
-        markerSize: this.getRerPoiTrait("markerSize"),
-        iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
-        iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
-        showLabels: this.getRerPoiTrait("showLabels"),
-        labelTextColor: this.getRerPoiTrait("labelTextColor"),
-        labelFontSize: this.getRerPoiTrait("labelFontSize"),
-        labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
-        labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
-        poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
-        scaleField: this.getRerPoiTrait("scaleField"),
-        nameField: this.getRerPoiTrait("nameField"),
-        domainIdField: this.getRerPoiTrait("domainIdField")
-      });
+      applyRerPoiEntityStyles(
+        ds,
+        newEntities,
+        this.getRerPoiStylingOptions(showLabels)
+      );
       for (const entity of newEntities) {
+        (entity as any)._catalogItem = this;
         const id = this.readObjectIdFromEntity(entity, now);
-        if (id) this.liveEntityByObjectId.set(id, entity);
+        if (id) cache.liveEntityByObjectId.set(id, entity);
       }
     }
-
-    this.activeDynamicQuery = nextQuery;
-    this.syncCachedEntityVisibility(nextQuery);
   }
 
   protected async forceLoadGeojsonData(): Promise<
@@ -1052,26 +1544,16 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     geoJson: FeatureCollectionWithCrs<
       Geometry | GeometryCollection,
       GeoJsonProperties
-    >
+    >,
+    options?: { showLabels?: boolean }
   ): Promise<GeoJsonDataSource> {
     const dataSource = await super.loadGeoJsonDataSource(geoJson as any);
 
-    applyRerPoiEntityStyles(dataSource, dataSource.entities.values, {
-      isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
-      defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
-      markerSize: this.getRerPoiTrait("markerSize"),
-      iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
-      iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
-      showLabels: this.getRerPoiTrait("showLabels"),
-      labelTextColor: this.getRerPoiTrait("labelTextColor"),
-      labelFontSize: this.getRerPoiTrait("labelFontSize"),
-      labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
-      labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
-      poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
-      scaleField: this.getRerPoiTrait("scaleField"),
-      nameField: this.getRerPoiTrait("nameField"),
-      domainIdField: this.getRerPoiTrait("domainIdField")
-    });
+    applyRerPoiEntityStyles(
+      dataSource,
+      dataSource.entities.values,
+      this.getRerPoiStylingOptions(options?.showLabels ?? false)
+    );
     return dataSource;
   }
 
@@ -1311,6 +1793,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     return {
       filterKey: levelFilter.filterKey,
       queryRectangle,
+      screenRectangle,
       requestOptions: {
         bbox: queryRectangle,
         minLevelId: levelFilter.minLevelId,
@@ -1325,14 +1808,25 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     filterKey: string;
   } {
     const minLevelId = this.getRerPoiTrait("minLevelId");
-    const viewerScale = this.getCurrentViewerScale();
-
-    const maxLevelId =
-      viewerScale === undefined
-        ? minLevelId - 1
-        : this.getProgressiveLevelIdFromScale(viewerScale, minLevelId);
-
     const levelIdField = this.getRerPoiTrait("levelIdField");
+
+    let maxLevelId: number;
+
+    if (
+      this.terria.mainViewer.viewerMode === ViewerMode.Cesium ||
+      this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+    ) {
+      this.currentViewportLevelId = this.getCesiumWebMercatorLevel();
+      maxLevelId =
+        this.currentViewportLevelId === undefined
+          ? minLevelId - 1
+          : this.currentViewportLevelId;
+    } else {
+      this.currentViewportLevelId = undefined;
+      const viewerScale = this.getCurrentViewerScale();
+      maxLevelId = viewerScale === undefined ? minLevelId - 1 : viewerScale;
+    }
+
     return {
       minLevelId,
       maxLevelId,
@@ -1345,79 +1839,10 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     };
   }
 
-  private getProgressiveLevelIdMappings(): LevelIdCameraHeightMapping[] {
-    const mappings = this.getRerPoiTrait("levelIdMappings");
-    return mappings.length > 0
-      ? mappings
-      : defaultRerPoiCatalogItemTraits.levelIdMappings;
-  }
-
-  private getProgressiveLevelIdFromScale(
-    viewerScale: number,
-    minimumLevelId: number
-  ): number {
-    const levelIdMappings = this.getProgressiveLevelIdMappings();
-
-    if (levelIdMappings.length === 0) {
-      return minimumLevelId - 1;
-    }
-
-    let lastLevelId = levelIdMappings[levelIdMappings.length - 1].levelId;
-
-    for (const mapping of levelIdMappings) {
-      lastLevelId = mapping.levelId;
-
-      if (viewerScale >= mapping.cameraHeightThreshold) {
-        return mapping.levelId;
-      }
-    }
-
-    return lastLevelId;
-  }
-
   private getCurrentViewerScale(): number | undefined {
     const leafletScale = this.getLeafletViewerScale();
     if (isDefined(leafletScale)) return leafletScale;
-
-    const scale = this.terria.mainViewer.scale;
-    if (isDefined(scale) && Number.isFinite(scale)) {
-      return scale * 100;
-    }
-
-    const cesium = this.terria.cesium;
-    if (!cesium) return undefined;
-
-    const scene = cesium.scene;
-    const width = scene.canvas.clientWidth;
-    const height = scene.canvas.clientHeight;
-
-    if (width <= 1 || height <= 1) return undefined;
-
-    const left = scene.camera.getPickRay(
-      new Cartesian2((width / 2) | 0, height - 1)
-    );
-    const right = scene.camera.getPickRay(
-      new Cartesian2((1 + width / 2) | 0, height - 1)
-    );
-
-    if (!isDefined(left) || !isDefined(right)) return undefined;
-
-    const leftPosition = scene.globe.pick(left, scene);
-    const rightPosition = scene.globe.pick(right, scene);
-
-    if (!isDefined(leftPosition) || !isDefined(rightPosition)) return undefined;
-
-    const leftCartographic =
-      scene.globe.ellipsoid.cartesianToCartographic(leftPosition);
-    const rightCartographic =
-      scene.globe.ellipsoid.cartesianToCartographic(rightPosition);
-
-    if (!isDefined(leftCartographic) || !isDefined(rightCartographic)) {
-      return undefined;
-    }
-
-    geodesic.setEndPoints(leftCartographic, rightCartographic);
-    return geodesic.surfaceDistance;
+    return undefined;
   }
 
   private getLeafletViewerScale(): number | undefined {
@@ -1425,16 +1850,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     if (!leaflet) return undefined;
 
     const map = leaflet.map;
-    const size = map.getSize();
-    if (size.x <= 1 || size.y <= 1) return undefined;
-
-    const y = size.y / 2;
-    const x = size.x / 2;
-    const pixelDistance = map
-      .containerPointToLatLng([x, y])
-      .distanceTo(map.containerPointToLatLng([x + 1, y]));
-
-    return Number.isFinite(pixelDistance) ? pixelDistance * 100 : undefined;
+    const level = Math.round(map.getZoom());
+    console.log("[RerPoiCatalogItem] Leaflet zoom level:", level);
+    return level;
   }
 }
 
@@ -1457,16 +1875,16 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelOutlineWidth: getDefaultRerPoiTrait("labelOutlineWidth"),
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
-    levelIdMappings: getDefaultRerPoiTrait("levelIdMappings"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
     poiDomainStyleGroups: getDefaultRerPoiTrait("poiDomainStyleGroups"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
-    scaleField: getDefaultRerPoiTrait("scaleField"),
+    movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
     showLabels: getDefaultRerPoiTrait("showLabels"),
+    labelVisibilityThreshold: getDefaultRerPoiTrait("labelVisibilityThreshold"),
     where: getDefaultRerPoiTrait("where")
   };
 }
