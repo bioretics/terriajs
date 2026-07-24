@@ -2377,6 +2377,7 @@
       "transformButton": "## Transform\n\nTurns your measurement into a temporary layer you can style, export, or present it in flight mode.",
       "multiPathControls": "## Multi-path management\n\nSwitch between paths, add new paths, or remove the current one to build multi-segment measurements."
     },
+    "editButton": "Edit",
     "download": "Download"
   },
   "elevationChart": {

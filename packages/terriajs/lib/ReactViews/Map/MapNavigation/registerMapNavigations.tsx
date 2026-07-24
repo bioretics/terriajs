@@ -230,6 +230,25 @@ export const registerMapNavigations = (viewState: ViewState) => {
     noExpand: window.innerWidth < 1100
   });
 
+  const measureCircleToolController = new MeasureCircleTool({
+    terria: terria,
+    viewState: viewState,
+    measureTools: measureTools,
+    ...createMeasureToolCallbacks(MeasureCircleTool.id, {
+      clearCurrentGeometryDataOnOpen: true
+    })
+  });
+  mapNavigationModel.addItem({
+    id: MeasureCircleTool.id,
+    name: "translate#measure.measureCircleToolTitle",
+    title: "translate#measure.measureCircle",
+    location: "TOP",
+    controller: measureCircleToolController,
+    screenSize: undefined,
+    order: 5,
+    noExpand: window.innerWidth < 1100
+  });
+
   const measurePolygonToolController = new MeasurePolygonTool({
     terria: terria,
     viewState: viewState,
@@ -264,25 +283,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     screenSize: undefined,
     controller: measureLineToolController,
-    order: 5,
-    noExpand: window.innerWidth < 1100
-  });
-
-  const measureCircleToolController = new MeasureCircleTool({
-    terria: terria,
-    viewState: viewState,
-    measureTools: measureTools,
-    ...createMeasureToolCallbacks(MeasureCircleTool.id, {
-      clearCurrentGeometryDataOnOpen: true
-    })
-  });
-  mapNavigationModel.addItem({
-    id: MeasureCircleTool.id,
-    name: "translate#measure.measureCircleToolTitle",
-    title: "translate#measure.measureCircle",
-    location: "TOP",
-    controller: measureCircleToolController,
-    screenSize: undefined,
     order: 5,
     noExpand: window.innerWidth < 1100
   });
