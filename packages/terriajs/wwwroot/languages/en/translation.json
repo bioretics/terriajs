@@ -986,10 +986,10 @@
       "reachedMaxFeatureLimit": "Warning: This layer has reached the FeatureService feature limit ({{maxFeatures}})."
     },
     "rerPoiCatalogItem": {
-      "exceededCameraTiltLimit": "Warning: The camera tilt angle limit ({{cameraTiltLimitDegrees}}°) has been exceeded. To view new POIs, you must reset the camera tilt angle correctly.",
+"exceededCameraTiltLimit": "Warning: The camera tilt angle limit ({{cameraTiltLimitDegrees}}°) has been exceeded. To view new POIs, you must reset the camera tilt angle correctly.",
       "noVisiblePoints": "Warning: No POIs are visible in the current view.",
-      "viewingLabeled": "Viewing POIs with labels.",
-      "viewingUnlabeled": "Viewing POIs without labels."
+      "viewingLabeled": "POI under threshold switching to labeled view.",
+      "viewingUnlabeled": "POI above threshold switching to unlabeled view."
     },
     "arcGisMapServerCatalogGroup": {
       "name": "ArcGIS Map Server Group",

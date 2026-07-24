@@ -725,8 +725,8 @@
     "rerPoiCatalogItem": {
       "exceededCameraTiltLimit": "Attenzione: Il limite dell'angolo di inclinazione della camera ({{cameraTiltLimitDegrees}}°) è stato superato. Per poter visualizzare nuovi POI è necessario reimpostare l'angolo di inclinazione della camera in maniera corretta.",
       "noVisiblePoints": "Attenzione: non ci sono POI visibili nella vista corrente.",
-      "viewingLabeled": "Visualizzazione dei POI con etichette.",
-      "viewingUnlabeled": "Visualizzazione dei POI senza etichette."
+      "viewingLabeled": "POI sotto la soglia: passaggio alla vista etichettata.",
+      "viewingUnlabeled": "POI sopra la soglia: passaggio alla vista non etichettata."
     },
     "arcGisFeatureServerCatalogGroup": {
       "serviceDescription": "Descrizione del Servizio",
