@@ -2,6 +2,8 @@ declare namespace FeatureInfoDownloadScssNamespace {
   export interface IFeatureInfoDownloadScss {
     btn: string;
     download: string;
+    "download-wrapper": string;
+    downloadWrapper: string;
     dropdownButton: string;
     dropdownList: string;
     dropdown__button: string;

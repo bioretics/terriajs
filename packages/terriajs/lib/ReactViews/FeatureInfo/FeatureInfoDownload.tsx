@@ -11,6 +11,8 @@ import Icon from "../../Styled/Icon";
 import { withViewState } from "../Context";
 import Styles from "./feature-info-download.scss";
 import Dropdown from "../Generic/Dropdown";
+import updateDownloadDropdownPosition from "./updateDownloadDropdownPosition";
+import React from "react";
 
 class FeatureInfoDownload extends Component<{
   data: JsonObject;
@@ -18,6 +20,12 @@ class FeatureInfoDownload extends Component<{
   viewState: ViewState;
   t: TFunction;
 }> {
+  private wrapperRef = React.createRef<HTMLDivElement>();
+
+  private updateListPosition = () => {
+    updateDownloadDropdownPosition(this.wrapperRef.current);
+  };
+
   getLinks() {
     const csv = generateCsvData(this.props.data);
     return filterOutUndefined([
@@ -47,18 +55,24 @@ class FeatureInfoDownload extends Component<{
     );
 
     return (
-      <Dropdown
-        options={links}
-        textProperty="label"
-        theme={{
-          dropdown: Styles.download,
-          list: Styles.dropdownList,
-          button: Styles.dropdownButton,
-          icon: icon
-        }}
+      <div
+        ref={this.wrapperRef}
+        className={Styles.downloadWrapper}
+        onClick={this.updateListPosition}
       >
-        {t(($) => $.featureInfo.download)}
-      </Dropdown>
+        <Dropdown
+          options={links}
+          textProperty="label"
+          theme={{
+            dropdown: Styles.download,
+            list: Styles.dropdownList,
+            button: Styles.dropdownButton,
+            icon: icon
+          }}
+        >
+          {t(($) => $.featureInfo.download)}
+        </Dropdown>
+      </div>
     );
   }
 }

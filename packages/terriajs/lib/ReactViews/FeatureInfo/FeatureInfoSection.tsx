@@ -30,6 +30,7 @@ import TimeVarying from "../../ModelMixins/TimeVarying";
 import TerriaFeature from "../../Models/Feature/Feature";
 import FeatureInfoContext from "../../Models/Feature/FeatureInfoContext";
 // Fork (rer3d): user-profile-gated feature info fields.
+import FeatureInfoGeometryDownload from "./FeatureInfoGeometryDownload";
 import Terria from "../../Models/Terria";
 import CesiumResource from "terriajs-cesium/Source/Core/Resource";
 import type ViewState from "../../ReactViewModels/ViewState";
@@ -633,11 +634,19 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
                 !this.props.printView &&
                 showFeatureInfoDownload &&
                 isDefined(this.downloadableData.data) ? (
-                  <FeatureInfoDownload
-                    key="download"
-                    data={this.downloadableData.data}
-                    name={this.downloadableData.fileName}
-                  />
+                  <>
+                    <FeatureInfoDownload
+                      key="download"
+                      data={this.downloadableData.data}
+                      name={this.downloadableData.fileName}
+                    />
+                    <FeatureInfoGeometryDownload
+                      key="download-geometry"
+                      name={this.downloadableData.fileName}
+                      feature={this.props.feature}
+                      catalogItem={this.props.catalogItem}
+                    />
+                  </>
                 ) : null
               }
             </div>
