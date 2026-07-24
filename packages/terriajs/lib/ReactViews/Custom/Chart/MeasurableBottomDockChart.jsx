@@ -28,9 +28,11 @@ import ZoomX from "./ZoomX";
 import Styles from "./bottom-dock-chart.scss";
 import LineAndPointChart from "./LineAndPointChart";
 import PointOnMap from "./PointOnMap";
+import Dropdown from "../../Generic/Dropdown";
 import MeasurablePanelManager from "../MeasurablePanelManager";
 import { terriaTheme } from "../../StandardUserInterface";
 import html2canvas from "html2canvas";
+import downloadChartPoints from "./downloadChartPoints";
 
 const chartMinWidth = 110;
 const defaultGridColor = "#efefef";
@@ -485,6 +487,15 @@ class Chart extends React.Component {
     }, 0);
   };
 
+  downloadPoints = (format) => {
+    downloadChartPoints(
+      format,
+      this.props.terria,
+      this.chartItems,
+      this.props.xAxis
+    );
+  };
+
   render() {
     const { height, xAxis, terria } = this;
     if (this.chartItems.length === 0)
@@ -508,24 +519,42 @@ class Chart extends React.Component {
           ]}
           onZoom={(zoomedScale) => this.setZoomedXScale(zoomedScale)}
         >
-          <div style={{ display: "flex", alignItems: "center", marginTop: 8 }}>
-            <button
-              type="button"
-              className={Styles.btn}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginTop: 8
+            }}
+          >
+            <div
               style={{
-                marginTop: "auto",
-                marginBottom: "auto",
-                color: "#ffffff",
-                background: "#519ac2",
-                border: "1px solid #ffffff",
-                borderRadius: 4,
-                display: this.isDownloading ? "none" : "inline-block"
+                display: this.isDownloading ? "none" : "contents"
               }}
-              onClick={this.downloadChart}
-              disabled={this.isDownloading}
             >
-              Download
-            </button>
+              <button
+                type="button"
+                className={Styles.downloadButton}
+                onClick={this.downloadChart}
+                disabled={this.isDownloading}
+              >
+                Download image
+              </button>
+              <Dropdown
+                theme={{ button: Styles.downloadButton }}
+                options={[
+                  { name: "GeoJSON" },
+                  { name: "KML" },
+                  { name: "CSV" },
+                  { name: "DXF" }
+                ]}
+                selectOption={(option) => {
+                  this.downloadPoints(option.name.toLowerCase());
+                }}
+              >
+                Download points ▾
+              </Dropdown>
+            </div>
             <Legends width={this.plotWidth} chartItems={this.chartItems} />
           </div>
           <div style={{ position: "relative" }}>

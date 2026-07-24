@@ -1,5 +1,6 @@
 declare namespace BottomDockChartScssNamespace {
   export interface IBottomDockChartScss {
+    downloadButton: string;
     empty: string;
   }
 }

@@ -5,3 +5,31 @@
   text-align: center;
   margin-top: 130px;
 }
+
+.downloadButton {
+  composes: btn from "../../../Sass/common/_buttons.scss";
+  display: inline-block !important;
+  width: auto !important;
+  margin-top: auto;
+  margin-bottom: auto;
+  padding: 0 !important;
+  color: #ffffff !important;
+  background: #519ac2 !important;
+  border: 1px solid #ffffff !important;
+  border-radius: 4px;
+  text-align: center !important;
+
+  &:hover,
+  &:focus {
+    background: #519ac2 !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    background: #519ac2 !important;
+    color: #ffffff !important;
+    opacity: 0.3;
+  }
+}
