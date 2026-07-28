@@ -134,17 +134,17 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     type: "number",
     name: "Minimum level ID",
     description:
-      "The minimum zoom level ID to request from the service. Lower values represent farther zoom levels."
+      "The minimum zoom level ID to request from the service. Lower values represent farther zoom levels. If not specified, it is read from the service on load, by querying the distinct values of the level ID field."
   })
-  minLevelId: number = 7;
+  minLevelId?: number;
 
   @primitiveTrait({
     type: "number",
     name: "Maximum level ID",
     description:
-      "The maximum zoom level ID to request from the service. Higher values represent closer zoom levels."
+      "The maximum zoom level ID to request from the service. Higher values represent closer zoom levels. If not specified, it is read from the service on load, by querying the distinct values of the level ID field."
   })
-  maxLevelId: number = 19;
+  maxLevelId?: number;
 
   @primitiveTrait({
     type: "number",

@@ -82,7 +82,8 @@ interface RerPoiTraitSnapshot {
   labelTextColor: string;
   levelIdField: string;
   markerSize: number;
-  minLevelId: number;
+  maxLevelId: number | undefined;
+  minLevelId: number | undefined;
   nameField: string;
   poiDomainStyleGroups: RerPoiCatalogItemTraits["poiDomainStyleGroups"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
@@ -99,11 +100,21 @@ interface RerPoiEntityCache {
   liveEntityByObjectId: Map<string, any>;
 }
 
+interface RerPoiLevelIdRange {
+  minLevelId: number;
+  maxLevelId: number;
+}
+
 type RerPoiLabelDisplayMode = "labeled" | "unlabeled";
 type RerPoiShortReportKey = "viewingLabeled" | "viewingUnlabeled";
 
 /** Tile size of the Google-standard / Leaflet Web Mercator pyramid. */
 const WEB_MERCATOR_TILE_SIZE = 256;
+
+const FALLBACK_LEVEL_ID_RANGE: RerPoiLevelIdRange = {
+  minLevelId: 7,
+  maxLevelId: 19
+};
 
 export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
@@ -149,6 +160,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private isFirstDynamicLoad = true;
   private serviceEnumValuesLoadPromise: Promise<void> | undefined;
   private readonly serviceEnumValues = new Map<string, string[]>();
+  private serviceLevelIdRange: RerPoiLevelIdRange | undefined;
+  private serviceLevelIdRangeLoadPromise: Promise<void> | undefined;
 
   @observable private debugDataSource: CustomDataSource | undefined;
 
@@ -396,6 +409,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
+      maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
       poiDomainStyleGroups: this.getRerPoiTraitForSnapshot(
@@ -724,20 +738,123 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     return this.serviceEnumValuesLoadPromise;
   }
 
+  private async loadServiceLevelIdRange(): Promise<void> {
+    if (this.serviceLevelIdRange) return;
+
+    if (this.serviceLevelIdRangeLoadPromise) {
+      console.log(
+        "[RerPoiCatalogItem] Level ID range request executed, waiting for it"
+      );
+      return this.serviceLevelIdRangeLoadPromise;
+    }
+
+    const startedAt = Date.now();
+
+    this.serviceLevelIdRangeLoadPromise = this.queryLevelIdRangeFromService()
+      .catch((error) => {
+        console.warn(
+          "[RerPoiCatalogItem] Failed to load the level ID range from the service",
+          error
+        );
+        return undefined;
+      })
+      .then((range) => {
+        this.serviceLevelIdRange = range ?? FALLBACK_LEVEL_ID_RANGE;
+        console.log("[RerPoiCatalogItem] Level ID range resolved", {
+          source: range ? "service" : "fallback",
+          serviceRange: this.serviceLevelIdRange,
+          configuredMinLevelId: this.getRerPoiTrait("minLevelId"),
+          configuredMaxLevelId: this.getRerPoiTrait("maxLevelId"),
+          effectiveRange: this.getEffectiveLevelIdRange(),
+          elapsedMs: Date.now() - startedAt
+        });
+      })
+      .finally(() => {
+        this.serviceLevelIdRangeLoadPromise = undefined;
+      });
+
+    return this.serviceLevelIdRangeLoadPromise;
+  }
+
+  private async queryLevelIdRangeFromService(): Promise<
+    RerPoiLevelIdRange | undefined
+  > {
+    const levelIdField = this.getRerPoiTrait("levelIdField");
+    if (!levelIdField) {
+      console.warn(
+        "[RerPoiCatalogItem] No level ID field configured, skipping the level ID range request"
+      );
+      return undefined;
+    }
+
+    console.log(
+      "[RerPoiCatalogItem] Requesting the level ID range from the service",
+      { levelIdField }
+    );
+
+    const rawValues = await this.loadQueryableValuesFromService(levelIdField);
+    const levelIds = rawValues
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value));
+
+    if (levelIds.length === 0) {
+      console.warn(
+        "[RerPoiCatalogItem] The service returned no usable level IDs",
+        { levelIdField, rawValues }
+      );
+      return undefined;
+    }
+
+    const range = {
+      minLevelId: Math.min(...levelIds),
+      maxLevelId: Math.max(...levelIds)
+    };
+
+    console.log(
+      "[RerPoiCatalogItem] Obtained the level ID range from the service",
+      { levelIdField, range, levelIds }
+    );
+
+    return range;
+  }
+
+  private getEffectiveLevelIdRange(): RerPoiLevelIdRange {
+    const serviceRange = this.serviceLevelIdRange ?? FALLBACK_LEVEL_ID_RANGE;
+    return {
+      minLevelId: this.getRerPoiTrait("minLevelId") ?? serviceRange.minLevelId,
+      maxLevelId: this.getRerPoiTrait("maxLevelId") ?? serviceRange.maxLevelId
+    };
+  }
+
   private async loadQueryableValuesFromService(
     propertyName: string
   ): Promise<string[]> {
-    const esriJson = await this.loadEsriJsonFromServer({
+    const queryOptions: EsriJsonQueryOptions = {
       outFields: propertyName,
       orderByFields: propertyName,
       returnDistinctValues: true,
       returnGeometry: false
+    };
+
+    console.log("[RerPoiCatalogItem] Requesting distinct values", {
+      propertyName,
+      url: runInAction(() => this.buildEsriJsonUrl(queryOptions))
     });
 
-    return (esriJson.features ?? [])
+    const esriJson = await this.loadEsriJsonFromServer(queryOptions);
+
+    const values = (esriJson.features ?? [])
       .map((feature) => feature.attributes?.[propertyName])
       .filter((value): value is string | number | boolean => isDefined(value))
       .map((value) => String(value));
+
+    console.log("[RerPoiCatalogItem] Received distinct values", {
+      propertyName,
+      count: values.length,
+      values
+    });
+
+    return values;
   }
 
   private buildEnumValuesFromService(
@@ -841,6 +958,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
   private async reloadDynamicViewportData() {
     if (!this.show || this.isCameraPastTiltLimit()) return;
+
+    if (!this.serviceLevelIdRange) {
+      await this.loadServiceLevelIdRange();
+      if (!this.show || this.isCameraPastTiltLimit()) return;
+    }
 
     const nextQuery = this.getDynamicViewportQuery();
     if (!nextQuery) return;
@@ -1288,7 +1410,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const raw = entity.properties?.[levelIdField]?.getValue(now);
     if (!isDefined(raw)) return false;
 
-    return Number(raw) === 7;
+    // POIs at the coarsest level stay visible at every zoom level.
+    return Number(raw) === this.getEffectiveLevelIdRange().minLevelId;
   }
 
   private hasActiveFilters(): boolean {
@@ -1786,25 +1909,27 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     maxLevelId: number;
     filterKey: string;
   } {
-    const minLevelId = this.getRerPoiTrait("minLevelId");
+    const { minLevelId, maxLevelId: highestLevelId } =
+      this.getEffectiveLevelIdRange();
     const levelIdField = this.getRerPoiTrait("levelIdField");
 
-    let maxLevelId: number;
+    let viewportLevelId: number | undefined;
 
     if (
       this.terria.mainViewer.viewerMode === ViewerMode.Cesium ||
       this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
     ) {
       this.currentViewportLevelId = this.getCesiumWebMercatorLevel();
-      maxLevelId =
-        this.currentViewportLevelId === undefined
-          ? minLevelId - 1
-          : this.currentViewportLevelId;
+      viewportLevelId = this.currentViewportLevelId;
     } else {
       this.currentViewportLevelId = undefined;
-      const viewerScale = this.getCurrentViewerScale();
-      maxLevelId = viewerScale === undefined ? minLevelId - 1 : viewerScale;
+      viewportLevelId = this.getCurrentViewerScale();
     }
+
+    const maxLevelId =
+      viewportLevelId === undefined
+        ? minLevelId - 1
+        : Math.min(viewportLevelId, highestLevelId);
 
     return {
       minLevelId,
@@ -1855,6 +1980,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
+    maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
     poiDomainStyleGroups: getDefaultRerPoiTrait("poiDomainStyleGroups"),
