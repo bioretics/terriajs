@@ -85,7 +85,6 @@ interface RerPoiTraitSnapshot {
   maxLevelId: number | undefined;
   minLevelId: number | undefined;
   nameField: string;
-  poiDomainStyleGroups: RerPoiCatalogItemTraits["poiDomainStyleGroups"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
   movementThresholdRatio: number;
@@ -412,9 +411,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
-      poiDomainStyleGroups: this.getRerPoiTraitForSnapshot(
-        "poiDomainStyleGroups"
-      ),
       queryableProperties: this.getRerPoiTraitForSnapshot(
         "queryableProperties"
       ),
@@ -1111,7 +1107,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelFontSize: this.getRerPoiTrait("labelFontSize"),
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
-      poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
       nameField: this.getRerPoiTrait("nameField"),
       domainIdField: this.getRerPoiTrait("domainIdField")
     };
@@ -1983,7 +1978,6 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
-    poiDomainStyleGroups: getDefaultRerPoiTrait("poiDomainStyleGroups"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
     movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),

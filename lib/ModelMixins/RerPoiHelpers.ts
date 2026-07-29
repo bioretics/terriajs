@@ -8,10 +8,7 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import { getMakiIcon } from "../Map/Icons/Maki/MakiIcons";
-import {
-  defaultRerPoiCatalogItemTraits,
-  PoiDomainStyleGroup
-} from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+import { defaultRerPoiCatalogItemTraits } from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import isDefined from "../Core/isDefined";
 
 export const RER_POI_CATALOG_ITEM_TYPE = "rer-poi";
@@ -41,10 +38,12 @@ export interface RerPoiStylingOptions {
   labelFontSize?: number;
   labelOutlineWidth?: number;
   labelOutlineColor?: string;
-  poiDomainStyleGroups?: PoiDomainStyleGroup[];
   domainIdField?: string;
   nameField?: string;
 }
+
+const MARKER_SYMBOL_PROPERTY = "marker-symbol";
+const MARKER_COLOR_PROPERTY = "marker-color";
 
 const BILLBOARD_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
 const DEPTH_TEST_DISTANCE = new ConstantProperty(Number.POSITIVE_INFINITY);
@@ -212,44 +211,41 @@ function buildCompositeMarkerCanvas(
   return canvas;
 }
 
-function normalizePoiDomainStyleGroup(
-  group: Partial<PoiDomainStyleGroup>
-): PoiDomainStyleGroup {
-  const normalized = new PoiDomainStyleGroup();
-  normalized.id = typeof group.id === "string" ? group.id : "";
-  normalized.symbol =
-    typeof group.symbol === "string" && group.symbol.trim()
-      ? group.symbol.trim()
-      : "marker";
-  normalized.color =
-    typeof group.color === "string" && group.color.trim()
-      ? group.color.trim()
-      : undefined;
-  normalized.domainIds = Array.isArray(group.domainIds)
-    ? group.domainIds.map((x) => Number(x)).filter(Number.isFinite)
-    : [];
-  return normalized;
-}
-
-function getDefaultPoiDomainStyleGroups(): PoiDomainStyleGroup[] {
-  return (defaultRerPoiCatalogItemTraits.poiDomainStyleGroups ?? []).map(
-    normalizePoiDomainStyleGroup
-  );
-}
-
-function buildPoiDomainStyleMap(
-  groups: PoiDomainStyleGroup[]
+function flattenPoiDomainStyles(
+  groups: Array<{ symbol: string; color?: string; domainIds: number[] }>
 ): Record<number, PoiDomainStyle> {
   return groups.reduce<Record<number, PoiDomainStyle>>((acc, group) => {
-    for (const domainId of group.domainIds ?? []) {
+    for (const domainId of group.domainIds) {
       acc[domainId] = { symbol: group.symbol, color: group.color };
     }
     return acc;
   }, {});
 }
 
+const DEFAULT_POI_DOMAIN_STYLES: Record<number, PoiDomainStyle> =
+  flattenPoiDomainStyles([
+    { symbol: "village", domainIds: [1, 2] },
+    { symbol: "industrial", domainIds: [3] },
+    { symbol: "village", color: "#ff0", domainIds: [4] },
+    { symbol: "village", color: "#333", domainIds: [5] },
+    { symbol: "village", color: "#fff", domainIds: [6] },
+    { symbol: "square", domainIds: [7] },
+    { symbol: "cross", domainIds: [8] },
+    { symbol: "mountain", color: "#ff00ff", domainIds: [9] },
+    { symbol: "triangle", domainIds: [10] },
+    { symbol: "triangle-stroked", domainIds: [11] },
+    { symbol: "marker", domainIds: [12, 15, 19, 20, 21, 22, 24] },
+    { symbol: "water", domainIds: [13, 14, 16, 17, 18, 23] },
+    { symbol: "town", domainIds: [601] },
+    { symbol: "city", domainIds: [602, 603] }
+  ]);
+
 function getRerPoiIconId(symbol: unknown): string {
   return typeof symbol === "string" && symbol.trim() ? symbol.trim() : "marker";
+}
+
+function readStyleString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 export function applyRerPoiEntityStyles(
@@ -290,18 +286,11 @@ export function applyRerPoiEntityStyles(
       defaultRerPoiCatalogItemTraits.labelOutlineColor
   };
 
-  const poiDomainStyleGroups = (
-    options?.poiDomainStyleGroups?.length
-      ? options.poiDomainStyleGroups
-      : getDefaultPoiDomainStyleGroups()
-  ).map(normalizePoiDomainStyleGroup);
-
   const nameField =
     options?.nameField ?? defaultRerPoiCatalogItemTraits.nameField;
   const domainIdField =
     options?.domainIdField ?? defaultRerPoiCatalogItemTraits.domainIdField;
 
-  const poiDomainIconMap = buildPoiDomainStyleMap(poiDomainStyleGroups);
   const now = JulianDate.now();
 
   dataSource.entities.suspendEvents();
@@ -315,11 +304,18 @@ export function applyRerPoiEntityStyles(
       const rawDomainValue = properties?.[domainIdField]?.getValue(now);
       const domainId = Number(rawDomainValue);
       const mapped = Number.isFinite(domainId)
-        ? poiDomainIconMap[domainId]
+        ? DEFAULT_POI_DOMAIN_STYLES[domainId]
         : undefined;
 
-      const symbol = getRerPoiIconId(mapped?.symbol);
-      const color = mapped?.color ?? defaultMarkerColor;
+      const featureSymbol = readStyleString(
+        properties?.[MARKER_SYMBOL_PROPERTY]?.getValue(now)
+      );
+      const featureColor = readStyleString(
+        properties?.[MARKER_COLOR_PROPERTY]?.getValue(now)
+      );
+
+      const symbol = getRerPoiIconId(featureSymbol ?? mapped?.symbol);
+      const color = featureColor ?? mapped?.color ?? defaultMarkerColor;
 
       const rawName = properties?.[nameField]?.getValue(now);
       const name =
