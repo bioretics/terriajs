@@ -159,6 +159,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private transientShortReportTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly onDynamicViewportChanged = () => {
+    if (!this.isShownOnMainMap) return;
+
     const isPastLimit = this.isCameraPastTiltLimit();
     runInAction(() => {
       this.cameraTiltLimitExceeded = isPastLimit;
@@ -287,6 +289,17 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
   get type(): string {
     return RER_POI_CATALOG_ITEM_TYPE;
+  }
+
+  private get isOnMainMap(): boolean {
+    return (
+      this.terria.workbench.contains(this) ||
+      this.terria.overlays.contains(this)
+    );
+  }
+
+  private get isShownOnMainMap(): boolean {
+    return this.show && this.isOnMainMap;
   }
 
   get objectIdField(): string {
@@ -528,9 +541,13 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     });
 
     this.removeShowReaction ??= reaction(
-      () => this.show,
-      (show) => {
-        if (show) this.queueDynamicReload(true);
+      () => this.isShownOnMainMap,
+      (isShown) => {
+        if (isShown) {
+          this.queueDynamicReload(true);
+        } else {
+          this.hideCachedEntities();
+        }
       }
     );
 
@@ -845,7 +862,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private async reloadDynamicViewportData() {
-    if (!this.show || this.isCameraPastTiltLimit()) return;
+    if (!this.isShownOnMainMap || this.isCameraPastTiltLimit()) return;
 
     const nextQuery = this.getDynamicViewportQuery();
     if (!nextQuery) return;
@@ -1132,6 +1149,31 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       dataSource,
       liveEntityByObjectId: this.buildLiveEntityMapFromDataSource(dataSource)
     };
+  }
+
+  private hideCachedEntities(): void {
+    if (this.dynamicReloadTimer) {
+      clearTimeout(this.dynamicReloadTimer);
+      this.dynamicReloadTimer = undefined;
+    }
+    this.dynamicReloadQueued = false;
+
+    for (const cache of [this.unlabeledEntityCache, this.labeledEntityCache]) {
+      if (!cache) continue;
+
+      cache.dataSource.show = false;
+      cache.dataSource.entities.suspendEvents();
+      for (const entity of cache.liveEntityByObjectId.values()) {
+        this.setEntityVisibility(entity, false);
+      }
+      cache.dataSource.entities.resumeEvents();
+    }
+
+    if (this.debugDataSource) {
+      this.debugDataSource.show = false;
+    }
+
+    this.terria.currentViewer.notifyRepaintRequired();
   }
 
   private applyDisplayModeToCaches(
@@ -1727,6 +1769,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         this.debugDataSource = new CustomDataSource("RerPoiDebugBBox");
       }
     });
+
+    this.debugDataSource!.show = true;
 
     const entities = this.debugDataSource!.entities;
     entities.suspendEvents();
