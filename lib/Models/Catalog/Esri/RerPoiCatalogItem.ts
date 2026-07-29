@@ -99,21 +99,11 @@ interface RerPoiEntityCache {
   liveEntityByObjectId: Map<string, any>;
 }
 
-interface RerPoiLevelIdRange {
-  minLevelId: number;
-  maxLevelId: number;
-}
-
 type RerPoiLabelDisplayMode = "labeled" | "unlabeled";
 type RerPoiShortReportKey = "viewingLabeled" | "viewingUnlabeled";
 
 /** Tile size of the Google-standard / Leaflet Web Mercator pyramid. */
 const WEB_MERCATOR_TILE_SIZE = 256;
-
-const FALLBACK_LEVEL_ID_RANGE: RerPoiLevelIdRange = {
-  minLevelId: 7,
-  maxLevelId: 19
-};
 
 export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
@@ -159,7 +149,10 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private isFirstDynamicLoad = true;
   private serviceEnumValuesLoadPromise: Promise<void> | undefined;
   private readonly serviceEnumValues = new Map<string, string[]>();
-  private serviceLevelIdRange: RerPoiLevelIdRange | undefined;
+  private serviceLevelIdRange:
+    | { minLevelId: number; maxLevelId: number }
+    | undefined;
+  private serviceLevelIdRangeLoaded = false;
   private serviceLevelIdRangeLoadPromise: Promise<void> | undefined;
 
   @observable private debugDataSource: CustomDataSource | undefined;
@@ -735,7 +728,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private async loadServiceLevelIdRange(): Promise<void> {
-    if (this.serviceLevelIdRange) return;
+    if (this.serviceLevelIdRangeLoaded) return;
 
     if (this.serviceLevelIdRangeLoadPromise) {
       console.log(
@@ -755,9 +748,10 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         return undefined;
       })
       .then((range) => {
-        this.serviceLevelIdRange = range ?? FALLBACK_LEVEL_ID_RANGE;
+        this.serviceLevelIdRange = range;
+        this.serviceLevelIdRangeLoaded = true;
         console.log("[RerPoiCatalogItem] Level ID range resolved", {
-          source: range ? "service" : "fallback",
+          source: range ? "service" : "unavailable",
           serviceRange: this.serviceLevelIdRange,
           configuredMinLevelId: this.getRerPoiTrait("minLevelId"),
           configuredMaxLevelId: this.getRerPoiTrait("maxLevelId"),
@@ -773,7 +767,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private async queryLevelIdRangeFromService(): Promise<
-    RerPoiLevelIdRange | undefined
+    { minLevelId: number; maxLevelId: number } | undefined
   > {
     const levelIdField = this.getRerPoiTrait("levelIdField");
     if (!levelIdField) {
@@ -814,11 +808,17 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     return range;
   }
 
-  private getEffectiveLevelIdRange(): RerPoiLevelIdRange {
-    const serviceRange = this.serviceLevelIdRange ?? FALLBACK_LEVEL_ID_RANGE;
+  private getEffectiveLevelIdRange(): {
+    minLevelId: number | undefined;
+    maxLevelId: number | undefined;
+  } {
     return {
-      minLevelId: this.getRerPoiTrait("minLevelId") ?? serviceRange.minLevelId,
-      maxLevelId: this.getRerPoiTrait("maxLevelId") ?? serviceRange.maxLevelId
+      minLevelId:
+        this.getRerPoiTrait("minLevelId") ??
+        this.serviceLevelIdRange?.minLevelId,
+      maxLevelId:
+        this.getRerPoiTrait("maxLevelId") ??
+        this.serviceLevelIdRange?.maxLevelId
     };
   }
 
@@ -955,7 +955,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private async reloadDynamicViewportData() {
     if (!this.show || this.isCameraPastTiltLimit()) return;
 
-    if (!this.serviceLevelIdRange) {
+    if (!this.serviceLevelIdRangeLoaded) {
       await this.loadServiceLevelIdRange();
       if (!this.show || this.isCameraPastTiltLimit()) return;
     }
@@ -1887,6 +1887,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     if (rectangleArea(queryRectangle) <= 0) return undefined;
 
     const levelFilter = this.getLevelFilterForViewport();
+
+    if (levelFilter.maxLevelId === undefined) return undefined;
+
     return {
       filterKey: levelFilter.filterKey,
       queryRectangle,
@@ -1900,8 +1903,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private getLevelFilterForViewport(): {
-    minLevelId: number;
-    maxLevelId: number;
+    minLevelId: number | undefined;
+    maxLevelId: number | undefined;
     filterKey: string;
   } {
     const { minLevelId, maxLevelId: highestLevelId } =
@@ -1922,9 +1925,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     }
 
     const maxLevelId =
-      viewportLevelId === undefined
-        ? minLevelId - 1
-        : Math.min(viewportLevelId, highestLevelId);
+      viewportLevelId !== undefined && highestLevelId !== undefined
+        ? Math.min(viewportLevelId, highestLevelId)
+        : viewportLevelId;
 
     return {
       minLevelId,
