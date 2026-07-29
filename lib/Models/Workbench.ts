@@ -12,6 +12,7 @@ import LayerOrderingTraits from "../Traits/TraitsClasses/LayerOrderingTraits";
 import CommonStrata from "./Definition/CommonStrata";
 import hasTraits from "./Definition/hasTraits";
 import { BaseModel } from "./Definition/Model";
+import { ensureCatalogMemberAccess } from "./Authentication/CatalogAccessControl";
 
 const keepOnTop = (model: BaseModel) =>
   hasTraits(model, LayerOrderingTraits, "keepOnTop") && model.keepOnTop;
@@ -188,6 +189,11 @@ export default class Workbench {
         importance: -1
       });
     }
+
+    // Check before inserting the item or loading a reference/map item. The
+    // denial message is intentionally not returned as an error, because it is
+    // an expected authentication prompt rather than a failed catalogue load.
+    if (!ensureCatalogMemberAccess(item)) return Result.none();
 
     this.insertItem(item);
 

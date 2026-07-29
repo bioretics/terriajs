@@ -14,6 +14,10 @@ interface IMessageModalProps {
   message?: string;
 }
 
+// MessageModal is rendered through a portal that appears before the explorer
+// window in the DOM. Keep it above every application panel and its popovers.
+const MESSAGE_MODAL_Z_INDEX = 2147483647;
+
 const AttributionText = styled(Text).attrs(() => ({ medium: true }))`
   a {
     color: ${(props) => props.theme.textDark};
@@ -37,7 +41,7 @@ const DataAttributionBox = styled(Box).attrs({
   scroll: true,
   column: true
 })`
-  z-index: 99989;
+  z-index: ${MESSAGE_MODAL_Z_INDEX};
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -55,16 +59,20 @@ const DataAttributionBox = styled(Box).attrs({
   }
 `;
 
+const ModalPrefaceBox = styled(PrefaceBox)`
+  z-index: ${MESSAGE_MODAL_Z_INDEX - 1};
+`;
+
 export const MessageModal: FC<IMessageModalProps> = observer(
   ({ closeModal, header, message }) => {
     return ReactDOM.createPortal(
       <>
-        <PrefaceBox
+        <ModalPrefaceBox
           onClick={closeModal}
           role="presentation"
           aria-hidden="true"
           pseudoBg
-          css={{ top: 0, left: 0, zIndex: 99989 }}
+          css={{ top: 0, left: 0 }}
         />
         <DataAttributionBox>
           <CloseButton color="#red" topRight onClick={closeModal} />

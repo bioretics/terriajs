@@ -798,6 +798,16 @@ export default class Terria {
   @observable userAuthToken?: string;
 
   /**
+   * The application-wide authentication check used by catalogue access
+   * policies. Update this accessor when the login mechanism changes so that
+   * the catalogue and the login button stay in sync.
+   */
+  @computed
+  get isAuthenticated(): boolean {
+    return !!(this.userAuthToken || this.userProfile);
+  }
+
+  /**
    * Gets or sets height of viewshed observer point.
    * @type {string}
    */

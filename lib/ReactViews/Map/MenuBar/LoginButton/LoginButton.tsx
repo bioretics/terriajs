@@ -32,7 +32,7 @@ const LoginButton = observer((props: Props) => {
     useState<boolean>(false);
 
   const { t } = useTranslation();
-  const isLoggedIn = !!(props.terria.userAuthToken || props.terria.userProfile);
+  const isLoggedIn = props.terria.isAuthenticated;
 
   useEffect(() => {
     if (!isLogoutConfirmVisible) return;

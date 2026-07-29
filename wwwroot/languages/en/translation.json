@@ -513,6 +513,12 @@
     "loginPanelGenericError": "An unexpected error occurred during login. Please try again later.",
     "loginPanelMissingFields": "Please enter both username and password."
   },
+  "access": {
+    "authenticationRequiredTitle": "Authentication required",
+    "authenticationRequiredMessage": "Please log in to access this layer.",
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedMessage": "You do not have permission to access this layer."
+  },
   "helpPanel": {
     "btnText": "Help",
     "menuPaneTitle": "We're here to help",

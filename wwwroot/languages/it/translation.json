@@ -312,6 +312,12 @@
     "loginPanelGenericError": "Si è verificato un errore imprevisto durante il login. Riprova più tardi.",
     "loginPanelMissingFields": "Inserisci sia il nome utente che la password."
   },
+  "access": {
+    "authenticationRequiredTitle": "Autenticazione richiesta",
+    "authenticationRequiredMessage": "Effettua il login per accedere a questo livello.",
+    "accessDeniedTitle": "Accesso negato",
+    "accessDeniedMessage": "Non disponi dell'autorizzazione per accedere a questo livello."
+  },
   "settingPanel": {
     "performanceLabel": "Prestazioni",
     "qualityLabel": "Qualità",
