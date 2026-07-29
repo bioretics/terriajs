@@ -8,7 +8,9 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import { getMakiIcon } from "../Map/Icons/Maki/MakiIcons";
-import { defaultRerPoiCatalogItemTraits } from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
+import RerPoiCatalogItemTraits, {
+  defaultRerPoiCatalogItemTraits
+} from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import isDefined from "../Core/isDefined";
 
 export const RER_POI_CATALOG_ITEM_TYPE = "rer-poi";
@@ -40,6 +42,9 @@ export interface RerPoiStylingOptions {
   labelOutlineColor?: string;
   domainIdField?: string;
   nameField?: string;
+  perPropertyStyles?: ReadonlyArray<
+    RerPoiCatalogItemTraits["perPropertyStyles"][number]
+  >;
 }
 
 const MARKER_SYMBOL_PROPERTY = "marker-symbol";
@@ -248,6 +253,29 @@ function readStyleString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function getPerPropertyStyleValue(
+  properties: any,
+  perPropertyStyles:
+    | ReadonlyArray<RerPoiCatalogItemTraits["perPropertyStyles"][number]>
+    | undefined,
+  styleProperty: string,
+  now: JulianDate
+): unknown {
+  return perPropertyStyles?.reduce((value, style) => {
+    const matches = Object.entries(style.properties ?? {}).every(
+      ([key, expected]) => {
+        const actual = properties?.[key]?.getValue(now);
+        return typeof actual === "string" &&
+          typeof expected === "string" &&
+          !style.caseSensitive
+          ? actual.toLowerCase() === expected.toLowerCase()
+          : actual === expected;
+      }
+    );
+    return matches ? (style.style as any)?.[styleProperty] ?? value : value;
+  }, undefined);
+}
+
 export function applyRerPoiEntityStyles(
   dataSource: GeoJsonDataSource,
   entitiesToStyle: any[],
@@ -314,8 +342,28 @@ export function applyRerPoiEntityStyles(
         properties?.[MARKER_COLOR_PROPERTY]?.getValue(now)
       );
 
-      const symbol = getRerPoiIconId(featureSymbol ?? mapped?.symbol);
-      const color = featureColor ?? mapped?.color ?? defaultMarkerColor;
+      const perPropertySymbol = readStyleString(
+        getPerPropertyStyleValue(
+          properties,
+          options?.perPropertyStyles,
+          MARKER_SYMBOL_PROPERTY,
+          now
+        )
+      );
+      const perPropertyColor = readStyleString(
+        getPerPropertyStyleValue(
+          properties,
+          options?.perPropertyStyles,
+          MARKER_COLOR_PROPERTY,
+          now
+        )
+      );
+
+      const symbol = getRerPoiIconId(
+        perPropertySymbol ?? featureSymbol ?? mapped?.symbol
+      );
+      const color =
+        perPropertyColor ?? featureColor ?? mapped?.color ?? defaultMarkerColor;
 
       const rawName = properties?.[nameField]?.getValue(now);
       const name =

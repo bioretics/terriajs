@@ -1108,7 +1108,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
       nameField: this.getRerPoiTrait("nameField"),
-      domainIdField: this.getRerPoiTrait("domainIdField")
+      domainIdField: this.getRerPoiTrait("domainIdField"),
+      perPropertyStyles: this.perPropertyStyles
     };
   }
 
