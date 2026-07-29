@@ -2,7 +2,8 @@ import { runInAction } from "mobx";
 import Result from "../../../lib/Core/Result";
 import {
   CatalogPermissionLevel,
-  canAccessCatalogMember
+  canAccessCatalogMember,
+  isCatalogMemberVisible
 } from "../../../lib/Models/Authentication/CatalogAccessControl";
 import WebMapServiceCatalogItem from "../../../lib/Models/Catalog/Ows/WebMapServiceCatalogItem";
 import CommonStrata from "../../../lib/Models/Definition/CommonStrata";
@@ -73,5 +74,54 @@ describe("Catalogue access control", () => {
     expect(loadMetadata).toHaveBeenCalled();
     expect(loadMapItems).toHaveBeenCalled();
     expect(terria.workbench.contains(item)).toBe(true);
+  });
+
+  it("hides private items until the user has the private permission", () => {
+    item.setTrait(
+      CommonStrata.definition,
+      "permissionLevel",
+      CatalogPermissionLevel.Private
+    );
+
+    expect(canAccessCatalogMember(item)).toBe(false);
+    expect(isCatalogMemberVisible(item)).toBe(false);
+
+    runInAction(() => {
+      terria.userProfile = "limited";
+    });
+    terria.configParameters.userProfilesDefinition = {
+      limited: { allowed: [], isAdmin: false }
+    };
+
+    expect(canAccessCatalogMember(item)).toBe(false);
+    expect(isCatalogMemberVisible(item)).toBe(false);
+
+    terria.configParameters.userProfilesDefinition.limited.allowed.push(
+      CatalogPermissionLevel.Private
+    );
+
+    expect(canAccessCatalogMember(item)).toBe(true);
+    expect(isCatalogMemberVisible(item)).toBe(true);
+  });
+
+  it("removes private items from the visible workbench when permission is lost", () => {
+    item.setTrait(
+      CommonStrata.definition,
+      "permissionLevel",
+      CatalogPermissionLevel.Private
+    );
+    runInAction(() => {
+      terria.userAuthToken = "test-token";
+      terria.workbench.items = [item];
+    });
+
+    expect(terria.workbench.items).toEqual([item]);
+
+    runInAction(() => {
+      terria.userAuthToken = undefined;
+    });
+
+    expect(terria.workbench.items).toEqual([]);
+    expect(terria.workbench.itemIds).toEqual([]);
   });
 });
