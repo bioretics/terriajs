@@ -22,6 +22,7 @@ import CatalogMemberMixin, { getName } from "../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../ModelMixins/GroupMixin";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ReferenceMixin from "../ModelMixins/ReferenceMixin";
+import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
 import CzmlCatalogItem from "../Models/Catalog/CatalogItems/CzmlCatalogItem";
 import CommonStrata from "../Models/Definition/CommonStrata";
@@ -882,6 +883,10 @@ export default class ViewState {
     stratum: string = CommonStrata.user,
     openAddData = true
   ): Promise<Result<void>> {
+    // Do this before setting preview state or loading a reference, metadata, or
+    // map items. Access denial is an expected user-facing state, not a catalog
+    // loading error.
+    if (!ensureCatalogMemberAccess(item)) return Result.none();
     // Set preview item before loading - so we can see loading indicator and errors in DataPreview panel.
     runInAction(() => (this._previewedItem = item));
 

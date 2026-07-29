@@ -7,6 +7,7 @@ import { withTranslation } from "react-i18next";
 import styled from "styled-components";
 import defined from "terriajs-cesium/Source/Core/defined";
 import MappableMixin from "../../ModelMixins/MappableMixin";
+import { isCatalogMemberVisible } from "../../Models/Authentication/CatalogAccessControl";
 import DataCatalogTab from "./Tabs/DataCatalogTab";
 import MyDataTab from "./Tabs/MyDataTab/MyDataTab";
 import Styles from "./tabs.scss";
@@ -52,7 +53,9 @@ class Tabs extends Component {
       tabs.push(
         ...this.props.terria.catalog.group.memberModels
           .filter(
-            (member) => member !== this.props.terria.catalog.userAddedDataGroup
+            (member) =>
+              member !== this.props.terria.catalog.userAddedDataGroup &&
+              isCatalogMemberVisible(member)
           )
           .map((member) => ({
             name: member.nameInCatalog,

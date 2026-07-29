@@ -874,6 +874,32 @@ export default class Terria {
   @observable userAuthToken?: string;
 
   /**
+   * The application-wide authentication check used by catalogue access
+   * policies. Update this accessor when the login mechanism changes so that
+   * the catalogue and the login button stay in sync.
+   */
+  @computed
+  get isAuthenticated(): boolean {
+    return !!(this.userAuthToken || this.userProfile);
+  }
+
+  /**
+   * Checks a named permission for an authenticated user. Deployments without
+   * profile definitions grant authenticated users all named permissions;
+   * profile-aware deployments require the permission in `allowed` or an admin
+   * profile. This is the extension point for a future role/claim provider.
+   */
+  hasPermission(permission: string): boolean {
+    if (!this.isAuthenticated) return false;
+    if (!this.configParameters.userProfilesDefinition) return true;
+
+    const profile = this.profile;
+    return (
+      !!profile && (profile.isAdmin || profile.allowed.includes(permission))
+    );
+  }
+
+  /**
    * Gets or sets height of viewshed observer point.
    * @type {string}
    */

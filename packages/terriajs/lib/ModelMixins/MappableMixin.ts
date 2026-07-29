@@ -9,6 +9,7 @@ import AbstractConstructor from "../Core/AbstractConstructor";
 import AsyncLoader from "../Core/AsyncLoader";
 import Result from "../Core/Result";
 import Model from "../Models/Definition/Model";
+import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import CatalogMemberMixin, { getName } from "./CatalogMemberMixin";
 
@@ -170,6 +171,7 @@ function MappableMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
      * {@see AsyncLoader}
      */
     async loadMapItems(force?: boolean): Promise<Result<void>> {
+      if (!ensureCatalogMemberAccess(this)) return Result.none();
       try {
         if (CatalogMemberMixin.isMixedInto(this))
           (await this.loadMetadata()).throwIfError();
