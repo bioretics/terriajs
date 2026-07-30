@@ -89,12 +89,11 @@ interface RerPoiTraitSnapshot {
   labelTextColor: string;
   levelIdField: string;
   markerSize: number;
-  minLevelId: number;
+  maxLevelId: number | undefined;
+  minLevelId: number | undefined;
   nameField: string;
-  poiDomainStyleGroups: RerPoiCatalogItemTraits["poiDomainStyleGroups"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
-  movementThresholdRatio: number;
   showDebugBBox: boolean;
   showLabels: boolean;
   labelVisibilityThreshold: number;
@@ -139,10 +138,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   private currentViewportLevelId: number | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
-  private lastCommittedLevelId: number | undefined;
-  private lastCommittedCenter: { lon: number; lat: number } | undefined;
-  private lastCommittedExtent: { width: number; height: number } | undefined;
-
   @observable private cameraTiltLimitExceeded = false;
   @observable private activeLanguage =
     i18next.resolvedLanguage ?? i18next.language;
@@ -156,6 +151,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   private isFirstDynamicLoad = true;
   private serviceEnumValuesLoadPromise: Promise<void> | undefined;
   private readonly serviceEnumValues = new Map<string, string[]>();
+  private serviceLevelIdRange:
+    | { minLevelId: number; maxLevelId: number }
+    | undefined;
+  private serviceLevelIdRangeLoaded = false;
+  private serviceLevelIdRangeLoadPromise: Promise<void> | undefined;
 
   @observable private debugDataSource: CustomDataSource | undefined;
 
@@ -168,10 +168,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       this.cameraTiltLimitExceeded = isPastLimit;
     });
     if (isPastLimit) return;
-
-    if (this.isMovementBelowThreshold()) {
-      return;
-    }
 
     this.queueDynamicReload();
   };
@@ -407,19 +403,14 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
+      maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
-      poiDomainStyleGroups: this.getRerPoiTraitForSnapshot(
-        "poiDomainStyleGroups"
-      ),
       queryableProperties: this.getRerPoiTraitForSnapshot(
         "queryableProperties"
       ),
       queryBboxPaddingRatio: this.getRerPoiTraitForSnapshot(
         "queryBboxPaddingRatio"
-      ),
-      movementThresholdRatio: this.getRerPoiTraitForSnapshot(
-        "movementThresholdRatio"
       ),
       showDebugBBox: this.getRerPoiTraitForSnapshot("showDebugBBox"),
       showLabels: this.getRerPoiTraitForSnapshot("showLabels"),
@@ -568,9 +559,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
-    this.lastCommittedLevelId = undefined;
-    this.lastCommittedCenter = undefined;
-    this.lastCommittedExtent = undefined;
     this.clearTransientShortReport();
   }
 
@@ -607,9 +595,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
-    this.lastCommittedLevelId = undefined;
-    this.lastCommittedCenter = undefined;
-    this.lastCommittedExtent = undefined;
     this.clearTransientShortReport();
   }
 
@@ -735,20 +720,96 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     return this.serviceEnumValuesLoadPromise;
   }
 
+  private async loadServiceLevelIdRange(): Promise<void> {
+    if (this.serviceLevelIdRangeLoaded) return;
+
+    if (this.serviceLevelIdRangeLoadPromise) {
+      return this.serviceLevelIdRangeLoadPromise;
+    }
+
+    this.serviceLevelIdRangeLoadPromise = this.queryLevelIdRangeFromService()
+      .catch((error) => {
+        console.warn(
+          "[RerPoiCatalogItem] Failed to load the level ID range from the service",
+          error
+        );
+        return undefined;
+      })
+      .then((range) => {
+        this.serviceLevelIdRange = range;
+        this.serviceLevelIdRangeLoaded = true;
+      })
+      .finally(() => {
+        this.serviceLevelIdRangeLoadPromise = undefined;
+      });
+
+    return this.serviceLevelIdRangeLoadPromise;
+  }
+
+  private async queryLevelIdRangeFromService(): Promise<
+    { minLevelId: number; maxLevelId: number } | undefined
+  > {
+    const levelIdField = this.getRerPoiTrait("levelIdField");
+    if (!levelIdField) {
+      console.warn(
+        "[RerPoiCatalogItem] No level ID field configured, skipping the level ID range request"
+      );
+      return undefined;
+    }
+
+    const rawValues = await this.loadQueryableValuesFromService(levelIdField);
+    const levelIds = rawValues
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value));
+
+    if (levelIds.length === 0) {
+      console.warn(
+        "[RerPoiCatalogItem] The service returned no usable level IDs",
+        { levelIdField, rawValues }
+      );
+      return undefined;
+    }
+
+    const range = {
+      minLevelId: Math.min(...levelIds),
+      maxLevelId: Math.max(...levelIds)
+    };
+
+    return range;
+  }
+
+  private getEffectiveLevelIdRange(): {
+    minLevelId: number | undefined;
+    maxLevelId: number | undefined;
+  } {
+    return {
+      minLevelId:
+        this.getRerPoiTrait("minLevelId") ??
+        this.serviceLevelIdRange?.minLevelId,
+      maxLevelId:
+        this.getRerPoiTrait("maxLevelId") ??
+        this.serviceLevelIdRange?.maxLevelId
+    };
+  }
+
   private async loadQueryableValuesFromService(
     propertyName: string
   ): Promise<string[]> {
-    const esriJson = await this.loadEsriJsonFromServer({
+    const queryOptions: EsriJsonQueryOptions = {
       outFields: propertyName,
       orderByFields: propertyName,
       returnDistinctValues: true,
       returnGeometry: false
-    });
+    };
 
-    return (esriJson.features ?? [])
+    const esriJson = await this.loadEsriJsonFromServer(queryOptions);
+
+    const values = (esriJson.features ?? [])
       .map((feature) => feature.attributes?.[propertyName])
       .filter((value): value is string | number | boolean => isDefined(value))
       .map((value) => String(value));
+
+    return values;
   }
 
   private buildEnumValuesFromService(
@@ -853,6 +914,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   private async reloadDynamicViewportData() {
     if (!this.show || this.isCameraPastTiltLimit()) return;
 
+    if (!this.serviceLevelIdRangeLoaded) {
+      await this.loadServiceLevelIdRange();
+      if (!this.show || this.isCameraPastTiltLimit()) return;
+    }
+
     const nextQuery = this.getDynamicViewportQuery();
     if (!nextQuery) return;
 
@@ -865,7 +931,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     ) {
       this.activeDynamicQuery = nextQuery;
       this.syncCachedEntityVisibility(nextQuery);
-      this.commitViewportSnapshot(nextQuery);
       return;
     }
 
@@ -902,13 +967,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
           this.syncCachedEntityVisibility(nextQuery);
           this.updateEnumValues();
           this.sanitizeQueryValues();
-          this.commitViewportSnapshot(nextQuery);
         }
       } else {
         await this.applyIncrementalUpdate(nextQuery);
         this.updateEnumValues();
         this.sanitizeQueryValues();
-        this.commitViewportSnapshot(nextQuery);
       }
     } finally {
       this.dynamicReloadInProgress = false;
@@ -918,53 +981,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
         if (shouldRetry) this.queueDynamicReload(true);
       }
     }
-  }
-
-  private isMovementBelowThreshold(): boolean {
-    if (
-      this.lastCommittedCenter === undefined ||
-      this.lastCommittedExtent === undefined
-    ) {
-      return false;
-    }
-
-    const levelFilter = this.getLevelFilterForViewport();
-    const currentMaxLevel = levelFilter.maxLevelId;
-
-    if (currentMaxLevel !== this.lastCommittedLevelId) {
-      return false;
-    }
-
-    // Compute current viewport centre.
-    const screenRect = this.getScreenBoundingBox();
-    const centerLon = (screenRect.west + screenRect.east) / 2;
-    const centerLat = (screenRect.south + screenRect.north) / 2;
-
-    const dLon = Math.abs(centerLon - this.lastCommittedCenter.lon);
-    const dLat = Math.abs(centerLat - this.lastCommittedCenter.lat);
-
-    const movementThresholdRatio = this.getRerPoiTrait(
-      "movementThresholdRatio"
-    );
-    const thresholdLon =
-      this.lastCommittedExtent.width * movementThresholdRatio;
-    const thresholdLat =
-      this.lastCommittedExtent.height * movementThresholdRatio;
-
-    return dLon < thresholdLon && dLat < thresholdLat;
-  }
-
-  private commitViewportSnapshot(query: DynamicViewportQuery) {
-    const rect = query.queryRectangle;
-    this.lastCommittedLevelId = query.requestOptions.maxLevelId;
-    this.lastCommittedCenter = {
-      lon: (rect.west + rect.east) / 2,
-      lat: (rect.south + rect.north) / 2
-    };
-    this.lastCommittedExtent = {
-      width: Math.abs(rect.east - rect.west),
-      height: Math.abs(rect.north - rect.south)
-    };
   }
 
   private findGeoJsonDataSource(): GeoJsonDataSource | undefined {
@@ -1000,9 +1016,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       labelFontSize: this.getRerPoiTrait("labelFontSize"),
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
-      poiDomainStyleGroups: this.getRerPoiTrait("poiDomainStyleGroups"),
       nameField: this.getRerPoiTrait("nameField"),
-      domainIdField: this.getRerPoiTrait("domainIdField")
+      domainIdField: this.getRerPoiTrait("domainIdField"),
+      perPropertyStyles: this.perPropertyStyles
     };
   }
 
@@ -1272,8 +1288,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     entity.show = isVisible;
     const show = new ConstantProperty(isVisible);
     if (entity.billboard) entity.billboard.show = show;
-    //if (entity.point) entity.point.show = show;
-    //if (entity.label) entity.label.show = show;
+    if (entity.point) entity.point.show = show;
+    if (entity.label) entity.label.show = show;
   }
 
   private isEntityInLevelRange(
@@ -1307,7 +1323,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     const raw = entity.properties?.[levelIdField]?.getValue(now);
     if (!isDefined(raw)) return false;
 
-    return Number(raw) === 7;
+    return Number(raw) === this.getEffectiveLevelIdRange().minLevelId;
   }
 
   private hasActiveFilters(): boolean {
@@ -1340,11 +1356,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   }
 
   filterData() {
-    if (this.activeDynamicQuery) {
-      this.syncCachedEntityVisibility(this.activeDynamicQuery);
-    } else if (this.getDynamicViewportQuery()) {
-      this.syncCachedEntityVisibility(this.getDynamicViewportQuery());
-    }
+    this.syncCachedEntityVisibility(
+      this.activeDynamicQuery ?? this.getDynamicViewportQuery()
+    );
   }
 
   private matchesQueryableFilters(entity: any, now: JulianDate): boolean {
@@ -1790,6 +1804,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
     if (rectangleArea(queryRectangle) <= 0) return undefined;
 
     const levelFilter = this.getLevelFilterForViewport();
+
+    if (levelFilter.maxLevelId === undefined) return undefined;
+
     return {
       filterKey: levelFilter.filterKey,
       queryRectangle,
@@ -1803,29 +1820,31 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
   }
 
   private getLevelFilterForViewport(): {
-    minLevelId: number;
-    maxLevelId: number;
+    minLevelId: number | undefined;
+    maxLevelId: number | undefined;
     filterKey: string;
   } {
-    const minLevelId = this.getRerPoiTrait("minLevelId");
+    const { minLevelId, maxLevelId: highestLevelId } =
+      this.getEffectiveLevelIdRange();
     const levelIdField = this.getRerPoiTrait("levelIdField");
 
-    let maxLevelId: number;
+    let viewportLevelId: number | undefined;
 
     if (
       this.terria.mainViewer.viewerMode === ViewerMode.Cesium ||
       this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
     ) {
       this.currentViewportLevelId = this.getCesiumWebMercatorLevel();
-      maxLevelId =
-        this.currentViewportLevelId === undefined
-          ? minLevelId - 1
-          : this.currentViewportLevelId;
+      viewportLevelId = this.currentViewportLevelId;
     } else {
       this.currentViewportLevelId = undefined;
-      const viewerScale = this.getCurrentViewerScale();
-      maxLevelId = viewerScale === undefined ? minLevelId - 1 : viewerScale;
+      viewportLevelId = this.getCurrentViewerScale();
     }
+
+    const maxLevelId =
+      viewportLevelId !== undefined && highestLevelId !== undefined
+        ? Math.min(viewportLevelId, highestLevelId)
+        : viewportLevelId;
 
     return {
       minLevelId,
@@ -1876,12 +1895,11 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
+    maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
-    poiDomainStyleGroups: getDefaultRerPoiTrait("poiDomainStyleGroups"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
-    movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
     showLabels: getDefaultRerPoiTrait("showLabels"),
     labelVisibilityThreshold: getDefaultRerPoiTrait("labelVisibilityThreshold"),
