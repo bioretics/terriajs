@@ -731,9 +731,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     if (this.serviceLevelIdRangeLoaded) return;
 
     if (this.serviceLevelIdRangeLoadPromise) {
-      console.log(
-        "[RerPoiCatalogItem] Level ID range request executed, waiting for it"
-      );
       return this.serviceLevelIdRangeLoadPromise;
     }
 
@@ -750,14 +747,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       .then((range) => {
         this.serviceLevelIdRange = range;
         this.serviceLevelIdRangeLoaded = true;
-        console.log("[RerPoiCatalogItem] Level ID range resolved", {
-          source: range ? "service" : "unavailable",
-          serviceRange: this.serviceLevelIdRange,
-          configuredMinLevelId: this.getRerPoiTrait("minLevelId"),
-          configuredMaxLevelId: this.getRerPoiTrait("maxLevelId"),
-          effectiveRange: this.getEffectiveLevelIdRange(),
-          elapsedMs: Date.now() - startedAt
-        });
       })
       .finally(() => {
         this.serviceLevelIdRangeLoadPromise = undefined;
@@ -777,11 +766,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       return undefined;
     }
 
-    console.log(
-      "[RerPoiCatalogItem] Requesting the level ID range from the service",
-      { levelIdField }
-    );
-
     const rawValues = await this.loadQueryableValuesFromService(levelIdField);
     const levelIds = rawValues
       .map((value) => Number(value))
@@ -799,11 +783,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       minLevelId: Math.min(...levelIds),
       maxLevelId: Math.max(...levelIds)
     };
-
-    console.log(
-      "[RerPoiCatalogItem] Obtained the level ID range from the service",
-      { levelIdField, range, levelIds }
-    );
 
     return range;
   }
@@ -832,23 +811,12 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       returnGeometry: false
     };
 
-    console.log("[RerPoiCatalogItem] Requesting distinct values", {
-      propertyName,
-      url: runInAction(() => this.buildEsriJsonUrl(queryOptions))
-    });
-
     const esriJson = await this.loadEsriJsonFromServer(queryOptions);
 
     const values = (esriJson.features ?? [])
       .map((feature) => feature.attributes?.[propertyName])
       .filter((value): value is string | number | boolean => isDefined(value))
       .map((value) => String(value));
-
-    console.log("[RerPoiCatalogItem] Received distinct values", {
-      propertyName,
-      count: values.length,
-      values
-    });
 
     return values;
   }
@@ -1406,7 +1374,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const raw = entity.properties?.[levelIdField]?.getValue(now);
     if (!isDefined(raw)) return false;
 
-    // POIs at the coarsest level stay visible at every zoom level.
     return Number(raw) === this.getEffectiveLevelIdRange().minLevelId;
   }
 
