@@ -225,13 +225,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     super(...args);
     makeObservable(this);
     this.setTrait(CommonStrata.definition, "forceCesiumPrimitives", true);
-    this.setTrait(CommonStrata.definition, "clustering", {
-      enabled: true,
-      pixelRange: 35,
-      minimumClusterSize: 5,
-      pinSize: 60,
-      pinBackgroundColor: "gray"
-    });
 
     onBecomeObserved(this, "mapItems", () =>
       this.startDynamicViewportRequests()
@@ -1011,23 +1004,40 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     };
   }
 
+  private getClusteringOptions() {
+    return runInAction(() => ({
+      enabled: this.clustering.enabled,
+      pixelRange: this.clustering.pixelRange,
+      minimumClusterSize: this.clustering.minimumClusterSize,
+      pinSize: this.clustering.pinSize,
+      pinBackgroundColor: this.clustering.pinBackgroundColor
+    }));
+  }
+
   private configureDataSourceClustering(dataSource: GeoJsonDataSource): void {
-    const clusteringEnabled = this.clustering.enabled;
-    if (!clusteringEnabled || dataSource.clustering.enabled) {
+    const clusteringOptions = this.getClusteringOptions();
+
+    (dataSource as any)[LEAFLET_CLUSTERING_CONFIG_KEY] = clusteringOptions;
+
+    if (!clusteringOptions.enabled) {
+      dataSource.clustering.enabled = false;
+      return;
+    }
+    if (dataSource.clustering.enabled) {
       return;
     }
 
     const pinBuilder = new PinBuilder();
     const pinColor = Color.fromCssColorString(
-      this.clustering.pinBackgroundColor
+      clusteringOptions.pinBackgroundColor
     );
-    const pinSize = this.clustering.pinSize;
+    const pinSize = clusteringOptions.pinSize;
     const pinCache = new Map<number, string>();
 
     dataSource.clustering.enabled = true;
-    dataSource.clustering.pixelRange = this.clustering.pixelRange;
+    dataSource.clustering.pixelRange = clusteringOptions.pixelRange;
     dataSource.clustering.minimumClusterSize =
-      this.clustering.minimumClusterSize;
+      clusteringOptions.minimumClusterSize;
     dataSource.clustering.clusterEvent.addEventListener(function (
       entities,
       cluster
@@ -1047,14 +1057,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       }
       cluster.billboard.image = image;
     });
-
-    (dataSource as any)[LEAFLET_CLUSTERING_CONFIG_KEY] = {
-      enabled: clusteringEnabled,
-      pixelRange: this.clustering.pixelRange,
-      minimumClusterSize: this.clustering.minimumClusterSize,
-      pinSize: this.clustering.pinSize,
-      pinBackgroundColor: this.clustering.pinBackgroundColor
-    };
   }
 
   private tagEntitiesWithCatalogItem(dataSource: GeoJsonDataSource): void {
@@ -1132,11 +1134,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const dataSource = await this.loadGeoJsonDataSource(geoJson, {
       showLabels
     });
-    if (showLabels) {
-      dataSource.clustering.enabled = false;
-    } else {
-      this.configureDataSourceClustering(dataSource);
-    }
+    this.configureDataSourceClustering(dataSource);
     this.tagEntitiesWithCatalogItem(dataSource);
     return {
       dataSource,
