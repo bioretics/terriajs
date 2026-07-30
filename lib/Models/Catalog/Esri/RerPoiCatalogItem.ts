@@ -716,8 +716,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       return this.serviceLevelIdRangeLoadPromise;
     }
 
-    const startedAt = Date.now();
-
     this.serviceLevelIdRangeLoadPromise = this.queryLevelIdRangeFromService()
       .catch((error) => {
         console.warn(
