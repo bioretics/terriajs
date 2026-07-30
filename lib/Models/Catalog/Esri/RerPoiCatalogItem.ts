@@ -87,7 +87,6 @@ interface RerPoiTraitSnapshot {
   nameField: string;
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
-  movementThresholdRatio: number;
   showDebugBBox: boolean;
   showLabels: boolean;
   labelVisibilityThreshold: number;
@@ -132,10 +131,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private currentViewportLevelId: number | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
-  private lastCommittedLevelId: number | undefined;
-  private lastCommittedCenter: { lon: number; lat: number } | undefined;
-  private lastCommittedExtent: { width: number; height: number } | undefined;
-
   @observable private cameraTiltLimitExceeded = false;
   @observable private activeLanguage =
     i18next.resolvedLanguage ?? i18next.language;
@@ -166,10 +161,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       this.cameraTiltLimitExceeded = isPastLimit;
     });
     if (isPastLimit) return;
-
-    if (this.isMovementBelowThreshold()) {
-      return;
-    }
 
     this.queueDynamicReload();
   };
@@ -410,9 +401,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       queryBboxPaddingRatio: this.getRerPoiTraitForSnapshot(
         "queryBboxPaddingRatio"
       ),
-      movementThresholdRatio: this.getRerPoiTraitForSnapshot(
-        "movementThresholdRatio"
-      ),
       showDebugBBox: this.getRerPoiTraitForSnapshot("showDebugBBox"),
       showLabels: this.getRerPoiTraitForSnapshot("showLabels"),
       labelVisibilityThreshold: this.getRerPoiTraitForSnapshot(
@@ -560,9 +548,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
-    this.lastCommittedLevelId = undefined;
-    this.lastCommittedCenter = undefined;
-    this.lastCommittedExtent = undefined;
     this.clearTransientShortReport();
   }
 
@@ -599,9 +584,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
-    this.lastCommittedLevelId = undefined;
-    this.lastCommittedCenter = undefined;
-    this.lastCommittedExtent = undefined;
     this.clearTransientShortReport();
   }
 
@@ -940,7 +922,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     ) {
       this.activeDynamicQuery = nextQuery;
       this.syncCachedEntityVisibility(nextQuery);
-      this.commitViewportSnapshot(nextQuery);
       return;
     }
 
@@ -977,13 +958,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
           this.syncCachedEntityVisibility(nextQuery);
           this.updateEnumValues();
           this.sanitizeQueryValues();
-          this.commitViewportSnapshot(nextQuery);
         }
       } else {
         await this.applyIncrementalUpdate(nextQuery);
         this.updateEnumValues();
         this.sanitizeQueryValues();
-        this.commitViewportSnapshot(nextQuery);
       }
     } finally {
       this.dynamicReloadInProgress = false;
@@ -993,53 +972,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         if (shouldRetry) this.queueDynamicReload(true);
       }
     }
-  }
-
-  private isMovementBelowThreshold(): boolean {
-    if (
-      this.lastCommittedCenter === undefined ||
-      this.lastCommittedExtent === undefined
-    ) {
-      return false;
-    }
-
-    const levelFilter = this.getLevelFilterForViewport();
-    const currentMaxLevel = levelFilter.maxLevelId;
-
-    if (currentMaxLevel !== this.lastCommittedLevelId) {
-      return false;
-    }
-
-    // Compute current viewport centre.
-    const screenRect = this.getScreenBoundingBox();
-    const centerLon = (screenRect.west + screenRect.east) / 2;
-    const centerLat = (screenRect.south + screenRect.north) / 2;
-
-    const dLon = Math.abs(centerLon - this.lastCommittedCenter.lon);
-    const dLat = Math.abs(centerLat - this.lastCommittedCenter.lat);
-
-    const movementThresholdRatio = this.getRerPoiTrait(
-      "movementThresholdRatio"
-    );
-    const thresholdLon =
-      this.lastCommittedExtent.width * movementThresholdRatio;
-    const thresholdLat =
-      this.lastCommittedExtent.height * movementThresholdRatio;
-
-    return dLon < thresholdLon && dLat < thresholdLat;
-  }
-
-  private commitViewportSnapshot(query: DynamicViewportQuery) {
-    const rect = query.queryRectangle;
-    this.lastCommittedLevelId = query.requestOptions.maxLevelId;
-    this.lastCommittedCenter = {
-      lon: (rect.west + rect.east) / 2,
-      lat: (rect.south + rect.north) / 2
-    };
-    this.lastCommittedExtent = {
-      width: Math.abs(rect.east - rect.west),
-      height: Math.abs(rect.north - rect.south)
-    };
   }
 
   private findGeoJsonDataSource(): GeoJsonDataSource | undefined {
@@ -1339,8 +1271,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     entity.show = isVisible;
     const show = new ConstantProperty(isVisible);
     if (entity.billboard) entity.billboard.show = show;
-    //if (entity.point) entity.point.show = show;
-    //if (entity.label) entity.label.show = show;
+    if (entity.point) entity.point.show = show;
+    if (entity.label) entity.label.show = show;
   }
 
   private isEntityInLevelRange(
@@ -1407,11 +1339,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   filterData() {
-    if (this.activeDynamicQuery) {
-      this.syncCachedEntityVisibility(this.activeDynamicQuery);
-    } else if (this.getDynamicViewportQuery()) {
-      this.syncCachedEntityVisibility(this.getDynamicViewportQuery());
-    }
+    this.syncCachedEntityVisibility(
+      this.activeDynamicQuery ?? this.getDynamicViewportQuery()
+    );
   }
 
   private matchesQueryableFilters(entity: any, now: JulianDate): boolean {
@@ -1951,7 +1881,6 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     nameField: getDefaultRerPoiTrait("nameField"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
-    movementThresholdRatio: getDefaultRerPoiTrait("movementThresholdRatio"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
     showLabels: getDefaultRerPoiTrait("showLabels"),
     labelVisibilityThreshold: getDefaultRerPoiTrait("labelVisibilityThreshold"),
