@@ -84,6 +84,7 @@ interface RerPoiTraitSnapshot {
   maxLevelId: number | undefined;
   minLevelId: number | undefined;
   nameField: string;
+  perPropertyStyles: RerPoiCatalogItemTraits["perPropertyStyles"];
   queryableProperties: RerPoiCatalogItemTraits["queryableProperties"];
   queryBboxPaddingRatio: number;
   showDebugBBox: boolean;
@@ -386,6 +387,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
       nameField: this.getRerPoiTraitForSnapshot("nameField"),
+      perPropertyStyles: this.getRerPoiTraitForSnapshot("perPropertyStyles"),
       queryableProperties: this.getRerPoiTraitForSnapshot(
         "queryableProperties"
       ),
@@ -416,8 +418,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private keepImperativeComputedViewsAlive() {
     [
       "disableZoomTo",
+      "featuresPerRequest",
+      "maxFeatures",
       "queryProperties",
       "queryableProperties",
+      "supportsPagination",
       "where",
       "zoomOnAddToWorkbench"
     ].forEach((property) => {
@@ -997,7 +1002,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
       nameField: this.getRerPoiTrait("nameField"),
-      perPropertyStyles: this.perPropertyStyles
+      perPropertyStyles: this.getRerPoiTrait("perPropertyStyles")
     };
   }
 
@@ -1871,6 +1876,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
     nameField: getDefaultRerPoiTrait("nameField"),
+    perPropertyStyles: getDefaultRerPoiTrait("perPropertyStyles"),
     queryableProperties: getDefaultRerPoiTrait("queryableProperties"),
     queryBboxPaddingRatio: getDefaultRerPoiTrait("queryBboxPaddingRatio"),
     showDebugBBox: getDefaultRerPoiTrait("showDebugBBox"),
