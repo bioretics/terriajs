@@ -1,65 +1,7 @@
-import objectArrayTrait from "../Decorators/objectArrayTrait";
-import primitiveArrayTrait from "../Decorators/primitiveArrayTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
-import ModelTraits from "../ModelTraits";
 import { traitClass } from "../Trait";
 import mixTraits from "../mixTraits";
 import ArcGisFeatureServerCatalogItemTraits from "./ArcGisFeatureServerCatalogItemTraits";
-
-@traitClass({
-  description: "POI domain style group."
-})
-export class PoiDomainStyleGroup extends ModelTraits {
-  @primitiveTrait({
-    type: "string",
-    name: "ID",
-    description: "Unique identifier for this style group."
-  })
-  id: string = "";
-
-  @primitiveTrait({
-    type: "string",
-    name: "Symbol",
-    description: "The Maki icon symbol to use for this group of POI domains."
-  })
-  symbol: string = "marker";
-
-  @primitiveTrait({
-    type: "string",
-    name: "Color",
-    description:
-      "The marker color to use for this group of POI domains. Accepts CSS color strings."
-  })
-  color?: string;
-
-  @primitiveArrayTrait({
-    type: "number",
-    name: "Domain IDs",
-    description: "The domain IDs that share this POI marker style."
-  })
-  domainIds: number[] = [];
-}
-
-@traitClass({
-  description:
-    "Level ID to camera height mapping for progressive POI filtering."
-})
-export class LevelIdCameraHeightMapping extends ModelTraits {
-  @primitiveTrait({
-    type: "number",
-    name: "Level ID",
-    description: "The zoom level ID from the RER3D POI service."
-  })
-  levelId: number = 0;
-
-  @primitiveTrait({
-    type: "number",
-    name: "Camera height threshold (meters)",
-    description:
-      "The camera height threshold in meters at which this zoom level should be displayed. Converted from cartographic scale."
-  })
-  cameraHeightThreshold: number = 0;
-}
 
 @traitClass({
   description: `Creates a single item in the catalog from RER3D POI (Regione Emilia-Romagna 3D Points of Interest) service.
@@ -137,14 +79,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
 
   @primitiveTrait({
     type: "string",
-    name: "Scale field",
-    description:
-      "The name of the feature attribute field that defines the visibility scale/distance for each POI."
-  })
-  scaleField: string = "SCALA";
-
-  @primitiveTrait({
-    type: "string",
     name: "Level ID field",
     description:
       "The name of the feature attribute field that contains the zoom level ID."
@@ -152,28 +86,20 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
   levelIdField: string = "LEVEL_ID";
 
   @primitiveTrait({
-    type: "string",
-    name: "Domain ID field",
-    description:
-      "The name of the feature attribute field that contains the domain/category ID for styling."
-  })
-  domainIdField: string = "ID_DOMINIO";
-
-  @primitiveTrait({
     type: "number",
     name: "Minimum level ID",
     description:
-      "The minimum zoom level ID to request from the service. Lower values represent farther zoom levels."
+      "The minimum zoom level ID to request from the service. Lower values represent farther zoom levels. If not specified, it is read from the service on load, by querying the distinct values of the level ID field."
   })
-  minLevelId: number = 7;
+  minLevelId?: number;
 
   @primitiveTrait({
     type: "number",
     name: "Maximum level ID",
     description:
-      "The maximum zoom level ID to request from the service. Higher values represent closer zoom levels."
+      "The maximum zoom level ID to request from the service. Higher values represent closer zoom levels. If not specified, it is read from the service on load, by querying the distinct values of the level ID field."
   })
-  maxLevelId: number = 19;
+  maxLevelId?: number;
 
   @primitiveTrait({
     type: "number",
@@ -182,14 +108,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
       "The padding ratio to apply to the viewport rectangle when querying features. A value of 0.2 means 20% padding on each side."
   })
   queryBboxPaddingRatio: number = 0.2;
-
-  @primitiveTrait({
-    type: "number",
-    name: "Movement threshold ratio",
-    description:
-      "Fraction of the last-committed viewport extent that the center must move before a dynamic reload is triggered. A value of 0.1 means 10%. Reloads are also triggered when the zoom level ID changes."
-  })
-  movementThresholdRatio: number = 0.1;
 
   @primitiveTrait({
     type: "number",
@@ -211,7 +129,7 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     type: "string",
     name: "Default marker color",
     description:
-      "The default color for POI markers when no domain-specific color is defined. Accepts CSS color strings."
+      "The color used for POI markers that no `perPropertyStyles` rule (or `marker-color` feature property) applies to. Accepts CSS color strings."
   })
   defaultMarkerColor: string = "royalblue";
 
@@ -236,113 +154,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
       "The color of the stroke around icon symbols. Accepts CSS color strings."
   })
   iconStrokeColor: string = "#000000";
-
-  @objectArrayTrait({
-    type: LevelIdCameraHeightMapping,
-    idProperty: "levelId",
-    name: "Level ID camera height mappings",
-    description:
-      "Maps zoom level IDs to camera height thresholds in meters. Used for progressive POI filtering based on camera altitude. Thresholds are derived from cartographic scales and represent the camera altitude at which each level should be displayed."
-  })
-  levelIdMappings: LevelIdCameraHeightMapping[] = [
-    { levelId: 7, cameraHeightThreshold: 46223.24 },
-    { levelId: 8, cameraHeightThreshold: 23111.62 },
-    { levelId: 9, cameraHeightThreshold: 11555.81 },
-    { levelId: 10, cameraHeightThreshold: 5777.9 },
-    { levelId: 11, cameraHeightThreshold: 2888.95 },
-    { levelId: 12, cameraHeightThreshold: 1444.47 },
-    { levelId: 13, cameraHeightThreshold: 722.23 },
-    { levelId: 14, cameraHeightThreshold: 361.11 },
-    { levelId: 15, cameraHeightThreshold: 180.55 },
-    { levelId: 16, cameraHeightThreshold: 90.27 },
-    { levelId: 17, cameraHeightThreshold: 45.13 },
-    { levelId: 18, cameraHeightThreshold: 22.56 },
-    { levelId: 19, cameraHeightThreshold: 11.28 }
-  ];
-
-  @objectArrayTrait({
-    type: PoiDomainStyleGroup,
-    idProperty: "id",
-    name: "POI domain style groups",
-    description:
-      "Defines the mapping between domain IDs and their associated icon symbols and colors."
-  })
-  poiDomainStyleGroups: PoiDomainStyleGroup[] = [
-    {
-      id: "group-1",
-      symbol: "village",
-      domainIds: [1, 2]
-    },
-    {
-      id: "group-2",
-      symbol: "industrial",
-      domainIds: [3]
-    },
-    {
-      id: "group-3",
-      symbol: "village",
-      color: "#ff0",
-      domainIds: [4]
-    },
-    {
-      id: "group-4",
-      symbol: "village",
-      color: "#333",
-      domainIds: [5]
-    },
-    {
-      id: "group-5",
-      symbol: "village",
-      color: "#fff",
-      domainIds: [6]
-    },
-    {
-      id: "group-6",
-      symbol: "square",
-      domainIds: [7]
-    },
-    {
-      id: "group-7",
-      symbol: "cross",
-      domainIds: [8]
-    },
-    {
-      id: "group-8",
-      symbol: "mountain",
-      color: "#ff00ff",
-      domainIds: [9]
-    },
-    {
-      id: "group-9",
-      symbol: "triangle",
-      domainIds: [10]
-    },
-    {
-      id: "group-10",
-      symbol: "triangle-stroked",
-      domainIds: [11]
-    },
-    {
-      id: "group-11",
-      symbol: "marker",
-      domainIds: [12, 15, 19, 20, 21, 22, 24]
-    },
-    {
-      id: "group-12",
-      symbol: "water",
-      domainIds: [13, 14, 16, 17, 18, 23]
-    },
-    {
-      id: "group-13",
-      symbol: "town",
-      domainIds: [601]
-    },
-    {
-      id: "group-14",
-      symbol: "city",
-      domainIds: [602, 603]
-    }
-  ];
 }
 
 export const defaultRerPoiCatalogItemTraits = new RerPoiCatalogItemTraits();

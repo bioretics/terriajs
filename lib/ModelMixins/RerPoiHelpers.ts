@@ -1,6 +1,5 @@
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
-import DistanceDisplayCondition from "terriajs-cesium/Source/Core/DistanceDisplayCondition";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import BillboardGraphics from "terriajs-cesium/Source/DataSources/BillboardGraphics";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
@@ -9,9 +8,8 @@ import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import { getMakiIcon } from "../Map/Icons/Maki/MakiIcons";
-import {
-  defaultRerPoiCatalogItemTraits,
-  PoiDomainStyleGroup
+import RerPoiCatalogItemTraits, {
+  defaultRerPoiCatalogItemTraits
 } from "../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import isDefined from "../Core/isDefined";
 
@@ -42,16 +40,18 @@ export interface RerPoiStylingOptions {
   labelFontSize?: number;
   labelOutlineWidth?: number;
   labelOutlineColor?: string;
-  poiDomainStyleGroups?: PoiDomainStyleGroup[];
-  scaleField?: string;
-  domainIdField?: string;
   nameField?: string;
+  perPropertyStyles?: ReadonlyArray<
+    RerPoiCatalogItemTraits["perPropertyStyles"][number]
+  >;
 }
+
+const MARKER_SYMBOL_PROPERTY = "marker-symbol";
+const MARKER_COLOR_PROPERTY = "marker-color";
 
 const BILLBOARD_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
 const DEPTH_TEST_DISTANCE = new ConstantProperty(Number.POSITIVE_INFINITY);
 
-type PoiDomainStyle = { symbol: string; color?: string };
 type LabelStyleOptions = {
   labelTextColor: string;
   labelFontSize: number;
@@ -68,14 +68,14 @@ const COMPOSITE_DATAURL_CACHE = new Map<string, string | Promise<string>>();
 const pinBuilder = new PinBuilder();
 
 function getPinCanvas(
-  iconId: string,
+  iconId: string | undefined,
   color: string,
   markerSize: number,
   iconStrokeWidth: number,
   iconStrokeColor: string
-): HTMLCanvasElement | Promise<HTMLCanvasElement> | undefined {
+): HTMLCanvasElement | Promise<HTMLCanvasElement> {
   const key = [
-    iconId,
+    iconId ?? "",
     color,
     markerSize,
     iconStrokeWidth,
@@ -85,17 +85,18 @@ function getPinCanvas(
   const cached = PIN_CANVAS_CACHE.get(key);
   if (cached) return cached;
 
-  const svgUrl = getMakiIcon(
-    iconId,
-    "#ffffff",
-    iconStrokeWidth,
-    iconStrokeColor,
-    24,
-    24
-  );
-  if (!svgUrl) return undefined;
-
   const pinColor = Color.fromCssColorString(color);
+
+  const svgUrl = isDefined(iconId)
+    ? getMakiIcon(iconId, "#ffffff", iconStrokeWidth, iconStrokeColor, 24, 24)
+    : undefined;
+
+  if (!svgUrl) {
+    const emptyPin = pinBuilder.fromColor(pinColor, markerSize);
+    PIN_CANVAS_CACHE.set(key, emptyPin);
+    return emptyPin;
+  }
+
   const image = pinBuilder.fromUrl(svgUrl, pinColor, markerSize) as
     | HTMLCanvasElement
     | Promise<HTMLCanvasElement>;
@@ -214,53 +215,31 @@ function buildCompositeMarkerCanvas(
   return canvas;
 }
 
-function getVisibilityRange(
-  scaleValue: unknown
-): DistanceDisplayCondition | undefined {
-  const maxDistance = Number(scaleValue);
-  return Number.isFinite(maxDistance)
-    ? new DistanceDisplayCondition(0, maxDistance)
-    : undefined;
+function readStyleString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-function normalizePoiDomainStyleGroup(
-  group: Partial<PoiDomainStyleGroup>
-): PoiDomainStyleGroup {
-  const normalized = new PoiDomainStyleGroup();
-  normalized.id = typeof group.id === "string" ? group.id : "";
-  normalized.symbol =
-    typeof group.symbol === "string" && group.symbol.trim()
-      ? group.symbol.trim()
-      : "marker";
-  normalized.color =
-    typeof group.color === "string" && group.color.trim()
-      ? group.color.trim()
-      : undefined;
-  normalized.domainIds = Array.isArray(group.domainIds)
-    ? group.domainIds.map((x) => Number(x)).filter(Number.isFinite)
-    : [];
-  return normalized;
-}
-
-function getDefaultPoiDomainStyleGroups(): PoiDomainStyleGroup[] {
-  return (defaultRerPoiCatalogItemTraits.poiDomainStyleGroups ?? []).map(
-    normalizePoiDomainStyleGroup
-  );
-}
-
-function buildPoiDomainStyleMap(
-  groups: PoiDomainStyleGroup[]
-): Record<number, PoiDomainStyle> {
-  return groups.reduce<Record<number, PoiDomainStyle>>((acc, group) => {
-    for (const domainId of group.domainIds ?? []) {
-      acc[domainId] = { symbol: group.symbol, color: group.color };
-    }
-    return acc;
-  }, {});
-}
-
-function getRerPoiIconId(symbol: unknown): string {
-  return typeof symbol === "string" && symbol.trim() ? symbol.trim() : "marker";
+function getPerPropertyStyleValue(
+  properties: any,
+  perPropertyStyles:
+    | ReadonlyArray<RerPoiCatalogItemTraits["perPropertyStyles"][number]>
+    | undefined,
+  styleProperty: string,
+  now: JulianDate
+): unknown {
+  return perPropertyStyles?.reduce((value, style) => {
+    const matches = Object.entries(style.properties ?? {}).every(
+      ([key, expected]) => {
+        const actual = properties?.[key]?.getValue(now);
+        return typeof actual === "string" &&
+          typeof expected === "string" &&
+          !style.caseSensitive
+          ? actual.toLowerCase() === expected.toLowerCase()
+          : actual === expected;
+      }
+    );
+    return matches ? (style.style as any)?.[styleProperty] ?? value : value;
+  }, undefined);
 }
 
 export function applyRerPoiEntityStyles(
@@ -301,20 +280,9 @@ export function applyRerPoiEntityStyles(
       defaultRerPoiCatalogItemTraits.labelOutlineColor
   };
 
-  const poiDomainStyleGroups = (
-    options?.poiDomainStyleGroups?.length
-      ? options.poiDomainStyleGroups
-      : getDefaultPoiDomainStyleGroups()
-  ).map(normalizePoiDomainStyleGroup);
-
-  const scaleField =
-    options?.scaleField ?? defaultRerPoiCatalogItemTraits.scaleField;
   const nameField =
     options?.nameField ?? defaultRerPoiCatalogItemTraits.nameField;
-  const domainIdField =
-    options?.domainIdField ?? defaultRerPoiCatalogItemTraits.domainIdField;
 
-  const poiDomainIconMap = buildPoiDomainStyleMap(poiDomainStyleGroups);
   const now = JulianDate.now();
 
   dataSource.entities.suspendEvents();
@@ -323,23 +291,34 @@ export function applyRerPoiEntityStyles(
       const entity = entitiesToStyle[i];
       const properties = entity.properties;
 
-      const visibilityRange = getVisibilityRange(
-        properties?.[scaleField]?.getValue(now)
-      );
-      const visibilityProp = visibilityRange
-        ? new ConstantProperty(visibilityRange)
-        : undefined;
-
       if (!entity.position) continue;
 
-      const rawDomainValue = properties?.[domainIdField]?.getValue(now);
-      const domainId = Number(rawDomainValue);
-      const mapped = Number.isFinite(domainId)
-        ? poiDomainIconMap[domainId]
-        : undefined;
+      const featureSymbol = readStyleString(
+        properties?.[MARKER_SYMBOL_PROPERTY]?.getValue(now)
+      );
+      const featureColor = readStyleString(
+        properties?.[MARKER_COLOR_PROPERTY]?.getValue(now)
+      );
 
-      const symbol = getRerPoiIconId(mapped?.symbol);
-      const color = mapped?.color ?? defaultMarkerColor;
+      const perPropertySymbol = readStyleString(
+        getPerPropertyStyleValue(
+          properties,
+          options?.perPropertyStyles,
+          MARKER_SYMBOL_PROPERTY,
+          now
+        )
+      );
+      const perPropertyColor = readStyleString(
+        getPerPropertyStyleValue(
+          properties,
+          options?.perPropertyStyles,
+          MARKER_COLOR_PROPERTY,
+          now
+        )
+      );
+
+      const symbol = perPropertySymbol ?? featureSymbol;
+      const color = perPropertyColor ?? featureColor ?? defaultMarkerColor;
 
       const rawName = properties?.[nameField]?.getValue(now);
       const name =
@@ -366,7 +345,6 @@ export function applyRerPoiEntityStyles(
           verticalOrigin: BILLBOARD_VERTICAL_ORIGIN,
           heightReference: heightReferenceProp,
           eyeOffset: eyeOffsetProp,
-          distanceDisplayCondition: visibilityProp,
           disableDepthTestDistance: DEPTH_TEST_DISTANCE
         });
 
@@ -391,7 +369,6 @@ export function applyRerPoiEntityStyles(
         iconStrokeWidth,
         iconStrokeColor
       );
-      if (!pinCanvasResult) continue;
 
       const generateFinalDataUrl = (pinCanvas: HTMLCanvasElement): string => {
         const finalCanvas =
