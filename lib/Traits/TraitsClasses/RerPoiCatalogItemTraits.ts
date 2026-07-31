@@ -86,14 +86,6 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
   levelIdField: string = "LEVEL_ID";
 
   @primitiveTrait({
-    type: "string",
-    name: "Domain ID field",
-    description:
-      "The name of the feature attribute field that contains the domain/category ID for styling."
-  })
-  domainIdField: string = "ID_DOMINIO";
-
-  @primitiveTrait({
     type: "number",
     name: "Minimum level ID",
     description:
@@ -137,7 +129,7 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     type: "string",
     name: "Default marker color",
     description:
-      "The default color for POI markers when no domain-specific color is defined. Accepts CSS color strings."
+      "The color used for POI markers that no `perPropertyStyles` rule (or `marker-color` feature property) applies to. Accepts CSS color strings."
   })
   defaultMarkerColor: string = "royalblue";
 

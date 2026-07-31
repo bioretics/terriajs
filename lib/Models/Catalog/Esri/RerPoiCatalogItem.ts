@@ -72,7 +72,6 @@ interface EsriJsonFeatureServerResponse {
 interface RerPoiTraitSnapshot {
   cameraTiltLimitDegrees: number;
   defaultMarkerColor: string;
-  domainIdField: string;
   dynamicRequestDebounceMs: number;
   iconStrokeColor: string;
   iconStrokeWidth: number;
@@ -373,7 +372,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         "cameraTiltLimitDegrees"
       ),
       defaultMarkerColor: this.getRerPoiTraitForSnapshot("defaultMarkerColor"),
-      domainIdField: this.getRerPoiTraitForSnapshot("domainIdField"),
       dynamicRequestDebounceMs: this.getRerPoiTraitForSnapshot(
         "dynamicRequestDebounceMs"
       ),
@@ -999,7 +997,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTrait("labelOutlineWidth"),
       labelOutlineColor: this.getRerPoiTrait("labelOutlineColor"),
       nameField: this.getRerPoiTrait("nameField"),
-      domainIdField: this.getRerPoiTrait("domainIdField"),
       perPropertyStyles: this.perPropertyStyles
     };
   }
@@ -1862,7 +1859,6 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
   return {
     cameraTiltLimitDegrees: getDefaultRerPoiTrait("cameraTiltLimitDegrees"),
     defaultMarkerColor: getDefaultRerPoiTrait("defaultMarkerColor"),
-    domainIdField: getDefaultRerPoiTrait("domainIdField"),
     dynamicRequestDebounceMs: getDefaultRerPoiTrait("dynamicRequestDebounceMs"),
     iconStrokeColor: getDefaultRerPoiTrait("iconStrokeColor"),
     iconStrokeWidth: getDefaultRerPoiTrait("iconStrokeWidth"),
