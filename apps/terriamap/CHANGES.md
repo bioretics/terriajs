@@ -190,6 +190,11 @@
 - TerriaMap no longer supports ejs templating for data sources. We suggest to use terria reference to manage a catalog in multiple files.
 
 #### next release (0.4.7)
+#### next release
+
+- Upgrade terriajs-server to 5.0.0-alpha.4
+
+#### 0.4.7
 
 - Upgrade terriajs-server to version 5 alpha
   - Requires node version 22 or above
