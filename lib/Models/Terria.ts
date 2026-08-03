@@ -450,14 +450,13 @@ export interface ConfigParameters {
   /**
    * Catalogue access policies keyed by permission level name. Define any number
    * of levels here (via config.json); catalogue members reference them with the
-   * `permissionLevel` trait. Levels omitted from this map deny access.
+   * `permissionLevel` trait. Each member independently decides whether it is
+   * hidden when access is denied. Levels omitted from this map deny access.
    */
   catalogAccessPolicies?: {
     [level: string]: {
       requiresAuth: boolean;
       requiredPermission?: string;
-      hideWhenUnauthorized: boolean;
-      deniedMessage?: { title: string; message: string };
     };
   };
 

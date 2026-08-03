@@ -111,6 +111,14 @@ class CatalogMemberTraits extends ModelTraits {
   permissionLevel?: string;
 
   @primitiveTrait({
+    type: "boolean",
+    name: "Hide when unauthorized",
+    description:
+      "If true, hide this member from catalogue listings while the current user cannot access its permission level. This has no effect when `permissionLevel` is omitted or `unauthenticated`."
+  })
+  hideWhenUnauthorized?: boolean;
+
+  @primitiveTrait({
     type: "string",
     name: "Name",
     description: "The name of the catalog item."
