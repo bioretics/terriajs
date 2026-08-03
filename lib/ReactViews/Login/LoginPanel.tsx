@@ -4,7 +4,6 @@ import { observer } from "mobx-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 //import { useTheme } from "styled-components";
-import Resource from "terriajs-cesium/Source/Core/Resource";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
@@ -55,56 +54,70 @@ const LoginPanel = observer((props: Props) => {
       return;
     }
 
-    if (!username?.trim() || !password?.trim()) {
+    const trimmedUsername = username?.trim() ?? "";
+    if (!trimmedUsername || !password?.trim()) {
       setMessageType("error");
       setMessageKey("login.loginPanelMissingFields");
       return;
     }
 
-    if (terria.configParameters.userProfileLoginServiceUrl) {
-      setIsLoading(true);
-      setMessageKey(undefined);
-      document.body.style.cursor = "wait";
+    const loginUrl = terria.configParameters.userProfileLoginServiceUrl;
+    if (!loginUrl) {
+      return;
+    }
 
-      const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
-        "base64"
-      )}`;
-      const resource = new Resource({
-        url: terria.corsProxy.getURL(
-          terria.configParameters.userProfileLoginServiceUrl
-        ),
+    setIsLoading(true);
+    setMessageKey(undefined);
+    document.body.style.cursor = "wait";
+
+    const authHeader = `Basic ${Buffer.from(
+      `${trimmedUsername}:${password}`
+    ).toString("base64")}`;
+    const formBody = new URLSearchParams({
+      username: trimmedUsername,
+      password
+    }).toString();
+    try {
+      const response = await fetch(loginUrl, {
+        method: "POST",
         headers: {
-          Authorization: header,
-          "Cache-Control": "no-cache, no-store, must-revalidate"
-        }
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formBody,
+        redirect: "follow",
+        credentials: "include"
       });
-      resource
-        .fetch()
-        ?.then((res) => {
-          if (res) {
-            terria.userAuthToken = header;
-            viewState.isLoginPanelVisible = false;
-          }
-        })
-        .catch((e) => {
-          console.log(e);
-          setMessageType("error");
-          if (e.statusCode === 401) {
-            setMessageKey("login.loginPanelInvalidCredentials");
-          } else if (
-            e.statusCode === 0 ||
-            !e.statusCode ||
-            e.response === "Proxy error"
-          ) {
-            setMessageKey("login.loginPanelConnectionProblem");
-          } else {
-            setMessageKey("login.loginPanelGenericError");
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-          document.body.style.cursor = "default";
-        });
+
+      // Both valid and invalid form logins return a redirect. GeoServer sends
+      // valid credentials to /web and sends invalid credentials to its login
+      // page with ?error=true. Following that redirect lets this one login
+      // request distinguish the two outcomes without a second API check.
+      const responseUrl = new URL(response.url);
+      const isInvalidLogin =
+        responseUrl.searchParams.get("error") === "true" ||
+        responseUrl.pathname.includes("GeoServerLoginPage");
+
+      if (!response.ok || isInvalidLogin) {
+        setMessageType("error");
+        setMessageKey(
+          isInvalidLogin || response.status === 401 || response.status === 403
+            ? "login.loginPanelInvalidCredentials"
+            : "login.loginPanelGenericError"
+        );
+        return;
+      }
+
+      runInAction(() => {
+        terria.userAuthToken = authHeader;
+        viewState.isLoginPanelVisible = false;
+      });
+    } catch (e: any) {
+      console.log(e);
+      setMessageType("error");
+      setMessageKey("login.loginPanelConnectionProblem");
+    } finally {
+      setIsLoading(false);
+      document.body.style.cursor = "default";
     }
   });
 
