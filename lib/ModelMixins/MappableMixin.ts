@@ -9,7 +9,6 @@ import AbstractConstructor from "../Core/AbstractConstructor";
 import AsyncLoader from "../Core/AsyncLoader";
 import Result from "../Core/Result";
 import Model from "../Models/Definition/Model";
-import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import CatalogMemberMixin, { getName } from "./CatalogMemberMixin";
 
@@ -171,10 +170,6 @@ function MappableMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
      * {@see AsyncLoader}
      */
     async loadMapItems(force?: boolean): Promise<Result<void>> {
-      // This is the final request gate. It also protects calls initiated from
-      // existing workbench items after a user has logged out.
-      if (!ensureCatalogMemberAccess(this)) return Result.none();
-
       try {
         runInAction(() => {
           if (this.shouldShowInitialMessage) {
