@@ -1,6 +1,5 @@
 import i18next from "i18next";
 import { JsonObject } from "../../Core/Json";
-import { CatalogPermissionLevel } from "../../Models/Authentication/CatalogAccessControl";
 import anyTrait from "../Decorators/anyTrait";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
 import primitiveArrayTrait from "../Decorators/primitiveArrayTrait";
@@ -107,9 +106,9 @@ class CatalogMemberTraits extends ModelTraits {
     type: "string",
     name: "Permission level",
     description:
-      "The access requirement for this catalogue member. Use `authenticated` to require a signed-in user. If omitted, the member is available to all users."
+      "Access level key matching an entry in config `parameters.catalogAccessPolicies`. If omitted, the member is available to all users."
   })
-  permissionLevel?: CatalogPermissionLevel;
+  permissionLevel?: string;
 
   @primitiveTrait({
     type: "string",
