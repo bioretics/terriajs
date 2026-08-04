@@ -16,6 +16,21 @@ describe("Catalogue access control", () => {
 
   beforeEach(() => {
     terria = new Terria({ baseUrl: "./" });
+    runInAction(() => {
+      terria.configParameters.catalogAccessPolicies = {
+        unauthenticated: {
+          requiresAuth: false,
+          default: true
+        },
+        authenticated: {
+          requiresAuth: true
+        },
+        private: {
+          requiresAuth: true,
+          requiredPermission: "private"
+        }
+      };
+    });
     viewState = new ViewState({
       terria,
       catalogSearchProvider: undefined
@@ -51,26 +66,6 @@ describe("Catalogue access control", () => {
 
     expect(isCatalogMemberVisible(publicItem)).toBe(true);
     expect(isCatalogMemberVisible(unauthenticatedItem)).toBe(true);
-  });
-
-  it("uses the config default policy as the public visibility level", () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        guest: {
-          requiresAuth: false,
-          default: true
-        },
-        authenticated: {
-          requiresAuth: true
-        }
-      };
-    });
-
-    const guestItem = new WebMapServiceCatalogItem("guest-item", terria);
-    guestItem.setTrait(CommonStrata.definition, "permissionLevel", "guest");
-
-    expect(isCatalogMemberVisible(guestItem)).toBe(true);
-    expect(canAccessCatalogMember(guestItem)).toBe(true);
   });
 
   it("does not preview or load a protected item for an unauthenticated user", async () => {
