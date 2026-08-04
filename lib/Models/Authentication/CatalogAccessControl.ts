@@ -3,23 +3,11 @@ import { runInAction } from "mobx";
 import { BaseModel } from "../Definition/Model";
 import type Terria from "../Terria";
 
-/**
- * Common permission level names used by this deployment's catalogue. These are
- * only string constants — the authoritative set of levels and their access
- * behaviour lives in `configParameters.catalogAccessPolicies` (from
- * config.json). Add or rename levels there freely; catalogue members reference
- * them by string via the `permissionLevel` trait.
- */
-export enum CatalogPermissionLevel {
-  Unauthenticated = "unauthenticated",
-  Authenticated = "authenticated",
-  Private = "private"
-}
-
 /** Config shape for a single catalogue access level. */
 export interface CatalogAccessPolicyConfig {
   requiresAuth: boolean;
   requiredPermission?: string;
+  default?: boolean;
 }
 
 type CatalogAccessControlledMember = BaseModel & {
@@ -32,6 +20,18 @@ function getCatalogAccessPolicyConfig(
   level: string
 ): CatalogAccessPolicyConfig | undefined {
   return terria.configParameters.catalogAccessPolicies?.[level];
+}
+
+/**
+ * Returns the policy key that should behave as the public/default level.
+ * Falls back to `unauthenticated` for deployments that do not mark one.
+ */
+function getDefaultCatalogAccessPolicyLevel(terria: Terria): string {
+  const defaultLevel = Object.entries(
+    terria.configParameters.catalogAccessPolicies ?? {}
+  ).find(([, policy]) => policy.default)?.[0];
+
+  return defaultLevel ?? "unauthenticated";
 }
 
 function isAllowedByPolicy(
@@ -97,11 +97,13 @@ export function canAccessCatalogMember(item: BaseModel): boolean {
  * Returns whether a catalogue member may be shown in UI listings. Permission
  * levels which are merely gated remain visible and show an access message. A
  * member can instead opt into being hidden with its `hideWhenUnauthorized`
- * trait. Public and unauthenticated members are always visible.
+ * trait. Public members and the config-marked default level are always visible.
  */
 export function isCatalogMemberVisible(item: BaseModel): boolean {
   const level = getCatalogPermissionLevel(item);
-  if (!level || level === CatalogPermissionLevel.Unauthenticated) return true;
+  if (!level || level === getDefaultCatalogAccessPolicyLevel(item.terria)) {
+    return true;
+  }
 
   return (
     !getCatalogMemberHideWhenUnauthorized(item) || canAccessCatalogMember(item)

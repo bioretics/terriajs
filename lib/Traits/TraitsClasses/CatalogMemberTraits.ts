@@ -106,7 +106,7 @@ class CatalogMemberTraits extends ModelTraits {
     type: "string",
     name: "Permission level",
     description:
-      "Access level key matching an entry in config `parameters.catalogAccessPolicies`. If omitted, the member is available to all users."
+      "Access level key matching an entry in config `parameters.catalogAccessPolicies`. If omitted, the member is available to all users. The policy marked `default: true` is treated as the default public level."
   })
   permissionLevel?: string;
 

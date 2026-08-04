@@ -457,6 +457,7 @@ export interface ConfigParameters {
     [level: string]: {
       requiresAuth: boolean;
       requiredPermission?: string;
+      default?: boolean;
     };
   };
 
