@@ -4,6 +4,7 @@ import {
   computed,
   makeObservable,
   observable,
+  reaction,
   runInAction,
   toJS,
   when
@@ -501,6 +502,20 @@ export interface ConfigParameters {
   };
 
   /**
+   * Catalogue access policies keyed by permission level name. Define any number
+   * of levels here (via config.json); catalogue members reference them with the
+   * `permissionLevel` trait. Each member independently decides whether it is
+   * hidden when access is denied. Levels omitted from this map deny access.
+   */
+  catalogAccessPolicies?: {
+    [level: string]: {
+      requiresAuth: boolean;
+      requiredPermission?: string;
+      default?: boolean;
+    };
+  };
+
+  /**
    * Side size for the drill pick in Cesium
    */
   pickSize?: number;
@@ -819,6 +834,7 @@ export default class Terria {
     userProfilesDefinition: undefined,
     userProfileLoginServiceUrl: undefined,
     userProfileLoginServiceType: undefined,
+    catalogAccessPolicies: undefined,
     pickSize: undefined,
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
@@ -1077,6 +1093,25 @@ export default class Terria {
     this.analytics = options.analytics ?? new NoopAnalytics();
 
     this.corsProxy = options.corsProxy ?? new CorsProxy();
+
+    // Re-evaluate workbench membership whenever auth or named permissions change.
+    // Run synchronously so the map/workbench drop inaccessible layers in the same
+    // turn as logout or a profile update (not on a later microtask).
+    reaction(
+      () => ({
+        userAuthToken: this.userAuthToken,
+        userProfile: this.userProfile,
+        isAuthenticated: this.isAuthenticated,
+        profileAllowed: this.profile?.allowed?.slice(),
+        profileIsAdmin: this.profile?.isAdmin,
+        userProfilesDefinition: this.configParameters.userProfilesDefinition,
+        catalogAccessPolicies: this.configParameters.catalogAccessPolicies
+      }),
+      () => {
+        this.workbench.removeInaccessibleItems();
+      },
+      { scheduler: (run) => run() }
+    );
   }
 
   /** Raise error to user.

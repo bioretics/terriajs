@@ -13,6 +13,7 @@ import CommonStrata from "./Definition/CommonStrata";
 import hasTraits from "./Definition/hasTraits";
 import { BaseModel } from "./Definition/Model";
 import {
+  canAccessCatalogMember,
   ensureCatalogMemberAccess,
   isCatalogMemberVisible
 } from "./Authentication/CatalogAccessControl";
@@ -104,6 +105,19 @@ export default class Workbench {
   @action
   removeAll(): void {
     this._items.clear();
+  }
+
+  /**
+   * Removes workbench items the current user is no longer allowed to access,
+   * re-checking each member's permission level against the live auth state.
+   */
+  @action
+  removeInaccessibleItems() {
+    [...this.allItems].forEach((item) => {
+      if (!canAccessCatalogMember(item)) {
+        this.remove(item);
+      }
+    });
   }
 
   /**

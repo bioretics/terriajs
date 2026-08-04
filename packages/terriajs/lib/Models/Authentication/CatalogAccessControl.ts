@@ -1,83 +1,59 @@
 import i18next from "i18next";
-import type { SelectorParam } from "i18next";
 import { runInAction } from "mobx";
 import { BaseModel } from "../Definition/Model";
 import type Terria from "../Terria";
 
-/**
- * Permission levels supported by catalogue members.
- *
- * Add a value here and a corresponding policy to `catalogAccessPolicies` when
- * introducing a new access requirement.
- */
-export enum CatalogPermissionLevel {
-  Unauthenticated = "unauthenticated",
-  Authenticated = "authenticated",
-  Private = "private"
+/** Config shape for a single catalogue access level. */
+export interface CatalogAccessPolicyConfig {
+  requiresAuth: boolean;
+  requiredPermission?: string;
+  default?: boolean;
 }
 
-interface CatalogAccessPolicy {
-  /** Determines whether the current user has the permission required by this level. */
-  isAllowed(terria: Terria): boolean;
-  /**
-   * If true, users without the required permission must not be able to
-   * discover the member in catalogue, add-data, or workbench UI.
-   */
-  hideWhenUnauthorized: boolean;
-  deniedMessage: {
-    title: SelectorParam;
-    message: SelectorParam;
-  };
-}
-
-/**
- * The single policy table for catalogue-member access. Keeping the policy
- * separate from the traits lets new access levels use a different
- * authentication or authorisation check without changing catalogue UI code.
- */
-const catalogAccessPolicies: Record<
-  CatalogPermissionLevel,
-  CatalogAccessPolicy
-> = {
-  [CatalogPermissionLevel.Unauthenticated]: {
-    isAllowed: () => true,
-    hideWhenUnauthorized: false,
-    deniedMessage: {
-      title: ($) => $.access.accessDeniedTitle,
-      message: ($) => $.access.accessDeniedMessage
-    }
-  },
-  [CatalogPermissionLevel.Authenticated]: {
-    isAllowed: (terria) => terria.isAuthenticated,
-    hideWhenUnauthorized: false,
-    deniedMessage: {
-      title: ($) => $.access.authenticationRequiredTitle,
-      message: ($) => $.access.authenticationRequiredMessage
-    }
-  },
-  [CatalogPermissionLevel.Private]: {
-    // A profile-aware deployment requires the "private" permission (or an
-    // administrator profile). A basic-token deployment has no profiles, so
-    // any authenticated user has this permission.
-    isAllowed: (terria) => terria.hasPermission(CatalogPermissionLevel.Private),
-    hideWhenUnauthorized: true,
-    deniedMessage: {
-      title: ($) => $.access.accessDeniedTitle,
-      message: ($) => $.access.accessDeniedMessage
-    }
-  }
+type CatalogAccessControlledMember = BaseModel & {
+  permissionLevel?: string;
+  hideWhenUnauthorized?: boolean;
 };
+
+function getCatalogAccessPolicyConfig(
+  terria: Terria,
+  level: string
+): CatalogAccessPolicyConfig | undefined {
+  return terria.configParameters.catalogAccessPolicies?.[level];
+}
+
+/**
+ * Returns the policy key that should behave as the public/default level.
+ * Falls back to `unauthenticated` for deployments that do not mark one.
+ */
+function getDefaultCatalogAccessPolicyLevel(terria: Terria): string {
+  const defaultLevel = Object.entries(
+    terria.configParameters.catalogAccessPolicies ?? {}
+  ).find(([, policy]) => policy.default)?.[0];
+
+  return defaultLevel ?? "unauthenticated";
+}
+
+function isAllowedByPolicy(
+  terria: Terria,
+  policy: CatalogAccessPolicyConfig
+): boolean {
+  if (policy.requiredPermission) {
+    return terria.hasPermission(policy.requiredPermission);
+  }
+  if (policy.requiresAuth) {
+    return terria.isAuthenticated;
+  }
+  return true;
+}
 
 /**
  * Returns the configured level for a member. Omitting `permissionLevel` keeps a
- * catalogue item publicly accessible.
+ * catalogue item publicly accessible (no policy lookup).
  */
-export function getCatalogPermissionLevel(item: BaseModel): string {
-  const permissionLevel = (
-    item as BaseModel & {
-      permissionLevel?: string;
-    }
-  ).permissionLevel;
+export function getCatalogPermissionLevel(item: BaseModel): string | undefined {
+  const permissionLevel = (item as CatalogAccessControlledMember)
+    .permissionLevel;
   if (permissionLevel) return permissionLevel;
 
   // A dereferenced item inherits the level configured on its reference.
@@ -86,52 +62,69 @@ export function getCatalogPermissionLevel(item: BaseModel): string {
     return getCatalogPermissionLevel(sourceReference);
   }
 
-  return CatalogPermissionLevel.Unauthenticated;
+  return undefined;
+}
+
+/**
+ * Returns whether a member opts into being hidden when its permission level is
+ * unavailable. A dereferenced item inherits this setting from its reference.
+ */
+export function getCatalogMemberHideWhenUnauthorized(item: BaseModel): boolean {
+  const hideWhenUnauthorized = (item as CatalogAccessControlledMember)
+    .hideWhenUnauthorized;
+  if (hideWhenUnauthorized !== undefined) return hideWhenUnauthorized;
+
+  const sourceReference = item.sourceReference;
+  if (sourceReference && sourceReference !== item) {
+    return getCatalogMemberHideWhenUnauthorized(sourceReference);
+  }
+
+  return false;
 }
 
 export function canAccessCatalogMember(item: BaseModel): boolean {
-  const policy =
-    catalogAccessPolicies[
-      getCatalogPermissionLevel(item) as CatalogPermissionLevel
-    ];
+  const level = getCatalogPermissionLevel(item);
+  // No permissionLevel → public.
+  if (!level) return true;
 
-  // An unrecognised configured level must not accidentally grant access.
-  return policy?.isAllowed(item.terria) ?? false;
+  const policy = getCatalogAccessPolicyConfig(item.terria, level);
+
+  // An unrecognised / unconfigured level must not accidentally grant access.
+  return policy ? isAllowedByPolicy(item.terria, policy) : false;
 }
 
 /**
  * Returns whether a catalogue member may be shown in UI listings. Permission
- * levels which are merely gated remain visible and show an access message;
- * levels with `hideWhenUnauthorized` are hidden instead.
+ * levels which are merely gated remain visible and show an access message. A
+ * member can instead opt into being hidden with its `hideWhenUnauthorized`
+ * trait. Public members and the config-marked default level are always visible.
  */
 export function isCatalogMemberVisible(item: BaseModel): boolean {
-  const policy =
-    catalogAccessPolicies[
-      getCatalogPermissionLevel(item) as CatalogPermissionLevel
-    ];
+  const level = getCatalogPermissionLevel(item);
+  if (!level || level === getDefaultCatalogAccessPolicyLevel(item.terria)) {
+    return true;
+  }
 
-  // Unknown levels fail closed: they cannot unexpectedly expose a member.
-  return policy
-    ? policy.isAllowed(item.terria) || !policy.hideWhenUnauthorized
-    : false;
+  return (
+    !getCatalogMemberHideWhenUnauthorized(item) || canAccessCatalogMember(item)
+  );
 }
 
-/** Shows the plain-language denial message configured for the access level. */
+/**
+ * Shows the denial message for a catalogue member. Message copy depends on
+ * whether the member is hidden when unauthorized.
+ */
 export function showCatalogAccessDeniedMessage(item: BaseModel) {
-  const policy =
-    catalogAccessPolicies[
-      getCatalogPermissionLevel(item) as CatalogPermissionLevel
-    ];
-  const title =
-    policy?.deniedMessage.title ?? (($) => $.access.accessDeniedTitle);
-  const message =
-    policy?.deniedMessage.message ?? (($) => $.access.accessDeniedMessage);
-
+  const hideWhenUnauthorized = getCatalogMemberHideWhenUnauthorized(item);
   runInAction(() => {
     item.terria.messageModal = {
       isVisible: true,
-      header: i18next.t(title),
-      message: i18next.t(message)
+      header: hideWhenUnauthorized
+        ? i18next.t(($) => $.access.accessDeniedTitle)
+        : i18next.t(($) => $.access.authenticationRequiredTitle),
+      message: hideWhenUnauthorized
+        ? i18next.t(($) => $.access.accessDeniedMessage)
+        : i18next.t(($) => $.access.authenticationRequiredMessage)
     };
   });
 }

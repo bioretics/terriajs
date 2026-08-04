@@ -1,6 +1,5 @@
 import i18next from "i18next";
 import { JsonObject } from "../../Core/Json";
-import { CatalogPermissionLevel } from "../../Models/Authentication/CatalogAccessControl";
 import { WorkbenchControls } from "../../ReactViews/Workbench/Controls/WorkbenchControls";
 import anyTrait from "../Decorators/anyTrait";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
@@ -108,9 +107,17 @@ class CatalogMemberTraits extends ModelTraits {
     type: "string",
     name: "Permission level",
     description:
-      "The access requirement for this catalogue member. Use `authenticated` to require a signed-in user. If omitted, the member is available to all users."
+      "Access level key matching an entry in config `parameters.catalogAccessPolicies`. If omitted, the member is available to all users. The policy marked `default: true` is treated as the default public level."
   })
-  permissionLevel?: CatalogPermissionLevel;
+  permissionLevel?: string;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "Hide when unauthorized",
+    description:
+      "If true, hide this member from catalogue listings while the current user cannot access its permission level. This has no effect when `permissionLevel` is omitted or `unauthenticated`."
+  })
+  hideWhenUnauthorized?: boolean;
 
   @primitiveTrait({
     type: "string",

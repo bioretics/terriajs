@@ -22,6 +22,17 @@ interface ButtonProps extends Props {
 
 const LOGIN_BUTTON_NAME = "MenuBarLoginButton";
 
+function usernameFromAuthToken(token?: string): string | undefined {
+  if (!token?.startsWith("Basic ")) return undefined;
+  try {
+    const decoded = atob(token.slice("Basic ".length));
+    const separator = decoded.indexOf(":");
+    return separator >= 0 ? decoded.slice(0, separator) : decoded;
+  } catch {
+    return undefined;
+  }
+}
+
 const LoginButton = observer((props: Props) => {
   const storyButtonRef: Ref<HTMLButtonElement> = useRefForTerria(
     LOGIN_BUTTON_NAME,
@@ -33,6 +44,9 @@ const LoginButton = observer((props: Props) => {
 
   const { t } = useTranslation();
   const isLoggedIn = props.terria.isAuthenticated;
+  const username =
+    usernameFromAuthToken(props.terria.userAuthToken) ??
+    props.terria.userProfile;
 
   useEffect(() => {
     if (!isLogoutConfirmVisible) return;
@@ -140,7 +154,7 @@ const LoginButton = observer((props: Props) => {
           aria-label={t(($) => $.login.logoutConfirmTitle)}
         >
           <div className={Styles.logoutConfirmMessage}>
-            {t(($) => $.login.logoutConfirmMessage)}
+            {t(($) => $.login.logoutConfirmMessage, { username })}
           </div>
           <div className={Styles.logoutConfirmActions}>
             <button
