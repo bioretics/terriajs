@@ -1,5 +1,5 @@
 import { Ref, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { DefaultTheme } from "styled-components";
@@ -150,7 +150,11 @@ const LoginButton = observer((props: Props) => {
           aria-label={t("login.logoutConfirmTitle")}
         >
           <div className={Styles.logoutConfirmMessage}>
-            {t("login.logoutConfirmMessage", { username })}
+            <Trans
+              i18nKey="login.logoutConfirmMessage"
+              values={{ username }}
+              components={[<strong key="username" />]}
+            />
           </div>
           <div className={Styles.logoutConfirmActions}>
             <button

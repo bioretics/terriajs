@@ -497,7 +497,7 @@
     "loginTitle": "Login",
     "logoutTitle": "Logout",
     "logoutConfirmTitle": "Confirm logout",
-    "logoutConfirmMessage": "Do you want to log out as {{username}}?",
+    "logoutConfirmMessage": "Do you want to log out as <0>{{username}}</0>?",
     "logoutConfirmOk": "Logout",
     "logoutConfirmCancel": "Cancel",
     "loginPanelHeader": "User authentication",
