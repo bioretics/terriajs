@@ -410,7 +410,7 @@ const PlayPathPanel = observer((props: Props) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.1,
+        width: window.innerWidth * 0.15,
         height: "auto"
       }}
       maxWidth={window.innerWidth * 0.4}
