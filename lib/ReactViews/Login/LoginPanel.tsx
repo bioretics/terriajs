@@ -71,7 +71,7 @@ const LoginPanel = observer((props: Props) => {
       )}`;
       const resource = new Resource({
         url: terria.corsProxy.getURL(
-          terria.configParameters.userProfileLoginServiceUrl
+          terria.configParameters.userProfileLoginServiceUrl + username
         ),
         headers: {
           Authorization: header,
