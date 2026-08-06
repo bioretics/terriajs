@@ -103,6 +103,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
 
   @primitiveTrait({
     type: "number",
+    name: "Level preload buffer",
+    description:
+      "In Cesium 3D only, how many extra LEVEL_ID steps above the highest currently rendered globe tile level to request from the service. Helps keep the next terrain refine level in cache. Ignored in Cesium 2D and Leaflet."
+  })
+  levelPreloadBuffer: number = 2;
+
+  @primitiveTrait({
+    type: "number",
     name: "Query bbox padding ratio",
     description:
       "The padding ratio to apply to the viewport rectangle when querying features. A value of 0.2 means 20% padding on each side."
