@@ -4,7 +4,6 @@ import {
 } from "../../Core/AnalyticEvents/analyticEvents";
 import getPath from "../../Core/getPath";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
-import { ensureCatalogMemberAccess } from "../../Models/Authentication/CatalogAccessControl";
 import TimeVarying from "../../ModelMixins/TimeVarying";
 import { BaseModel } from "../../Models/Definition/Model";
 import Terria from "../../Models/Terria";
@@ -54,8 +53,6 @@ export default async function toggleItemOnMapFromCatalog(
   const op = viewState.terria.workbench.contains(item) ? Op.Remove : Op.Add;
 
   if (op === Op.Add) {
-    if (!ensureCatalogMemberAccess(item)) return;
-
     (await viewState.terria.workbench.add(item)).raiseError(
       viewState.terria,
       undefined,
