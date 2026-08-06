@@ -32,6 +32,9 @@ export function isRerPoiUrl(url: string | undefined): boolean {
 export interface RerPoiStylingOptions {
   isCesium2D?: boolean;
   defaultMarkerColor?: string;
+  levelIdField?: string;
+  minLevelId?: number;
+  maxLevelId?: number;
   markerSize?: number;
   iconStrokeWidth?: number;
   iconStrokeColor?: string;
@@ -219,6 +222,33 @@ function readStyleString(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
+function getLevelBasedBillboardScale(
+  properties: any,
+  options: RerPoiStylingOptions | undefined,
+  now: JulianDate
+): number {
+  const levelIdField = options?.levelIdField;
+  const minLevelId = options?.minLevelId;
+  const maxLevelId = options?.maxLevelId;
+
+  if (!levelIdField || !isDefined(minLevelId) || !isDefined(maxLevelId)) {
+    return 1;
+  }
+
+  const rawLevelId = properties?.[levelIdField]?.getValue(now);
+  const levelId = Number(rawLevelId);
+  if (!Number.isFinite(levelId) || maxLevelId <= minLevelId) {
+    return 1;
+  }
+
+  const clampedLevelId = Math.min(Math.max(levelId, minLevelId), maxLevelId);
+  const normalized = (clampedLevelId - minLevelId) / (maxLevelId - minLevelId);
+
+  const minScale = 0.8;
+  const maxScale = 1.4;
+  return minScale + normalized * (maxScale - minScale);
+}
+
 function getPerPropertyStyleValue(
   properties: any,
   perPropertyStyles:
@@ -325,6 +355,7 @@ export function applyRerPoiEntityStyles(
         isDefined(rawName) && String(rawName).trim().length > 0
           ? String(rawName).trim()
           : undefined;
+      const scale = getLevelBasedBillboardScale(properties, options, now);
 
       const finalCacheKey = [
         symbol,
@@ -342,6 +373,7 @@ export function applyRerPoiEntityStyles(
         entity.billboard = new BillboardGraphics({
           show: new ConstantProperty(entity.show !== false),
           image: new ConstantProperty(dataUrl),
+          scale: new ConstantProperty(scale),
           verticalOrigin: BILLBOARD_VERTICAL_ORIGIN,
           heightReference: heightReferenceProp,
           eyeOffset: eyeOffsetProp,

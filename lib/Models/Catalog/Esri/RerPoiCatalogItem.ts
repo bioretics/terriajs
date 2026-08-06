@@ -1007,9 +1007,14 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private getRerPoiStylingOptions(showLabels: boolean): RerPoiStylingOptions {
+    const { minLevelId, maxLevelId } = this.getEffectiveLevelIdRange();
+
     return {
       isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
       defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
+      levelIdField: this.getRerPoiTrait("levelIdField"),
+      minLevelId,
+      maxLevelId,
       markerSize: this.getRerPoiTrait("markerSize"),
       iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
       iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
@@ -1190,6 +1195,12 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     useLabeledDisplay: boolean,
     layerShown: boolean
   ): void {
+    const globe = this.terria.cesium?.scene.globe;
+    // @ts-expect-error — _surface is a private/internal Cesium property, not in the public Globe typings
+    const surface = globe?._surface;
+    surface._tilesToRender.forEach((tile: any) => {
+      console.log(`level ${tile.level}  x:${tile.x}  y:${tile.y}`);
+    });
     const activeCache = useLabeledDisplay
       ? this.labeledEntityCache ?? this.unlabeledEntityCache
       : this.unlabeledEntityCache;
@@ -1252,6 +1263,14 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
     const labelThreshold = this.getRerPoiTrait("labelVisibilityThreshold");
     const useLabeledDisplay = onScreenPoiCount < labelThreshold;
+    const scaleByObjectId = new Map<string, number>();
+
+    for (const [id, entity] of referenceCache.liveEntityByObjectId) {
+      scaleByObjectId.set(
+        id,
+        this.getLevelBasedBillboardScaleForEntity(entity, now)
+      );
+    }
 
     if (
       this.activeLabelDisplayMode !==
@@ -1278,6 +1297,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
     if (activeCache && this.show) {
       for (const [id, entity] of activeCache.liveEntityByObjectId) {
+        this.setEntityScale(entity, scaleByObjectId.get(id) ?? 1);
         this.setEntityVisibility(entity, visibilityByObjectId.get(id) ?? false);
       }
     }
@@ -1313,6 +1333,37 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     if (entity.billboard) entity.billboard.show = show;
     if (entity.point) entity.point.show = show;
     if (entity.label) entity.label.show = show;
+  }
+
+  private setEntityScale(entity: any, scale: number) {
+    if (!entity.billboard) return;
+    entity.billboard.scale = new ConstantProperty(scale);
+  }
+
+  private getLevelBasedBillboardScaleForEntity(
+    entity: any,
+    now: JulianDate
+  ): number {
+    const levelIdField = this.getRerPoiTrait("levelIdField");
+    const { minLevelId, maxLevelId } = this.getEffectiveLevelIdRange();
+
+    if (!levelIdField || !isDefined(minLevelId) || !isDefined(maxLevelId)) {
+      return 1;
+    }
+
+    const rawLevelId = entity.properties?.[levelIdField]?.getValue(now);
+    const levelId = Number(rawLevelId);
+    if (!Number.isFinite(levelId) || maxLevelId <= minLevelId) {
+      return 1;
+    }
+
+    const clampedLevelId = Math.min(Math.max(levelId, minLevelId), maxLevelId);
+    const normalized =
+      (clampedLevelId - minLevelId) / (maxLevelId - minLevelId);
+
+    const minScale = 0.8;
+    const maxScale = 1.4;
+    return minScale + normalized * (maxScale - minScale);
   }
 
   private isEntityInLevelRange(
