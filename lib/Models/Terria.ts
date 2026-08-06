@@ -456,8 +456,6 @@ export interface ConfigParameters {
     [level: string]: {
       requiresAuth: boolean;
       requiredPermission?: string;
-      hideWhenUnauthorized: boolean;
-      deniedMessage?: { title: string; message: string };
     };
   };
 

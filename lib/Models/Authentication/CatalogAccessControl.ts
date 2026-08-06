@@ -20,12 +20,12 @@ export enum CatalogPermissionLevel {
 export interface CatalogAccessPolicyConfig {
   requiresAuth: boolean;
   requiredPermission?: string;
-  hideWhenUnauthorized: boolean;
-  deniedMessage?: {
-    title: string;
-    message: string;
-  };
 }
+
+type CatalogAccessControlledMember = BaseModel & {
+  permissionLevel?: string;
+  hideWhenUnauthorized?: boolean;
+};
 
 function getCatalogAccessPolicyConfig(
   terria: Terria,
@@ -52,11 +52,8 @@ function isAllowedByPolicy(
  * catalogue item publicly accessible (no policy lookup).
  */
 export function getCatalogPermissionLevel(item: BaseModel): string | undefined {
-  const permissionLevel = (
-    item as BaseModel & {
-      permissionLevel?: string;
-    }
-  ).permissionLevel;
+  const permissionLevel = (item as CatalogAccessControlledMember)
+    .permissionLevel;
   if (permissionLevel) return permissionLevel;
 
   // A dereferenced item inherits the level configured on its reference.
@@ -66,6 +63,23 @@ export function getCatalogPermissionLevel(item: BaseModel): string | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * Returns whether a member opts into being hidden when its permission level is
+ * unavailable. A dereferenced item inherits this setting from its reference.
+ */
+export function getCatalogMemberHideWhenUnauthorized(item: BaseModel): boolean {
+  const hideWhenUnauthorized = (item as CatalogAccessControlledMember)
+    .hideWhenUnauthorized;
+  if (hideWhenUnauthorized !== undefined) return hideWhenUnauthorized;
+
+  const sourceReference = item.sourceReference;
+  if (sourceReference && sourceReference !== item) {
+    return getCatalogMemberHideWhenUnauthorized(sourceReference);
+  }
+
+  return false;
 }
 
 export function canAccessCatalogMember(item: BaseModel): boolean {
@@ -86,25 +100,22 @@ export function canAccessCatalogMember(item: BaseModel): boolean {
  */
 export function isCatalogMemberVisible(item: BaseModel): boolean {
   const level = getCatalogPermissionLevel(item);
-  if (!level) return true;
+  if (!level || level === CatalogPermissionLevel.Unauthenticated) return true;
 
-  const policy = getCatalogAccessPolicyConfig(item.terria, level);
-
-  // Unknown levels fail closed: they cannot unexpectedly expose a member.
-  return policy
-    ? isAllowedByPolicy(item.terria, policy) || !policy.hideWhenUnauthorized
-    : false;
+  return (
+    !getCatalogMemberHideWhenUnauthorized(item) || canAccessCatalogMember(item)
+  );
 }
 
 /** Shows the plain-language denial message configured for the access level. */
 export function showCatalogAccessDeniedMessage(item: BaseModel) {
-  const level = getCatalogPermissionLevel(item);
-  const policy = level
-    ? getCatalogAccessPolicyConfig(item.terria, level)
-    : undefined;
-  const title = policy?.deniedMessage?.title ?? "access.accessDeniedTitle";
-  const message =
-    policy?.deniedMessage?.message ?? "access.accessDeniedMessage";
+  const hideWhenUnauthorized = getCatalogMemberHideWhenUnauthorized(item);
+  const title = hideWhenUnauthorized
+    ? "access.accessDeniedTitle"
+    : "access.authenticationRequiredTitle";
+  const message = hideWhenUnauthorized
+    ? "access.accessDeniedMessage"
+    : "access.authenticationRequiredMessage";
 
   runInAction(() => {
     item.terria.messageModal = {
