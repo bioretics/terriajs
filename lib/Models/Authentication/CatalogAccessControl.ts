@@ -71,11 +71,11 @@ export function isCatalogMemberVisible(item: BaseModel): boolean {
 
 /** Shows the plain-language denial message for a blocked catalogue member. */
 export function showCatalogAccessDeniedMessage(item: BaseModel) {
-  const hideWhenUnauthorized = getCatalogMemberHideWhenUnauthorized(item);
-  const title = hideWhenUnauthorized
+  const isAuthenticated = item.terria.isAuthenticated;
+  const title = isAuthenticated
     ? "access.accessDeniedTitle"
     : "access.authenticationRequiredTitle";
-  const message = hideWhenUnauthorized
+  const message = isAuthenticated
     ? "access.accessDeniedMessage"
     : "access.authenticationRequiredMessage";
 
