@@ -49,9 +49,24 @@ const LoginPanel = observer((props: Props) => {
     [Styles.isLoading]: isLoading
   });
 
+  const parseFirstGroupFromXml = (xmlText: string): string | undefined => {
+    try {
+      const doc = new DOMParser().parseFromString(xmlText, "application/xml");
+      if (doc.getElementsByTagName("parsererror").length > 0) {
+        return undefined;
+      }
+      const firstGroup = doc.getElementsByTagName("group")[0];
+      const groupName = firstGroup?.textContent?.trim();
+      return groupName || undefined;
+    } catch {
+      return undefined;
+    }
+  };
+
   const doLogin = action(async () => {
     if (terria.userAuthToken) {
       terria.userAuthToken = undefined;
+      terria.userProfile = undefined;
       return;
     }
 
@@ -86,6 +101,7 @@ const LoginPanel = observer((props: Props) => {
         ?.then((res) => {
           if (res) {
             terria.userAuthToken = header;
+            terria.userProfile = parseFirstGroupFromXml(String(res));
             viewState.isLoginPanelVisible = false;
           }
         })

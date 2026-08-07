@@ -21,46 +21,35 @@ describe("Catalogue access control", () => {
       catalogSearchProvider: undefined
     });
     item = new WebMapServiceCatalogItem("protected-item", terria);
-    item.setTrait(CommonStrata.definition, "permissionLevel", "authenticated");
+    item.setTrait(CommonStrata.definition, "allowedGroups", ["regione"]);
   });
 
-  it("defaults catalogue items to public access when permissionLevel is omitted", () => {
+  it("defaults catalogue items to public access when allowedGroups is omitted", () => {
     const publicItem = new WebMapServiceCatalogItem("public-item", terria);
 
     expect(canAccessCatalogMember(publicItem)).toBe(true);
   });
 
-  it("does not hide public or unauthenticated items", () => {
+  it("denies access when allowedGroups is an empty array", () => {
+    item.setTrait(CommonStrata.definition, "allowedGroups", []);
+
+    runInAction(() => {
+      terria.userAuthToken = "test-token";
+      terria.userProfile = "regione";
+    });
+
+    expect(canAccessCatalogMember(item)).toBe(false);
+    expect(isCatalogMemberVisible(item)).toBe(true);
+  });
+
+  it("does not hide public items even with hideWhenUnauthorized", () => {
     const publicItem = new WebMapServiceCatalogItem("public-item", terria);
     publicItem.setTrait(CommonStrata.definition, "hideWhenUnauthorized", true);
 
-    const unauthenticatedItem = new WebMapServiceCatalogItem(
-      "unauthenticated-item",
-      terria
-    );
-    unauthenticatedItem.setTrait(
-      CommonStrata.definition,
-      "permissionLevel",
-      "unauthenticated"
-    );
-    unauthenticatedItem.setTrait(
-      CommonStrata.definition,
-      "hideWhenUnauthorized",
-      true
-    );
-
     expect(isCatalogMemberVisible(publicItem)).toBe(true);
-    expect(isCatalogMemberVisible(unauthenticatedItem)).toBe(true);
   });
 
   it("does not preview or load a protected item for an unauthenticated user", async () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        }
-      };
-    });
     const loadMapItems = spyOn(item, "loadMapItems").and.callThrough();
 
     const result = await viewState.viewCatalogMember(item);
@@ -72,13 +61,6 @@ describe("Catalogue access control", () => {
   });
 
   it("does not add or load a protected item for an unauthenticated user", async () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        }
-      };
-    });
     const loadMapItems = spyOn(item, "loadMapItems").and.callThrough();
 
     await terria.workbench.add(item);
@@ -88,14 +70,10 @@ describe("Catalogue access control", () => {
     expect(terria.messageModal?.isVisible).toBe(true);
   });
 
-  it("allows an authenticated user to add a protected item", async () => {
+  it("allows an authenticated user whose group is allowed to add a protected item", async () => {
     runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        }
-      };
       terria.userAuthToken = "test-token";
+      terria.userProfile = "regione";
     });
     const loadMetadata = spyOn(item, "loadMetadata").and.returnValue(
       Promise.resolve(Result.none())
@@ -113,127 +91,96 @@ describe("Catalogue access control", () => {
     expect(terria.workbench.contains(item)).toBe(true);
   });
 
-  it("hides private items until the user has the private permission", () => {
+  it("denies an authenticated user whose group is not allowed", () => {
     runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        private: {
-          requiresAuth: true,
-          requiredPermission: "private"
-        }
-      };
+      terria.userAuthToken = "test-token";
+      terria.userProfile = "basic";
     });
-    item.setTrait(CommonStrata.definition, "permissionLevel", "private");
+
+    expect(canAccessCatalogMember(item)).toBe(false);
+    expect(isCatalogMemberVisible(item)).toBe(true);
+  });
+
+  it("denies an authenticated user with no group", () => {
+    runInAction(() => {
+      terria.userAuthToken = "test-token";
+      terria.userProfile = undefined;
+    });
+
+    expect(canAccessCatalogMember(item)).toBe(false);
+  });
+
+  it("hides restricted items with hideWhenUnauthorized until the user has an allowed group", () => {
+    item.setTrait(CommonStrata.definition, "allowedGroups", ["admin"]);
     item.setTrait(CommonStrata.definition, "hideWhenUnauthorized", true);
 
     expect(canAccessCatalogMember(item)).toBe(false);
     expect(isCatalogMemberVisible(item)).toBe(false);
 
     runInAction(() => {
-      terria.userProfile = "limited";
-      terria.configParameters.userProfilesDefinition = {
-        limited: { allowed: [], isAdmin: false }
-      };
+      terria.userAuthToken = "test-token";
+      terria.userProfile = "basic";
     });
 
     expect(canAccessCatalogMember(item)).toBe(false);
     expect(isCatalogMemberVisible(item)).toBe(false);
 
-    terria.configParameters.userProfilesDefinition!.limited.allowed.push(
-      "private"
-    );
+    runInAction(() => {
+      terria.userProfile = "admin";
+    });
 
     expect(canAccessCatalogMember(item)).toBe(true);
     expect(isCatalogMemberVisible(item)).toBe(true);
   });
 
-  it("removes authenticated and private items from the workbench when access is lost", () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        },
-        private: {
-          requiresAuth: true,
-          requiredPermission: "private"
-        }
-      };
-    });
-
-    const privateItem = new WebMapServiceCatalogItem("private-item", terria);
-    privateItem.setTrait(CommonStrata.definition, "permissionLevel", "private");
+  it("removes items when the user's group no longer matches allowedGroups", () => {
+    const adminItem = new WebMapServiceCatalogItem("admin-item", terria);
+    adminItem.setTrait(CommonStrata.definition, "allowedGroups", ["admin"]);
     const publicItem = new WebMapServiceCatalogItem("public-item", terria);
 
     runInAction(() => {
       terria.userAuthToken = "test-token";
-      terria.workbench.items = [item, privateItem, publicItem];
+      terria.userProfile = "admin";
+      terria.workbench.items = [adminItem, publicItem, item];
+    });
+
+    // item requires regione; with admin profile the reaction drops it.
+    expect(terria.workbench.contains(adminItem)).toBe(true);
+    expect(terria.workbench.contains(item)).toBe(false);
+    expect(terria.workbench.contains(publicItem)).toBe(true);
+
+    runInAction(() => {
+      terria.userProfile = "regione";
+    });
+
+    expect(terria.workbench.contains(adminItem)).toBe(false);
+    expect(terria.workbench.contains(publicItem)).toBe(true);
+  });
+
+  it("removes restricted items from the workbench when access is lost", () => {
+    const publicItem = new WebMapServiceCatalogItem("public-item", terria);
+
+    runInAction(() => {
+      terria.userAuthToken = "test-token";
+      terria.userProfile = "regione";
+      terria.workbench.items = [item, publicItem];
     });
 
     expect(terria.workbench.contains(item)).toBe(true);
-    expect(terria.workbench.contains(privateItem)).toBe(true);
     expect(terria.workbench.contains(publicItem)).toBe(true);
 
     runInAction(() => {
       terria.userAuthToken = undefined;
+      terria.userProfile = undefined;
     });
 
     expect(terria.workbench.contains(item)).toBe(false);
-    expect(terria.workbench.contains(privateItem)).toBe(false);
     expect(terria.workbench.contains(publicItem)).toBe(true);
     expect(terria.workbench.items).toEqual([publicItem]);
     expect(terria.workbench.itemIds).toEqual(["public-item"]);
   });
 
-  it("removes private items when the required permission is revoked", () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        },
-        private: {
-          requiresAuth: true,
-          requiredPermission: "private"
-        }
-      };
-    });
-
-    const privateItem = new WebMapServiceCatalogItem("private-item", terria);
-    privateItem.setTrait(CommonStrata.definition, "permissionLevel", "private");
-    const publicItem = new WebMapServiceCatalogItem("public-item", terria);
-
-    runInAction(() => {
-      terria.userProfile = "limited";
-      terria.configParameters.userProfilesDefinition = {
-        limited: { allowed: ["private"], isAdmin: false }
-      };
-      terria.workbench.items = [privateItem, publicItem, item];
-    });
-
-    expect(terria.workbench.contains(privateItem)).toBe(true);
-    expect(terria.workbench.contains(item)).toBe(true);
-    expect(terria.workbench.contains(publicItem)).toBe(true);
-
-    runInAction(() => {
-      terria.configParameters.userProfilesDefinition!.limited.allowed = [];
-    });
-
-    expect(terria.workbench.contains(privateItem)).toBe(false);
-    expect(terria.workbench.contains(item)).toBe(true);
-    expect(terria.workbench.contains(publicItem)).toBe(true);
-  });
-
-  it("lets each member choose whether an unavailable custom level is hidden", () => {
-    runInAction(() => {
-      terria.configParameters.catalogAccessPolicies = {
-        authenticated: {
-          requiresAuth: true
-        },
-        partner: {
-          requiresAuth: true,
-          requiredPermission: "partner"
-        }
-      };
-    });
-
+  it("lets each member choose whether an unavailable group restriction is hidden", () => {
     expect(canAccessCatalogMember(item)).toBe(false);
     expect(isCatalogMemberVisible(item)).toBe(true);
 
@@ -241,11 +188,9 @@ describe("Catalogue access control", () => {
       "hidden-partner-item",
       terria
     );
-    hiddenPartnerItem.setTrait(
-      CommonStrata.definition,
-      "permissionLevel",
+    hiddenPartnerItem.setTrait(CommonStrata.definition, "allowedGroups", [
       "partner"
-    );
+    ]);
     hiddenPartnerItem.setTrait(
       CommonStrata.definition,
       "hideWhenUnauthorized",
@@ -255,11 +200,9 @@ describe("Catalogue access control", () => {
       "visible-partner-item",
       terria
     );
-    visiblePartnerItem.setTrait(
-      CommonStrata.definition,
-      "permissionLevel",
+    visiblePartnerItem.setTrait(CommonStrata.definition, "allowedGroups", [
       "partner"
-    );
+    ]);
 
     expect(canAccessCatalogMember(hiddenPartnerItem)).toBe(false);
     expect(canAccessCatalogMember(visiblePartnerItem)).toBe(false);
@@ -268,13 +211,9 @@ describe("Catalogue access control", () => {
 
     runInAction(() => {
       terria.userAuthToken = "test-token";
-      terria.userProfile = "partner-user";
-      terria.configParameters.userProfilesDefinition = {
-        "partner-user": { allowed: ["partner"], isAdmin: false }
-      };
+      terria.userProfile = "partner";
     });
 
-    expect(canAccessCatalogMember(item)).toBe(true);
     expect(canAccessCatalogMember(hiddenPartnerItem)).toBe(true);
     expect(canAccessCatalogMember(visiblePartnerItem)).toBe(true);
     expect(isCatalogMemberVisible(hiddenPartnerItem)).toBe(true);

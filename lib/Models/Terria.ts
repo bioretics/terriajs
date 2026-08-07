@@ -448,18 +448,6 @@ export interface ConfigParameters {
   };
 
   /**
-   * Catalogue access policies keyed by permission level name. Define any number
-   * of levels here (via config.json); catalogue members reference them with the
-   * `permissionLevel` trait. Levels omitted from this map deny access.
-   */
-  catalogAccessPolicies?: {
-    [level: string]: {
-      requiresAuth: boolean;
-      requiredPermission?: string;
-    };
-  };
-
-  /**
    * Side size for the drill pick in Cesium
    */
   pickSize?: number;
@@ -756,7 +744,6 @@ export default class Terria {
     userProfilesDefinition: undefined,
     userProfileLoginServiceUrl: undefined,
     userProfileLoginServiceType: undefined,
-    catalogAccessPolicies: undefined,
     pickSize: undefined,
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
@@ -1029,8 +1016,7 @@ export default class Terria {
         isAuthenticated: this.isAuthenticated,
         profileAllowed: this.profile?.allowed?.slice(),
         profileIsAdmin: this.profile?.isAdmin,
-        userProfilesDefinition: this.configParameters.userProfilesDefinition,
-        catalogAccessPolicies: this.configParameters.catalogAccessPolicies
+        userProfilesDefinition: this.configParameters.userProfilesDefinition
       }),
       () => {
         this.workbench.removeInaccessibleItems();

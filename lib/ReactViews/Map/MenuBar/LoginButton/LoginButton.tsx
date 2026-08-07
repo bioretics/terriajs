@@ -99,6 +99,7 @@ const LoginButton = observer((props: Props) => {
       runInAction(() => {
         if (props.terria.userAuthToken) {
           props.terria.userAuthToken = undefined;
+          props.terria.userProfile = undefined;
         } else {
           viewState.isLoginPanelVisible = true;
         }
