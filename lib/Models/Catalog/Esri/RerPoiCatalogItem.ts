@@ -80,6 +80,7 @@ interface RerPoiTraitSnapshot {
   labelOutlineWidth: number;
   labelTextColor: string;
   levelIdField: string;
+  levelScales: ReadonlyArray<{ levelId: number; scale: number }>;
   markerSize: number;
   maxLevelId: number | undefined;
   minLevelId: number | undefined;
@@ -396,6 +397,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTraitForSnapshot("labelOutlineWidth"),
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
+      levelScales: this.getRerPoiTraitForSnapshot("levelScales"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
       maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
@@ -1007,14 +1009,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private getRerPoiStylingOptions(showLabels: boolean): RerPoiStylingOptions {
-    const { minLevelId, maxLevelId } = this.getEffectiveLevelIdRange();
-
     return {
       isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
       defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
       levelIdField: this.getRerPoiTrait("levelIdField"),
-      minLevelId,
-      maxLevelId,
+      levelScales: this.getRerPoiTrait("levelScales"),
       markerSize: this.getRerPoiTrait("markerSize"),
       iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
       iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
@@ -1264,11 +1263,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const labelThreshold = this.getRerPoiTrait("labelVisibilityThreshold");
     const useLabeledDisplay = onScreenPoiCount < labelThreshold;
     const scaleByObjectId = new Map<string, number>();
+    const levelScales = this.getRerPoiTrait("levelScales");
+    const levelIdField = this.getRerPoiTrait("levelIdField");
 
     for (const [id, entity] of referenceCache.liveEntityByObjectId) {
       scaleByObjectId.set(
         id,
-        this.getLevelBasedBillboardScaleForEntity(entity, now)
+        this.getLevelBasedBillboardScaleForEntity(
+          entity,
+          now,
+          levelIdField,
+          levelScales
+        )
       );
     }
 
@@ -1342,28 +1348,22 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
   private getLevelBasedBillboardScaleForEntity(
     entity: any,
-    now: JulianDate
+    now: JulianDate,
+    levelIdField: string,
+    levelScales: ReadonlyArray<{ levelId: number; scale: number }>
   ): number {
-    const levelIdField = this.getRerPoiTrait("levelIdField");
-    const { minLevelId, maxLevelId } = this.getEffectiveLevelIdRange();
-
-    if (!levelIdField || !isDefined(minLevelId) || !isDefined(maxLevelId)) {
+    if (!levelIdField || !levelScales || levelScales.length === 0) {
       return 1;
     }
 
     const rawLevelId = entity.properties?.[levelIdField]?.getValue(now);
     const levelId = Number(rawLevelId);
-    if (!Number.isFinite(levelId) || maxLevelId <= minLevelId) {
+    if (!Number.isFinite(levelId)) {
       return 1;
     }
 
-    const clampedLevelId = Math.min(Math.max(levelId, minLevelId), maxLevelId);
-    const normalized =
-      (clampedLevelId - minLevelId) / (maxLevelId - minLevelId);
-
-    const minScale = 0.8;
-    const maxScale = 1.4;
-    return minScale + normalized * (maxScale - minScale);
+    const match = levelScales.find((entry) => entry.levelId === levelId);
+    return match?.scale ?? 1;
   }
 
   private isEntityInLevelRange(
@@ -1967,6 +1967,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelOutlineWidth: getDefaultRerPoiTrait("labelOutlineWidth"),
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
+    levelScales: getDefaultRerPoiTrait("levelScales"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
     maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),

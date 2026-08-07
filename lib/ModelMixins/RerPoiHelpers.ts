@@ -33,8 +33,7 @@ export interface RerPoiStylingOptions {
   isCesium2D?: boolean;
   defaultMarkerColor?: string;
   levelIdField?: string;
-  minLevelId?: number;
-  maxLevelId?: number;
+  levelScales?: ReadonlyArray<{ levelId: number; scale: number }>;
   markerSize?: number;
   iconStrokeWidth?: number;
   iconStrokeColor?: string;
@@ -228,25 +227,20 @@ function getLevelBasedBillboardScale(
   now: JulianDate
 ): number {
   const levelIdField = options?.levelIdField;
-  const minLevelId = options?.minLevelId;
-  const maxLevelId = options?.maxLevelId;
+  const levelScales = options?.levelScales;
 
-  if (!levelIdField || !isDefined(minLevelId) || !isDefined(maxLevelId)) {
+  if (!levelIdField || !levelScales || levelScales.length === 0) {
     return 1;
   }
 
   const rawLevelId = properties?.[levelIdField]?.getValue(now);
   const levelId = Number(rawLevelId);
-  if (!Number.isFinite(levelId) || maxLevelId <= minLevelId) {
+  if (!Number.isFinite(levelId)) {
     return 1;
   }
 
-  const clampedLevelId = Math.min(Math.max(levelId, minLevelId), maxLevelId);
-  const normalized = (clampedLevelId - minLevelId) / (maxLevelId - minLevelId);
-
-  const minScale = 0.8;
-  const maxScale = 1.4;
-  return minScale + normalized * (maxScale - minScale);
+  const match = levelScales.find((entry) => entry.levelId === levelId);
+  return match?.scale ?? 1;
 }
 
 function getPerPropertyStyleValue(

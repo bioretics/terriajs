@@ -1,7 +1,25 @@
+import objectArrayTrait from "../Decorators/objectArrayTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
-import { traitClass } from "../Trait";
 import mixTraits from "../mixTraits";
+import ModelTraits from "../ModelTraits";
+import { traitClass } from "../Trait";
 import ArcGisFeatureServerCatalogItemTraits from "./ArcGisFeatureServerCatalogItemTraits";
+
+export class LevelScaleTraits extends ModelTraits {
+  @primitiveTrait({
+    type: "number",
+    name: "Level ID",
+    description: "The LEVEL_ID value to match."
+  })
+  levelId!: number;
+
+  @primitiveTrait({
+    type: "number",
+    name: "Scale",
+    description: "The billboard scale to apply for POIs with this level ID."
+  })
+  scale: number = 1;
+}
 
 @traitClass({
   description: `Creates a single item in the catalog from RER3D POI (Regione Emilia-Romagna 3D Points of Interest) service.
@@ -154,6 +172,15 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
       "The color of the stroke around icon symbols. Accepts CSS color strings."
   })
   iconStrokeColor: string = "#000000";
+
+  @objectArrayTrait({
+    type: LevelScaleTraits,
+    idProperty: "levelId",
+    name: "Level scales",
+    description:
+      "Maps level IDs to fixed billboard scales. POIs whose LEVEL_ID matches an entry get the specified scale. Unmatched POIs default to scale 1."
+  })
+  levelScales: LevelScaleTraits[] = [];
 }
 
 export const defaultRerPoiCatalogItemTraits = new RerPoiCatalogItemTraits();
