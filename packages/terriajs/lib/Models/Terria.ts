@@ -502,20 +502,6 @@ export interface ConfigParameters {
   };
 
   /**
-   * Catalogue access policies keyed by permission level name. Define any number
-   * of levels here (via config.json); catalogue members reference them with the
-   * `permissionLevel` trait. Each member independently decides whether it is
-   * hidden when access is denied. Levels omitted from this map deny access.
-   */
-  catalogAccessPolicies?: {
-    [level: string]: {
-      requiresAuth: boolean;
-      requiredPermission?: string;
-      default?: boolean;
-    };
-  };
-
-  /**
    * Side size for the drill pick in Cesium
    */
   pickSize?: number;
@@ -834,7 +820,6 @@ export default class Terria {
     userProfilesDefinition: undefined,
     userProfileLoginServiceUrl: undefined,
     userProfileLoginServiceType: undefined,
-    catalogAccessPolicies: undefined,
     pickSize: undefined,
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
@@ -897,22 +882,6 @@ export default class Terria {
   @computed
   get isAuthenticated(): boolean {
     return !!(this.userAuthToken || this.userProfile);
-  }
-
-  /**
-   * Checks a named permission for an authenticated user. Deployments without
-   * profile definitions grant authenticated users all named permissions;
-   * profile-aware deployments require the permission in `allowed` or an admin
-   * profile. This is the extension point for a future role/claim provider.
-   */
-  hasPermission(permission: string): boolean {
-    if (!this.isAuthenticated) return false;
-    if (!this.configParameters.userProfilesDefinition) return true;
-
-    const profile = this.profile;
-    return (
-      !!profile && (profile.isAdmin || profile.allowed.includes(permission))
-    );
   }
 
   /**
@@ -1104,8 +1073,7 @@ export default class Terria {
         isAuthenticated: this.isAuthenticated,
         profileAllowed: this.profile?.allowed?.slice(),
         profileIsAdmin: this.profile?.isAdmin,
-        userProfilesDefinition: this.configParameters.userProfilesDefinition,
-        catalogAccessPolicies: this.configParameters.catalogAccessPolicies
+        userProfilesDefinition: this.configParameters.userProfilesDefinition
       }),
       () => {
         this.workbench.removeInaccessibleItems();
