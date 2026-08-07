@@ -69,10 +69,13 @@ const LoginPanel = observer((props: Props) => {
       const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
         "base64"
       )}`;
+      const loginServiceUrl =
+        terria.configParameters.userProfileLoginServiceUrl;
+      const resolvedLoginUrl = loginServiceUrl.includes("<username>")
+        ? loginServiceUrl.replace("<username>", username)
+        : loginServiceUrl;
       const resource = new Resource({
-        url: terria.corsProxy.getURL(
-          terria.configParameters.userProfileLoginServiceUrl + username
-        ),
+        url: terria.corsProxy.getURL(resolvedLoginUrl),
         headers: {
           Authorization: header,
           "Cache-Control": "no-cache, no-store, must-revalidate"
