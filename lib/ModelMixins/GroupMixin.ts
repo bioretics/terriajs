@@ -10,6 +10,7 @@ import filterOutUndefined from "../Core/filterOutUndefined";
 import flatten from "../Core/flatten";
 import isDefined from "../Core/isDefined";
 import CatalogMemberFactory from "../Models/Catalog/CatalogMemberFactory";
+import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import Group from "../Models/Catalog/Group";
 import CommonStrata from "../Models/Definition/CommonStrata";
 import Model, { BaseModel } from "../Models/Definition/Model";
@@ -137,6 +138,8 @@ function GroupMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
      * {@see AsyncLoader}
      */
     async loadMembers(): Promise<Result<void>> {
+      if (!ensureCatalogMemberAccess(this)) return Result.none();
+
       try {
         // Call loadMetadata if CatalogMemberMixin
         if (CatalogMemberMixin.isMixedInto(this))

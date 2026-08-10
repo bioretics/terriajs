@@ -1,5 +1,5 @@
 import { Ref, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { DefaultTheme } from "styled-components";
@@ -22,6 +22,17 @@ interface ButtonProps extends Props {
 
 const LOGIN_BUTTON_NAME = "MenuBarLoginButton";
 
+function usernameFromAuthToken(token?: string): string | undefined {
+  if (!token?.startsWith("Basic ")) return undefined;
+  try {
+    const decoded = atob(token.slice("Basic ".length));
+    const separator = decoded.indexOf(":");
+    return separator >= 0 ? decoded.slice(0, separator) : decoded;
+  } catch {
+    return undefined;
+  }
+}
+
 const LoginButton = observer((props: Props) => {
   const storyButtonRef: Ref<HTMLButtonElement> = useRefForTerria(
     LOGIN_BUTTON_NAME,
@@ -32,7 +43,10 @@ const LoginButton = observer((props: Props) => {
     useState<boolean>(false);
 
   const { t } = useTranslation();
-  const isLoggedIn = !!(props.terria.userAuthToken || props.terria.userProfile);
+  const isLoggedIn = props.terria.isAuthenticated;
+  const username =
+    usernameFromAuthToken(props.terria.userAuthToken) ??
+    props.terria.userProfile;
 
   useEffect(() => {
     if (!isLogoutConfirmVisible) return;
@@ -85,6 +99,7 @@ const LoginButton = observer((props: Props) => {
       runInAction(() => {
         if (props.terria.userAuthToken) {
           props.terria.userAuthToken = undefined;
+          props.terria.userProfile = undefined;
         } else {
           viewState.isLoginPanelVisible = true;
         }
@@ -136,7 +151,11 @@ const LoginButton = observer((props: Props) => {
           aria-label={t("login.logoutConfirmTitle")}
         >
           <div className={Styles.logoutConfirmMessage}>
-            {t("login.logoutConfirmMessage")}
+            <Trans
+              i18nKey="login.logoutConfirmMessage"
+              values={{ username }}
+              components={[<strong key="username" />]}
+            />
           </div>
           <div className={Styles.logoutConfirmActions}>
             <button

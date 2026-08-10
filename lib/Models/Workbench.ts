@@ -12,6 +12,11 @@ import LayerOrderingTraits from "../Traits/TraitsClasses/LayerOrderingTraits";
 import CommonStrata from "./Definition/CommonStrata";
 import hasTraits from "./Definition/hasTraits";
 import { BaseModel } from "./Definition/Model";
+import {
+  canAccessCatalogMember,
+  ensureCatalogMemberAccess,
+  isCatalogMemberVisible
+} from "./Authentication/CatalogAccessControl";
 
 const keepOnTop = (model: BaseModel) =>
   hasTraits(model, LayerOrderingTraits, "keepOnTop") && model.keepOnTop;
@@ -27,11 +32,20 @@ export default class Workbench {
   }
 
   /**
-   * Gets or sets the list of items on the workbench.
+   * Gets every item retained by the workbench, including members that may be
+   * filtered from {@link Workbench#items} when the user lacks a permission.
+   */
+  @computed
+  private get allItems(): readonly BaseModel[] {
+    return this._items.map(dereferenceModel);
+  }
+
+  /**
+   * Gets or sets the list of workbench items visible to the current user.
    */
   @computed
   get items(): readonly BaseModel[] {
-    return this._items.map(dereferenceModel);
+    return this.allItems.filter(isCatalogMemberVisible);
   }
   set items(items: readonly BaseModel[]) {
     // Run items through a set to remove duplicates.
@@ -48,7 +62,7 @@ export default class Workbench {
    */
   @computed
   get itemIds(): readonly string[] {
-    return filterOutUndefined(this._items.map((item) => item.uniqueId));
+    return filterOutUndefined(this.items.map((item) => item.uniqueId));
   }
 
   /**
@@ -64,7 +78,7 @@ export default class Workbench {
    */
   @computed
   get hasTimeWMS(): boolean {
-    return this._items.some(
+    return this.items.some(
       (item) =>
         item.type === "wms" &&
         TimeFilterMixin.isMixedInto(item) &&
@@ -90,6 +104,19 @@ export default class Workbench {
   @action
   removeAll() {
     this._items.clear();
+  }
+
+  /**
+   * Removes workbench items the current user is no longer allowed to access,
+   * re-checking each member's permission level against the live auth state.
+   */
+  @action
+  removeInaccessibleItems() {
+    [...this.allItems].forEach((item) => {
+      if (!canAccessCatalogMember(item)) {
+        this.remove(item);
+      }
+    });
   }
 
   /**
@@ -129,16 +156,16 @@ export default class Workbench {
     // Keep reorderable data sources (e.g.: imagery layers) below non-orderable ones (e.g.: GeoJSON).
     if (supportsReordering(targetItem)) {
       while (
-        index < this.items.length &&
-        !supportsReordering(this.items[index])
+        index < this.allItems.length &&
+        !supportsReordering(this.allItems[index])
       ) {
         ++index;
       }
     } else {
       while (
         index > 0 &&
-        this.items.length > 0 &&
-        supportsReordering(this.items[index - 1])
+        this.allItems.length > 0 &&
+        supportsReordering(this.allItems[index - 1])
       ) {
         --index;
       }
@@ -146,18 +173,19 @@ export default class Workbench {
 
     if (!keepOnTop(targetItem)) {
       while (
-        index < this.items.length &&
-        keepOnTop(this.items[index]) &&
-        supportsReordering(this.items[index]) === supportsReordering(targetItem)
+        index < this.allItems.length &&
+        keepOnTop(this.allItems[index]) &&
+        supportsReordering(this.allItems[index]) ===
+          supportsReordering(targetItem)
       ) {
         ++index;
       }
     } else {
       while (
         index > 0 &&
-        this.items.length > 0 &&
-        !keepOnTop(this.items[index - 1]) &&
-        supportsReordering(this.items[index - 1]) ===
+        this.allItems.length > 0 &&
+        !keepOnTop(this.allItems[index - 1]) &&
+        supportsReordering(this.allItems[index - 1]) ===
           supportsReordering(targetItem)
       ) {
         --index;
@@ -188,6 +216,11 @@ export default class Workbench {
         importance: -1
       });
     }
+
+    // Check before inserting the item or loading a reference/map item. The
+    // denial message is intentionally not returned as an error, because it is
+    // an expected authentication prompt rather than a failed catalogue load.
+    if (!ensureCatalogMemberAccess(item)) return Result.none();
 
     this.insertItem(item);
 
@@ -250,7 +283,7 @@ export default class Workbench {
    * @returns The index of the model or its dereferenced equivalent, or -1 if neither exist on the workbench.
    */
   indexOf(item: BaseModel) {
-    return this.items.findIndex(
+    return this.allItems.findIndex(
       (model) =>
         model === item || dereferenceModel(model) === dereferenceModel(item)
     );
