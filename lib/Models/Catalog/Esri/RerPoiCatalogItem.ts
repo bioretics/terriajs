@@ -1220,11 +1220,10 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const activeCache = useLabeledDisplay
       ? this.labeledEntityCache ?? this.unlabeledEntityCache
       : this.unlabeledEntityCache;
-    const inactiveCache =
-      activeCache === this.labeledEntityCache
-        ? this.unlabeledEntityCache
-        : this.labeledEntityCache;
 
+    // Only the data source of the active cache is displayed. Entity
+    // visibility is kept identical in both caches by
+    // syncCachedEntityVisibility, so swapping display mode needs no fixup.
     if (this.unlabeledEntityCache) {
       this.unlabeledEntityCache.dataSource.show =
         layerShown && this.unlabeledEntityCache === activeCache;
@@ -1232,12 +1231,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     if (this.labeledEntityCache) {
       this.labeledEntityCache.dataSource.show =
         layerShown && this.labeledEntityCache === activeCache;
-    }
-
-    if (inactiveCache) {
-      for (const entity of inactiveCache.liveEntityByObjectId.values()) {
-        this.setEntityVisibility(entity, false);
-      }
     }
   }
 
@@ -1296,16 +1289,24 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       });
     }
 
-    const activeCache =
-      (useLabeledDisplay
-        ? this.labeledEntityCache ?? this.unlabeledEntityCache
-        : this.unlabeledEntityCache) ?? this.labeledEntityCache;
-
     this.applyDisplayModeToCaches(useLabeledDisplay, this.show);
 
-    if (activeCache && this.show) {
-      for (const [id, entity] of activeCache.liveEntityByObjectId) {
-        this.setEntityVisibility(entity, visibilityByObjectId.get(id) ?? false);
+    if (this.show) {
+      // Apply to both caches so the one being swapped in is already correct.
+      for (const cache of [
+        this.unlabeledEntityCache,
+        this.labeledEntityCache
+      ]) {
+        if (!cache) continue;
+
+        cache.dataSource.entities.suspendEvents();
+        for (const [id, entity] of cache.liveEntityByObjectId) {
+          this.setEntityVisibility(
+            entity,
+            visibilityByObjectId.get(id) ?? false
+          );
+        }
+        cache.dataSource.entities.resumeEvents();
       }
     }
 
@@ -1479,16 +1480,42 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     });
   }
 
+  /**
+   * True when the viewport is zoomed out past `minLevelId`, so no feature can
+   * satisfy the level filter and only protected POIs should remain visible.
+   */
+  private isLevelRangeEmpty(
+    minLevelId: number | undefined,
+    maxLevelId: number | undefined
+  ): boolean {
+    return (
+      isDefined(minLevelId) && isDefined(maxLevelId) && maxLevelId < minLevelId
+    );
+  }
+
   private async applyIncrementalUpdate(
     nextQuery: DynamicViewportQuery,
     signal?: AbortSignal
   ) {
+    if (
+      this.isLevelRangeEmpty(
+        nextQuery.requestOptions.minLevelId,
+        nextQuery.requestOptions.maxLevelId
+      )
+    ) {
+      // Zoomed out past minLevelId: skip the contradictory LEVEL_ID query and
+      // keep the cached POIs, letting the visibility sync hide them.
+      this.activeDynamicQuery = nextQuery;
+      this.syncCachedEntityVisibility(nextQuery);
+      return;
+    }
+
     let geoJson: FeatureCollectionWithCrs<
       Geometry | GeometryCollection,
       Properties
     >;
     try {
-      geoJson = await this.loadGeoJsonFromServer(
+      geoJson = await this.loadGeoJsonFromServerOrEmpty(
         nextQuery.requestOptions,
         signal
       );
@@ -1594,7 +1621,13 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const dynamicQuery =
       this.pendingDynamicQuery ?? this.getDynamicViewportQuery();
 
-    if (!dynamicQuery) {
+    if (
+      !dynamicQuery ||
+      this.isLevelRangeEmpty(
+        dynamicQuery.requestOptions.minLevelId,
+        dynamicQuery.requestOptions.maxLevelId
+      )
+    ) {
       return featureCollection([]) as any;
     }
 
@@ -1640,6 +1673,33 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
     if (!combined.features || combined.features.length === 0)
       throw new Error("RerPoi query returned no features");
+    if (combined.features.length > this.maxFeatures)
+      throw new Error("RerPoi query exceeded the maximum feature limit");
+    if (combined.exceededTransferLimit === true)
+      throw new Error("RerPoi query exceeded transfer limit");
+
+    return (featureDataToGeoJson(combined) ?? {
+      type: "FeatureCollection",
+      features: []
+    }) as any;
+  }
+
+  /**
+   * Like {@link loadGeoJsonFromServer}, but treats an empty result as a valid
+   * empty FeatureCollection instead of an error, so a viewport with no POIs
+   * still prunes the cache and refreshes visibility.
+   */
+  private async loadGeoJsonFromServerOrEmpty(
+    queryOptions?: EsriJsonQueryOptions,
+    signal?: AbortSignal
+  ): Promise<
+    FeatureCollectionWithCrs<Geometry | GeometryCollection, Properties>
+  > {
+    const combined = await this.loadEsriJsonFromServer(queryOptions, signal);
+
+    if (!combined.features || combined.features.length === 0) {
+      return featureCollection([]) as any;
+    }
     if (combined.features.length > this.maxFeatures)
       throw new Error("RerPoi query exceeded the maximum feature limit");
     if (combined.exceededTransferLimit === true)
