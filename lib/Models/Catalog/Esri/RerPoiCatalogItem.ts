@@ -126,8 +126,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private dynamicReloadTimer: ReturnType<typeof setTimeout> | undefined;
   private pendingDynamicQuery: DynamicViewportQuery | undefined;
   private activeDynamicQuery: DynamicViewportQuery | undefined;
-  private dynamicReloadQueued = false;
-  private dynamicReloadInProgress = false;
+  private dynamicReloadGeneration = 0;
+  private dynamicReloadAbortController: AbortController | undefined;
   private currentViewportLevelId: number | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
@@ -548,8 +548,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       this.dynamicReloadTimer = undefined;
     }
 
-    this.dynamicReloadQueued = false;
-    this.dynamicReloadInProgress = false;
+    this.dynamicReloadGeneration++;
+    this.dynamicReloadAbortController?.abort();
+    this.dynamicReloadAbortController = undefined;
     runInAction(() => {
       this.unlabeledEntityCache = undefined;
       this.labeledEntityCache = undefined;
@@ -584,8 +585,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       this.dynamicReloadTimer = undefined;
     }
 
-    this.dynamicReloadQueued = false;
-    this.dynamicReloadInProgress = false;
+    this.dynamicReloadGeneration++;
+    this.dynamicReloadAbortController?.abort();
+    this.dynamicReloadAbortController = undefined;
     runInAction(() => {
       this.unlabeledEntityCache = undefined;
       this.labeledEntityCache = undefined;
@@ -828,7 +830,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   private async loadEsriJsonFromServer(
-    queryOptions?: EsriJsonQueryOptions
+    queryOptions?: EsriJsonQueryOptions,
+    signal?: AbortSignal
   ): Promise<EsriJsonFeatureServerResponse> {
     const supportsPagination = this.supportsPagination;
     const featuresPerRequest = this.featuresPerRequest;
@@ -841,6 +844,15 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       const urlString = runInAction(() =>
         this.buildEsriJsonUrl({ ...queryOptions, resultOffset })
       );
+      if (signal) {
+        const response = await fetch(urlString, { signal });
+        if (!response.ok) {
+          throw new Error(
+            `RerPoi fetch failed: ${response.status} ${response.statusText}`
+          );
+        }
+        return response.json();
+      }
       return loadJson(urlString);
     };
 
@@ -903,6 +915,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       clearTimeout(this.dynamicReloadTimer);
       this.dynamicReloadTimer = undefined;
     }
+
+    // Bump generation on every queue — any in-flight request for a previous
+    // generation will be discarded when it completes.
+    this.dynamicReloadGeneration++;
+
     const debounceMs = this.getRerPoiTrait("dynamicRequestDebounceMs");
     this.dynamicReloadTimer = setTimeout(
       () => {
@@ -916,8 +933,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private async reloadDynamicViewportData() {
     if (!this.isShownOnMainMap || this.isCameraPastTiltLimit()) return;
 
+    // Capture current generation if it changes while await results
+    // are stale and must be discarded.
+    const myGeneration = this.dynamicReloadGeneration;
+
+    // Abort any previous in-flight HTTP request.
+    this.dynamicReloadAbortController?.abort();
+    const abortController = new AbortController();
+    this.dynamicReloadAbortController = abortController;
+
     if (!this.serviceLevelIdRangeLoaded) {
       await this.loadServiceLevelIdRange();
+      if (myGeneration !== this.dynamicReloadGeneration) return;
       if (!this.show || this.isCameraPastTiltLimit()) return;
     }
 
@@ -936,12 +963,6 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       return;
     }
 
-    if (this.dynamicReloadInProgress || this.isLoadingMapItems) {
-      this.dynamicReloadQueued = true;
-      return;
-    }
-
-    this.dynamicReloadInProgress = true;
     try {
       if (this.isFirstDynamicLoad || !this.unlabeledEntityCache) {
         this.pendingDynamicQuery = nextQuery;
@@ -949,6 +970,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
           "Failed to reload RerPoi dynamic viewport data"
         );
         this.pendingDynamicQuery = undefined;
+
+        // Staleness check after the potentially long loadMapItems await.
+        if (myGeneration !== this.dynamicReloadGeneration) return;
 
         const unlabeledDataSource = this.findGeoJsonDataSource();
         if (unlabeledDataSource) {
@@ -962,26 +986,27 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
           this.tagEntitiesWithCatalogItem(unlabeledDataSource);
 
           await this.ensureLabeledEntityCache(nextQuery, true);
+          if (myGeneration !== this.dynamicReloadGeneration) return;
 
           this.activeDynamicQuery = nextQuery;
           this.isFirstDynamicLoad = false;
           await this.preloadServiceQueryableValues();
+          if (myGeneration !== this.dynamicReloadGeneration) return;
           this.syncCachedEntityVisibility(nextQuery);
           this.updateEnumValues();
           this.sanitizeQueryValues();
         }
       } else {
-        await this.applyIncrementalUpdate(nextQuery);
+        await this.applyIncrementalUpdate(nextQuery, abortController.signal);
+        // Staleness check after the incremental update await.
+        if (myGeneration !== this.dynamicReloadGeneration) return;
         this.updateEnumValues();
         this.sanitizeQueryValues();
       }
-    } finally {
-      this.dynamicReloadInProgress = false;
-      if (this.dynamicReloadQueued) {
-        const shouldRetry = !this.isCameraPastTiltLimit();
-        this.dynamicReloadQueued = false;
-        if (shouldRetry) this.queueDynamicReload(true);
-      }
+    } catch (error: unknown) {
+      // AbortError is expected when canceling a stale request so ignore it.
+      if (error instanceof DOMException && error.name === "AbortError") return;
+      throw error;
     }
   }
 
@@ -1166,7 +1191,9 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       clearTimeout(this.dynamicReloadTimer);
       this.dynamicReloadTimer = undefined;
     }
-    this.dynamicReloadQueued = false;
+    this.dynamicReloadGeneration++;
+    this.dynamicReloadAbortController?.abort();
+    this.dynamicReloadAbortController = undefined;
 
     for (const cache of [this.unlabeledEntityCache, this.labeledEntityCache]) {
       if (!cache) continue;
@@ -1452,14 +1479,23 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     });
   }
 
-  private async applyIncrementalUpdate(nextQuery: DynamicViewportQuery) {
+  private async applyIncrementalUpdate(
+    nextQuery: DynamicViewportQuery,
+    signal?: AbortSignal
+  ) {
     let geoJson: FeatureCollectionWithCrs<
       Geometry | GeometryCollection,
       Properties
     >;
     try {
-      geoJson = await this.loadGeoJsonFromServer(nextQuery.requestOptions);
-    } catch {
+      geoJson = await this.loadGeoJsonFromServer(
+        nextQuery.requestOptions,
+        signal
+      );
+    } catch (error: unknown) {
+      // Rethrow AbortError so reloadDynamicViewportData can handle it.
+      if (error instanceof DOMException && error.name === "AbortError")
+        throw error;
       return;
     }
 
@@ -1595,11 +1631,12 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   }
 
   protected async loadGeoJsonFromServer(
-    queryOptions?: EsriJsonQueryOptions
+    queryOptions?: EsriJsonQueryOptions,
+    signal?: AbortSignal
   ): Promise<
     FeatureCollectionWithCrs<Geometry | GeometryCollection, Properties>
   > {
-    const combined = await this.loadEsriJsonFromServer(queryOptions);
+    const combined = await this.loadEsriJsonFromServer(queryOptions, signal);
 
     if (!combined.features || combined.features.length === 0)
       throw new Error("RerPoi query returned no features");
