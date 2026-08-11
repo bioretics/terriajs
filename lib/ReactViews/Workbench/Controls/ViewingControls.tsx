@@ -145,6 +145,10 @@ class ViewingControls extends React.Component<
     terria.removeSelectedFeaturesForModel(this.props.item);
     if (TimeVarying.is(this.props.item))
       this.props.viewState.terria.timelineStack.remove(this.props.item);
+    runInAction(() => {
+      this.props.viewState.measurableDownloadPanelIsVisible = false;
+      this.props.viewState.measurableDownloadPanelDefaultName = "";
+    });
     this.props.viewState.terria.analytics?.logEvent(
       Category.dataSource,
       DataSourceAction.removeFromWorkbench,
