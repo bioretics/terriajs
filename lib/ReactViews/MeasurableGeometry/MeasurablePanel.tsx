@@ -111,6 +111,7 @@ const MeasurablePanel = observer((props: Props) => {
     );
     viewState.measurablePanelIsVisible = false;
     viewState.mobileMeasureToolsButtonVisible = false;
+    viewState.measurablePanelSourceItemId = undefined;
     [
       MeasureToolsController.id,
       MeasureLineTool.id,

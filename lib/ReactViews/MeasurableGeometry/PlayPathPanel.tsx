@@ -143,9 +143,7 @@ const PlayPathPanel = observer((props: Props) => {
           type="button"
           onClick={() => {
             props.onClose?.();
-            runInAction(() => {
-              props.viewState.playPathPanelIsVisible = false;
-            });
+            props.viewState.closePlayPathPanel();
           }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}

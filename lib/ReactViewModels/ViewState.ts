@@ -447,10 +447,28 @@ export default class ViewState {
   @observable measurableDownloadPanelDefaultName: string = "";
 
   /**
+   * Unique id of the workbench item the DownloadPanel was opened for.
+   * @type {String}
+   */
+  @observable measurableDownloadPanelSourceItemId: string | undefined;
+
+  /**
+   * Unique id of the workbench item the MeasurablePanel was opened for.
+   * @type {String}
+   */
+  @observable measurablePanelSourceItemId: string | undefined;
+
+  /**
    * Gets or sets a value indicating whether the PlayPathPanel is visible.
    * @type {Boolean}
    */
   @observable playPathPanelIsVisible: boolean = false;
+
+  /**
+   * Unique id of the workbench item the PlayPathPanel was opened for.
+   * @type {String}
+   */
+  @observable playPathPanelSourceItemId: string | undefined;
 
   /**
    * Gets or sets a value indicating whether the QueryPanel is visible.
@@ -508,6 +526,9 @@ export default class ViewState {
   private _measurablePanelIsVisibleSubscription: IReactionDisposer;
   private _disposeSamplingPathStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
+  private _measurableDownloadPanelSourceItemSubscription: IReactionDisposer;
+  private _measurablePanelSourceItemSubscription: IReactionDisposer;
+  private _playPathPanelSourceItemSubscription: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -686,6 +707,54 @@ export default class ViewState {
       }
     );
 
+    this._measurableDownloadPanelSourceItemSubscription = reaction(
+      () => {
+        const sourceItemId = this.measurableDownloadPanelSourceItemId;
+        return (
+          this.measurableDownloadPanelIsVisible &&
+          sourceItemId !== undefined &&
+          !this.terria.workbench.itemIds.includes(sourceItemId)
+        );
+      },
+      (sourceItemRemoved) => {
+        if (sourceItemRemoved) {
+          this.closeMeasurableDownloadPanel();
+        }
+      }
+    );
+
+    this._measurablePanelSourceItemSubscription = reaction(
+      () => {
+        const sourceItemId = this.measurablePanelSourceItemId;
+        return (
+          this.measurablePanelIsVisible &&
+          sourceItemId !== undefined &&
+          !this.terria.workbench.itemIds.includes(sourceItemId)
+        );
+      },
+      (sourceItemRemoved) => {
+        if (sourceItemRemoved) {
+          this.closeMeasurablePanel();
+        }
+      }
+    );
+
+    this._playPathPanelSourceItemSubscription = reaction(
+      () => {
+        const sourceItemId = this.playPathPanelSourceItemId;
+        return (
+          this.playPathPanelIsVisible &&
+          sourceItemId !== undefined &&
+          !this.terria.workbench.itemIds.includes(sourceItemId)
+        );
+      },
+      (sourceItemRemoved) => {
+        if (sourceItemRemoved) {
+          this.closePlayPathPanel();
+        }
+      }
+    );
+
     this._viewshedPanelIsVisibleSubscription = reaction(
       () => this.terria.viewshedDistances,
       (viewshedDistances?: (number | undefined)[]) => {
@@ -736,7 +805,38 @@ export default class ViewState {
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
     this._viewshedPanelIsVisibleSubscription();
+    this._measurableDownloadPanelSourceItemSubscription();
+    this._measurablePanelSourceItemSubscription();
+    this._playPathPanelSourceItemSubscription();
     this.searchState.dispose();
+  }
+
+  @action
+  closeMeasurableDownloadPanel() {
+    this.measurableDownloadPanelIsVisible = false;
+    this.measurableDownloadPanelDefaultName = "";
+    this.measurableDownloadPanelSourceItemId = undefined;
+    this.terria.measurableGeomList.splice(
+      1,
+      this.terria.measurableGeomList.length - 1
+    );
+    this.terria.measurableGeometryManager.splice(
+      1,
+      this.terria.measurableGeometryManager.length - 1
+    );
+  }
+
+  @action
+  closeMeasurablePanel() {
+    this.measurablePanelIsVisible = false;
+    this.mobileMeasureToolsButtonVisible = false;
+    this.measurablePanelSourceItemId = undefined;
+  }
+
+  @action
+  closePlayPathPanel() {
+    this.playPathPanelIsVisible = false;
+    this.playPathPanelSourceItemId = undefined;
   }
 
   @action
