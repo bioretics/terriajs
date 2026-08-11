@@ -346,6 +346,10 @@ class KmlCatalogItem
     }
   }
 
+  override get canSampleMeasurableGeometry(): boolean {
+    return true;
+  }
+
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.
   private isPolygonValid(polygons: Entity[]): boolean {
     const pointOccurrences: { point: Cartesian3; count: number }[] = [];

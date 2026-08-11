@@ -459,7 +459,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         if (this.canUseAsPath) {
           action = Promise.resolve(this.computePath());
         } else {
-          (this as any).tryGeoJsonOrGpxSampling();
+          action = this.tryGeoJsonOrGpxSampling();
         }
         await action;
       } catch (e) {
@@ -1601,6 +1601,15 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
 
       this._pathType = pathType;
       return pathType !== PathTypes.noPath;
+    }
+
+    @computed
+    override get canSampleMeasurableGeometry(): boolean {
+      return (
+        this.canUseAsPath ||
+        typeof (this as any).sampleFromGeojsonData === "function" ||
+        typeof (this as any).sampleFromGpxData === "function"
+      );
     }
 
     private isCrsOkForPath(fc: any): boolean {
