@@ -18,7 +18,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [loadPercentage, setLoadPercentage] = useState(0);
-  const [indeterminate, setIndeterminate] = useState(false);
+  const indeterminateRef = useRef(false);
 
   const [isPitchTooLowState, setIsPitchTooLowState] = useState(false);
 
@@ -194,7 +194,9 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       setLoadPercentage(percentage);
     };
 
-    const onIndeterminate = (mode: boolean) => setIndeterminate(mode);
+    const onIndeterminate = (mode: boolean) => {
+      indeterminateRef.current = mode;
+    };
 
     terria.tileLoadProgressEvent.addEventListener(onProgress);
     terria.indeterminateTileLoadProgressEvent.addEventListener(onIndeterminate);
@@ -310,21 +312,28 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         );
         dist = Cartesian3.distance(cameraTrueCartesian, cartesians[initialIdx]);
       }
+      if (!(dist > 1)) {
+        dist = 1000;
+      }
     }
 
     const waitForProgressComplete = () =>
       new Promise<"loaded">((resolve) => {
-        if (loadPercentageRef.current === 100 && !indeterminate) {
+        if (loadPercentageRef.current === 100 && !indeterminateRef.current) {
           resolve("loaded");
           return;
         }
         const onProg = () => {
-          if (loadPercentageRef.current === 100 && !indeterminate) {
+          if (loadPercentageRef.current === 100 && !indeterminateRef.current) {
             terria.tileLoadProgressEvent.removeEventListener(onProg);
+            terria.indeterminateTileLoadProgressEvent.removeEventListener(
+              onProg
+            );
             resolve("loaded");
           }
         };
         terria.tileLoadProgressEvent.addEventListener(onProg);
+        terria.indeterminateTileLoadProgressEvent.addEventListener(onProg);
       });
 
     const waitForLeafletFlight = (durationSeconds: number) =>
@@ -360,21 +369,27 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
             CesiumMath.TWO_PI) %
           CesiumMath.TWO_PI;
         hpr = new HeadingPitchRange(heading, -pitch, dist);
-      } else if (useLookAt && isCesium2D && isTerminalStep && pts.length > 1) {
+      } else if (useLookAt && isTerminalStep && pts.length > 1) {
         const previous = isForwardStep ? pts[i - 1] : pts[i + 1];
         const heading =
           (new EllipsoidGeodesic(previous, pts[i]).startHeading +
             CesiumMath.TWO_PI) %
           CesiumMath.TWO_PI;
         hpr = new HeadingPitchRange(heading, -pitch, dist);
+      } else if (useLookAt && camera) {
+        hpr = new HeadingPitchRange(camera.heading, -pitch, dist);
       }
 
-      await viewer.doZoomTo(
-        useLookAt && hpr
-          ? CameraView.fromLookAt(pts[i], hpr)
-          : Rectangle.fromCartographicArray([pts[i]]),
-        duration
-      );
+      try {
+        await viewer.doZoomTo(
+          useLookAt && hpr
+            ? CameraView.fromLookAt(pts[i], hpr)
+            : Rectangle.fromCartographicArray([pts[i]]),
+          duration
+        );
+      } catch {
+        return false;
+      }
 
       const result = await Promise.race([
         isLeafletViewer
@@ -390,6 +405,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       return true;
     };
 
+    let reachedEnd = false;
+
     const loop = async (start: number, end: number, step: number) => {
       for (
         let i = start;
@@ -398,15 +415,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         i !== end;
         i += step
       ) {
-        if (
-          !(
-            startIdxRef.current === currentPointIndexRef.current &&
-            i === currentPointIndexRef.current
-          )
-        ) {
-          const ok = await tryStep(i);
-          if (!ok) break;
-        }
+        const ok = await tryStep(i);
+        if (!ok) break;
 
         const nextIndex = i + step;
 
@@ -414,6 +424,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
           const finalIndex = step > 0 ? pts.length - 1 : 0;
           setCurrentPointIndex(finalIndex);
           currentPointIndexRef.current = finalIndex;
+          reachedEnd = true;
           break;
         }
 
@@ -431,11 +442,17 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     }
 
     if (playIdRef.current === thisPlayId) {
+      if (reachedEnd) {
+        resumeAvailableRef.current = false;
+        resumeGeometryIndexRef.current = null;
+        resumePointIndexRef.current = 0;
+      }
+
       runInAction(() => {
         viewState.isPlayingPath = false;
       });
     }
-  }, [getPoints, terria, viewState, indeterminate]);
+  }, [getPoints, terria, viewState]);
 
   const onPlay = () => {
     const pts = getPoints();
