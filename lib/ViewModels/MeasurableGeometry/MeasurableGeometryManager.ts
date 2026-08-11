@@ -245,7 +245,10 @@ export default class MeasurableGeometryManager {
     circleRadius?: number,
     circleCenter?: Cartographic,
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
-  ) {
+  ): Promise<void> {
+    if (!cartoPositions.length) {
+      return Promise.resolve();
+    }
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid =
       this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
@@ -296,7 +299,7 @@ export default class MeasurableGeometryManager {
         this.geoidModel.getHeights(interpolatedCartographics)
       );
     }
-    Promise.all(terrainPromises).then((sampledCartographics) => {
+    return Promise.all(terrainPromises).then((sampledCartographics) => {
       if (sampledCartographics.length === 2) {
         const geoidHeights = sampledCartographics[1];
         sampledCartographics[0].forEach(

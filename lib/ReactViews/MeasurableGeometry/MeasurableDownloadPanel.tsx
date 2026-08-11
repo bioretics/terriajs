@@ -19,10 +19,12 @@ interface Props {
 const MeasurableDownloadPanel = observer((props: Props) => {
   const { onClose, ...downloadProps } = props;
   const isMobile = downloadProps.viewState.useSmallScreenInterface;
+  const downloadGeomState =
+    downloadProps.viewState.getMeasurableGeomStateForSource(
+      downloadProps.viewState.measurableDownloadPanelSourceItemId
+    );
   const currentGeom =
-    downloadProps.terria.measurableGeomList[
-      downloadProps.terria.measurableGeometryIndex
-    ];
+    downloadGeomState.geomList[downloadGeomState.geometryIndex];
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: downloadProps.viewState.measurablePanelIsCollapsed,

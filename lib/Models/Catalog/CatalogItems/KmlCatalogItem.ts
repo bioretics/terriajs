@@ -404,12 +404,12 @@ class KmlCatalogItem
     }
   }
 
-  computePath() {
+  computePath(): Promise<void> {
     const entities = this._dataSource?.entities?.values ?? [];
     const items = entities.filter((e) => e && (e.polygon || e.polyline));
-    if (items.length === 0) return;
+    if (items.length === 0) return Promise.resolve();
 
-    items.forEach((element, i) => {
+    const promises = items.map((element, i) => {
       const description = element.description?.getValue(JulianDate.now());
       let pathNotes = "";
       if (description) {
@@ -418,7 +418,7 @@ class KmlCatalogItem
         pathNotes = doc.body.textContent || "";
       }
       const allCoordinates = this.getPositions(element);
-      if (allCoordinates.length === 0) return;
+      if (allCoordinates.length === 0) return Promise.resolve();
 
       const allCartographics = allCoordinates.map((elem) =>
         Cartographic.fromCartesian(elem)
@@ -433,8 +433,10 @@ class KmlCatalogItem
             allCoordinates[allCoordinates.length - 1]
           ));
 
-      this.asPath(positions, pathNotes, i, closeLoop);
+      return this.asPath(positions, pathNotes, i, closeLoop);
     });
+
+    return Promise.all(promises).then(() => {});
   }
 
   // Retrieves the positions of an entity, either from a polyline or polygon.

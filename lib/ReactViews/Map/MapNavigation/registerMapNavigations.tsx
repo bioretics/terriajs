@@ -138,6 +138,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     viewState.measurableDownloadPanelSourceItemId = undefined;
     viewState.measurablePanelSourceItemId = undefined;
     viewState.playPathPanelSourceItemId = undefined;
+    viewState.pendingMeasurableGeomSourceItemId = undefined;
+    viewState.lastMeasurableGeomSourceItemId = undefined;
   };
 
   const resetMeasureGeometryCollections = () => {

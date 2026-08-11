@@ -477,6 +477,7 @@ class ViewingControls extends React.Component<
       item.canSampleMeasurableGeometry
     ) {
       runInAction(() => {
+        this.props.viewState.beginMeasurableGeomLoadForItem(item.uniqueId);
         this.props.viewState.measurableDownloadPanelDefaultName =
           getName(item) || "";
         this.props.viewState.measurableDownloadPanelSourceItemId =
@@ -488,6 +489,15 @@ class ViewingControls extends React.Component<
     await exportData(item).catch((e) => {
       this.props.item.terria.raiseErrorToUser(e);
     });
+
+    if (
+      MeasurableGeometryMixin.isMixedInto(item) &&
+      item.canSampleMeasurableGeometry
+    ) {
+      runInAction(() => {
+        this.props.viewState.finishMeasurableGeomLoadForItem(item.uniqueId);
+      });
+    }
   }
 
   /**
@@ -642,6 +652,9 @@ class ViewingControls extends React.Component<
                 }
                 onClick={() =>
                   runInAction(() => {
+                    this.props.viewState.beginMeasurableGeomLoadForItem(
+                      item.uniqueId
+                    );
                     this.props.viewState.measurablePanelSourceItemId =
                       item.uniqueId;
                     if (
@@ -650,7 +663,13 @@ class ViewingControls extends React.Component<
                     ) {
                       this.props.viewState.measurablePanelIsVisible = true;
                     }
-                    item.computePath();
+                    Promise.resolve(item.computePath()).then(() => {
+                      runInAction(() => {
+                        this.props.viewState.finishMeasurableGeomLoadForItem(
+                          item.uniqueId
+                        );
+                      });
+                    });
                     [
                       MeasureToolsController.id,
                       MeasureLineTool.id,
@@ -676,9 +695,16 @@ class ViewingControls extends React.Component<
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
-                      item.computePath();
+                      viewState.beginMeasurableGeomLoadForItem(item.uniqueId);
                       viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
+                    });
+                    Promise.resolve(item.computePath()).then(() => {
+                      runInAction(() => {
+                        viewState.finishMeasurableGeomLoadForItem(
+                          item.uniqueId
+                        );
+                      });
                     });
                   }
                 }}

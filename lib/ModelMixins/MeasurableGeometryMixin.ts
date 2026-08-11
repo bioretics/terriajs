@@ -30,7 +30,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       return this.canUseAsPath;
     }
 
-    abstract computePath(): void;
+    abstract computePath(): void | Promise<void>;
 
     @action
     update(
@@ -42,26 +42,28 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       circleRadius?: number,
       circleCenter?: Cartographic,
       geomProperties?: Partial<MeasurableGeometry> | JsonObject
-    ) {
+    ): Promise<void> {
       if (indexPath && !this.terria.measurableGeometryManager[indexPath]) {
         this.terria.measurableGeometryManager.push(
           Object.freeze(new MeasurableGeometryManager(this.terria))
         );
       }
-      this.terria.measurableGeometryManager[
-        this.terria.measurableGeometryIndex
-      ].sampleFromCartographics(
-        stopPoints,
-        closeLoop ?? false,
-        false,
-        [],
-        pathNotes,
-        true,
-        indexPath,
-        isCircle,
-        circleRadius,
-        circleCenter,
-        geomProperties
+      return (
+        this.terria.measurableGeometryManager[
+          this.terria.measurableGeometryIndex
+        ].sampleFromCartographics(
+          stopPoints,
+          closeLoop ?? false,
+          false,
+          [],
+          pathNotes,
+          true,
+          indexPath,
+          isCircle,
+          circleRadius,
+          circleCenter,
+          geomProperties
+        ) ?? Promise.resolve()
       );
     }
 
@@ -74,9 +76,9 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
       circleRadius?: number,
       circleCenter?: Cartographic,
       geomProperties?: Partial<MeasurableGeometry> | JsonObject
-    ) {
+    ): Promise<void> {
       if (!this?.terria) {
-        return;
+        return Promise.resolve();
       }
 
       const terrainProvider: TerrainProvider | undefined =
@@ -95,7 +97,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         );
       }
 
-      prom.then((newPositions: Cartographic[]) => {
+      return prom.then((newPositions: Cartographic[]) =>
         this.update(
           newPositions,
           pathNotes,
@@ -105,8 +107,8 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
           circleRadius,
           circleCenter,
           geomProperties
-        );
-      });
+        )
+      );
     }
   }
 

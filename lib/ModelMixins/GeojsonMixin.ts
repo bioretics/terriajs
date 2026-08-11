@@ -1804,8 +1804,12 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       });
     }
 
-    computePath() {
-      if (!this.readyData || !isJsonArray(this.readyData.features)) return;
+    computePath(): Promise<void> {
+      if (!this.readyData || !isJsonArray(this.readyData.features)) {
+        return Promise.resolve();
+      }
+
+      const promises: Promise<void>[] = [];
 
       const processFeature = (feature: any, index?: number) => {
         const coordsResult = this.getPathCoordsForFeature(index);
@@ -1825,15 +1829,17 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         const coordinates = this.convertJsonCoords(jsonCoords);
         const geomProperties = properties;
 
-        this.asPath(
-          coordinates,
-          pathNotes,
-          index,
-          closeLoop,
-          isCircle,
-          circleRadius,
-          circleCenter,
-          geomProperties
+        promises.push(
+          this.asPath(
+            coordinates,
+            pathNotes,
+            index,
+            closeLoop,
+            isCircle,
+            circleRadius,
+            circleCenter,
+            geomProperties
+          )
         );
       };
 
@@ -1843,6 +1849,8 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
           this.readyData.features.length === 1 ? undefined : i
         );
       }
+
+      return Promise.all(promises).then(() => {});
     }
 
     private getPathCoordsForFeature(
