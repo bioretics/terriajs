@@ -17,7 +17,9 @@ import {
 } from "../Core/AnalyticEvents/analyticEvents";
 import Result from "../Core/Result";
 import triggerResize from "../Core/triggerResize";
-import PickedFeatures from "../Map/PickedFeatures/PickedFeatures";
+import PickedFeatures, {
+  featureBelongsToCatalogItem
+} from "../Map/PickedFeatures/PickedFeatures";
 import CatalogMemberMixin, { getName } from "../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../ModelMixins/GroupMixin";
 import MappableMixin from "../ModelMixins/MappableMixin";
@@ -25,6 +27,7 @@ import ReferenceMixin from "../ModelMixins/ReferenceMixin";
 import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import CommonStrata from "../Models/Definition/CommonStrata";
 import { BaseModel } from "../Models/Definition/Model";
+import TerriaFeature from "../Models/Feature/Feature";
 import getAncestors from "../Models/getAncestors";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 import Terria from "../Models/Terria";
@@ -32,6 +35,7 @@ import { ViewingControl } from "../Models/ViewingControls";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
 import { FeatureInfoPanelButtonGenerator } from "../ViewModels/FeatureInfoPanel";
+import filterOutUndefined from "../Core/filterOutUndefined";
 import {
   defaultTourPoints,
   RelativePosition,
@@ -405,6 +409,11 @@ export default class ViewState {
   @observable featureInfoPanelIsVisible: boolean = false;
 
   /**
+   * Unique ids of the workbench items the FeatureInfoPanel was opened for.
+   */
+  @observable featureInfoPanelSourceItemIds: string[] = [];
+
+  /**
    * Gets or sets a value indicating whether the feature info panel is collapsed.
    * When it's collapsed, only the title bar is visible.
    * @type {Boolean}
@@ -529,6 +538,7 @@ export default class ViewState {
   private _measurableDownloadPanelSourceItemSubscription: IReactionDisposer;
   private _measurablePanelSourceItemSubscription: IReactionDisposer;
   private _playPathPanelSourceItemSubscription: IReactionDisposer;
+  private _featureInfoPanelSourceItemSubscription: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -549,11 +559,36 @@ export default class ViewState {
       () => this.terria.pickedFeatures,
       (pickedFeatures: PickedFeatures | undefined) => {
         if (this.terria.isPickInfoEnabled) {
-          if (defined(pickedFeatures)) {
-            this.featureInfoPanelIsVisible = true;
-            this.featureInfoPanelIsCollapsed = false;
-          } else {
+          if (!pickedFeatures) {
             this.featureInfoPanelIsVisible = false;
+            this.featureInfoPanelSourceItemIds = [];
+            return;
+          }
+
+          const currentPickedFeatures = pickedFeatures;
+          this.featureInfoPanelIsVisible = true;
+          this.featureInfoPanelIsCollapsed = false;
+          this.featureInfoPanelSourceItemIds = [];
+          const assignSourceItemIds = () => {
+            if (this.terria.pickedFeatures !== currentPickedFeatures) {
+              return;
+            }
+            this.featureInfoPanelSourceItemIds = filterOutUndefined(
+              this.terria.workbench.items
+                .filter((item) =>
+                  currentPickedFeatures.features.some((feature) =>
+                    featureBelongsToCatalogItem(feature as TerriaFeature, item)
+                  )
+                )
+                .map((item) => item.uniqueId)
+            );
+          };
+          if (currentPickedFeatures.allFeaturesAvailablePromise) {
+            currentPickedFeatures.allFeaturesAvailablePromise.then(() => {
+              runInAction(assignSourceItemIds);
+            });
+          } else {
+            assignSourceItemIds();
           }
         }
       }
@@ -755,6 +790,24 @@ export default class ViewState {
       }
     );
 
+    this._featureInfoPanelSourceItemSubscription = reaction(
+      () => {
+        const sourceItemIds = this.featureInfoPanelSourceItemIds;
+        return (
+          this.featureInfoPanelIsVisible &&
+          sourceItemIds.length > 0 &&
+          sourceItemIds.every(
+            (id) => !this.terria.workbench.itemIds.includes(id)
+          )
+        );
+      },
+      (sourceItemsRemoved) => {
+        if (sourceItemsRemoved) {
+          this.closeFeatureInfoPanel();
+        }
+      }
+    );
+
     this._viewshedPanelIsVisibleSubscription = reaction(
       () => this.terria.viewshedDistances,
       (viewshedDistances?: (number | undefined)[]) => {
@@ -808,7 +861,16 @@ export default class ViewState {
     this._measurableDownloadPanelSourceItemSubscription();
     this._measurablePanelSourceItemSubscription();
     this._playPathPanelSourceItemSubscription();
+    this._featureInfoPanelSourceItemSubscription();
     this.searchState.dispose();
+  }
+
+  @action
+  closeFeatureInfoPanel() {
+    this.featureInfoPanelIsVisible = false;
+    this.featureInfoPanelSourceItemIds = [];
+    this.terria.pickedFeatures = undefined;
+    this.terria.selectedFeature = undefined;
   }
 
   @action
