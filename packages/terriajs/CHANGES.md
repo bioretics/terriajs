@@ -7,6 +7,8 @@
 - Harden the custom markdown/HTML sanitizer: replaced the blanket `ALLOW_UNKNOWN_PROTOCOLS` DOMPurify option (which preserved OS/app-handler schemes such as `vscode:`, `ms-its:` and `slack:` on links and images) with a scoped `uponSanitizeAttribute` hook. The hook keeps custom components' free-text attributes verbatim (so values may contain `:`, e.g. a chart's `column-titles`) while scheme-validating their URL attributes per URL, closing a gap where a dangerous scheme could hide in a comma-separated `sources`/`downloads` list.
 - Upgrade terriajs-server to 5.0.0-alpha.4
 - Document security best practices for production deployment of terriajs
+- Fix an error when picking features on a Mapbox vector tile layer: `@mapbox/vector-tile` now builds feature props with a null prototype, which broke Cesium's `ImageryLayerFeatureInfo` methods that call `hasOwnProperty` directly. Props are now copied into a plain object before use.
+- Move catalog index from terria.ts class to catalog instance
 
 #### 8.12.5 - 2026-07-28
 
@@ -14,6 +16,9 @@
 - Upgraded `terriajs-cesium` to `26.0.0` and `terriajs-cesium-widgets` to `16.0.0`. We are now using cesium 1.142.
 - Upgraded terriajs-server to v5.0.0-alpha.3
 - Upgraded to i18next v26 and migrated to i18next select pattern `(t($ => translation.key))` #7882
+- Show spinner when loading tab group members
+- Changed `disablePreview` to also hide `Add to map` in preview modal.
+- Changed `About data` button to `About job` in workbench for CatalogFunctionJob instances.
 - Add `edit` stratum for tracking temporary user changes that shouldn't be captured in share link - example form edits.
 - Upgraded `papaparse` to `5.5.4` (and `@types/papaparse` to `5.5.2`).
 - Guard CSV exports against spreadsheet formula injection (CWE-1236): the feature-info "Download" CSV, table data export, and `CsvCatalogItem`'s inline `csvString` export now prefix cells a spreadsheet would treat as a formula (`= + - @`, tab, CR) with a `'`, while leaving legitimate numbers (e.g. `-5`) untouched. `TableMixin` table exports now also structurally escape values via `papaparse` (previously they were joined with `,` unescaped). Downloads of a remote `url` are unchanged (the original file is served directly).

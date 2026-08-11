@@ -16,6 +16,7 @@ import filterOutUndefined from "../../../Core/filterOutUndefined";
 import getDereferencedIfExists from "../../../Core/getDereferencedIfExists";
 import getPath from "../../../Core/getPath";
 import { makeUniqueName } from "../../../Core/makeUniqueFilename";
+import CatalogFunctionJobMixin from "../../../ModelMixins/CatalogFunctionJobMixin";
 import CatalogMemberMixin, {
   getName
 } from "../../../ModelMixins/CatalogMemberMixin";
@@ -675,6 +676,16 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
     );
   };
 
+  const previewButton = CatalogFunctionJobMixin.isMixedInto(item)
+    ? {
+        text: t(($) => $.workbench.previewJob),
+        title: t(($) => $.workbench.previewJobTitle)
+      }
+    : {
+        text: t(($) => $.workbench.previewItem),
+        title: t(($) => $.workbench.previewItemTitle)
+      };
+
   return (
     <Box>
       <Ul
@@ -719,14 +730,14 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         </WorkbenchButton>
         <WorkbenchButton
           onClick={previewItem}
-          title={t(($) => $.workbench.previewItemTitle)}
+          title={previewButton.title}
           iconElement={() => <Icon glyph={Icon.GLYPHS.about} />}
           disabled={
             !controls.aboutData ||
             (CatalogMemberMixin.isMixedInto(item) && item.disableAboutData)
           }
         >
-          {t(($) => $.workbench.previewItem)}
+          {previewButton.text}
         </WorkbenchButton>
         <WorkbenchButton
           css="flex-grow:0;"
