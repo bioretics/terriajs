@@ -135,11 +135,6 @@ export const registerMapNavigations = (viewState: ViewState) => {
     }
     viewState.mobileMeasureToolsButtonVisible = false;
     viewState.measurableDownloadPanelIsVisible = false;
-    viewState.measurableDownloadPanelSourceItemId = undefined;
-    viewState.measurablePanelSourceItemId = undefined;
-    viewState.playPathPanelSourceItemId = undefined;
-    viewState.pendingMeasurableGeomSourceItemId = undefined;
-    viewState.lastMeasurableGeomSourceItemId = undefined;
   };
 
   const resetMeasureGeometryCollections = () => {

@@ -159,7 +159,16 @@ class FeatureInfoPanel extends React.Component<Props> {
 
   @action.bound
   close() {
-    this.props.viewState.closeFeatureInfoPanel();
+    this.props.viewState.featureInfoPanelIsVisible = false;
+
+    // give the close animation time to finish before unselecting, to avoid jumpiness
+    setTimeout(
+      action(() => {
+        this.props.viewState.terria.pickedFeatures = undefined;
+        this.props.viewState.terria.selectedFeature = undefined;
+      }),
+      200
+    );
   }
 
   @action.bound

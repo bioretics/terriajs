@@ -49,6 +49,6 @@ export function addFeatureButton(
  */
 export function closePanel(viewState: ViewState) {
   runInAction(() => {
-    viewState.closeFeatureInfoPanel();
+    viewState.terria.pickedFeatures = undefined;
   });
 }
