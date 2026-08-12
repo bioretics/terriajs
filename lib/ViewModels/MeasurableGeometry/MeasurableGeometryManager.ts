@@ -37,6 +37,7 @@ export interface MeasurableGeometry {
   indexPath?: number;
   featureProperties?: JsonObject;
   pointProperties?: JsonObject[];
+  sourceItemId?: string;
 }
 
 export default class MeasurableGeometryManager {
@@ -58,22 +59,26 @@ export default class MeasurableGeometryManager {
       return;
     }
 
-    const closeGeomProperties = currentGeometry?.isCircle
-      ? {
-          hasArea: true,
-          isCircle: true,
-          circleRadius: currentGeometry.circleRadius,
-          circleDiameter: currentGeometry.circleDiameter,
-          circlePerimeter: currentGeometry.circlePerimeter,
-          circleArea: currentGeometry.circleArea,
-          circleCenter: currentGeometry.circleCenter,
-          geodeticDistance:
-            currentGeometry.circlePerimeter ?? currentGeometry.geodeticDistance,
-          geodeticArea:
-            currentGeometry.circleArea ?? currentGeometry.geodeticArea,
-          airArea: currentGeometry.airArea
-        }
-      : undefined;
+    const closeGeomProperties = {
+      sourceItemId: currentGeometry.sourceItemId,
+      ...(currentGeometry?.isCircle
+        ? {
+            hasArea: true,
+            isCircle: true,
+            circleRadius: currentGeometry.circleRadius,
+            circleDiameter: currentGeometry.circleDiameter,
+            circlePerimeter: currentGeometry.circlePerimeter,
+            circleArea: currentGeometry.circleArea,
+            circleCenter: currentGeometry.circleCenter,
+            geodeticDistance:
+              currentGeometry.circlePerimeter ??
+              currentGeometry.geodeticDistance,
+            geodeticArea:
+              currentGeometry.circleArea ?? currentGeometry.geodeticArea,
+            airArea: currentGeometry.airArea
+          }
+        : {})
+    };
 
     this.sampleFromCartographics(
       currentGeometry?.stopPoints ?? [],
@@ -245,10 +250,7 @@ export default class MeasurableGeometryManager {
     circleRadius?: number,
     circleCenter?: Cartographic,
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
-  ): Promise<void> {
-    if (!cartoPositions.length) {
-      return Promise.resolve();
-    }
+  ) {
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid =
       this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
@@ -299,7 +301,7 @@ export default class MeasurableGeometryManager {
         this.geoidModel.getHeights(interpolatedCartographics)
       );
     }
-    return Promise.all(terrainPromises).then((sampledCartographics) => {
+    Promise.all(terrainPromises).then((sampledCartographics) => {
       if (sampledCartographics.length === 2) {
         const geoidHeights = sampledCartographics[1];
         sampledCartographics[0].forEach(
