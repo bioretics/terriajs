@@ -145,10 +145,6 @@ class ViewingControls extends React.Component<
     terria.removeSelectedFeaturesForModel(this.props.item);
     if (TimeVarying.is(this.props.item))
       this.props.viewState.terria.timelineStack.remove(this.props.item);
-    runInAction(() => {
-      this.props.viewState.measurableDownloadPanelIsVisible = false;
-      this.props.viewState.measurableDownloadPanelDefaultName = "";
-    });
     this.props.viewState.terria.analytics?.logEvent(
       Category.dataSource,
       DataSourceAction.removeFromWorkbench,
@@ -483,6 +479,8 @@ class ViewingControls extends React.Component<
       runInAction(() => {
         this.props.viewState.measurableDownloadPanelDefaultName =
           getName(item) || "";
+        this.props.viewState.measurableDownloadPanelSourceItemId =
+          item.uniqueId;
         this.props.viewState.measurableDownloadPanelIsVisible = true;
       });
     }
@@ -644,6 +642,8 @@ class ViewingControls extends React.Component<
                 }
                 onClick={() =>
                   runInAction(() => {
+                    this.props.viewState.measurablePanelSourceItemId =
+                      item.uniqueId;
                     if (
                       this.props.viewState.playPathPanelIsVisible ||
                       this.props.viewState.measurableDownloadPanelIsVisible
@@ -676,8 +676,9 @@ class ViewingControls extends React.Component<
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
-                      item.computePath();
+                      viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
+                      item.computePath();
                     });
                   }
                 }}
