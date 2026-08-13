@@ -468,6 +468,31 @@ class ViewingControls extends React.Component<
       .then((result) => result.raiseError(this.props.viewState.terria));
   }
 
+  deactivateMeasureTools() {
+    const viewState = this.props.viewState;
+    const toolIds = [
+      MeasureLineTool.id,
+      MeasurePolygonTool.id,
+      MeasurePointTool.id,
+      MeasureAngleTool.id,
+      MeasureCircleTool.id
+    ];
+    let hadActiveTool = false;
+    toolIds.forEach((id) => {
+      const controller =
+        viewState.terria.mapNavigationModel.findItem(id)?.controller;
+      if (controller && controller.active) {
+        controller.deactivate();
+        hadActiveTool = true;
+      }
+    });
+    if (hadActiveTool) {
+      [MeasureToolsController.id, ...toolIds].forEach((id) =>
+        viewState.terria.mapNavigationModel.enable(id)
+      );
+    }
+  }
+
   async exportDataClicked() {
     const item = this.props.item;
     if (!ExportableMixin.isMixedInto(item)) return;
@@ -642,6 +667,7 @@ class ViewingControls extends React.Component<
                 }
                 onClick={() =>
                   runInAction(() => {
+                    this.deactivateMeasureTools();
                     this.props.viewState.measurablePanelSourceItemId =
                       item.uniqueId;
                     if (
@@ -676,9 +702,9 @@ class ViewingControls extends React.Component<
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
+                      this.deactivateMeasureTools();
                       viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
-                      item.computePath();
                     });
                   }
                 }}

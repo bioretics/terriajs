@@ -96,8 +96,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       });
     }
 
+    terria.cesium?.scene.camera.cancelFlight();
+
     clearPlaybackState();
-  }, [viewState, clearPlaybackState]);
+  }, [viewState, terria, clearPlaybackState]);
 
   const resamplePathForFlight = useCallback(
     (
@@ -375,12 +377,16 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         hpr = new HeadingPitchRange(heading, -pitch, dist);
       }
 
-      await viewer.doZoomTo(
-        useLookAt && hpr
-          ? CameraView.fromLookAt(pts[i], hpr)
-          : Rectangle.fromCartographicArray([pts[i]]),
-        duration
-      );
+      try {
+        await viewer.doZoomTo(
+          useLookAt && hpr
+            ? CameraView.fromLookAt(pts[i], hpr)
+            : Rectangle.fromCartographicArray([pts[i]]),
+          duration
+        );
+      } catch {
+        return false;
+      }
 
       const result = await Promise.race([
         isLeafletViewer
