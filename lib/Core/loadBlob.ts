@@ -36,7 +36,9 @@ export function isJson(uri: string) {
 }
 
 export function isZip(uri: string) {
-  return /(\.zip\b)/i.test(uri);
+  // Match .zip only as the actual file extension (optional query/hash), not when
+  // ".zip" appears mid-name (e.g. FeatureInfo downloads from shapefile catalog items).
+  return /\.zip(?:$|[?#])/i.test(uri);
 }
 
 /** Get zipjs ZipReader for given Blob */
