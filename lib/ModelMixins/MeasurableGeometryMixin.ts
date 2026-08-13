@@ -24,6 +24,12 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
 
     abstract get canUseAsPath(): boolean;
 
+    /** Whether the item can feed the measurable geometry panel, either as a
+     * path or through a type specific sampling method. */
+    get canSampleMeasurableGeometry(): boolean {
+      return this.canUseAsPath;
+    }
+
     abstract computePath(): void;
 
     @action
@@ -55,7 +61,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         isCircle,
         circleRadius,
         circleCenter,
-        geomProperties
+        { ...(geomProperties ?? {}), sourceItemId: this.uniqueId }
       );
     }
 

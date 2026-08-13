@@ -497,10 +497,15 @@ class ViewingControls extends React.Component<
     const item = this.props.item;
     if (!ExportableMixin.isMixedInto(item)) return;
 
-    if (MeasurableGeometryMixin.isMixedInto(item)) {
+    if (
+      MeasurableGeometryMixin.isMixedInto(item) &&
+      item.canSampleMeasurableGeometry
+    ) {
       runInAction(() => {
         this.props.viewState.measurableDownloadPanelDefaultName =
           getName(item) || "";
+        this.props.viewState.measurableDownloadPanelSourceItemId =
+          item.uniqueId;
         this.props.viewState.measurableDownloadPanelIsVisible = true;
       });
     }
@@ -663,6 +668,8 @@ class ViewingControls extends React.Component<
                 onClick={() =>
                   runInAction(() => {
                     this.deactivateMeasureTools();
+                    this.props.viewState.measurablePanelSourceItemId =
+                      item.uniqueId;
                     if (
                       this.props.viewState.playPathPanelIsVisible ||
                       this.props.viewState.measurableDownloadPanelIsVisible
@@ -696,7 +703,7 @@ class ViewingControls extends React.Component<
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
                       this.deactivateMeasureTools();
-                      item.computePath();
+                      viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
                     });
                   }

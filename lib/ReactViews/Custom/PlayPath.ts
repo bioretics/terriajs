@@ -13,6 +13,12 @@ import { runInAction } from "mobx";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
+  const playGeomState = viewState.getMeasurableGeomStateForSource(
+    viewState.playPathPanelSourceItemId
+  );
+  const playGeometryIndex = playGeomState.geometryIndex;
+  const playGeom = playGeomState.geomList[playGeometryIndex];
+
   const [playSpeed, setPlaySpeed] = useState(1);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
   const [currentPointIndex, setCurrentPointIndex] = useState(0);
@@ -31,7 +37,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const currentPointIndexRef = useRef(currentPointIndex);
   const loadPercentageRef = useRef(loadPercentage);
 
-  const lastGeometryIndexRef = useRef(terria.measurableGeometryIndex);
+  const lastGeometryIndexRef = useRef(playGeometryIndex);
 
   const resumeAvailableRef = useRef(false);
   const resumeGeometryIndexRef = useRef<number | null>(null);
@@ -132,19 +138,21 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   );
 
   const getPoints = useCallback(() => {
-    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-    if (!geom) return;
+    if (!playGeom) return;
 
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
 
     const pts =
       isCesium2D || !terria.cesium
-        ? geom.stopPoints
-        : resamplePathForFlight(geom.stopPoints, terria.playPathSamplingStep);
+        ? playGeom.stopPoints
+        : resamplePathForFlight(
+            playGeom.stopPoints,
+            terria.playPathSamplingStep
+          );
 
     if (!pts || pts.length === 0) return pts;
     return pts;
-  }, [terria, resamplePathForFlight]);
+  }, [terria, playGeom, resamplePathForFlight]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
@@ -252,13 +260,11 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   }, [getPoints, terria]);
 
   useEffect(() => {
-    const geometryIndex = terria.measurableGeometryIndex;
-
-    if (lastGeometryIndexRef.current === geometryIndex) {
+    if (lastGeometryIndexRef.current === playGeometryIndex) {
       return;
     }
 
-    lastGeometryIndexRef.current = geometryIndex;
+    lastGeometryIndexRef.current = playGeometryIndex;
 
     abortPlayingPathRef.current = false;
     playIdRef.current += 1;
@@ -278,7 +284,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         viewState.isPlayingPath = false;
       });
     }
-  }, [terria.measurableGeometryIndex, viewState]);
+  }, [playGeometryIndex, playGeom, viewState]);
 
   const playPath = useCallback(async () => {
     playIdRef.current += 1;
@@ -448,7 +454,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const camera = terria.cesium?.scene.camera;
     if (!pts?.length) return;
 
-    const geometryIndex = terria.measurableGeometryIndex;
+    const geometryIndex = playGeometryIndex;
     const samePath =
       resumeGeometryIndexRef.current === geometryIndex &&
       lastGeometryIndexRef.current === geometryIndex;
@@ -511,7 +517,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     abortPlayingPathRef.current = false;
 
     resumeAvailableRef.current = true;
-    resumeGeometryIndexRef.current = terria.measurableGeometryIndex;
+    resumeGeometryIndexRef.current = playGeometryIndex;
     resumePointIndexRef.current = currentPointIndexRef.current;
 
     runInAction(() => {

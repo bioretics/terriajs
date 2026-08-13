@@ -1,5 +1,4 @@
 import { Rnd } from "react-rnd";
-import { runInAction } from "mobx";
 import MeasurableDownloadContent from "./MeasurableDownloadContent";
 import Terria from "../../Models/Terria";
 import Styles from "./measurable-panel.scss";
@@ -20,10 +19,12 @@ interface Props {
 const MeasurableDownloadPanel = observer((props: Props) => {
   const { onClose, ...downloadProps } = props;
   const isMobile = downloadProps.viewState.useSmallScreenInterface;
+  const downloadGeomState =
+    downloadProps.viewState.getMeasurableGeomStateForSource(
+      downloadProps.viewState.measurableDownloadPanelSourceItemId
+    );
   const currentGeom =
-    downloadProps.terria.measurableGeomList[
-      downloadProps.terria.measurableGeometryIndex
-    ];
+    downloadGeomState.geomList[downloadGeomState.geometryIndex];
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: downloadProps.viewState.measurablePanelIsCollapsed,
@@ -48,18 +49,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
           type="button"
           onClick={() => {
             if (onClose) onClose();
-            runInAction(() => {
-              downloadProps.viewState.measurableDownloadPanelIsVisible = false;
-              downloadProps.viewState.measurableDownloadPanelDefaultName = "";
-            });
-            downloadProps.terria.measurableGeomList.splice(
-              1,
-              downloadProps.terria.measurableGeomList.length - 1
-            );
-            downloadProps.terria.measurableGeometryManager.splice(
-              1,
-              downloadProps.terria.measurableGeometryManager.length - 1
-            );
+            downloadProps.viewState.closeMeasurableDownloadPanel();
           }}
           className={Styles.btnCloseFeature}
           title={i18next.t("general.close")}
