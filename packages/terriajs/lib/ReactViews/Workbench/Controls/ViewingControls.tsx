@@ -432,6 +432,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         // Open download panel first so the measurable-panel reaction stays closed.
         runInAction(() => {
           viewState.measurableDownloadPanelDefaultName = getName(item) || "";
+          viewState.measurableDownloadPanelSourceItemId = item.uniqueId;
           viewState.measurableDownloadPanelIsVisible = true;
         });
         if (item.canUseAsPath) {
@@ -603,6 +604,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                 }
                 onClick={() =>
                   runInAction(() => {
+                    viewState.measurablePanelSourceItemId = item.uniqueId;
                     if (
                       viewState.playPathPanelIsVisible ||
                       viewState.measurableDownloadPanelIsVisible
@@ -635,8 +637,9 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
-                      item.computePath();
+                      viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
+                      item.computePath();
                     });
                   }
                 }}

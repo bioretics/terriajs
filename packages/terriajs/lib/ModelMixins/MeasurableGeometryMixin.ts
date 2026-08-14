@@ -55,7 +55,7 @@ function MeasurableGeometryMixin<T extends AbstractConstructor<MixinModel>>(
         isCircle,
         circleRadius,
         circleCenter,
-        geomProperties
+        { ...(geomProperties ?? {}), sourceItemId: this.uniqueId }
       );
     }
 

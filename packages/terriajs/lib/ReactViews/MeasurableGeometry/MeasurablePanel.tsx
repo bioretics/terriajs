@@ -20,17 +20,13 @@ import ViewerMode from "../../Models/ViewerMode";
 import { useTheme } from "styled-components";
 import i18next from "i18next";
 import {
-  MeasureLineTool,
   MeasurePolygonTool,
-  MeasureAngleTool,
-  MeasurePointTool,
   MeasureCircleTool
 } from "../Map/MapNavigation/Items";
 import MeasurablePanelManager from "../Custom/MeasurablePanelManager";
 import Select from "../../Styled/Select";
 import MeasurableGeometryManager from "../../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import Checkbox from "../../Styled/Checkbox";
-import { MeasureToolsController } from "../Map/MapNavigation/Items/MeasureTools";
 import MeasurableTransform from "./MeasurableTransform";
 import MeasurableMouseProximity from "./MeasurableMouseProximity";
 import DataUri from "../../Core/DataUri";
@@ -109,23 +105,7 @@ const MeasurablePanel = observer((props: Props) => {
       1,
       terria.measurableGeometryManager.length - 1
     );
-    viewState.measurablePanelIsVisible = false;
-    viewState.mobileMeasureToolsButtonVisible = false;
-    MeasurablePanelManager.setPointerOverPanel(false);
-    [
-      MeasureToolsController.id,
-      MeasureLineTool.id,
-      MeasurePolygonTool.id,
-      MeasurePointTool.id,
-      MeasureAngleTool.id,
-      MeasureCircleTool.id
-    ].forEach((id) => {
-      const item = viewState.terria.mapNavigationModel.findItem(id)?.controller;
-      if (item && item.active) {
-        item.deactivate();
-      }
-      viewState.terria.mapNavigationModel.enable(id);
-    });
+    viewState.closeMeasurablePanel();
 
     if (isMultiPath) {
       setTimeout(() => {

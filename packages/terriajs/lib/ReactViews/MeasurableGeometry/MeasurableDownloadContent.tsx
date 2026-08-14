@@ -23,16 +23,19 @@ interface Props {
 
 const MeasurableDownloadContent = observer((props: Props) => {
   const { terria, viewState, pathNotes, ellipsoid, defaultFilename } = props;
+  const downloadGeomState = viewState.getMeasurableGeomStateForSource(
+    viewState.measurableDownloadPanelSourceItemId
+  );
   const [name, setName] = useState<string>("");
   const [selectedElementIndex, setSelectedElementIndex] = useState<number>(
-    terria.measurableGeometryIndex
+    downloadGeomState.geometryIndex
   );
   const [isSelectAll, setIsSelectAll] = useState<boolean>(
-    terria.measurableGeomList.length > 1
+    downloadGeomState.geomList.length > 1
   );
   const geom = isSelectAll
-    ? terria.measurableGeomList[terria.measurableGeometryIndex]
-    : terria.measurableGeomList[selectedElementIndex];
+    ? downloadGeomState.geomList[downloadGeomState.geometryIndex]
+    : downloadGeomState.geomList[selectedElementIndex];
 
   const theme = useTheme();
   const [selectedFormat, setSelectedFormat] = useState<string>("");
@@ -54,13 +57,13 @@ const MeasurableDownloadContent = observer((props: Props) => {
         MeasurableDownload.normalizeDefaultFilename(defaultFilename ?? "")
       );
       setSelectedFormat("");
-      setSelectedElementIndex(terria.measurableGeometryIndex);
-      setIsSelectAll(terria.measurableGeomList.length > 1);
+      setSelectedElementIndex(downloadGeomState.geometryIndex);
+      setIsSelectAll(downloadGeomState.geomList.length > 1);
     }
   }, [
-    terria.measurableGeometryIndex,
+    downloadGeomState.geometryIndex,
     viewState.measurableDownloadPanelIsVisible,
-    terria.measurableGeomList.length,
+    downloadGeomState.geomList.length,
     defaultFilename
   ]);
 
@@ -71,7 +74,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
           setIsLoading(true);
           const isMultiPath = isSelectAll;
           const geomListForMultiPath = isSelectAll
-            ? terria.measurableGeomList
+            ? downloadGeomState.geomList
             : undefined;
 
           const allLinks = await measurableDownload.generateAllFormatLinks(
@@ -101,7 +104,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
     pathNotes,
     ellipsoid,
     measurableDownload,
-    terria.measurableGeomList,
+    downloadGeomState.geomList,
     viewState.measurableDownloadPanelIsVisible
   ]);
 
@@ -126,7 +129,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
 
     if (value === "all") {
       setIsSelectAll(true);
-      setSelectedElementIndex(terria.measurableGeometryIndex);
+      setSelectedElementIndex(downloadGeomState.geometryIndex);
     } else {
       setIsSelectAll(false);
       setSelectedElementIndex(parseInt(value, 10));
@@ -137,7 +140,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
 
   return (
     <>
-      {terria.measurableGeomList.length > 1 && (
+      {downloadGeomState.geomList.length > 1 && (
         <div style={{ marginBottom: "10px" }}>
           <Select
             title={i18next.t(($) => $.measurableGeometry.changePath)}
@@ -148,7 +151,7 @@ const MeasurableDownloadContent = observer((props: Props) => {
             <option value="all">
               {i18next.t(($) => $.downloadData.selectAll)}
             </option>
-            {terria.measurableGeomList.map((geom, index) => {
+            {downloadGeomState.geomList.map((geom, index) => {
               const hasValidPoints =
                 geom.stopPoints && geom.stopPoints.length > 0;
               return (

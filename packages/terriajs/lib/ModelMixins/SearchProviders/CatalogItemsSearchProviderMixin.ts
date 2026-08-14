@@ -22,7 +22,8 @@ function CatalogItemsSearchProviderMixin<
     @computed get resultsAreReferences() {
       return (
         isDefined(this.terria.catalog.index?.loadPromise) &&
-        fromPromise(this.terria.catalog.index!.loadPromise).state === "fulfilled"
+        fromPromise(this.terria.catalog.index!.loadPromise).state ===
+          "fulfilled"
       );
     }
 

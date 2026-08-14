@@ -78,21 +78,25 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   }, [viewState, checkAndUpdatePitch]);
 
   const getPoints = useCallback(() => {
-    const geom = terria.measurableGeomList[terria.measurableGeometryIndex];
-    if (!geom) return;
+    const playGeomState = viewState.getMeasurableGeomStateForSource(
+      viewState.playPathPanelSourceItemId
+    );
+    const playGeometryIndex = playGeomState.geometryIndex;
+    const playGeom = playGeomState.geomList[playGeometryIndex];
+    if (!playGeom) return;
 
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
 
     const pts = isCesium2D
-      ? geom.stopPoints
+      ? playGeom.stopPoints
       : terria.cesium
-        ? geom.sampledPoints
-        : geom.stopPoints;
+        ? playGeom.sampledPoints
+        : playGeom.stopPoints;
 
     if (!pts || pts.length === 0) return;
 
     return pts;
-  }, [terria]);
+  }, [terria, viewState]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;

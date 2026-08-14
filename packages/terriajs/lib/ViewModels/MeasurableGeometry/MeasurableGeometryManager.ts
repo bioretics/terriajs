@@ -38,6 +38,7 @@ export interface MeasurableGeometry {
   indexPath?: number;
   featureProperties?: JsonObject;
   pointProperties?: JsonObject[];
+  sourceItemId?: string;
 }
 
 export default class MeasurableGeometryManager {
@@ -57,22 +58,26 @@ export default class MeasurableGeometryManager {
       return;
     }
 
-    const closeGeomProperties = currentGeometry?.isCircle
-      ? {
-          hasArea: true,
-          isCircle: true,
-          circleRadius: currentGeometry.circleRadius,
-          circleDiameter: currentGeometry.circleDiameter,
-          circlePerimeter: currentGeometry.circlePerimeter,
-          circleArea: currentGeometry.circleArea,
-          circleCenter: currentGeometry.circleCenter,
-          geodeticDistance:
-            currentGeometry.circlePerimeter ?? currentGeometry.geodeticDistance,
-          geodeticArea:
-            currentGeometry.circleArea ?? currentGeometry.geodeticArea,
-          airArea: currentGeometry.airArea
-        }
-      : undefined;
+    const closeGeomProperties = {
+      sourceItemId: currentGeometry.sourceItemId,
+      ...(currentGeometry?.isCircle
+        ? {
+            hasArea: true,
+            isCircle: true,
+            circleRadius: currentGeometry.circleRadius,
+            circleDiameter: currentGeometry.circleDiameter,
+            circlePerimeter: currentGeometry.circlePerimeter,
+            circleArea: currentGeometry.circleArea,
+            circleCenter: currentGeometry.circleCenter,
+            geodeticDistance:
+              currentGeometry.circlePerimeter ??
+              currentGeometry.geodeticDistance,
+            geodeticArea:
+              currentGeometry.circleArea ?? currentGeometry.geodeticArea,
+            airArea: currentGeometry.airArea
+          }
+        : {})
+    };
 
     this.sampleFromCartographics(
       currentGeometry?.stopPoints ?? [],

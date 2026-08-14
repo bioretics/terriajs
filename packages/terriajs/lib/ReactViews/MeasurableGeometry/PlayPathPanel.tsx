@@ -23,8 +23,11 @@ interface Props {
 
 const PlayPathPanel = observer((props: Props) => {
   const theme = useTheme();
+  const playGeomState = props.viewState.getMeasurableGeomStateForSource(
+    props.viewState.playPathPanelSourceItemId
+  );
   const [lastGeom, setLastGeom] = useState(
-    props.terria.measurableGeomList[props.terria.measurableGeometryIndex]
+    playGeomState.geomList[playGeomState.geometryIndex]
   );
   const [showTourPrompt, setShowTourPrompt] = useState(false);
   const [hasSeenTour, setHasSeenTour] = useState<boolean>(
@@ -51,8 +54,7 @@ const PlayPathPanel = observer((props: Props) => {
     isPitchTooLow
   } = usePlayPath(props.terria, props.viewState);
 
-  const currentGeom =
-    props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
+  const currentGeom = playGeomState.geomList[playGeomState.geometryIndex];
 
   useEffect(() => {
     if (panelRef.current) {
@@ -85,20 +87,11 @@ const PlayPathPanel = observer((props: Props) => {
   }, [props.viewState.playPathPanelIsVisible]);
 
   useEffect(() => {
-    const currentGeom =
-      props.terria.measurableGeomList[props.terria.measurableGeometryIndex];
-
     if (currentGeom !== lastGeom) {
       resetPlayPath();
       setLastGeom(currentGeom);
     }
-  }, [
-    currentGeom,
-    props.terria.measurableGeomList,
-    props.terria.measurableGeometryIndex,
-    lastGeom,
-    resetPlayPath
-  ]);
+  }, [currentGeom, lastGeom, resetPlayPath]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: props.viewState.playPathPanelIsVisible,
@@ -132,9 +125,7 @@ const PlayPathPanel = observer((props: Props) => {
           type="button"
           onClick={() => {
             props.onClose?.();
-            runInAction(() => {
-              props.viewState.playPathPanelIsVisible = false;
-            });
+            props.viewState.closePlayPathPanel();
           }}
           className={Styles.btnCloseFeature}
           title={i18next.t(($) => $.general.close)}
