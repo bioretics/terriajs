@@ -1,11 +1,12 @@
 import * as geoJsonMerge from "@mapbox/geojson-merge";
 import i18next from "i18next";
-import { computed, makeObservable } from "mobx";
+import { computed, makeObservable, override } from "mobx";
 import * as shp from "shpjs";
 import isDefined from "../../../Core/isDefined";
 import JsonValue, { isJsonObject, JsonArray } from "../../../Core/Json";
 import loadBlob, { isZip } from "../../../Core/loadBlob";
 import TerriaError from "../../../Core/TerriaError";
+import { ExportData } from "../../../ModelMixins/ExportableMixin";
 import GeoJsonMixin, {
   FeatureCollectionWithCrs
 } from "../../../ModelMixins/GeojsonMixin";
@@ -54,6 +55,32 @@ class ShapefileCatalogItem
 
   @computed get hasLocalData(): boolean {
     return isDefined(this._file);
+  }
+
+  @override
+  get _canExportData() {
+    return (
+      isDefined(this._file) || isDefined(this.url) || isDefined(this.readyData)
+    );
+  }
+
+  protected async _exportData(): Promise<ExportData | undefined> {
+    if (isDefined(this._file)) {
+      let name = this.name || this._file.name || this.uniqueId || "data.zip";
+      if (!isZip(name)) {
+        name = `${name}.zip`;
+      }
+      return {
+        name,
+        file: this._file
+      };
+    }
+
+    if (isDefined(this.url)) {
+      return this.url;
+    }
+
+    return super._exportData();
   }
 
   protected async forceLoadGeojsonData() {
