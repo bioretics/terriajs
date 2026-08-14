@@ -76,6 +76,7 @@ import {
 } from "../Core/Json";
 import { isJson } from "../Core/loadBlob";
 import StandardCssColors from "../Core/StandardCssColors";
+import stripFileExtension from "../Core/stripFileExtension";
 import TerriaError, { networkRequestError } from "../Core/TerriaError";
 import ProtomapsImageryProvider, {
   GeojsonSource,
@@ -409,7 +410,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       if (isDefined(this.readyData)) {
         let name = this.name || this.uniqueId || "data.geojson";
         if (!isJson(name)) {
-          name = `${name}.geojson`;
+          name = `${stripFileExtension(name)}.geojson`;
         }
         return {
           name,

@@ -218,6 +218,16 @@ export const customLocalDataTypes: Map<string, LocalDataType> = observable(
   new Map()
 );
 
+/**
+ * Every file extension (lowercase, without the leading dot) accepted for local
+ * file uploads, builtin and custom.
+ */
+export function getLocalDataTypeExtensions(): string[] {
+  return [...builtinLocalDataTypes, ...customLocalDataTypes.values()].flatMap(
+    (dataType) => dataType.extensions ?? []
+  );
+}
+
 export default function getDataTypes(): GetDataTypes {
   const uniqueRemoteDataTypes: Map<string, RemoteDataType> = new Map([
     ...(builtinRemoteDataTypes.map((dtype) => [dtype.value, dtype]) as [

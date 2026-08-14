@@ -19,6 +19,7 @@ import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import isDefined from "../../Core/isDefined";
+import stripFileExtension from "../../Core/stripFileExtension";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import DiscretelyTimeVaryingMixin from "../../ModelMixins/DiscretelyTimeVaryingMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
@@ -359,7 +360,7 @@ export class FeatureInfoSection extends React.Component<FeatureInfoProps> {
         this.featureProperties && Object.keys(this.featureProperties).length > 0
           ? this.featureProperties
           : undefined,
-      fileName: getName(this.props.catalogItem)
+      fileName: stripFileExtension(getName(this.props.catalogItem))
     };
   }
 
