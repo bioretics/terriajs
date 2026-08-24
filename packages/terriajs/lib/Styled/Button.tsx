@@ -1,10 +1,9 @@
 import {
-  type ReactNode,
-  type ReactChild,
-  type Ref,
-  type ComponentPropsWithoutRef,
-  type FC,
-  forwardRef
+  ComponentPropsWithoutRef,
+  FC,
+  forwardRef,
+  ReactNode,
+  Ref
 } from "react";
 import styled from "styled-components";
 import { BoxSpan } from "./Box";
@@ -167,7 +166,7 @@ ${(props) =>
 `;
 
 export type ButtonProps = {
-  renderIcon?: () => ReactChild;
+  renderIcon?: () => ReactNode;
   iconProps?: any;
   primary?: boolean;
   secondary?: boolean;
