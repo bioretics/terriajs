@@ -1,6 +1,5 @@
-//"use strict";
-
 import classNames from "classnames";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { useTheme } from "styled-components";
@@ -20,99 +19,59 @@ interface Props {
 
 const ViewshedPanel = observer((props: Props) => {
   const { terria, viewState } = props;
-
+  const state = terria.viewshed3d;
   const theme = useTheme();
-
   const { t } = useTranslation();
-
   const panelClassName = classNames(Styles.panel, {
     [Styles.isCollapsed]: false,
     [Styles.isVisible]: viewState.viewshedPanelIsVisible,
     [Styles.isTranslucent]: viewState.explorerPanelIsVisible
   });
+  const inputStyle = `
+    margin-left: 30px;
+    margin-right: 30px;
+    border: solid;
+    border-width: 1px;
+    border-color: ${theme.textLight};
+  `;
 
-  const renderHeader = () => {
-    return (
-      <div className={Styles.header}>
-        <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
-          <span style={{ display: "flex", justifyContent: "center" }}>
-            <b>{t(($) => $.viewshed.parameters)}</b>
-          </span>
-        </div>
-      </div>
-    );
+  const setNumber = (setter: (value: number) => void, value: string) => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return;
+    runInAction(() => setter(number));
   };
 
-  const renderBody = () => {
-    if (terria.viewshedDistances) {
-      return (
-        <div className={Styles.body}>
-          <Text
-            textLight
-            style={{ textAlign: "center" }}
-            title={t(($) => $.viewshed.observerHeightInputTitle)}
-          >
-            {t(($) => $.viewshed.observerHeightInput)}
-          </Text>
-          <Box>
-            <Input
-              css={`
-                margin-left: 30px;
-                margin-right: 30px;
-                border: solid;
-                border-width: 1px;
-                border-color: ${theme.textLight};
-              `}
-              title={t(($) => $.viewshed.observerHeightInputTitle)}
-              light={false}
-              dark
-              required
-              type="number"
-              value={terria.viewshedObserverHeight}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                runInAction(() => {
-                  terria.viewshedObserverHeight = isNaN(val) ? 0 : val;
-                });
-              }}
-            />
-          </Box>
-          <br />
-          <Text
-            textLight
-            style={{ textAlign: "center" }}
-            title={t(($) => $.viewshed.targetHeightInputTitle)}
-          >
-            {t(($) => $.viewshed.targetHeightInput)}
-          </Text>
-          <Box>
-            <Input
-              css={`
-                margin-left: 30px;
-                margin-right: 30px;
-                border: solid;
-                border-width: 1px;
-                border-color: ${theme.textLight};
-              `}
-              title={t(($) => $.viewshed.targetHeightInputTitle)}
-              light={false}
-              dark
-              required
-              type="number"
-              value={terria.viewshedTargetHeight}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                runInAction(() => {
-                  terria.viewshedTargetHeight = isNaN(val) ? 0 : val;
-                });
-              }}
-            />
-          </Box>
-          <br />
-        </div>
-      );
-    }
-  };
+  const numberField = (
+    label: string,
+    title: string,
+    value: number,
+    onChange: (value: number) => void,
+    min?: number,
+    max?: number,
+    step?: number
+  ) => (
+    <>
+      <Text textLight style={{ textAlign: "center" }} title={title}>
+        {label}
+      </Text>
+      <Box>
+        <Input
+          css={inputStyle}
+          title={title}
+          light={false}
+          dark
+          required
+          type="number"
+          min={min}
+          max={max}
+          step={step ?? 1}
+          value={value}
+          onChange={(event) => setNumber(onChange, event.target.value)}
+        />
+      </Box>
+      <br />
+    </>
+  );
 
   return (
     <DragWrapper>
@@ -120,8 +79,82 @@ const ViewshedPanel = observer((props: Props) => {
         className={panelClassName}
         aria-hidden={!viewState.viewshedPanelIsVisible}
       >
-        {renderHeader()}
-        {renderBody()}
+        <div className={Styles.header}>
+          <div className={classNames("drag-handle", Styles.btnPanelHeading)}>
+            <span style={{ display: "flex", justifyContent: "center" }}>
+              <b>{t(($) => $.viewshed.parameters)}</b>
+            </span>
+          </div>
+        </div>
+        {state && (
+          <div className={Styles.body}>
+            {numberField(
+              t(($) => $.viewshed.observerHeightInput),
+              t(($) => $.viewshed.observerHeightInputTitle),
+              state.observerHeight,
+              (value) => (state.observerHeight = Math.max(0, value)),
+              0
+            )}
+            {numberField(
+              t(($) => $.viewshed.targetHeightInput),
+              t(($) => $.viewshed.targetHeightInputTitle),
+              state.targetHeight,
+              (value) => (state.targetHeight = Math.max(0, value)),
+              0
+            )}
+            {numberField(
+              t(($) => $.viewshed.horizontalFovInput),
+              t(($) => $.viewshed.horizontalFovInputTitle),
+              Number(CesiumMath.toDegrees(state.horizontalFov).toFixed(1)),
+              (value) =>
+                (state.horizontalFov = CesiumMath.toRadians(
+                  Math.max(1, Math.min(179, value))
+                )),
+              1,
+              179
+            )}
+            {numberField(
+              t(($) => $.viewshed.verticalFovInput),
+              t(($) => $.viewshed.verticalFovInputTitle),
+              Number(CesiumMath.toDegrees(state.verticalFov).toFixed(1)),
+              (value) =>
+                (state.verticalFov = CesiumMath.toRadians(
+                  Math.max(1, Math.min(179, value))
+                )),
+              1,
+              179
+            )}
+            {numberField(
+              t(($) => $.viewshed.maximumDistanceInput),
+              t(($) => $.viewshed.maximumDistanceInputTitle),
+              Number(state.maximumDistance.toFixed(1)),
+              (value) => (state.maximumDistance = Math.max(1.1, value)),
+              1.1
+            )}
+            <Text textLight style={{ textAlign: "center" }}>
+              {state.terrainStatus === "updating"
+                ? t(($) => $.viewshed.terrainUpdating, {
+                    count: state.terrainTileLoadCount
+                  })
+                : t(($) => $.viewshed.terrainCurrent)}
+            </Text>
+            <Text textLight style={{ textAlign: "center", fontSize: "0.85em" }}>
+              {t(($) => $.viewshed.terrainLodNotice)}
+            </Text>
+            <Box style={{ marginTop: 10, textAlign: "center" }}>
+              <label title={t(($) => $.viewshed.debugInputTitle)}>
+                <input
+                  type="checkbox"
+                  checked={state.showDebug}
+                  onChange={(event) =>
+                    runInAction(() => (state.showDebug = event.target.checked))
+                  }
+                />{" "}
+                {t(($) => $.viewshed.debugInput)}
+              </label>
+            </Box>
+          </div>
+        )}
       </div>
     </DragWrapper>
   );

@@ -61,6 +61,9 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
   }
 
   apply() {
+    // Globe supports one material at a time. Viewshed3D owns it while an
+    // analysis is active so that the mask remains terrain-conforming.
+    if (this.props.terria.viewshed3d) return;
     const scene = this.props.terria.cesium?.scene;
     if (scene) {
       const heightCorrection =
@@ -221,6 +224,12 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
           <Box>
             <ColorPanelButton
               primary
+              disabled={this.props.terria.viewshed3d !== undefined}
+              title={
+                this.props.terria.viewshed3d
+                  ? t(($) => $.viewshed.colorPanelConflict)
+                  : undefined
+              }
               onClick={() => {
                 this.apply();
               }}

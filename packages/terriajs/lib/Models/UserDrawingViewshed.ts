@@ -1,30 +1,24 @@
 import i18next from "i18next";
-import {
-  computed,
-  IReactionDisposer,
-  observable,
-  reaction,
-  runInAction
-} from "mobx";
+import { computed, observable, reaction, runInAction } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
-import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
-import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
-import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
+import Viewshed3D, {
+  headingPitchFromObserverAndTarget
+} from "../Map/Cesium/Viewshed3D";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import CreateModel from "./Definition/CreateModel";
 import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
+import { createViewshed3DState } from "./Viewshed3DState";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
-import Ray from "terriajs-cesium/Source/Core/Ray";
 
 interface Options {
   terria: Terria;
@@ -50,15 +44,11 @@ export default class UserDrawingViewshed extends MappableMixin(
   pointEntities: CustomDataSource;
   otherEntities: CustomDataSource;
 
-  @observable visibleLinePoints: Cartesian3[] = [];
-  @observable hiddenLinePoints: Cartesian3[] = [];
-
   @observable
   private inDrawMode: boolean;
   private disposePickedFeatureSubscription?: () => void;
-  private disposeViewshedHeight?: () => void;
-
-  private mouseMoveDispose?: IReactionDisposer;
+  private disposeViewshedOptions?: () => void;
+  private viewshed?: Viewshed3D;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -106,7 +96,7 @@ export default class UserDrawingViewshed extends MappableMixin(
 
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, () => {
-      this.computeLineOfSight();
+      this.updateViewshedFromPoints(true);
       this.prepareToAddNewPoint();
     });
   }
@@ -165,14 +155,22 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.inDrawMode = true;
     });
 
-    this.disposeViewshedHeight?.();
-    this.disposeViewshedHeight = reaction(
-      () => this.terria.viewshedDistances?.[1],
+    this.disposeViewshedOptions?.();
+    this.disposeViewshedOptions = reaction(
       () => {
-        if (this.inDrawMode) {
-          this.addMapInteractionMode();
-        }
-      }
+        const state = this.terria.viewshed3d;
+        return state
+          ? [
+              state.observerHeight,
+              state.targetHeight,
+              state.horizontalFov,
+              state.verticalFov,
+              state.maximumDistance,
+              state.showDebug
+            ]
+          : undefined;
+      },
+      () => this.updateViewshedFromPoints(false)
     );
 
     if (isDefined(this.terria.cesium)) {
@@ -192,39 +190,6 @@ export default class UserDrawingViewshed extends MappableMixin(
       this.terria.pickedFeatures = undefined;
       this.terria.allowFeatureInfoRequests = false;
     });
-    const that = this;
-
-    // Line will show up once user has drawn some points. Vertices of line are user points.
-    this.otherEntities.entities.add({
-      name: "Line visible",
-      polyline: {
-        positions: new CallbackProperty(function () {
-          that.computeLineOfSight();
-          return that.visibleLinePoints;
-        }, false),
-
-        material: new PolylineGlowMaterialProperty({
-          color: new Color(0.0, 1.0, 0.0, 0.3),
-          glowPower: 0.25
-        }),
-        width: 20
-      }
-    });
-    this.otherEntities.entities.add({
-      name: "Line Invisible",
-      polyline: {
-        positions: new CallbackProperty(function () {
-          return that.hiddenLinePoints;
-        }, false),
-
-        material: new PolylineGlowMaterialProperty({
-          color: new Color(1.0, 0.0, 0.0, 0.3),
-          glowPower: 0.25
-        }),
-        width: 20
-      }
-    });
-
     this.terria.overlays.add(this);
 
     // Listen for user clicks on map
@@ -268,16 +233,16 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.pointEntities.entities.add(pointEntity);
     this.dragHelper.updateDraggableObjects(this.pointEntities);
 
-    this.computeLineOfSight();
+    this.updateViewshedFromPoints(true);
   }
 
   endDrawing() {
     if (this.disposePickedFeatureSubscription) {
       this.disposePickedFeatureSubscription();
     }
-    if (this.disposeViewshedHeight) {
-      this.disposeViewshedHeight();
-      this.disposeViewshedHeight = undefined;
+    if (this.disposeViewshedOptions) {
+      this.disposeViewshedOptions();
+      this.disposeViewshedOptions = undefined;
     }
 
     runInAction(() => {
@@ -384,7 +349,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     });
 
-    this.computeLineOfSight();
+    this.updateViewshedFromPoints(true);
 
     return userClickedExistingPoint;
   }
@@ -393,6 +358,7 @@ export default class UserDrawingViewshed extends MappableMixin(
    * User has finished or cancelled; restore initial state.
    */
   cleanUp() {
+    this.destroyViewshed();
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
     this.otherEntities.entities.removeAll();
@@ -416,14 +382,8 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     }
 
-    if (isDefined(this.mouseMoveDispose)) {
-      this.mouseMoveDispose();
-    }
-
     // Allow client to clean up too
     if (typeof this.onCleanUp === "function") {
-      this.visibleLinePoints = [];
-      this.hiddenLinePoints = [];
       this.onCleanUp();
     }
   }
@@ -459,13 +419,8 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
   }
 
-  computeLineOfSight() {
-    /*const pos = this.pointEntities.entities.values
-      .filter((elem) => isDefined(elem.position))
-      .map((elem: Entity): Cartesian3 =>
-        elem.position.getValue(this.terria.timelineClock.currentTime)
-      );*/
-    const pos = this.pointEntities.entities.values.flatMap(
+  private updateViewshedFromPoints(syncMaximumDistance: boolean) {
+    const positions = this.pointEntities.entities.values.flatMap(
       (elem): Cartesian3[] => {
         if (elem.position) {
           const val = elem.position.getValue(
@@ -477,57 +432,69 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     );
 
-    if (pos.length !== 2) return [];
-
-    const cartoPos0 = Cartographic.fromCartesian(pos[0]);
-    cartoPos0.height = cartoPos0.height + this.terria.viewshedObserverHeight;
-    const cartoPos1 = Cartographic.fromCartesian(pos[1]);
-    cartoPos1.height = cartoPos1.height + this.terria.viewshedTargetHeight;
-
-    const pos0Updated = Cartographic.toCartesian(cartoPos0);
-    const pos1Updated = Cartographic.toCartesian(cartoPos1);
-
-    const direction = Cartesian3.subtract(
-      pos1Updated,
-      pos0Updated,
-      new Cartesian3()
-    );
-
-    const ray = new Ray(pos0Updated, direction);
-    const intersection = this.terria.cesium?.scene.globe.pick(
-      ray,
-      this.terria.cesium?.scene
-    );
-
-    const oldViewshedDistances = this.terria.viewshedDistances;
-
-    const distOrig = Cartesian3.distance(pos0Updated, pos1Updated);
-    const distInter =
-      intersection && Cartesian3.distance(pos0Updated, intersection);
-
-    if (
-      oldViewshedDistances &&
-      distOrig === oldViewshedDistances[0] &&
-      distInter === oldViewshedDistances[1]
-    ) {
+    if (positions.length !== 2 || !this.terria.cesium) {
+      this.destroyViewshed();
       return;
     }
 
-    const useInter: boolean =
-      intersection !== undefined &&
-      distInter !== undefined &&
-      distInter < distOrig;
+    const existingState = this.terria.viewshed3d;
+    const cartoPos0 = Cartographic.fromCartesian(positions[0]);
+    const cartoPos1 = Cartographic.fromCartesian(positions[1]);
+    if (!cartoPos0 || !cartoPos1) return;
+
+    cartoPos0.height += existingState?.observerHeight ?? 0;
+    cartoPos1.height += existingState?.targetHeight ?? 0;
+
+    const pos0Updated = Cartographic.toCartesian(cartoPos0);
+    const pos1Updated = Cartographic.toCartesian(cartoPos1);
+    const orientation = headingPitchFromObserverAndTarget(
+      pos0Updated,
+      pos1Updated,
+      this.terria.cesium.scene
+    );
+    if (orientation.distance <= 1) return;
+
+    // Do not publish state with a placeholder range: adding it to Terria makes
+    // the MobX reaction immediately construct the renderer.
+    const state = existingState ?? createViewshed3DState(orientation.distance);
 
     runInAction(() => {
-      this.terria.viewshedDistances = [
-        distOrig,
-        useInter ? distInter : distOrig
-      ];
+      if (!existingState) this.terria.viewshed3d = state;
+      if (syncMaximumDistance) {
+        state.maximumDistance = orientation.distance;
+      }
     });
-    this.visibleLinePoints = [
-      pos0Updated,
-      useInter ? intersection! : pos1Updated
-    ];
-    this.hiddenLinePoints = useInter ? [intersection!, pos1Updated] : [];
+
+    const rendererOptions = {
+      observerPosition: pos0Updated,
+      heading: orientation.heading,
+      pitch: orientation.pitch,
+      horizontalFov: state.horizontalFov,
+      verticalFov: state.verticalFov,
+      maximumDistance: state.maximumDistance,
+      showDebug: state.showDebug,
+      onTerrainLoadProgress: (queuedTileCount: number) => {
+        if (this.terria.viewshed3d !== state) return;
+        runInAction(() => {
+          state.terrainTileLoadCount = queuedTileCount;
+          state.terrainStatus =
+            queuedTileCount > 0 ? "updating" : "currentTerrain";
+        });
+      }
+    };
+
+    if (this.viewshed) {
+      this.viewshed.update(rendererOptions);
+    } else {
+      this.viewshed = new Viewshed3D(this.terria.cesium.scene, rendererOptions);
+    }
+  }
+
+  private destroyViewshed() {
+    this.viewshed?.destroy();
+    this.viewshed = undefined;
+    runInAction(() => {
+      this.terria.viewshed3d = undefined;
+    });
   }
 }

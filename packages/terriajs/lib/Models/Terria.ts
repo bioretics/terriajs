@@ -118,6 +118,7 @@ import NoViewer from "./NoViewer";
 import { RelatedMap } from "./RelatedMaps";
 import CatalogIndex from "./SearchProviders/CatalogIndex";
 import { SearchBarModel } from "./SearchProviders/SearchBarModel";
+import { Viewshed3DState } from "./Viewshed3DState";
 import ShareDataService from "./ShareDataService";
 import { StoryVideoSettings } from "./StoryVideoSettings";
 import TimelineStack from "./TimelineStack";
@@ -882,22 +883,11 @@ export default class Terria {
   @observable userAuthToken?: string;
 
   /**
-   * Gets or sets height of viewshed observer point.
-   * @type {string}
+   * State for the active, non-persistent GPU terrain Viewshed3D interaction.
+   * It intentionally contains UI-friendly degrees/metres rather than renderer
+   * resources or Cesium scene state.
    */
-  @observable viewshedObserverHeight: number = 0;
-
-  /**
-   * Gets or sets height of viewshed target point.
-   * @type {string}
-   */
-  @observable viewshedTargetHeight: number = 0;
-
-  /**
-   * Gets or sets viewshed computed distances
-   * @type {string}
-   */
-  @observable viewshedDistances?: (number | undefined)[];
+  @observable viewshed3d?: Viewshed3DState;
 
   /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack

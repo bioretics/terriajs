@@ -690,10 +690,9 @@ export default class ViewState {
     );
 
     this._viewshedPanelIsVisibleSubscription = reaction(
-      () => this.terria.viewshedDistances,
-      (viewshedDistances?: (number | undefined)[]) => {
-        this.viewshedPanelIsVisible =
-          viewshedDistances !== undefined && viewshedDistances.length > 0;
+      () => this.terria.viewshed3d,
+      (viewshed3d) => {
+        this.viewshedPanelIsVisible = viewshed3d !== undefined;
       }
     );
 

@@ -2316,7 +2316,20 @@
     "observerHeightInput": "Observer height above ground in meters (the orange point)",
     "observerHeightInputTitle": "Height of observer above ground (m)",
     "targetHeightInput": "Target height above ground in meters (the purple point)",
-    "targetHeightInputTitle": "Height of target above ground (m)"
+    "targetHeightInputTitle": "Height of target above ground (m)",
+    "horizontalFovInput": "Horizontal field of view (degrees)",
+    "horizontalFovInputTitle": "Width of the terrain viewshed sector in degrees",
+    "verticalFovInput": "Vertical field of view (degrees)",
+    "verticalFovInputTitle": "Height of the terrain viewshed sector in degrees",
+    "maximumDistanceInput": "Maximum distance (meters)",
+    "maximumDistanceInputTitle": "Hard visibility cutoff in meters",
+    "terrainUpdating_one": "Terrain is loading; the viewshed will refine ({{count}} tile queued).",
+    "terrainUpdating_other": "Terrain is loading; the viewshed will refine ({{count}} tiles queued).",
+    "terrainCurrent": "Using currently rendered terrain.",
+    "terrainLodNotice": "Terrain visibility reflects the current Cesium terrain detail, not a GIS-grade most-detailed calculation.",
+    "debugInput": "Show observer frustum",
+    "debugInputTitle": "Show the developer frustum and range boundary",
+    "colorPanelConflict": "Close the active Viewshed3D before applying elevation colors."
   },
   "measurableGeometry": {
     "header": "MEASURABLE",

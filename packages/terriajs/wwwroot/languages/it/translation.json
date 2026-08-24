@@ -1766,7 +1766,20 @@
     "observerHeightInput": "Altezza dell'osservatore rispetto al suolo in metri (punto arancione)",
     "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
     "targetHeightInput": "Altezza del bersaglio<br/>rispetto al suolo in metri<br/>(punto viola)",
-    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)"
+    "targetHeightInputTitle": "Altezza del bersaglio rispetto al suolo (m)",
+    "horizontalFovInput": "Campo visivo orizzontale (gradi)",
+    "horizontalFovInputTitle": "Larghezza del settore di visibilità del terreno in gradi",
+    "verticalFovInput": "Campo visivo verticale (gradi)",
+    "verticalFovInputTitle": "Altezza del settore di visibilità del terreno in gradi",
+    "maximumDistanceInput": "Distanza massima (metri)",
+    "maximumDistanceInputTitle": "Limite massimo di visibilità in metri",
+    "terrainUpdating_one": "Terreno in caricamento: la vista si affinerà ({{count}} tile in coda).",
+    "terrainUpdating_other": "Terreno in caricamento: la vista si affinerà ({{count}} tile in coda).",
+    "terrainCurrent": "Uso del terreno attualmente visualizzato.",
+    "terrainLodNotice": "La visibilità riflette il dettaglio del terreno Cesium corrente, non un calcolo GIS alla massima precisione.",
+    "debugInput": "Mostra frustum osservatore",
+    "debugInputTitle": "Mostra il frustum di sviluppo e il limite di distanza",
+    "colorPanelConflict": "Chiudi Viewshed3D attivo prima di applicare i colori altimetrici."
   },
   "measurableGeometry": {
     "header": "MISURE",
