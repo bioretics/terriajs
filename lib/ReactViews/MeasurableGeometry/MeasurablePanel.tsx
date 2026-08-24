@@ -11,7 +11,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 import Button from "../../Styled/Button";
-import Text from "../../Styled/Text";
+import Text, { TextSpan } from "../../Styled/Text";
 import Box from "../../Styled/Box";
 import Input, { StyledTextArea } from "../../Styled/Input";
 import ViewState from "../../ReactViewModels/ViewState";
@@ -35,6 +35,10 @@ import {
   getSummaryKind
 } from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummary";
 import MeasurableGeometryExporter from "../../ViewModels/MeasurableGeometry/MeasurableGeometryExporter";
+import {
+  defaultSamplingStep,
+  samplingStepRange
+} from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 interface Props {
   viewState: ViewState;
@@ -128,8 +132,23 @@ const MeasurablePanel = observer((props: Props) => {
     terria.clampMeasureLineToGround = !terria.clampMeasureLineToGround;
   });
 
+  const [minSamplingPathStep, maxSamplingPathStep] = samplingStepRange(
+    currentGeom?.geodeticDistance
+  );
+  const isAutoSamplingPathStep = terria.measurableGeomSamplingStepIsAuto;
+  const autoSamplingPathStep = defaultSamplingStep(
+    currentGeom?.geodeticDistance
+  );
+
   const changeSamplingPathStep = action((val: number) => {
     terria.measurableGeomSamplingStep = val;
+  });
+
+  const toggleAutoSamplingPathStep = action((isAuto: boolean) => {
+    if (!isAuto && autoSamplingPathStep > 0) {
+      terria.measurableGeomSamplingStep = autoSamplingPathStep;
+    }
+    terria.measurableGeomSamplingStepIsAuto = isAuto;
   });
 
   const getCircleToolController = () => {
@@ -186,30 +205,6 @@ const MeasurablePanel = observer((props: Props) => {
         terria.measurableGeometryIndex
       ]?.stopPoints?.map((elem) => elem.height) || []
     );
-  });
-
-  const rangeSamplingPathStep = computed(() => {
-    if (
-      !terria?.measurableGeomList[terria.measurableGeometryIndex]
-        ?.geodeticDistance
-    ) {
-      return [0, 0];
-    }
-    const minExponent = 0;
-    const maxExponent = 3;
-    const thousandthExponent = 4;
-    const exponent = Math.min(
-      maxExponent,
-      Math.max(
-        minExponent,
-        (terria.measurableGeomList[
-          terria.measurableGeometryIndex
-        ]?.geodeticDistance?.toFixed(0).length ?? 0) - thousandthExponent
-      )
-    );
-    const minSamplingPathStep = 10 ** exponent;
-    const maxSamplingPathStep = 2 * 10 ** maxExponent;
-    return [minSamplingPathStep, maxSamplingPathStep];
   });
 
   const prettifyNumber = (number: number, squared: boolean = false) => {
@@ -356,6 +351,27 @@ const MeasurablePanel = observer((props: Props) => {
     terria.measurableGeomList,
     isMobile
   ]);
+
+  useEffect(() => {
+    if (isAutoSamplingPathStep) {
+      if (autoSamplingPathStep > 0) {
+        setSamplingPathStep(autoSamplingPathStep);
+      }
+    } else {
+      setSamplingPathStep(terria.measurableGeomSamplingStep);
+    }
+  }, [
+    isAutoSamplingPathStep,
+    autoSamplingPathStep,
+    terria.measurableGeomSamplingStep
+  ]);
+
+  useEffect(() => {
+    setIsValidSamplingPathStep(
+      samplingPathStep >= minSamplingPathStep &&
+        samplingPathStep <= maxSamplingPathStep
+    );
+  }, [samplingPathStep, minSamplingPathStep, maxSamplingPathStep]);
 
   useEffect(() => {
     if (measurablePanelIsVisible) {
@@ -577,9 +593,21 @@ const MeasurablePanel = observer((props: Props) => {
             {i18next.t("measurableGeometry.samplingStepHeader")}
             {":"}
           </Text>
+          <Checkbox
+            title={i18next.t(
+              "measurableGeometry.samplingStepAutoCheckboxTitle"
+            )}
+            isChecked={isAutoSamplingPathStep}
+            onChange={(e) => {
+              toggleAutoSamplingPathStep(e.target.checked);
+            }}
+          >
+            <TextSpan textLight style={{ whiteSpace: "nowrap" }}>
+              {i18next.t("measurableGeometry.samplingStepAutoCheckbox")}
+            </TextSpan>
+          </Checkbox>
           <Text textLight style={{ whiteSpace: "nowrap" }} title="">
-            [min {rangeSamplingPathStep.get()[0]}, max{" "}
-            {rangeSamplingPathStep.get()[1]}]
+            [min {minSamplingPathStep}, max {maxSamplingPathStep}]
           </Text>
           <Box
             css={`
@@ -602,17 +630,13 @@ const MeasurablePanel = observer((props: Props) => {
                 light={false}
                 dark
                 type="number"
-                min={1}
-                max={2000}
+                min={minSamplingPathStep}
+                max={maxSamplingPathStep}
                 step={1}
                 value={samplingPathStep}
+                disabled={isAutoSamplingPathStep}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value, 10);
-                  setIsValidSamplingPathStep(
-                    val >= rangeSamplingPathStep.get()[0] &&
-                      val <= rangeSamplingPathStep.get()[1]
-                  );
-                  setSamplingPathStep(val);
+                  setSamplingPathStep(parseInt(e.target.value, 10));
                 }}
               />
             </Box>
@@ -622,6 +646,7 @@ const MeasurablePanel = observer((props: Props) => {
                 background: ${theme.colorPrimary};
               `}
               disabled={
+                isAutoSamplingPathStep ||
                 !terria.measurableGeomList[terria.measurableGeometryIndex]
                   ?.stopPoints.length
               }

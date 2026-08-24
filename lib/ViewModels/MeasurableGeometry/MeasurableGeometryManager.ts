@@ -8,6 +8,7 @@ import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSourc
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
 import { JsonObject } from "../../Core/Json";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import { defaultSamplingStep } from "./MeasurableGeometrySamplingStep";
 export interface MeasurableGeometry {
   isClosed: boolean;
   hasArea: boolean;
@@ -92,6 +93,26 @@ export default class MeasurableGeometryManager {
       currentGeometry?.circleRadius,
       currentGeometry?.circleCenter,
       closeGeomProperties
+    );
+  }
+
+  private samplingStepFor(
+    cartoPositions: Cartographic[],
+    ellipsoid: Ellipsoid
+  ): number {
+    if (!this.terria.measurableGeomSamplingStepIsAuto) {
+      return this.terria.measurableGeomSamplingStep;
+    }
+    let pathLength = 0;
+    for (let i = 0; i < cartoPositions.length - 1; ++i) {
+      pathLength += new EllipsoidGeodesic(
+        cartoPositions[i],
+        cartoPositions[i + 1],
+        ellipsoid
+      ).surfaceDistance;
+    }
+    return (
+      defaultSamplingStep(pathLength) || this.terria.measurableGeomSamplingStep
     );
   }
 
@@ -260,6 +281,7 @@ export default class MeasurableGeometryManager {
       !!ellipsoid &&
       cartoPositions.length > 0;
 
+    const samplingStep = this.samplingStepFor(cartoPositions, ellipsoid);
     // index of the original stops in the new array of sampling points
     const originalStopsIndex: number[] = [0];
     // geodetic distance between two stops
@@ -275,7 +297,7 @@ export default class MeasurableGeometryManager {
       const segmentDistance = geodesic.surfaceDistance;
       stopGeodeticDistances.push(segmentDistance);
       let y = 0;
-      while ((y += this.terria.measurableGeomSamplingStep) < segmentDistance) {
+      while ((y += samplingStep) < segmentDistance) {
         interpolatedCartographics.push(
           geodesic.interpolateUsingSurfaceDistance(y)
         );
