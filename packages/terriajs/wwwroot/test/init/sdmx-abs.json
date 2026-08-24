@@ -13834,7 +13834,7 @@
                           "showWarnings": false,
                           "cleanFootnotes": true,
                           "forceShowDimensionIds": ["MEASURE"],
-                      (   "url": "http://stat.data.abs.gov.au/sdmx-json/data/ABS_CENSUS2011_B29",
+                          "url": "http://stat.data.abs.gov.au/sdmx-json/data/ABS_CENSUS2011_B29",
                           "description": "Counts are of all persons on Census night based on place of usual residence, not including overseas visitors.<br/>You can view this data, along with explanations of the meaning of terms, on the ABS.Stat website [here](http://stat.data.abs.gov.au/Index.aspx?DatasetCode=ABS_CENSUS2011_B29). Click on the 'i' symbols on that page for further information and links.",
                           "aggregatedDimensionIds": ["STATE"],
                           "totalValueIds": {
