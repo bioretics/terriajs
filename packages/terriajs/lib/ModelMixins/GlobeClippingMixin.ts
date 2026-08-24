@@ -1,7 +1,8 @@
-import { action, autorun, makeObservable, override } from "mobx";
+import { action, autorun, computed, makeObservable } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
-import SelectableDimensions, {
+import {
+  SelectableDimension,
   SelectableDimensionCheckbox
 } from "../Models/SelectableDimensions/SelectableDimensions";
 import GlobeClippingTraits from "../Traits/TraitsClasses/GlobeClippingTraits";
@@ -16,7 +17,7 @@ import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import CesiumColor from "terriajs-cesium/Source/Core/Color";
 
-type BaseType = Model<GlobeClippingTraits> & SelectableDimensions;
+type BaseType = Model<GlobeClippingTraits>;
 
 function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
   abstract class GlobeClippingMixinBase extends Base {
@@ -37,8 +38,8 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return true;
     }
 
-    @override
-    get selectableDimensions() {
+    @computed
+    get globeClippingSelectableDimensions(): SelectableDimension[] {
       const globeClippingCheckbox: SelectableDimensionCheckbox | undefined =
         this.globeClippingControlShowed
           ? {
@@ -65,10 +66,7 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             }
           : undefined;
 
-      return filterOutUndefined([
-        ...super.selectableDimensions,
-        globeClippingCheckbox
-      ]);
+      return filterOutUndefined([globeClippingCheckbox]);
     }
 
     abstract get data(): DataSource | undefined;

@@ -93,6 +93,7 @@ import { ExportData } from "./ExportableMixin";
 import FeatureInfoUrlTemplateMixin from "./FeatureInfoUrlTemplateMixin";
 import { ImageryParts, isDataSource } from "./MappableMixin";
 import TableMixin from "./TableMixin";
+import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 import GlobeClippingMixin from "./GlobeClippingMixin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
@@ -376,6 +377,14 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
 
     get data(): DataSource | undefined {
       return this._dataSource;
+    }
+
+    @override
+    get selectableDimensions(): SelectableDimension[] {
+      return [
+        ...super.selectableDimensions,
+        ...this.globeClippingSelectableDimensions
+      ];
     }
 
     @override
