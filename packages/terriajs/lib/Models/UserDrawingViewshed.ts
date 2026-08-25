@@ -1,15 +1,22 @@
 import i18next from "i18next";
 import { computed, observable, reaction, runInAction } from "mobx";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
+import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
+import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
 import Viewshed3D from "../Map/Cesium/Viewshed3D";
-import type { ViewshedStatus } from "../Map/Cesium/Viewshed3D";
+import type {
+  ViewshedStatus,
+  VisibilityLineInfo
+} from "../Map/Cesium/Viewshed3D";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
@@ -18,6 +25,15 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import { createViewshed3DState } from "./Viewshed3DState";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
+import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
+import HorizontalOrigin from "terriajs-cesium/Source/Scene/HorizontalOrigin";
+
+// Entity IDs for the auxiliary viewshed entities
+const BORDER_CIRCLE_ID = "viewshed-border-circle";
+const LINE_VISIBLE_ID = "viewshed-line-visible";
+const LINE_HIDDEN_ID = "viewshed-line-hidden";
+const LINE_LABEL_ID = "viewshed-line-label";
 
 interface Options {
   terria: Terria;
@@ -48,6 +64,11 @@ export default class UserDrawingViewshed extends MappableMixin(
   private disposePickedFeatureSubscription?: () => void;
   private disposeViewshedOptions?: () => void;
   private viewshed?: Viewshed3D;
+
+  /** Cached positions of the two user-placed points (observer, target). */
+  private lastPositions?: [Cartesian3, Cartesian3];
+  /** Latest visibility-line info computed by Viewshed3D. */
+  @observable private visibilityLineInfo?: VisibilityLineInfo;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
@@ -159,7 +180,12 @@ export default class UserDrawingViewshed extends MappableMixin(
       () => {
         const state = this.terria.viewshed3d;
         return state
-          ? [state.observerHeight, state.maximumDistance]
+          ? [
+              state.observerHeight,
+              state.maximumDistance,
+              state.showBorder,
+              state.showLine
+            ]
           : undefined;
       },
       () => this.updateViewshedFromPoints(false)
@@ -359,7 +385,9 @@ export default class UserDrawingViewshed extends MappableMixin(
 
     runInAction(() => {
       this.inDrawMode = false;
+      this.visibilityLineInfo = undefined;
     });
+    this.lastPositions = undefined;
 
     // Return cursor to original state
     if (isDefined(this.terria.cesium)) {
@@ -411,6 +439,235 @@ export default class UserDrawingViewshed extends MappableMixin(
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Circle border helper
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Builds a ring of Cartesian3 positions around the observer at the given
+   * radius, suitable for a polyline entity clamped to ground.
+   */
+  private buildCircleBorderPositions(
+    observerCartographic: Cartographic,
+    radius: number,
+    segments: number = 128
+  ): Cartesian3[] {
+    const positions: Cartesian3[] = [];
+    const lat = observerCartographic.latitude;
+    const lon = observerCartographic.longitude;
+    const height = observerCartographic.height;
+
+    // Approximate radius in radians on the WGS84 ellipsoid
+    const earthRadius = 6378137; // WGS84 semi-major axis
+    for (let k = 0; k <= segments; k++) {
+      const angle = (k / segments) * 2 * Math.PI;
+      const dLat = (radius / earthRadius) * Math.cos(angle);
+      const dLon = (radius / (earthRadius * Math.cos(lat))) * Math.sin(angle);
+      positions.push(
+        Cartographic.toCartesian(
+          new Cartographic(lon + dLon, lat + dLat, height)
+        )
+      );
+    }
+    return positions;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auxiliary entity management (border circle + visibility line)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Create or update the border circle, visibility line, and distance label
+   * entities in otherEntities.
+   */
+  private updateAuxiliaryEntities(
+    observerPosition: Cartesian3,
+    targetPosition: Cartesian3,
+    maximumDistance: number,
+    showBorder: boolean,
+    showLine: boolean
+  ) {
+    const observerCarto = Cartographic.fromCartesian(observerPosition);
+
+    // ---- Border circle ----
+    const borderPositions = this.buildCircleBorderPositions(
+      observerCarto,
+      maximumDistance
+    );
+
+    const borderEntity = this.otherEntities.entities.getById(BORDER_CIRCLE_ID);
+    if (borderEntity) {
+      // Update existing entity
+      if (borderEntity.polyline) {
+        (borderEntity.polyline.positions as any) = new ConstantProperty(
+          borderPositions
+        );
+      }
+      borderEntity.show = showBorder;
+    } else {
+      this.otherEntities.entities.add({
+        id: BORDER_CIRCLE_ID,
+        name: "Viewshed Border",
+        polyline: {
+          positions: borderPositions as any,
+          clampToGround: true,
+          width: 3,
+          material: new PolylineGlowMaterialProperty({
+            color: Color.YELLOW,
+            glowPower: 0.15
+          })
+        },
+        show: showBorder
+      });
+    }
+
+    // ---- Visibility line (green/red segments + label) ----
+    this.updateVisibilityLineEntities(
+      observerPosition,
+      targetPosition,
+      showLine
+    );
+  }
+
+  /**
+   * Create or update the green (visible) and red (hidden) line segments and
+   * the distance label at the visibility boundary.
+   */
+  private updateVisibilityLineEntities(
+    observerPosition: Cartesian3,
+    targetPosition: Cartesian3,
+    showLine: boolean
+  ) {
+    const info = this.visibilityLineInfo;
+
+    // Determine the two segments
+    let greenPositions: Cartesian3[];
+    let redPositions: Cartesian3[] | undefined;
+    let labelPosition: Cartesian3 | undefined;
+    let labelText: string = "";
+
+    if (info && info.visibleDistance !== undefined && info.boundaryPosition) {
+      // Partial visibility: green up to boundary, red from boundary to target
+      greenPositions = [observerPosition, info.boundaryPosition];
+      redPositions = [info.boundaryPosition, targetPosition];
+      labelPosition = info.boundaryPosition;
+      labelText = `${Math.round(info.visibleDistance)} m`;
+    } else {
+      // Fully visible (or no info yet): entire line is green
+      greenPositions = [observerPosition, targetPosition];
+      redPositions = undefined;
+      labelPosition = undefined;
+    }
+
+    // --- Green (visible) segment ---
+    const greenEntity = this.otherEntities.entities.getById(LINE_VISIBLE_ID);
+    if (greenEntity) {
+      if (greenEntity.polyline) {
+        (greenEntity.polyline.positions as any) = new ConstantProperty(
+          greenPositions
+        );
+      }
+      greenEntity.show = showLine;
+    } else {
+      this.otherEntities.entities.add({
+        id: LINE_VISIBLE_ID,
+        name: "Visible segment",
+        polyline: {
+          positions: greenPositions as any,
+          clampToGround: true,
+          width: 4,
+          material: new PolylineGlowMaterialProperty({
+            color: Color.LIME,
+            glowPower: 0.15
+          })
+        },
+        show: showLine
+      });
+    }
+
+    // --- Red (hidden) segment ---
+    const redEntity = this.otherEntities.entities.getById(LINE_HIDDEN_ID);
+    if (redPositions) {
+      if (redEntity) {
+        if (redEntity.polyline) {
+          (redEntity.polyline.positions as any) = new ConstantProperty(
+            redPositions
+          );
+        }
+        redEntity.show = showLine;
+      } else {
+        this.otherEntities.entities.add({
+          id: LINE_HIDDEN_ID,
+          name: "Hidden segment",
+          polyline: {
+            positions: redPositions as any,
+            clampToGround: true,
+            width: 4,
+            material: new PolylineGlowMaterialProperty({
+              color: Color.RED,
+              glowPower: 0.15
+            })
+          },
+          show: showLine
+        });
+      }
+    } else if (redEntity) {
+      // No hidden segment needed; hide existing
+      redEntity.show = false;
+    }
+
+    // --- Distance label at the boundary ---
+    const labelEntity = this.otherEntities.entities.getById(LINE_LABEL_ID);
+    if (labelPosition && labelText) {
+      if (labelEntity) {
+        (labelEntity.position as any) = new ConstantPositionProperty(
+          labelPosition
+        );
+        if (labelEntity.label) {
+          (labelEntity.label.text as any) = new ConstantProperty(labelText);
+        }
+        labelEntity.show = showLine;
+      } else {
+        this.otherEntities.entities.add({
+          id: LINE_LABEL_ID,
+          name: "Visible distance",
+          position: new ConstantPositionProperty(labelPosition) as any,
+          label: {
+            text: labelText as any,
+            font: "14px sans-serif",
+            style: LabelStyle.FILL_AND_OUTLINE,
+            fillColor: Color.WHITE,
+            outlineColor: Color.BLACK,
+            outlineWidth: 3,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY,
+            pixelOffset: new Cartesian2(0, -16),
+            verticalOrigin: VerticalOrigin.BOTTOM,
+            horizontalOrigin: HorizontalOrigin.CENTER
+          },
+          show: showLine
+        });
+      }
+    } else if (labelEntity) {
+      // Entire ray visible — hide the label
+      labelEntity.show = false;
+    }
+  }
+
+  /**
+   * Remove all auxiliary entities (border + line + label).
+   */
+  private removeAuxiliaryEntities() {
+    this.otherEntities.entities.removeById(BORDER_CIRCLE_ID);
+    this.otherEntities.entities.removeById(LINE_VISIBLE_ID);
+    this.otherEntities.entities.removeById(LINE_HIDDEN_ID);
+    this.otherEntities.entities.removeById(LINE_LABEL_ID);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Main viewshed update
+  // ---------------------------------------------------------------------------
+
   private updateViewshedFromPoints(syncMaximumDistance: boolean) {
     const positions = this.pointEntities.entities.values.flatMap(
       (elem): Cartesian3[] => {
@@ -438,7 +695,9 @@ export default class UserDrawingViewshed extends MappableMixin(
     const range = Cartesian3.distance(positions[0], positions[1]);
     if (range <= 1) return;
 
-    cartoPos0.height += existingState?.observerHeight ?? 0;
+    // Keep observerPosition at ground level; observerHeight is passed
+    // separately to the Viewshed3D renderer so the terrain grid is centred
+    // correctly and the height offset is applied in the viewshed calculation.
     const observerPosition = Cartographic.toCartesian(cartoPos0);
 
     const state = existingState ?? createViewshed3DState(range);
@@ -450,19 +709,46 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     });
 
+    // Cache positions for auxiliary entity updates
+    this.lastPositions = [positions[0], positions[1]];
+
     const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
 
     const rendererOptions = {
       terrainProvider,
       observerPosition,
+      observerHeight: state.observerHeight,
       maximumDistance: state.maximumDistance,
+      targetPosition: positions[1],
       onStatusChange: (status: ViewshedStatus) => {
         if (this.terria.viewshed3d !== state) return;
         runInAction(() => {
           state.terrainStatus = status;
         });
+      },
+      onVisibilityLineComputed: (info: VisibilityLineInfo) => {
+        runInAction(() => {
+          this.visibilityLineInfo = info;
+        });
+        // Update the line entities with the new info
+        if (this.lastPositions) {
+          this.updateVisibilityLineEntities(
+            this.lastPositions[0],
+            this.lastPositions[1],
+            state.showLine
+          );
+        }
       }
     };
+
+    // Create / update auxiliary entities (border + line)
+    this.updateAuxiliaryEntities(
+      observerPosition,
+      positions[1],
+      state.maximumDistance,
+      state.showBorder,
+      state.showLine
+    );
 
     if (this.viewshed) {
       this.viewshed.update(rendererOptions);
@@ -474,8 +760,11 @@ export default class UserDrawingViewshed extends MappableMixin(
   private destroyViewshed() {
     this.viewshed?.destroy();
     this.viewshed = undefined;
+    this.removeAuxiliaryEntities();
+    this.lastPositions = undefined;
     runInAction(() => {
       this.terria.viewshed3d = undefined;
+      this.visibilityLineInfo = undefined;
     });
   }
 }

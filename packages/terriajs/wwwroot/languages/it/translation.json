@@ -1770,6 +1770,8 @@
     "terrainComputing": "Calcolo della visibilità alla massima precisione del terreno…",
     "terrainReady": "Visibilità calcolata (terreno alla massima precisione).",
     "terrainUnavailable": "Il provider del terreno non supporta l'analisi di visibilità.",
+    "showBorderCheckbox": "Mostra bordo",
+    "showLineCheckbox": "Mostra linea",
     "colorPanelConflict": "Chiudi Viewshed3D attivo prima di applicare i colori altimetrici."
   },
   "measurableGeometry": {

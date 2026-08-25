@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
 import Input from "../../Styled/Input";
+import Checkbox from "../../Styled/Checkbox";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import Styles from "./viewshed-panel.scss";
@@ -120,6 +121,29 @@ const ViewshedPanel = observer((props: Props) => {
                   )
                 }
               />
+            </Box>
+            <br />
+            <Box paddedHorizontally={2} column style={{ gap: "6px" }}>
+              <Checkbox
+                isChecked={state.showBorder}
+                onChange={() =>
+                  runInAction(() => {
+                    state.showBorder = !state.showBorder;
+                  })
+                }
+              >
+                <Text textLight>{t(($) => $.viewshed.showBorderCheckbox)}</Text>
+              </Checkbox>
+              <Checkbox
+                isChecked={state.showLine}
+                onChange={() =>
+                  runInAction(() => {
+                    state.showLine = !state.showLine;
+                  })
+                }
+              >
+                <Text textLight>{t(($) => $.viewshed.showLineCheckbox)}</Text>
+              </Checkbox>
             </Box>
             <br />
             <Text textLight style={{ textAlign: "center" }}>

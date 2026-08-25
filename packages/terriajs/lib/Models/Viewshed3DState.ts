@@ -5,6 +5,8 @@ export interface Viewshed3DState {
   observerHeight: number;
   maximumDistance: number;
   terrainStatus: ViewshedTerrainStatus;
+  showBorder: boolean;
+  showLine: boolean;
 }
 
 export function createViewshed3DState(
@@ -13,6 +15,8 @@ export function createViewshed3DState(
   return {
     observerHeight: 0,
     maximumDistance,
-    terrainStatus: "computing"
+    terrainStatus: "computing",
+    showBorder: true,
+    showLine: true
   };
 }
