@@ -25,9 +25,10 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       makeObservable(this);
 
       autorun(() => {
-        if (this.data) {
+        const boundingSphere = this.globeClippingBoundingSphere;
+        if (boundingSphere) {
           this.autoComputeClippingPlanes(
-            this.globeClippingEnabled ? this.data : undefined
+            this.globeClippingEnabled ? boundingSphere : undefined
           );
         }
       });
@@ -71,16 +72,37 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ]);
     }
 
-    abstract get data(): DataSource | undefined;
+    get data(): DataSource | undefined {
+      return undefined;
+    }
 
-    autoComputeClippingPlanes(dataSource: DataSource | undefined) {
+    get globeClippingBoundingSphere(): BoundingSphere | undefined {
+      const points: Cartesian3[] = filterOutUndefined(
+        this.data?.entities.values.map((elem) =>
+          elem.position?.getValue(JulianDate.now())
+        ) ?? []
+      );
+      if (points.length === 0) {
+        return undefined;
+      }
+      return this.withGlobeClippingRadius(BoundingSphere.fromPoints(points));
+    }
+
+    protected withGlobeClippingRadius(sphere: BoundingSphere) {
+      const radius = this.globeClippingRadius;
+      return radius === undefined
+        ? sphere
+        : new BoundingSphere(sphere.center, radius);
+    }
+
+    autoComputeClippingPlanes(boundingSphere: BoundingSphere | undefined) {
       if (!this.terria.cesium) {
         return;
       }
 
       const globe = this.terria.cesium.scene.globe;
 
-      if (dataSource === undefined) {
+      if (boundingSphere === undefined) {
         globe.backFaceCulling = true;
         globe.showSkirts = true;
         if (globe.clippingPlanes) {
@@ -89,14 +111,11 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return;
       }
 
-      const points: Cartesian3[] = dataSource?.entities.values
-        .map((elem) => {
-          return elem.position?.getValue(JulianDate.now());
-        })
-        .filter((elem): elem is Cartesian3 => !!elem);
-      const sphere = BoundingSphere.fromPoints(points);
-      const position = sphere.center;
-      const distance = sphere.radius;
+      const position = boundingSphere.center;
+      const distance = boundingSphere.radius;
+      if (!(distance > 0)) {
+        return;
+      }
 
       globe.clippingPlanes = new ClippingPlaneCollection({
         modelMatrix: Transforms.eastNorthUpToFixedFrame(position),

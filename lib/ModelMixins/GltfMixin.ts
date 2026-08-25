@@ -16,9 +16,11 @@ import proxyCatalogItemUrl from "../Models/Catalog/proxyCatalogItemUrl";
 import Model from "../Models/Definition/Model";
 import GltfTraits from "../Traits/TraitsClasses/GltfTraits";
 import CatalogMemberMixin from "./CatalogMemberMixin";
+import GlobeClippingMixin from "./GlobeClippingMixin";
 import MappableMixin from "./MappableMixin";
 import ShadowMixin from "./ShadowMixin";
 import Resource from "terriajs-cesium/Source/Core/Resource";
+import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 
 type BaseType = Model<GltfTraits>;
 
@@ -37,8 +39,8 @@ export interface GltfTransformationJson {
 }
 
 function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
-  abstract class GltfMixin extends ShadowMixin(
-    CatalogMemberMixin(MappableMixin(Base))
+  abstract class GltfMixin extends GlobeClippingMixin(
+    ShadowMixin(CatalogMemberMixin(MappableMixin(Base)))
   ) {
     // Create stable instances of DataSource and Entity instead
     // of generating a new one each time the traits change and mobx recomputes.
@@ -177,6 +179,14 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return i18next.t("models.commonModelErrors.3dTypeIn2dMode", this);
       }
       return super.shortReport;
+    }
+
+    get globeClippingBoundingSphere(): BoundingSphere | undefined {
+      const position = this.cesiumPosition;
+      if (position.equals(Cartesian3.ZERO)) {
+        return undefined;
+      }
+      return this.withGlobeClippingRadius(new BoundingSphere(position, 0));
     }
 
     @computed
