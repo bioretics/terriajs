@@ -2317,10 +2317,9 @@
     "observerHeightInputTitle": "Height of observer above ground (m)",
     "maximumDistanceInput": "Maximum distance (meters)",
     "maximumDistanceInputTitle": "Radius of the visibility analysis around the observer (m). Also set by the purple point.",
-    "terrainUpdating_one": "Terrain is loading; the viewshed will refine ({{count}} tile queued).",
-    "terrainUpdating_other": "Terrain is loading; the viewshed will refine ({{count}} tiles queued).",
-    "terrainCurrent": "Using currently rendered terrain.",
-    "terrainLodNotice": "Terrain visibility reflects the current Cesium terrain detail, not a GIS-grade most-detailed calculation.",
+    "terrainComputing": "Computing viewshed at maximum terrain detail…",
+    "terrainReady": "Viewshed computed (highest precision terrain).",
+    "terrainUnavailable": "Terrain provider does not support viewshed analysis.",
     "colorPanelConflict": "Close the active Viewshed3D before applying elevation colors."
   },
   "measurableGeometry": {

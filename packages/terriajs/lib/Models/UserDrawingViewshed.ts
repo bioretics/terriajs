@@ -9,6 +9,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
 import Viewshed3D from "../Map/Cesium/Viewshed3D";
+import type { ViewshedStatus } from "../Map/Cesium/Viewshed3D";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
@@ -449,15 +450,16 @@ export default class UserDrawingViewshed extends MappableMixin(
       }
     });
 
+    const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
+
     const rendererOptions = {
+      terrainProvider,
       observerPosition,
       maximumDistance: state.maximumDistance,
-      onTerrainLoadProgress: (queuedTileCount: number) => {
+      onStatusChange: (status: ViewshedStatus) => {
         if (this.terria.viewshed3d !== state) return;
         runInAction(() => {
-          state.terrainTileLoadCount = queuedTileCount;
-          state.terrainStatus =
-            queuedTileCount > 0 ? "updating" : "currentTerrain";
+          state.terrainStatus = status;
         });
       }
     };

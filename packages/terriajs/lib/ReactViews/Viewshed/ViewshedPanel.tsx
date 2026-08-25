@@ -40,6 +40,19 @@ const ViewshedPanel = observer((props: Props) => {
     runInAction(() => setter(number));
   };
 
+  const statusText = (status: string) => {
+    switch (status) {
+      case "computing":
+        return t(($) => $.viewshed.terrainComputing);
+      case "ready":
+        return t(($) => $.viewshed.terrainReady);
+      case "unavailable":
+        return t(($) => $.viewshed.terrainUnavailable);
+      default:
+        return "";
+    }
+  };
+
   return (
     <DragWrapper>
       <div
@@ -110,14 +123,7 @@ const ViewshedPanel = observer((props: Props) => {
             </Box>
             <br />
             <Text textLight style={{ textAlign: "center" }}>
-              {state.terrainStatus === "updating"
-                ? t(($) => $.viewshed.terrainUpdating, {
-                    count: state.terrainTileLoadCount
-                  })
-                : t(($) => $.viewshed.terrainCurrent)}
-            </Text>
-            <Text textLight style={{ textAlign: "center", fontSize: "0.85em" }}>
-              {t(($) => $.viewshed.terrainLodNotice)}
+              {statusText(state.terrainStatus)}
             </Text>
           </div>
         )}

@@ -1767,10 +1767,9 @@
     "observerHeightInputTitle": "Altezza dell'osservatore rispetto al suolo (m)",
     "maximumDistanceInput": "Distanza massima (metri)",
     "maximumDistanceInputTitle": "Raggio dell'analisi di visibilità intorno all'osservatore (m). Impostabile anche con il punto viola.",
-    "terrainUpdating_one": "Terreno in caricamento: la vista si affinerà ({{count}} tile in coda).",
-    "terrainUpdating_other": "Terreno in caricamento: la vista si affinerà ({{count}} tile in coda).",
-    "terrainCurrent": "Uso del terreno attualmente visualizzato.",
-    "terrainLodNotice": "La visibilità riflette il dettaglio del terreno Cesium corrente, non un calcolo GIS alla massima precisione.",
+    "terrainComputing": "Calcolo della visibilità alla massima precisione del terreno…",
+    "terrainReady": "Visibilità calcolata (terreno alla massima precisione).",
+    "terrainUnavailable": "Il provider del terreno non supporta l'analisi di visibilità.",
     "colorPanelConflict": "Chiudi Viewshed3D attivo prima di applicare i colori altimetrici."
   },
   "measurableGeometry": {
