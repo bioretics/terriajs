@@ -1,31 +1,22 @@
 import Camera from "terriajs-cesium/Source/Scene/Camera";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
-import DebugCameraPrimitive from "terriajs-cesium/Source/Scene/DebugCameraPrimitive";
 import Material from "terriajs-cesium/Source/Scene/Material";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
-import PerspectiveFrustum from "terriajs-cesium/Source/Core/PerspectiveFrustum";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
 import ShadowMap from "terriajs-cesium/Source/Scene/ShadowMap";
 import ShadowMode from "terriajs-cesium/Source/Scene/ShadowMode";
-import Transforms from "terriajs-cesium/Source/Core/Transforms";
 
 /**
- * Parameters for a single terrain viewshed. Angles are in radians and distances
- * are in metres. The class deliberately has no Terria dependency so it can be
- * reused by another Terria UI entry point.
+ * Parameters for an omnidirectional terrain viewshed. Distances are in metres.
+ * The analysis covers a sphere of radius `maximumDistance` around the observer;
+ * only terrain that is line-of-sight visible is tinted.
  */
 export interface Viewshed3DOptions {
   observerPosition: Cartesian3;
-  heading: number;
-  pitch: number;
-  horizontalFov: number;
-  verticalFov: number;
   maximumDistance: number;
   visibleColor?: Color;
-  occludedColor?: Color;
   alpha?: number;
-  showDebug?: boolean;
   textureSize?: number;
   onTerrainLoadProgress?: (queuedTileCount: number) => void;
 }
@@ -34,90 +25,8 @@ export interface Viewshed3DUpdateOptions extends Partial<
   Omit<Viewshed3DOptions, "textureSize">
 > {}
 
-export const DEFAULT_VIEWSHED_HORIZONTAL_FOV = Math.PI / 3;
-export const DEFAULT_VIEWSHED_VERTICAL_FOV = Math.PI / 4;
 export const DEFAULT_VIEWSHED_TEXTURE_SIZE = 512;
 export const DEFAULT_VIEWSHED_ALPHA = 0.45;
-
-const scratchDirection = new Cartesian3();
-const scratchUp = new Cartesian3();
-const scratchRight = new Cartesian3();
-const scratchEnu = new Matrix4();
-const scratchInverseEnu = new Matrix4();
-const scratchLocalDirection = new Cartesian3();
-const scratchMatrixArray = new Array<number>(16);
-
-/**
- * Heading and pitch of the segment expressed in the observer's local ENU frame.
- * Cesium's heading is clockwise from north and pitch is positive above the
- * local horizon.
- *
- * The look direction MUST be unit-length before deriving pitch: Cesium's
- * getPitch uses acos(direction.z), so an unnormalised ECEF delta collapses
- * pitch to ±90° and the analysis frustum aims straight down.
- */
-export function headingPitchFromObserverAndTarget(
-  observer: Cartesian3,
-  target: Cartesian3,
-  scene: Scene
-): { heading: number; pitch: number; distance: number } {
-  const direction = Cartesian3.subtract(target, observer, scratchDirection);
-  const distance = Cartesian3.magnitude(direction);
-
-  if (distance === 0) {
-    return { heading: 0, pitch: 0, distance: 0 };
-  }
-
-  Cartesian3.normalize(direction, direction);
-
-  const enu = Transforms.eastNorthUpToFixedFrame(
-    observer,
-    scene.globe.ellipsoid,
-    scratchEnu
-  );
-  const inverseEnu = Matrix4.inverseTransformation(enu, scratchInverseEnu);
-  const localDirection = Matrix4.multiplyByPointAsVector(
-    inverseEnu,
-    direction,
-    scratchLocalDirection
-  );
-  Cartesian3.normalize(localDirection, localDirection);
-
-  // ENU: x = east, y = north, z = up. Heading is clockwise from north.
-  const heading = Math.atan2(localDirection.x, localDirection.y);
-  const pitch = Math.asin(localDirection.z);
-
-  return { heading, pitch, distance };
-}
-
-/**
- * World-space look direction for Cesium heading/pitch at an ECEF position.
- */
-export function directionFromHeadingPitch(
-  observer: Cartesian3,
-  heading: number,
-  pitch: number,
-  scene: Scene,
-  result: Cartesian3 = new Cartesian3()
-): Cartesian3 {
-  const cosPitch = Math.cos(pitch);
-  // ENU components matching Cesium Camera heading/pitch conventions.
-  const localDirection = Cartesian3.fromElements(
-    Math.sin(heading) * cosPitch,
-    Math.cos(heading) * cosPitch,
-    Math.sin(pitch),
-    scratchLocalDirection
-  );
-  const enu = Transforms.eastNorthUpToFixedFrame(
-    observer,
-    scene.globe.ellipsoid,
-    scratchEnu
-  );
-  return Cartesian3.normalize(
-    Matrix4.multiplyByPointAsVector(enu, localDirection, result),
-    result
-  );
-}
 
 /**
  * Cesium exposes ShadowMap as a public symbol but deliberately does not expose
@@ -127,9 +36,9 @@ export function directionFromHeadingPitch(
  */
 interface Cesium26ShadowMap {
   _shadowMapTexture?: unknown;
-  _shadowMapMatrix: Matrix4;
+  _pointLightRadius: number;
+  maximumDistance: number;
   _terrainBias: { depthBias: number };
-  _usesDepthTexture: boolean;
   _needsUpdate: boolean;
   _boundingSphere: { radius: number };
   _passes: Array<{ commandList: Array<{ pass?: number }> }>;
@@ -143,6 +52,8 @@ interface Cesium26ShadowMapConstructor {
     context: unknown;
     lightCamera: Camera;
     enabled: boolean;
+    isPointLight: boolean;
+    pointLightRadius: number;
     cascadesEnabled: boolean;
     size: number;
     softShadows: boolean;
@@ -158,6 +69,7 @@ interface Cesium26FrameState {
 
 interface Cesium26SceneContext {
   defaultTexture: unknown;
+  defaultCubeMap: unknown;
 }
 
 interface Cesium26Scene extends Scene {
@@ -185,9 +97,9 @@ class TerrainShadowMapAdapter {
 
   private destroyed = false;
   /**
-   * When true, the depth texture is held fixed. The shadow matrix still
-   * updates every frame (eye-space remapping for the navigation camera), but
-   * Cesium is not allowed to rebuild the analysis depth from new terrain LODs.
+   * When true, the depth cube is held fixed. Eye-space remapping still happens
+   * via the observer-position uniform; Cesium is not allowed to rebuild analysis
+   * depth from navigation-driven terrain LOD changes.
    */
   private depthFrozen = false;
   private readonly originalUpdatePass: (
@@ -208,6 +120,8 @@ class TerrainShadowMapAdapter {
       context: cesium26Scene.context,
       lightCamera: camera,
       enabled: true,
+      isPointLight: true,
+      pointLightRadius: maximumDistance,
       cascadesEnabled: false,
       size: textureSize,
       softShadows: false,
@@ -239,8 +153,6 @@ class TerrainShadowMapAdapter {
       update: (frameState: Cesium26FrameState) => {
         if (this.destroyed) return;
         // Freeze after capture so pan/zoom LOD changes cannot rewrite depth.
-        // Matrix remapping still runs inside ShadowMap.update when needsUpdate
-        // is false — that is intentional and view-stable in world space.
         if (this.depthFrozen) {
           this.shadowMap._needsUpdate = false;
         } else if (
@@ -262,7 +174,7 @@ class TerrainShadowMapAdapter {
   get texture(): unknown {
     return (
       this.shadowMap._shadowMapTexture ??
-      (this.scene as Cesium26Scene).context.defaultTexture
+      (this.scene as Cesium26Scene).context.defaultCubeMap
     );
   }
 
@@ -270,19 +182,16 @@ class TerrainShadowMapAdapter {
     return this.shadowMap._shadowMapTexture !== undefined;
   }
 
-  get matrix(): Matrix4 {
-    return this.shadowMap._shadowMapMatrix;
-  }
-
   get depthBias(): number {
     return this.shadowMap._terrainBias.depthBias;
   }
 
-  get usesDepthTexture(): boolean {
-    return this.shadowMap._usesDepthTexture;
+  setRadius(maximumDistance: number) {
+    this.shadowMap._pointLightRadius = maximumDistance;
+    this.shadowMap.maximumDistance = maximumDistance;
   }
 
-  /** Rebuild the analysis depth map after explicit observer/option edits. */
+  /** Rebuild the analysis depth cube after explicit observer/option edits. */
   markDirty() {
     this.depthFrozen = false;
     this.shadowMap._needsUpdate = true;
@@ -303,48 +212,44 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
 {
     czm_material material = czm_getDefaultMaterial(materialInput);
     // A globe material is alpha-blended *over* the already computed imagery.
-    // The default material is opaque black, so make non-analysis fragments
-    // transparent and set an alpha only for the viewshed overlay below.
+    // Keep non-visible fragments fully transparent.
     material.alpha = 0.0;
 
     // GlobeFS sets positionToEyeEC = -v_positionEC, so negate once for EC.
     vec3 positionEC = -materialInput.positionToEyeEC;
-    float range = distance(positionEC, viewshedObserverPositionEC);
+    vec3 directionEC = positionEC - viewshedObserverPositionEC;
+    float range = length(directionEC);
 
-    if (range > viewshedMaximumDistance) {
+    if (range > viewshedMaximumDistance || range < 1e-3) {
         return material;
     }
 
-    vec4 shadowPosition = viewshedShadowMatrix * vec4(positionEC, 1.0);
-    shadowPosition /= shadowPosition.w;
-
-    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) ||
-        any(greaterThan(shadowPosition.xyz, vec3(1.0)))) {
+    // Before the cubemap is ready, leave terrain unpainted.
+    if (viewshedShadowReady < 0.5) {
         return material;
     }
 
-    // Before the first shadow pass, still tint the geometric FOV so the user
-    // sees the analysis footprint immediately; refine once depth is ready.
-    float visibility = 1.0;
-    if (viewshedShadowReady > 0.5) {
-        vec4 packedShadowDepth = texture(viewshedShadowTexture, shadowPosition.xy);
-        float storedDepth = viewshedUsesDepthTexture > 0.5
-            ? packedShadowDepth.r
-            : czm_unpackDepth(packedShadowDepth);
-        float depthBias = viewshedDepthBias * max(length(positionEC) * 0.01, 1.0);
-        visibility = step(shadowPosition.z - depthBias, storedDepth);
+    // Omnidirectional sampling matches Cesium's point-light shadow receive path:
+    // depth is stored as distance/radius; lookup direction is in world space.
+    vec3 directionWC = czm_inverseViewRotation * normalize(directionEC);
+    float depth = range / viewshedMaximumDistance;
+    float storedDepth = czm_unpackDepth(texture(viewshedShadowCube, directionWC));
+    float depthBias = viewshedDepthBias * max(range * 0.01, 1.0);
+    float visibility = step(depth - depthBias, storedDepth);
+
+    if (visibility < 0.5) {
+        return material;
     }
 
-    vec4 analysisColor = mix(viewshedOccludedColor, viewshedVisibleColor, visibility);
-    material.diffuse = analysisColor.rgb;
-    material.alpha = analysisColor.a;
+    material.diffuse = viewshedVisibleColor.rgb;
+    material.alpha = viewshedVisibleColor.a;
     return material;
 }`;
 
 /**
- * GPU terrain visibility renderer for one observer. It is intentionally a
- * short-lived scene resource: callers create it once after choosing an
- * observer/aim point, call update while editing, and always destroy it.
+ * GPU omnidirectional terrain visibility renderer for one observer. Callers
+ * create it after choosing an observer and range point, call update while
+ * editing, and always destroy it.
  */
 export default class Viewshed3D {
   private options: Required<
@@ -355,7 +260,6 @@ export default class Viewshed3D {
   private readonly material: Material;
   private readonly priorGlobeMaterial: Material | undefined;
   private readonly priorGlobeShadows: ShadowMode;
-  private readonly debugPrimitive: DebugCameraPrimitive;
   private readonly removeTileProgressListener: () => void;
   private readonly priorTileCacheSize: number;
   /**
@@ -374,7 +278,7 @@ export default class Viewshed3D {
     this.validateOptions(this.options);
 
     this.camera = new Camera(scene);
-    this.configureCamera();
+    Cartesian3.clone(this.options.observerPosition, this.camera.position);
     this.shadowAdapter = new TerrainShadowMapAdapter(
       scene,
       this.camera,
@@ -393,20 +297,10 @@ export default class Viewshed3D {
     scene.globe.shadows = ShadowMode.ENABLED;
     scene.globe.material = this.material;
 
-    this.debugPrimitive = new DebugCameraPrimitive({
-      camera: this.camera,
-      color: Color.YELLOW.withAlpha(0.8),
-      show: this.options.showDebug
-    });
-    scene.primitives.add(this.debugPrimitive);
-
     this.removeTileProgressListener =
       scene.globe.tileLoadProgressEvent.addEventListener(
         (queuedTileCount: number) => {
           this.options.onTerrainLoadProgress?.(queuedTileCount);
-          // Do not rebuild depth on every navigation LOD change — that is what
-          // made the tint flicker when the user panned or zoomed. Only take one
-          // refine after an explicit observer edit, when a real load cycle drains.
           if (queuedTileCount > 0) {
             this.seenTilesLoadingSinceArm = true;
           } else if (
@@ -432,7 +326,6 @@ export default class Viewshed3D {
     this.settleRefineArmed = true;
     this.seenTilesLoadingSinceArm = false;
     this.shadowAdapter.markDirty();
-    this.debugPrimitive.show = this.options.showDebug;
     this.scene.requestRender();
   }
 
@@ -440,7 +333,6 @@ export default class Viewshed3D {
     if (this.destroyed) return;
     this.destroyed = true;
     this.removeTileProgressListener();
-    this.scene.primitives.remove(this.debugPrimitive);
     this.shadowAdapter.destroy();
 
     // Do not overwrite a globe material installed after Viewshed3D was started.
@@ -457,69 +349,24 @@ export default class Viewshed3D {
   }
 
   private configureCamera() {
-    const frustum = this.camera.frustum as PerspectiveFrustum;
-    const aspectRatio =
-      Math.tan(this.options.horizontalFov / 2) /
-      Math.tan(this.options.verticalFov / 2);
-    // PerspectiveFrustum uses fov for the larger image dimension.
-    frustum.fov =
-      aspectRatio >= 1 ? this.options.horizontalFov : this.options.verticalFov;
-    frustum.aspectRatio = aspectRatio;
-    frustum.near = 1.0;
-    frustum.far = this.options.maximumDistance;
-
-    // Aim like SensorShadow: world-space position/direction/up on the light
-    // camera. Avoid setView(heading/pitch) round-trips that previously fed
-    // unnormalised directions into Cesium's acos-based pitch.
-    const direction = directionFromHeadingPitch(
-      this.options.observerPosition,
-      this.options.heading,
-      this.options.pitch,
-      this.scene,
-      scratchDirection
-    );
-    const up = this.scene.globe.ellipsoid.geodeticSurfaceNormal(
-      this.options.observerPosition,
-      scratchUp
-    );
+    // Point-light shadow maps only need the observer position; Cesium fills the
+    // six cube faces with fixed world axes in computeOmnidirectional.
     Cartesian3.clone(this.options.observerPosition, this.camera.position);
-    Cartesian3.clone(direction, this.camera.direction);
-    Cartesian3.cross(direction, up, scratchRight);
-    if (Cartesian3.magnitudeSquared(scratchRight) < 1e-12) {
-      // Looking nearly along the surface normal — pick any stable right vector.
-      Cartesian3.mostOrthogonalAxis(direction, scratchRight);
-      Cartesian3.cross(direction, scratchRight, scratchRight);
-    }
-    Cartesian3.normalize(scratchRight, scratchRight);
-    Cartesian3.cross(scratchRight, direction, this.camera.up);
-    Cartesian3.normalize(this.camera.up, this.camera.up);
-    Cartesian3.clone(scratchRight, this.camera.right);
+    this.shadowAdapter.setRadius(this.options.maximumDistance);
   }
 
   private createTerrainMaterial() {
     const material = new Material({
       translucent: true,
       fabric: {
-        type: "TerriaViewshed3DTerrain_v2",
+        type: "TerriaViewshed3DTerrain_v3",
         uniforms: {
-          viewshedShadowTexture: Material.DefaultImageId,
-          // Fabric infers GLSL matrices from a number array, not a Matrix4
-          // instance. Passing Matrix4.IDENTITY here leaves the uniform type
-          // undefined during Material construction (Cesium 26).
-          viewshedShadowMatrix: Matrix4.toArray(
-            Matrix4.IDENTITY,
-            scratchMatrixArray.slice()
-          ),
+          viewshedShadowCube: Material.DefaultCubeMapId,
           viewshedObserverPositionEC: new Cartesian3(),
           viewshedMaximumDistance: this.options.maximumDistance,
           viewshedDepthBias: this.shadowAdapter.depthBias,
-          // Use floats — Fabric bool uniforms are fragile across Cesium builds.
-          viewshedUsesDepthTexture: this.shadowAdapter.usesDepthTexture
-            ? 1.0
-            : 0.0,
           viewshedShadowReady: 0.0,
-          viewshedVisibleColor: this.options.visibleColor,
-          viewshedOccludedColor: this.options.occludedColor
+          viewshedVisibleColor: this.options.visibleColor
         },
         source: terrainMaterialSource
       }
@@ -541,15 +388,7 @@ export default class Viewshed3D {
       materialInternals._uniforms[uniformName] = getValue;
     };
 
-    // Cesium records the Fabric uniform type at construction time. Replacing
-    // the generated uniform callbacks afterwards keeps those types intact
-    // while supplying the current shadow-map values on every render.
-    setDynamicUniform(
-      "viewshedShadowTexture",
-      () => this.shadowAdapter.texture
-    );
-    // Runtime path matches Cesium's own shadowMap_matrix uniform (Matrix4).
-    setDynamicUniform("viewshedShadowMatrix", () => this.shadowAdapter.matrix);
+    setDynamicUniform("viewshedShadowCube", () => this.shadowAdapter.texture);
     setDynamicUniform("viewshedObserverPositionEC", () =>
       Matrix4.multiplyByPoint(
         this.scene.camera.viewMatrix,
@@ -562,36 +401,16 @@ export default class Viewshed3D {
       () => this.options.maximumDistance
     );
     setDynamicUniform("viewshedDepthBias", () => this.shadowAdapter.depthBias);
-    setDynamicUniform("viewshedUsesDepthTexture", () =>
-      this.shadowAdapter.usesDepthTexture ? 1.0 : 0.0
-    );
     setDynamicUniform("viewshedShadowReady", () =>
       this.shadowAdapter.hasTexture ? 1.0 : 0.0
     );
     setDynamicUniform("viewshedVisibleColor", () => this.options.visibleColor);
-    setDynamicUniform(
-      "viewshedOccludedColor",
-      () => this.options.occludedColor
-    );
     return material;
   }
 
-  private validateOptions(
-    options: Pick<
-      Viewshed3DOptions,
-      "maximumDistance" | "horizontalFov" | "verticalFov"
-    >
-  ) {
-    if (
-      options.maximumDistance <= 1 ||
-      options.horizontalFov <= 0 ||
-      options.horizontalFov >= Math.PI ||
-      options.verticalFov <= 0 ||
-      options.verticalFov >= Math.PI
-    ) {
-      throw new Error(
-        "Viewshed3D needs positive FOVs below 180° and a range above one metre"
-      );
+  private validateOptions(options: Pick<Viewshed3DOptions, "maximumDistance">) {
+    if (options.maximumDistance <= 1) {
+      throw new Error("Viewshed3D needs a range above one metre");
     }
   }
 
@@ -601,8 +420,6 @@ export default class Viewshed3D {
       ...options,
       alpha,
       visibleColor: (options.visibleColor ?? Color.LIME).withAlpha(alpha),
-      occludedColor: (options.occludedColor ?? Color.RED).withAlpha(alpha),
-      showDebug: options.showDebug ?? false,
       textureSize: options.textureSize ?? DEFAULT_VIEWSHED_TEXTURE_SIZE
     };
   }

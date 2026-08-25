@@ -8,9 +8,7 @@ import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSourc
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
-import Viewshed3D, {
-  headingPitchFromObserverAndTarget
-} from "../Map/Cesium/Viewshed3D";
+import Viewshed3D from "../Map/Cesium/Viewshed3D";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
@@ -160,14 +158,7 @@ export default class UserDrawingViewshed extends MappableMixin(
       () => {
         const state = this.terria.viewshed3d;
         return state
-          ? [
-              state.observerHeight,
-              state.targetHeight,
-              state.horizontalFov,
-              state.verticalFov,
-              state.maximumDistance,
-              state.showDebug
-            ]
+          ? [state.observerHeight, state.maximumDistance]
           : undefined;
       },
       () => this.updateViewshedFromPoints(false)
@@ -301,7 +292,7 @@ export default class UserDrawingViewshed extends MappableMixin(
                 this.pointEntities.entities.values.length !== this.numMaxPoints)
             ) {
               // No existing point was picked, so add a new point
-              this.addPointToPointEntities("Target", pickedPoint, false);
+              this.addPointToPointEntities("Range", pickedPoint, false);
             } else {
               this.dragHelper.resetDragCount();
             }
@@ -439,40 +430,28 @@ export default class UserDrawingViewshed extends MappableMixin(
 
     const existingState = this.terria.viewshed3d;
     const cartoPos0 = Cartographic.fromCartesian(positions[0]);
-    const cartoPos1 = Cartographic.fromCartesian(positions[1]);
-    if (!cartoPos0 || !cartoPos1) return;
+    if (!cartoPos0) return;
+
+    // Radius is the ground distance to the second point; only the observer is
+    // raised for the visibility origin.
+    const range = Cartesian3.distance(positions[0], positions[1]);
+    if (range <= 1) return;
 
     cartoPos0.height += existingState?.observerHeight ?? 0;
-    cartoPos1.height += existingState?.targetHeight ?? 0;
+    const observerPosition = Cartographic.toCartesian(cartoPos0);
 
-    const pos0Updated = Cartographic.toCartesian(cartoPos0);
-    const pos1Updated = Cartographic.toCartesian(cartoPos1);
-    const orientation = headingPitchFromObserverAndTarget(
-      pos0Updated,
-      pos1Updated,
-      this.terria.cesium.scene
-    );
-    if (orientation.distance <= 1) return;
-
-    // Do not publish state with a placeholder range: adding it to Terria makes
-    // the MobX reaction immediately construct the renderer.
-    const state = existingState ?? createViewshed3DState(orientation.distance);
+    const state = existingState ?? createViewshed3DState(range);
 
     runInAction(() => {
       if (!existingState) this.terria.viewshed3d = state;
       if (syncMaximumDistance) {
-        state.maximumDistance = orientation.distance;
+        state.maximumDistance = range;
       }
     });
 
     const rendererOptions = {
-      observerPosition: pos0Updated,
-      heading: orientation.heading,
-      pitch: orientation.pitch,
-      horizontalFov: state.horizontalFov,
-      verticalFov: state.verticalFov,
+      observerPosition,
       maximumDistance: state.maximumDistance,
-      showDebug: state.showDebug,
       onTerrainLoadProgress: (queuedTileCount: number) => {
         if (this.terria.viewshed3d !== state) return;
         runInAction(() => {

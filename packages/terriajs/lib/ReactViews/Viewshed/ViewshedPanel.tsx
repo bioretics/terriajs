@@ -1,5 +1,4 @@
 import classNames from "classnames";
-import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { useTheme } from "styled-components";
@@ -41,38 +40,6 @@ const ViewshedPanel = observer((props: Props) => {
     runInAction(() => setter(number));
   };
 
-  const numberField = (
-    label: string,
-    title: string,
-    value: number,
-    onChange: (value: number) => void,
-    min?: number,
-    max?: number,
-    step?: number
-  ) => (
-    <>
-      <Text textLight style={{ textAlign: "center" }} title={title}>
-        {label}
-      </Text>
-      <Box>
-        <Input
-          css={inputStyle}
-          title={title}
-          light={false}
-          dark
-          required
-          type="number"
-          min={min}
-          max={max}
-          step={step ?? 1}
-          value={value}
-          onChange={(event) => setNumber(onChange, event.target.value)}
-        />
-      </Box>
-      <br />
-    </>
-  );
-
   return (
     <DragWrapper>
       <div
@@ -88,49 +55,60 @@ const ViewshedPanel = observer((props: Props) => {
         </div>
         {state && (
           <div className={Styles.body}>
-            {numberField(
-              t(($) => $.viewshed.observerHeightInput),
-              t(($) => $.viewshed.observerHeightInputTitle),
-              state.observerHeight,
-              (value) => (state.observerHeight = Math.max(0, value)),
-              0
-            )}
-            {numberField(
-              t(($) => $.viewshed.targetHeightInput),
-              t(($) => $.viewshed.targetHeightInputTitle),
-              state.targetHeight,
-              (value) => (state.targetHeight = Math.max(0, value)),
-              0
-            )}
-            {numberField(
-              t(($) => $.viewshed.horizontalFovInput),
-              t(($) => $.viewshed.horizontalFovInputTitle),
-              Number(CesiumMath.toDegrees(state.horizontalFov).toFixed(1)),
-              (value) =>
-                (state.horizontalFov = CesiumMath.toRadians(
-                  Math.max(1, Math.min(179, value))
-                )),
-              1,
-              179
-            )}
-            {numberField(
-              t(($) => $.viewshed.verticalFovInput),
-              t(($) => $.viewshed.verticalFovInputTitle),
-              Number(CesiumMath.toDegrees(state.verticalFov).toFixed(1)),
-              (value) =>
-                (state.verticalFov = CesiumMath.toRadians(
-                  Math.max(1, Math.min(179, value))
-                )),
-              1,
-              179
-            )}
-            {numberField(
-              t(($) => $.viewshed.maximumDistanceInput),
-              t(($) => $.viewshed.maximumDistanceInputTitle),
-              Number(state.maximumDistance.toFixed(1)),
-              (value) => (state.maximumDistance = Math.max(1.1, value)),
-              1.1
-            )}
+            <Text
+              textLight
+              style={{ textAlign: "center" }}
+              title={t(($) => $.viewshed.observerHeightInputTitle)}
+            >
+              {t(($) => $.viewshed.observerHeightInput)}
+            </Text>
+            <Box>
+              <Input
+                css={inputStyle}
+                title={t(($) => $.viewshed.observerHeightInputTitle)}
+                light={false}
+                dark
+                required
+                type="number"
+                min={0}
+                step={1}
+                value={state.observerHeight}
+                onChange={(event) =>
+                  setNumber(
+                    (value) => (state.observerHeight = Math.max(0, value)),
+                    event.target.value
+                  )
+                }
+              />
+            </Box>
+            <br />
+            <Text
+              textLight
+              style={{ textAlign: "center" }}
+              title={t(($) => $.viewshed.maximumDistanceInputTitle)}
+            >
+              {t(($) => $.viewshed.maximumDistanceInput)}
+            </Text>
+            <Box>
+              <Input
+                css={inputStyle}
+                title={t(($) => $.viewshed.maximumDistanceInputTitle)}
+                light={false}
+                dark
+                required
+                type="number"
+                min={1.1}
+                step={1}
+                value={Number(state.maximumDistance.toFixed(1))}
+                onChange={(event) =>
+                  setNumber(
+                    (value) => (state.maximumDistance = Math.max(1.1, value)),
+                    event.target.value
+                  )
+                }
+              />
+            </Box>
+            <br />
             <Text textLight style={{ textAlign: "center" }}>
               {state.terrainStatus === "updating"
                 ? t(($) => $.viewshed.terrainUpdating, {
@@ -141,18 +119,6 @@ const ViewshedPanel = observer((props: Props) => {
             <Text textLight style={{ textAlign: "center", fontSize: "0.85em" }}>
               {t(($) => $.viewshed.terrainLodNotice)}
             </Text>
-            <Box style={{ marginTop: 10, textAlign: "center" }}>
-              <label title={t(($) => $.viewshed.debugInputTitle)}>
-                <input
-                  type="checkbox"
-                  checked={state.showDebug}
-                  onChange={(event) =>
-                    runInAction(() => (state.showDebug = event.target.checked))
-                  }
-                />{" "}
-                {t(($) => $.viewshed.debugInput)}
-              </label>
-            </Box>
           </div>
         )}
       </div>
