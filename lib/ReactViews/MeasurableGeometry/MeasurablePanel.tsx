@@ -583,40 +583,48 @@ const MeasurablePanel = observer((props: Props) => {
           ref={samplingStepRef}
           css={`
             display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            flex-direction: column;
+            gap: 5px;
           `}
           styledMargin="5px"
         >
-          <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
-            {i18next.t("measurableGeometry.samplingStepHeader")}
-            {":"}
-          </Text>
-          <Checkbox
-            title={i18next.t(
-              "measurableGeometry.samplingStepAutoCheckboxTitle"
-            )}
-            isChecked={isAutoSamplingPathStep}
-            onChange={(e) => {
-              toggleAutoSamplingPathStep(e.target.checked);
-            }}
-          >
-            <TextSpan textLight style={{ whiteSpace: "nowrap" }}>
-              {i18next.t("measurableGeometry.samplingStepAutoCheckbox")}
-            </TextSpan>
-          </Checkbox>
-          <Text textLight style={{ whiteSpace: "nowrap" }} title="">
-            [min {minSamplingPathStep}, max {maxSamplingPathStep}]
-          </Text>
           <Box
             css={`
-              display: inline-flex;
+              display: flex;
               align-items: center;
-              gap: 8px;
-              flex-wrap: nowrap;
+              gap: 10px;
+              flex-wrap: wrap;
             `}
           >
+            <Text textLight style={{ marginLeft: 1, whiteSpace: "nowrap" }}>
+              {i18next.t("measurableGeometry.samplingStepHeader")}
+              {":"}
+            </Text>
+            <Text textLight style={{ whiteSpace: "nowrap" }} title="">
+              [min {minSamplingPathStep}, max {maxSamplingPathStep}]
+            </Text>
+          </Box>
+          <Box
+            css={`
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              flex-wrap: wrap;
+            `}
+          >
+            <Checkbox
+              title={i18next.t(
+                "measurableGeometry.samplingStepAutoCheckboxTitle"
+              )}
+              isChecked={isAutoSamplingPathStep}
+              onChange={(e) => {
+                toggleAutoSamplingPathStep(e.target.checked);
+              }}
+            >
+              <TextSpan textLight style={{ whiteSpace: "nowrap" }}>
+                {i18next.t("measurableGeometry.samplingStepAutoCheckbox")}
+              </TextSpan>
+            </Checkbox>
             <Box styledWidth="120px">
               <Input
                 css={`
