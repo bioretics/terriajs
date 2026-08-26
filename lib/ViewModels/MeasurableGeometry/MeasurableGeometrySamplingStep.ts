@@ -6,11 +6,15 @@ const MAX_SAMPLE_POINTS = 1000;
 const MIN_SAMPLE_POINTS = 10;
 const MIN_RANGE_WIDTH = 2;
 
-type SnapMode = "up" | "down" | "nearest";
+enum SnapMode {
+  Up = "up",
+  Down = "down",
+  Nearest = "nearest"
+}
 
-export function snapSamplingStep(
+function snapSamplingStep(
   value: number,
-  mode: SnapMode = "nearest"
+  mode: SnapMode = SnapMode.Nearest
 ): number {
   const series = SAMPLING_STEP_SERIES;
   const last = series.length - 1;
@@ -24,10 +28,10 @@ export function snapSamplingStep(
   while (i < last && series[i + 1] <= value) {
     ++i;
   }
-  if (mode === "down" || series[i] === value) {
+  if (mode === SnapMode.Down || series[i] === value) {
     return series[i];
   }
-  if (mode === "up") {
+  if (mode === SnapMode.Up) {
     return series[i + 1];
   }
   return value / series[i] <= series[i + 1] / value ? series[i] : series[i + 1];
@@ -39,12 +43,14 @@ export function samplingStepRange(pathLength: number | undefined): number[] {
   }
   const series = SAMPLING_STEP_SERIES;
   const minIndex = series.indexOf(
-    snapSamplingStep(pathLength / MAX_SAMPLE_POINTS, "up")
+    snapSamplingStep(pathLength / MAX_SAMPLE_POINTS, SnapMode.Up)
   );
   const maxIndex = Math.min(
     series.length - 1,
     Math.max(
-      series.indexOf(snapSamplingStep(pathLength / MIN_SAMPLE_POINTS, "down")),
+      series.indexOf(
+        snapSamplingStep(pathLength / MIN_SAMPLE_POINTS, SnapMode.Down)
+      ),
       minIndex + MIN_RANGE_WIDTH
     )
   );
