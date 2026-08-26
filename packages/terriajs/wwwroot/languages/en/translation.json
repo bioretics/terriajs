@@ -2316,7 +2316,11 @@
     "observerHeightInput": "Observer height above ground in meters (the orange point)",
     "observerHeightInputTitle": "Height of observer above ground (m)",
     "targetHeightInput": "Target height above ground in meters (the purple point)",
-    "targetHeightInputTitle": "Height of target above ground (m)"
+    "targetHeightInputTitle": "Height of target above ground (m)",
+    "showArea": "Show visible area",
+    "showAreaTitle": "Highlight the terrain area visible from the observer",
+    "areaDistance": "Visible area radius in meters (from observer)",
+    "areaDistanceTitle": "Radius of the viewshed area overlay around the observer (m)"
   },
   "measurableGeometry": {
     "header": "MEASURABLE",

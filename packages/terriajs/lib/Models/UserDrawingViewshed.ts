@@ -12,11 +12,13 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
+import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
+import Viewshed3D from "../Map/Cesium/Viewshed3D";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
@@ -25,6 +27,8 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import Ray from "terriajs-cesium/Source/Core/Ray";
+
+const BORDER_CIRCLE_ID = "viewshed-area-border";
 
 interface Options {
   terria: Terria;
@@ -57,6 +61,10 @@ export default class UserDrawingViewshed extends MappableMixin(
   private inDrawMode: boolean;
   private disposePickedFeatureSubscription?: () => void;
   private disposeViewshedHeight?: () => void;
+  private disposeViewshedArea?: () => void;
+  private viewshed?: Viewshed3D;
+  /** Observer position used for the area overlay; frozen while show-area stays on. */
+  private areaObserverPosition?: Cartesian3;
 
   private mouseMoveDispose?: IReactionDisposer;
 
@@ -107,6 +115,7 @@ export default class UserDrawingViewshed extends MappableMixin(
     // helper for dragging points around
     this.dragHelper = new DragPoints(options.terria, () => {
       this.computeLineOfSight();
+      // Area overlay stays fixed while show-area is on; only the line follows points.
       this.prepareToAddNewPoint();
     });
   }
@@ -173,6 +182,16 @@ export default class UserDrawingViewshed extends MappableMixin(
           this.addMapInteractionMode();
         }
       }
+    );
+
+    this.disposeViewshedArea?.();
+    this.disposeViewshedArea = reaction(
+      () => [
+        this.terria.viewshedShowArea,
+        this.terria.viewshedAreaDistance,
+        this.terria.viewshedObserverHeight
+      ],
+      () => this.updateViewshedArea()
     );
 
     if (isDefined(this.terria.cesium)) {
@@ -269,6 +288,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     this.dragHelper.updateDraggableObjects(this.pointEntities);
 
     this.computeLineOfSight();
+    // Create area once when points become ready; do not retarget it on later point edits.
+    if (this.terria.viewshedShowArea && !this.viewshed) {
+      this.updateViewshedArea();
+    }
   }
 
   endDrawing() {
@@ -278,6 +301,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     if (this.disposeViewshedHeight) {
       this.disposeViewshedHeight();
       this.disposeViewshedHeight = undefined;
+    }
+    if (this.disposeViewshedArea) {
+      this.disposeViewshedArea();
+      this.disposeViewshedArea = undefined;
     }
 
     runInAction(() => {
@@ -385,6 +412,10 @@ export default class UserDrawingViewshed extends MappableMixin(
     });
 
     this.computeLineOfSight();
+    // Destroy area if a required point was removed; otherwise leave it fixed.
+    if (this.pointEntities.entities.values.length !== 2) {
+      this.destroyViewshedArea();
+    }
 
     return userClickedExistingPoint;
   }
@@ -393,6 +424,7 @@ export default class UserDrawingViewshed extends MappableMixin(
    * User has finished or cancelled; restore initial state.
    */
   cleanUp() {
+    this.destroyViewshedArea();
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
     this.otherEntities.entities.removeAll();
@@ -457,6 +489,144 @@ export default class UserDrawingViewshed extends MappableMixin(
         ? i18next.t(($) => $.models.userDrawing.btnDone)
         : i18next.t(($) => $.models.userDrawing.btnCancel))
     );
+  }
+
+  /**
+   * Builds a ring of Cartesian3 positions around the observer at the given
+   * radius, suitable for a polyline entity clamped to ground.
+   */
+  private buildCircleBorderPositions(
+    observerCartographic: Cartographic,
+    radius: number,
+    segments: number = 128
+  ): Cartesian3[] {
+    const positions: Cartesian3[] = [];
+    const lat = observerCartographic.latitude;
+    const lon = observerCartographic.longitude;
+    const height = observerCartographic.height;
+
+    const earthRadius = 6378137; // WGS84 semi-major axis
+    for (let k = 0; k <= segments; k++) {
+      const angle = (k / segments) * 2 * Math.PI;
+      const dLat = (radius / earthRadius) * Math.cos(angle);
+      const dLon = (radius / (earthRadius * Math.cos(lat))) * Math.sin(angle);
+      positions.push(
+        Cartographic.toCartesian(
+          new Cartographic(lon + dLon, lat + dLat, height)
+        )
+      );
+    }
+    return positions;
+  }
+
+  private updateAreaBorder(
+    observerPosition: Cartesian3,
+    maximumDistance: number
+  ) {
+    const observerCarto = Cartographic.fromCartesian(observerPosition);
+    const borderPositions = this.buildCircleBorderPositions(
+      observerCarto,
+      maximumDistance
+    );
+
+    const borderEntity = this.otherEntities.entities.getById(BORDER_CIRCLE_ID);
+    if (borderEntity) {
+      if (borderEntity.polyline) {
+        (borderEntity.polyline.positions as any) = new ConstantProperty(
+          borderPositions
+        );
+      }
+      borderEntity.show = true;
+    } else {
+      this.otherEntities.entities.add({
+        id: BORDER_CIRCLE_ID,
+        name: "Viewshed Area Border",
+        polyline: {
+          positions: borderPositions as any,
+          clampToGround: true,
+          width: 3,
+          material: new PolylineGlowMaterialProperty({
+            color: Color.YELLOW,
+            glowPower: 0.15
+          })
+        },
+        show: true
+      });
+    }
+  }
+
+  private updateViewshedArea() {
+    const positions = this.pointEntities.entities.values.flatMap(
+      (elem): Cartesian3[] => {
+        if (elem.position) {
+          const val = elem.position.getValue(
+            this.terria.timelineClock.currentTime
+          );
+          if (val) return [val];
+        }
+        return [];
+      }
+    );
+
+    if (
+      positions.length !== 2 ||
+      !this.terria.cesium ||
+      !this.terria.viewshedShowArea
+    ) {
+      this.destroyViewshedArea();
+      return;
+    }
+
+    // Seed radius once from the current line length if the user has not set one yet.
+    // After that, radius is only changed via the panel field — never from point moves.
+    if (this.terria.viewshedAreaDistance <= 0) {
+      const range = Cartesian3.distance(positions[0], positions[1]);
+      if (range <= 1) {
+        this.destroyViewshedArea();
+        return;
+      }
+      runInAction(() => {
+        this.terria.viewshedAreaDistance = range;
+      });
+    }
+
+    const maximumDistance = this.terria.viewshedAreaDistance;
+    if (maximumDistance <= 0) {
+      this.destroyViewshedArea();
+      return;
+    }
+
+    // Lock origin to the observer at first compute; point drags do not move the area.
+    if (!this.areaObserverPosition) {
+      const cartoPos0 = Cartographic.fromCartesian(positions[0]);
+      if (!cartoPos0) return;
+      this.areaObserverPosition = Cartographic.toCartesian(cartoPos0);
+    }
+
+    const observerPosition = this.areaObserverPosition;
+    const terrainProvider = this.terria.cesium.scene.globe.terrainProvider;
+
+    this.updateAreaBorder(observerPosition, maximumDistance);
+
+    const rendererOptions = {
+      terrainProvider,
+      observerPosition,
+      observerHeight: this.terria.viewshedObserverHeight,
+      maximumDistance
+    };
+
+    if (this.viewshed) {
+      this.viewshed.update(rendererOptions);
+    } else {
+      this.viewshed = new Viewshed3D(this.terria.cesium.scene, rendererOptions);
+    }
+  }
+
+  private destroyViewshedArea() {
+    this.viewshed?.destroy();
+    this.viewshed = undefined;
+    this.areaObserverPosition = undefined;
+    this.otherEntities.entities.removeById(BORDER_CIRCLE_ID);
   }
 
   computeLineOfSight() {

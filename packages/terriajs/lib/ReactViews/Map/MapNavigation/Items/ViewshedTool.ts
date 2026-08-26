@@ -58,6 +58,8 @@ export class ViewshedTool extends MapNavigationItemController {
 
   onCleanUp() {
     this.terria.viewshedDistances = undefined;
+    this.terria.viewshedShowArea = false;
+    this.terria.viewshedAreaDistance = 0;
     this.onClose();
     super.deactivate();
   }

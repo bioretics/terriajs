@@ -1,5 +1,3 @@
-//"use strict";
-
 import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
@@ -8,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import Text from "../../Styled/Text";
 import Box from "../../Styled/Box";
 import Input from "../../Styled/Input";
+import Checkbox from "../../Styled/Checkbox";
 import ViewState from "../../ReactViewModels/ViewState";
 import Terria from "../../Models/Terria";
 import Styles from "./viewshed-panel.scss";
@@ -104,6 +103,58 @@ const ViewshedPanel = observer((props: Props) => {
                 const val = parseInt(e.target.value, 10);
                 runInAction(() => {
                   terria.viewshedTargetHeight = isNaN(val) ? 0 : val;
+                });
+              }}
+            />
+          </Box>
+          <br />
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "10px"
+            }}
+          >
+            <Checkbox
+              title={t(($) => $.viewshed.showAreaTitle)}
+              isChecked={terria.viewshedShowArea}
+              onChange={(e) => {
+                runInAction(() => {
+                  terria.viewshedShowArea = e.target.checked;
+                });
+              }}
+            />
+            {t(($) => $.viewshed.showArea)}
+          </label>
+          <Text
+            textLight
+            style={{ textAlign: "center" }}
+            title={t(($) => $.viewshed.areaDistanceTitle)}
+          >
+            {t(($) => $.viewshed.areaDistance)}
+          </Text>
+          <Box>
+            <Input
+              css={`
+                margin-left: 30px;
+                margin-right: 30px;
+                border: solid;
+                border-width: 1px;
+                border-color: ${theme.textLight};
+              `}
+              title={t(($) => $.viewshed.areaDistanceTitle)}
+              light={false}
+              dark
+              type="number"
+              disabled={!terria.viewshedShowArea}
+              value={Math.round(terria.viewshedAreaDistance)}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                runInAction(() => {
+                  terria.viewshedAreaDistance = isNaN(val)
+                    ? 0
+                    : Math.max(0, val);
                 });
               }}
             />

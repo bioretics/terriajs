@@ -900,6 +900,16 @@ export default class Terria {
   @observable viewshedDistances?: (number | undefined)[];
 
   /**
+   * Whether to show the Viewshed3D visible-area overlay on the map.
+   */
+  @observable viewshedShowArea: boolean = false;
+
+  /**
+   * Radius in metres of the Viewshed3D area overlay around the observer.
+   */
+  @observable viewshedAreaDistance: number = 0;
+
+  /**
    * Gets or sets the stack of map interactions modes.  The mode at the top of the stack
    * (highest index) handles click interactions with the map
    */
