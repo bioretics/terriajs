@@ -1,4 +1,4 @@
-import { action, autorun, makeObservable, override } from "mobx";
+import { action, autorun, makeObservable, observable, override } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
 import SelectableDimensions, {
@@ -20,22 +20,40 @@ type BaseType = Model<GlobeClippingTraits> & SelectableDimensions;
 
 function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
   abstract class GlobeClippingMixinBase extends Base {
+    @observable.ref
+    private _measuredBoundingSphere: BoundingSphere | undefined = undefined;
+    private _globeClippingApplied = false;
+    private readonly _globeClippingDisposer: () => void;
+
     constructor(...args: any[]) {
       super(...args);
       makeObservable(this);
 
-      autorun(() => {
-        const boundingSphere = this.globeClippingBoundingSphere;
-        if (boundingSphere) {
-          this.autoComputeClippingPlanes(
-            this.globeClippingEnabled ? boundingSphere : undefined
-          );
+      this._globeClippingDisposer = autorun(() => {
+        const boundingSphere = this.globeClippingEnabled
+          ? this.globeClippingBoundingSphere
+          : undefined;
+
+        if (
+          (boundingSphere?.radius ?? 0) > 0 &&
+          this.terria.cesium !== undefined
+        ) {
+          this.autoComputeClippingPlanes(boundingSphere);
+          this._globeClippingApplied = true;
+        } else if (this._globeClippingApplied) {
+          this.autoComputeClippingPlanes(undefined);
+          this._globeClippingApplied = false;
         }
       });
     }
 
     get hasGlobeClippingMixin() {
       return true;
+    }
+
+    dispose() {
+      super.dispose();
+      this._globeClippingDisposer();
     }
 
     @override
@@ -85,14 +103,20 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       if (points.length === 0) {
         return undefined;
       }
-      return this.withGlobeClippingRadius(BoundingSphere.fromPoints(points));
+      return BoundingSphere.fromPoints(points);
     }
 
-    protected withGlobeClippingRadius(sphere: BoundingSphere) {
-      const radius = this.globeClippingRadius;
-      return radius === undefined
-        ? sphere
-        : new BoundingSphere(sphere.center, radius);
+    protected get measuredGlobeClippingBoundingSphere():
+      | BoundingSphere
+      | undefined {
+      return this._measuredBoundingSphere;
+    }
+
+    @action
+    protected setMeasuredGlobeClippingBoundingSphere(
+      boundingSphere: BoundingSphere | undefined
+    ) {
+      this._measuredBoundingSphere = boundingSphere;
     }
 
     autoComputeClippingPlanes(boundingSphere: BoundingSphere | undefined) {

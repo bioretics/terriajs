@@ -102,7 +102,7 @@ function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       ) {
         return undefined;
       }
-      return this.withGlobeClippingRadius(tileset.boundingSphere);
+      return tileset.boundingSphere;
     }
 
     clippingPlanesOriginMatrix(): Matrix4 {
