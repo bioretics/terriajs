@@ -229,7 +229,8 @@ export class ViewshedAreaTool extends MapNavigationItemController {
     this.userDrawing = new UserDrawingViewshedArea({
       terria: props.terria,
       messageHeader: i18next.t(($) => $.viewshed.areaMessageHeader),
-      onCleanUp: this.onCleanUp.bind(this)
+      onCleanUp: this.onCleanUp.bind(this),
+      invisible: true
     });
     this.onClose = props.onClose || (() => {});
     this.onOpen = props.onOpen || (() => {});

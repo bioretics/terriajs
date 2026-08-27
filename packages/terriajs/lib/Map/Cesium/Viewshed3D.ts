@@ -67,6 +67,9 @@ type NormalisedOptions = Required<
  */
 export default class Viewshed3D {
   private options: NormalisedOptions;
+  private readonly onImageryPartsChanged?: (
+    parts: ImageryParts | undefined
+  ) => void;
 
   private readonly scene: Scene;
   private destroyed = false;
@@ -75,6 +78,7 @@ export default class Viewshed3D {
 
   constructor(scene: Scene, options: Viewshed3DOptions) {
     this.scene = scene;
+    this.onImageryPartsChanged = options.onImageryPartsChanged;
     this.options = Viewshed3D.normaliseOptions(options);
 
     if (!this.options.terrainProvider.availability) {
@@ -110,7 +114,7 @@ export default class Viewshed3D {
       this.debounceTimer = undefined;
     }
 
-    this.options.onImageryPartsChanged?.(undefined);
+    this.onImageryPartsChanged?.(undefined);
     this.scene.requestRender();
   }
 
@@ -172,7 +176,7 @@ export default class Viewshed3D {
           (imageryProvider) => {
             if (this.destroyed || generation !== this.computeGeneration) return;
 
-            this.options.onImageryPartsChanged?.(
+            this.onImageryPartsChanged?.(
               new ImageryParts({
                 imageryProvider,
                 alpha: 1,

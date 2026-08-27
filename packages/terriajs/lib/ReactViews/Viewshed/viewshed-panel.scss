@@ -1,11 +1,26 @@
 @use "../../Sass/common/_variables";
 @use "../../Sass/common/mixins";
 
+/* Outer Rnd shell: escape .featureInfo > div stacking (top/right/max-width). */
+.panelShell {
+  position: absolute !important;
+  right: auto !important;
+  top: auto !important;
+  max-width: none !important;
+  min-width: 280px !important;
+  pointer-events: auto;
+}
+
 .panel {
   background: variables.$feature-info-bg;
   color: variables.$feature-info-color;
   border-radius: variables.$radius-small;
   display: none;
+  position: relative;
+  box-sizing: border-box;
+  min-width: 280px;
+  width: 100%;
+  height: 100%;
 
   svg {
     fill: variables.$feature-info-color;
@@ -25,7 +40,6 @@
 .is-visible {
   display: flex;
   flex-direction: column;
-  align-items: center;
 }
 
 .is-translucent {
@@ -35,12 +49,37 @@
 .header {
   background: variables.$feature-info-header-bg;
   line-height: variables.$modal-header-height;
+  padding-right: variables.$input-height;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .btnPanelHeading {
   padding: 0px 8px;
   color: variables.$feature-info-btn-color;
-  width: 10vw;
+  width: 100%;
+}
+
+.btn--close-feature {
+  composes: btn from "../../Sass/common/_buttons.scss";
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  vertical-align: middle;
+
+  &:hover,
+  &:focus {
+    svg {
+      fill: variables.$color-primary;
+    }
+  }
+
+  svg {
+    width: 15px;
+    height: 26px;
+    display: block;
+    fill: variables.$feature-info-btn-color;
+  }
 }
 
 .body {
@@ -48,8 +87,11 @@
   composes: scrollbars from "../../Sass/common/_base.scss";
 
   overflow-y: auto;
-  overflow-x: auto;
-  width: 8vw;
+  overflow-x: hidden;
+  flex: 1;
+  width: 100%;
+  box-sizing: border-box;
   font-size: variables.$font-size-feature-info;
   margin-top: 5px;
+  padding: 0 8px 12px;
 }

@@ -1,6 +1,8 @@
 declare namespace ViewshedPanelScssNamespace {
   export interface IViewshedPanelScss {
     body: string;
+    "btn--close-feature": string;
+    btnCloseFeature: string;
     btnPanelHeading: string;
     header: string;
     "is-collapsed": string;
@@ -10,6 +12,7 @@ declare namespace ViewshedPanelScssNamespace {
     isTranslucent: string;
     isVisible: string;
     panel: string;
+    panelShell: string;
   }
 }
 

@@ -1,4 +1,3 @@
-import i18next from "i18next";
 import {
   computed,
   makeObservable,
@@ -7,24 +6,29 @@ import {
   runInAction
 } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
+import defined from "terriajs-cesium/Source/Core/defined";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
+import ScreenSpaceEventHandler from "terriajs-cesium/Source/Core/ScreenSpaceEventHandler";
+import ScreenSpaceEventType from "terriajs-cesium/Source/Core/ScreenSpaceEventType";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
+import ImageryProvider from "terriajs-cesium/Source/Scene/ImageryProvider";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
 import Viewshed3D from "../Map/Cesium/Viewshed3D";
 import MappableMixin, { ImageryParts } from "../ModelMixins/MappableMixin";
-import ViewState from "../ReactViewModels/ViewState";
 import MappableTraits from "../Traits/TraitsClasses/MappableTraits";
 import CreateModel from "./Definition/CreateModel";
-import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
+import UserDrawingViewshed from "./UserDrawingViewshed";
 
 const BORDER_CIRCLE_ID = "viewshed-area-border";
 
@@ -32,45 +36,43 @@ interface Options {
   terria: Terria;
   messageHeader?: string | (() => string);
   onCleanUp?: () => void;
+  /** When true, do not use mapInteractionModeStack (avoids covering other tools' UI). */
   invisible?: boolean;
 }
 
 export default class UserDrawingViewshedArea extends MappableMixin(
   CreateModel(MappableTraits)
 ) {
-  private readonly messageHeader: string | (() => string);
   private readonly onCleanUp?: () => void;
-  private readonly invisible?: boolean;
   private readonly dragHelper: DragPoints;
 
   pointEntities: CustomDataSource;
   otherEntities: CustomDataSource;
 
   @observable
-  private inDrawMode: boolean;
-  private disposePickedFeatureSubscription?: () => void;
+  private inDrawMode = false;
   private disposeViewshedArea?: () => void;
   private viewshed?: Viewshed3D;
-  /** Fresh ImageryParts instance whenever viewshed compute finishes (drives mapItems). */
-  @observable.ref private areaImagery?: ImageryParts;
-  private ownedInteractionModes: MapInteractionMode[] = [];
+  @observable.ref
+  private areaImageryProvider: ImageryProvider | undefined = undefined;
+  @observable.ref
+  private areaImageryRectangle: Rectangle | undefined = undefined;
+  /** Own map clicks so we never push onto mapInteractionModeStack. */
+  private mapClickHandler?: ScreenSpaceEventHandler;
 
   constructor(options: Options) {
     super(createGuid(), options.terria);
-    makeObservable(this);
 
-    this.messageHeader =
-      options.messageHeader ?? i18next.t(($) => $.viewshed.areaMessageHeader);
+    makeObservable(this);
 
     this.onCleanUp = options.onCleanUp;
     this.pointEntities = new CustomDataSource("ViewshedAreaPoints");
     this.otherEntities = new CustomDataSource("ViewshedAreaOther");
-    this.inDrawMode = false;
-    this.invisible = options.invisible;
+    // options.messageHeader / invisible are retained for API compatibility with
+    // the line drawer; area picking is always via ScreenSpaceEventHandler.
 
     this.dragHelper = new DragPoints(options.terria, () => {
       this.updateViewshedArea();
-      this.prepareToAddNewPoint();
     });
   }
 
@@ -79,9 +81,16 @@ export default class UserDrawingViewshedArea extends MappableMixin(
   }
 
   @computed get mapItems() {
-    return this.areaImagery
-      ? [this.pointEntities, this.otherEntities, this.areaImagery]
-      : [this.pointEntities, this.otherEntities];
+    return [
+      this.pointEntities,
+      this.otherEntities,
+      new ImageryParts({
+        imageryProvider: this.areaImageryProvider,
+        clippingRectangle: this.areaImageryRectangle,
+        alpha: 1,
+        show: true
+      })
+    ];
   }
 
   get svgObserverPoint() {
@@ -127,27 +136,68 @@ export default class UserDrawingViewshedArea extends MappableMixin(
     });
 
     this.terria.overlays.add(this);
-
-    const pickPointMode = this.addMapInteractionMode();
-    this.disposePickedFeatureSubscription = reaction(
-      () => pickPointMode.pickedFeatures,
-      async (pickedFeatures, _previousValue, reaction) => {
-        if (isDefined(pickedFeatures)) {
-          if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
-            await pickedFeatures.allFeaturesAvailablePromise;
-          }
-          if (isDefined(pickedFeatures.pickPosition)) {
-            const pickedPoint = pickedFeatures.pickPosition;
-            this.addOrReplaceObserver(pickedPoint);
-            reaction.dispose();
-            this.prepareToAddNewPoint();
-          }
-        }
-      }
-    );
+    this.startMapClickPicking();
   }
 
-  private addOrReplaceObserver(position: Cartesian3) {
+  private startMapClickPicking() {
+    this.stopMapClickPicking();
+    const cesium = this.terria.cesium;
+    if (!isDefined(cesium)) {
+      return;
+    }
+
+    const scene = cesium.scene;
+    this.mapClickHandler = new ScreenSpaceEventHandler(scene.canvas);
+    this.mapClickHandler.setInputAction((click: { position: Cartesian2 }) => {
+      if (!this.inDrawMode) {
+        return;
+      }
+      // Once placed, only drag (or close/reopen) — never replace by clicking.
+      if (this.pointEntities.entities.values.length >= 1) {
+        return;
+      }
+      if (this.dragHelper.getDragCount() >= 10) {
+        this.dragHelper.resetDragCount();
+        return;
+      }
+      // Let the line tool collect its clicks without also placing the area point.
+      if (this.lineViewshedIsWaitingForPoints()) {
+        return;
+      }
+
+      const pickRay = scene.camera.getPickRay(click.position);
+      if (!defined(pickRay)) {
+        return;
+      }
+      const pickedPoint = scene.globe.pick(pickRay, scene);
+      if (!defined(pickedPoint)) {
+        return;
+      }
+
+      this.addObserver(pickedPoint);
+      runInAction(() => {
+        this.terria.pickedFeatures = undefined;
+      });
+    }, ScreenSpaceEventType.LEFT_CLICK);
+  }
+
+  private lineViewshedIsWaitingForPoints(): boolean {
+    for (const item of this.terria.overlays.items) {
+      if (item instanceof UserDrawingViewshed) {
+        return item.pointEntities.entities.values.length < 2;
+      }
+    }
+    return false;
+  }
+
+  private stopMapClickPicking() {
+    if (this.mapClickHandler) {
+      this.mapClickHandler.destroy();
+      this.mapClickHandler = undefined;
+    }
+  }
+
+  private addObserver(position: Cartesian3) {
     this.pointEntities.entities.removeAll();
     const pointEntity = new Entity({
       name: "Observer",
@@ -164,86 +214,19 @@ export default class UserDrawingViewshedArea extends MappableMixin(
   }
 
   endDrawing() {
-    if (this.disposePickedFeatureSubscription) {
-      this.disposePickedFeatureSubscription();
-    }
+    this.stopMapClickPicking();
     if (this.disposeViewshedArea) {
       this.disposeViewshedArea();
       this.disposeViewshedArea = undefined;
     }
 
     runInAction(() => {
-      this.removeOwnedInteractionModes();
       this.cleanUp();
     });
   }
 
-  private removeOwnedInteractionModes() {
-    for (const mode of this.ownedInteractionModes) {
-      const idx = this.terria.mapInteractionModeStack.indexOf(mode);
-      if (idx >= 0) {
-        this.terria.mapInteractionModeStack.splice(idx, 1);
-      }
-    }
-    this.ownedInteractionModes = [];
-  }
-
-  private addMapInteractionMode() {
-    const pickPointMode = new MapInteractionMode({
-      message: this.getDialogMessage(),
-      buttonText: this.getButtonText(),
-      onCancel: () => {
-        this.endDrawing();
-      },
-      onEnable: (viewState: ViewState) => {
-        runInAction(() => (viewState.explorerPanelIsVisible = false));
-      },
-      invisible: this.invisible
-    });
-    runInAction(() => {
-      this.terria.mapInteractionModeStack.push(pickPointMode);
-      this.ownedInteractionModes.push(pickPointMode);
-    });
-    return pickPointMode;
-  }
-
-  private prepareToAddNewPoint() {
-    runInAction(() => {
-      const stack = this.terria.mapInteractionModeStack;
-      const top = stack[stack.length - 1];
-      if (top && this.ownedInteractionModes.includes(top)) {
-        stack.pop();
-        const idx = this.ownedInteractionModes.indexOf(top);
-        if (idx >= 0) this.ownedInteractionModes.splice(idx, 1);
-      }
-    });
-
-    const pickPointMode = this.addMapInteractionMode();
-    this.disposePickedFeatureSubscription = reaction(
-      () => pickPointMode.pickedFeatures,
-      async (pickedFeatures, _previousValue, reaction) => {
-        if (isDefined(pickedFeatures)) {
-          if (isDefined(pickedFeatures.allFeaturesAvailablePromise)) {
-            await pickedFeatures.allFeaturesAvailablePromise;
-          }
-          if (isDefined(pickedFeatures.pickPosition)) {
-            const pickedPoint = pickedFeatures.pickPosition;
-            if (this.dragHelper.getDragCount() < 10) {
-              this.addOrReplaceObserver(pickedPoint);
-            } else {
-              this.dragHelper.resetDragCount();
-            }
-            reaction.dispose();
-            if (this.inDrawMode) {
-              this.prepareToAddNewPoint();
-            }
-          }
-        }
-      }
-    );
-  }
-
   cleanUp() {
+    this.stopMapClickPicking();
     this.destroyViewshedArea();
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
@@ -264,20 +247,6 @@ export default class UserDrawingViewshedArea extends MappableMixin(
     if (typeof this.onCleanUp === "function") {
       this.onCleanUp();
     }
-  }
-
-  getDialogMessage() {
-    const header =
-      typeof this.messageHeader === "function"
-        ? this.messageHeader()
-        : this.messageHeader;
-    return `<div><strong>${header}</strong></div>`;
-  }
-
-  getButtonText(): string {
-    return this.pointEntities.entities.values.length >= 1
-      ? i18next.t(($) => $.models.userDrawing.btnDone)
-      : i18next.t(($) => $.models.userDrawing.btnCancel);
   }
 
   private buildCircleBorderPositions(
@@ -378,8 +347,10 @@ export default class UserDrawingViewshedArea extends MappableMixin(
       maximumDistance,
       onImageryPartsChanged: (parts: ImageryParts | undefined) => {
         runInAction(() => {
-          this.areaImagery = parts;
+          this.areaImageryProvider = parts?.imageryProvider;
+          this.areaImageryRectangle = parts?.clippingRectangle;
         });
+        this.terria.currentViewer.notifyRepaintRequired();
       }
     };
 
@@ -394,7 +365,8 @@ export default class UserDrawingViewshedArea extends MappableMixin(
     this.viewshed?.destroy();
     this.viewshed = undefined;
     runInAction(() => {
-      this.areaImagery = undefined;
+      this.areaImageryProvider = undefined;
+      this.areaImageryRectangle = undefined;
     });
     this.otherEntities.entities.removeById(BORDER_CIRCLE_ID);
   }

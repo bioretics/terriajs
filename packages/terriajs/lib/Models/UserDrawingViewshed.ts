@@ -344,17 +344,18 @@ export default class UserDrawingViewshed extends MappableMixin(
           }
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
+            const atMaxPoints =
+              this.numMaxPoints !== undefined &&
+              this.pointEntities.entities.values.length >= this.numMaxPoints;
 
-            // If existing point was picked, _clickedExistingPoint handles that, and returns true.
-            // getDragCount helps us determine if the point was actually dragged rather than clicked. If it was
-            // dragged, we shouldn't treat it as a clicked-existing-point scenario.
-            if (
+            // Once both points are placed, only drag (or close/reopen) — do not
+            // add/remove points on further map clicks.
+            if (atMaxPoints) {
+              this.dragHelper.resetDragCount();
+            } else if (
               this.dragHelper.getDragCount() < 10 &&
-              !this.clickedExistingPoint(pickedFeatures.features) &&
-              (this.numMaxPoints === undefined ||
-                this.pointEntities.entities.values.length !== this.numMaxPoints)
+              !this.clickedExistingPoint(pickedFeatures.features)
             ) {
-              // No existing point was picked, so add a new point
               this.addPointToPointEntities("Target", pickedPoint, false);
             } else {
               this.dragHelper.resetDragCount();
