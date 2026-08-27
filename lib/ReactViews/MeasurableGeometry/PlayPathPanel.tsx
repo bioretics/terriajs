@@ -233,7 +233,7 @@ const PlayPathPanel = observer((props: Props) => {
         <div
           style={{
             display: "flex",
-            flexDirection: "row",
+            flexDirection: "column",
             alignItems: "stretch",
             justifyContent: "center",
             gap: 8,
@@ -327,46 +327,69 @@ const PlayPathPanel = observer((props: Props) => {
           <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
             {i18next.t("playPath.samplingStepHeader")}:
           </label>
-          <Box styledWidth="70px">
-            <Input
-              css={`
-                border: solid;
-                border-width: ${isValidSamplingStep ? 1 : 2}px;
-                border-color: ${isValidSamplingStep ? theme.textLight : "red"};
-              `}
-              title={i18next.t("playPath.samplingStepHeader")}
-              light={false}
-              dark
-              type="number"
-              min={1}
-              max={2000}
-              step={1}
-              value={samplingStepInput}
-              disabled={playingPath}
-              onChange={(e) => {
-                const val = parseInt(e.target.value, 10);
-                setIsValidSamplingStep(
-                  Number.isFinite(val) && val > 0 && val <= 2000
-                );
-                setSamplingStepInput(val);
-              }}
-            />
-          </Box>
-          <Button
-            css={`
-              color: ${theme.textLight};
-              background: ${theme.colorPrimary};
-            `}
-            disabled={!isValidSamplingStep || playingPath}
-            title={i18next.t("playPath.samplingStepButtonTitle")}
-            onClick={() => {
-              if (isValidSamplingStep) {
-                changePlayPathSamplingStep(samplingStepInput);
-              }
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              width: "100%"
             }}
           >
-            {i18next.t("playPath.samplingStepButtonText")}
-          </Button>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                flexWrap: "nowrap"
+              }}
+            >
+              <Box styledWidth="70px">
+                <Input
+                  css={`
+                    border: solid;
+                    border-width: ${isValidSamplingStep ? 1 : 2}px;
+                    border-color: ${isValidSamplingStep
+                      ? theme.textLight
+                      : "red"};
+                  `}
+                  title={i18next.t("playPath.samplingStepHeader")}
+                  light={false}
+                  dark
+                  type="number"
+                  min={0}
+                  max={2000}
+                  step={1}
+                  value={samplingStepInput}
+                  disabled={playingPath}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10);
+                    setIsValidSamplingStep(
+                      Number.isFinite(val) && val >= 0 && val <= 2000
+                    );
+                    setSamplingStepInput(val);
+                  }}
+                />
+              </Box>
+              <Button
+                css={`
+                  color: ${theme.textLight};
+                  background: ${theme.colorPrimary};
+                `}
+                disabled={!isValidSamplingStep || playingPath}
+                title={i18next.t("playPath.samplingStepButtonTitle")}
+                onClick={() => {
+                  if (isValidSamplingStep) {
+                    changePlayPathSamplingStep(samplingStepInput);
+                  }
+                }}
+              >
+                {i18next.t("playPath.samplingStepButtonText")}
+              </Button>
+            </div>
+            <Text textLight style={{ fontSize: "10px", lineHeight: 1.2 }}>
+              {i18next.t("playPath.samplingStepHelp")}
+            </Text>
+          </div>
         </div>
       </div>
     );
@@ -378,7 +401,7 @@ const PlayPathPanel = observer((props: Props) => {
       default={{
         x: 50,
         y: 50,
-        width: window.innerWidth * 0.1,
+        width: window.innerWidth * 0.15,
         height: "auto"
       }}
       maxWidth={window.innerWidth * 0.4}
