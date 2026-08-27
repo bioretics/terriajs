@@ -48,6 +48,7 @@ import MicrozonationPanel from "../Microzonation/MicrozonationPanel";
 import QueryWindow from "../QueryWindow/QueryWindow";
 import { MessageModal } from "../MessageModal/MessageModal";
 import ViewshedPanel from "../Viewshed/ViewshedPanel";
+import ViewshedAreaPanel from "../Viewshed/ViewshedAreaPanel";
 import LoginPanel from "../Login/LoginPanel";
 
 export const animationDuration = 250;
@@ -322,6 +323,10 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
                 viewState={props.viewState}
               />
               <ViewshedPanel
+                terria={props.terria}
+                viewState={props.viewState}
+              />
+              <ViewshedAreaPanel
                 terria={props.terria}
                 viewState={props.viewState}
               />

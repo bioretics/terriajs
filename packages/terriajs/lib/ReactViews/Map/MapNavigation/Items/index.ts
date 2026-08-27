@@ -17,4 +17,9 @@ export {
 export { MyLocation } from "./MyLocation";
 export { ToggleSplitterController } from "./ToggleSplitterTool";
 export { ZoomControl, ZOOM_CONTROL_ID } from "./ZoomControl";
-export { ViewshedTool } from "./ViewshedTool";
+export {
+  ViewshedTool,
+  ViewshedAreaTool,
+  ViewshedTools,
+  ViewshedToolsController
+} from "./ViewshedTool";

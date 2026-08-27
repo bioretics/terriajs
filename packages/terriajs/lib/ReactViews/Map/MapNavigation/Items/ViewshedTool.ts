@@ -1,17 +1,91 @@
 "use strict";
 import React from "react";
-import { reaction } from "mobx";
+import { action, computed, makeObservable, observable, reaction } from "mobx";
 import Terria from "../../../../Models/Terria";
 import ViewerMode from "../../../../Models/ViewerMode";
 import { GLYPHS } from "../../../../Styled/Icon";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
 import UserDrawingViewshed from "../../../../Models/UserDrawingViewshed";
+import UserDrawingViewshedArea from "../../../../Models/UserDrawingViewshedArea";
+import ViewState from "../../../../ReactViewModels/ViewState";
 import i18next from "i18next";
 
-interface ViewshedToolOptions {
+/** Tiny expand/collapse state for the viewshed toolbar group (like MeasureTools). */
+export class ViewshedTools {
+  @observable private _active = false;
+
+  constructor() {
+    makeObservable(this);
+  }
+
+  @computed
+  get active() {
+    return this._active;
+  }
+
+  @action
+  activate() {
+    this._active = true;
+  }
+
+  @action
+  deactivate() {
+    this._active = false;
+  }
+}
+
+interface ViewshedToolsControllerOptions {
   terria: Terria;
-  onClose(): void;
-  onOpen(): void;
+  viewState: ViewState;
+  viewshedTools: ViewshedTools;
+}
+
+export class ViewshedToolsController extends MapNavigationItemController {
+  static id = "viewshed-tools";
+  static displayName = "ViewshedTools";
+
+  constructor(private props: ViewshedToolsControllerOptions) {
+    super();
+    makeObservable(this);
+  }
+
+  @computed
+  get active(): boolean {
+    return this.props.viewshedTools.active;
+  }
+
+  get glyph(): any {
+    return GLYPHS.eye;
+  }
+
+  get viewerMode(): ViewerMode | undefined {
+    return ViewerMode.Cesium;
+  }
+
+  activate() {
+    this.props.viewshedTools.activate();
+  }
+
+  deactivate() {
+    // Collapse children when the parent is closed.
+    const line = this.props.terria.mapNavigationModel.findItem(
+      ViewshedTool.id
+    )?.controller;
+    const area = this.props.terria.mapNavigationModel.findItem(
+      ViewshedAreaTool.id
+    )?.controller;
+    if (line?.active) line.deactivate();
+    if (area?.active) area.deactivate();
+    this.props.viewshedTools.deactivate();
+  }
+}
+
+interface ViewshedChildToolOptions {
+  terria: Terria;
+  viewState: ViewState;
+  viewshedTools: ViewshedTools;
+  onClose?(): void;
+  onOpen?(): void;
 }
 
 export class ViewshedTool extends MapNavigationItemController {
@@ -25,8 +99,9 @@ export class ViewshedTool extends MapNavigationItemController {
   onOpen: () => void;
   itemRef: React.RefObject<HTMLDivElement> = React.createRef();
 
-  constructor(props: ViewshedToolOptions) {
+  constructor(private props: ViewshedChildToolOptions) {
     super();
+    makeObservable(this);
     this.terria = props.terria;
     this.userDrawing = new UserDrawingViewshed({
       terria: props.terria,
@@ -35,8 +110,8 @@ export class ViewshedTool extends MapNavigationItemController {
       onMakeDialogMessage: this.onMakeDialogMessage.bind(this),
       onCleanUp: this.onCleanUp.bind(this)
     });
-    this.onClose = props.onClose;
-    this.onOpen = props.onOpen;
+    this.onClose = props.onClose || (() => {});
+    this.onOpen = props.onOpen || (() => {});
 
     reaction(
       () => this.terria.mainViewer.viewerMode,
@@ -49,33 +124,34 @@ export class ViewshedTool extends MapNavigationItemController {
   }
 
   get glyph(): any {
-    return GLYPHS.eye;
+    return GLYPHS.difference;
   }
 
   get viewerMode(): ViewerMode | undefined {
     return ViewerMode.Cesium;
   }
 
+  @computed
+  get visible(): boolean {
+    return (
+      (this.props.viewshedTools.active ||
+        this.props.viewState.useSmallScreenInterface) &&
+      super.visible
+    );
+  }
+
   onCleanUp() {
     this.terria.viewshedDistances = undefined;
-    this.terria.viewshedShowArea = false;
-    this.terria.viewshedAreaDistance = 0;
     this.onClose();
     super.deactivate();
   }
 
-  /**
-   * @overrides
-   */
   deactivate() {
     this.onClose();
     this.userDrawing.endDrawing();
     super.deactivate();
   }
 
-  /**
-   * @overrides
-   */
   activate() {
     this.onOpen();
     this.userDrawing.enterDrawMode();
@@ -86,14 +162,12 @@ export class ViewshedTool extends MapNavigationItemController {
     if (number <= 0) {
       return "";
     }
-    // Given a number representing a number in metres, make it human readable
     let label = "m";
     if (number > 999) {
       label = "Km";
       number = number / 1000.0;
     }
     let numberStr = number.toFixed(2);
-    // http://stackoverflow.com/questions/2901102/how-to-print-a-number-with-commas-as-thousands-separators-in-javascript
     numberStr.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     numberStr = `${numberStr} ${label}`;
 
@@ -133,4 +207,77 @@ export class ViewshedTool extends MapNavigationItemController {
       </table>
     `;
   };
+}
+
+export class ViewshedAreaTool extends MapNavigationItemController {
+  static id = "viewshed-area-tool";
+  static displayName = "ViewshedAreaTool";
+
+  private readonly terria: Terria;
+  private readonly viewState: ViewState;
+  private userDrawing: UserDrawingViewshedArea;
+
+  onClose: () => void;
+  onOpen: () => void;
+  itemRef: React.RefObject<HTMLDivElement> = React.createRef();
+
+  constructor(private props: ViewshedChildToolOptions) {
+    super();
+    makeObservable(this);
+    this.terria = props.terria;
+    this.viewState = props.viewState;
+    this.userDrawing = new UserDrawingViewshedArea({
+      terria: props.terria,
+      messageHeader: i18next.t(($) => $.viewshed.areaMessageHeader),
+      onCleanUp: this.onCleanUp.bind(this)
+    });
+    this.onClose = props.onClose || (() => {});
+    this.onOpen = props.onOpen || (() => {});
+
+    reaction(
+      () => this.terria.mainViewer.viewerMode,
+      (viewerMode) => {
+        if (viewerMode !== ViewerMode.Cesium && this._active) {
+          this.deactivate();
+        }
+      }
+    );
+  }
+
+  get glyph(): any {
+    return GLYPHS.sphere;
+  }
+
+  get viewerMode(): ViewerMode | undefined {
+    return ViewerMode.Cesium;
+  }
+
+  @computed
+  get visible(): boolean {
+    return (
+      (this.props.viewshedTools.active ||
+        this.props.viewState.useSmallScreenInterface) &&
+      super.visible
+    );
+  }
+
+  onCleanUp() {
+    this.viewState.viewshedAreaPanelIsVisible = false;
+    this.onClose();
+    super.deactivate();
+  }
+
+  deactivate() {
+    this.onClose();
+    this.viewState.viewshedAreaPanelIsVisible = false;
+    this.userDrawing.endDrawing();
+    super.deactivate();
+  }
+
+  activate() {
+    this.onOpen();
+    this.viewState.viewshedAreaPanelIsVisible = true;
+    this.userDrawing.enterDrawMode();
+    super.activate();
+  }
 }

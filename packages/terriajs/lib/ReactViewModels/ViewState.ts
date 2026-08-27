@@ -419,6 +419,12 @@ export default class ViewState {
    * @type {Boolean}
    */
   @observable viewshedPanelIsVisible: boolean = false;
+
+  /**
+   * Gets or sets a value indicating whether the ViewshedAreaPanel is visible.
+   */
+  @observable viewshedAreaPanelIsVisible: boolean = false;
+
   /**
    * Gets or sets a value indicating whether the ElevationPanel is collapsed.
    * @type {Boolean}

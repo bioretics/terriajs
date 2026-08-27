@@ -1,9 +1,9 @@
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
-import ImageryLayer from "terriajs-cesium/Source/Scene/ImageryLayer";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
 import SingleTileImageryProvider from "terriajs-cesium/Source/Scene/SingleTileImageryProvider";
 import TerrainProvider from "terriajs-cesium/Source/Core/TerrainProvider";
+import { ImageryParts } from "../../ModelMixins/MappableMixin";
 import {
   sampleTerrainVisibilityGrid,
   computeViewshed,
@@ -35,10 +35,16 @@ export interface Viewshed3DOptions {
   visibleColor?: Color;
   alpha?: number;
   onStatusChange?: (status: ViewshedStatus) => void;
+  /**
+   * Called whenever the draped imagery should change. The owner must put the
+   * parts (when defined) into its `mapItems` so Cesium's imagery sync owns the
+   * layer — do not add it to `scene.imageryLayers` directly.
+   */
+  onImageryPartsChanged?: (parts: ImageryParts | undefined) => void;
 }
 
 export interface Viewshed3DUpdateOptions extends Partial<
-  Omit<Viewshed3DOptions, "terrainProvider">
+  Omit<Viewshed3DOptions, "terrainProvider" | "onImageryPartsChanged">
 > {}
 
 export const DEFAULT_VIEWSHED_ALPHA = 0.45;
@@ -46,27 +52,23 @@ export const DEFAULT_VIEWSHED_ALPHA = 0.45;
 /** Debounce interval (ms) for update() calls during point dragging. */
 const UPDATE_DEBOUNCE_MS = 200;
 
-type NormalisedOptions = Required<Omit<Viewshed3DOptions, "onStatusChange">> & {
+type NormalisedOptions = Required<
+  Omit<Viewshed3DOptions, "onStatusChange" | "onImageryPartsChanged">
+> & {
   onStatusChange?: Viewshed3DOptions["onStatusChange"];
+  onImageryPartsChanged?: Viewshed3DOptions["onImageryPartsChanged"];
 };
 
 /**
  * Render-independent terrain viewshed for one observer.
  *
- * Uses {@link sampleTerrainVisibilityGrid} to sample terrain heights at
- * maximum detail directly from the TerrainProvider (independent of the Globe's
- * current LOD), computes line-of-sight with a CPU ray sweep, and drapes the
- * result as a {@link SingleTileImageryProvider} layer. The overlay is stable
- * across all camera movements.
- *
- * Callers create it after choosing observer and range points, call
- * {@link update} while editing, and always {@link destroy} it.
+ * Computes visibility and reports {@link ImageryParts} via
+ * {@link Viewshed3DOptions.onImageryPartsChanged} for inclusion in `mapItems`.
  */
 export default class Viewshed3D {
   private options: NormalisedOptions;
 
   private readonly scene: Scene;
-  private imageryLayer?: ImageryLayer;
   private destroyed = false;
   private computeGeneration = 0;
   private debounceTimer?: ReturnType<typeof setTimeout>;
@@ -108,17 +110,13 @@ export default class Viewshed3D {
       this.debounceTimer = undefined;
     }
 
-    this.removeImageryLayer();
+    this.options.onImageryPartsChanged?.(undefined);
     this.scene.requestRender();
   }
 
   isDestroyed() {
     return this.destroyed;
   }
-
-  // ---------------------------------------------------------------------------
-  // Private
-  // ---------------------------------------------------------------------------
 
   private scheduleCompute() {
     if (this.debounceTimer !== undefined) {
@@ -159,6 +157,7 @@ export default class Viewshed3D {
         const eyeHeight = groundHeight + observerHeight;
 
         const visibility = computeViewshed(grid, eyeHeight);
+        // Alpha is baked into the canvas; ImageryParts.alpha stays 1.
         const canvas = rasterizeVisibilityToCanvas(grid, visibility, [
           Math.round(visibleColor.red * 255),
           Math.round(visibleColor.green * 255),
@@ -173,12 +172,14 @@ export default class Viewshed3D {
           (imageryProvider) => {
             if (this.destroyed || generation !== this.computeGeneration) return;
 
-            this.removeImageryLayer();
-
-            this.imageryLayer = new ImageryLayer(imageryProvider, {
-              rectangle
-            });
-            this.scene.imageryLayers.add(this.imageryLayer);
+            this.options.onImageryPartsChanged?.(
+              new ImageryParts({
+                imageryProvider,
+                alpha: 1,
+                clippingRectangle: rectangle,
+                show: true
+              })
+            );
             this.scene.requestRender();
 
             this.options.onStatusChange?.("ready");
@@ -192,13 +193,6 @@ export default class Viewshed3D {
       });
   }
 
-  private removeImageryLayer() {
-    if (this.imageryLayer) {
-      this.scene.imageryLayers.remove(this.imageryLayer, true);
-      this.imageryLayer = undefined;
-    }
-  }
-
   private static normaliseOptions(
     options: Viewshed3DOptions
   ): NormalisedOptions {
@@ -210,7 +204,8 @@ export default class Viewshed3D {
       observerHeight: options.observerHeight ?? 0,
       alpha,
       visibleColor: (options.visibleColor ?? Color.LIME).withAlpha(alpha),
-      onStatusChange: options.onStatusChange
+      onStatusChange: options.onStatusChange,
+      onImageryPartsChanged: options.onImageryPartsChanged
     };
   }
 }

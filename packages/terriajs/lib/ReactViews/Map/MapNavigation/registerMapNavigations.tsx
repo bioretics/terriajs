@@ -14,6 +14,9 @@ import PedestrianMode, {
 import { ToolButtonController } from "../../Tools/Tool";
 import {
   ViewshedTool,
+  ViewshedAreaTool,
+  ViewshedTools,
+  ViewshedToolsController,
   AR_TOOL_ID,
   AugmentedVirtualityController,
   AugmentedVirtualityHoverController,
@@ -402,27 +405,26 @@ export const registerMapNavigations = (viewState: ViewState) => {
     order: 9
   });
 
+  const viewshedTools = new ViewshedTools();
+  const viewshedToolsController = new ViewshedToolsController({
+    terria,
+    viewState,
+    viewshedTools
+  });
+  mapNavigationModel.addItem({
+    id: ViewshedToolsController.id,
+    name: "translate#viewshed.toolsButton",
+    title: "translate#viewshed.toolsButtonTitle",
+    location: "TOP",
+    controller: viewshedToolsController,
+    screenSize: "medium",
+    order: 8
+  });
+
   const viewshedTool = new ViewshedTool({
     terria,
-    onClose: () => {
-      runInAction(() => {
-        viewState.terria.mapNavigationModel.enable(ViewshedTool.id);
-        viewState.panel = undefined;
-      });
-    },
-    onOpen: () => {
-      runInAction(() => {
-        if (viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium) {
-          const item = viewState.terria.mapNavigationModel.findItem(
-            ViewshedTool.id
-          )?.controller;
-          if (item && item.active) {
-            item.deactivate();
-          }
-          viewState.terria.mapNavigationModel.disable(ViewshedTool.id);
-        }
-      });
-    }
+    viewState,
+    viewshedTools
   });
   mapNavigationModel.addItem({
     id: ViewshedTool.id,
@@ -431,7 +433,22 @@ export const registerMapNavigations = (viewState: ViewState) => {
     location: "TOP",
     controller: viewshedTool,
     screenSize: "medium",
-    order: 8
+    order: 8.1
+  });
+
+  const viewshedAreaTool = new ViewshedAreaTool({
+    terria,
+    viewState,
+    viewshedTools
+  });
+  mapNavigationModel.addItem({
+    id: ViewshedAreaTool.id,
+    name: "translate#viewshed.areaToolButton",
+    title: "translate#viewshed.areaToolButtonTitle",
+    location: "TOP",
+    controller: viewshedAreaTool,
+    screenSize: "medium",
+    order: 8.2
   });
 
   const feedbackController = new FeedbackButtonController(viewState);
