@@ -700,6 +700,7 @@ export default class ViewState {
         this.measurablePanelIsVisible = !!geom;
         this.mobileMeasureToolsButtonVisible = !!geom;
         if (!wasVisible) {
+          this.terria.measurableGeomSamplingStepIsAuto = true;
           this.measurablePanelSourceItemId = owner;
           if (this.measurableDownloadPanelIsVisible) {
             this.measurablePanelIsVisible = false;
@@ -760,11 +761,14 @@ export default class ViewState {
     );
 
     this._disposeSamplingPathStep = reaction(
-      () => this.terria.measurableGeomSamplingStep,
+      () => [
+        this.terria.measurableGeomSamplingStep,
+        this.terria.measurableGeomSamplingStepIsAuto
+      ],
       () => {
         this.terria.measurableGeometryManager[
           this.terria.measurableGeometryIndex
-        ].resample();
+        ]?.resample();
       }
     );
 
