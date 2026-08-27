@@ -49,6 +49,7 @@ import {
   TourPoint
 } from "./defaultTourPoints";
 import { defaultPlayPathTourPoints } from "./defaultPlayPathTourPoints";
+import { profileSamplingStep } from "../ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 import { defaultMeasurableTourPoints } from "./defaultMeasurableTourPoints";
 import SearchState from "./SearchState";
 import CatalogSearchProviderMixin from "../ModelMixins/SearchProviders/CatalogSearchProviderMixin";
@@ -545,6 +546,7 @@ export default class ViewState {
   private _storyBeforeUnloadSubscription: IReactionDisposer;
   private _measurablePanelIsVisibleSubscription: IReactionDisposer;
   private _disposeSamplingPathStep: IReactionDisposer;
+  private _disposePlayPathSamplingStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _panelSourceItemRemovedSubscription: IReactionDisposer;
 
@@ -761,14 +763,40 @@ export default class ViewState {
     );
 
     this._disposeSamplingPathStep = reaction(
-      () => [
-        this.terria.measurableGeomSamplingStep,
-        this.terria.measurableGeomSamplingStepIsAuto
-      ],
       () => {
+        if (!this.measurablePanelIsVisible) {
+          return this.terria.measurableGeomSamplingStepInUse;
+        }
+        if (!this.terria.measurableGeomSamplingStepIsAuto) {
+          return this.terria.measurableGeomSamplingStep;
+        }
+        const pathLength =
+          this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+            ?.geodeticDistance;
+        if (!pathLength) {
+          return 0;
+        }
+        return profileSamplingStep(pathLength, this.terria.mainViewer.scale);
+      },
+      (step) => {
+        if (!this.measurablePanelIsVisible) {
+          return;
+        }
+        if (step === this.terria.measurableGeomSamplingStepInUse) {
+          return;
+        }
         this.terria.measurableGeometryManager[
           this.terria.measurableGeometryIndex
         ]?.resample();
+      }
+    );
+
+    this._disposePlayPathSamplingStep = reaction(
+      () => this.playPathPanelIsVisible,
+      (isVisible) => {
+        if (isVisible) {
+          this.terria.playPathSamplingStepIsAuto = true;
+        }
       }
     );
 
@@ -804,6 +832,7 @@ export default class ViewState {
     this._storyBeforeUnloadSubscription();
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
+    this._disposePlayPathSamplingStep();
     this._viewshedPanelIsVisibleSubscription();
     this._panelSourceItemRemovedSubscription();
     this.searchState.dispose();

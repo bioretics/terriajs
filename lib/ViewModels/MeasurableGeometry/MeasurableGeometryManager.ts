@@ -1,5 +1,5 @@
 import Terria from "../../Models/Terria";
-import { action, makeObservable } from "mobx";
+import { action, makeObservable, runInAction } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
@@ -8,7 +8,7 @@ import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSourc
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
 import { JsonObject } from "../../Core/Json";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
-import { defaultSamplingStep } from "./MeasurableGeometrySamplingStep";
+import { profileSamplingStep } from "./MeasurableGeometrySamplingStep";
 export interface MeasurableGeometry {
   isClosed: boolean;
   hasArea: boolean;
@@ -100,20 +100,23 @@ export default class MeasurableGeometryManager {
     cartoPositions: Cartographic[],
     ellipsoid: Ellipsoid
   ): number {
-    if (!this.terria.measurableGeomSamplingStepIsAuto) {
-      return this.terria.measurableGeomSamplingStep;
+    let step = this.terria.measurableGeomSamplingStep;
+    if (this.terria.measurableGeomSamplingStepIsAuto) {
+      let pathLength = 0;
+      for (let i = 0; i < cartoPositions.length - 1; ++i) {
+        pathLength += new EllipsoidGeodesic(
+          cartoPositions[i],
+          cartoPositions[i + 1],
+          ellipsoid
+        ).surfaceDistance;
+      }
+      step =
+        profileSamplingStep(pathLength, this.terria.mainViewer.scale) || step;
     }
-    let pathLength = 0;
-    for (let i = 0; i < cartoPositions.length - 1; ++i) {
-      pathLength += new EllipsoidGeodesic(
-        cartoPositions[i],
-        cartoPositions[i + 1],
-        ellipsoid
-      ).surfaceDistance;
-    }
-    return (
-      defaultSamplingStep(pathLength) || this.terria.measurableGeomSamplingStep
-    );
+    runInAction(() => {
+      this.terria.measurableGeomSamplingStepInUse = step;
+    });
+    return step;
   }
 
   getGeodesicDistance(
