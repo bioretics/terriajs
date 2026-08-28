@@ -174,6 +174,8 @@ export const registerMapNavigations = (viewState: ViewState) => {
     return {
       onOpen: () => {
         runInAction(() => {
+          viewState.playPathPanelIsVisible = false;
+          viewState.measurableDownloadPanelIsVisible = false;
           setMeasureToolsEnabled(siblingToolIds, false);
           if (clearCurrentGeometryDataOnOpen) {
             clearCurrentMeasureGeometryData();

@@ -14,6 +14,7 @@ import { observer } from "mobx-react";
 import { useEffect, useState, useRef } from "react";
 import Box from "../../Styled/Box";
 import Text from "../../Styled/Text";
+import Input from "../../Styled/Input";
 
 interface Props {
   terria: Terria;
@@ -51,8 +52,18 @@ const PlayPathPanel = observer((props: Props) => {
     onPause,
     onStop,
     resetPlayPath,
-    isPitchTooLow
+    isPitchTooLow,
+    playPathSamplingStep,
+    changePlayPathSamplingStep
   } = usePlayPath(props.terria, props.viewState);
+
+  const [samplingStepInput, setSamplingStepInput] =
+    useState(playPathSamplingStep);
+  const [isValidSamplingStep, setIsValidSamplingStep] = useState(true);
+
+  useEffect(() => {
+    setSamplingStepInput(playPathSamplingStep);
+  }, [playPathSamplingStep]);
 
   const currentGeom = playGeomState.geomList[playGeomState.geometryIndex];
 
@@ -299,6 +310,60 @@ const PlayPathPanel = observer((props: Props) => {
           <span style={{ minWidth: 32, textAlign: "right", fontSize: "0.9em" }}>
             {playSpeed}x
           </span>
+        </div>
+        <div
+          className="no-drag"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            gap: 8,
+            flexWrap: "wrap"
+          }}
+        >
+          <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+            {i18next.t(($) => $.playPath.samplingStepHeader)}:
+          </label>
+          <Box styledWidth="70px">
+            <Input
+              css={`
+                border: solid;
+                border-width: ${isValidSamplingStep ? 1 : 2}px;
+                border-color: ${isValidSamplingStep ? theme.textLight : "red"};
+              `}
+              title={i18next.t(($) => $.playPath.samplingStepHeader)}
+              light={false}
+              dark
+              type="number"
+              min={1}
+              max={2000}
+              step={1}
+              value={samplingStepInput}
+              disabled={playingPath}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                setIsValidSamplingStep(
+                  Number.isFinite(val) && val > 0 && val <= 2000
+                );
+                setSamplingStepInput(val);
+              }}
+            />
+          </Box>
+          <Button
+            css={`
+              color: ${theme.textLight};
+              background: ${theme.colorPrimary};
+            `}
+            disabled={!isValidSamplingStep || playingPath}
+            title={i18next.t(($) => $.playPath.samplingStepButtonTitle)}
+            onClick={() => {
+              if (isValidSamplingStep) {
+                changePlayPathSamplingStep(samplingStepInput);
+              }
+            }}
+          >
+            {i18next.t(($) => $.playPath.samplingStepButtonText)}
+          </Button>
         </div>
       </div>
     );
