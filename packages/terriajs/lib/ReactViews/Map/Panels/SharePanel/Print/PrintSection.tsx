@@ -8,6 +8,7 @@ import ViewState from "../../../../../ReactViewModels/ViewState";
 import Box from "../../../../../Styled/Box";
 import { TextSpan } from "../../../../../Styled/Text";
 import Button from "../../../../../Styled/Button";
+import { composeMapScreenshot } from "./composeMapScreenshot";
 import { downloadImg } from "./PrintView";
 import Spacing from "../../../../../Styled/Spacing";
 
@@ -29,8 +30,17 @@ export const PrintSection: FC<IPrintSectionProps> = ({ viewState }) => {
     setIsDownloading(true);
     viewState.terria.currentViewer
       .captureScreenshot()
+      .then((dataString) =>
+        composeMapScreenshot(dataString, viewState.terria, {
+          includeScaleBar: viewState.printIncludeScaleBar,
+          includeCompass: viewState.printIncludeCompass
+        })
+      )
       .then((dataString) => {
         downloadImg(dataString);
+      })
+      .catch((error) => {
+        console.error("Failed to download map screenshot:", error);
       })
       .finally(() => setIsDownloading(false));
   };

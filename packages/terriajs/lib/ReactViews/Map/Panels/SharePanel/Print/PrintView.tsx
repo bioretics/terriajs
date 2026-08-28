@@ -1,15 +1,16 @@
 import DOMPurify from "dompurify";
-import { useEffect, useRef, useState } from "react";
+import { observer } from "mobx-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { StyleSheetManager, ThemeProvider } from "styled-components";
 import { terriaTheme } from "../../../../StandardUserInterface";
 import { useViewState } from "../../../../Context";
-import { DistanceLegend } from "../../../BottomBar/DistanceLegend";
 import {
   buildShareLink,
   buildShortShareLink,
   canShorten
 } from "../BuildShareLink";
+import { composeMapScreenshot } from "./composeMapScreenshot";
 import PrintDatasets from "./PrintDatasets";
 import PrintSource from "./PrintSource";
 import PrintViewButtons from "./PrintViewButtons";
@@ -62,31 +63,6 @@ const styles = `
       width: 80%;
     }
 
-    .tjs-legend__distanceLegend {
-      display: inline-block;
-      text-align: center;
-      position: absolute;
-      bottom: 5px;
-      right: 10px;
-      background: white;
-      padding: 5px;
-    }
-
-    .tjs-legend__distanceLegend > label {
-      color: black;
-    }
-
-    .tjs-legend__distanceLegend:hover {
-      background: #fff;
-    }
-
-    .tjs-legend__bar {
-      border-bottom: 3px solid black;
-      border-right: 3px solid black;
-      border-left: 3px solid black;
-      margin: 0 auto;
-    }
-
     body {
       display:flex;
       justify-content: center;
@@ -128,16 +104,13 @@ interface Props {
   closeCallback: () => void;
 }
 
-const getScale = (maybeElement: Element | undefined) =>
-  maybeElement
-    ? PRINT_MAP_WIDTH / (maybeElement as HTMLElement).offsetWidth
-    : 1;
-
-const PrintView = (props: Props) => {
+const PrintView = observer((props: Props) => {
   const viewState = useViewState();
   const rootNode = useRef(document.createElement("main"));
 
-  const [screenshot, setScreenshot] = useState<Promise<string> | null>(null);
+  const [rawScreenshot, setRawScreenshot] = useState<Promise<string> | null>(
+    null
+  );
   const [shareLink, setShareLink] = useState("");
 
   useEffect(() => {
@@ -149,9 +122,24 @@ const PrintView = (props: Props) => {
   }, [props.window]);
 
   useEffect(() => {
-    setScreenshot(viewState.terria.currentViewer.captureScreenshot());
+    setRawScreenshot(viewState.terria.currentViewer.captureScreenshot());
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [props.window]);
+
+  // Scale bar and compass are drawn onto the screenshot itself, so the
+  // preview, the printed page and the downloaded image are always identical.
+  const { printIncludeScaleBar, printIncludeCompass } = viewState;
+  const screenshot = useMemo(
+    () =>
+      rawScreenshot &&
+      rawScreenshot.then((dataString) =>
+        composeMapScreenshot(dataString, viewState.terria, {
+          includeScaleBar: printIncludeScaleBar,
+          includeCompass: printIncludeCompass
+        })
+      ),
+    [rawScreenshot, viewState.terria, printIncludeScaleBar, printIncludeCompass]
+  );
 
   useEffect(() => {
     if (canShorten(viewState.terria)) {
@@ -185,14 +173,7 @@ const PrintView = (props: Props) => {
           </div>
           <div className="map">
             {screenshot ? (
-              <PrintViewMap screenshot={screenshot}>
-                <DistanceLegend
-                  scale={getScale(
-                    viewState.terria.currentViewer.getContainer()
-                  )}
-                  isPrintMode
-                />
-              </PrintViewMap>
+              <PrintViewMap screenshot={screenshot} />
             ) : (
               <div>Loading...</div>
             )}
@@ -209,6 +190,6 @@ const PrintView = (props: Props) => {
     </StyleSheetManager>,
     rootNode.current
   );
-};
+});
 
 export default PrintView;
