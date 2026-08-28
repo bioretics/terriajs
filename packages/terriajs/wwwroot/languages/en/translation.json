@@ -2334,6 +2334,8 @@
     "samplingStepHeader": "Terrain sampling step (m)",
     "samplingStepButtonText": "Change",
     "samplingStepButtonTitle": "Change sampling step",
+    "samplingStepAutoCheckbox": "auto",
+    "samplingStepAutoCheckboxTitle": "Keep the sampling step scaled to the length of the path; uncheck it to set the step by hand",
     "showElevationChart": "Show/hide elevation chart",
     "geometrySummaryHeader": "Summary",
     "geometrySummaryElevationMin": "Alt. min",

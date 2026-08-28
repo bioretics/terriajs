@@ -1782,6 +1782,8 @@
     "samplingStepHeader": "Passo di campionamento del terreno (m)",
     "samplingStepButtonText": "Cambia",
     "samplingStepButtonTitle": "Cambia passo di campionamento",
+    "samplingStepAutoCheckbox": "auto",
+    "samplingStepAutoCheckboxTitle": "Adatta il passo di campionamento alla lunghezza del percorso; togli la spunta per impostarlo a mano",
     "showElevationChart": "Mostra/nascondi il grafico altimetrico",
     "geometrySummaryHeader": "Dettaglio",
     "geometrySummaryElevationMin": "Alt. min",
