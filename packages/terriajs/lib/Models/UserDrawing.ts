@@ -1330,6 +1330,9 @@ export default class UserDrawing extends MappableMixin(
         !this.autoClosePolygon
       ) {
         this.closeLoop = false;
+        if (this.polygon) {
+          this.otherEntities.entities.remove(this.polygon);
+        }
         this.polygon = undefined;
         this.updateAreaLabel();
 

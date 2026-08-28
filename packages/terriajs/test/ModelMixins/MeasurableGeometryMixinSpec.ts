@@ -230,6 +230,29 @@ describe("MeasurableGeometryMixin", function () {
       expect(geom.circleDiameter).toEqual(1600);
     });
 
+    it("stamps the geometry with the workbench item it came from", async function () {
+      item.asPath([carto(11.34, 44.49, 30), carto(11.35, 44.5, 80)]);
+      await flushSampling();
+
+      expect(terria.measurableGeomList[0].sourceItemId).toEqual(item.uniqueId);
+    });
+
+    it("keeps that stamp even when a sourceItemId is handed in", async function () {
+      item.asPath(
+        [carto(11.34, 44.49), carto(11.35, 44.5)],
+        undefined,
+        undefined,
+        false,
+        false,
+        undefined,
+        undefined,
+        { sourceItemId: "someone-else" }
+      );
+      await flushSampling();
+
+      expect(terria.measurableGeomList[0].sourceItemId).toEqual(item.uniqueId);
+    });
+
     it("merges any extra geometry properties it is handed", async function () {
       item.asPath(
         [carto(11.34, 44.49), carto(11.35, 44.5)],

@@ -1,4 +1,5 @@
 import { runInAction } from "mobx";
+import { LEAFLET_CLUSTERING_CONFIG_KEY } from "../../lib/ModelMixins/GeojsonMixin";
 import GeoJsonCatalogItem from "../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import updateModelFromJson from "../../lib/Models/Definition/updateModelFromJson";
@@ -49,6 +50,12 @@ describe("GeoJSON clustering", function () {
       await item.loadMapItems();
       expect(item.data?.clustering.enabled).toBe(false);
     });
+
+    it("still tells the Leaflet viewer that clustering is off", async function () {
+      await item.loadMapItems();
+      const config = (item.data as any)?.[LEAFLET_CLUSTERING_CONFIG_KEY];
+      expect(config?.enabled).toBe(false);
+    });
   });
 
   describe("when enabled", function () {
@@ -87,6 +94,28 @@ describe("GeoJSON clustering", function () {
     it("listens for cluster events so it can draw the count pin", async function () {
       await item.loadMapItems();
       expect(item.data?.clustering.clusterEvent.numberOfListeners).toEqual(1);
+    });
+
+    it("hands the Leaflet viewer the same clustering settings", async function () {
+      updateModelFromJson(item, CommonStrata.definition, {
+        clustering: {
+          enabled: true,
+          pixelRange: 80,
+          minimumClusterSize: 2,
+          pinSize: 42,
+          pinBackgroundColor: "red"
+        }
+      });
+      await item.loadMapItems();
+
+      const config = (item.data as any)?.[LEAFLET_CLUSTERING_CONFIG_KEY];
+      expect(config).toEqual({
+        enabled: true,
+        pixelRange: 80,
+        minimumClusterSize: 2,
+        pinSize: 42,
+        pinBackgroundColor: "red"
+      });
     });
   });
 });

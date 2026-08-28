@@ -38,12 +38,19 @@ import { worker } from "../mocks/browser";
 
 import json from "../../wwwroot/test/init/czml-with-template-0.json";
 
+// The templates below format numbers through `toLocaleString`, so both
+// separators follow whichever locale the browser running the specs is in.
 let separator = ",";
+let decimalSeparator = ".";
 if (typeof Intl === "object" && typeof Intl.NumberFormat === "function") {
-  const thousand = Intl.NumberFormat().format(1000);
-  if (thousand.length === 5) {
-    separator = thousand[1];
-  }
+  // Read the separators off a grouped number rather than guessing from its
+  // length: locales such as it-IT do not group a bare 1000 at all.
+  const parts = Intl.NumberFormat(undefined, {
+    useGrouping: true
+  }).formatToParts(1234567.8);
+  separator = parts.find((part) => part.type === "group")?.value ?? separator;
+  decimalSeparator =
+    parts.find((part) => part.type === "decimal")?.value ?? decimalSeparator;
 }
 
 // Takes the absolute value of the value and pads it to 2 digits i.e. 7->07, 17->17, -3->3, -13->13. It is expected that value is an integer is in the range [0, 99].
@@ -512,7 +519,13 @@ describe("FeatureInfoSection", function () {
 
       expect(
         screen.getByText(
-          "Size: 12" + separator + "345" + separator + "678.9012"
+          "Size: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "9012"
         )
       ).toBeVisible();
     });
@@ -541,7 +554,13 @@ describe("FeatureInfoSection", function () {
       );
       expect(
         screen.getByText(
-          "Size: 12" + separator + "345" + separator + "678.9012"
+          "Size: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "9012"
         )
       ).toBeVisible();
     });
@@ -571,7 +590,19 @@ describe("FeatureInfoSection", function () {
       );
 
       expect(
-        screen.getByText("Base: 12345678.9012; Sep: 12,345,678.901; DP: 0.235")
+        screen.getByText(
+          "Base: 12345678" +
+            decimalSeparator +
+            "9012; Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901; DP: 0" +
+            decimalSeparator +
+            "235"
+        )
       ).toBeVisible();
     });
 
@@ -597,7 +628,19 @@ describe("FeatureInfoSection", function () {
         viewState
       );
 
-      expect(screen.getByText("Sep: 12,345,678.901; DP: 0.235")).toBeVisible();
+      expect(
+        screen.getByText(
+          "Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901; DP: 0" +
+            decimalSeparator +
+            "235"
+        )
+      ).toBeVisible();
     });
 
     it("can handle white text in terria.formatNumber", function () {
@@ -620,7 +663,15 @@ describe("FeatureInfoSection", function () {
         viewState
       );
       expect(
-        screen.getByText("Sep: 12" + separator + "345" + separator + "678.901")
+        screen.getByText(
+          "Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901"
+        )
       ).toBeVisible();
     });
 
@@ -861,7 +912,7 @@ describe("FeatureInfoSection", function () {
         "template",
         "Less than: {{lessThan}}"
       );
-      renderWithContexts(
+      const { container } = renderWithContexts(
         <FeatureInfoSection
           feature={feature}
           catalogItem={catalogItem}
@@ -871,8 +922,10 @@ describe("FeatureInfoSection", function () {
         />,
         viewState
       );
-      expect(screen.getByText("Less than: A < B")).toBeInTheDocument();
-      expect(screen.queryByText(/&lt;/)).not.toBeInTheDocument();
+      expect(
+        within(container).getByText("Less than: A < B")
+      ).toBeInTheDocument();
+      expect(within(container).queryByText(/&lt;/)).not.toBeInTheDocument();
     });
 
     it("can embed safe html in template", function () {
@@ -946,7 +999,7 @@ describe("FeatureInfoSection", function () {
       expect(container.querySelectorAll(".jk").length).toEqual(0);
       expect(container.querySelectorAll(".jj").length).toEqual(1);
       expect(container.querySelectorAll("b").length).toEqual(1);
-      expect(screen.getByText(/bar/)).toBeInTheDocument();
+      expect(within(container).getByText(/bar/)).toBeInTheDocument();
       expect(container.textContent).toContain("test ");
     });
 
@@ -1180,13 +1233,60 @@ describe("FeatureInfoSection", function () {
     });
   });
 
+  describe("download", function () {
+    function downloadNames(container: HTMLElement) {
+      return Array.from(
+        container.querySelectorAll<HTMLAnchorElement>("a[download]")
+      ).map((link) => link.getAttribute("download"));
+    }
+
+    it("names the downloads after the catalog item", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      const name = getName(catalogItem);
+      expect(downloadNames(container)).toEqual([`${name}.csv`, `${name}.json`]);
+    });
+
+    it("does not put the clicked coordinates in the file names", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          position={Ellipsoid.WGS84.cartographicToCartesian(
+            Cartographic.fromDegrees(11.34, 44.49)
+          )}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      const name = getName(catalogItem);
+      const names = downloadNames(container);
+      expect(names).toEqual([`${name}.csv`, `${name}.json`]);
+      expect(names.join(" ")).not.toContain("Lat");
+      expect(names.join(" ")).not.toContain("Lon");
+      expect(names.join(" ")).not.toContain("44.49");
+    });
+  });
+
   describe("raw data", function () {
     beforeEach(function () {
       feature.description = new ConstantProperty("<p>hi!</p>");
     });
 
     it("does not appear if no template", function () {
-      renderWithContexts(
+      const { container } = renderWithContexts(
         <FeatureInfoSection
           catalogItem={catalogItem}
           feature={feature}
@@ -1197,10 +1297,10 @@ describe("FeatureInfoSection", function () {
         viewState
       );
       expect(
-        screen.queryByText(/featureInfo\.showCuratedData/)
+        within(container).queryByText(/featureInfo\.showCuratedData/)
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/featureInfo\.showRawData/)
+        within(container).queryByText(/featureInfo\.showRawData/)
       ).not.toBeInTheDocument();
     });
 

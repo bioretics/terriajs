@@ -123,6 +123,55 @@ describe("MeasurableGeometryExporter", function () {
       expect(links.every((link) => link.href !== false)).toBe(true);
     });
 
+    describe("filtering by download key", function () {
+      it("keeps the line and point exports of an open path named after a polygon", async function () {
+        const links = await generate(makeGeometry(), `route${SUFFIX_POLYGON}`);
+        const keys = links.map((link) => link.key);
+
+        expect(keys).toContain("kmlLines");
+        expect(keys).toContain("jsonLines");
+        expect(keys).toContain("csv");
+        expect(keys).not.toContain("kmlPolygon");
+        expect(keys).not.toContain("jsonPolygon");
+      });
+
+      it("still names those downloads after the path", async function () {
+        const links = await generate(makeGeometry(), `route${SUFFIX_POLYGON}`);
+        expect(byKey(links, "jsonLines")?.download).toEqual(
+          `route${SUFFIX_POLYGON}${SUFFIX_LINES}.geojson`
+        );
+      });
+
+      it("keeps the point exports of loose points named after lines", async function () {
+        const links = await generate(
+          makeGeometry({ onlyPoints: true }),
+          `grid${SUFFIX_LINES}`
+        );
+        const keys = links.map((link) => link.key);
+
+        expect(keys).toContain("csv");
+        expect(keys).toContain("kmlPoints");
+        expect(keys).toContain("gpxWaypoints");
+        expect(keys).toContain("jsonPoints");
+        expect(keys).not.toContain("kmlLines");
+        expect(keys).not.toContain("jsonLines");
+        expect(keys).not.toContain("gpxTracks");
+      });
+
+      it("keeps every export of a closed path named after a polygon", async function () {
+        const links = await generate(
+          makeGeometry({ isClosed: true }),
+          `area${SUFFIX_POLYGON}`
+        );
+        const keys = links.map((link) => link.key);
+
+        expect(keys).toContain("kmlPolygon");
+        expect(keys).toContain("jsonPolygon");
+        expect(keys).toContain("jsonLines");
+        expect(keys).toContain("csv");
+      });
+    });
+
     describe("multi-path exports", function () {
       const geomList = [
         makeGeometry(),

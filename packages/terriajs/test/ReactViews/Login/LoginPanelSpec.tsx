@@ -12,6 +12,9 @@ const LOGIN_URL = "https://example.com/auth/login";
 
 const EXPECTED_HEADER = `Basic ${btoa("user:password")}`;
 
+const GROUPS_XML =
+  "<groups><group>regione</group><group>partner</group></groups>";
+
 function waitUntil(condition: () => boolean, message: string) {
   return waitFor(() => {
     if (!condition()) throw new Error(message);
@@ -222,6 +225,74 @@ describe("LoginPanel", function () {
     });
   });
 
+  describe("the user's group", function () {
+    it("remembers the first group the service reports", async function () {
+      worker.use(http.get(LOGIN_URL, () => HttpResponse.text(GROUPS_XML)));
+
+      const user = render();
+      await signIn(user);
+
+      await waitUntil(
+        () => terria.userAuthToken !== undefined,
+        "the token was never stored"
+      );
+      expect(terria.userProfile).toEqual("regione");
+      expect(terria.isAuthenticated).toBe(true);
+    });
+
+    it("leaves the group unset when the service reports none", async function () {
+      worker.use(
+        http.get(LOGIN_URL, () => HttpResponse.text("<groups></groups>"))
+      );
+
+      const user = render();
+      await signIn(user);
+
+      await waitUntil(
+        () => terria.userAuthToken !== undefined,
+        "the token was never stored"
+      );
+      expect(terria.userProfile).toBeUndefined();
+    });
+
+    it("leaves the group unset when the answer is not XML", async function () {
+      worker.use(
+        http.get(LOGIN_URL, () => HttpResponse.text("not xml at all"))
+      );
+
+      const user = render();
+      await signIn(user);
+
+      await waitUntil(
+        () => terria.userAuthToken !== undefined,
+        "the token was never stored"
+      );
+      expect(terria.userProfile).toBeUndefined();
+    });
+
+    it("asks the service about the user it is signing in", async function () {
+      terria.configParameters.userProfileLoginServiceUrl =
+        "https://example.com/auth/<username>/groups";
+      let requestedUrl: string | undefined;
+      (terria.corsProxy.getURL as jasmine.Spy).and.callFake((url: string) => {
+        requestedUrl = url;
+        return LOGIN_URL;
+      });
+      worker.use(http.get(LOGIN_URL, () => HttpResponse.text(GROUPS_XML)));
+
+      const user = render();
+      await signIn(user);
+
+      // Wait for the whole exchange, so no request is still in flight after
+      // this spec finishes.
+      await waitUntil(
+        () => terria.userProfile !== undefined,
+        "the login service was never called"
+      );
+      expect(requestedUrl).toEqual("https://example.com/auth/user/groups");
+    });
+  });
+
   describe("signing out", function () {
     it("drops the token without calling the service", async function () {
       runInAction(() => {
@@ -241,6 +312,20 @@ describe("LoginPanel", function () {
 
       expect(terria.userAuthToken).toBeUndefined();
       expect(called).toBe(false);
+    });
+
+    it("forgets the user's group as well", async function () {
+      runInAction(() => {
+        terria.userAuthToken = EXPECTED_HEADER;
+        terria.userProfile = "regione";
+      });
+
+      const user = render();
+      await user.click(okButton());
+      await new Promise((resolve) => setTimeout(resolve, 50));
+
+      expect(terria.userProfile).toBeUndefined();
+      expect(terria.isAuthenticated).toBe(false);
     });
   });
 

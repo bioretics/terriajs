@@ -465,7 +465,7 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
         this.featureProperties && !isEmpty(this.featureProperties)
           ? this.featureProperties
           : undefined,
-      fileName: getName(this.props.catalogItem)
+      fileName: getName(this.observableCatalogItem)
     };
   }
 

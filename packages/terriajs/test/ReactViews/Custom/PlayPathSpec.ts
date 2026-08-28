@@ -32,6 +32,22 @@ function measuredPath(): MeasurableGeometry {
   };
 }
 
+function longMeasuredPath(): MeasurableGeometry {
+  const stopPoints = [
+    carto(11.34, 44.49, 30),
+    carto(11.35, 44.5, 80),
+    carto(11.36, 44.51, 120),
+    carto(11.37, 44.52, 160)
+  ];
+  return {
+    isClosed: false,
+    hasArea: false,
+    stopPoints,
+    stopGeodeticDistances: [0, 1300, 2600, 3900],
+    sampledPoints: stopPoints
+  };
+}
+
 describe("usePlayPath", function () {
   let terria: Terria;
   let viewState: ViewState;
@@ -49,6 +65,19 @@ describe("usePlayPath", function () {
 
   function render() {
     return renderHook(() => usePlayPath(terria, viewState));
+  }
+
+  /** Pretends a Cesium viewer is attached, without building a real globe. */
+  function useCesium() {
+    spyOnProperty(terria, "cesium", "get").and.returnValue({
+      scene: {}
+    } as any);
+  }
+
+  function flushTimers() {
+    return act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   }
 
   describe("before a path is measured", function () {
@@ -87,24 +116,21 @@ describe("usePlayPath", function () {
       expect(result.current.pointsSize).toEqual(2);
     });
 
-    it("flies through the sampled points in the Cesium viewer", function () {
+    it("resamples the stop points for the flight in the Cesium viewer", function () {
       addPath();
-      spyOnProperty(terria, "cesium", "get").and.returnValue({
-        scene: {}
-      } as any);
+      useCesium();
 
+      // The two stops are ~1366 m apart, flown in 500 m steps.
       const { result } = render();
       expect(result.current.pointsSize).toEqual(4);
     });
 
-    it("has nothing to fly through in Cesium until the path is sampled", function () {
+    it("resamples an unsampled path in Cesium too", function () {
       addPath({ ...measuredPath(), sampledPoints: undefined });
-      spyOnProperty(terria, "cesium", "get").and.returnValue({
-        scene: {}
-      } as any);
+      useCesium();
 
       const { result } = render();
-      expect(result.current.pointsSize).toBeUndefined();
+      expect(result.current.pointsSize).toEqual(4);
     });
 
     it("still uses the stop points for an unsampled path outside Cesium", function () {
@@ -170,6 +196,146 @@ describe("usePlayPath", function () {
       expect(result.current.currentPointIndex).toEqual(0);
       expect(result.current.countdown).toBeNull();
       expect(result.current.isCameraMoving).toBe(false);
+    });
+  });
+
+  describe("flight sampling step", function () {
+    it("starts from the sampling step configured on terria", function () {
+      const { result } = render();
+      expect(result.current.playPathSamplingStep).toEqual(
+        terria.playPathSamplingStep
+      );
+    });
+
+    it("resamples more finely when the step is reduced", function () {
+      addPath();
+      useCesium();
+      runInAction(() => {
+        terria.playPathSamplingStep = 200;
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(8);
+    });
+
+    it("keeps the bare stop points when the step is longer than the path", function () {
+      addPath();
+      useCesium();
+      runInAction(() => {
+        terria.playPathSamplingStep = 2000;
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(2);
+    });
+
+    it("keeps the bare stop points when the step is not a positive length", function () {
+      addPath();
+      useCesium();
+      runInAction(() => {
+        terria.playPathSamplingStep = 0;
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(2);
+    });
+
+    it("does not resample outside the Cesium viewer", function () {
+      addPath();
+      runInAction(() => {
+        terria.playPathSamplingStep = 200;
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(2);
+    });
+
+    it("records a new step on terria and rewinds the playback", function () {
+      addPath();
+      const { result } = render();
+      act(() => result.current.onPlay());
+      expect(result.current.countdown).toEqual(3);
+
+      act(() => result.current.changePlayPathSamplingStep(200));
+
+      expect(terria.playPathSamplingStep).toEqual(200);
+      expect(result.current.playPathSamplingStep).toEqual(200);
+      expect(result.current.countdown).toBeNull();
+      expect(result.current.currentPointIndex).toEqual(0);
+    });
+  });
+
+  describe("the path the panel was opened for", function () {
+    function pinSnapshotFor(sourceItemId: string) {
+      runInAction(() => {
+        viewState.measurableGeomBySourceItemId.set(
+          sourceItemId,
+          viewState.createMeasurableGeomSnapshot()
+        );
+      });
+    }
+
+    it("keeps playing the geometry pinned to its workbench item", function () {
+      addPath();
+      pinSnapshotFor("layer-a");
+
+      runInAction(() => {
+        terria.measurableGeomList.splice(
+          0,
+          terria.measurableGeomList.length,
+          longMeasuredPath()
+        );
+        viewState.playPathPanelSourceItemId = "layer-a";
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(2);
+    });
+
+    it("falls back to the geometry being measured when nothing is pinned", function () {
+      addPath(longMeasuredPath());
+      runInAction(() => {
+        viewState.playPathPanelSourceItemId = "layer-b";
+      });
+
+      const { result } = render();
+      expect(result.current.pointsSize).toEqual(4);
+    });
+  });
+
+  describe("switching between measured geometries", function () {
+    it("rewinds and drops the countdown when another geometry is selected", async function () {
+      addPath();
+      addPath(longMeasuredPath());
+      const { result, rerender } = render();
+
+      act(() => result.current.onPlay());
+      expect(result.current.countdown).toEqual(3);
+
+      act(() => {
+        runInAction(() => {
+          terria.measurableGeometryIndex = 1;
+        });
+        rerender();
+      });
+      await flushTimers();
+
+      expect(result.current.countdown).toBeNull();
+      expect(result.current.currentPointIndex).toEqual(0);
+      expect(result.current.pointsSize).toEqual(4);
+      expect(viewState.isPlayingPath).toBe(false);
+    });
+
+    it("leaves the playback alone while the same geometry stays selected", async function () {
+      addPath();
+      addPath(longMeasuredPath());
+      const { result, rerender } = render();
+
+      act(() => result.current.onPlay());
+      act(() => rerender());
+      await flushTimers();
+
+      expect(result.current.countdown).not.toBeNull();
     });
   });
 

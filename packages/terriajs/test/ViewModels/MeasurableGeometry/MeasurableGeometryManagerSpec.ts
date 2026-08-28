@@ -404,6 +404,58 @@ describe("MeasurableGeometryManager", function () {
       expect(geom.hasArea).toBe(true);
     });
 
+    it("keeps the workbench item the geometry was measured on", async function () {
+      manager.sampleFromCartographics(
+        [carto(11.34, 44.49), carto(11.35, 44.5)],
+        false,
+        false,
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { sourceItemId: "layer-a" }
+      );
+      await flushSampling();
+      expect(terria.measurableGeomList[0].sourceItemId).toEqual("layer-a");
+
+      manager.resample(0);
+      await flushSampling();
+
+      expect(terria.measurableGeomList[0].sourceItemId).toEqual("layer-a");
+    });
+
+    it("keeps that item alongside the circle measurements", async function () {
+      manager.sampleFromCartographics(
+        [carto(11.34, 44.49), carto(11.35, 44.5)],
+        false,
+        false,
+        [],
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        { sourceItemId: "layer-a" }
+      );
+      await flushSampling();
+      manager.updateCircleGeometry(
+        cartesian(11.34, 44.49),
+        cartesian(11.35, 44.49),
+        0
+      );
+
+      manager.resample(0);
+      await flushSampling();
+
+      const geom = terria.measurableGeomList[0];
+      expect(geom.sourceItemId).toEqual("layer-a");
+      expect(geom.isCircle).toBe(true);
+    });
+
     it("does nothing for a slot that holds no geometry", function () {
       expect(() => manager.resample(5)).not.toThrow();
       expect(terria.measurableGeomList.length).toEqual(0);

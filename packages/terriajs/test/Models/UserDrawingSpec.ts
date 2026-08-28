@@ -9,6 +9,7 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import supportsWebGL from "../../lib/Core/supportsWebGL";
 import PickedFeatures from "../../lib/Map/PickedFeatures/PickedFeatures";
 import TerriaFeature from "../../lib/Models/Feature/Feature";
+import MapInteractionMode from "../../lib/Models/MapInteractionMode";
 import Terria from "../../lib/Models/Terria";
 import UserDrawing from "../../lib/Models/UserDrawing";
 
@@ -52,6 +53,9 @@ describe("UserDrawing", function () {
     terria = new Terria();
   });
 
+  // This build drops the generic "click to add a point" hints: the measure
+  // tools put their own running measurement in the dialog through
+  // onMakeDialogMessage, and the two messages fought over the same line.
   it("will use default options if options are not specified", function () {
     const options = { terria: terria };
     const userDrawing = new UserDrawing(options);
@@ -59,9 +63,7 @@ describe("UserDrawing", function () {
     expect(userDrawing.getDialogMessage()).toEqual(
       `<div><strong>${i18next.t(
         ($) => $.models.userDrawing.messageHeader
-      )}</strong></br><i>${i18next.t(
-        ($) => $.models.userDrawing.clickToAddFirstPoint
-      )}</i></div>`
+      )}</strong></br></div>`
     );
   });
 
@@ -77,9 +79,38 @@ describe("UserDrawing", function () {
     expect(userDrawing.getDialogMessage()).toEqual(
       `<div><strong>${i18next.t(
         ($) => $.models.userDrawing.messageHeader
-      )}</strong></br>HELLO</br><i>${i18next.t(
-        ($) => $.models.userDrawing.clickToAddFirstPoint
-      )}</i></div>`
+      )}</strong></br>HELLO</br></div>`
+    );
+  });
+
+  it("prompts the user to redraw once a rectangle has two corners", function () {
+    const userDrawing = new UserDrawing({
+      terria,
+      allowPolygon: false,
+      drawRectangle: true
+    });
+    userDrawing.enterDrawMode();
+    const pickedFeatures = new PickedFeatures();
+
+    [
+      [149.121, -35.309],
+      [149.124, -35.311]
+    ].forEach(([longitude, latitude]) => {
+      pickedFeatures.pickPosition = Ellipsoid.WGS84.cartographicToCartesian(
+        new Cartographic(
+          CesiumMath.toRadians(longitude),
+          CesiumMath.toRadians(latitude),
+          0
+        )
+      );
+      runInAction(() => {
+        userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
+          pickedFeatures;
+      });
+    });
+
+    expect(userDrawing.getDialogMessage()).toContain(
+      i18next.t(($) => $.models.userDrawing.clickToRedrawRectangle)
     );
   });
 
@@ -105,6 +136,89 @@ describe("UserDrawing", function () {
     expect(userDrawing.terria.allowFeatureInfoRequests).toEqual(false);
     userDrawing.cleanUp();
     expect(userDrawing.terria.allowFeatureInfoRequests).toEqual(true);
+  });
+
+  describe("map interaction mode lifecycle", function () {
+    // Auckland, in case you're wondering
+    const aucklandPosition = new Cartesian3(
+      -5088454.576893678,
+      465233.10329933715,
+      -3804299.6786334896
+    );
+
+    function pickPoint(mode: MapInteractionMode) {
+      const pickedFeatures = new PickedFeatures();
+      pickedFeatures.pickPosition = aucklandPosition;
+      runInAction(() => {
+        mode.pickedFeatures = pickedFeatures;
+      });
+    }
+
+    it("removes only its own picking mode when the drawing ends", function () {
+      const userDrawing = new UserDrawing({ terria });
+      userDrawing.enterDrawMode();
+      const otherMode = new MapInteractionMode({ message: "another tool" });
+      runInAction(() => {
+        terria.mapInteractionModeStack.push(otherMode);
+      });
+
+      userDrawing.endDrawing();
+
+      expect(terria.mapInteractionModeStack.slice()).toEqual([otherMode]);
+    });
+
+    it("removes its picking mode when cleaning up", function () {
+      const userDrawing = new UserDrawing({ terria });
+      userDrawing.enterDrawMode();
+      expect(terria.mapInteractionModeStack.length).toEqual(1);
+
+      userDrawing.cleanUp();
+
+      expect(terria.mapInteractionModeStack.length).toEqual(0);
+    });
+
+    it("keeps another tool's mode while it swaps its own between points", function () {
+      const userDrawing = new UserDrawing({ terria });
+      userDrawing.enterDrawMode();
+      const drawMode = terria.mapInteractionModeStack[0];
+      const otherMode = new MapInteractionMode({ message: "another tool" });
+      runInAction(() => {
+        terria.mapInteractionModeStack.push(otherMode);
+      });
+
+      pickPoint(drawMode);
+
+      expect(terria.mapInteractionModeStack.length).toEqual(2);
+      expect(terria.mapInteractionModeStack).toContain(otherMode);
+      expect(terria.mapInteractionModeStack).not.toContain(drawMode);
+    });
+
+    it("leaves nothing behind across repeated drawings", function () {
+      const first = new UserDrawing({ terria });
+      first.enterDrawMode();
+      first.endDrawing();
+
+      const second = new UserDrawing({ terria });
+      second.enterDrawMode();
+      second.endDrawing();
+
+      expect(terria.mapInteractionModeStack.length).toEqual(0);
+      expect(terria.allowFeatureInfoRequests).toBe(true);
+    });
+
+    it("does not remove a mode a second time when it is ended twice", function () {
+      const userDrawing = new UserDrawing({ terria });
+      userDrawing.enterDrawMode();
+      userDrawing.endDrawing();
+
+      const otherMode = new MapInteractionMode({ message: "another tool" });
+      runInAction(() => {
+        terria.mapInteractionModeStack.push(otherMode);
+      });
+      userDrawing.endDrawing();
+
+      expect(terria.mapInteractionModeStack.slice()).toEqual([otherMode]);
+    });
   });
 
   it("ensures onPointClicked callback is called when point is picked by user", function () {
@@ -419,85 +533,91 @@ describe("UserDrawing", function () {
     expect(userDrawing.pointEntities.entities.values.length).toEqual(2);
   });
 
+  // The polygon entity UserDrawing adds when the shape is closed.
+  const USER_POLYGON = "User polygon";
+
+  /** Drives the drawing the way a click on the map would. */
+  function drawingHarness(userDrawing: UserDrawing, terria: Terria) {
+    const pickedFeatures = new PickedFeatures();
+
+    const send = () =>
+      runInAction(() => {
+        userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
+          pickedFeatures;
+      });
+
+    return {
+      clickAt(longitude: number, latitude: number) {
+        pickedFeatures.features = [];
+        pickedFeatures.pickPosition = Ellipsoid.WGS84.cartographicToCartesian(
+          new Cartographic(
+            CesiumMath.toRadians(longitude),
+            CesiumMath.toRadians(latitude),
+            0
+          )
+        );
+        send();
+      },
+      /** In the UI, clicking a drawn point hands that entity back to us. */
+      clickOnFirstPoint() {
+        const firstPoint = userDrawing.pointEntities.entities.values[0];
+        pickedFeatures.features = [firstPoint as TerriaFeature];
+        pickedFeatures.pickPosition = firstPoint.position?.getValue(
+          terria.timelineClock.currentTime
+        );
+        send();
+      },
+      polygons() {
+        return userDrawing.otherEntities.entities.values.filter(
+          (entity) => entity.name === USER_POLYGON
+        );
+      }
+    };
+  }
+
   it("polygon is only drawn once", function () {
     const userDrawing = new UserDrawing({ terria });
     userDrawing.enterDrawMode();
-    const pickedFeatures = new PickedFeatures();
+    const draw = drawingHarness(userDrawing, terria);
 
-    // First point
-    // Points around Parliament house
-    const pt1Position = new Cartographic(
-      CesiumMath.toRadians(149.121),
-      CesiumMath.toRadians(-35.309),
-      CesiumMath.toRadians(0)
-    );
-    const pt1CartesianPosition =
-      Ellipsoid.WGS84.cartographicToCartesian(pt1Position);
-    pickedFeatures.pickPosition = pt1CartesianPosition;
-    runInAction(() => {
-      userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
-        pickedFeatures;
-    });
+    // Three points around Parliament house
+    draw.clickAt(149.121, -35.309);
+    draw.clickAt(149.124, -35.311);
+    draw.clickAt(149.127, -35.308);
 
-    // Second point
-    const pt2Position = new Cartographic(
-      CesiumMath.toRadians(149.124),
-      CesiumMath.toRadians(-35.311),
-      CesiumMath.toRadians(0)
-    );
-    const pt2CartesianPosition =
-      Ellipsoid.WGS84.cartographicToCartesian(pt2Position);
-    pickedFeatures.pickPosition = pt2CartesianPosition;
-    runInAction(() => {
-      userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
-        pickedFeatures;
-    });
-
-    // Third point
-    const pt3Position = new Cartographic(
-      CesiumMath.toRadians(149.127),
-      CesiumMath.toRadians(-35.308),
-      CesiumMath.toRadians(0)
-    );
-    const pt3CartesianPosition =
-      Ellipsoid.WGS84.cartographicToCartesian(pt3Position);
-    pickedFeatures.pickPosition = pt3CartesianPosition;
-    runInAction(() => {
-      userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
-        pickedFeatures;
-    });
     expect((userDrawing as any).closeLoop).toBeFalsy();
-    expect(userDrawing.otherEntities.entities.values.length).toEqual(1);
+    expect(draw.polygons().length).toEqual(0);
 
-    // Now pick the first point
-    pickedFeatures.pickPosition = pt1CartesianPosition;
-    // If in the UI the user clicks on a point, it returns that entity, so we're pulling it out of userDrawing and
-    // pretending the user actually clicked on it.
-    const pt1Entity = userDrawing.pointEntities.entities.values[0];
-    pickedFeatures.features = [pt1Entity as TerriaFeature];
-    runInAction(() => {
-      userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
-        pickedFeatures;
-    });
-    expect((userDrawing as any).closeLoop).toBeTruthy();
-    expect(userDrawing.otherEntities.entities.values.length).toEqual(2);
-
-    // Another point. Polygon is still closed.
-    const newPtPosition = new Cartographic(
-      CesiumMath.toRadians(149.0),
-      CesiumMath.toRadians(-35.0),
-      CesiumMath.toRadians(0)
-    );
-    const newPtCartesianPosition =
-      Ellipsoid.WGS84.cartographicToCartesian(newPtPosition);
-    pickedFeatures.pickPosition = newPtCartesianPosition;
-    runInAction(() => {
-      userDrawing.terria.mapInteractionModeStack[0].pickedFeatures =
-        pickedFeatures;
-    });
+    // Clicking the first point closes the shape.
+    draw.clickOnFirstPoint();
 
     expect((userDrawing as any).closeLoop).toBeTruthy();
-    expect(userDrawing.otherEntities.entities.values.length).toEqual(2);
+    expect(draw.polygons().length).toEqual(1);
+
+    // Another point somewhere else. The shape stays closed and the polygon is
+    // not drawn a second time.
+    draw.clickAt(149.0, -35.0);
+
+    expect((userDrawing as any).closeLoop).toBeTruthy();
+    expect(draw.polygons().length).toEqual(1);
+  });
+
+  it("re-opens the shape when the first point is clicked again", function () {
+    // Closing is a toggle in this build, so a mis-click can be undone.
+    const userDrawing = new UserDrawing({ terria });
+    userDrawing.enterDrawMode();
+    const draw = drawingHarness(userDrawing, terria);
+
+    draw.clickAt(149.121, -35.309);
+    draw.clickAt(149.124, -35.311);
+    draw.clickAt(149.127, -35.308);
+    draw.clickOnFirstPoint();
+    expect((userDrawing as any).closeLoop).toBeTruthy();
+
+    draw.clickOnFirstPoint();
+
+    expect((userDrawing as any).closeLoop).toBeFalsy();
+    expect(draw.polygons().length).toEqual(0);
   });
 
   it("point is removed if it is clicked on and it is not the first point", function () {

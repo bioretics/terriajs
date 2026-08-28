@@ -310,7 +310,8 @@ export default class ViewState {
   @computed
   get activeTourPoints() {
     if (this.isMeasurableTour) return defaultMeasurableTourPoints;
-    return this.isPlayPathTour ? defaultPlayPathTourPoints : defaultTourPoints;
+    if (this.isPlayPathTour) return defaultPlayPathTourPoints;
+    return this.tourPoints;
   }
 
   @action
