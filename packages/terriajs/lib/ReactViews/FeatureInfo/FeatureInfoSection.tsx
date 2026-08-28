@@ -460,35 +460,12 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
   }
 
   @computed get downloadableData() {
-    let fileName = getName(this.observableCatalogItem);
-
-    // Add the Lat, Lon to the baseFilename if it is possible and not already present.
-    if (this.observablePosition) {
-      const position = Ellipsoid.WGS84.cartesianToCartographic(
-        this.observablePosition
-      );
-      const latitude = CesiumMath.toDegrees(position.latitude);
-      const longitude = CesiumMath.toDegrees(position.longitude);
-      const precision = 5;
-      // Check that baseFilename doesn't already contain the lat, lon with the similar or better precision.
-      if (
-        !contains(fileName, latitude, precision) ||
-        !contains(fileName, longitude, precision)
-      ) {
-        fileName +=
-          " - Lat " +
-          latitude.toFixed(precision) +
-          " Lon " +
-          longitude.toFixed(precision);
-      }
-    }
-
     return {
       data:
         this.featureProperties && !isEmpty(this.featureProperties)
           ? this.featureProperties
           : undefined,
-      fileName
+      fileName: getName(this.props.catalogItem)
     };
   }
 
@@ -655,19 +632,6 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
       </li>
     );
   }
-}
-
-// See if text contains the number (to a precision number of digits (after the dp) either fixed up or down on the last digit).
-function contains(text: string, number: number, precision: number) {
-  // Take Math.ceil or Math.floor and use it to calculate the number with a precision number of digits (after the dp).
-  function fixed(round: (x: number) => number, number: number) {
-    const scale = Math.pow(10, precision);
-    return (round(number * scale) / scale).toFixed(precision);
-  }
-  return (
-    text.indexOf(fixed(Math.floor, number)) !== -1 ||
-    text.indexOf(fixed(Math.ceil, number)) !== -1
-  );
 }
 
 const ButtonsContainer = styled.div`

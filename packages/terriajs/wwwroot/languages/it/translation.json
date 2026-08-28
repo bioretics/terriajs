@@ -722,6 +722,12 @@
       "invalidServiceMessage": "Si è verificato un errore durante l'invocazione di ArcGIS Feature Service.  La risposta del server non sembra essere un livello Feature Service valido.",
       "missingUrlMessage": "Impossibile caricare l'endpoint ArcGis FeatureServer perché l'elemento del catalogo non ha un `url`."
     },
+    "rerPoiCatalogItem": {
+      "exceededCameraTiltLimit": "Attenzione: Il limite dell'angolo di inclinazione della camera ({{cameraTiltLimitDegrees}}°) è stato superato. Per poter visualizzare nuovi POI è necessario reimpostare l'angolo di inclinazione della camera in maniera corretta.",
+      "noVisiblePoints": "Attenzione: non ci sono POI visibili nella vista corrente.",
+      "viewingLabeled": "POI sotto la soglia: passaggio alla vista etichettata.",
+      "viewingUnlabeled": "POI sopra la soglia: passaggio alla vista non etichettata."
+    },
     "arcGisFeatureServerCatalogGroup": {
       "serviceDescription": "Descrizione del Servizio",
       "dataDescription": "Descrizione dei Dati",
@@ -1865,6 +1871,9 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "samplingStepHeader": "Passo di campionamento",
+    "samplingStepButtonText": "Cambia",
+    "samplingStepButtonTitle": "Applica il nuovo passo di campionamento del volo, indipendente da quello del pannello Misure",
     "tooltip": {
       "play": "Avvia percorso",
       "pause": "Pausa percorso",
@@ -1928,7 +1937,7 @@
     "loginTitle": "Login",
     "logoutTitle": "Logout",
     "logoutConfirmTitle": "Conferma logout",
-    "logoutConfirmMessage": "Vuoi effettuare il logout?",
+    "logoutConfirmMessage": "Vuoi effettuare il logout come {{username}}?",
     "logoutConfirmOk": "Logout",
     "logoutConfirmCancel": "Annulla",
     "loginPanelHeader": "Autenticazione utente",
@@ -1943,6 +1952,12 @@
     "loginPanelConnectionProblem": "Impossibile raggiungere il servizio di autenticazione. Verifica la connessione internet e riprova.",
     "loginPanelGenericError": "Si è verificato un errore imprevisto durante il login. Riprova più tardi.",
     "loginPanelMissingFields": "Inserisci sia il nome utente che la password."
+  },
+  "access": {
+    "authenticationRequiredTitle": "Autenticazione richiesta",
+    "authenticationRequiredMessage": "Effettua il login per accedere a questo livello.",
+    "accessDeniedTitle": "Accesso negato",
+    "accessDeniedMessage": "Non disponi dell'autorizzazione per accedere a questo livello."
   },
   "zoomCotrol": {
     "zoomReset": "Ripristina lo zoom",

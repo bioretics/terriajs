@@ -422,6 +422,30 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
     }
   }, [item, viewState]);
 
+  const deactivateMeasureTools = useCallback(() => {
+    const toolIds = [
+      MeasureLineTool.id,
+      MeasurePolygonTool.id,
+      MeasurePointTool.id,
+      MeasureAngleTool.id,
+      MeasureCircleTool.id
+    ];
+    let hadActiveTool = false;
+    toolIds.forEach((id) => {
+      const controller =
+        viewState.terria.mapNavigationModel.findItem(id)?.controller;
+      if (controller && controller.active) {
+        controller.deactivate();
+        hadActiveTool = true;
+      }
+    });
+    if (hadActiveTool) {
+      [MeasureToolsController.id, ...toolIds].forEach((id) =>
+        viewState.terria.mapNavigationModel.enable(id)
+      );
+    }
+  }, [viewState]);
+
   const exportDataClicked = useCallback(async () => {
     if (!ExportableMixin.isMixedInto(item)) return;
 
@@ -432,6 +456,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         // Open download panel first so the measurable-panel reaction stays closed.
         runInAction(() => {
           viewState.measurableDownloadPanelDefaultName = getName(item) || "";
+          viewState.measurableDownloadPanelSourceItemId = item.uniqueId;
           viewState.measurableDownloadPanelIsVisible = true;
         });
         if (item.canUseAsPath) {
@@ -603,6 +628,8 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                 }
                 onClick={() =>
                   runInAction(() => {
+                    deactivateMeasureTools();
+                    viewState.measurablePanelSourceItemId = item.uniqueId;
                     if (
                       viewState.playPathPanelIsVisible ||
                       viewState.measurableDownloadPanelIsVisible
@@ -635,7 +662,8 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
-                      item.computePath();
+                      deactivateMeasureTools();
+                      viewState.playPathPanelSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
                     });
                   }

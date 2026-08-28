@@ -231,6 +231,8 @@
     "downloadMap": "Download map (png)",
     "printViewButton": "Show Print View",
     "btnAdvanced": "Advanced options",
+    "includeScaleBar": "Include scale bar on exported map",
+    "includeCompass": "Include north compass on exported map",
     "embedTitle": "Embed map",
     "embedDescription": "Copy this code to embed the map in an HTML page.",
     "shortenUsingService": "Shorten the share link",
@@ -987,6 +989,12 @@
       "invalidServiceTitle": "Invalid ArcGIS Feature Service layer",
       "invalidServiceMessage": "An error occurred while invoking the ArcGIS Feature Service.  The server's response does not appear to be a valid Feature Service layer.",
       "reachedMaxFeatureLimit": "Warning: This layer has reached the FeatureService feature limit ({{maxFeatures}})."
+    },
+    "rerPoiCatalogItem": {
+      "exceededCameraTiltLimit": "Warning: The camera tilt angle limit ({{cameraTiltLimitDegrees}}°) has been exceeded. To view new POIs, you must reset the camera tilt angle correctly.",
+      "noVisiblePoints": "Warning: No POIs are visible in the current view.",
+      "viewingLabeled": "POI under threshold switching to labeled view.",
+      "viewingUnlabeled": "POI above threshold switching to unlabeled view."
     },
     "arcGisMapServerCatalogGroup": {
       "name": "ArcGIS Map Server Group",
@@ -2415,6 +2423,9 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Speed",
+    "samplingStepHeader": "Sampling step",
+    "samplingStepButtonText": "Change",
+    "samplingStepButtonTitle": "Apply the new flight sampling step, independent from the Measure panel's",
     "tooltip": {
       "play": "Play path",
       "pause": "Pause path",
@@ -2484,7 +2495,7 @@
     "loginTitle": "Login",
     "logoutTitle": "Logout",
     "logoutConfirmTitle": "Confirm logout",
-    "logoutConfirmMessage": "Do you want to log out?",
+    "logoutConfirmMessage": "Do you want to log out as {{username}}?",
     "logoutConfirmOk": "Logout",
     "logoutConfirmCancel": "Cancel",
     "loginPanelHeader": "User authentication",
@@ -2499,6 +2510,12 @@
     "loginPanelConnectionProblem": "Unable to reach the authentication service. Please check your internet connection and try again.",
     "loginPanelGenericError": "An unexpected error occurred during login. Please try again later.",
     "loginPanelMissingFields": "Please enter both username and password."
+  },
+  "access": {
+    "authenticationRequiredTitle": "Authentication required",
+    "authenticationRequiredMessage": "Please log in to access this layer.",
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedMessage": "You do not have permission to access this layer."
   },
   "microzonation": {
     "menuButton": "Seismic microzonation",

@@ -96,6 +96,7 @@ export default class UserDrawing extends MappableMixin(
   private drawRectangle: boolean;
 
   private mousePointEntity?: Entity;
+  private pickPointMode?: MapInteractionMode;
   private disposeShowDistanceLabelsReaction?: IReactionDisposer;
   private disposeClampMeasureLineToGround?: IReactionDisposer;
   private disposeViewerModeReaction?: IReactionDisposer;
@@ -1065,12 +1066,25 @@ export default class UserDrawing extends MappableMixin(
 
   endDrawing() {
     this.dragHelper?.destroy();
+    runInAction(() => {
+      this.removeMapInteractionMode();
+      this.cleanUp();
+    });
+  }
+
+  private removeMapInteractionMode() {
     if (this.disposePickedFeatureSubscription) {
       this.disposePickedFeatureSubscription();
+      this.disposePickedFeatureSubscription = undefined;
     }
+    const mode = this.pickPointMode;
+    if (!mode) return;
+    this.pickPointMode = undefined;
     runInAction(() => {
-      this.terria.mapInteractionModeStack.pop();
-      this.cleanUp();
+      const index = this.terria.mapInteractionModeStack.indexOf(mode);
+      if (index !== -1) {
+        this.terria.mapInteractionModeStack.splice(index, 1);
+      }
     });
   }
 
@@ -1129,6 +1143,7 @@ export default class UserDrawing extends MappableMixin(
       invisible: true /* this.invisible */
     });
     runInAction(() => {
+      this.pickPointMode = pickPointMode;
       this.terria.mapInteractionModeStack.push(pickPointMode);
     });
     return pickPointMode;
@@ -1154,9 +1169,7 @@ export default class UserDrawing extends MappableMixin(
         ].isPointAdding = !circleIsLocked;
       });
     }
-    runInAction(() => {
-      this.terria.mapInteractionModeStack.pop();
-    });
+    this.removeMapInteractionMode();
 
     const pickPointMode = this.addMapInteractionMode();
     this.disposePickedFeatureSubscription = reaction(
@@ -1354,6 +1367,7 @@ export default class UserDrawing extends MappableMixin(
    * User has finished or cancelled; restore initial state.
    */
   cleanUp(refresh?: boolean) {
+    this.removeMapInteractionMode();
     this.terria.overlays.remove(this);
     this.pointEntities.entities.removeAll();
     this.otherEntities.entities.removeAll();

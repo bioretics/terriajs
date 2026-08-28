@@ -4,14 +4,14 @@ import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import Box from "../../../../Styled/Box";
 import Spacing from "../../../../Styled/Spacing";
-import Text, { TextSpan } from "../../../../Styled/Text";
+import Text from "../../../../Styled/Text";
 import { useCallbackRef } from "../../../useCallbackRef";
+import { AdvancedOptions } from "./AdvancedOptions/AdvancedOptions";
 import { canShorten } from "./BuildShareLink";
 import { PrintSection } from "./Print/PrintSection";
 import { shouldShorten as shouldShortenDefault } from "./SharePanel";
 import { IShareUrlRef, ShareUrl, ShareUrlBookmark } from "./ShareUrl";
-import Checkbox from "../../../../Styled/Checkbox";
-import { EmbedSection } from "./Embed/EmbedSection";
+import { StyledHr } from "./StyledHr";
 
 interface ISharePanelContentProps {
   terria: Terria;
@@ -46,14 +46,9 @@ export const SharePanelContent: FC<ISharePanelContentProps> = ({
     });
   }, [terria]);
 
-  // eslint-disable-next-line react-hooks/refs
-  const shareUrl = shareUrlRef?.current;
-
   return (
-    <Box paddedRatio={3} column>
-      <Text semiBold medium>
-        {t(($) => $.clipboard.shareURL)}
-      </Text>
+    <Box paddedRatio={2} column>
+      <Text medium>{t(($) => $.clipboard.shareURL)}</Text>
       <Spacing bottom={1} />
       <ShareUrl
         terria={terria}
@@ -65,38 +60,18 @@ export const SharePanelContent: FC<ISharePanelContentProps> = ({
       >
         <ShareUrlBookmark viewState={viewState} />
       </ShareUrl>
-      <Spacing bottom={1} />
-      {terria.stories && terria.stories.length > 0 && (
-        <>
-          <Checkbox
-            textProps={{ medium: true }}
-            id="includeStory"
-            title="Include Story in Share"
-            isChecked={includeStoryInShare}
-            onChange={includeStoryInShareOnChange}
-          >
-            <TextSpan>{t(($) => $.includeStory.message)}</TextSpan>
-          </Checkbox>
-          <Spacing bottom={2} />
-        </>
-      )}
-      <Checkbox
-        textProps={{ medium: true }}
-        id="shortenUrl"
-        isChecked={shouldShorten}
-        onChange={shouldShortenOnChange}
-        isDisabled={!canShortenUrl}
-      >
-        <TextSpan>{t(($) => $.share.shortenUsingService)}</TextSpan>
-      </Checkbox>
-      <Spacing bottom={4} />
+      <Spacing bottom={2} />
       <PrintSection viewState={viewState} />
-      {terria.configParameters.disableShareEmbed ? null : (
-        <>
-          <Spacing bottom={4} />
-          <EmbedSection shareUrl={shareUrl} />
-        </>
-      )}
+      <StyledHr />
+      <AdvancedOptions
+        viewState={viewState}
+        canShortenUrl={canShortenUrl}
+        shouldShorten={shouldShorten}
+        shouldShortenOnChange={shouldShortenOnChange}
+        includeStoryInShare={includeStoryInShare}
+        includeStoryInShareOnChange={includeStoryInShareOnChange}
+        shareUrl={shareUrlRef}
+      />
     </Box>
   );
 };

@@ -1,8 +1,7 @@
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   screenshot: Promise<string>;
-  children: ReactNode;
 }
 
 const PrintViewMap = (props: Props) => {
@@ -20,7 +19,6 @@ const PrintViewMap = (props: Props) => {
   ) : map ? (
     <div className="mapContainer">
       <img className="map-image" src={map} alt="Map snapshot" />
-      {props.children}
     </div>
   ) : (
     <div>Loading</div>

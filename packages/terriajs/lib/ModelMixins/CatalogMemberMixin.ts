@@ -16,6 +16,7 @@ import Result from "../Core/Result";
 import hasTraits from "../Models/Definition/hasTraits";
 import Model, { BaseModel } from "../Models/Definition/Model";
 import updateModelFromJson from "../Models/Definition/updateModelFromJson";
+import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import SelectableDimensions, {
   SelectableDimension
 } from "../Models/SelectableDimensions/SelectableDimensions";
@@ -84,6 +85,7 @@ function CatalogMemberMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
      * {@see AsyncLoader}
      */
     async loadMetadata(): Promise<Result<void>> {
+      if (!ensureCatalogMemberAccess(this)) return Result.none();
       return (await this._metadataLoader.load()).clone({
         message: `Failed to load \`${getName(this)}\` metadata`,
         importance: -1
