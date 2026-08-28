@@ -23,6 +23,7 @@ import TerriaError from "../Core/TerriaError";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import flatten from "../Core/flatten";
 import isDefined from "../Core/isDefined";
+import stripFileExtension from "../Core/stripFileExtension";
 import { sanitizeCsvValue } from "../Core/sanitizeCsv";
 import ConstantColorMap from "../Map/ColorMap/ConstantColorMap";
 import RegionProvider from "../Map/Region/RegionProvider";
@@ -228,7 +229,7 @@ function TableMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         // Make sure we have .csv file extension
         let name = this.name || this.uniqueId || "data.csv";
         if (!/(\.csv\b)/i.test(name)) {
-          name = `${name}.csv`;
+          name = `${stripFileExtension(name)}.csv`;
         }
 
         return {

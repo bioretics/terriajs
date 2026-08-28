@@ -22,6 +22,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import TerriaError from "../../Core/TerriaError";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
+import stripFileExtension from "../../Core/stripFileExtension";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import DiscretelyTimeVaryingMixin from "../../ModelMixins/DiscretelyTimeVaryingMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
@@ -465,7 +466,7 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
         this.featureProperties && !isEmpty(this.featureProperties)
           ? this.featureProperties
           : undefined,
-      fileName: getName(this.props.catalogItem)
+      fileName: stripFileExtension(getName(this.props.catalogItem))
     };
   }
 

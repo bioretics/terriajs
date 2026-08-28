@@ -13,6 +13,7 @@ import mergeWith from "lodash-es/mergeWith";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
 import { isJsonObject, JsonObject } from "../../Core/Json";
+import stripFileExtension from "../../Core/stripFileExtension";
 import TerriaError from "../../Core/TerriaError";
 import ConstantColorMap from "../../Map/ColorMap/ConstantColorMap";
 import ContinuousColorMap from "../../Map/ColorMap/ContinuousColorMap";
@@ -3116,11 +3117,11 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
     try {
       const rawFileNameBase =
         this.item.uniqueId ?? this.tableStyle.id ?? "table-style";
-      const fileNameBase = (
-        rawFileNameBase.split(/[\\/]/).pop() ?? rawFileNameBase
-      )
-        .split(/[?#]/)[0]
-        .replace(/\.[^/.]+$/, "");
+      const fileNameBase = stripFileExtension(
+        (rawFileNameBase.split(/[\\/]/).pop() ?? rawFileNameBase).split(
+          /[?#]/
+        )[0]
+      );
       const safeFileNameBase =
         fileNameBase
           .replace(/[^a-zA-Z0-9_.-]+/g, "_")
