@@ -1,12 +1,14 @@
 import primitiveTrait from "../Decorators/primitiveTrait";
 import mixTraits from "../mixTraits";
 import CatalogMemberTraits from "./CatalogMemberTraits";
+import GlobeClippingTraits from "./GlobeClippingTraits";
 import LegendOwnerTraits from "./LegendOwnerTraits";
 import MappableTraits from "./MappableTraits";
 import ShadowTraits from "./ShadowTraits";
 import TransformationTraits from "./TransformationTraits";
 
 export default class GltfTraits extends mixTraits(
+  GlobeClippingTraits,
   MappableTraits,
   TransformationTraits,
   ShadowTraits,

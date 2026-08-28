@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { computed, makeObservable, override } from "mobx";
+import { autorun, computed, makeObservable, override } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import HeadingPitchRoll from "terriajs-cesium/Source/Core/HeadingPitchRoll";
 import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
@@ -9,16 +9,21 @@ import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantPropert
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import ModelGraphics from "terriajs-cesium/Source/DataSources/ModelGraphics";
+import BoundingSphereState from "terriajs-cesium/Source/DataSources/BoundingSphereState";
 import Axis from "terriajs-cesium/Source/Scene/Axis";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
 import AbstractConstructor from "../Core/AbstractConstructor";
+import pollToPromise from "../Core/pollToPromise";
+import runLater from "../Core/runLater";
 import proxyCatalogItemUrl from "../Models/Catalog/proxyCatalogItemUrl";
 import Model from "../Models/Definition/Model";
 import GltfTraits from "../Traits/TraitsClasses/GltfTraits";
 import CatalogMemberMixin from "./CatalogMemberMixin";
+import GlobeClippingMixin from "./GlobeClippingMixin";
 import MappableMixin from "./MappableMixin";
 import ShadowMixin from "./ShadowMixin";
 import Resource from "terriajs-cesium/Source/Core/Resource";
+import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 
 type BaseType = Model<GltfTraits>;
@@ -38,8 +43,8 @@ export interface GltfTransformationJson {
 }
 
 function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
-  abstract class GltfMixin extends ShadowMixin(
-    CatalogMemberMixin(MappableMixin(Base))
+  abstract class GltfMixin extends GlobeClippingMixin(
+    ShadowMixin(CatalogMemberMixin(MappableMixin(Base)))
   ) {
     // Create stable instances of DataSource and Entity instead
     // of generating a new one each time the traits change and mobx recomputes.
@@ -48,10 +53,28 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     // Note that these are private instances and must not be modified outside the Mixin
     private readonly _dataSource = new CustomDataSource("glTF Model");
     private readonly _modelEntity = new Entity({ name: "glTF Model Entity" });
-
+    private _globeClippingMeasurementToken = 0;
+    private _globeClippingMeasurementDisposer: (() => void) | undefined;
+    private _disposed = false;
     constructor(...args: any[]) {
       super(...args);
       makeObservable(this);
+      runLater(() => {
+        if (this._disposed) {
+          return;
+        }
+        this._globeClippingMeasurementDisposer = autorun(() =>
+          this.measureGlobeClippingBoundingSphere()
+        );
+      });
+    }
+
+    dispose() {
+      super.dispose();
+      this._disposed = true;
+      this._globeClippingMeasurementToken++;
+      this._globeClippingMeasurementDisposer?.();
+      this._globeClippingMeasurementDisposer = undefined;
     }
 
     get hasGltfMixin() {
@@ -178,6 +201,63 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return i18next.t(($) => $.models.commonModelErrors["3dTypeIn2dMode"]);
       }
       return super.shortReport;
+    }
+
+    get globeClippingBoundingSphere(): BoundingSphere | undefined {
+      return this.measuredGlobeClippingBoundingSphere;
+    }
+
+    private measureGlobeClippingBoundingSphere() {
+      const token = ++this._globeClippingMeasurementToken;
+      this.setMeasuredGlobeClippingBoundingSphere(undefined);
+      if (
+        !this.globeClippingEnabled ||
+        !this.show ||
+        !this.terria.workbench.contains(this)
+      ) {
+        return;
+      }
+
+      const modelGraphics = this.modelGraphics;
+      const position = this.cesiumPosition;
+      const cesium = this.terria.cesium;
+      if (
+        cesium === undefined ||
+        modelGraphics === undefined ||
+        position.equals(Cartesian3.ZERO)
+      ) {
+        return;
+      }
+
+      const entity = this.modelEntity;
+      const measured = new BoundingSphere();
+      pollToPromise(
+        () => {
+          if (token !== this._globeClippingMeasurementToken) {
+            return true;
+          }
+          let state: BoundingSphereState;
+          try {
+            state = (cesium.dataSourceDisplay as any).getBoundingSphere(
+              entity,
+              false,
+              measured
+            );
+          } catch {
+            return false;
+          }
+          if (state !== BoundingSphereState.DONE) {
+            return false;
+          }
+          if (measured.radius > 0) {
+            this.setMeasuredGlobeClippingBoundingSphere(
+              BoundingSphere.clone(measured)
+            );
+          }
+          return true;
+        },
+        { pollInterval: 200, timeout: 60000 }
+      );
     }
 
     @computed

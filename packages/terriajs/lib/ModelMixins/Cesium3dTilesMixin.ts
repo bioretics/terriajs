@@ -43,7 +43,9 @@ import {
 } from "../Traits/TraitsClasses/Cesium3dTilesTraits";
 import CatalogMemberMixin, { getName } from "./CatalogMemberMixin";
 import Cesium3dTilesStyleMixin from "./Cesium3dTilesStyleMixin";
+import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import ClippingMixin from "./ClippingMixin";
+import GlobeClippingMixin from "./GlobeClippingMixin";
 import MappableMixin from "./MappableMixin";
 import ShadowMixin from "./ShadowMixin";
 
@@ -94,7 +96,9 @@ type BaseType = Model<Cesium3dTilesTraits>;
 
 function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
   abstract class Cesium3dTilesMixin extends Cesium3dTilesStyleMixin(
-    ClippingMixin(ShadowMixin(MappableMixin(CatalogMemberMixin(Base))))
+    GlobeClippingMixin(
+      ClippingMixin(ShadowMixin(MappableMixin(CatalogMemberMixin(Base))))
+    )
   ) {
     protected tileset?: ObservableCesium3DTileset;
 
@@ -115,6 +119,19 @@ function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
     // Just a variable to save the original tileset.root.transform if it exists
     @observable
     private originalRootTransform: Matrix4 = Matrix4.IDENTITY.clone();
+
+    get globeClippingBoundingSphere(): BoundingSphere | undefined {
+      const tileset = this.tileset;
+      if (
+        this.isLoadingMapItems ||
+        !tileset ||
+        tileset.destroyed ||
+        !tileset.root
+      ) {
+        return undefined;
+      }
+      return tileset.boundingSphere;
+    }
 
     clippingPlanesOriginMatrix(): Matrix4 {
       if (this.tileset) {
