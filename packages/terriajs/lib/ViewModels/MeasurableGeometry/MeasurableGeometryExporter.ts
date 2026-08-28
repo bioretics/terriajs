@@ -44,18 +44,17 @@ export default class MeasurableGeometryExporter {
       );
     }
 
+    // Filter by key (not download filename): the base name can itself contain
+    // "_polygon" / "_lines" / "_points" (e.g. re-exported layers).
     return downloads.filter((download) => {
       if (download.href === false) return false;
-
+      const key = download.key ?? "";
       if (geom.onlyPoints) {
-        return (
-          !download.download?.includes(SUFFIX_LINES) &&
-          !download.download?.includes(SUFFIX_POLYGON)
-        );
+        return !/polygon|lines|tracks/i.test(key);
       } else if (geom.isClosed) {
         return true;
       } else {
-        return !download.download?.includes(SUFFIX_POLYGON);
+        return !/polygon/i.test(key);
       }
     });
   }
