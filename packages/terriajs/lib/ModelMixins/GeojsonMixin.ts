@@ -104,6 +104,11 @@ import SearchableCatalogItemMixin, {
 } from "./SearchableCatalogItemMixin";
 import QueryableCatalogItemMixin from "./QueryableCatalogItemMixin";
 import Constructor from "../Core/Constructor";
+import {
+  applyRerPoiEntityStyles,
+  isRerPoiUrl,
+  RER_POI_CATALOG_ITEM_TYPE
+} from "./RerPoiHelpers";
 import ViewerMode from "../Models/ViewerMode";
 
 enum PathTypes {
@@ -192,6 +197,7 @@ class GeoJsonStratum extends LoadableStratum(GeoJsonTraits) {
     // If more than 50% of features have simple style properties - disable table styling
     if (
       this._item.featureCounts.multiPoint > 0 ||
+      this._item.featureCounts.point > 500 ||
       this._item.featureCounts.simpleStyle / this._item.featureCounts.total >=
         0.5
     ) {
@@ -389,7 +395,11 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
 
     @override
     get mapItems() {
-      if (this.isLoadingMapItems) {
+      if (
+        this.isLoadingMapItems &&
+        !this._dataSource &&
+        !this._imageryProvider
+      ) {
         return [];
       }
       if (this._dataSource) {
@@ -437,6 +447,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
     @computed
     get useTableStylingAndProtomaps() {
       return (
+        !isRerPoiUrl(this.url) &&
         !this.forceCesiumPrimitives &&
         !isDefined(this.czmlTemplate) &&
         // Table styling doesn't support the old GeoJson StyleTraits
@@ -486,6 +497,11 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       const czmlTemplate = this.czmlTemplate;
       const filterByProperties = this.filterByProperties;
       const explodeMultiPoints = this.explodeMultiPoints;
+      const clusteringEnabled = this.clustering.enabled;
+      const clusteringPixelRange = this.clustering.pixelRange;
+      const clusteringMinSize = this.clustering.minimumClusterSize;
+      const clusteringPinBackgroundColor = this.clustering.pinBackgroundColor;
+      const clusteringPinSize = this.clustering.pinSize;
 
       let geoJson: FeatureCollectionWithCrs | undefined;
 
@@ -607,30 +623,46 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
         } else {
           const dataSource = await this.loadGeoJsonDataSource(geoJsonWgs84);
 
-          if (this.clustering.enabled) {
-            const pinBackgroundColor = this.clustering.pinBackgroundColor;
-            const pinSize = this.clustering.pinSize;
-
+          if (clusteringEnabled && !dataSource.clustering.enabled) {
             const pinBuilder = new PinBuilder();
+            const pinColor = Color.fromCssColorString(
+              clusteringPinBackgroundColor
+            );
+            const pinCache = new Map<number, string>();
             dataSource.clustering.enabled = true;
-            dataSource.clustering.pixelRange = this.clustering.pixelRange;
-            dataSource.clustering.minimumClusterSize =
-              this.clustering.minimumClusterSize;
+            dataSource.clustering.pixelRange = clusteringPixelRange;
+            dataSource.clustering.minimumClusterSize = clusteringMinSize;
             dataSource.clustering.clusterEvent.addEventListener(
               function (entities, cluster) {
                 cluster.label.show = false;
                 cluster.billboard.verticalOrigin = VerticalOrigin.BOTTOM;
-                cluster.billboard.image = pinBuilder
-                  .fromText(
-                    entities.length.toLocaleString(),
-                    Color.fromCssColorString(pinBackgroundColor),
-                    pinSize
-                  )
-                  .toDataURL();
+                cluster.billboard.disableDepthTestDistance =
+                  Number.POSITIVE_INFINITY;
                 cluster.billboard.show = true;
+                const count = entities.length;
+                let image = pinCache.get(count);
+                if (!image) {
+                  image = pinBuilder
+                    .fromText(
+                      count.toLocaleString(),
+                      pinColor,
+                      clusteringPinSize
+                    )
+                    .toDataURL();
+                  pinCache.set(count, image);
+                }
+                cluster.billboard.image = image;
               }
             );
           }
+
+          (dataSource as any)[LEAFLET_CLUSTERING_CONFIG_KEY] = {
+            enabled: clusteringEnabled,
+            pixelRange: clusteringPixelRange,
+            minimumClusterSize: clusteringMinSize,
+            pinSize: clusteringPinSize,
+            pinBackgroundColor: clusteringPinBackgroundColor
+          } as LeafletClusteringConfig;
 
           runInAction(() => {
             this._dataSource = dataSource;
@@ -1261,6 +1293,12 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       }
 
       this.applyMixedStyle(dataSource);
+
+      if (isRerPoiUrl(this.url) && this.type !== RER_POI_CATALOG_ITEM_TYPE) {
+        applyRerPoiEntityStyles(dataSource, dataSource.entities.values, {
+          isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
+        });
+      }
 
       return dataSource;
     }
@@ -2453,6 +2491,16 @@ export function parseMarkerSize(sizeString?: string): number | undefined {
   }
   return parseInt(sizeString, 10); // SimpleStyle doesn't allow 'marker-size: 20', but people will do it.
 }
+
+export interface LeafletClusteringConfig {
+  enabled: boolean;
+  pixelRange: number;
+  minimumClusterSize: number;
+  pinSize: number;
+  pinBackgroundColor: string;
+}
+
+export const LEAFLET_CLUSTERING_CONFIG_KEY = "__leafletClusteringConfig__";
 
 function stringifyFeatureProperties(featureProps: JsonObject | undefined) {
   return Object.keys(featureProps ?? {}).reduce<{
