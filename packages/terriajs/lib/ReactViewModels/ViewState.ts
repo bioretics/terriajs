@@ -4,6 +4,7 @@ import {
   IReactionDisposer,
   makeObservable,
   observable,
+  ObservableMap,
   reaction,
   runInAction
 } from "mobx";
@@ -35,6 +36,15 @@ import { ViewingControl } from "../Models/ViewingControls";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
 import { FeatureInfoPanelButtonGenerator } from "../ViewModels/FeatureInfoPanel";
+import MeasurableGeometryManager, {
+  MeasurableGeometry
+} from "../ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+
+export interface MeasurableGeomSnapshot {
+  geomList: MeasurableGeometry[];
+  geometryIndex: number;
+  geometryManagers: MeasurableGeometryManager[];
+}
 import {
   defaultTourPoints,
   RelativePosition,
@@ -447,10 +457,37 @@ export default class ViewState {
   @observable measurableDownloadPanelDefaultName: string = "";
 
   /**
+   * Unique id of the workbench item the DownloadPanel was opened for.
+   * @type {String}
+   */
+  @observable measurableDownloadPanelSourceItemId: string | undefined;
+
+  /**
+   * Unique id of the workbench item the MeasurablePanel was opened for.
+   * @type {String}
+   */
+  @observable measurablePanelSourceItemId: string | undefined;
+
+  /**
    * Gets or sets a value indicating whether the PlayPathPanel is visible.
    * @type {Boolean}
    */
   @observable playPathPanelIsVisible: boolean = false;
+
+  /**
+   * Unique id of the workbench item the PlayPathPanel was opened for.
+   * @type {String}
+   */
+  @observable playPathPanelSourceItemId: string | undefined;
+
+  /**
+   * Per-workbench-item snapshots of measurable geometry so panels stay fixed
+   * on the layer they were opened for.
+   */
+  readonly measurableGeomBySourceItemId: ObservableMap<
+    string,
+    MeasurableGeomSnapshot
+  > = observable.map();
 
   /**
    * Gets or sets a value indicating whether the QueryPanel is visible.
@@ -510,6 +547,7 @@ export default class ViewState {
   private _measurablePanelIsVisibleSubscription: IReactionDisposer;
   private _disposeSamplingPathStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
+  private _panelSourceItemRemovedSubscription: IReactionDisposer;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -655,10 +693,18 @@ export default class ViewState {
     this._measurablePanelIsVisibleSubscription = reaction(
       () => this.terria.measurableGeomList[this.terria.measurableGeometryIndex],
       (geom) => {
+        const owner = geom?.sourceItemId;
+        if (owner !== undefined) {
+          this.measurableGeomBySourceItemId.set(
+            owner,
+            this.createMeasurableGeomSnapshot()
+          );
+        }
         const wasVisible = this.measurablePanelIsVisible;
         this.measurablePanelIsVisible = !!geom;
         this.mobileMeasureToolsButtonVisible = !!geom;
         if (!wasVisible) {
+          this.measurablePanelSourceItemId = owner;
           if (this.measurableDownloadPanelIsVisible) {
             this.measurablePanelIsVisible = false;
             return;
@@ -688,8 +734,25 @@ export default class ViewState {
               this.terria.measurableGeometryIndex
             ].pointDescriptions?.push("");
           }
+        } else if (owner === undefined) {
+          this.measurablePanelSourceItemId = undefined;
+        } else if (owner !== this.measurablePanelSourceItemId) {
+          const pinned = this.measurablePanelSourceItemId;
+          const pinnedSnapshot = pinned
+            ? this.measurableGeomBySourceItemId.get(pinned)
+            : undefined;
+          if (pinnedSnapshot) {
+            this.applyMeasurableGeomSnapshot(pinnedSnapshot);
+          } else {
+            this.measurablePanelSourceItemId = owner;
+          }
         }
       }
+    );
+
+    this._panelSourceItemRemovedSubscription = reaction(
+      () => this.terria.workbench.itemIds,
+      () => this.closePanelsOfRemovedSourceItems()
     );
 
     this._viewshedPanelIsVisibleSubscription = reaction(
@@ -742,7 +805,174 @@ export default class ViewState {
     this._measurablePanelIsVisibleSubscription();
     this._disposeSamplingPathStep();
     this._viewshedPanelIsVisibleSubscription();
+    this._panelSourceItemRemovedSubscription();
     this.searchState.dispose();
+  }
+
+  @action
+  createMeasurableGeomSnapshot(): MeasurableGeomSnapshot {
+    return {
+      geomList: this.terria.measurableGeomList.slice(),
+      geometryIndex: this.terria.measurableGeometryIndex,
+      geometryManagers:
+        this.terria.measurableGeometryManager.slice() as MeasurableGeometryManager[]
+    };
+  }
+
+  @action
+  applyMeasurableGeomSnapshot(snapshot: MeasurableGeomSnapshot) {
+    this.terria.measurableGeomList.splice(
+      0,
+      this.terria.measurableGeomList.length,
+      ...snapshot.geomList
+    );
+    this.terria.measurableGeometryManager.splice(
+      0,
+      this.terria.measurableGeometryManager.length,
+      ...snapshot.geometryManagers
+    );
+    this.terria.measurableGeometryIndex = snapshot.geometryIndex;
+  }
+
+  getMeasurableGeomSnapshot(
+    sourceItemId: string | undefined
+  ): MeasurableGeomSnapshot | undefined {
+    if (!sourceItemId) return undefined;
+    return this.measurableGeomBySourceItemId.get(sourceItemId);
+  }
+
+  getMeasurableGeomStateForSource(sourceItemId: string | undefined): {
+    geomList: MeasurableGeometry[];
+    geometryIndex: number;
+  } {
+    const snapshot = this.getMeasurableGeomSnapshot(sourceItemId);
+    if (snapshot) {
+      return {
+        geomList: snapshot.geomList,
+        geometryIndex: snapshot.geometryIndex
+      };
+    }
+    return {
+      geomList: this.terria.measurableGeomList,
+      geometryIndex: this.terria.measurableGeometryIndex
+    };
+  }
+
+  @action
+  closePanelsOfRemovedSourceItems() {
+    const itemIds = this.terria.workbench.itemIds;
+    const removed = (id: string | undefined): id is string =>
+      id !== undefined && !itemIds.includes(id);
+
+    if (
+      this.measurableDownloadPanelIsVisible &&
+      removed(this.measurableDownloadPanelSourceItemId)
+    ) {
+      this.closeMeasurableDownloadPanel();
+    }
+    if (
+      this.measurablePanelIsVisible &&
+      removed(this.measurablePanelSourceItemId)
+    ) {
+      this.closeMeasurablePanel();
+    }
+    if (
+      this.playPathPanelIsVisible &&
+      removed(this.playPathPanelSourceItemId)
+    ) {
+      this.closePlayPathPanel();
+    }
+
+    [...this.measurableGeomBySourceItemId.keys()]
+      .filter((id) => !itemIds.includes(id))
+      .forEach((id) => this.measurableGeomBySourceItemId.delete(id));
+  }
+
+  private deleteMeasurableGeomSnapshotIfUnused(sourceItemId: string) {
+    const usedBy = (id: string | undefined, panelIsVisible: boolean) =>
+      panelIsVisible && id === sourceItemId;
+    if (
+      usedBy(this.measurablePanelSourceItemId, this.measurablePanelIsVisible) ||
+      usedBy(
+        this.measurableDownloadPanelSourceItemId,
+        this.measurableDownloadPanelIsVisible
+      ) ||
+      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible)
+    ) {
+      return;
+    }
+    this.measurableGeomBySourceItemId.delete(sourceItemId);
+  }
+
+  @action
+  closeMeasurableDownloadPanel() {
+    const sourceId = this.measurableDownloadPanelSourceItemId;
+    this.measurableDownloadPanelIsVisible = false;
+    this.measurableDownloadPanelDefaultName = "";
+    this.measurableDownloadPanelSourceItemId = undefined;
+    if (sourceId) {
+      this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
+    }
+
+    const storeOwner =
+      this.terria.measurableGeomList[this.terria.measurableGeometryIndex]
+        ?.sourceItemId;
+    if (sourceId !== undefined && storeOwner === sourceId) {
+      const pinned = this.measurablePanelIsVisible
+        ? this.measurablePanelSourceItemId
+        : undefined;
+      const pinnedSnapshot =
+        pinned && pinned !== sourceId
+          ? this.measurableGeomBySourceItemId.get(pinned)
+          : undefined;
+      if (pinnedSnapshot) {
+        this.applyMeasurableGeomSnapshot(pinnedSnapshot);
+      } else if (!this.measurablePanelIsVisible) {
+        this.terria.measurableGeomList.splice(
+          1,
+          this.terria.measurableGeomList.length - 1
+        );
+        this.terria.measurableGeometryManager.splice(
+          1,
+          this.terria.measurableGeometryManager.length - 1
+        );
+      }
+    }
+  }
+
+  @action
+  closeMeasurablePanel() {
+    const sourceId = this.measurablePanelSourceItemId;
+    this.measurablePanelIsVisible = false;
+    this.mobileMeasureToolsButtonVisible = false;
+    this.measurablePanelSourceItemId = undefined;
+    if (sourceId) {
+      this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
+    }
+    [
+      "measure-tool",
+      "measure-line-tool",
+      "measure-polygon-tool",
+      "measure-point-tool",
+      "measure-angle-tool",
+      "measure-circle-tool"
+    ].forEach((id) => {
+      const item = this.terria.mapNavigationModel.findItem(id)?.controller;
+      if (item && item.active) {
+        item.deactivate();
+      }
+      this.terria.mapNavigationModel.enable(id);
+    });
+  }
+
+  @action
+  closePlayPathPanel() {
+    const sourceId = this.playPathPanelSourceItemId;
+    this.playPathPanelIsVisible = false;
+    this.playPathPanelSourceItemId = undefined;
+    if (sourceId) {
+      this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
+    }
   }
 
   @action
