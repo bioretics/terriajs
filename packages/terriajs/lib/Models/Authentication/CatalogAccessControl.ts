@@ -10,7 +10,8 @@ type CatalogAccessControlledMember = BaseModel & {
 /**
  * Returns the configured allowed groups for a member. Omitting `allowedGroups`
  * keeps a catalogue item publicly accessible. A dereferenced item inherits the
- * groups configured on its reference when the trait is missing.
+ * groups configured on its reference when the trait is missing; a member also
+ * inherits from its parent catalogue group. A member value overrides.
  */
 export function getCatalogAllowedGroups(item: BaseModel): string[] | undefined {
   const allowedGroups = (item as CatalogAccessControlledMember).allowedGroups;
@@ -18,7 +19,15 @@ export function getCatalogAllowedGroups(item: BaseModel): string[] | undefined {
 
   const sourceReference = item.sourceReference;
   if (sourceReference && sourceReference !== item) {
-    return getCatalogAllowedGroups(sourceReference);
+    const fromReference = getCatalogAllowedGroups(sourceReference);
+    if (fromReference !== undefined) return fromReference;
+  }
+
+  for (const parentId of item.knownContainerUniqueIds) {
+    const parent = item.terria.getModelById(BaseModel, parentId);
+    if (!parent) continue;
+    const fromParent = getCatalogAllowedGroups(parent);
+    if (fromParent !== undefined) return fromParent;
   }
 
   return undefined;
@@ -26,7 +35,8 @@ export function getCatalogAllowedGroups(item: BaseModel): string[] | undefined {
 
 /**
  * Returns whether a member opts into being hidden when access is denied. A
- * dereferenced item inherits this setting from its reference.
+ * dereferenced item inherits this setting from its reference; a member also
+ * inherits from its parent catalogue group when unset.
  */
 export function getCatalogMemberHideWhenUnauthorized(item: BaseModel): boolean {
   const hideWhenUnauthorized = (item as CatalogAccessControlledMember)
@@ -36,6 +46,33 @@ export function getCatalogMemberHideWhenUnauthorized(item: BaseModel): boolean {
   const sourceReference = item.sourceReference;
   if (sourceReference && sourceReference !== item) {
     return getCatalogMemberHideWhenUnauthorized(sourceReference);
+  }
+
+  for (const parentId of item.knownContainerUniqueIds) {
+    const parent = item.terria.getModelById(BaseModel, parentId);
+    if (parent) return getCatalogMemberHideWhenUnauthorized(parent);
+  }
+
+  return false;
+}
+
+/**
+ * Returns whether authentication should be used for this member. Reads stratum
+ * values only (ignores the false default) so a parent group's setting applies
+ * when the member leaves the trait unset. Member overrides group.
+ */
+export function getCatalogUseAuthentication(item: BaseModel): boolean {
+  const own = item.traits?.useAuthentication?.getValue(item);
+  if (own !== undefined) return Boolean(own);
+
+  const sourceReference = item.sourceReference;
+  if (sourceReference && sourceReference !== item) {
+    return getCatalogUseAuthentication(sourceReference);
+  }
+
+  for (const parentId of item.knownContainerUniqueIds) {
+    const parent = item.terria.getModelById(BaseModel, parentId);
+    if (parent) return getCatalogUseAuthentication(parent);
   }
 
   return false;

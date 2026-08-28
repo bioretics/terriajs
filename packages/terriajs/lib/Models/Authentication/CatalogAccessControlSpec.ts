@@ -2,8 +2,12 @@ import { runInAction } from "mobx";
 import Result from "../../../lib/Core/Result";
 import {
   canAccessCatalogMember,
+  getCatalogAllowedGroups,
+  getCatalogMemberHideWhenUnauthorized,
+  getCatalogUseAuthentication,
   isCatalogMemberVisible
 } from "../../../lib/Models/Authentication/CatalogAccessControl";
+import CatalogGroup from "../../../lib/Models/Catalog/CatalogGroup";
 import WebMapServiceCatalogItem from "../../../lib/Models/Catalog/Ows/WebMapServiceCatalogItem";
 import CommonStrata from "../../../lib/Models/Definition/CommonStrata";
 import Terria from "../../../lib/Models/Terria";
@@ -217,5 +221,46 @@ describe("Catalogue access control", () => {
     expect(canAccessCatalogMember(hiddenPartnerItem)).toBe(true);
     expect(canAccessCatalogMember(visiblePartnerItem)).toBe(true);
     expect(isCatalogMemberVisible(hiddenPartnerItem)).toBe(true);
+  });
+  describe("group inheritance", () => {
+    let group: CatalogGroup;
+    let child: WebMapServiceCatalogItem;
+
+    beforeEach(() => {
+      group = new CatalogGroup("protected-group", terria);
+      child = new WebMapServiceCatalogItem("group-child-item", terria);
+      terria.addModel(group);
+      terria.addModel(child);
+      group.setTrait(CommonStrata.definition, "members", [child.uniqueId!]);
+      child.knownContainerUniqueIds.push(group.uniqueId!);
+    });
+
+    it("inherits allowedGroups and hideWhenUnauthorized from a parent group", () => {
+      group.setTrait(CommonStrata.definition, "allowedGroups", ["regione"]);
+      group.setTrait(CommonStrata.definition, "hideWhenUnauthorized", true);
+
+      expect(getCatalogAllowedGroups(child)).toEqual(["regione"]);
+      expect(getCatalogMemberHideWhenUnauthorized(child)).toBe(true);
+      expect(canAccessCatalogMember(child)).toBe(false);
+      expect(isCatalogMemberVisible(child)).toBe(false);
+    });
+
+    it("lets a child override inherited group access traits", () => {
+      group.setTrait(CommonStrata.definition, "allowedGroups", ["regione"]);
+      group.setTrait(CommonStrata.definition, "hideWhenUnauthorized", true);
+      child.setTrait(CommonStrata.definition, "allowedGroups", ["admin"]);
+      child.setTrait(CommonStrata.definition, "hideWhenUnauthorized", false);
+
+      expect(getCatalogAllowedGroups(child)).toEqual(["admin"]);
+      expect(getCatalogMemberHideWhenUnauthorized(child)).toBe(false);
+    });
+
+    it("inherits useAuthentication from a parent group unless overridden", () => {
+      expect(getCatalogUseAuthentication(child)).toBe(false);
+      group.setTrait(CommonStrata.definition, "useAuthentication", true);
+      expect(getCatalogUseAuthentication(child)).toBe(true);
+      child.setTrait(CommonStrata.definition, "useAuthentication", false);
+      expect(getCatalogUseAuthentication(child)).toBe(false);
+    });
   });
 });
