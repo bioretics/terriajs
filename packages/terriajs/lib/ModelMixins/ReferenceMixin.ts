@@ -11,6 +11,7 @@ import AsyncLoader from "../Core/AsyncLoader";
 import Result from "../Core/Result";
 import TerriaError from "../Core/TerriaError";
 import Model, { BaseModel, ModelInterface } from "../Models/Definition/Model";
+import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import ReferenceTraits from "../Traits/TraitsClasses/ReferenceTraits";
 import { getName } from "./CatalogMemberMixin";
 import { applyItemProperties } from "./GroupMixin";
@@ -116,6 +117,7 @@ function ReferenceMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
      * {@see AsyncLoader}
      */
     async loadReference(forceReload: boolean = false): Promise<Result<void>> {
+      if (!ensureCatalogMemberAccess(this)) return Result.none();
       const result = (await this._referenceLoader.load(forceReload)).clone(
         `Failed to load reference \`${getName(this)}\``
       );

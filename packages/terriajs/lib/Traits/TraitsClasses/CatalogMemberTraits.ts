@@ -103,6 +103,22 @@ export class ShortReportTraits extends ModelTraits {
 
 /* eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging */
 class CatalogMemberTraits extends ModelTraits {
+  @primitiveArrayTrait({
+    type: "string",
+    name: "Allowed groups",
+    description:
+      "GeoServer groups allowed to access this member. If omitted, the member is public. If set (including to an empty array), authentication is required and the user's group (`terria.userProfile`) must be in the list."
+  })
+  allowedGroups?: string[];
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "Hide when unauthorized",
+    description:
+      "If true, hide this member from catalogue listings while the current user cannot access it. This has no effect when `allowedGroups` is omitted."
+  })
+  hideWhenUnauthorized?: boolean;
+
   @primitiveTrait({
     type: "string",
     name: "Name",

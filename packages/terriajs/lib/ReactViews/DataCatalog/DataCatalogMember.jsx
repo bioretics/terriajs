@@ -5,6 +5,7 @@ import GroupMixin from "../../ModelMixins/GroupMixin";
 import ReferenceMixin from "../../ModelMixins/ReferenceMixin";
 import DataCatalogGroup from "./DataCatalogGroup";
 import DataCatalogItem from "./DataCatalogItem";
+import { isCatalogMemberVisible } from "../../Models/Authentication/CatalogAccessControl";
 import DataCatalogReference from "./DataCatalogReference";
 
 /**
@@ -30,6 +31,7 @@ class DataCatalogMember extends Component {
         ? this.props.member.nestedTarget
         : this.props.member;
 
+    if (!isCatalogMemberVisible(member)) return null;
     if (ReferenceMixin.isMixedInto(member)) {
       return (
         <DataCatalogReference

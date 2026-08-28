@@ -4,6 +4,7 @@ import {
   computed,
   makeObservable,
   observable,
+  reaction,
   runInAction,
   toJS,
   when
@@ -882,6 +883,16 @@ export default class Terria {
   @observable userAuthToken?: string;
 
   /**
+   * The application-wide authentication check used by catalogue access
+   * policies. Update this accessor when the login mechanism changes so that
+   * the catalogue and the login button stay in sync.
+   */
+  @computed
+  get isAuthenticated(): boolean {
+    return !!(this.userAuthToken || this.userProfile);
+  }
+
+  /**
    * Gets or sets height of viewshed observer point.
    * @type {string}
    */
@@ -1059,6 +1070,24 @@ export default class Terria {
     this.analytics = options.analytics ?? new NoopAnalytics();
 
     this.corsProxy = options.corsProxy ?? new CorsProxy();
+
+    // Re-evaluate workbench membership whenever auth or named permissions change.
+    // Run synchronously so the map/workbench drop inaccessible layers in the same
+    // turn as logout or a profile update (not on a later microtask).
+    reaction(
+      () => ({
+        userAuthToken: this.userAuthToken,
+        userProfile: this.userProfile,
+        isAuthenticated: this.isAuthenticated,
+        profileAllowed: this.profile?.allowed?.slice(),
+        profileIsAdmin: this.profile?.isAdmin,
+        userProfilesDefinition: this.configParameters.userProfilesDefinition
+      }),
+      () => {
+        this.workbench.removeInaccessibleItems();
+      },
+      { scheduler: (run) => run() }
+    );
   }
 
   /** Raise error to user.

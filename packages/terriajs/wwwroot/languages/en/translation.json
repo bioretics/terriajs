@@ -2492,7 +2492,7 @@
     "loginTitle": "Login",
     "logoutTitle": "Logout",
     "logoutConfirmTitle": "Confirm logout",
-    "logoutConfirmMessage": "Do you want to log out?",
+    "logoutConfirmMessage": "Do you want to log out as {{username}}?",
     "logoutConfirmOk": "Logout",
     "logoutConfirmCancel": "Cancel",
     "loginPanelHeader": "User authentication",
@@ -2507,6 +2507,12 @@
     "loginPanelConnectionProblem": "Unable to reach the authentication service. Please check your internet connection and try again.",
     "loginPanelGenericError": "An unexpected error occurred during login. Please try again later.",
     "loginPanelMissingFields": "Please enter both username and password."
+  },
+  "access": {
+    "authenticationRequiredTitle": "Authentication required",
+    "authenticationRequiredMessage": "Please log in to access this layer.",
+    "accessDeniedTitle": "Access denied",
+    "accessDeniedMessage": "You do not have permission to access this layer."
   },
   "microzonation": {
     "menuButton": "Seismic microzonation",

@@ -1934,7 +1934,7 @@
     "loginTitle": "Login",
     "logoutTitle": "Logout",
     "logoutConfirmTitle": "Conferma logout",
-    "logoutConfirmMessage": "Vuoi effettuare il logout?",
+    "logoutConfirmMessage": "Vuoi effettuare il logout come {{username}}?",
     "logoutConfirmOk": "Logout",
     "logoutConfirmCancel": "Annulla",
     "loginPanelHeader": "Autenticazione utente",
@@ -1949,6 +1949,12 @@
     "loginPanelConnectionProblem": "Impossibile raggiungere il servizio di autenticazione. Verifica la connessione internet e riprova.",
     "loginPanelGenericError": "Si è verificato un errore imprevisto durante il login. Riprova più tardi.",
     "loginPanelMissingFields": "Inserisci sia il nome utente che la password."
+  },
+  "access": {
+    "authenticationRequiredTitle": "Autenticazione richiesta",
+    "authenticationRequiredMessage": "Effettua il login per accedere a questo livello.",
+    "accessDeniedTitle": "Accesso negato",
+    "accessDeniedMessage": "Non disponi dell'autorizzazione per accedere a questo livello."
   },
   "zoomCotrol": {
     "zoomReset": "Ripristina lo zoom",
