@@ -36,7 +36,7 @@ import {
 } from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySummary";
 import MeasurableGeometryExporter from "../../ViewModels/MeasurableGeometry/MeasurableGeometryExporter";
 import {
-  defaultSamplingStep,
+  profileSamplingStep,
   samplingStepRange
 } from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
@@ -136,9 +136,14 @@ const MeasurablePanel = observer((props: Props) => {
     currentGeom?.geodeticDistance
   );
   const isAutoSamplingPathStep = terria.measurableGeomSamplingStepIsAuto;
-  const autoSamplingPathStep = defaultSamplingStep(
-    currentGeom?.geodeticDistance
-  );
+  const autoSamplingPathStep = computed(() =>
+    measurablePanelIsVisible
+      ? profileSamplingStep(
+          currentGeom?.geodeticDistance,
+          terria.mainViewer.scale
+        )
+      : terria.measurableGeomSamplingStepInUse
+  ).get();
 
   const changeSamplingPathStep = action((val: number) => {
     terria.measurableGeomSamplingStep = val;

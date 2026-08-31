@@ -57,10 +57,43 @@ export function samplingStepRange(pathLength: number | undefined): number[] {
   return [series[minIndex], series[Math.max(minIndex, maxIndex)]];
 }
 
-export function defaultSamplingStep(pathLength: number | undefined): number {
+const PIXELS_PER_SAMPLE = 10;
+
+function blendSamplingStep(
+  pathLength: number | undefined,
+  groundResolution: number | undefined,
+  viewWeight: number
+): number {
   const [min, max] = samplingStepRange(pathLength);
   if (!min || !max) {
     return 0;
   }
-  return snapSamplingStep(Math.sqrt(min * max));
+  const lengthStep = Math.sqrt(min * max);
+  const weight = Math.min(1, Math.max(0, viewWeight));
+  if (
+    !groundResolution ||
+    groundResolution <= 0 ||
+    !Number.isFinite(groundResolution) ||
+    weight === 0
+  ) {
+    return snapSamplingStep(lengthStep);
+  }
+  const viewStep = groundResolution * PIXELS_PER_SAMPLE;
+  const blended = lengthStep ** (1 - weight) * viewStep ** weight;
+  return snapSamplingStep(Math.min(max, Math.max(min, blended)));
 }
+
+export function profileSamplingStep(
+  pathLength: number | undefined,
+  groundResolution?: number
+): number {
+  return blendSamplingStep(pathLength, groundResolution, 0.5);
+}
+export function flightSamplingStep(
+  pathLength: number | undefined,
+  groundResolution?: number
+): number {
+  return blendSamplingStep(pathLength, groundResolution, 1);
+}
+
+export const SAMPLING_STEP_DISABLED = 0;

@@ -9,8 +9,12 @@ import CameraView from "../../Models/CameraView";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import ViewerMode from "../../Models/ViewerMode";
-import { runInAction } from "mobx";
+import { computed, runInAction } from "mobx";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import {
+  flightSamplingStep,
+  samplingStepRange
+} from "../../ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const playGeomState = viewState.getMeasurableGeomStateForSource(
@@ -18,6 +22,23 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   );
   const playGeometryIndex = playGeomState.geometryIndex;
   const playGeom = playGeomState.geomList[playGeometryIndex];
+  const playPathSamplingStepIsAuto = terria.playPathSamplingStepIsAuto;
+  const autoPlayPathSamplingStep = computed(() =>
+    flightSamplingStep(
+      playGeom?.geodeticDistance,
+      viewState.playPathPanelIsVisible ? terria.mainViewer.scale : undefined
+    )
+  ).get();
+  const playPathSamplingStepRange = samplingStepRange(
+    playGeom?.geodeticDistance
+  );
+  const playPathSamplingStep = playPathSamplingStepIsAuto
+    ? autoPlayPathSamplingStep
+    : terria.playPathSamplingStep;
+
+  const lockedSamplingStepRef = useRef<number | undefined>(undefined);
+  const effectiveSamplingStep =
+    lockedSamplingStepRef.current ?? playPathSamplingStep;
 
   const [playSpeed, setPlaySpeed] = useState(1);
   const [isCameraMoving, setIsCameraMoving] = useState(false);
@@ -85,6 +106,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     resumeAvailableRef.current = false;
     resumeGeometryIndexRef.current = null;
     resumePointIndexRef.current = 0;
+    lockedSamplingStepRef.current = undefined;
 
     checkAndUpdatePitch();
   }, [checkAndUpdatePitch]);
@@ -147,12 +169,12 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
         ? playGeom.stopPoints
         : resamplePathForFlight(
             playGeom.stopPoints,
-            terria.playPathSamplingStep
+            lockedSamplingStepRef.current ?? playPathSamplingStep
           );
 
     if (!pts || pts.length === 0) return pts;
     return pts;
-  }, [terria, playGeom, resamplePathForFlight]);
+  }, [terria, playGeom, playPathSamplingStep, resamplePathForFlight]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
@@ -277,6 +299,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     resumeAvailableRef.current = false;
     resumeGeometryIndexRef.current = null;
     resumePointIndexRef.current = 0;
+    lockedSamplingStepRef.current = undefined;
 
     const resetPlaybackDisplay = window.setTimeout(() => {
       setCountdown(null);
@@ -459,9 +482,14 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   }, [getPoints, terria, viewState, indeterminate]);
 
   const onPlay = () => {
+    lockedSamplingStepRef.current ??= playPathSamplingStep;
+
     const pts = getPoints();
     const camera = terria.cesium?.scene.camera;
-    if (!pts?.length) return;
+    if (!pts?.length) {
+      lockedSamplingStepRef.current = undefined;
+      return;
+    }
 
     const geometryIndex = playGeometryIndex;
     const samePath =
@@ -584,6 +612,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
 
     setCurrentPointIndex(targetIdx);
     currentPointIndexRef.current = targetIdx;
+    lockedSamplingStepRef.current = undefined;
     terria.currentViewer.notifyRepaintRequired();
   };
 
@@ -595,6 +624,19 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       resetPlayPath();
     },
     [terria, resetPlayPath]
+  );
+
+  const changePlayPathSamplingStepIsAuto = useCallback(
+    (isAuto: boolean) => {
+      runInAction(() => {
+        if (!isAuto && autoPlayPathSamplingStep > 0) {
+          terria.playPathSamplingStep = autoPlayPathSamplingStep;
+        }
+        terria.playPathSamplingStepIsAuto = isAuto;
+      });
+      resetPlayPath();
+    },
+    [terria, autoPlayPathSamplingStep, resetPlayPath]
   );
 
   useEffect(() => {
@@ -614,7 +656,10 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     onStop,
     resetPlayPath,
     isPitchTooLow,
-    playPathSamplingStep: terria.playPathSamplingStep,
-    changePlayPathSamplingStep
+    playPathSamplingStep: effectiveSamplingStep,
+    changePlayPathSamplingStep,
+    playPathSamplingStepIsAuto,
+    playPathSamplingStepRange,
+    changePlayPathSamplingStepIsAuto
   };
 }
