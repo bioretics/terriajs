@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, runInAction } from "mobx";
 import { http, passthrough } from "msw";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -1277,6 +1277,191 @@ describe("FeatureInfoSection", function () {
       expect(names.join(" ")).not.toContain("Lat");
       expect(names.join(" ")).not.toContain("Lon");
       expect(names.join(" ")).not.toContain("44.49");
+    });
+
+    it("does not stack the item's own extension onto the download name", function () {
+      catalogItem.setTrait(CommonStrata.definition, "name", "bike_racks.zip");
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(downloadNames(container)).toEqual([
+        "bike_racks.csv",
+        "bike_racks.json"
+      ]);
+    });
+
+    it("keeps a name that only looks like it ends in an extension", function () {
+      catalogItem.setTrait(
+        CommonStrata.definition,
+        "name",
+        "Rete stradale v2.0"
+      );
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(downloadNames(container)).toEqual([
+        "Rete stradale v2.0.csv",
+        "Rete stradale v2.0.json"
+      ]);
+    });
+  });
+
+  describe("per profile fields", function () {
+    function useProfiles(profile: string, isAdmin = false) {
+      runInAction(() => {
+        terria.configParameters.userProfilesDefinition = {
+          [profile]: { allowed: [], isAdmin }
+        };
+        terria.userProfile = profile;
+      });
+    }
+
+    function restrictTo(item: TestModel, profile: string, fields: string[]) {
+      updateModelFromJson(item, CommonStrata.definition, {
+        featureInfoTemplate: {
+          perProfileInfoFields: { [profile]: fields }
+        }
+      });
+    }
+
+    it("shows every property when no profiles are configured", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).toContain("steel");
+    });
+
+    it("restricts the properties to the ones the profile may see", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).not.toContain("steel");
+    });
+
+    it("checks again when the section is handed another catalog item", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+      const otherItem = new TestModel("other", terria);
+      restrictTo(otherItem, "regione", ["material"]);
+
+      const { container, rerender } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+      expect(container.textContent).toContain("bar");
+
+      rerender(
+        <FeatureInfoSection
+          catalogItem={otherItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />
+      );
+
+      expect(container.textContent).toContain("steel");
+      expect(container.textContent).not.toContain("bar");
+    });
+
+    it("checks again when the section is handed another feature", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+
+      const { container, rerender } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+      expect(container.textContent).toContain("bar");
+
+      const otherFeature = new TerriaFeature({
+        name: "Baz",
+        properties: { foo: "quux" }
+      });
+      otherFeature._catalogItem = catalogItem;
+      restrictTo(catalogItem, "regione", ["material"]);
+
+      rerender(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={otherFeature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />
+      );
+
+      expect(container.textContent).not.toContain("quux");
+    });
+
+    it("shows everything again to an administrator", function () {
+      useProfiles("amministratore", true);
+      restrictTo(catalogItem, "amministratore", ["foo"]);
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).toContain("steel");
     });
   });
 

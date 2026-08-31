@@ -1,9 +1,11 @@
+import { runInAction } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Terria from "../../../lib/Models/Terria";
 import MeasurableGeometryManager from "../../../lib/ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import { profileSamplingStep } from "../../../lib/ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 function carto(longitude: number, latitude: number, height = 0) {
   return new Cartographic(
@@ -31,6 +33,9 @@ describe("MeasurableGeometryManager", function () {
   beforeEach(function () {
     terria = new Terria({ baseUrl: "./" });
     manager = new MeasurableGeometryManager(terria);
+    runInAction(() => {
+      terria.measurableGeomSamplingStepIsAuto = false;
+    });
   });
 
   describe("getGeodesicDistance", function () {
@@ -459,6 +464,109 @@ describe("MeasurableGeometryManager", function () {
     it("does nothing for a slot that holds no geometry", function () {
       expect(() => manager.resample(5)).not.toThrow();
       expect(terria.measurableGeomList.length).toEqual(0);
+    });
+  });
+
+  describe("the automatic sampling step", function () {
+    const stopPoints = [
+      carto(144.424868, -37.951033, 100),
+      carto(143.926496, -37.652821, 75)
+    ];
+
+    beforeEach(function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStepIsAuto = true;
+      });
+    });
+
+    it("is on by default", function () {
+      const fresh = new Terria({ baseUrl: "./" });
+      expect(fresh.measurableGeomSamplingStepIsAuto).toBe(true);
+      expect(fresh.measurableGeomSamplingStepInUse).toEqual(0);
+    });
+
+    it("scales the step to the path instead of using the manual one", async function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStep = 2000;
+      });
+
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(
+        profileSamplingStep(
+          terria.measurableGeomList[0].geodeticDistance,
+          terria.mainViewer.scale
+        )
+      );
+      expect(terria.measurableGeomSamplingStepInUse).not.toEqual(2000);
+    });
+
+    it("records the step it actually used", async function () {
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+
+      const step = terria.measurableGeomSamplingStepInUse;
+      const sampled = terria.measurableGeomList[0].sampledPoints ?? [];
+      const distance = terria.measurableGeomList[0].geodeticDistance!;
+
+      expect(step).toBeGreaterThan(0);
+      expect(sampled.length).toBeGreaterThan(distance / step);
+      expect(sampled.length).toBeLessThan(distance / step + 3);
+    });
+
+    it("follows the map zoom, so a closer view samples more finely", async function () {
+      runInAction(() => {
+        terria.mainViewer.scale = 500;
+      });
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+      const zoomedOut = terria.measurableGeomSamplingStepInUse;
+
+      runInAction(() => {
+        terria.mainViewer.scale = 1;
+      });
+      manager.resample(0);
+      await flushSampling();
+
+      expect(terria.measurableGeomSamplingStepInUse).toBeLessThan(zoomedOut);
+    });
+
+    it("hands back to the manual step once auto is turned off", async function () {
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+
+      runInAction(() => {
+        terria.measurableGeomSamplingStepIsAuto = false;
+        terria.measurableGeomSamplingStep = 2000;
+      });
+      manager.resample(0);
+      await flushSampling();
+
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(2000);
+    });
+
+    it("still records the manual step while auto is off", async function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStepIsAuto = false;
+        terria.measurableGeomSamplingStep = 1000;
+      });
+
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(1000);
+    });
+
+    it("falls back on the manual step for a path with no length", async function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStep = 250;
+      });
+
+      manager.sampleFromCartographics([carto(11.34, 44.49, 30)]);
+      await flushSampling();
+
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(250);
     });
   });
 });

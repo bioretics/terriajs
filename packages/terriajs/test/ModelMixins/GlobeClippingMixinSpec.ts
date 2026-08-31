@@ -1,6 +1,10 @@
 import { runInAction } from "mobx";
+import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import GlobeClippingMixin from "../../lib/ModelMixins/GlobeClippingMixin";
+import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 import GeoJsonCatalogItem from "../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import GltfCatalogItem from "../../lib/Models/Catalog/Gltf/GltfCatalogItem";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import Terria from "../../lib/Models/Terria";
 import { SelectableDimensionCheckbox } from "../../lib/Models/SelectableDimensions/SelectableDimensions";
@@ -32,9 +36,23 @@ const twoPointGeoJson = {
   ]
 };
 
-async function loadPoints(item: GeoJsonCatalogItem) {
+const onePointGeoJson = {
+  type: "FeatureCollection" as const,
+  features: [
+    {
+      type: "Feature" as const,
+      properties: {},
+      geometry: { type: "Point" as const, coordinates: [11.34, 44.49] }
+    }
+  ]
+};
+
+async function loadPoints(
+  item: GeoJsonCatalogItem,
+  geoJson: unknown = twoPointGeoJson
+) {
   runInAction(() => {
-    item.setTrait(CommonStrata.definition, "geoJsonData", twoPointGeoJson);
+    item.setTrait(CommonStrata.definition, "geoJsonData", geoJson as any);
     item.setTrait(CommonStrata.definition, "forceCesiumPrimitives", true);
   });
   await item.loadMapItems();
@@ -177,7 +195,7 @@ describe("GlobeClippingMixin", function () {
       stubCesium(terria, globe);
       await loadPoints(item);
 
-      item.autoComputeClippingPlanes(item.data);
+      item.autoComputeClippingPlanes(item.globeClippingBoundingSphere);
 
       expect(globe.clippingPlanes).toBeDefined();
       expect(globe.clippingPlanes.length).toEqual(4);
@@ -190,7 +208,7 @@ describe("GlobeClippingMixin", function () {
       stubCesium(terria, globe);
       await loadPoints(item);
 
-      item.autoComputeClippingPlanes(item.data);
+      item.autoComputeClippingPlanes(item.globeClippingBoundingSphere);
 
       expect(globe.backFaceCulling).toBe(false);
       expect(globe.showSkirts).toBe(false);
@@ -200,7 +218,7 @@ describe("GlobeClippingMixin", function () {
       const globe = fakeGlobe();
       stubCesium(terria, globe);
       await loadPoints(item);
-      item.autoComputeClippingPlanes(item.data);
+      item.autoComputeClippingPlanes(item.globeClippingBoundingSphere);
 
       item.autoComputeClippingPlanes(undefined);
 
@@ -216,6 +234,145 @@ describe("GlobeClippingMixin", function () {
       expect(() => item.autoComputeClippingPlanes(undefined)).not.toThrow();
       expect(globe.backFaceCulling).toBe(true);
       expect(globe.showSkirts).toBe(true);
+    });
+
+    it("leaves the globe alone for a sphere with no extent to clip", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item, onePointGeoJson);
+
+      // A single point gives a sphere of radius zero: there is nothing to cut.
+      expect(item.globeClippingBoundingSphere?.radius).toEqual(0);
+      item.autoComputeClippingPlanes(item.globeClippingBoundingSphere);
+
+      expect(globe.clippingPlanes).toBeUndefined();
+      expect(globe.backFaceCulling).toBe(true);
+      expect(globe.showSkirts).toBe(true);
+    });
+
+    it("centres the planes on the data it was given", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item);
+      const sphere = item.globeClippingBoundingSphere!;
+
+      item.autoComputeClippingPlanes(sphere);
+
+      // The planes are built in a frame anchored at the sphere centre, one
+      // sphere radius away from it on each of the four horizontal directions.
+      expect(globe.clippingPlanes.length).toEqual(4);
+      for (let i = 0; i < globe.clippingPlanes.length; ++i) {
+        expect(globe.clippingPlanes.get(i).distance).toBeCloseTo(
+          sphere.radius,
+          3
+        );
+      }
+    });
+  });
+
+  describe("globeClippingBoundingSphere", function () {
+    it("has nothing to measure before the data is loaded", function () {
+      expect(item.globeClippingBoundingSphere).toBeUndefined();
+    });
+
+    it("fits a sphere around the positions of the item's entities", async function () {
+      await loadPoints(item);
+
+      const sphere = item.globeClippingBoundingSphere;
+      expect(sphere).toBeDefined();
+      expect(sphere?.radius).toBeGreaterThan(0);
+      // The two points are roughly 1.3 km apart, so the sphere around them is
+      // of that order rather than of the order of the globe.
+      expect(sphere!.radius).toBeLessThan(10000);
+    });
+
+    it("is what drives the clipping, so it can be measured another way", function () {
+      // 3D Tiles and glTF items have no `data` to read positions off; they
+      // override this getter instead, which is why the autorun watches it.
+      const measured = new BoundingSphere(new Cartesian3(1, 2, 3), 42);
+      spyOnProperty(item, "globeClippingBoundingSphere", "get").and.returnValue(
+        measured
+      );
+
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      item.autoComputeClippingPlanes(item.globeClippingBoundingSphere);
+
+      expect(globe.clippingPlanes).toBeDefined();
+      expect(globe.clippingPlanes.length).toEqual(4);
+    });
+  });
+
+  describe("the item types it is mixed into", function () {
+    it("covers 3D Tiles catalog items", function () {
+      const tileset = new Cesium3DTilesCatalogItem("tiles", terria);
+
+      expect(GlobeClippingMixin.isMixedInto(tileset)).toBe(true);
+      expect(tileset.globeClippingControlShowed).toBe(false);
+      expect(tileset.globeClippingEnabled).toBe(false);
+    });
+
+    it("covers glTF catalog items", function () {
+      const gltf = new GltfCatalogItem("gltf", terria);
+
+      expect(GlobeClippingMixin.isMixedInto(gltf)).toBe(true);
+      expect(gltf.globeClippingControlShowed).toBe(false);
+      expect(gltf.globeClippingEnabled).toBe(false);
+    });
+
+    it("offers the same checkbox on a 3D Tiles item", function () {
+      const tileset = new Cesium3DTilesCatalogItem("tiles", terria);
+      runInAction(() => {
+        tileset.setTrait(
+          CommonStrata.definition,
+          "globeClippingControlShowed",
+          true
+        );
+      });
+
+      const dimension = tileset.globeClippingSelectableDimensions[0];
+      expect(dimension?.id).toEqual("globe-clipping-box");
+
+      runInAction(() => {
+        (dimension as SelectableDimensionCheckbox).setDimensionValue(
+          CommonStrata.user,
+          "true"
+        );
+      });
+      expect(tileset.globeClippingEnabled).toBe(true);
+    });
+
+    it("has nothing to clip against a 3D Tiles item that has not loaded", function () {
+      const tileset = new Cesium3DTilesCatalogItem("tiles", terria);
+
+      expect(tileset.globeClippingBoundingSphere).toBeUndefined();
+    });
+
+    it("has nothing to clip against a glTF item that was never measured", function () {
+      const gltf = new GltfCatalogItem("gltf", terria);
+
+      expect(gltf.globeClippingBoundingSphere).toBeUndefined();
+    });
+  });
+
+  describe("dispose", function () {
+    it("stops watching the item once it is disposed", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item);
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "globeClippingEnabled", true);
+      });
+      expect(globe.clippingPlanes).toBeDefined();
+
+      item.dispose();
+      globe.clippingPlanes = undefined;
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "globeClippingEnabled", false);
+      });
+
+      // The autorun is gone, so nothing touches the globe any more.
+      expect(globe.clippingPlanes).toBeUndefined();
     });
   });
 });

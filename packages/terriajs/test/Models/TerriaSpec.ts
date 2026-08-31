@@ -151,6 +151,23 @@ describe("TerriaSpec", function () {
       expect(terria.measurableGeomSamplingStep).toEqual(500);
       expect(terria.playPathSamplingStep).toEqual(100);
     });
+
+    it("works out both steps automatically until told otherwise", function () {
+      expect(terria.measurableGeomSamplingStepIsAuto).toBe(true);
+      expect(terria.playPathSamplingStepIsAuto).toBe(true);
+    });
+
+    it("has not sampled anything yet, so no step is in use", function () {
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(0);
+    });
+
+    it("keeps the two automatic flags apart", function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStepIsAuto = false;
+      });
+
+      expect(terria.playPathSamplingStepIsAuto).toBe(true);
+    });
   });
 
   describe("terria start", function () {

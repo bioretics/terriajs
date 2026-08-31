@@ -1,11 +1,16 @@
-import { runInAction } from "mobx";
+import { makeObservable, observable, runInAction } from "mobx";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import MeasurableGeometryMixin from "../../lib/ModelMixins/MeasurableGeometryMixin";
 import GeoJsonCatalogItem from "../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import GpxCatalogItem from "../../lib/Models/Catalog/CatalogItems/GpxCatalogItem";
 import KmlCatalogItem from "../../lib/Models/Catalog/CatalogItems/KmlCatalogItem";
+import ShapefileCatalogItem from "../../lib/Models/Catalog/CatalogItems/ShapefileCatalogItem";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
+import CreateModel from "../../lib/Models/Definition/CreateModel";
+import { ModelConstructorParameters } from "../../lib/Models/Definition/Model";
 import Terria from "../../lib/Models/Terria";
+import MappableTraits from "../../lib/Traits/TraitsClasses/MappableTraits";
 
 function carto(longitude: number, latitude: number, height = 0) {
   return new Cartographic(
@@ -29,6 +34,28 @@ function feature(geometry: unknown) {
 
 function flushSampling() {
   return new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+/** The mixin on its own: no data of its own to sample, just the flag. */
+class PlainMeasurableItem extends MeasurableGeometryMixin(
+  CreateModel(MappableTraits)
+) {
+  @observable canUseAsPath = false;
+
+  constructor(...args: ModelConstructorParameters) {
+    super(...args);
+    makeObservable(this);
+  }
+
+  computePath() {}
+
+  protected forceLoadMapItems() {
+    return Promise.resolve();
+  }
+
+  get mapItems() {
+    return [];
+  }
 }
 
 describe("MeasurableGeometryMixin", function () {
@@ -269,6 +296,79 @@ describe("MeasurableGeometryMixin", function () {
       const geom = terria.measurableGeomList[0];
       expect(geom.hasArea).toBe(true);
       expect(geom.featureProperties).toEqual({ source: "upload" });
+    });
+  });
+
+  describe("canSampleMeasurableGeometry", function () {
+    async function load(geoJson: unknown) {
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "geoJsonData", geoJson as any);
+      });
+      await item.loadMapItems();
+    }
+
+    it("follows canUseAsPath unless an item says otherwise", function () {
+      // The base mixin has no sampling of its own to fall back on.
+      const plain = new PlainMeasurableItem("plain", terria);
+
+      expect(plain.canSampleMeasurableGeometry).toBe(false);
+
+      runInAction(() => {
+        plain.canUseAsPath = true;
+      });
+      expect(plain.canSampleMeasurableGeometry).toBe(true);
+    });
+
+    it("accepts a GeoJSON item that is a path", async function () {
+      await load(
+        featureCollection([
+          feature({
+            type: "LineString",
+            coordinates: [
+              [11.34, 44.49],
+              [11.35, 44.5]
+            ]
+          })
+        ])
+      );
+
+      expect(item.canUseAsPath).toBe(true);
+      expect(item.canSampleMeasurableGeometry).toBe(true);
+    });
+
+    it("accepts a GeoJSON item that is not a path but can sample itself", async function () {
+      await load(
+        featureCollection([
+          feature({ type: "Point", coordinates: [11.34, 44.49] })
+        ])
+      );
+
+      // A lone point is no path, but GeoJSON items sample their own data, so
+      // the measurable panel still has something to show.
+      expect(item.canUseAsPath).toBe(false);
+      expect(item.canSampleMeasurableGeometry).toBe(true);
+      expect(typeof (item as any).sampleFromGeojsonData).toEqual("function");
+    });
+
+    it("accepts a GPX item through its own sampling", function () {
+      const gpx = new GpxCatalogItem("gpx", terria);
+
+      expect(gpx.canSampleMeasurableGeometry).toBe(true);
+      expect(typeof (gpx as any).sampleFromGpxData).toEqual("function");
+    });
+
+    it("accepts a KML item, which samples on demand", function () {
+      const kml = new KmlCatalogItem("kml", terria);
+
+      expect(kml.canUseAsPath).toBe(false);
+      expect(kml.canSampleMeasurableGeometry).toBe(true);
+    });
+
+    it("turns down a shapefile, which has no sampling of its own", function () {
+      const shapefile = new ShapefileCatalogItem("shp", terria);
+
+      expect(shapefile.canUseAsPath).toBe(false);
+      expect(shapefile.canSampleMeasurableGeometry).toBe(false);
     });
   });
 });

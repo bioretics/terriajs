@@ -7,6 +7,10 @@ import ViewerMode, { setViewerMode } from "../../../lib/Models/ViewerMode";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import usePlayPath from "../../../lib/ReactViews/Custom/PlayPath";
 import { MeasurableGeometry } from "../../../lib/ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import {
+  flightSamplingStep,
+  samplingStepRange
+} from "../../../lib/ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 function carto(longitude: number, latitude: number, height = 0) {
   return new Cartographic(
@@ -30,6 +34,10 @@ function measuredPath(): MeasurableGeometry {
       stopPoints[1]
     ]
   };
+}
+
+function measuredPathWithLength(): MeasurableGeometry {
+  return { ...measuredPath(), geodeticDistance: 100000 };
 }
 
 function longMeasuredPath(): MeasurableGeometry {
@@ -110,6 +118,12 @@ describe("usePlayPath", function () {
   });
 
   describe("once a path is measured", function () {
+    beforeEach(function () {
+      runInAction(() => {
+        terria.playPathSamplingStepIsAuto = false;
+      });
+    });
+
     it("uses the stop points while there is no Cesium viewer", function () {
       addPath();
       const { result } = render();
@@ -200,6 +214,12 @@ describe("usePlayPath", function () {
   });
 
   describe("flight sampling step", function () {
+    beforeEach(function () {
+      runInAction(() => {
+        terria.playPathSamplingStepIsAuto = false;
+      });
+    });
+
     it("starts from the sampling step configured on terria", function () {
       const { result } = render();
       expect(result.current.playPathSamplingStep).toEqual(
@@ -262,6 +282,164 @@ describe("usePlayPath", function () {
       expect(result.current.playPathSamplingStep).toEqual(200);
       expect(result.current.countdown).toBeNull();
       expect(result.current.currentPointIndex).toEqual(0);
+    });
+  });
+
+  describe("the automatic flight sampling step", function () {
+    it("is on to start with", function () {
+      const { result } = render();
+
+      expect(terria.playPathSamplingStepIsAuto).toBe(true);
+      expect(result.current.playPathSamplingStepIsAuto).toBe(true);
+    });
+
+    it("has no step to offer before a path is measured", function () {
+      const { result } = render();
+
+      expect(result.current.playPathSamplingStep).toEqual(0);
+      expect(result.current.playPathSamplingStepRange).toEqual([0, 0]);
+    });
+
+    it("offers the range the length of the path allows", function () {
+      addPath(measuredPathWithLength());
+
+      const { result } = render();
+      expect(result.current.playPathSamplingStepRange).toEqual(
+        samplingStepRange(100000)
+      );
+    });
+
+    it("scales the step to the path while the panel is closed", function () {
+      addPath(measuredPathWithLength());
+
+      const { result } = render();
+      expect(result.current.playPathSamplingStep).toEqual(
+        flightSamplingStep(100000)
+      );
+    });
+
+    it("follows the map zoom once the panel is open", function () {
+      addPath(measuredPathWithLength());
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        terria.mainViewer.scale = 30;
+      });
+
+      const { result } = render();
+      expect(result.current.playPathSamplingStep).toEqual(
+        flightSamplingStep(100000, 30)
+      );
+    });
+
+    it("samples more finely the closer the map is framed", function () {
+      addPath(measuredPathWithLength());
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        terria.mainViewer.scale = 1000;
+      });
+      const { result, rerender } = render();
+      const zoomedOut = result.current.playPathSamplingStep;
+
+      runInAction(() => {
+        terria.mainViewer.scale = 1;
+      });
+      rerender();
+
+      expect(result.current.playPathSamplingStep).toBeLessThan(zoomedOut);
+    });
+
+    it("ignores the manual step while it is on", function () {
+      addPath(measuredPathWithLength());
+      runInAction(() => {
+        terria.playPathSamplingStep = 2000;
+      });
+
+      const { result } = render();
+      expect(result.current.playPathSamplingStep).toEqual(
+        flightSamplingStep(100000)
+      );
+      expect(result.current.playPathSamplingStep).not.toEqual(2000);
+    });
+
+    it("hands the step it had reached over when it is switched off", function () {
+      addPath(measuredPathWithLength());
+      const { result, rerender } = render();
+      const automatic = result.current.playPathSamplingStep;
+
+      act(() => result.current.changePlayPathSamplingStepIsAuto(false));
+      rerender();
+
+      expect(terria.playPathSamplingStepIsAuto).toBe(false);
+      expect(terria.playPathSamplingStep).toEqual(automatic);
+      expect(result.current.playPathSamplingStep).toEqual(automatic);
+    });
+
+    it("leaves the manual step alone when it is switched back on", function () {
+      addPath(measuredPathWithLength());
+      runInAction(() => {
+        terria.playPathSamplingStepIsAuto = false;
+        terria.playPathSamplingStep = 2000;
+      });
+      const { result, rerender } = render();
+
+      act(() => result.current.changePlayPathSamplingStepIsAuto(true));
+      rerender();
+
+      expect(terria.playPathSamplingStep).toEqual(2000);
+      expect(result.current.playPathSamplingStep).toEqual(
+        flightSamplingStep(100000)
+      );
+    });
+
+    it("rewinds the playback when it is toggled", function () {
+      addPath(measuredPathWithLength());
+      const { result } = render();
+      act(() => result.current.onPlay());
+      expect(result.current.countdown).toEqual(3);
+
+      act(() => result.current.changePlayPathSamplingStepIsAuto(false));
+
+      expect(result.current.countdown).toBeNull();
+      expect(result.current.currentPointIndex).toEqual(0);
+    });
+
+    it("pins the step for the duration of a flight", function () {
+      addPath(measuredPathWithLength());
+      useCesium();
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        terria.mainViewer.scale = 1000;
+      });
+      const { result, rerender } = render();
+      const pinned = result.current.playPathSamplingStep;
+
+      act(() => result.current.onPlay());
+      runInAction(() => {
+        terria.mainViewer.scale = 1;
+      });
+      rerender();
+
+      expect(result.current.playPathSamplingStep).toEqual(pinned);
+    });
+
+    it("releases the pinned step on stop", function () {
+      addPath(measuredPathWithLength());
+      useCesium();
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        terria.mainViewer.scale = 1000;
+      });
+      const { result, rerender } = render();
+      const pinned = result.current.playPathSamplingStep;
+
+      act(() => result.current.onPlay());
+      runInAction(() => {
+        terria.mainViewer.scale = 1;
+      });
+      act(() => result.current.onStop());
+      rerender();
+
+      expect(result.current.playPathSamplingStep).toBeLessThan(pinned);
     });
   });
 
