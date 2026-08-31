@@ -1438,6 +1438,15 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       return pathType !== PathTypes.noPath;
     }
 
+    @computed
+    override get canSampleMeasurableGeometry(): boolean {
+      return (
+        this.canUseAsPath ||
+        typeof (this as any).sampleFromGeojsonData === "function" ||
+        typeof (this as any).sampleFromGpxData === "function"
+      );
+    }
+
     private isCrsOkForPath(fc: any): boolean {
       const crs = fc ? (fc as any).crs : undefined;
       return (

@@ -451,7 +451,10 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
 
     // Fork (rer3d): measurable items load into measurable geometry and open
     // the download panel. Plain file download is handled below / on failure.
-    if (MeasurableGeometryMixin.isMixedInto(item)) {
+    if (
+      MeasurableGeometryMixin.isMixedInto(item) &&
+      item.canSampleMeasurableGeometry
+    ) {
       try {
         // Open download panel first so the measurable-panel reaction stays closed.
         runInAction(() => {
