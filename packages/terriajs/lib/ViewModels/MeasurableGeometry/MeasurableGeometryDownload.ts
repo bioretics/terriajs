@@ -8,6 +8,7 @@ import MeasurableGeometryExporter, {
   SUFFIX_MULTIPATH
 } from "./MeasurableGeometryExporter";
 import i18next from "i18next";
+import stripFileExtension from "../../Core/stripFileExtension";
 
 export interface DownloadLink {
   key: string;
@@ -26,7 +27,7 @@ export default class MeasurableDownload {
   static normalizeDefaultFilename(rawName: string): string {
     if (!rawName) return "";
 
-    const withoutExtension = rawName.replace(/\.[^/.]+$/, "");
+    const withoutExtension = stripFileExtension(rawName);
     const suffixRegex = new RegExp(
       `(?:(?:${SUFFIX_POLYGON}|${SUFFIX_LINES}|${SUFFIX_POINTS})(?:${SUFFIX_MULTIPATH})?)+$`
     );

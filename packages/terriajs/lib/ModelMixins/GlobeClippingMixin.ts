@@ -1,4 +1,4 @@
-import { action, autorun, computed, makeObservable } from "mobx";
+import { action, autorun, computed, makeObservable, observable } from "mobx";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import Model from "../Models/Definition/Model";
 import {
@@ -21,21 +21,39 @@ type BaseType = Model<GlobeClippingTraits>;
 
 function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
   abstract class GlobeClippingMixinBase extends Base {
+    @observable.ref
+    private _measuredBoundingSphere: BoundingSphere | undefined = undefined;
+    private _globeClippingApplied = false;
+    private readonly _globeClippingDisposer: () => void;
     constructor(...args: any[]) {
       super(...args);
       makeObservable(this);
 
-      autorun(() => {
-        if (this.data) {
-          this.autoComputeClippingPlanes(
-            this.globeClippingEnabled ? this.data : undefined
-          );
+      this._globeClippingDisposer = autorun(() => {
+        const boundingSphere = this.globeClippingEnabled
+          ? this.globeClippingBoundingSphere
+          : undefined;
+
+        if (
+          (boundingSphere?.radius ?? 0) > 0 &&
+          this.terria.cesium !== undefined
+        ) {
+          this.autoComputeClippingPlanes(boundingSphere);
+          this._globeClippingApplied = true;
+        } else if (this._globeClippingApplied) {
+          this.autoComputeClippingPlanes(undefined);
+          this._globeClippingApplied = false;
         }
       });
     }
 
     get hasGlobeClippingMixin() {
       return true;
+    }
+
+    dispose() {
+      super.dispose();
+      this._globeClippingDisposer();
     }
 
     @computed
@@ -69,16 +87,43 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return filterOutUndefined([globeClippingCheckbox]);
     }
 
-    abstract get data(): DataSource | undefined;
+    get data(): DataSource | undefined {
+      return undefined;
+    }
 
-    autoComputeClippingPlanes(dataSource: DataSource | undefined) {
+    get globeClippingBoundingSphere(): BoundingSphere | undefined {
+      const points: Cartesian3[] = filterOutUndefined(
+        this.data?.entities.values.map((elem) =>
+          elem.position?.getValue(JulianDate.now())
+        ) ?? []
+      );
+      if (points.length === 0) {
+        return undefined;
+      }
+      return BoundingSphere.fromPoints(points);
+    }
+
+    protected get measuredGlobeClippingBoundingSphere():
+      | BoundingSphere
+      | undefined {
+      return this._measuredBoundingSphere;
+    }
+
+    @action
+    protected setMeasuredGlobeClippingBoundingSphere(
+      boundingSphere: BoundingSphere | undefined
+    ) {
+      this._measuredBoundingSphere = boundingSphere;
+    }
+
+    autoComputeClippingPlanes(boundingSphere: BoundingSphere | undefined) {
       if (!this.terria.cesium) {
         return;
       }
 
       const globe = this.terria.cesium.scene.globe;
 
-      if (dataSource === undefined) {
+      if (boundingSphere === undefined) {
         globe.backFaceCulling = true;
         globe.showSkirts = true;
         if (globe.clippingPlanes) {
@@ -87,14 +132,11 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
         return;
       }
 
-      const points: Cartesian3[] = dataSource?.entities.values
-        .map((elem) => {
-          return elem.position?.getValue(JulianDate.now());
-        })
-        .filter((elem): elem is Cartesian3 => !!elem);
-      const sphere = BoundingSphere.fromPoints(points);
-      const position = sphere.center;
-      const distance = sphere.radius;
+      const position = boundingSphere.center;
+      const distance = boundingSphere.radius;
+      if (!(distance > 0)) {
+        return;
+      }
 
       globe.clippingPlanes = new ClippingPlaneCollection({
         modelMatrix: Transforms.eastNorthUpToFixedFrame(position),

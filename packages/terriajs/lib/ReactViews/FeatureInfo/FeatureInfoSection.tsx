@@ -22,6 +22,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import TerriaError from "../../Core/TerriaError";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
+import stripFileExtension from "../../Core/stripFileExtension";
 import { getName } from "../../ModelMixins/CatalogMemberMixin";
 import DiscretelyTimeVaryingMixin from "../../ModelMixins/DiscretelyTimeVaryingMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
@@ -114,8 +115,7 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
 
   componentDidMount() {
     // Fork (rer3d): resolve per-profile fields for this feature.
-    // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-    this.checkAuth;
+    this.checkAuth();
 
     this.templateReactionDisposer = reaction(
       () => [
@@ -159,6 +159,12 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
 
     if (prevProps.feature !== this.props.feature) {
       this.setFeatureChangedCounter(this.props.feature);
+    }
+    if (
+      prevProps.feature !== this.props.feature ||
+      prevProps.catalogItem !== this.props.catalogItem
+    ) {
+      this.checkAuth();
     }
   }
 
@@ -233,23 +239,23 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
   // Fork (rer3d): when user profiles are configured, check whether the
   // current user may see all fields of this feature (via the optional
   // webServiceUrlProfileCheck endpoint) or only the per-profile subset.
-  // Runs once at construction.
-  checkAuth = runInAction(async () => {
-    const feature = this.props.feature;
+  checkAuth = async () => {
+    const terria = this.props.terria ?? this.observableViewState.terria;
+    const catalogItem = this.observableCatalogItem;
+    const feature = this.observableFeature;
 
     if (
-      this.props.terria?.configParameters.userProfilesDefinition &&
-      MappableMixin.isMixedInto(this.props.catalogItem) &&
-      (!this.props.terria.profile ||
-        (this.props.terria.profile && !this.props.terria.profile?.isAdmin))
+      terria?.configParameters.userProfilesDefinition &&
+      MappableMixin.isMixedInto(catalogItem) &&
+      (!terria.profile || (terria.profile && !terria.profile?.isAdmin))
     ) {
       if (
-        this.props.terria.userAuthToken &&
-        this.props.terria.userProfile &&
-        this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+        terria.userAuthToken &&
+        terria.userProfile &&
+        catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
       ) {
-        const proxiedUrl = this.props.terria?.corsProxy.getURL(
-          this.props.catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
+        const proxiedUrl = terria.corsProxy.getURL(
+          catalogItem.featureInfoTemplate.webServiceUrlProfileCheck
         );
         try {
           const result = await CesiumResource.fetchJson({
@@ -257,33 +263,33 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
             queryParameters: {
               idIntervento:
                 feature.properties?.[feature.properties.propertyNames[0]],
-              authToken: this.props.terria.userAuthToken
+              authToken: terria.userAuthToken
             }
           });
 
           if (result && result.status === 200) {
-            this.setFields(this.props.feature.properties?.propertyNames);
+            this.setFields(feature.properties?.propertyNames);
           } else {
-            throw "Request failed";
+            throw new Error("Request failed");
           }
         } catch (_error) {
           this.setFields(
-            this.props.catalogItem.featureInfoTemplate.perProfileInfoFields[
-              String(this.props.terria?.userProfile)
+            catalogItem.featureInfoTemplate.perProfileInfoFields[
+              String(terria.userProfile)
             ] as string[]
           );
         }
       } else {
         this.setFields(
-          this.props.catalogItem.featureInfoTemplate?.perProfileInfoFields?.[
-            String(this.props.terria?.userProfile)
+          catalogItem.featureInfoTemplate?.perProfileInfoFields?.[
+            String(terria.userProfile)
           ] as string[]
         );
       }
     } else {
       this.setFields(undefined);
     }
-  });
+  };
 
   /** This monstrosity contains properties which can be used by Mustache templates:
    * - All feature properties
@@ -465,7 +471,7 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
         this.featureProperties && !isEmpty(this.featureProperties)
           ? this.featureProperties
           : undefined,
-      fileName: getName(this.observableCatalogItem)
+      fileName: stripFileExtension(getName(this.observableCatalogItem))
     };
   }
 
@@ -620,8 +626,8 @@ export class FeatureInfoSection extends Component<FeatureInfoProps> {
                     <FeatureInfoGeometryDownload
                       key="download-geometry"
                       name={this.downloadableData.fileName}
-                      feature={this.props.feature}
-                      catalogItem={this.props.catalogItem}
+                      feature={this.observableFeature}
+                      catalogItem={this.observableCatalogItem}
                     />
                   </>
                 ) : null

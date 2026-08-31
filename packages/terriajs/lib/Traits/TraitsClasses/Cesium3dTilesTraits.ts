@@ -18,6 +18,7 @@ import SplitterTraits from "./SplitterTraits";
 import TransformationTraits from "./TransformationTraits";
 import UrlTraits from "./UrlTraits";
 import FeaturePickingTraits from "./FeaturePickingTraits";
+import GlobeClippingTraits from "./GlobeClippingTraits";
 import CesiumIonTraits from "./CesiumIonTraits";
 import LayerOrderingTraits from "./LayerOrderingTraits";
 
@@ -121,6 +122,7 @@ export class OptionsTraits extends ModelTraits {
 }
 
 export default class Cesium3DTilesTraits extends mixTraits(
+  GlobeClippingTraits,
   HighlightColorTraits,
   PlaceEditorTraits,
   TransformationTraits,
@@ -131,7 +133,6 @@ export default class Cesium3DTilesTraits extends mixTraits(
   ShadowTraits,
   OpacityTraits,
   LegendOwnerTraits,
-  ShadowTraits,
   ClippingPlanesTraits,
   SplitterTraits,
   LayerOrderingTraits,

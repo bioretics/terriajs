@@ -2334,6 +2334,8 @@
     "samplingStepHeader": "Terrain sampling step (m)",
     "samplingStepButtonText": "Change",
     "samplingStepButtonTitle": "Change sampling step",
+    "samplingStepAutoCheckbox": "auto",
+    "samplingStepAutoCheckboxTitle": "Keep the sampling step scaled to the length of the path and to the map zoom; uncheck it to set the step by hand",
     "showElevationChart": "Show/hide elevation chart",
     "geometrySummaryHeader": "Summary",
     "geometrySummaryElevationMin": "Alt. min",
@@ -2451,6 +2453,10 @@
       "playPathPanel": "## Play Path Panel\n\nThis panel allows you to view by scrolling the camera on the map a route drawn manually or loaded from files. The panel can be moved by dragging and also closed to get a full view.",
       "cameraPosition": "## Camera Position\n\nThe camera will follow the predefined path. At the beginning, it is necessary to place the camera near the starting point (which can either be the actual beginning of the route or the endpoint). It is also important to setting the camera's zoom and pitch according to the characteristics of the path: for example, in mountainous areas, it is advisable to avoid a very low pitch angle."
     },
+    "samplingStepHelp": "0 = no resampling; {{min}}-{{max}} = meters",
+    "samplingStepAutoCheckbox": "auto",
+    "samplingStepAutoCheckboxTitle": "The flight sampling step follows the map zoom: the closer you frame the ground, the denser the sampling, within the limits the path length allows. It is pinned when playback starts and released on stop. Uncheck it to set the step by hand, or to switch resampling off with 0.",
+    "samplingStepAutoHelp": "Step follows the map zoom",
     "tourPrompt": "First time using Play Path? Take a quick tour!"
   },
   "pickInfo": {

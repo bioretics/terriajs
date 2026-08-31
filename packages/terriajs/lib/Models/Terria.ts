@@ -699,7 +699,13 @@ export default class Terria {
 
   @observable measurableGeomSamplingStep: number = 500;
 
+  @observable measurableGeomSamplingStepIsAuto: boolean = true;
+
+  @observable measurableGeomSamplingStepInUse: number = 0;
+
   @observable playPathSamplingStep: number = 500;
+
+  @observable playPathSamplingStepIsAuto: boolean = true;
 
   appName: string = "TerriaJS App";
   supportEmail: string = "info@terria.io";

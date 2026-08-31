@@ -15,6 +15,7 @@ import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
 import isDefined from "../../../Core/isDefined";
 import readXml from "../../../Core/readXml";
+import stripFileExtension from "../../../Core/stripFileExtension";
 import TerriaError, { networkRequestError } from "../../../Core/TerriaError";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
@@ -158,7 +159,7 @@ class KmlCatalogItem
         !name.toLowerCase().endsWith(".kml") &&
         !name.toLowerCase().endsWith(".kmz")
       ) {
-        name = `${name}.kml`;
+        name = `${stripFileExtension(name)}.kml`;
       }
       return {
         name,
@@ -340,6 +341,10 @@ class KmlCatalogItem
     } else {
       return false;
     }
+  }
+
+  override get canSampleMeasurableGeometry(): boolean {
+    return true;
   }
 
   // Checks if the provided polygons are valid by ensuring only one point is connected exactly twice.

@@ -64,6 +64,7 @@ import {
 } from "../Core/Json";
 import { isJson } from "../Core/loadBlob";
 import StandardCssColors from "../Core/StandardCssColors";
+import stripFileExtension from "../Core/stripFileExtension";
 import TerriaError, { networkRequestError } from "../Core/TerriaError";
 import ProtomapsImageryProvider, {
   ProtomapsData
@@ -367,7 +368,7 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
       if (isDefined(this.readyData)) {
         let name = this.name || this.uniqueId || "data.geojson";
         if (!isJson(name)) {
-          name = `${name}.geojson`;
+          name = `${stripFileExtension(name)}.geojson`;
         }
         return {
           name,
@@ -1435,6 +1436,15 @@ function GeoJsonMixin<T extends Constructor<BaseType>>(Base: T) {
 
       this._pathType = pathType;
       return pathType !== PathTypes.noPath;
+    }
+
+    @computed
+    override get canSampleMeasurableGeometry(): boolean {
+      return (
+        this.canUseAsPath ||
+        typeof (this as any).sampleFromGeojsonData === "function" ||
+        typeof (this as any).sampleFromGpxData === "function"
+      );
     }
 
     private isCrsOkForPath(fc: any): boolean {
