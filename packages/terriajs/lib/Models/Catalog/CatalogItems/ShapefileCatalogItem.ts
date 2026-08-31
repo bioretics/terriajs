@@ -1,7 +1,8 @@
 import { FeatureCollection } from "geojson";
 import i18next from "i18next";
-import { action, computed, makeObservable } from "mobx";
+import { action, computed, makeObservable, override } from "mobx";
 import { FeatureCollectionWithFilename, parseZip } from "shpjs";
+import isDefined from "../../../Core/isDefined";
 import { isJsonObject } from "../../../Core/Json";
 import loadBlob, { isZip } from "../../../Core/loadBlob";
 import TerriaError from "../../../Core/TerriaError";
@@ -55,6 +56,22 @@ class ShapefileCatalogItem
 
   @computed get hasLocalData(): boolean {
     return this.url?.startsWith("blob:") ?? false;
+  }
+
+  @override
+  get _canExportData() {
+    return isDefined(this.url);
+  }
+
+  protected async _exportData() {
+    if (isDefined(this.url)) {
+      return this.url;
+    }
+
+    throw new TerriaError({
+      sender: this,
+      message: "No data available to download."
+    });
   }
 
   protected async forceLoadGeojsonData() {
