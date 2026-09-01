@@ -85,6 +85,9 @@ export default class UserDrawing extends MappableMixin(
   // helper for dragging points around
   private dragHelper?: DragPoints;
 
+  // the MapInteractionMode this UserDrawing pushed onto terria.mapInteractionModeStack, if any - tracked so cleanUp() can remove it by identity
+  private activeMapInteractionMode?: MapInteractionMode;
+
   pointEntities: CustomDataSource;
   otherEntities: CustomDataSource;
   polygon?: Entity;
@@ -1145,6 +1148,7 @@ export default class UserDrawing extends MappableMixin(
     runInAction(() => {
       this.pickPointMode = pickPointMode;
       this.terria.mapInteractionModeStack.push(pickPointMode);
+      this.activeMapInteractionMode = pickPointMode;
     });
     return pickPointMode;
   }
@@ -1376,6 +1380,16 @@ export default class UserDrawing extends MappableMixin(
 
     runInAction(() => {
       this.inDrawMode = false;
+
+      // Remove the MapInteractionMode entry from the stack if still present.
+      if (this.activeMapInteractionMode !== undefined) {
+        const stack = this.terria.mapInteractionModeStack;
+        const index = stack.indexOf(this.activeMapInteractionMode);
+        if (index !== -1) {
+          stack.splice(index, 1);
+        }
+        this.activeMapInteractionMode = undefined;
+      }
     });
     this.closeLoop = false;
 

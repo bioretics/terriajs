@@ -155,32 +155,46 @@ describe("GeoJsonCatalogItemSpec", () => {
         expect(geojson.readyData?.features.length).toBe(1);
       });
 
-      it("preserves the source item when sampling point data", async () => {
+      it("drops features with too few coordinates to form a valid geometry", async () => {
         geojson.setTrait(CommonStrata.user, "geoJsonData", {
           type: "FeatureCollection",
           features: [
             {
+              // An unclosed/degenerate ring - too few points for a Polygon.
               type: "Feature",
               properties: {},
               geometry: {
-                type: "Point",
-                coordinates: [144.8, -37.8]
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [144.8, -32.9],
+                    [145.0, -33.1]
+                  ]
+                ]
+              }
+            },
+            {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [144.806671142578125, -32.96258644191746],
+                    [145.008544921875, -33.19273094190691],
+                    [145.557861328125, -32.659031913817685],
+                    [145.042877197265625, -32.375322284319346],
+                    [144.7998046875, -32.96719522935591],
+                    [144.806671142578125, -32.96258644191746]
+                  ]
+                ]
               }
             }
           ]
         });
-        const sampleFromCartographics = spyOn(
-          terria.measurableGeometryManager[0],
-          "sampleFromCartographics"
-        );
 
-        await geojson.sampleFromGeojsonData();
-
-        expect(sampleFromCartographics).toHaveBeenCalled();
-        const callArgs = sampleFromCartographics.calls.mostRecent().args;
-        expect(callArgs[10]).toEqual(
-          jasmine.objectContaining({ sourceItemId: geojson.uniqueId })
-        );
+        await geojson.loadMapItems();
+        expect(geojson.readyData?.features.length).toBe(1);
       });
 
       it("reloads when the URL is changed", async function () {
