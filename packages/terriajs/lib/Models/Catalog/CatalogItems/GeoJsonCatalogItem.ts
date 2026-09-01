@@ -292,6 +292,7 @@ class GeoJsonCatalogItem
       circleRadius,
       circleCenter,
       {
+        sourceItemId: this.uniqueId,
         featureProperties,
         pointProperties: pointProperties.length ? pointProperties : undefined
       }

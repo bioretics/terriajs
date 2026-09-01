@@ -408,7 +408,13 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
           false,
           true,
           descriptions,
-          pathNotes
+          pathNotes,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { sourceItemId: item.uniqueId }
         );
         return;
       }

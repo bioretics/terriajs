@@ -155,6 +155,34 @@ describe("GeoJsonCatalogItemSpec", () => {
         expect(geojson.readyData?.features.length).toBe(1);
       });
 
+      it("preserves the source item when sampling point data", async () => {
+        geojson.setTrait(CommonStrata.user, "geoJsonData", {
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: {},
+              geometry: {
+                type: "Point",
+                coordinates: [144.8, -37.8]
+              }
+            }
+          ]
+        });
+        const sampleFromCartographics = spyOn(
+          terria.measurableGeometryManager[0],
+          "sampleFromCartographics"
+        );
+
+        await geojson.sampleFromGeojsonData();
+
+        expect(sampleFromCartographics).toHaveBeenCalled();
+        const callArgs = sampleFromCartographics.calls.mostRecent().args;
+        expect(callArgs[10]).toEqual(
+          jasmine.objectContaining({ sourceItemId: geojson.uniqueId })
+        );
+      });
+
       it("reloads when the URL is changed", async function () {
         geojson.setTrait(
           CommonStrata.user,
