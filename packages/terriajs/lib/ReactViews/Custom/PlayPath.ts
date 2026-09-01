@@ -162,19 +162,14 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const getPoints = useCallback(() => {
     if (!playGeom) return;
 
-    const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
-
-    const pts =
-      isCesium2D || !terria.cesium
-        ? playGeom.stopPoints
-        : resamplePathForFlight(
-            playGeom.stopPoints,
-            lockedSamplingStepRef.current ?? playPathSamplingStep
-          );
+    const pts = resamplePathForFlight(
+      playGeom.stopPoints,
+      lockedSamplingStepRef.current ?? playPathSamplingStep
+    );
 
     if (!pts || pts.length === 0) return pts;
     return pts;
-  }, [terria, playGeom, playPathSamplingStep, resamplePathForFlight]);
+  }, [playGeom, playPathSamplingStep, resamplePathForFlight]);
 
   useEffect(() => {
     const camera = terria.cesium?.scene.camera;
@@ -335,6 +330,8 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
     const isCesium2D = terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
     const pitch = camera?.pitch ?? 0;
 
+    const opensOnTheCurrentCamera = !isLeafletViewer && !isCesium2D;
+
     const initialIdx = Math.min(
       currentPointIndexRef.current,
       cartesians.length - 1
@@ -444,6 +441,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
       ) {
         if (
           !(
+            opensOnTheCurrentCamera &&
             startIdxRef.current === currentPointIndexRef.current &&
             i === currentPointIndexRef.current
           )
