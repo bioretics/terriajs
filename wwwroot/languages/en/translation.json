@@ -511,6 +511,8 @@
     "loginPanelUsernameTitle": "Enter your username",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Enter your password",
+    "loginPanelShowPassword": "Show password",
+    "loginPanelHidePassword": "Hide password",
     "loginPanelOk": "Login",
     "loginPanelCancel": "Cancel",
     "loginPanelLoading": "Authenticating...",

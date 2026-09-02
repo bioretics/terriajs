@@ -310,6 +310,8 @@
     "loginPanelUsernameTitle": "Inserisci il nome utente",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Inserisci la password",
+    "loginPanelShowPassword": "Mostra la password",
+    "loginPanelHidePassword": "Nascondi la password",
     "loginPanelOk": "Login",
     "loginPanelCancel": "Cancella",
     "loginPanelLoading": "Autenticazione in corso...",

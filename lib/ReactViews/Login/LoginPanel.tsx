@@ -30,6 +30,7 @@ const LoginPanel = observer((props: Props) => {
   const [messageKey, setMessageKey] = useState<string>();
   const [messageType, setMessageType] = useState<"error" | "info">("error");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   //const theme = useTheme();
 
@@ -41,6 +42,7 @@ const LoginPanel = observer((props: Props) => {
     setMessageKey(undefined);
     setMessageType("error");
     setIsLoading(false);
+    setShowPassword(false);
     document.body.style.cursor = "default";
   }, [viewState.isLoginPanelVisible]);
 
@@ -191,19 +193,40 @@ const LoginPanel = observer((props: Props) => {
             >
               {t("login.loginPanelPassword")}
             </Text>
-            <Input
-              title={t("login.loginPanelPasswordTitle")}
-              required
-              dark
-              type="password"
-              disabled={isLoading}
-              value={password}
-              onKeyDown={handleKeyDown}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setMessageKey(undefined);
-              }}
-            />
+            <div className={Styles.passwordField}>
+              <Input
+                title={t("login.loginPanelPasswordTitle")}
+                required
+                dark
+                type={showPassword ? "text" : "password"}
+                disabled={isLoading}
+                value={password}
+                onKeyDown={handleKeyDown}
+                style={{ paddingRight: "36px" }}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setMessageKey(undefined);
+                }}
+              />
+              {password.length > 0 && (
+                <button
+                  type="button"
+                  className={classNames(Styles.passwordToggle, {
+                    [Styles.passwordToggleActive]: showPassword
+                  })}
+                  onClick={() => setShowPassword((shown) => !shown)}
+                  disabled={isLoading}
+                  aria-pressed={showPassword}
+                  title={t(
+                    showPassword
+                      ? "login.loginPanelHidePassword"
+                      : "login.loginPanelShowPassword"
+                  )}
+                >
+                  <Icon glyph={Icon.GLYPHS.eye} />
+                </button>
+              )}
+            </div>
           </div>
           {messageKey && (
             <div
