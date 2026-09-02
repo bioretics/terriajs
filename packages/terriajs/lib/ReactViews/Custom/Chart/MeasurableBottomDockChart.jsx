@@ -324,7 +324,46 @@ class Chart extends React.Component {
     });
   }
 
+  @action
+  syncPropsToObservables(
+    chartItems,
+    xAxis,
+    margin,
+    terria,
+    chartItemKeyForPointMouseNear,
+    onPointMouseNear,
+    width,
+    height,
+    selectedStopPointIdx,
+    selectedSampledPointIdx
+  ) {
+    this.chartItemsProp = chartItems;
+    this.xAxisProp = xAxis;
+    this.marginProp = margin;
+    this.terriaProp = terria;
+    this.chartItemKeyForPointMouseNearProp = chartItemKeyForPointMouseNear;
+    this.onPointMouseNearProp = onPointMouseNear;
+    this.widthProp = width;
+    this.heightProp = height;
+    this.selectedStopPointIdxProp = selectedStopPointIdx;
+    this.selectedSampledPointIdxProp = selectedSampledPointIdx;
+  }
+
   componentDidMount() {
+    // Sync props once on mount (not in a reactive context, so safe to read this.props)
+    this.syncPropsToObservables(
+      this.props.chartItems,
+      this.props.xAxis,
+      this.props.margin,
+      this.props.terria,
+      this.props.chartItemKeyForPointMouseNear,
+      this.props.onPointMouseNear,
+      this.props.width,
+      this.props.height,
+      this.props.selectedStopPointIdx,
+      this.props.selectedSampledPointIdx
+    );
+
     this.disposeReaction = reaction(
       () =>
         `${this.selectedSampledPointIdxProp}:${this.selectedStopPointIdxProp}`,
@@ -416,17 +455,33 @@ class Chart extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    this.chartItemsProp = this.props.chartItems;
-    this.xAxisProp = this.props.xAxis;
-    this.marginProp = this.props.margin;
-    this.terriaProp = this.props.terria;
-    this.chartItemKeyForPointMouseNearProp =
-      this.props.chartItemKeyForPointMouseNear;
-    this.onPointMouseNearProp = this.props.onPointMouseNear;
-    this.widthProp = this.props.width;
-    this.heightProp = this.props.height;
-    this.selectedStopPointIdxProp = this.props.selectedStopPointIdx;
-    this.selectedSampledPointIdxProp = this.props.selectedSampledPointIdx;
+    // Sync props to observables when they change (safe outside reactive context)
+    if (
+      prevProps.chartItems !== this.props.chartItems ||
+      prevProps.xAxis !== this.props.xAxis ||
+      prevProps.margin !== this.props.margin ||
+      prevProps.terria !== this.props.terria ||
+      prevProps.chartItemKeyForPointMouseNear !==
+        this.props.chartItemKeyForPointMouseNear ||
+      prevProps.onPointMouseNear !== this.props.onPointMouseNear ||
+      prevProps.width !== this.props.width ||
+      prevProps.height !== this.props.height ||
+      prevProps.selectedStopPointIdx !== this.props.selectedStopPointIdx ||
+      prevProps.selectedSampledPointIdx !== this.props.selectedSampledPointIdx
+    ) {
+      this.syncPropsToObservables(
+        this.props.chartItems,
+        this.props.xAxis,
+        this.props.margin,
+        this.props.terria,
+        this.props.chartItemKeyForPointMouseNear,
+        this.props.onPointMouseNear,
+        this.props.width,
+        this.props.height,
+        this.props.selectedStopPointIdx,
+        this.props.selectedSampledPointIdx
+      );
+    }
 
     if (prevProps.chartItems !== this.props.chartItems) {
       this.setZoomedXScale(undefined);
@@ -454,9 +509,9 @@ class Chart extends React.Component {
       const pointNearMouse = this.pointsNearMouse.find(
         (elem) =>
           elem.chartItem.key ===
-            this.chartItemKeyForPointMouseNearProp.AirChart ||
+            this.chartItemKeyForPointMouseNearProp?.AirChart ||
           elem.chartItem.key ===
-            this.chartItemKeyForPointMouseNearProp.GroundChart
+            this.chartItemKeyForPointMouseNearProp?.GroundChart
       );
 
       this.onPointMouseNearProp?.(pointNearMouse?.point);
@@ -488,12 +543,7 @@ class Chart extends React.Component {
   };
 
   downloadPoints = (format) => {
-    downloadChartPoints(
-      format,
-      this.props.terria,
-      this.chartItems,
-      this.props.xAxis
-    );
+    downloadChartPoints(format, this.terria, this.chartItems, this.xAxis);
   };
 
   render() {
