@@ -1,45 +1,26 @@
-import classNames from "classnames";
+import { useEffect, useState } from "react";
 import { observer } from "mobx-react";
-import { useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
-import Icon, { StyledIcon } from "../../Styled/Icon";
 import { useLogin } from "../Map/MenuBar/LoginButton/useLogin";
+import MobileMenuItem from "./MobileMenuItem";
 
-import Styles from "./mobile-login-button.scss";
+import Styles from "./mobile-login-menu-item.scss";
 
 interface Props {
   terria: Terria;
   viewState: ViewState;
+  closeMenu: () => void;
 }
 
-const MobileLoginButton = observer((props: Props) => {
+const MobileLoginMenuItem = observer((props: Props) => {
   const { t } = useTranslation();
   const { isLoggedIn, username, executeAuthAction } = useLogin(
     props.terria,
     props.viewState
   );
-  const containerRef = useRef<HTMLDivElement>(null);
   const [isLogoutConfirmVisible, setIsLogoutConfirmVisible] = useState(false);
-
-  useEffect(() => {
-    if (!isLogoutConfirmVisible) return;
-
-    const handleOutsideClick = (event: Event) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsLogoutConfirmVisible(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handleOutsideClick);
-    return () => {
-      document.removeEventListener("pointerdown", handleOutsideClick);
-    };
-  }, [isLogoutConfirmVisible]);
 
   useEffect(() => {
     if (!isLoggedIn && isLogoutConfirmVisible) {
@@ -47,39 +28,30 @@ const MobileLoginButton = observer((props: Props) => {
     }
   }, [isLoggedIn, isLogoutConfirmVisible]);
 
-  const onLoginButtonClick = () => {
+  const onMenuItemClick = () => {
     if (isLoggedIn) {
       setIsLogoutConfirmVisible((visible) => !visible);
       return;
     }
+    props.closeMenu();
     executeAuthAction();
   };
 
   const onConfirmLogout = () => {
     setIsLogoutConfirmVisible(false);
+    props.closeMenu();
     executeAuthAction();
   };
 
   return (
-    <div className={Styles.loginContainer} ref={containerRef}>
-      <button
-        type="button"
-        className={classNames(Styles.loginBtn, {
-          [Styles.loginBtnActive]: isLoggedIn
-        })}
-        onClick={onLoginButtonClick}
-        aria-expanded={isLoggedIn && isLogoutConfirmVisible}
-        title={!isLoggedIn ? t("login.loginTitle") : t("login.logoutTitle")}
-      >
-        <StyledIcon
-          glyph={isLoggedIn ? Icon.GLYPHS.logout : Icon.GLYPHS.user}
-          styledWidth="20px"
-          styledHeight="20px"
-        />
-      </button>
+    <>
+      <MobileMenuItem
+        onClick={onMenuItemClick}
+        caption={isLoggedIn ? t("login.logoutTitle") : t("login.loginTitle")}
+      />
       {isLoggedIn && isLogoutConfirmVisible && (
         <div
-          className={Styles.logoutConfirmPanel}
+          className={Styles.logoutConfirm}
           role="dialog"
           aria-modal={false}
           aria-label={t("login.logoutConfirmTitle")}
@@ -109,7 +81,7 @@ const MobileLoginButton = observer((props: Props) => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 });
-export default MobileLoginButton;
+export default MobileLoginMenuItem;

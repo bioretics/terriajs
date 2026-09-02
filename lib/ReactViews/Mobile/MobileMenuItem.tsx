@@ -7,7 +7,7 @@ type Props = {
   href?: string;
   onClick: React.MouseEventHandler<HTMLElement>;
   caption: string;
-  icon: { id: keyof typeof GLYPHS };
+  icon?: { id: keyof typeof GLYPHS };
 };
 
 const MobileMenuItem = (props: Props) => (
