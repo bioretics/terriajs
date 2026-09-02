@@ -265,4 +265,26 @@ describe("ViewState", function () {
     viewState.afterTerriaStarted();
     expect(viewState.explorerPanelIsVisible).toEqual(false);
   });
+
+  it("syncs the active sampling step before auto-resampling", function () {
+    const resampleSpy = spyOn(
+      terria.measurableGeometryManager[0],
+      "resample"
+    ).and.callThrough();
+
+    runInAction(() => {
+      viewState.measurablePanelIsVisible = true;
+      terria.measurableGeomList.length = 1;
+      terria.measurableGeomList[0] = {
+        geodeticDistance: 10000,
+        stopPoints: [],
+        sourceItemId: "test-source"
+      } as any;
+      terria.measurableGeomSamplingStepInUse = 0;
+      terria.measurableGeomSamplingStepIsAuto = true;
+    });
+
+    expect(terria.measurableGeomSamplingStepInUse).toBeGreaterThan(0);
+    expect(resampleSpy).toHaveBeenCalled();
+  });
 });
