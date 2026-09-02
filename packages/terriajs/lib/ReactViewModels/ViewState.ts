@@ -923,6 +923,8 @@ export default class ViewState {
       removed(this.measurablePanelSourceItemId)
     ) {
       this.closeMeasurablePanel();
+      // Also close the chart panel when the measurable panel's layer is removed
+      this.measurableChartIsVisible = false;
     }
     if (
       this.playPathPanelIsVisible &&
