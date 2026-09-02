@@ -63,6 +63,11 @@ class MobileMenu extends React.Component {
     this.props.viewState.runStories();
   }
 
+  onHelpClick() {
+    this.props.viewState.showHelpPanel();
+    this.hideMenu();
+  }
+
   dismissSatelliteGuidanceAction() {
     this.props.viewState.toggleFeaturePrompt("mapGuidesLocation", true, true);
   }
@@ -144,6 +149,10 @@ class MobileMenu extends React.Component {
               {menuItem}
             </div>
           ))}
+          <MobileMenuItem
+            onClick={() => this.onHelpClick()}
+            caption={t("helpPanel.btnText")}
+          />
           {mapUserGuide && <MobileMenuItem {...mapUserGuide} />}
           {this.props.showFeedback && (
             <MobileMenuItem

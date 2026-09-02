@@ -14,6 +14,7 @@ import SearchBox from "../Search/SearchBox";
 import Branding from "../SidePanel/Branding";
 import { withViewState } from "../Context";
 import Styles from "./mobile-header.scss";
+import MobileLoginButton from "./MobileLoginButton";
 import MobileMenu from "./MobileMenu";
 import MobileModalWindow from "./MobileModalWindow";
 import ViewerMode, { setViewerMode } from "../../Models/ViewerMode";
@@ -312,6 +313,13 @@ class MobileHeader extends React.Component {
                     styledHeight="20px"
                   />
                 </button>
+                {this.props.viewState.terria.configParameters
+                  .userProfileLoginServiceUrl && (
+                  <MobileLoginButton
+                    terria={this.props.viewState.terria}
+                    viewState={this.props.viewState}
+                  />
+                )}
               </div>
             </>
           ) : (
