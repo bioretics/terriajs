@@ -198,18 +198,24 @@ class Chart extends React.Component {
 
   @computed
   get initialScales() {
-    return this.chartItems.map((c) => ({
-      x: this.initialXScale,
-      y: this.yAxes.find((y) => y.units === c.units).scale
-    }));
+    return this.chartItems.map((c) => {
+      const yAxis = this.yAxes.find((y) => y.units === c.units);
+      return {
+        x: this.initialXScale,
+        y: yAxis?.scale
+      };
+    });
   }
 
   @computed
   get zoomedScales() {
-    return this.chartItems.map((c) => ({
-      x: this.xScale,
-      y: this.yAxes.find((y) => y.units === c.units).scale
-    }));
+    return this.chartItems.map((c) => {
+      const yAxis = this.yAxes.find((y) => y.units === c.units);
+      return {
+        x: this.xScale,
+        y: yAxis?.scale
+      };
+    });
   }
 
   @computed
@@ -260,9 +266,12 @@ class Chart extends React.Component {
 
   @computed
   get estimatedYAxesWidth() {
+    const leftmostYAxis = this.yAxes[0];
+    if (!leftmostYAxis) {
+      return 0;
+    }
     const numTicks = 4;
     const tickLabelFontSize = 10;
-    const leftmostYAxis = this.yAxes[0];
     const maxLabelDigits = Math.max(
       0,
       ...leftmostYAxis.scale.ticks(numTicks).map((n) => n.toString().length)
