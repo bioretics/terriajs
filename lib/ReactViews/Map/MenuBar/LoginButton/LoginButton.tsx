@@ -1,12 +1,12 @@
 import { Ref, useEffect, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { DefaultTheme } from "styled-components";
-import Terria, { LoginProfileServiceType } from "../../../../Models/Terria";
+import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import Icon from "../../../../Styled/Icon";
 import { useRefForTerria } from "../../../Hooks/useRefForTerria";
+import { useLogin } from "./useLogin";
 
 import Styles from "./login-button.scss";
 
@@ -22,17 +22,6 @@ interface ButtonProps extends Props {
 
 const LOGIN_BUTTON_NAME = "MenuBarLoginButton";
 
-function usernameFromAuthToken(token?: string): string | undefined {
-  if (!token?.startsWith("Basic ")) return undefined;
-  try {
-    const decoded = atob(token.slice("Basic ".length));
-    const separator = decoded.indexOf(":");
-    return separator >= 0 ? decoded.slice(0, separator) : decoded;
-  } catch {
-    return undefined;
-  }
-}
-
 const LoginButton = observer((props: Props) => {
   const storyButtonRef: Ref<HTMLButtonElement> = useRefForTerria(
     LOGIN_BUTTON_NAME,
@@ -43,10 +32,10 @@ const LoginButton = observer((props: Props) => {
     useState<boolean>(false);
 
   const { t } = useTranslation();
-  const isLoggedIn = props.terria.isAuthenticated;
-  const username =
-    usernameFromAuthToken(props.terria.userAuthToken) ??
-    props.terria.userProfile;
+  const { isLoggedIn, username, executeAuthAction } = useLogin(
+    props.terria,
+    props.viewState
+  );
 
   useEffect(() => {
     if (!isLogoutConfirmVisible) return;
@@ -81,44 +70,18 @@ const LoginButton = observer((props: Props) => {
     }
   }, [isLoggedIn, isLogoutConfirmVisible]);
 
-  const executeAuthAction = (viewState: ViewState) => {
-    if (
-      props.terria.configParameters.userProfileLoginServiceType ===
-      LoginProfileServiceType.Cohesion
-    ) {
-      const a = document.createElement("a");
-      a.href = !viewState.terria.userProfile
-        ? viewState.terria.configParameters.userProfileLoginServiceUrl +
-          document.baseURI
-        : document.baseURI;
-      a.click();
-    } else if (
-      props.terria.configParameters.userProfileLoginServiceType ===
-      LoginProfileServiceType.Geoserver
-    ) {
-      runInAction(() => {
-        if (props.terria.userAuthToken) {
-          props.terria.userAuthToken = undefined;
-          props.terria.userProfile = undefined;
-        } else {
-          viewState.isLoginPanelVisible = true;
-        }
-      });
-    }
-  };
-
-  const onLoginButtonClick = (viewState: ViewState) => () => {
+  const onLoginButtonClick = () => {
     if (isLoggedIn) {
       setIsLogoutConfirmVisible((showPanel) => !showPanel);
       return;
     }
 
-    executeAuthAction(viewState);
+    executeAuthAction();
   };
 
   const onConfirmLogout = () => {
     setIsLogoutConfirmVisible(false);
-    executeAuthAction(props.viewState);
+    executeAuthAction();
   };
 
   return (
@@ -127,7 +90,7 @@ const LoginButton = observer((props: Props) => {
         ref={storyButtonRef}
         className={Styles.loginBtn}
         type="button"
-        onClick={onLoginButtonClick(props.viewState)}
+        onClick={onLoginButtonClick}
         aria-expanded={isLoggedIn}
         css={`
           ${(p: ButtonProps) =>

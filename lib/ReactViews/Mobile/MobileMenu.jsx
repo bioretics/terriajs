@@ -6,6 +6,7 @@ import PropTypes from "prop-types";
 
 import classNames from "classnames";
 import MobileMenuItem from "./MobileMenuItem";
+import MobileLoginMenuItem from "./MobileLoginMenuItem";
 import SettingPanel from "../Map/Panels/SettingPanel";
 import SharePanel from "../Map/Panels/SharePanel/SharePanel";
 import { withTranslation } from "react-i18next";
@@ -61,6 +62,11 @@ class MobileMenu extends React.Component {
 
   runStories() {
     this.props.viewState.runStories();
+  }
+
+  onHelpClick() {
+    this.props.viewState.showHelpPanel();
+    this.hideMenu();
   }
 
   dismissSatelliteGuidanceAction() {
@@ -144,6 +150,10 @@ class MobileMenu extends React.Component {
               {menuItem}
             </div>
           ))}
+          <MobileMenuItem
+            onClick={() => this.onHelpClick()}
+            caption={t("helpPanel.btnText")}
+          />
           {mapUserGuide && <MobileMenuItem {...mapUserGuide} />}
           {this.props.showFeedback && (
             <MobileMenuItem
@@ -167,6 +177,13 @@ class MobileMenu extends React.Component {
                 smallScreen={this.props.viewState.useSmallScreenInterface}
               />
             </div>
+          )}
+          {this.props.terria.configParameters.userProfileLoginServiceUrl && (
+            <MobileLoginMenuItem
+              terria={this.props.terria}
+              viewState={this.props.viewState}
+              closeMenu={() => this.hideMenu()}
+            />
           )}
         </div>
       </div>
