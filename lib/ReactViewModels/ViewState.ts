@@ -904,6 +904,7 @@ export default class ViewState {
       removed(this.measurablePanelSourceItemId)
     ) {
       this.closeMeasurablePanel();
+      this.measurableChartIsVisible = false;
     }
     if (
       this.playPathPanelIsVisible &&
