@@ -785,6 +785,7 @@ export default class ViewState {
         if (step === this.terria.measurableGeomSamplingStepInUse) {
           return;
         }
+        this.terria.measurableGeomSamplingStepInUse = step;
         this.terria.measurableGeometryManager[
           this.terria.measurableGeometryIndex
         ]?.resample();
