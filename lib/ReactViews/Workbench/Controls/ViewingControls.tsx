@@ -703,8 +703,16 @@ class ViewingControls extends React.Component<
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
                       this.deactivateMeasureTools();
+                      const isPlayingSameLayer =
+                        viewState.isPlayingPath &&
+                        viewState.playPathPlaybackSourceItemId ===
+                          item.uniqueId;
                       viewState.playPathPanelSourceItemId = item.uniqueId;
+                      viewState.playPathPlaybackSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
+                      if (!isPlayingSameLayer) {
+                        item.computePath();
+                      }
                     });
                   }
                 }}
