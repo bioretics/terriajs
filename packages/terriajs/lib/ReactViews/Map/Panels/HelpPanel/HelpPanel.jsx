@@ -63,15 +63,27 @@ class HelpPanel extends Component {
         onClick={() => this.props.viewState.setTopElement("HelpPanel")}
         css={`
           position: fixed;
+          top: 0;
           z-index: ${this.props.viewState.topElement === "HelpPanel"
             ? 99999
             : 110};
           transition: right 0.25s;
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
           right: ${isAnimatingOpen ? -320 : isExpanded ? 490 : 0}px;
+
+          @media (max-width: 830px) {
+            right: ${isAnimatingOpen ? -320 : 0}px;
+          }
         `}
       >
-        <Box position="absolute" paddedRatio={3} topRight>
+        <Box
+          position="absolute"
+          paddedRatio={3}
+          topRight
+          css={`
+            z-index: 120;
+          `}
+        >
           <RawButton
             onClick={() => this.props.viewState.hideHelpPanel()}
             aria-label="Close help panel"
