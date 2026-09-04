@@ -5,7 +5,7 @@ import Icon, { StyledIcon } from "../../Styled/Icon";
 import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
-import Button from "../../Styled/Button";
+import Button, { RawButton } from "../../Styled/Button";
 import { useTheme } from "styled-components";
 import Slider from "rc-slider";
 import usePlayPath from "../Custom/PlayPath";
@@ -33,6 +33,7 @@ const PlayPathPanel = observer((props: Props) => {
     playGeomState.geomList[playGeomState.geometryIndex]
   );
   const [showTourPrompt, setShowTourPrompt] = useState(false);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const [hasSeenTour, setHasSeenTour] = useState<boolean>(
     !!localStorage.getItem("playPathTourShown")
   );
@@ -338,92 +339,115 @@ const PlayPathPanel = observer((props: Props) => {
             gap: 4
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap"
-            }}
+          <RawButton
+            onClick={() => setShowAdvancedOptions((shown) => !shown)}
+            css={`
+              display: flex;
+              align-items: center;
+              gap: 4px;
+            `}
           >
-            <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
-              {i18next.t("playPath.samplingStepHeader")}:
-            </label>
-            <span style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
-              [min {minSamplingStep}, max {maxSamplingStep}]
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              flexWrap: "wrap"
-            }}
-          >
-            <Checkbox
-              title={i18next.t("playPath.samplingStepAutoCheckboxTitle")}
-              isChecked={playPathSamplingStepIsAuto}
-              isDisabled={playingPath}
-              onChange={(e) => {
-                changePlayPathSamplingStepIsAuto(e.target.checked);
-              }}
-            >
-              <TextSpan textLight style={{ whiteSpace: "nowrap" }}>
-                {i18next.t("playPath.samplingStepAutoCheckbox")}
-              </TextSpan>
-            </Checkbox>
-            <Box styledWidth="70px">
-              <Input
-                css={`
-                  border: solid;
-                  border-width: ${isValidSamplingStep ? 1 : 2}px;
-                  border-color: ${isValidSamplingStep
-                    ? theme.textLight
-                    : "red"};
-                `}
-                title={i18next.t("playPath.samplingStepHeader")}
-                light={false}
-                dark
-                type="number"
-                min={SAMPLING_STEP_DISABLED}
-                max={maxSamplingStep}
-                step={1}
-                value={samplingStepInput}
-                disabled={playPathSamplingStepIsAuto || playingPath}
-                onChange={(e) => {
-                  setSamplingStepInput(parseInt(e.target.value, 10));
-                }}
-              />
-            </Box>
-            <Button
-              css={`
-                color: ${theme.textLight};
-                background: ${theme.colorPrimary};
-              `}
-              disabled={
-                playPathSamplingStepIsAuto ||
-                !isValidSamplingStep ||
-                playingPath
+            <TextSpan textLight style={{ fontSize: "0.9em" }}>
+              {i18next.t("playPath.advancedOptions")}
+            </TextSpan>
+            <StyledIcon
+              light
+              styledWidth="10px"
+              glyph={
+                showAdvancedOptions ? Icon.GLYPHS.opened : Icon.GLYPHS.closed
               }
-              title={i18next.t("playPath.samplingStepButtonTitle")}
-              onClick={() => {
-                if (isValidSamplingStep) {
-                  changePlayPathSamplingStep(samplingStepInput);
-                }
-              }}
-            >
-              {i18next.t("playPath.samplingStepButtonText")}
-            </Button>
-          </div>
-          <Text textLight style={{ fontSize: "10px", lineHeight: 1.2 }}>
-            {playPathSamplingStepIsAuto
-              ? i18next.t("playPath.samplingStepAutoHelp")
-              : i18next.t("playPath.samplingStepHelp", {
-                  min: minSamplingStep,
-                  max: maxSamplingStep
-                })}
-          </Text>
+            />
+          </RawButton>
+          {showAdvancedOptions && (
+            <>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap"
+                }}
+              >
+                <label style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+                  {i18next.t("playPath.samplingStepHeader")}:
+                </label>
+                <span style={{ whiteSpace: "nowrap", fontSize: "0.9em" }}>
+                  [min {minSamplingStep}, max {maxSamplingStep}]
+                </span>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  flexWrap: "wrap"
+                }}
+              >
+                <Checkbox
+                  title={i18next.t("playPath.samplingStepAutoCheckboxTitle")}
+                  isChecked={playPathSamplingStepIsAuto}
+                  isDisabled={playingPath}
+                  onChange={(e) => {
+                    changePlayPathSamplingStepIsAuto(e.target.checked);
+                  }}
+                >
+                  <TextSpan textLight style={{ whiteSpace: "nowrap" }}>
+                    {i18next.t("playPath.samplingStepAutoCheckbox")}
+                  </TextSpan>
+                </Checkbox>
+                <Box styledWidth="70px">
+                  <Input
+                    css={`
+                      border: solid;
+                      border-width: ${isValidSamplingStep ? 1 : 2}px;
+                      border-color: ${isValidSamplingStep
+                        ? theme.textLight
+                        : "red"};
+                    `}
+                    title={i18next.t("playPath.samplingStepHeader")}
+                    light={false}
+                    dark
+                    type="number"
+                    min={SAMPLING_STEP_DISABLED}
+                    max={maxSamplingStep}
+                    step={1}
+                    value={samplingStepInput}
+                    disabled={playPathSamplingStepIsAuto || playingPath}
+                    onChange={(e) => {
+                      setSamplingStepInput(parseInt(e.target.value, 10));
+                    }}
+                  />
+                </Box>
+                <Button
+                  css={`
+                    color: ${theme.textLight};
+                    background: ${theme.colorPrimary};
+                  `}
+                  disabled={
+                    playPathSamplingStepIsAuto ||
+                    !isValidSamplingStep ||
+                    playingPath
+                  }
+                  title={i18next.t("playPath.samplingStepButtonTitle")}
+                  onClick={() => {
+                    if (isValidSamplingStep) {
+                      changePlayPathSamplingStep(samplingStepInput);
+                    }
+                  }}
+                >
+                  {i18next.t("playPath.samplingStepButtonText")}
+                </Button>
+              </div>
+              <Text textLight style={{ fontSize: "10px", lineHeight: 1.2 }}>
+                {playPathSamplingStepIsAuto
+                  ? i18next.t("playPath.samplingStepAutoHelp")
+                  : i18next.t("playPath.samplingStepHelp", {
+                      min: minSamplingStep,
+                      max: maxSamplingStep
+                    })}
+              </Text>
+            </>
+          )}
         </div>
       </div>
     );
