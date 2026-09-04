@@ -190,6 +190,7 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "advancedOptions": "Opzioni avanzate",
     "samplingStepHeader": "Passo di campionamento",
     "samplingStepButtonText": "Cambia",
     "samplingStepButtonTitle": "Applica il nuovo passo di campionamento del volo, indipendente da quello del pannello Misure",
