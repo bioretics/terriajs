@@ -549,6 +549,7 @@ export default class ViewState {
   private _disposePlayPathSamplingStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _panelSourceItemRemovedSubscription: IReactionDisposer;
+  private _isResamplingInProgress: boolean = false;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -785,9 +786,24 @@ export default class ViewState {
         if (step === this.terria.measurableGeomSamplingStepInUse) {
           return;
         }
+        // Prevent re-entrance: skip if a resample is already in progress.
+        // This prevents loop when scale or dependencies change during async resampling.
+        if (this._isResamplingInProgress) {
+          return;
+        }
+
+        this._isResamplingInProgress = true;
+
+        this.terria.measurableGeomSamplingStepInUse = step;
         this.terria.measurableGeometryManager[
           this.terria.measurableGeometryIndex
         ]?.resample();
+
+        // Reset flag after async operations complete. Most terrain sampling completes
+        // within 100ms; if it takes longer, the reaction will fire again after this delay.
+        setTimeout(() => {
+          this._isResamplingInProgress = false;
+        }, 100);
       }
     );
 
