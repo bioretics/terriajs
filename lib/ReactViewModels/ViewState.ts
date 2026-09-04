@@ -483,6 +483,11 @@ export default class ViewState {
   @observable playPathPanelSourceItemId: string | undefined;
 
   /**
+   * Unique id of the workbench item the PlayPathPlayback was opened for.
+   * @type {String}
+   */
+  @observable playPathPlaybackSourceItemId: string | undefined;
+  /**
    * Per-workbench-item snapshots of measurable geometry so panels stay fixed
    * on the layer they were opened for.
    */
@@ -920,6 +925,11 @@ export default class ViewState {
       removed(this.measurablePanelSourceItemId)
     ) {
       this.closeMeasurablePanel();
+      this.measurableChartIsVisible = false;
+    }
+    if (this.isPlayingPath && removed(this.playPathPlaybackSourceItemId)) {
+      this.isPlayingPath = false;
+      this.playPathPlaybackSourceItemId = undefined;
     }
     if (
       this.playPathPanelIsVisible &&
@@ -942,7 +952,8 @@ export default class ViewState {
         this.measurableDownloadPanelSourceItemId,
         this.measurableDownloadPanelIsVisible
       ) ||
-      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible)
+      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible) ||
+      usedBy(this.playPathPlaybackSourceItemId, this.isPlayingPath)
     ) {
       return;
     }

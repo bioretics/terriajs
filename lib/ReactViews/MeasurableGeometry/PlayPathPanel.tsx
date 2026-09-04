@@ -117,14 +117,16 @@ const PlayPathPanel = observer((props: Props) => {
     if (props.viewState.playPathPanelIsVisible) {
       setShowAdvancedOptions(false);
     }
-  }, [props.viewState.playPathPanelIsVisible]);
-
-  useEffect(() => {
-    if (currentGeom !== lastGeom) {
+    if (props.viewState.playPathPanelIsVisible && currentGeom !== lastGeom) {
       resetPlayPath();
       setLastGeom(currentGeom);
     }
-  }, [currentGeom, lastGeom, resetPlayPath]);
+  }, [
+    currentGeom,
+    lastGeom,
+    props.viewState.playPathPanelIsVisible,
+    resetPlayPath
+  ]);
 
   const panelClassName = classNames(Styles.panel, {
     [Styles.isVisible]: props.viewState.playPathPanelIsVisible,
