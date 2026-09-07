@@ -116,7 +116,7 @@ const PlayPathPanel = observer((props: Props) => {
     if (props.viewState.playPathPanelIsVisible) {
       setShowAdvancedOptions(false);
     }
-    if (currentGeom !== lastGeom) {
+    if (props.viewState.playPathPanelIsVisible && currentGeom !== lastGeom) {
       resetPlayPath();
       setLastGeom(currentGeom);
     }

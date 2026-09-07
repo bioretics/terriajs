@@ -18,7 +18,7 @@ import {
 
 export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const playGeomState = viewState.getMeasurableGeomStateForSource(
-    viewState.playPathPanelSourceItemId
+    viewState.playPathPlaybackSourceItemId
   );
   const playGeometryIndex = playGeomState.geometryIndex;
   const playGeom = playGeomState.geomList[playGeometryIndex];
@@ -638,7 +638,11 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   );
 
   useEffect(() => {
-    if (viewState.isPlayingPath) playPath();
+    if (viewState.isPlayingPath) {
+      playPath();
+    } else {
+      abortPlayingPathRef.current = false;
+    }
   }, [viewState.isPlayingPath, playPath]);
 
   return {

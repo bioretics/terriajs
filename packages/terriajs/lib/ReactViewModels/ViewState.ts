@@ -481,6 +481,8 @@ export default class ViewState {
    */
   @observable playPathPanelSourceItemId: string | undefined;
 
+  @observable playPathPlaybackSourceItemId: string | undefined;
+
   /**
    * Per-workbench-item snapshots of measurable geometry so panels stay fixed
    * on the layer they were opened for.
@@ -926,6 +928,10 @@ export default class ViewState {
       // Also close the chart panel when the measurable panel's layer is removed
       this.measurableChartIsVisible = false;
     }
+    if (this.isPlayingPath && removed(this.playPathPlaybackSourceItemId)) {
+      this.isPlayingPath = false;
+      this.playPathPlaybackSourceItemId = undefined;
+    }
     if (
       this.playPathPanelIsVisible &&
       removed(this.playPathPanelSourceItemId)
@@ -947,7 +953,8 @@ export default class ViewState {
         this.measurableDownloadPanelSourceItemId,
         this.measurableDownloadPanelIsVisible
       ) ||
-      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible)
+      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible) ||
+      usedBy(this.playPathPlaybackSourceItemId, this.isPlayingPath)
     ) {
       return;
     }
