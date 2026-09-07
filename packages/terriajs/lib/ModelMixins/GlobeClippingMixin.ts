@@ -8,6 +8,7 @@ import {
 import GlobeClippingTraits from "../Traits/TraitsClasses/GlobeClippingTraits";
 import i18next from "i18next";
 import filterOutUndefined from "../Core/filterOutUndefined";
+import CommonStrata from "../Models/Definition/CommonStrata";
 import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import ClippingPlane from "terriajs-cesium/Source/Scene/ClippingPlane";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -30,8 +31,20 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       makeObservable(this);
 
       this._globeClippingDisposer = autorun(() => {
+        const ownerId = this.terria.activeGlobeClippingItemId;
+        const isOwnedByOther =
+          ownerId !== undefined && ownerId !== this.uniqueId;
+
+        // Force trait off so checkbox shows unchecked
+        if (this.globeClippingEnabled && isOwnedByOther) {
+          this.setTrait(CommonStrata.user, "globeClippingEnabled", false);
+          return;
+        }
+
         const boundingSphere =
-          this.globeClippingEnabled && this.terria.workbench.contains(this)
+          this.globeClippingEnabled &&
+          !isOwnedByOther &&
+          this.terria.workbench.contains(this)
             ? this.globeClippingBoundingSphere
             : undefined;
 
@@ -39,6 +52,7 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           (boundingSphere?.radius ?? 0) > 0 &&
           this.terria.cesium !== undefined
         ) {
+          this.terria.activeGlobeClippingItemId = this.uniqueId;
           this.autoComputeClippingPlanes(boundingSphere);
           this._globeClippingApplied = true;
         } else if (this._globeClippingApplied) {
