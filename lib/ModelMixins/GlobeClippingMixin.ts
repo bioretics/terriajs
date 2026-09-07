@@ -7,6 +7,7 @@ import SelectableDimensions, {
 import GlobeClippingTraits from "../Traits/TraitsClasses/GlobeClippingTraits";
 import i18next from "i18next";
 import filterOutUndefined from "../Core/filterOutUndefined";
+import CommonStrata from "../Models/Definition/CommonStrata";
 import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import ClippingPlane from "terriajs-cesium/Source/Scene/ClippingPlane";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -30,19 +31,36 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       makeObservable(this);
 
       this._globeClippingDisposer = autorun(() => {
-        const boundingSphere = this.globeClippingEnabled
-          ? this.globeClippingBoundingSphere
-          : undefined;
+        const ownerId = this.terria.activeGlobeClippingItemId;
+        const isOwnedByOther =
+          ownerId !== undefined && ownerId !== this.uniqueId;
+
+        // Force trait off so checkbox shows unchecked
+        if (this.globeClippingEnabled && isOwnedByOther) {
+          this.setTrait(CommonStrata.user, "globeClippingEnabled", false);
+          return;
+        }
+        const boundingSphere =
+          this.globeClippingEnabled &&
+          !isOwnedByOther &&
+          this.terria.workbench.contains(this)
+            ? this.globeClippingBoundingSphere
+            : undefined;
 
         if (
           (boundingSphere?.radius ?? 0) > 0 &&
           this.terria.cesium !== undefined
         ) {
+          this.terria.activeGlobeClippingItemId = this.uniqueId;
           this.autoComputeClippingPlanes(boundingSphere);
           this._globeClippingApplied = true;
         } else if (this._globeClippingApplied) {
           this.autoComputeClippingPlanes(undefined);
           this._globeClippingApplied = false;
+          // Release ownership so other layers can enable clipping
+          if (this.terria.activeGlobeClippingItemId === this.uniqueId) {
+            this.terria.activeGlobeClippingItemId = undefined;
+          }
         }
       });
     }
@@ -58,12 +76,15 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @override
     get selectableDimensions() {
+      const ownerId = this.terria.activeGlobeClippingItemId;
+      const isOwnedByOther = ownerId !== undefined && ownerId !== this.uniqueId;
       const globeClippingCheckbox: SelectableDimensionCheckbox | undefined =
         this.globeClippingControlShowed
           ? {
               type: "checkbox",
               id: "globe-clipping-box",
               selectedId: this.globeClippingEnabled ? "true" : "false",
+              readOnly: isOwnedByOther,
               options: [
                 {
                   id: "true",
@@ -75,11 +96,12 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
                 }
               ],
               setDimensionValue: action((stratumId, value) => {
-                this.setTrait(
-                  stratumId,
-                  "globeClippingEnabled",
-                  value === "true"
-                );
+                const enabling = value === "true";
+                if (enabling && isOwnedByOther) return; // blocked
+                this.setTrait(stratumId, "globeClippingEnabled", enabling);
+                this.terria.activeGlobeClippingItemId = enabling
+                  ? this.uniqueId
+                  : undefined;
               })
             }
           : undefined;
