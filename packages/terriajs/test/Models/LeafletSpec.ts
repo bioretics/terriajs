@@ -160,6 +160,44 @@ describe("Leaflet Model", function () {
         );
       });
     });
+
+    describe("when the container has not been laid out yet", function () {
+      const target = Rectangle.fromDegrees(11.34, 44.49, 11.35, 44.5);
+
+      it("measures the container again before flying", async function () {
+        const invalidateSize = spyOn(
+          leaflet.map,
+          "invalidateSize"
+        ).and.callThrough();
+
+        await leaflet.zoomTo(target, 0);
+
+        expect(invalidateSize).toHaveBeenCalled();
+      });
+
+      it("moves without animating when the container reports no size", async function () {
+        spyOn(leaflet.map, "getSize").and.returnValue(new L.Point(0, 0));
+        const setView = spyOn(leaflet.map, "setView").and.callThrough();
+        const flyToBounds = spyOn(leaflet.map, "flyToBounds");
+
+        // Leaflet's flight maths divides by the container size, so flying to
+        // bounds against a zero sized container yields NaN and then throws on
+        // every animation frame.
+        await leaflet.zoomTo(target, 0);
+
+        expect(flyToBounds).not.toHaveBeenCalled();
+        expect(setView).toHaveBeenCalled();
+      });
+
+      it("flies normally once the container has a size", async function () {
+        spyOn(leaflet.map, "getSize").and.returnValue(new L.Point(800, 600));
+        const flyToBounds = spyOn(leaflet.map, "flyToBounds");
+
+        await leaflet.zoomTo(target, 0);
+
+        expect(flyToBounds).toHaveBeenCalled();
+      });
+    });
   });
 
   describe("mouseCoords", function () {

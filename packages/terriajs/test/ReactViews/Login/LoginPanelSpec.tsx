@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { http, HttpResponse } from "msw";
 import { runInAction } from "mobx";
@@ -350,6 +350,84 @@ describe("LoginPanel", function () {
       );
 
       expect(terria.userAuthToken).toEqual(EXPECTED_HEADER);
+    });
+  });
+
+  describe("showing the password", function () {
+    function toggle() {
+      return screen.queryByRole("button", {
+        name: /login\.loginPanel(Show|Hide)Password/
+      });
+    }
+
+    function passwordField() {
+      return document.querySelector<HTMLInputElement>(
+        'input[type="password"], input[type="text"][title="login.loginPanelPasswordTitle"]'
+      )!;
+    }
+
+    it("offers nothing to reveal while the field is empty", function () {
+      render();
+
+      expect(toggle()).toBeNull();
+    });
+
+    it("offers the toggle once something has been typed", async function () {
+      const user = render();
+      await user.type(fields().password, "segreta");
+
+      expect(toggle()).not.toBeNull();
+    });
+
+    it("hides the password to start with", async function () {
+      const user = render();
+      await user.type(fields().password, "segreta");
+
+      expect(passwordField().type).toEqual("password");
+      expect(toggle()?.getAttribute("aria-pressed")).toEqual("false");
+    });
+
+    it("reveals the password when the toggle is used", async function () {
+      const user = render();
+      await user.type(fields().password, "segreta");
+
+      await user.click(toggle()!);
+
+      expect(passwordField().type).toEqual("text");
+      expect(passwordField().value).toEqual("segreta");
+      expect(toggle()?.getAttribute("aria-pressed")).toEqual("true");
+    });
+
+    it("hides it again on a second use", async function () {
+      const user = render();
+      await user.type(fields().password, "segreta");
+
+      await user.click(toggle()!);
+      await user.click(toggle()!);
+
+      expect(passwordField().type).toEqual("password");
+    });
+
+    it("goes back to hidden when the panel is reopened", async function () {
+      const user = render();
+      await user.type(fields().password, "segreta");
+      await user.click(toggle()!);
+      expect(passwordField().type).toEqual("text");
+
+      // Each visibility change is flushed on its own, otherwise React
+      // coalesces them and the panel never sees it was closed.
+      await act(async () => {
+        runInAction(() => {
+          viewState.isLoginPanelVisible = false;
+        });
+      });
+      await act(async () => {
+        runInAction(() => {
+          viewState.isLoginPanelVisible = true;
+        });
+      });
+
+      expect(passwordField().type).toEqual("password");
     });
   });
 });

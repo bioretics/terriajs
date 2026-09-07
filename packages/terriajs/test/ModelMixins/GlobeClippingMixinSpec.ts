@@ -66,6 +66,12 @@ function fakeGlobe() {
   };
 }
 
+function putOnWorkbench(item: GeoJsonCatalogItem) {
+  runInAction(() => {
+    item.terria.workbench.items = [item];
+  });
+}
+
 function stubCesium(terria: Terria, globe: ReturnType<typeof fakeGlobe>) {
   spyOnProperty(terria, "cesium", "get").and.returnValue({
     scene: { globe }
@@ -353,6 +359,110 @@ describe("GlobeClippingMixin", function () {
 
       expect(gltf.globeClippingBoundingSphere).toBeUndefined();
     });
+
+    it("puts the checkbox in a 3D Tiles item's own dimension list", function () {
+      const tileset = new Cesium3DTilesCatalogItem("tiles", terria);
+      expect(
+        tileset.selectableDimensions.find((d) => d.id === "globe-clipping-box")
+      ).toBeUndefined();
+
+      runInAction(() => {
+        tileset.setTrait(
+          CommonStrata.definition,
+          "globeClippingControlShowed",
+          true
+        );
+      });
+
+      // The mixin contributes the checkbox, but the item has to hand it on
+      // through its own selectableDimensions or the user never sees it.
+      expect(
+        tileset.selectableDimensions.find((d) => d.id === "globe-clipping-box")
+      ).toBeDefined();
+    });
+
+    it("puts the checkbox in a glTF item's own dimension list", function () {
+      const gltf = new GltfCatalogItem("gltf", terria);
+      expect(
+        gltf.selectableDimensions.find((d) => d.id === "globe-clipping-box")
+      ).toBeUndefined();
+
+      runInAction(() => {
+        gltf.setTrait(
+          CommonStrata.definition,
+          "globeClippingControlShowed",
+          true
+        );
+      });
+
+      expect(
+        gltf.selectableDimensions.find((d) => d.id === "globe-clipping-box")
+      ).toBeDefined();
+    });
+
+    it("keeps the dimensions those items already had", function () {
+      const tileset = new Cesium3DTilesCatalogItem("tiles", terria);
+      const before = tileset.selectableDimensions.length;
+
+      runInAction(() => {
+        tileset.setTrait(
+          CommonStrata.definition,
+          "globeClippingControlShowed",
+          true
+        );
+      });
+
+      expect(tileset.selectableDimensions.length).toEqual(before + 1);
+    });
+  });
+
+  describe("while the item is on the workbench", function () {
+    it("does not clip for an item that is not on the workbench", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item);
+
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "globeClippingEnabled", true);
+      });
+
+      // The item has data and clipping is on, but nothing is showing it.
+      expect(terria.workbench.contains(item)).toBe(false);
+      expect(globe.clippingPlanes).toBeUndefined();
+    });
+
+    it("clips once the item is added to the workbench", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item);
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "globeClippingEnabled", true);
+      });
+
+      putOnWorkbench(item);
+
+      expect(globe.clippingPlanes).toBeDefined();
+      expect(globe.clippingPlanes.enabled).toBe(true);
+    });
+
+    it("restores the globe when the item leaves the workbench", async function () {
+      const globe = fakeGlobe();
+      stubCesium(terria, globe);
+      await loadPoints(item);
+      runInAction(() => {
+        item.setTrait(CommonStrata.definition, "globeClippingEnabled", true);
+      });
+      putOnWorkbench(item);
+      expect(globe.backFaceCulling).toBe(false);
+
+      runInAction(() => {
+        terria.workbench.items = [];
+      });
+
+      expect(globe.clippingPlanes.enabled).toBe(false);
+      expect(globe.backFaceCulling).toBe(true);
+      expect(globe.showSkirts).toBe(true);
+    });
   });
 
   describe("dispose", function () {
@@ -360,6 +470,7 @@ describe("GlobeClippingMixin", function () {
       const globe = fakeGlobe();
       stubCesium(terria, globe);
       await loadPoints(item);
+      putOnWorkbench(item);
       runInAction(() => {
         item.setTrait(CommonStrata.definition, "globeClippingEnabled", true);
       });

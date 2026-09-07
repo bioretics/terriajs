@@ -16,6 +16,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import MeasurableGeometryManager, {
   MeasurableGeometry
 } from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import { profileSamplingStep } from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 describe("ViewState", function () {
   let terria: Terria;
@@ -378,12 +379,85 @@ describe("ViewState", function () {
       expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeDefined();
     });
 
+    describe("the layer a playback belongs to", function () {
+      it("stops the playback when its layer is taken off the workbench", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.items = [];
+        });
+
+        expect(viewState.isPlayingPath).toBe(false);
+        expect(viewState.playPathPlaybackSourceItemId).toBeUndefined();
+      });
+
+      it("leaves a playback on a layer that is still there alone", function () {
+        const [, layerB] = putOnWorkbench("layer-a", "layer-b");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.remove(layerB);
+        });
+
+        expect(viewState.isPlayingPath).toBe(true);
+        expect(viewState.playPathPlaybackSourceItemId).toEqual("layer-a");
+      });
+
+      it("keeps the geometry snapshot while the path is still playing", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        // Closing every panel must not pull the geometry out from under a
+        // flight that is still running.
+        runInAction(() => {
+          viewState.closeMeasurablePanel();
+        });
+
+        expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeDefined();
+      });
+
+      it("closes the elevation chart with the measurable panel's layer", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.measurableChartIsVisible = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.items = [];
+        });
+
+        expect(viewState.measurablePanelIsVisible).toBe(false);
+        expect(viewState.measurableChartIsVisible).toBe(false);
+      });
+    });
+
     describe("the sampling step", function () {
       let resample: jasmine.Spy;
 
       beforeEach(function () {
         // The managers on terria are frozen, so the spy goes on the prototype.
         resample = spyOn(MeasurableGeometryManager.prototype, "resample");
+        // The reaction holds a re-entrance guard open for 100ms after each
+        // re-sample, so the clock is driven by hand to step past it.
+        jasmine.clock().install();
+      });
+
+      afterEach(function () {
+        jasmine.clock().uninstall();
       });
 
       /** Gives the geometry a length, which is what the automatic step needs. */
@@ -420,9 +494,11 @@ describe("ViewState", function () {
 
       it("re-samples when the user changes the step by hand", function () {
         measureLongPathOn("layer-a");
+        jasmine.clock().tick(100);
         runInAction(() => {
           terria.measurableGeomSamplingStepIsAuto = false;
         });
+        jasmine.clock().tick(100);
         resample.calls.reset();
 
         runInAction(() => {
@@ -434,12 +510,41 @@ describe("ViewState", function () {
 
       it("re-samples when the map zoom moves the automatic step", function () {
         measureLongPathOn("layer-a");
+        jasmine.clock().tick(100);
         resample.calls.reset();
 
         runInAction(() => {
           terria.mainViewer.scale = 1000;
         });
 
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("records the step it is about to use before re-sampling", function () {
+        measureLongPathOn("layer-a");
+
+        // The step has to be on terria before the re-sample runs, otherwise
+        // the reaction sees a stale value and fires itself again.
+        expect(terria.measurableGeomSamplingStepInUse).toEqual(
+          profileSamplingStep(100000, terria.mainViewer.scale)
+        );
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("does not start a second re-sample while one is still running", function () {
+        measureLongPathOn("layer-a");
+        resample.calls.reset();
+
+        // A zoom change that would otherwise ask for a different step.
+        runInAction(() => {
+          terria.mainViewer.scale = 50;
+        });
+        expect(resample).not.toHaveBeenCalled();
+
+        jasmine.clock().tick(100);
+        runInAction(() => {
+          terria.mainViewer.scale = 1000;
+        });
         expect(resample).toHaveBeenCalled();
       });
 
@@ -460,22 +565,17 @@ describe("ViewState", function () {
 
       it("does not re-sample for the step that is already in use", function () {
         measureLongPathOn("layer-a");
-        runInAction(() => {
-          terria.measurableGeomSamplingStepIsAuto = false;
-          terria.measurableGeomSamplingStep = 250;
-          terria.measurableGeomSamplingStepInUse = 250;
-        });
+        jasmine.clock().tick(100);
+        const inUse = terria.measurableGeomSamplingStepInUse;
         resample.calls.reset();
 
+        // Asking by hand for exactly the step the geometry already carries.
         runInAction(() => {
-          terria.measurableGeomSamplingStep = 500;
-        });
-        runInAction(() => {
-          terria.measurableGeomSamplingStep = 250;
+          terria.measurableGeomSamplingStepIsAuto = false;
+          terria.measurableGeomSamplingStep = inUse;
         });
 
-        // Back to the step the geometry already carries: nothing to redo.
-        expect(resample.calls.count()).toEqual(1);
+        expect(resample).not.toHaveBeenCalled();
       });
 
       it("copes with a geometry slot that has no manager of its own", function () {

@@ -124,10 +124,10 @@ describe("usePlayPath", function () {
       });
     });
 
-    it("uses the stop points while there is no Cesium viewer", function () {
+    it("resamples the flight even without a Cesium viewer", function () {
       addPath();
       const { result } = render();
-      expect(result.current.pointsSize).toEqual(2);
+      expect(result.current.pointsSize).toEqual(4);
     });
 
     it("resamples the stop points for the flight in the Cesium viewer", function () {
@@ -147,30 +147,32 @@ describe("usePlayPath", function () {
       expect(result.current.pointsSize).toEqual(4);
     });
 
-    it("still uses the stop points for an unsampled path outside Cesium", function () {
+    it("resamples an unsampled path outside Cesium too", function () {
       addPath({ ...measuredPath(), sampledPoints: undefined });
       const { result } = render();
-      expect(result.current.pointsSize).toEqual(2);
+      expect(result.current.pointsSize).toEqual(4);
     });
 
-    it("uses only the stop points in the flat Cesium viewer", function () {
+    it("resamples in the flat Cesium viewer as closely as in 3D", function () {
       addPath();
       setViewerMode("2dcesium", terria.mainViewer);
       expect(terria.mainViewer.viewerMode).toEqual(ViewerMode.Cesium2D);
 
       const { result } = render();
-      expect(result.current.pointsSize).toEqual(2);
+      expect(result.current.pointsSize).toEqual(4);
     });
 
     it("reads the path the workbench currently has selected", function () {
       addPath();
-      addPath({ ...measuredPath(), sampledPoints: undefined });
+      addPath(longMeasuredPath());
       runInAction(() => {
         terria.measurableGeometryIndex = 1;
       });
 
+      // The second path has three segments to the first one's single segment,
+      // so the point count says which one was picked up.
       const { result } = render();
-      expect(result.current.pointsSize).toEqual(2);
+      expect(result.current.pointsSize).toEqual(10);
     });
   });
 
@@ -260,14 +262,14 @@ describe("usePlayPath", function () {
       expect(result.current.pointsSize).toEqual(2);
     });
 
-    it("does not resample outside the Cesium viewer", function () {
+    it("uses the same step outside the Cesium viewer", function () {
       addPath();
       runInAction(() => {
         terria.playPathSamplingStep = 200;
       });
 
       const { result } = render();
-      expect(result.current.pointsSize).toEqual(2);
+      expect(result.current.pointsSize).toEqual(8);
     });
 
     it("records a new step on terria and rewinds the playback", function () {
@@ -309,12 +311,14 @@ describe("usePlayPath", function () {
       );
     });
 
-    it("scales the step to the path while the panel is closed", function () {
+    it("follows the map zoom even while the panel is closed", function () {
       addPath(measuredPathWithLength());
 
+      // The step is worked out from the zoom whether or not the panel is
+      // showing, so opening the panel cannot make the flight jump.
       const { result } = render();
       expect(result.current.playPathSamplingStep).toEqual(
-        flightSamplingStep(100000)
+        flightSamplingStep(100000, terria.mainViewer.scale)
       );
     });
 
@@ -356,7 +360,7 @@ describe("usePlayPath", function () {
 
       const { result } = render();
       expect(result.current.playPathSamplingStep).toEqual(
-        flightSamplingStep(100000)
+        flightSamplingStep(100000, terria.mainViewer.scale)
       );
       expect(result.current.playPathSamplingStep).not.toEqual(2000);
     });
@@ -387,7 +391,7 @@ describe("usePlayPath", function () {
 
       expect(terria.playPathSamplingStep).toEqual(2000);
       expect(result.current.playPathSamplingStep).toEqual(
-        flightSamplingStep(100000)
+        flightSamplingStep(100000, terria.mainViewer.scale)
       );
     });
 
@@ -463,7 +467,7 @@ describe("usePlayPath", function () {
           terria.measurableGeomList.length,
           longMeasuredPath()
         );
-        viewState.playPathPanelSourceItemId = "layer-a";
+        viewState.playPathPlaybackSourceItemId = "layer-a";
       });
 
       const { result } = render();
@@ -473,7 +477,7 @@ describe("usePlayPath", function () {
     it("falls back to the geometry being measured when nothing is pinned", function () {
       addPath(longMeasuredPath());
       runInAction(() => {
-        viewState.playPathPanelSourceItemId = "layer-b";
+        viewState.playPathPlaybackSourceItemId = "layer-b";
       });
 
       const { result } = render();
