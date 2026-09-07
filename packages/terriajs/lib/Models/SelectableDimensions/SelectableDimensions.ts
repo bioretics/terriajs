@@ -110,6 +110,8 @@ export interface SelectableDimensionCheckbox
     SelectableDimensionBase<"true" | "false">,
     EnumDimension<"true" | "false"> {
   type: "checkbox";
+  /** If true, checkbox is visible but grayed out and non-interactive. */
+  readOnly?: boolean;
 }
 
 export interface SelectableDimensionCheckboxGroup

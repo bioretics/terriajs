@@ -976,6 +976,9 @@ export default class Terria {
 
   @observable globeTranslucencyEnabled = false;
 
+  /** ID of the layer that currently owns globe clipping (one at a time). */
+  @observable activeGlobeClippingItemId: string | undefined = undefined;
+
   @observable enableCollisionDetection = true;
 
   @observable stories: StoryData[] = [];

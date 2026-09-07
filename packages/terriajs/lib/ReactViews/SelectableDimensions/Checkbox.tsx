@@ -15,6 +15,7 @@ export const SelectableDimensionCheckbox: FC<{
     <Checkbox
       name={id}
       isChecked={dim.selectedId === "true"}
+      isDisabled={dim.readOnly}
       onChange={(evt) =>
         runInAction(() =>
           dim.setDimensionValue(
