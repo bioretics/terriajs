@@ -566,7 +566,8 @@ function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       return [
         ...super.selectableDimensions,
         ...super.shadowDimensions,
-        ...super.clippingDimensions
+        ...super.clippingDimensions,
+        ...this.globeClippingSelectableDimensions
       ];
     }
   }

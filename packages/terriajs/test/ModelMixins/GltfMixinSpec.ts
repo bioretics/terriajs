@@ -11,6 +11,7 @@ import updateModelFromJson from "../../lib/Models/Definition/updateModelFromJson
 import Terria from "../../lib/Models/Terria";
 import GltfTraits from "../../lib/Traits/TraitsClasses/GltfTraits";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import { SelectableDimensionCheckbox } from "../../lib/Models/SelectableDimensions/SelectableDimensions";
 
 describe("GltfMixin", function () {
   let terria: Terria;
@@ -86,6 +87,20 @@ describe("GltfMixin", function () {
       }
     })
   );
+
+  it("exposes the globe clipping control", function () {
+    const testItem = new TestGltfItem("test", terria);
+    testItem.setTrait(CommonStrata.user, "globeClippingControlShowed", true);
+
+    const globeClippingControl = testItem.selectableDimensions.find(
+      (dimension): dimension is SelectableDimensionCheckbox =>
+        dimension.type === "checkbox" && dimension.id === "globe-clipping-box"
+    );
+
+    expect(globeClippingControl).toBeDefined();
+    globeClippingControl?.setDimensionValue(CommonStrata.user, "true");
+    expect(testItem.globeClippingEnabled).toBe(true);
+  });
 
   describe("disableZoomTo", function () {
     it("should disable zoom to when model position is not known", function () {

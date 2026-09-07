@@ -292,7 +292,11 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @override
     get selectableDimensions(): SelectableDimension[] {
-      return [...super.selectableDimensions, ...super.shadowDimensions];
+      return [
+        ...super.selectableDimensions,
+        ...super.shadowDimensions,
+        ...this.globeClippingSelectableDimensions
+      ];
     }
   }
 

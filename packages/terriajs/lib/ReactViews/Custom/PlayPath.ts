@@ -24,10 +24,7 @@ export default function usePlayPath(terria: Terria, viewState: ViewState) {
   const playGeom = playGeomState.geomList[playGeometryIndex];
   const playPathSamplingStepIsAuto = terria.playPathSamplingStepIsAuto;
   const autoPlayPathSamplingStep = computed(() =>
-    flightSamplingStep(
-      playGeom?.geodeticDistance,
-      viewState.playPathPanelIsVisible ? terria.mainViewer.scale : undefined
-    )
+    flightSamplingStep(playGeom?.geodeticDistance, terria.mainViewer.scale)
   ).get();
   const playPathSamplingStepRange = samplingStepRange(
     playGeom?.geodeticDistance

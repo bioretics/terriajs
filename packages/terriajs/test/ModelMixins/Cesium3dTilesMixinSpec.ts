@@ -11,10 +11,30 @@ import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesi
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import Terria from "../../lib/Models/Terria";
 import Cesium3DTileContent from "terriajs-cesium/Source/Scene/Cesium3DTileContent";
+import { SelectableDimensionCheckbox } from "../../lib/Models/SelectableDimensions/SelectableDimensions";
 
 describe("Cesium3dTilesMixin", function () {
   let terria: Terria;
   let cesium3dTiles: Cesium3DTilesCatalogItem;
+
+  it("exposes the globe clipping control", function () {
+    terria = new Terria();
+    cesium3dTiles = new Cesium3DTilesCatalogItem("test", terria);
+    cesium3dTiles.setTrait(
+      CommonStrata.user,
+      "globeClippingControlShowed",
+      true
+    );
+
+    const globeClippingControl = cesium3dTiles.selectableDimensions.find(
+      (dimension): dimension is SelectableDimensionCheckbox =>
+        dimension.type === "checkbox" && dimension.id === "globe-clipping-box"
+    );
+
+    expect(globeClippingControl).toBeDefined();
+    globeClippingControl?.setDimensionValue(CommonStrata.user, "true");
+    expect(cesium3dTiles.globeClippingEnabled).toBe(true);
+  });
 
   describe(" - loadClippingPlanes", function () {
     beforeEach(async function () {
