@@ -408,7 +408,13 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
           false,
           true,
           descriptions,
-          pathNotes
+          pathNotes,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          { sourceItemId: item.uniqueId }
         );
         return;
       }
@@ -666,8 +672,16 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
                     runInAction(() => {
                       deactivateMeasureTools();
+                      const isPlayingSameLayer =
+                        viewState.isPlayingPath &&
+                        viewState.playPathPlaybackSourceItemId ===
+                          item.uniqueId;
                       viewState.playPathPanelSourceItemId = item.uniqueId;
+                      viewState.playPathPlaybackSourceItemId = item.uniqueId;
                       viewState.playPathPanelIsVisible = true;
+                      if (!isPlayingSameLayer) {
+                        item.computePath();
+                      }
                     });
                   }
                 }}

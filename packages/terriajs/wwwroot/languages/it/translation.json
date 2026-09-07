@@ -1873,6 +1873,7 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Velocità",
+    "advancedOptions": "Opzioni avanzate",
     "samplingStepHeader": "Passo di campionamento",
     "samplingStepButtonText": "Cambia",
     "samplingStepButtonTitle": "Applica il nuovo passo di campionamento del volo, indipendente da quello del pannello Misure",
@@ -1951,6 +1952,8 @@
     "loginPanelUsernameTitle": "Inserisci il nome utente",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Inserisci la password",
+    "loginPanelShowPassword": "Mostra la password",
+    "loginPanelHidePassword": "Nascondi la password",
     "loginPanelOk": "Login",
     "loginPanelCancel": "Cancella",
     "loginPanelLoading": "Autenticazione in corso...",

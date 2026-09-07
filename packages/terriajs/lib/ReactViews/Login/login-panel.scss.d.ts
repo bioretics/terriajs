@@ -20,6 +20,9 @@ declare namespace LoginPanelScssNamespace {
     messageError: string;
     messageInfo: string;
     panel: string;
+  passwordField: string;
+  passwordToggle: string;
+  passwordToggleActive: string;
     pulse: string;
   }
 }

@@ -1386,9 +1386,11 @@
       "invalidInitialTimeSource": "Invalid initialTimeSource specified in config file: {{initialTimeSource}}"
     },
     "shareData": {
-      "generateErrorTitle": "Couldn't generate short URL.",
-      "generateErrorMessage": "Something went wrong when trying to use the share data service to generate a short URL.",
-      "generateErrorDataExceedsLimitMessage": "Error: Share data exceeds limit",
+      "generateErrorTitle": "Couldn't create share link",
+      "generateErrorMessage": "Something went wrong",
+      "generateErrorMessageWithStatus": "Something went wrong ({{statusCode}})",
+      "generateErrorMessageUnauthorized": "Something went wrong (401)",
+      "generateErrorDataExceedsLimitMessage": "The story or share link is too large. Try removing some content or scenes, then try again.",
       "expandErrorTitle": "Couldn't expand URL",
       "expandErrorMessage": "The share data service used to launch {{appName}} was not located. This may indicate an error in the link or that the service is unavailable at this time.",
       "shareNotFoundTitle": "Link not found",
@@ -2425,6 +2427,7 @@
   "playPath": {
     "title": "Play Path",
     "speed": "Speed",
+    "advancedOptions": "Advanced options",
     "samplingStepHeader": "Sampling step",
     "samplingStepButtonText": "Change",
     "samplingStepButtonTitle": "Apply the new flight sampling step, independent from the Measure panel's",
@@ -2509,6 +2512,8 @@
     "loginPanelUsernameTitle": "Enter your username",
     "loginPanelPassword": "Password",
     "loginPanelPasswordTitle": "Enter your password",
+    "loginPanelShowPassword": "Show password",
+    "loginPanelHidePassword": "Hide password",
     "loginPanelOk": "Login",
     "loginPanelCancel": "Cancel",
     "loginPanelLoading": "Authenticating...",

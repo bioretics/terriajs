@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { StyleSheetManager, ThemeProvider } from "styled-components";
+import { shouldForwardProp } from "../../../../../Styled/shouldForwardProp";
 import { terriaTheme } from "../../../../StandardUserInterface";
 import { useViewState } from "../../../../Context";
 import {
@@ -164,7 +165,10 @@ const PrintView = observer((props: Props) => {
   }, [viewState.terria, viewState]);
 
   return ReactDOM.createPortal(
-    <StyleSheetManager target={props.window.document.head}>
+    <StyleSheetManager
+      target={props.window.document.head}
+      shouldForwardProp={shouldForwardProp}
+    >
       <ThemeProvider theme={terriaTheme}>
         <PrintViewButtons window={props.window} screenshot={screenshot} />
         <section className="mapSection">

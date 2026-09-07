@@ -482,6 +482,8 @@ export default class ViewState {
    */
   @observable playPathPanelSourceItemId: string | undefined;
 
+  @observable playPathPlaybackSourceItemId: string | undefined;
+
   /**
    * Per-workbench-item snapshots of measurable geometry so panels stay fixed
    * on the layer they were opened for.
@@ -551,6 +553,7 @@ export default class ViewState {
   private _disposePlayPathSamplingStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _panelSourceItemRemovedSubscription: IReactionDisposer;
+  private _isResamplingInProgress: boolean = false;
 
   constructor(options: ViewStateOptions) {
     makeObservable(this);
@@ -790,9 +793,23 @@ export default class ViewState {
         if (step === this.terria.measurableGeomSamplingStepInUse) {
           return;
         }
+        // Prevent re-entrance: skip if a resample is already in progress.
+        // This prevents loop when scale or dependencies change during async resampling.
+        if (this._isResamplingInProgress) {
+          return;
+        }
+
+        this._isResamplingInProgress = true;
+        this.terria.measurableGeomSamplingStepInUse = step;
         this.terria.measurableGeometryManager[
           this.terria.measurableGeometryIndex
         ]?.resample();
+
+        // Reset flag after async operations complete. Most terrain sampling completes
+        // within 100ms; if it takes longer, the reaction will fire again after this delay.
+        setTimeout(() => {
+          this._isResamplingInProgress = false;
+        }, 100);
       }
     );
 
@@ -909,6 +926,12 @@ export default class ViewState {
       removed(this.measurablePanelSourceItemId)
     ) {
       this.closeMeasurablePanel();
+      // Also close the chart panel when the measurable panel's layer is removed
+      this.measurableChartIsVisible = false;
+    }
+    if (this.isPlayingPath && removed(this.playPathPlaybackSourceItemId)) {
+      this.isPlayingPath = false;
+      this.playPathPlaybackSourceItemId = undefined;
     }
     if (
       this.playPathPanelIsVisible &&
@@ -931,7 +954,8 @@ export default class ViewState {
         this.measurableDownloadPanelSourceItemId,
         this.measurableDownloadPanelIsVisible
       ) ||
-      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible)
+      usedBy(this.playPathPanelSourceItemId, this.playPathPanelIsVisible) ||
+      usedBy(this.playPathPlaybackSourceItemId, this.isPlayingPath)
     ) {
       return;
     }
@@ -1188,12 +1212,15 @@ export default class ViewState {
         }
       }
 
-      // Open each ancestor group
-      getAncestors(item).forEach((ancestor) => {
-        if (GroupMixin.isMixedInto(ancestor)) {
-          ancestor.setTrait(stratum, "isOpen", isOpen);
-        }
-      });
+      // Open each ancestor group so the item is revealed. We only ever open
+      // ancestors here - collapsing an item must never collapse its parents.
+      if (isOpen) {
+        getAncestors(item).forEach((ancestor) => {
+          if (GroupMixin.isMixedInto(ancestor)) {
+            ancestor.setTrait(stratum, "isOpen", true);
+          }
+        });
+      }
 
       if (GroupMixin.isMixedInto(item)) {
         item.setTrait(stratum, "isOpen", isOpen);

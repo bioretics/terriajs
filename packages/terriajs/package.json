@@ -16,6 +16,7 @@
     "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.28.5",
     "@babel/preset-typescript": "^7.28.5",
+    "@emotion/is-prop-valid": "^1.4.0",
     "@mapbox/point-geometry": "^0.1.0",
     "@mapbox/togeojson": "^0.16.2",
     "@maplibre/maplibre-gl-style-spec": "^23.3.0",
@@ -188,7 +189,7 @@
     "plugin-error": "^2.0.1",
     "sass": "^1.98.0",
     "svg-sprite": "^2.0.4",
-    "terriajs-server": "5.0.0-alpha.4",
+    "terriajs-server": "*",
     "typescript-eslint": "^8.58.1",
     "yaml": "^1.10.0"
   },

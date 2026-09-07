@@ -1,0 +1,37 @@
+@import "~terriajs-variables";
+
+.logoutConfirm {
+  padding: $padding-small * 2 $padding-small * 3;
+  border-bottom: 1px solid $grey-lighter;
+  color: $text-dark;
+}
+
+.logoutConfirmMessage {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin-bottom: $padding-small * 2;
+}
+
+.logoutConfirmActions {
+  display: flex;
+  gap: $padding-small;
+}
+
+.logoutConfirmBtn,
+.logoutCancelBtn {
+  composes: btn from "../../Sass/common/_buttons.scss";
+
+  border-radius: $radius-small;
+  font-size: 0.9rem;
+  padding: $padding-small $padding-small * 2;
+}
+
+.logoutConfirmBtn {
+  background: $color-primary;
+  color: $text-light;
+}
+
+.logoutCancelBtn {
+  background: $grey-lighter;
+  color: $text-dark;
+}
