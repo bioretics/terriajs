@@ -30,9 +30,10 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       makeObservable(this);
 
       this._globeClippingDisposer = autorun(() => {
-        const boundingSphere = this.globeClippingEnabled
-          ? this.globeClippingBoundingSphere
-          : undefined;
+        const boundingSphere =
+          this.globeClippingEnabled && this.terria.workbench.contains(this)
+            ? this.globeClippingBoundingSphere
+            : undefined;
 
         if (
           (boundingSphere?.radius ?? 0) > 0 &&
