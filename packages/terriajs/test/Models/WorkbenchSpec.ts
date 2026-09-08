@@ -7,6 +7,8 @@ import Result from "../../lib/Core/Result";
 import TerriaError, { TerriaErrorSeverity } from "../../lib/Core/TerriaError";
 import TerriaReference from "../../lib/Models/Catalog/CatalogReferences/TerriaReference";
 import updateModelFromJson from "../../lib/Models/Definition/updateModelFromJson";
+import { runInAction } from "mobx";
+import CatalogGroup from "../../lib/Models/Catalog/CatalogGroup";
 
 describe("Workbench", function () {
   let terria: Terria;
@@ -37,6 +39,134 @@ describe("Workbench", function () {
     terria.addModel(item1);
     terria.addModel(item2);
     terria.addModel(item3);
+  });
+
+  describe("catalogue access control", function () {
+    let restricted: WebMapServiceCatalogItem;
+
+    function logIn(group: string) {
+      runInAction(() => {
+        terria.userAuthToken = "test-token";
+        terria.userProfile = group;
+      });
+    }
+
+    beforeEach(function () {
+      restricted = new WebMapServiceCatalogItem("restricted", terria);
+      restricted.setTrait(
+        "definition",
+        "url",
+        "test/WMS/single_metadata_url.xml"
+      );
+      restricted.setTrait("definition", "allowedGroups", ["regione"]);
+      terria.addModel(restricted);
+    });
+
+    it("lists a restricted item the user cannot access but has not hidden", function () {
+      runInAction(() => {
+        workbench.items = [item1, restricted];
+      });
+
+      expect(workbench.items).toEqual([item1, restricted]);
+      expect(workbench.itemIds).toEqual(["A", "restricted"]);
+    });
+
+    it("hides a restricted item that opted into hideWhenUnauthorized", function () {
+      restricted.setTrait("definition", "hideWhenUnauthorized", true);
+      runInAction(() => {
+        workbench.items = [item1, restricted];
+      });
+
+      expect(workbench.items).toEqual([item1]);
+      expect(workbench.itemIds).toEqual(["A"]);
+    });
+
+    it("still holds on to the hidden item so access can come back", function () {
+      restricted.setTrait("definition", "hideWhenUnauthorized", true);
+      runInAction(() => {
+        workbench.items = [item1, restricted];
+      });
+      expect(workbench.contains(restricted)).toBe(true);
+
+      logIn("regione");
+
+      expect(workbench.items).toEqual([item1, restricted]);
+    });
+
+    it("refuses to add a restricted item and asks the user to authenticate", async function () {
+      const loadMetadata = spyOn(restricted, "loadMetadata").and.callThrough();
+
+      const result = await workbench.add(restricted);
+
+      expect(result.error).toBeUndefined();
+      expect(workbench.contains(restricted)).toBe(false);
+      expect(loadMetadata).not.toHaveBeenCalled();
+      expect(terria.messageModal?.isVisible).toBe(true);
+    });
+
+    it("removes the items the user may no longer access", function () {
+      logIn("regione");
+      runInAction(() => {
+        workbench.items = [item1, restricted];
+      });
+      expect(workbench.contains(restricted)).toBe(true);
+
+      runInAction(() => {
+        terria.userProfile = "basic";
+      });
+      workbench.removeInaccessibleItems();
+
+      expect(workbench.contains(restricted)).toBe(false);
+      expect(workbench.contains(item1)).toBe(true);
+    });
+
+    it("drops restricted items as soon as the user logs out", function () {
+      logIn("regione");
+      runInAction(() => {
+        workbench.items = [item1, restricted];
+      });
+
+      runInAction(() => {
+        terria.userAuthToken = undefined;
+        terria.userProfile = undefined;
+      });
+
+      expect(workbench.contains(restricted)).toBe(false);
+      expect(workbench.items).toEqual([item1]);
+    });
+
+    it("applies the restriction a parent catalogue group declares", function () {
+      const group = new CatalogGroup("restricted-group", terria);
+      terria.addModel(group);
+      group.setTrait("definition", "allowedGroups", ["regione"]);
+      group.setTrait("definition", "hideWhenUnauthorized", true);
+      const child = new WebMapServiceCatalogItem("group-child", terria);
+      terria.addModel(child);
+      child.knownContainerUniqueIds.push(group.uniqueId!);
+
+      runInAction(() => {
+        workbench.items = [item1, child];
+      });
+
+      expect(workbench.items).toEqual([item1]);
+
+      logIn("regione");
+
+      expect(workbench.items).toEqual([item1, child]);
+    });
+
+    it("keeps ordering the workbench by the items it is holding", function () {
+      restricted.setTrait("definition", "hideWhenUnauthorized", true);
+      runInAction(() => {
+        workbench.items = [item1, restricted, item2];
+      });
+
+      expect(workbench.items).toEqual([item1, item2]);
+
+      logIn("regione");
+
+      expect(workbench.items).toEqual([item1, restricted, item2]);
+    });
   });
 
   it("can collapse/expand all catalog items", async function () {

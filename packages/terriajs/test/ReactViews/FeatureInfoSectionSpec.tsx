@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { observable, makeObservable } from "mobx";
+import { observable, makeObservable, runInAction } from "mobx";
 import { http, passthrough } from "msw";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
@@ -38,12 +38,19 @@ import { worker } from "../mocks/browser";
 
 import json from "../../wwwroot/test/init/czml-with-template-0.json";
 
+// The templates below format numbers through `toLocaleString`, so both
+// separators follow whichever locale the browser running the specs is in.
 let separator = ",";
+let decimalSeparator = ".";
 if (typeof Intl === "object" && typeof Intl.NumberFormat === "function") {
-  const thousand = Intl.NumberFormat().format(1000);
-  if (thousand.length === 5) {
-    separator = thousand[1];
-  }
+  // Read the separators off a grouped number rather than guessing from its
+  // length: locales such as it-IT do not group a bare 1000 at all.
+  const parts = Intl.NumberFormat(undefined, {
+    useGrouping: true
+  }).formatToParts(1234567.8);
+  separator = parts.find((part) => part.type === "group")?.value ?? separator;
+  decimalSeparator =
+    parts.find((part) => part.type === "decimal")?.value ?? decimalSeparator;
 }
 
 // Takes the absolute value of the value and pads it to 2 digits i.e. 7->07, 17->17, -3->3, -13->13. It is expected that value is an integer is in the range [0, 99].
@@ -512,7 +519,13 @@ describe("FeatureInfoSection", function () {
 
       expect(
         screen.getByText(
-          "Size: 12" + separator + "345" + separator + "678.9012"
+          "Size: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "9012"
         )
       ).toBeVisible();
     });
@@ -541,7 +554,13 @@ describe("FeatureInfoSection", function () {
       );
       expect(
         screen.getByText(
-          "Size: 12" + separator + "345" + separator + "678.9012"
+          "Size: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "9012"
         )
       ).toBeVisible();
     });
@@ -571,7 +590,19 @@ describe("FeatureInfoSection", function () {
       );
 
       expect(
-        screen.getByText("Base: 12345678.9012; Sep: 12,345,678.901; DP: 0.235")
+        screen.getByText(
+          "Base: 12345678" +
+            decimalSeparator +
+            "9012; Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901; DP: 0" +
+            decimalSeparator +
+            "235"
+        )
       ).toBeVisible();
     });
 
@@ -597,7 +628,19 @@ describe("FeatureInfoSection", function () {
         viewState
       );
 
-      expect(screen.getByText("Sep: 12,345,678.901; DP: 0.235")).toBeVisible();
+      expect(
+        screen.getByText(
+          "Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901; DP: 0" +
+            decimalSeparator +
+            "235"
+        )
+      ).toBeVisible();
     });
 
     it("can handle white text in terria.formatNumber", function () {
@@ -620,7 +663,15 @@ describe("FeatureInfoSection", function () {
         viewState
       );
       expect(
-        screen.getByText("Sep: 12" + separator + "345" + separator + "678.901")
+        screen.getByText(
+          "Sep: 12" +
+            separator +
+            "345" +
+            separator +
+            "678" +
+            decimalSeparator +
+            "901"
+        )
       ).toBeVisible();
     });
 
@@ -861,7 +912,7 @@ describe("FeatureInfoSection", function () {
         "template",
         "Less than: {{lessThan}}"
       );
-      renderWithContexts(
+      const { container } = renderWithContexts(
         <FeatureInfoSection
           feature={feature}
           catalogItem={catalogItem}
@@ -871,8 +922,10 @@ describe("FeatureInfoSection", function () {
         />,
         viewState
       );
-      expect(screen.getByText("Less than: A < B")).toBeInTheDocument();
-      expect(screen.queryByText(/&lt;/)).not.toBeInTheDocument();
+      expect(
+        within(container).getByText("Less than: A < B")
+      ).toBeInTheDocument();
+      expect(within(container).queryByText(/&lt;/)).not.toBeInTheDocument();
     });
 
     it("can embed safe html in template", function () {
@@ -946,7 +999,7 @@ describe("FeatureInfoSection", function () {
       expect(container.querySelectorAll(".jk").length).toEqual(0);
       expect(container.querySelectorAll(".jj").length).toEqual(1);
       expect(container.querySelectorAll("b").length).toEqual(1);
-      expect(screen.getByText(/bar/)).toBeInTheDocument();
+      expect(within(container).getByText(/bar/)).toBeInTheDocument();
       expect(container.textContent).toContain("test ");
     });
 
@@ -1180,13 +1233,245 @@ describe("FeatureInfoSection", function () {
     });
   });
 
+  describe("download", function () {
+    function downloadNames(container: HTMLElement) {
+      return Array.from(
+        container.querySelectorAll<HTMLAnchorElement>("a[download]")
+      ).map((link) => link.getAttribute("download"));
+    }
+
+    it("names the downloads after the catalog item", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      const name = getName(catalogItem);
+      expect(downloadNames(container)).toEqual([`${name}.csv`, `${name}.json`]);
+    });
+
+    it("does not put the clicked coordinates in the file names", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          position={Ellipsoid.WGS84.cartographicToCartesian(
+            Cartographic.fromDegrees(11.34, 44.49)
+          )}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      const name = getName(catalogItem);
+      const names = downloadNames(container);
+      expect(names).toEqual([`${name}.csv`, `${name}.json`]);
+      expect(names.join(" ")).not.toContain("Lat");
+      expect(names.join(" ")).not.toContain("Lon");
+      expect(names.join(" ")).not.toContain("44.49");
+    });
+
+    it("does not stack the item's own extension onto the download name", function () {
+      catalogItem.setTrait(CommonStrata.definition, "name", "bike_racks.zip");
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(downloadNames(container)).toEqual([
+        "bike_racks.csv",
+        "bike_racks.json"
+      ]);
+    });
+
+    it("keeps a name that only looks like it ends in an extension", function () {
+      catalogItem.setTrait(
+        CommonStrata.definition,
+        "name",
+        "Rete stradale v2.0"
+      );
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(downloadNames(container)).toEqual([
+        "Rete stradale v2.0.csv",
+        "Rete stradale v2.0.json"
+      ]);
+    });
+  });
+
+  describe("per profile fields", function () {
+    function useProfiles(profile: string, isAdmin = false) {
+      runInAction(() => {
+        terria.configParameters.userProfilesDefinition = {
+          [profile]: { allowed: [], isAdmin }
+        };
+        terria.userProfile = profile;
+      });
+    }
+
+    function restrictTo(item: TestModel, profile: string, fields: string[]) {
+      updateModelFromJson(item, CommonStrata.definition, {
+        featureInfoTemplate: {
+          perProfileInfoFields: { [profile]: fields }
+        }
+      });
+    }
+
+    it("shows every property when no profiles are configured", function () {
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).toContain("steel");
+    });
+
+    it("restricts the properties to the ones the profile may see", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).not.toContain("steel");
+    });
+
+    it("checks again when the section is handed another catalog item", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+      const otherItem = new TestModel("other", terria);
+      restrictTo(otherItem, "regione", ["material"]);
+
+      const { container, rerender } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+      expect(container.textContent).toContain("bar");
+
+      rerender(
+        <FeatureInfoSection
+          catalogItem={otherItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />
+      );
+
+      expect(container.textContent).toContain("steel");
+      expect(container.textContent).not.toContain("bar");
+    });
+
+    it("checks again when the section is handed another feature", function () {
+      useProfiles("regione");
+      restrictTo(catalogItem, "regione", ["foo"]);
+
+      const { container, rerender } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+      expect(container.textContent).toContain("bar");
+
+      const otherFeature = new TerriaFeature({
+        name: "Baz",
+        properties: { foo: "quux" }
+      });
+      otherFeature._catalogItem = catalogItem;
+      restrictTo(catalogItem, "regione", ["material"]);
+
+      rerender(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={otherFeature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />
+      );
+
+      expect(container.textContent).not.toContain("quux");
+    });
+
+    it("shows everything again to an administrator", function () {
+      useProfiles("amministratore", true);
+      restrictTo(catalogItem, "amministratore", ["foo"]);
+
+      const { container } = renderWithContexts(
+        <FeatureInfoSection
+          catalogItem={catalogItem}
+          feature={feature}
+          isOpen
+          viewState={viewState}
+          t={i18next.t}
+        />,
+        viewState
+      );
+
+      expect(container.textContent).toContain("bar");
+      expect(container.textContent).toContain("steel");
+    });
+  });
+
   describe("raw data", function () {
     beforeEach(function () {
       feature.description = new ConstantProperty("<p>hi!</p>");
     });
 
     it("does not appear if no template", function () {
-      renderWithContexts(
+      const { container } = renderWithContexts(
         <FeatureInfoSection
           catalogItem={catalogItem}
           feature={feature}
@@ -1197,10 +1482,10 @@ describe("FeatureInfoSection", function () {
         viewState
       );
       expect(
-        screen.queryByText(/featureInfo\.showCuratedData/)
+        within(container).queryByText(/featureInfo\.showCuratedData/)
       ).not.toBeInTheDocument();
       expect(
-        screen.queryByText(/featureInfo\.showRawData/)
+        within(container).queryByText(/featureInfo\.showRawData/)
       ).not.toBeInTheDocument();
     });
 

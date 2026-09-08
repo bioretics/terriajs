@@ -103,6 +103,73 @@ describe("TerriaSpec", function () {
     });
   });
 
+  describe("authentication state", function () {
+    it("starts signed out", function () {
+      expect(terria.isAuthenticated).toBe(false);
+    });
+
+    it("is signed in once there is a token", function () {
+      runInAction(() => {
+        terria.userAuthToken = "Basic dXNlcjpwYXNzd29yZA==";
+      });
+
+      expect(terria.isAuthenticated).toBe(true);
+    });
+
+    it("is signed in once there is a group, even without a token", function () {
+      runInAction(() => {
+        terria.userProfile = "regione";
+      });
+
+      expect(terria.isAuthenticated).toBe(true);
+    });
+
+    it("is signed out again once both are cleared", function () {
+      runInAction(() => {
+        terria.userAuthToken = "Basic dXNlcjpwYXNzd29yZA==";
+        terria.userProfile = "regione";
+      });
+      runInAction(() => {
+        terria.userAuthToken = undefined;
+        terria.userProfile = undefined;
+      });
+
+      expect(terria.isAuthenticated).toBe(false);
+    });
+  });
+
+  describe("path playback", function () {
+    it("flies a path in 500 metre steps by default", function () {
+      expect(terria.playPathSamplingStep).toEqual(500);
+    });
+
+    it("keeps the flight step separate from the measuring step", function () {
+      runInAction(() => {
+        terria.playPathSamplingStep = 100;
+      });
+
+      expect(terria.measurableGeomSamplingStep).toEqual(500);
+      expect(terria.playPathSamplingStep).toEqual(100);
+    });
+
+    it("works out both steps automatically until told otherwise", function () {
+      expect(terria.measurableGeomSamplingStepIsAuto).toBe(true);
+      expect(terria.playPathSamplingStepIsAuto).toBe(true);
+    });
+
+    it("has not sampled anything yet, so no step is in use", function () {
+      expect(terria.measurableGeomSamplingStepInUse).toEqual(0);
+    });
+
+    it("keeps the two automatic flags apart", function () {
+      runInAction(() => {
+        terria.measurableGeomSamplingStepIsAuto = false;
+      });
+
+      expect(terria.playPathSamplingStepIsAuto).toBe(true);
+    });
+  });
+
   describe("terria start", function () {
     beforeEach(function () {
       worker.use(
@@ -1203,7 +1270,7 @@ describe("TerriaSpec", function () {
       }
     });
 
-    it("sets the selectedFeature", async function () {
+    async function loadSharedPick() {
       const testItem = new SimpleCatalogItem("test", terria);
       const ds = new CustomDataSource("ds");
       const entity = new Entity({ name: "foo" });
@@ -1232,8 +1299,27 @@ describe("TerriaSpec", function () {
           name: "foo"
         }
       });
+    }
+
+    it("sets the selectedFeature", async function () {
+      runInAction(() => {
+        terria.isPickInfoEnabled = true;
+      });
+
+      await loadSharedPick();
+
       expect(terria.selectedFeature).toBeDefined();
       expect(terria.selectedFeature?.name).toBe("foo");
+    });
+
+    it("leaves the selectedFeature alone while feature picking is off", async function () {
+      // Feature picking is a toggle in this build; a shared link must not
+      // re-open a feature info panel the user has turned off.
+      expect(terria.isPickInfoEnabled).toBe(false);
+
+      await loadSharedPick();
+
+      expect(terria.selectedFeature).toBeUndefined();
     });
   });
 

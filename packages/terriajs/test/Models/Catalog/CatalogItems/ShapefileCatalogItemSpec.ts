@@ -65,4 +65,49 @@ describe("ShapefileCatalogItem", function () {
       (shapefile.mapItems[0] as GeoJsonDataSource).entities.values[0].position
     ).toBeDefined();
   });
+
+  describe("export", function () {
+    it("has nothing to export before a url is set", function () {
+      expect(shapefile.canExportData).toBe(false);
+    });
+
+    it("offers the zip archive itself once a url is set", async function () {
+      shapefile.setTrait(
+        CommonStrata.user,
+        "url",
+        "test/Shapefile/bike_racks.zip"
+      );
+
+      expect(shapefile.canExportData).toBe(true);
+      // The shapefile is a set of sidecar files, so it is handed back whole
+      // rather than converted to GeoJSON.
+      expect(await shapefile.exportData()).toEqual(
+        "test/Shapefile/bike_racks.zip"
+      );
+    });
+
+    it("exports the archive rather than the GeoJSON it parsed", async function () {
+      shapefile.setTrait(
+        CommonStrata.user,
+        "url",
+        "test/Shapefile/cemeteries.zip"
+      );
+      await shapefile.loadMapItems();
+
+      expect(await shapefile.exportData()).toEqual(
+        "test/Shapefile/cemeteries.zip"
+      );
+    });
+
+    it("respects an item that has export switched off", function () {
+      shapefile.setTrait(
+        CommonStrata.user,
+        "url",
+        "test/Shapefile/bike_racks.zip"
+      );
+      shapefile.setTrait(CommonStrata.user, "disableExport", true);
+
+      expect(shapefile.canExportData).toBe(false);
+    });
+  });
 });

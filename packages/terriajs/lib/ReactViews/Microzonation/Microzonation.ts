@@ -70,7 +70,7 @@ const normalizeDocument = (
   index: number
 ): MicrozonationDocument | undefined => {
   const properties = feature?.properties ?? {};
-  const url = String(properties?.link).trim();
+  const url = String(properties?.link ?? "").trim();
 
   if (!url) {
     return undefined;
@@ -312,7 +312,7 @@ export const fetchWfsDocuments = async (
     return [];
   }
 
-  const documentsLayerName = String(config.documentsLayerName).trim();
+  const documentsLayerName = String(config.documentsLayerName ?? "").trim();
   if (!documentsLayerName) {
     return [];
   }

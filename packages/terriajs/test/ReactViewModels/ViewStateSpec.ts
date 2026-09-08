@@ -11,6 +11,12 @@ import CatalogGroup from "../../lib/Models/Catalog/CatalogGroup";
 import GroupMixin from "../../lib/ModelMixins/GroupMixin";
 import getAncestors from "../../lib/Models/getAncestors";
 import { animationDuration } from "../../lib/ReactViews/StandardUserInterface/StandardUserInterface";
+import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import MeasurableGeometryManager, {
+  MeasurableGeometry
+} from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometryManager";
+import { profileSamplingStep } from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
 
 describe("ViewState", function () {
   let terria: Terria;
@@ -172,6 +178,493 @@ describe("ViewState", function () {
         expect(secondTab.isOpen).toBe(true);
         expect(subGroup.isOpen).toBe(true);
       });
+    });
+  });
+
+  describe("measurable geometry panels", function () {
+    function carto(longitude: number, latitude: number, height = 0) {
+      return new Cartographic(
+        CesiumMath.toRadians(longitude),
+        CesiumMath.toRadians(latitude),
+        height
+      );
+    }
+
+    function geometryOf(sourceItemId: string): MeasurableGeometry {
+      return {
+        isClosed: false,
+        hasArea: false,
+        stopPoints: [carto(11.34, 44.49, 30), carto(11.35, 44.5, 80)],
+        stopGeodeticDistances: [0, 1300],
+        sourceItemId
+      };
+    }
+
+    /** Measuring on a workbench item is what opens the measurable panel. */
+    function measureOn(sourceItemId: string, index = 0) {
+      runInAction(() => {
+        terria.measurableGeomList[index] = geometryOf(sourceItemId);
+      });
+    }
+
+    function putOnWorkbench(...ids: string[]) {
+      const items = ids.map((id) => {
+        const item = new SimpleCatalogItem(id, terria);
+        terria.addModel(item);
+        return item;
+      });
+      runInAction(() => {
+        terria.workbench.items = items;
+      });
+      return items;
+    }
+
+    it("opens the measurable panel pinned to the item that was measured", function () {
+      measureOn("layer-a");
+
+      expect(viewState.measurablePanelIsVisible).toBe(true);
+      expect(viewState.measurablePanelSourceItemId).toEqual("layer-a");
+      expect(viewState.mobileMeasureToolsButtonVisible).toBe(true);
+    });
+
+    it("snapshots the measured geometry against that item", function () {
+      measureOn("layer-a");
+
+      const snapshot = viewState.getMeasurableGeomSnapshot("layer-a");
+      expect(snapshot).toBeDefined();
+      expect(snapshot?.geometryIndex).toEqual(0);
+      expect(snapshot?.geomList.length).toEqual(1);
+      expect(snapshot?.geomList[0].sourceItemId).toEqual("layer-a");
+    });
+
+    it("keeps a pinned panel on its own geometry when another item is measured", function () {
+      measureOn("layer-a");
+      measureOn("layer-b");
+
+      expect(viewState.measurablePanelSourceItemId).toEqual("layer-a");
+      expect(
+        terria.measurableGeomList[terria.measurableGeometryIndex].sourceItemId
+      ).toEqual("layer-a");
+    });
+
+    it("reads back the geometry pinned to an item", function () {
+      measureOn("layer-a");
+
+      const state = viewState.getMeasurableGeomStateForSource("layer-a");
+      expect(state.geomList[0].sourceItemId).toEqual("layer-a");
+      expect(state.geometryIndex).toEqual(0);
+    });
+
+    it("falls back to the geometry being measured for an unknown item", function () {
+      measureOn("layer-a");
+
+      expect(
+        viewState.getMeasurableGeomStateForSource(undefined).geomList
+      ).toBe(terria.measurableGeomList);
+      expect(
+        viewState.getMeasurableGeomStateForSource("layer-z").geomList
+      ).toBe(terria.measurableGeomList);
+      expect(viewState.getMeasurableGeomSnapshot(undefined)).toBeUndefined();
+    });
+
+    it("restores a snapshot over the geometry currently being measured", function () {
+      measureOn("layer-a");
+      const snapshot = viewState.getMeasurableGeomSnapshot("layer-a")!;
+
+      runInAction(() => {
+        terria.measurableGeomList.splice(
+          0,
+          terria.measurableGeomList.length,
+          geometryOf("layer-b"),
+          geometryOf("layer-b")
+        );
+        terria.measurableGeometryIndex = 1;
+      });
+
+      runInAction(() => viewState.applyMeasurableGeomSnapshot(snapshot));
+
+      expect(terria.measurableGeomList.length).toEqual(1);
+      expect(terria.measurableGeomList[0].sourceItemId).toEqual("layer-a");
+      expect(terria.measurableGeometryIndex).toEqual(0);
+    });
+
+    it("forgets the snapshot once the measurable panel closes", function () {
+      measureOn("layer-a");
+
+      viewState.closeMeasurablePanel();
+
+      expect(viewState.measurablePanelIsVisible).toBe(false);
+      expect(viewState.mobileMeasureToolsButtonVisible).toBe(false);
+      expect(viewState.measurablePanelSourceItemId).toBeUndefined();
+      expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeUndefined();
+    });
+
+    it("keeps the snapshot while another panel is still showing that item", function () {
+      measureOn("layer-a");
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        viewState.playPathPanelSourceItemId = "layer-a";
+      });
+
+      viewState.closeMeasurablePanel();
+
+      expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeDefined();
+
+      viewState.closePlayPathPanel();
+
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      expect(viewState.playPathPanelSourceItemId).toBeUndefined();
+      expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeUndefined();
+    });
+
+    it("clears the download panel state when it closes", function () {
+      measureOn("layer-a");
+      runInAction(() => {
+        viewState.measurableDownloadPanelIsVisible = true;
+        viewState.measurableDownloadPanelSourceItemId = "layer-a";
+        viewState.measurableDownloadPanelDefaultName = "my path";
+      });
+
+      viewState.closeMeasurableDownloadPanel();
+
+      expect(viewState.measurableDownloadPanelIsVisible).toBe(false);
+      expect(viewState.measurableDownloadPanelDefaultName).toEqual("");
+      expect(viewState.measurableDownloadPanelSourceItemId).toBeUndefined();
+    });
+
+    it("drops the extra measured geometries when the last panel on them closes", function () {
+      measureOn("layer-a");
+      runInAction(() => {
+        terria.measurableGeomList.push(geometryOf("layer-a"));
+        viewState.measurableDownloadPanelIsVisible = true;
+        viewState.measurableDownloadPanelSourceItemId = "layer-a";
+      });
+      viewState.closeMeasurablePanel();
+
+      viewState.closeMeasurableDownloadPanel();
+
+      expect(terria.measurableGeomList.length).toEqual(1);
+    });
+
+    it("closes the panels of an item taken off the workbench", function () {
+      putOnWorkbench("layer-a");
+      measureOn("layer-a");
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        viewState.playPathPanelSourceItemId = "layer-a";
+        viewState.measurableDownloadPanelIsVisible = true;
+        viewState.measurableDownloadPanelSourceItemId = "layer-a";
+      });
+
+      runInAction(() => {
+        terria.workbench.items = [];
+      });
+
+      expect(viewState.measurablePanelIsVisible).toBe(false);
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      expect(viewState.measurableDownloadPanelIsVisible).toBe(false);
+      expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeUndefined();
+    });
+
+    it("leaves the panels of an item still on the workbench alone", function () {
+      const [, layerB] = putOnWorkbench("layer-a", "layer-b");
+      measureOn("layer-a");
+
+      runInAction(() => {
+        terria.workbench.remove(layerB);
+      });
+
+      expect(viewState.measurablePanelIsVisible).toBe(true);
+      expect(viewState.measurablePanelSourceItemId).toEqual("layer-a");
+      expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeDefined();
+    });
+
+    describe("the layer a playback belongs to", function () {
+      it("stops the playback when its layer is taken off the workbench", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.items = [];
+        });
+
+        expect(viewState.isPlayingPath).toBe(false);
+        expect(viewState.playPathPlaybackSourceItemId).toBeUndefined();
+      });
+
+      it("leaves a playback on a layer that is still there alone", function () {
+        const [, layerB] = putOnWorkbench("layer-a", "layer-b");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.remove(layerB);
+        });
+
+        expect(viewState.isPlayingPath).toBe(true);
+        expect(viewState.playPathPlaybackSourceItemId).toEqual("layer-a");
+      });
+
+      it("keeps the geometry snapshot while the path is still playing", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.playPathPlaybackSourceItemId = "layer-a";
+          viewState.isPlayingPath = true;
+        });
+
+        // Closing every panel must not pull the geometry out from under a
+        // flight that is still running.
+        runInAction(() => {
+          viewState.closeMeasurablePanel();
+        });
+
+        expect(viewState.getMeasurableGeomSnapshot("layer-a")).toBeDefined();
+      });
+
+      it("closes the elevation chart with the measurable panel's layer", function () {
+        putOnWorkbench("layer-a");
+        measureOn("layer-a");
+        runInAction(() => {
+          viewState.measurableChartIsVisible = true;
+        });
+
+        runInAction(() => {
+          terria.workbench.items = [];
+        });
+
+        expect(viewState.measurablePanelIsVisible).toBe(false);
+        expect(viewState.measurableChartIsVisible).toBe(false);
+      });
+    });
+
+    describe("the sampling step", function () {
+      let resample: jasmine.Spy;
+
+      beforeEach(function () {
+        // The managers on terria are frozen, so the spy goes on the prototype.
+        resample = spyOn(MeasurableGeometryManager.prototype, "resample");
+        // The reaction holds a re-entrance guard open for 100ms after each
+        // re-sample, so the clock is driven by hand to step past it.
+        jasmine.clock().install();
+      });
+
+      afterEach(function () {
+        jasmine.clock().uninstall();
+      });
+
+      /** Gives the geometry a length, which is what the automatic step needs. */
+      function measureLongPathOn(sourceItemId: string) {
+        runInAction(() => {
+          terria.measurableGeomList[0] = {
+            ...geometryOf(sourceItemId),
+            geodeticDistance: 100000
+          };
+        });
+      }
+
+      it("goes back to automatic each time the panel opens", function () {
+        runInAction(() => {
+          terria.measurableGeomSamplingStepIsAuto = false;
+        });
+
+        measureOn("layer-a");
+
+        expect(viewState.measurablePanelIsVisible).toBe(true);
+        expect(terria.measurableGeomSamplingStepIsAuto).toBe(true);
+      });
+
+      it("stays where the user left it while the panel is already open", function () {
+        measureOn("layer-a");
+        runInAction(() => {
+          terria.measurableGeomSamplingStepIsAuto = false;
+        });
+
+        measureOn("layer-a");
+
+        expect(terria.measurableGeomSamplingStepIsAuto).toBe(false);
+      });
+
+      it("re-samples when the user changes the step by hand", function () {
+        measureLongPathOn("layer-a");
+        jasmine.clock().tick(100);
+        runInAction(() => {
+          terria.measurableGeomSamplingStepIsAuto = false;
+        });
+        jasmine.clock().tick(100);
+        resample.calls.reset();
+
+        runInAction(() => {
+          terria.measurableGeomSamplingStep = 250;
+        });
+
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("re-samples when the map zoom moves the automatic step", function () {
+        measureLongPathOn("layer-a");
+        jasmine.clock().tick(100);
+        resample.calls.reset();
+
+        runInAction(() => {
+          terria.mainViewer.scale = 1000;
+        });
+
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("records the step it is about to use before re-sampling", function () {
+        measureLongPathOn("layer-a");
+
+        // The step has to be on terria before the re-sample runs, otherwise
+        // the reaction sees a stale value and fires itself again.
+        expect(terria.measurableGeomSamplingStepInUse).toEqual(
+          profileSamplingStep(100000, terria.mainViewer.scale)
+        );
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("does not start a second re-sample while one is still running", function () {
+        measureLongPathOn("layer-a");
+        resample.calls.reset();
+
+        // A zoom change that would otherwise ask for a different step.
+        runInAction(() => {
+          terria.mainViewer.scale = 50;
+        });
+        expect(resample).not.toHaveBeenCalled();
+
+        jasmine.clock().tick(100);
+        runInAction(() => {
+          terria.mainViewer.scale = 1000;
+        });
+        expect(resample).toHaveBeenCalled();
+      });
+
+      it("leaves the geometry alone while the panel is closed", function () {
+        measureLongPathOn("layer-a");
+        runInAction(() => {
+          viewState.measurablePanelIsVisible = false;
+        });
+        resample.calls.reset();
+
+        runInAction(() => {
+          terria.measurableGeomSamplingStepIsAuto = false;
+          terria.measurableGeomSamplingStep = 250;
+        });
+
+        expect(resample).not.toHaveBeenCalled();
+      });
+
+      it("does not re-sample for the step that is already in use", function () {
+        measureLongPathOn("layer-a");
+        jasmine.clock().tick(100);
+        const inUse = terria.measurableGeomSamplingStepInUse;
+        resample.calls.reset();
+
+        // Asking by hand for exactly the step the geometry already carries.
+        runInAction(() => {
+          terria.measurableGeomSamplingStepIsAuto = false;
+          terria.measurableGeomSamplingStep = inUse;
+        });
+
+        expect(resample).not.toHaveBeenCalled();
+      });
+
+      it("copes with a geometry slot that has no manager of its own", function () {
+        measureLongPathOn("layer-a");
+        // Only the first slot comes with a manager of its own.
+        runInAction(() => {
+          terria.measurableGeometryIndex = 1;
+          terria.measurableGeomList[1] = {
+            ...geometryOf("layer-b"),
+            geodeticDistance: 100000
+          };
+        });
+        expect(terria.measurableGeometryManager[1]).toBeUndefined();
+
+        expect(() =>
+          runInAction(() => {
+            terria.measurableGeomSamplingStepIsAuto = false;
+            terria.measurableGeomSamplingStep = 250;
+          })
+        ).not.toThrow();
+      });
+    });
+
+    describe("the play path sampling step", function () {
+      it("goes back to automatic each time the play path panel opens", function () {
+        runInAction(() => {
+          terria.playPathSamplingStepIsAuto = false;
+        });
+
+        runInAction(() => {
+          viewState.playPathPanelIsVisible = true;
+        });
+
+        expect(terria.playPathSamplingStepIsAuto).toBe(true);
+      });
+
+      it("stays where the user left it once the panel is open", function () {
+        runInAction(() => {
+          viewState.playPathPanelIsVisible = true;
+        });
+
+        runInAction(() => {
+          terria.playPathSamplingStepIsAuto = false;
+        });
+
+        expect(terria.playPathSamplingStepIsAuto).toBe(false);
+      });
+
+      it("is left alone when the panel closes", function () {
+        runInAction(() => {
+          viewState.playPathPanelIsVisible = true;
+        });
+        // Opening the panel is what turns it back on, so the user's choice is
+        // made after that.
+        runInAction(() => {
+          terria.playPathSamplingStepIsAuto = false;
+        });
+
+        runInAction(() => {
+          viewState.playPathPanelIsVisible = false;
+        });
+
+        expect(terria.playPathSamplingStepIsAuto).toBe(false);
+      });
+    });
+  });
+
+  describe("print overlay options", function () {
+    it("starts with neither the scale bar nor the compass", function () {
+      expect(viewState.printIncludeScaleBar).toBe(false);
+      expect(viewState.printIncludeCompass).toBe(false);
+    });
+
+    it("toggles the scale bar on and off", function () {
+      viewState.togglePrintIncludeScaleBar();
+      expect(viewState.printIncludeScaleBar).toBe(true);
+      expect(viewState.printIncludeCompass).toBe(false);
+
+      viewState.togglePrintIncludeScaleBar();
+      expect(viewState.printIncludeScaleBar).toBe(false);
+    });
+
+    it("toggles the compass on and off", function () {
+      viewState.togglePrintIncludeCompass();
+      expect(viewState.printIncludeCompass).toBe(true);
+      expect(viewState.printIncludeScaleBar).toBe(false);
+
+      viewState.togglePrintIncludeCompass();
+      expect(viewState.printIncludeCompass).toBe(false);
     });
   });
 
