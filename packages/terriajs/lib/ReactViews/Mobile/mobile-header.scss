@@ -53,6 +53,19 @@
   }
 }
 
+.btn-view-mode {
+  composes: btn;
+
+  margin: 0 variables.$padding-small;
+  padding: variables.$padding calc(variables.$padding * 1.5);
+  width: auto;
+  min-width: 44px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: variables.$font-weight-bold;
+  letter-spacing: 0.03em;
+}
+
 .btn-search {
   composes: btn;
   margin: 0 variables.$padding-small;

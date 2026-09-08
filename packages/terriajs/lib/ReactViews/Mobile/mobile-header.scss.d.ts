@@ -4,9 +4,11 @@ declare namespace MobileHeaderScssNamespace {
     "btn-add": string;
     "btn-now-viewing": string;
     "btn-search": string;
+    "btn-view-mode": string;
     btnAdd: string;
     btnNowViewing: string;
     btnSearch: string;
+    btnViewMode: string;
     doubleDigit: string;
     formSearchData: string;
     "group-left": string;

@@ -28,6 +28,7 @@ import { registerMapNavigations } from "./registerMapNavigations";
 import { MeasureToolsController } from "./Items/MeasureTools";
 
 const OVERFLOW_ACTION_SIZE = 42;
+const MOBILE_BOTTOM_OFFSET = 50;
 
 interface StyledMapNavigationProps {
   trainerBarVisible: boolean;
@@ -50,11 +51,6 @@ const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
     bottom: 50px;
     right: 21px;
   }
-  @media (max-width: ${(props) => props.theme.mobile}px) {
-    & > div {
-      flex-direction: row;
-    }
-  }
   pointer-events: none;
   button {
     pointer-events: auto;
@@ -64,6 +60,22 @@ const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
     `
     top: ${Number(p.theme.trainerHeight) + Number(p.theme.mapNavigationTop)}px;
   `}
+
+  @media (max-width: ${(props) => props.theme.mobile}px) {
+    top: auto;
+    bottom: ${MOBILE_BOTTOM_OFFSET}px;
+    left: 5px;
+    right: 5px;
+
+    & > div {
+      flex-direction: row;
+      flex-wrap: wrap;
+      height: auto;
+      align-items: flex-end;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  }
 `;
 
 const ControlWrapper = styled(Box)`
@@ -72,6 +84,9 @@ const ControlWrapper = styled(Box)`
       margin-top: 0 !important;
       padding-top: 0 !important;
     }
+  }
+  @media (max-width: ${(props) => props.theme.mobile}px) {
+    gap: 8px;
   }
 `;
 

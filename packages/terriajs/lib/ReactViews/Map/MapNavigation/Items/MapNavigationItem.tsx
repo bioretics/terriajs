@@ -42,6 +42,7 @@ class MapNavigationItemBase extends Component<PropTypes> {
           }}
           disabled={item.controller.disabled}
           primary={item.controller.active}
+          engaged={item.controller.active}
           closeIconElement={
             closeTool ? () => <Icon glyph={GLYPHS.closeTool} /> : undefined
           }
@@ -66,9 +67,8 @@ export const Control = styled(Box).attrs({
   }
 
   @media (max-width: ${(props) => props.theme.mobile}px) {
-    padding-right: 10px;
-    padding-top: 15px;
-    margin-bottom: 10px;
+    padding: 0;
+    margin: 0;
   }
   text-align: center;
 `;

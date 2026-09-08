@@ -21,6 +21,7 @@ interface IStyledMapIconButtonProps {
   splitter?: boolean;
   disabled?: boolean;
   inverted?: boolean;
+  engaged?: boolean;
 }
 
 // styles half ripped from nav.scss
@@ -50,6 +51,18 @@ const StyledMapIconButton = styled(RawButton)<IStyledMapIconButtonProps>`
     `
     background: ${props.theme.colorPrimary};
     border: 1px solid ${props.theme.colorPrimary};
+    color: ${props.theme.textLight};
+    svg {
+      fill: ${props.theme.textLight};
+      stroke: ${props.theme.textLight};
+    }
+  `}
+  ${(props) =>
+    props.engaged &&
+    !props.disabled &&
+    `
+    background: ${props.theme.colorSecondary};
+    border: 1px solid ${props.theme.colorSecondary};
     color: ${props.theme.textLight};
     svg {
       fill: ${props.theme.textLight};
@@ -114,6 +127,7 @@ function MapIconButton(props: IMapIconButtonProps) {
     neverCollapse,
     primary,
     splitter,
+    engaged,
     inverted,
     disabled,
     noExpand = false
@@ -136,6 +150,7 @@ function MapIconButton(props: IMapIconButtonProps) {
       className={props.className}
       primary={primary}
       splitter={splitter}
+      engaged={engaged}
       inverted={inverted}
       roundLeft={roundLeft}
       roundRight={roundRight}
