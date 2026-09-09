@@ -409,7 +409,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
           true,
           descriptions,
           pathNotes,
-          undefined,
+          true,
           undefined,
           undefined,
           undefined,
