@@ -418,6 +418,12 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         );
         return;
       }
+
+      // Fallback: GeoJsonCatalogItems with non-extension uniqueIds (e.g. MyLocation GUID).
+      if (item instanceof GeoJsonCatalogItem) {
+        await item.sampleFromGeojsonData();
+        return;
+      }
     } catch (error) {
       viewState.terria.raiseErrorToUser(
         TerriaError.from(error, {
