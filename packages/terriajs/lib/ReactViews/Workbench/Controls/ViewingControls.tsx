@@ -704,7 +704,25 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         {(!MeasurableGeometryMixin.isMixedInto(item) || !item.canUseAsPath) &&
           canVisualizePoints && (
             <li key={`${item.uniqueId}-measureItem`}>
-              <ViewingControlMenuButton onClick={visualizePointsClicked}>
+              <ViewingControlMenuButton
+                onClick={() =>
+                  runInAction(() => {
+                    deactivateMeasureTools();
+                    viewState.measurablePanelSourceItemId = item.uniqueId;
+                    visualizePointsClicked();
+                    [
+                      MeasureToolsController.id,
+                      MeasureLineTool.id,
+                      MeasurePolygonTool.id,
+                      MeasurePointTool.id,
+                      MeasureAngleTool.id,
+                      MeasureCircleTool.id
+                    ].forEach((id) =>
+                      viewState.terria.mapNavigationModel.disable(id)
+                    );
+                  })
+                }
+              >
                 <BoxViewingControl>
                   <StyledIcon glyph={Icon.GLYPHS.lineChart} />
                   <span>{t(($) => $.workbench.pointsItem)}</span>
