@@ -1,16 +1,10 @@
 declare namespace StandardUserInterfaceScssNamespace {
   export interface IStandardUserInterfaceScss {
-    disableMobileInterface: string;
     explorerPanelIsVisible: string;
     featureInfo: string;
     featureInfoFullScreen: string;
     feedback: string;
     map: string;
-    showWorkbenchButton: string;
-    showWorkbenchButtonTrainerBarVisible: string;
-    showWorkbenchButtonisNotVisible: string;
-    showWorkbenchButtonisVisible: string;
-    sidePanel: string;
     "story-wrapper": string;
     storyPanel: string;
     storyPanelFullScreen: string;
@@ -19,6 +13,8 @@ declare namespace StandardUserInterfaceScssNamespace {
     "ui-root": string;
     uiInner: string;
     uiRoot: string;
+    workspace: string;
+    workspaceNoMobileHeader: string;
   }
 }
 

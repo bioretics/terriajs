@@ -1,14 +1,17 @@
 declare namespace MenuBarScssNamespace {
   export interface IMenuBarScss {
+    "app-title": string;
+    appTitle: string;
+    brand: string;
     flex: string;
     langBtn: string;
+    left: string;
     menu: string;
     "menu-bar": string;
-    "menu-bar--workbenchClosed": string;
     "menu-item": string;
     menuBar: string;
-    menuBarWorkbenchClosed: string;
     menuItem: string;
+    right: string;
   }
 }
 

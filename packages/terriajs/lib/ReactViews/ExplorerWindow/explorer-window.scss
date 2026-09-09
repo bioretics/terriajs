@@ -1,6 +1,10 @@
 @use "../../Sass/common/_variables";
 @use "../../Sass/common/mixins";
 
+// Centred in the map area, between the top toolbar and the status bar.
+$explorer-vertical-chrome: variables.$top-toolbar-height +
+  variables.$status-bar-height;
+
 .modal-wrapper {
   position: fixed;
   z-index: variables.$front-component-z-index - 1;
@@ -8,25 +12,26 @@
   padding-right: 80px;
   padding-top: calc(
     (
-        100vh - #{variables.$modal-content-height} -
-          #{variables.$modal-header-height}
+        100vh - #{$explorer-vertical-chrome} -
+          #{variables.$modal-content-height} - #{variables.$modal-header-height}
       ) /
       2
   );
   padding-bottom: calc(
     (
-        100vh - #{variables.$modal-content-height} -
-          #{variables.$modal-header-height}
+        100vh - #{$explorer-vertical-chrome} -
+          #{variables.$modal-content-height} - #{variables.$modal-header-height}
       ) /
       2
   );
-  top: 0;
-  bottom: 0;
+  top: variables.$top-toolbar-height;
+  bottom: variables.$status-bar-height;
   right: 0;
   left: 0;
 
   @media (min-width: variables.$md) {
-    padding-left: 30px + variables.$work-bench-width;
+    padding-left: 30px + variables.$side-rail-width +
+      variables.$work-bench-width;
     padding-right: 30px;
   }
 }

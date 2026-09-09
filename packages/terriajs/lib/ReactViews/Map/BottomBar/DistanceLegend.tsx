@@ -2,14 +2,12 @@ import L from "leaflet";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { FC, useEffect, useState } from "react";
-import { useTheme } from "styled-components";
+import styled from "styled-components";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import EllipsoidGeodesic from "terriajs-cesium/Source/Core/EllipsoidGeodesic";
 import CesiumEvent from "terriajs-cesium/Source/Core/Event";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
 import isDefined from "../../../Core/isDefined";
-import Box from "../../../Styled/Box";
-import Text from "../../../Styled/Text";
 import { useViewState } from "../../Context";
 
 const geodesic = new EllipsoidGeodesic();
@@ -31,7 +29,6 @@ export const DistanceLegend: FC<IDistanceLegendProps> = observer(
     const [barWidth, setBarWidth] = useState<number>(0);
 
     const { terria } = useViewState();
-    const theme = useTheme();
 
     let removeUpdateSubscription:
       | CesiumEvent.RemoveCallback
@@ -164,44 +161,30 @@ export const DistanceLegend: FC<IDistanceLegendProps> = observer(
       setDistanceLabel(label);
     };
 
-    const barStyle = {
-      width: barWidth + "px",
-      left: 5 + (125 - barWidth) / 2 + "px",
-      height: "2px"
-    };
-
     return distanceLabel ? (
-      <Box
-        column
-        centered
-        css={`
-          margin-top: 3px;
-          margin-bottom: 3px;
-          &:hover {
-            background-color: ${theme.charcoalGrey};
-          }
-        `}
-        paddedHorizontally={2}
+      <ScaleBar
         className="tjs-legend__distanceLegend"
+        style={{ width: `${Math.max(barWidth, 0)}px` }}
+        title={distanceLabel}
       >
-        <Text
-          as="label"
-          mono
-          styledLineHeight="1"
-          textLight
-          styledFontSize="inherit"
-        >
-          {distanceLabel}
-        </Text>
-        <div
-          style={barStyle}
-          className="tjs-legend__bar"
-          css={{
-            backgroundColor: theme.textLight,
-            transition: "all 0.5s ease-in-out 0s"
-          }}
-        />
-      </Box>
+        {distanceLabel}
+      </ScaleBar>
     ) : null;
   }
 );
+
+// MapLibre-style scale bar: light box with dark left/right/bottom edges.
+const ScaleBar = styled.div`
+  box-sizing: border-box;
+  min-width: 40px;
+  padding: 0 5px;
+  border: 2px solid ${(p) => p.theme.mapControlColor};
+  border-top: none;
+  background: rgba(255, 255, 255, 0.75);
+  color: ${(p) => p.theme.mapControlColor};
+  font-family: ${(p) => p.theme.fontMono};
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+  transition: width 0.5s ease-in-out;
+`;

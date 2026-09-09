@@ -20,7 +20,10 @@
 @use "sass:meta";
 @use "sass:color";
 
-@import url("https://fonts.googleapis.com/css?family=Inter:300,400,500,400italic,600,700&display=swap");
+// Stylesheet that provides the web fonts. Apps override it together with
+// $font-base / $font-mono (e.g. to load IBM Plex instead of Inter).
+$font-import-url: "https://fonts.googleapis.com/css?family=Inter:300,400,500,400italic,600,700&display=swap" !default;
+@import url("#{$font-import-url}");
 
 $font-pop: "Inter", sans-serif !default;
 $font-base: "Inter", sans-serif !default;
@@ -67,6 +70,15 @@ $text-light: #ffffff !default;
 $text-light-dimmed: #bbbbbb !default;
 $text-warning: rgb(255, 105, 97) !default;
 $text-success: #6ee7b7 !default;
+
+// Semantic surface / text tokens (GeoLibre-style elevation ladder). Defaults
+// derive from the legacy palette so themes that don't set them look unchanged.
+$surface-card: $dark-mid !default; // toolbar, rails, docked panels
+$surface-popover: $dark-with-overlay !default; // menus, tooltips, dialogs
+$surface-muted: $dark-lighter !default; // inset fills, badges
+$surface-accent: $dark-lighter !default; // hover fills
+$text-muted: $grey !default; // secondary text and icons
+$input-border: $grey !default; // form control boundary
 
 // You can override these functions to change the link color depending on the background, eg.
 // @function get-link-color($bg-color) {
@@ -184,6 +196,32 @@ $border-style: 1px solid $border-color !default;
 $box-shadow:
   0 0 2px 0 rgba(0, 0, 0, 0.12),
   0 2px 2px 0 rgba(0, 0, 0, 0.24) !default;
+// Elevation scale: sm = resting control, md = popover/menu, lg = panel over
+// the map, xl = modal dialog.
+$shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.24) !default;
+$shadow-md: $box-shadow !default;
+$shadow-lg:
+  0 4px 8px -2px rgba(0, 0, 0, 0.2),
+  0 12px 20px -4px rgba(0, 0, 0, 0.3) !default;
+$shadow-xl:
+  0 8px 16px -4px rgba(0, 0, 0, 0.25),
+  0 24px 40px -8px rgba(0, 0, 0, 0.35) !default;
+
+// Docked shell layout (top toolbar, side rail, docked workbench, status bar).
+$side-rail-width: 44px !default;
+$top-toolbar-height: 44px !default;
+$status-bar-height: 28px !default;
+$status-bar-bg: rgba($dark-lighter, 0.4) !default;
+$work-bench-min-width: 180px !default;
+$work-bench-max-width: 560px !default;
+
+// Map controls (MapLibre-style light buttons, independent of the UI theme).
+$map-control-size: 29px !default;
+$map-control-bg: #fff !default;
+$map-control-color: #333 !default;
+$map-control-hover-bg: rgba(0, 0, 0, 0.05) !default;
+$map-control-separator: #ddd !default;
+$map-control-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !default;
 
 $radius-xlarge: 8px !default;
 $radius-large: 4px !default;

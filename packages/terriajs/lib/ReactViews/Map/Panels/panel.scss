@@ -19,26 +19,26 @@
   @include mixins.transition(0.2s all cubic-bezier(0.4, 0, 0.2, 1));
   @include mixins.transform-origin(50%, top);
 
-  box-shadow: variables.$box-shadow;
+  // Popover surface (GeoLibre dropdown menu look)
+  box-shadow: variables.$shadow-md;
   z-index: 20;
-  border-radius: variables.$radius-small;
-  // background: $dark;
+  border-radius: variables.$radius-medium;
   color: variables.$text-light;
-  border: variables.$border-style;
+  border: 1px solid variables.$border-color;
   max-width: calc(100vw - 10px);
 
   position: fixed;
   top: variables.$mobile-header-height;
   left: 0;
-  margin: 14px 5px 5px 5px;
+  margin: 6px 5px 5px 5px;
 
   @media (min-width: variables.$sm) {
     position: absolute;
-    right: variables.$padding * 2;
-    top: auto;
+    right: 0;
+    top: 100%;
     bottom: auto;
     left: auto;
-    margin: 14px 0 0 0;
+    margin: 6px 0 0 0;
   }
 
   &.is-open {
@@ -97,7 +97,8 @@
 
 .caret {
   content: "";
-  display: block;
+  // GeoLibre menus have no caret; kept for legacy class hooks only.
+  display: none;
   height: 20px;
   width: 20px;
   // background: $dark;

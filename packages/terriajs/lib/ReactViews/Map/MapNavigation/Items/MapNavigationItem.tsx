@@ -6,7 +6,7 @@ import styled from "styled-components";
 import { applyTranslationIfExists } from "../../../../Language/languageHelpers";
 import Terria from "../../../../Models/Terria";
 import Box from "../../../../Styled/Box";
-import Icon, { GLYPHS } from "../../../../Styled/Icon";
+import Icon from "../../../../Styled/Icon";
 import { IMapNavigationItem } from "../../../../ViewModels/MapNavigation/MapNavigationModel";
 import MapIconButton from "../../../MapIconButton/MapIconButton";
 
@@ -21,7 +21,7 @@ interface PropTypes {
 @observer
 class MapNavigationItemBase extends Component<PropTypes> {
   render() {
-    const { closeTool = true, item, expandInPlace, i18n } = this.props;
+    const { item, expandInPlace, i18n } = this.props;
 
     if (item.render)
       return (
@@ -30,11 +30,13 @@ class MapNavigationItemBase extends Component<PropTypes> {
         </Control>
       );
 
+    // GeoLibre-style controls are icon-only squares: the label is exposed
+    // through the tooltip instead of expanding on hover.
     return (
       <Control ref={item.controller.itemRef}>
         <MapIconButton
           expandInPlace={expandInPlace === undefined ? true : expandInPlace}
-          noExpand={item.noExpand}
+          noExpand
           iconElement={() => <Icon glyph={item.controller.glyph} />}
           title={applyTranslationIfExists(item.title || item.name, i18n)}
           onClick={() => {
@@ -43,9 +45,6 @@ class MapNavigationItemBase extends Component<PropTypes> {
           disabled={item.controller.disabled}
           primary={item.controller.active}
           engaged={item.controller.active}
-          closeIconElement={
-            closeTool ? () => <Icon glyph={GLYPHS.closeTool} /> : undefined
-          }
         >
           {applyTranslationIfExists(item.name, i18n)}
         </MapIconButton>

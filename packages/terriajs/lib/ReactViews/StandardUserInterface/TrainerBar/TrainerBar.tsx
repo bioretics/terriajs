@@ -23,12 +23,11 @@ import { applyTranslationIfExists } from "../../../Language/languageHelpers";
 import StyledHtml from "../../Map/Panels/HelpPanel/StyledHtml";
 import CloseButton from "../../Generic/CloseButton";
 
+// Rendered inside the map section, so it spans the map area regardless of
+// the docked workbench width.
 const TrainerBarWrapper = styled(Box)<{ isMapFullScreen: boolean }>`
   top: 0;
-  left: ${(p) =>
-    p.isMapFullScreen
-      ? 0
-      : Number(p.theme.workbenchWidth) + Number(p.theme.workbenchMargin) * 2}px;
+  left: 0;
   z-index: ${(p) => Number(p.theme.frontComponentZIndex) + 100};
 `;
 
@@ -343,13 +342,7 @@ export const TrainerBar = observer((props: TrainerBarProps) => {
     <TrainerBarWrapper
       centered
       position="absolute"
-      styledWidth={
-        isMapFullScreen
-          ? "100%"
-          : `calc(100% - ${Number(
-              Number(theme.workbenchWidth) + Number(theme.workbenchMargin) * 2
-            )}px)`
-      }
+      styledWidth="100%"
       isMapFullScreen={isMapFullScreen}
       onClick={() => viewState.setTopElement("TrainerBar")}
     >

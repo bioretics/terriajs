@@ -1,25 +1,46 @@
 import { observer } from "mobx-react";
 import { FC, RefObject, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import styled, { useTheme } from "styled-components";
+import styled from "styled-components";
 import MouseCoords from "../../../ReactViewModels/MouseCoords";
-import Box from "../../../Styled/Box";
 import { RawButton } from "../../../Styled/Button";
 
 interface ILocationBarProps {
   mouseCoords: MouseCoords;
 }
 
-const Section = styled(Box).attrs({
-  paddedHorizontally: true
-})``;
-
-const StyledText = styled.span`
-  font-family: ${(props) => props.theme.fontMono};
-  color: ${(props) => props.theme.textLight};
+const ReadoutButton = styled(RawButton)`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 0 4px;
+  border-radius: ${(p) => p.theme.radiusSmall};
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
   white-space: nowrap;
-  font-size: 0.7rem;
-  padding: 0 5px 0 5px;
+
+  &:hover,
+  &:focus-visible {
+    background: ${(p) => p.theme.accent};
+    color: ${(p) => p.theme.textLight};
+  }
+`;
+
+const Section = styled.span`
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+`;
+
+const Label = styled.span`
+  color: inherit;
+`;
+
+const Value = styled.span`
+  font-variant-numeric: tabular-nums;
 `;
 
 const setInnerText = (ref: RefObject<HTMLElement>, value: string) => {
@@ -28,7 +49,6 @@ const setInnerText = (ref: RefObject<HTMLElement>, value: string) => {
 
 export const LocationBar: FC<ILocationBarProps> = observer(
   ({ mouseCoords }) => {
-    const theme = useTheme();
     const { t } = useTranslation();
 
     const elevationRef = useRef<HTMLElement>(null);
@@ -51,68 +71,39 @@ export const LocationBar: FC<ILocationBarProps> = observer(
     });
 
     return (
-      <Box
-        styledHeight="30px"
-        col
-        verticalCenter
-        css={`
-          padding-top: 3px;
-          padding-bottom: 3px;
-        `}
-      >
-        <RawButton
-          css={`
-            display: flex;
-            align-items: center;
-            height: 100%;
-            &:hover {
-              background: ${theme.colorPrimary};
-            }
-          `}
-          onClick={mouseCoords.toggleUseProjection}
-        >
-          {mouseCoords.whereAmI && (
-            <Section centered>
-              <StyledText>{mouseCoords.whereAmI}</StyledText>
-            </Section>
-          )}
-          {!mouseCoords.useProjection ? (
-            <>
-              <Section centered>
-                <StyledText>{t(($) => $.legend.lat)}</StyledText>
-                <StyledText ref={latitudeRef}>
-                  {mouseCoords.latitude}
-                </StyledText>
-              </Section>
-              <Section centered>
-                <StyledText>{t(($) => $.legend.lon)}</StyledText>
-                <StyledText ref={longitudeRef}>
-                  {mouseCoords.longitude}
-                </StyledText>
-              </Section>
-            </>
-          ) : (
-            <>
-              <Section>
-                <StyledText>{t(($) => $.legend.zone)}</StyledText>
-                <StyledText ref={utmZoneRef}>{mouseCoords.utmZone}</StyledText>
-              </Section>
-              <Section>
-                <StyledText>{t(($) => $.legend.e)}</StyledText>
-                <StyledText ref={eastRef}>{mouseCoords.east}</StyledText>
-              </Section>
-              <Section>
-                <StyledText>{t(($) => $.legend.n)}</StyledText>
-                <StyledText ref={northRef}>{mouseCoords.north}</StyledText>
-              </Section>
-            </>
-          )}
+      <ReadoutButton type="button" onClick={mouseCoords.toggleUseProjection}>
+        {mouseCoords.whereAmI && (
           <Section>
-            <StyledText>{t(($) => $.legend.elev)}</StyledText>
-            <StyledText ref={elevationRef}>{mouseCoords.elevation}</StyledText>
+            <Value>{mouseCoords.whereAmI}</Value>
           </Section>
-        </RawButton>
-      </Box>
+        )}
+        {!mouseCoords.useProjection ? (
+          <Section>
+            <Label>{t(($) => $.sui.statusBar.coords)}:</Label>
+            <Value ref={latitudeRef}>{mouseCoords.latitude}</Value>
+            <Value ref={longitudeRef}>{mouseCoords.longitude}</Value>
+          </Section>
+        ) : (
+          <>
+            <Section>
+              <Label>{t(($) => $.legend.zone)}</Label>
+              <Value ref={utmZoneRef}>{mouseCoords.utmZone}</Value>
+            </Section>
+            <Section>
+              <Label>{t(($) => $.legend.e)}</Label>
+              <Value ref={eastRef}>{mouseCoords.east}</Value>
+            </Section>
+            <Section>
+              <Label>{t(($) => $.legend.n)}</Label>
+              <Value ref={northRef}>{mouseCoords.north}</Value>
+            </Section>
+          </>
+        )}
+        <Section>
+          <Label>{t(($) => $.sui.statusBar.elevation)}:</Label>
+          <Value ref={elevationRef}>{mouseCoords.elevation}</Value>
+        </Section>
+      </ReadoutButton>
     );
   }
 );

@@ -23,9 +23,8 @@ import TrainerBar from "./TrainerBar/TrainerBar";
 import MobileHeader from "../Mobile/MobileHeader";
 import MapInteractionWindow from "../Notification/MapInteractionWindow";
 import Notification from "../Notification/Notification";
-import Branding from "../SidePanel/Branding";
-import FullScreenButton from "../SidePanel/FullScreenButton";
 import SidePanel from "../SidePanel/SidePanel";
+import SideRail from "../SidePanel/SideRail";
 import StoryBuilder from "../Story/StoryBuilder";
 import StoryPanel from "../Story/StoryPanel/StoryPanel";
 import ClippingBoxToolLauncher from "../Tools/ClippingBox/ClippingBoxToolLauncher";
@@ -37,6 +36,8 @@ import WorkflowPanelPortal from "../Workflow/WorkflowPanelPortal";
 import { ContextProviders } from "../Context";
 import { GlobalTerriaStyles } from "./GlobalTerriaStyles";
 import MapColumn from "../Map/MapColumn";
+import MenuBar from "../Map/MenuBar/MenuBar";
+import { StatusBar } from "../Map/BottomBar";
 import processCustomElements from "./processCustomElements";
 import SidePanelContainer from "./SidePanelContainer";
 import Styles from "./standard-user-interface.scss";
@@ -157,6 +158,10 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
       props.viewState.storyShown &&
       !props.viewState.explorerPanelIsVisible &&
       !props.viewState.storyBuilderShown;
+    const disableMobileInterface =
+      !!props.terria.configParameters.disableMobileInterface;
+    const showChrome = !props.viewState.hideMapUi;
+
     return (
       <ContextProviders viewState={props.viewState} theme={mergedTheme}>
         <GlobalTerriaStyles />
@@ -182,19 +187,38 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
               `}
             >
               <div className={Styles.uiInner}>
-                {!props.viewState.hideMapUi && (
-                  <>
-                    {!props.terria.configParameters.disableMobileInterface && (
-                      <Small>
-                        <MobileHeader
-                          menuItems={customElements.menu}
-                          menuLeftItems={customElements.menuLeft}
-                          version={props.version}
-                        />
-                      </Small>
-                    )}
+                {/* Top toolbar (desktop) / mobile header */}
+                {showChrome && !disableMobileInterface && (
+                  <Small>
+                    <MobileHeader
+                      menuItems={customElements.menu}
+                      menuLeftItems={customElements.menuLeft}
+                      version={props.version}
+                    />
+                  </Small>
+                )}
+                {showChrome && (
+                  <Medium>
+                    <MenuBar
+                      menuItems={customElements.menu}
+                      menuLeftItems={customElements.menuLeft}
+                      animationDuration={animationDuration}
+                      version={props.version}
+                      elementConfig={props.terria.elements.get("menu-bar")}
+                    />
+                  </Medium>
+                )}
+
+                {/* Workspace: side rail + docked workbench + map */}
+                <div
+                  className={classNames(Styles.workspace, {
+                    [Styles.workspaceNoMobileHeader]: disableMobileInterface
+                  })}
+                >
+                  {showChrome && (
                     <Medium>
                       <>
+                        <SideRail />
                         <WorkflowPanelPortal
                           show={props.terria.isWorkflowPanelActive}
                         />
@@ -204,79 +228,106 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
                             !props.terria.isWorkflowPanelActive
                           }
                         >
-                          <FullScreenButton
-                            minified
-                            animationDuration={250}
-                            btnText={t(($) => $.addData.btnHide)}
-                          />
-                          <Branding version={props.version} />
                           <SidePanel />
                         </SidePanelContainer>
                       </>
                     </Medium>
-                  </>
-                )}
-                <Medium>
-                  <div
-                    className={classNames(Styles.showWorkbenchButton, {
-                      [Styles.showWorkbenchButtonTrainerBarVisible]:
-                        props.viewState.trainerBarVisible,
-                      [Styles.showWorkbenchButtonisVisible]:
-                        props.viewState.isMapFullScreen,
-                      [Styles.showWorkbenchButtonisNotVisible]:
-                        !props.viewState.isMapFullScreen
-                    })}
-                  >
-                    <FullScreenButton
-                      minified={false}
-                      btnText={t(($) => $.sui.showWorkbench, {
-                        count: props.viewState.terria.workbench.items.length
-                      })}
-                      animationDuration={animationDuration}
-                      elementConfig={props.terria.elements.get(
-                        "show-workbench"
-                      )}
-                    />
-                  </div>
-                </Medium>
+                  )}
 
-                <section
-                  className={classNames(Styles.map, {
-                    [Styles.disableMobileInterface]:
-                      props.terria.configParameters.disableMobileInterface
-                  })}
-                >
-                  <MapColumn
-                    customElements={customElements}
-                    animationDuration={animationDuration}
-                  />
-                  <div id="map-data-attribution" />
-                  <main>
-                    <ExplorerWindowComponents.ExplorerWindow />
-                    {/* Fork (rer3d): query-data window + message modal */}
-                    <QueryWindow />
-                    {props.terria.messageModal?.isVisible && (
-                      <MessageModal
-                        closeModal={() => props.viewState.closeMessageModal()}
-                        header={props.terria.messageModal.header}
-                        message={props.terria.messageModal.message}
-                      />
+                  <section className={Styles.map}>
+                    <MapColumn
+                      customElements={customElements}
+                      animationDuration={animationDuration}
+                    />
+                    <div id="map-data-attribution" />
+                    {showChrome && (
+                      <Medium>
+                        <TrainerBar />
+                      </Medium>
                     )}
-                    {props.terria.configParameters.experimentalFeatures &&
-                      !props.viewState.hideMapUi && (
-                        <ExperimentalFeatures
-                          experimentalItems={customElements.experimentalMenu}
+                    <div
+                      className={classNames(
+                        Styles.featureInfo,
+                        props.viewState.topElement === "FeatureInfo"
+                          ? "top-element"
+                          : "",
+                        {
+                          [Styles.featureInfoFullScreen]:
+                            props.viewState.isMapFullScreen
+                        }
+                      )}
+                      tabIndex={0}
+                      onPointerDown={action(() => {
+                        props.viewState.topElement = "FeatureInfo";
+                      })}
+                    >
+                      <FeatureInfoPanel />
+                      <MeasurablePanel
+                        terria={props.terria}
+                        viewState={props.viewState}
+                      />
+                      <MeasurableDownloadPanel
+                        terria={props.terria}
+                        viewState={props.viewState}
+                      />
+                      <PlayPathPanel
+                        terria={props.terria}
+                        viewState={props.viewState}
+                      />
+                      <ViewshedPanel
+                        terria={props.terria}
+                        viewState={props.viewState}
+                      />
+                      <LoginPanel
+                        terria={props.terria}
+                        viewState={props.viewState}
+                      />
+                    </div>
+                    {showStoryPanel && (
+                      <div
+                        className={classNames(
+                          Styles.storyPanel,
+                          props.viewState.topElement === "StoryPanel"
+                            ? "top-element"
+                            : "",
+                          {
+                            [Styles.storyPanelFullScreen]:
+                              props.viewState.isMapFullScreen
+                          }
+                        )}
+                        tabIndex={0}
+                        onPointerDown={action(() => {
+                          props.viewState.topElement = "StoryPanel";
+                        })}
+                      >
+                        <StoryPanel />
+                      </div>
+                    )}
+                    <main>
+                      <ExplorerWindowComponents.ExplorerWindow />
+                      {/* Fork (rer3d): query-data window + message modal */}
+                      <QueryWindow />
+                      {props.terria.messageModal?.isVisible && (
+                        <MessageModal
+                          closeModal={() => props.viewState.closeMessageModal()}
+                          header={props.terria.messageModal.header}
+                          message={props.terria.messageModal.message}
                         />
                       )}
-                  </main>
-                </section>
+                      {props.terria.configParameters.experimentalFeatures &&
+                        showChrome && (
+                          <ExperimentalFeatures
+                            experimentalItems={customElements.experimentalMenu}
+                          />
+                        )}
+                    </main>
+                  </section>
+                </div>
+
+                {/* Status bar */}
+                {showChrome && <StatusBar />}
               </div>
             </div>
-            {!props.viewState.hideMapUi && (
-              <Medium>
-                <TrainerBar />
-              </Medium>
-            )}
             <Medium>
               {/* I think this does what the previous boolean condition does, but without the console error */}
               {props.viewState.isToolOpen && (
@@ -290,64 +341,9 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
             <MapInteractionWindow />
             {!customElements.feedback.length &&
               props.terria.feedbackService &&
-              !props.viewState.hideMapUi &&
+              showChrome &&
               props.viewState.feedbackFormIsVisible && <FeedbackForm />}
-            <div
-              className={classNames(
-                Styles.featureInfo,
-                props.viewState.topElement === "FeatureInfo"
-                  ? "top-element"
-                  : "",
-                {
-                  [Styles.featureInfoFullScreen]:
-                    props.viewState.isMapFullScreen
-                }
-              )}
-              tabIndex={0}
-              onPointerDown={action(() => {
-                props.viewState.topElement = "FeatureInfo";
-              })}
-            >
-              <FeatureInfoPanel />
-              <MeasurablePanel
-                terria={props.terria}
-                viewState={props.viewState}
-              />
-              <MeasurableDownloadPanel
-                terria={props.terria}
-                viewState={props.viewState}
-              />
-              <PlayPathPanel
-                terria={props.terria}
-                viewState={props.viewState}
-              />
-              <ViewshedPanel
-                terria={props.terria}
-                viewState={props.viewState}
-              />
-              <LoginPanel terria={props.terria} viewState={props.viewState} />
-            </div>
             <DragDropFile />
-            {showStoryPanel && (
-              <div
-                className={classNames(
-                  Styles.storyPanel,
-                  props.viewState.topElement === "StoryPanel"
-                    ? "top-element"
-                    : "",
-                  {
-                    [Styles.storyPanelFullScreen]:
-                      props.viewState.isMapFullScreen
-                  }
-                )}
-                tabIndex={0}
-                onPointerDown={action(() => {
-                  props.viewState.topElement = "StoryPanel";
-                })}
-              >
-                <StoryPanel />
-              </div>
-            )}
           </div>
           {props.terria.configParameters.storyEnabled && showStoryBuilder && (
             <StoryBuilder

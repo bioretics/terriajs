@@ -7,10 +7,9 @@ import BottomDock from "../BottomDock/BottomDock";
 import { useViewState } from "../Context";
 import Loader from "../Loader";
 import SlideUpFadeIn from "../Transitions/SlideUpFadeIn/SlideUpFadeIn";
-import { BottomBar } from "./BottomBar";
+import { DistanceLegend } from "./BottomBar";
 import BottomLeftBar from "./BottomLeftBar/BottomLeftBar";
 import { MapNavigation } from "./MapNavigation";
-import MenuBar from "./MenuBar/MenuBar";
 import { ProgressBar } from "./ProgressBar";
 import { TerriaViewerWrapper } from "./TerriaViewerWrapper";
 import Toast from "./Toast";
@@ -22,138 +21,130 @@ interface IMapColumnProps {
 }
 
 /**
- * Right-hand column that contains the map, controls that sit over the map and sometimes the bottom dock containing
- * the timeline and charts.
+ * The map area: the viewer, the controls that sit over the map and the
+ * bottom dock containing the timeline and charts. The menu bar and the status
+ * bar are rendered by StandardUserInterface around the workspace.
  */
-export const MapColumn: FC<IMapColumnProps> = observer(
-  ({ customElements, animationDuration }) => {
-    const viewState = useViewState();
-    const theme = useTheme();
-    const { t } = useTranslation();
-    const loaderRef = useRef(null);
+export const MapColumn: FC<IMapColumnProps> = observer(({ customElements }) => {
+  const viewState = useViewState();
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const loaderRef = useRef(null);
 
-    return (
-      <Box
-        column
-        fullWidth
-        fullHeight
-        css={`
-          * {
-            box-sizing: border-box;
-          }
-        `}
-      >
-        <Box column fullWidth fullHeight>
+  // Keep the bottom dock clear of the map controls column on the right.
+  const controlsColumnWidth = viewState.useSmallScreenInterface
+    ? 0
+    : Number(theme.mapControlSize) + Number(theme.workbenchMargin) * 2;
+
+  return (
+    <Box
+      column
+      fullWidth
+      fullHeight
+      css={`
+        * {
+          box-sizing: border-box;
+        }
+      `}
+    >
+      <Box column fullWidth fullHeight>
+        <div
+          css={{
+            position: "absolute",
+            top: "0",
+            left: "0",
+            zIndex: 1,
+            width: "100%"
+          }}
+        >
+          <ProgressBar />
+        </div>
+        {!viewState.hideMapUi && (
           <div
-            css={{
-              position: "absolute",
-              top: "0",
-              left: "0",
-              zIndex: 1,
-              width: "100%"
-            }}
+            css={`
+              ${viewState.explorerPanelIsVisible && "opacity: 0.3;"}
+            `}
           >
-            <ProgressBar />
+            <MapNavigation
+              viewState={viewState}
+              navItems={customElements.nav}
+              elementConfig={viewState.terria.elements.get("map-navigation")}
+            />
           </div>
-          {!viewState.hideMapUi && (
+        )}
+        <Box
+          position="absolute"
+          css={{ top: "0", zIndex: 0 }}
+          fullWidth
+          fullHeight
+        >
+          <TerriaViewerWrapper />
+        </Box>
+        {!viewState.hideMapUi && (
+          <>
+            <ActionBarPortal show={viewState.isActionBarVisible} />
+            <SlideUpFadeIn
+              isVisible={viewState.isMapZooming}
+              nodeRef={loaderRef}
+            >
+              <Toast ref={loaderRef}>
+                <Loader
+                  message={t(($) => $.toast.mapIsZooming)}
+                  textProps={{
+                    style: {
+                      padding: "0 5px"
+                    }
+                  }}
+                />
+              </Toast>
+            </SlideUpFadeIn>
             <div
               css={`
-                ${viewState.explorerPanelIsVisible && "opacity: 0.3;"}
+                position: absolute;
+                left: 0;
+                right: ${controlsColumnWidth}px;
+                bottom: 0;
               `}
             >
-              <MenuBar
-                menuItems={customElements.menu}
-                menuLeftItems={customElements.menuLeft}
-                animationDuration={animationDuration}
-                elementConfig={viewState.terria.elements.get("menu-bar")}
-              />
-              <MapNavigation
-                viewState={viewState}
-                navItems={customElements.nav}
-                elementConfig={viewState.terria.elements.get("map-navigation")}
-              />
-            </div>
-          )}
-          <Box
-            position="absolute"
-            css={{ top: "0", zIndex: 0 }}
-            fullWidth
-            fullHeight
-          >
-            <TerriaViewerWrapper />
-          </Box>
-          {!viewState.hideMapUi && (
-            <>
-              <ActionBarPortal show={viewState.isActionBarVisible} />
-              <SlideUpFadeIn
-                isVisible={viewState.isMapZooming}
-                nodeRef={loaderRef}
-              >
-                <Toast ref={loaderRef}>
-                  <Loader
-                    message={t(($) => $.toast.mapIsZooming)}
-                    textProps={{
-                      style: {
-                        padding: "0 5px"
-                      }
-                    }}
-                  />
-                </Toast>
-              </SlideUpFadeIn>
-              <div
+              <Box
+                fullWidth
+                alignItemsFlexEnd
+                gap={2}
                 css={`
-                  position: absolute;
-                  margin-left: ${viewState.useSmallScreenInterface ||
-                  viewState.terria.elements.get("show-workbench")?.visible ===
-                    false
-                    ? `0px`
-                    : viewState.isMapFullScreen
-                      ? `${theme.workbenchMargin}px`
-                      : `calc(${theme.workbenchWidth}px + 2 * ${theme.workbenchMargin}px)`};
-                  margin-right: ${viewState.useSmallScreenInterface ||
-                  viewState.terria.elements.get("show-workbench")?.visible ===
-                    false
-                    ? `0px`
-                    : `calc(34px + 2 *${theme.workbenchMargin}px)`};
-                  bottom: ${viewState.useSmallScreenInterface ||
-                  viewState.terria.elements.get("show-workbench")?.visible ===
-                    false
-                    ? `0px`
-                    : `${theme.workbenchMargin}px`};
-                  left: 0;
-                  right: 0;
+                  padding: 0 ${theme.workbenchMargin}px
+                    ${theme.workbenchMargin}px;
                 `}
               >
+                <DistanceLegend />
                 <BottomLeftBar />
-                <BottomDock
-                  terria={viewState.terria}
-                  viewState={viewState}
-                  elementConfig={viewState.terria.elements.get("bottom-dock")}
-                />
-                <BottomBar />
-              </div>
+              </Box>
+              <BottomDock
+                terria={viewState.terria}
+                viewState={viewState}
+                elementConfig={viewState.terria.elements.get("bottom-dock")}
+              />
+            </div>
 
-              {viewState.terria.configParameters.printDisclaimer && (
-                <a
-                  css={`
-                    display: none;
-                    @media print {
-                      display: block;
-                      width: 100%;
-                      clear: both;
-                    }
-                  `}
-                  href={viewState.terria.configParameters.printDisclaimer.url}
-                >
-                  {viewState.terria.configParameters.printDisclaimer.text}
-                </a>
-              )}
-            </>
-          )}
-        </Box>
+            {viewState.terria.configParameters.printDisclaimer && (
+              <a
+                css={`
+                  display: none;
+                  @media print {
+                    display: block;
+                    width: 100%;
+                    clear: both;
+                  }
+                `}
+                href={viewState.terria.configParameters.printDisclaimer.url}
+              >
+                {viewState.terria.configParameters.printDisclaimer.text}
+              </a>
+            )}
+          </>
+        )}
       </Box>
-    );
-  }
-);
+    </Box>
+  );
+});
 
 export default MapColumn;

@@ -79,10 +79,11 @@ const Wrapper = styled(Box).attrs({
   min-height: 220px;
   max-height: calc(100vh - ${TOP_MARGIN + BOTTOM_MARGIN}px);
   // background: ${(p) => p.theme.dark};
+  // Right of the side rail and of the docked workbench (when open).
   margin-left: ${(props) =>
-    props.isMapFullScreen
-      ? 16
-      : parseInt(props.theme.workbenchWidth, 10) + 40}px;
+    Number(props.theme.sideRailWidth) +
+    (props.isMapFullScreen ? 0 : parseInt(props.theme.workbenchWidth, 10)) +
+    Number(props.theme.workbenchMargin)}px;
   transition: margin-left 0.25s;
 `;
 

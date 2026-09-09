@@ -114,8 +114,8 @@ const InnerPanel = createReactClass({
           { [Styles.showDropdownInCenter]: this.props.showDropdownInCenter }
         )}
         css={`
-          background: ${(p) => p.theme.dark};
-          opacity: 0.95;
+          background: ${(p) => p.theme.popover};
+          opacity: 1;
         `}
         ref={this.props.innerRef}
         onClick={(e) => e.stopPropagation()}

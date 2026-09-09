@@ -216,68 +216,51 @@ $btn-setting-size: 35px;
   padding: variables.$padding variables.$padding * 2;
   border-bottom: 2px solid transparent;
   li[aria-selected="true"] & {
-    background: #fff;
+    background: variables.$modal-bg;
     color: variables.$modal-highlight;
+    border-bottom-color: variables.$modal-highlight;
   }
 }
 
+// Toolbar ("ghost") button used by the top menu bar and dropdown triggers.
+// Colours come from the theme (see addTerriaMapBtnStyles in Styled/mixins.ts).
 .btn--map {
-  font-size: variables.$font-size-small;
-  padding: 5px;
-  // color: $text-light;
-  display: block;
-  // display: flex;
+  font-size: 0.75rem;
+  font-weight: variables.$font-weight-medium;
+  font-family: variables.$font-base;
+  line-height: 1;
+  height: 32px;
   min-height: 32px;
-  font-family: variables.$font-pop;
-  // opacity: 0.95; // new design has opaque map buttons?
-  // background-color: $dark;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.25);
+  padding: 0 variables.$padding-small * 3;
+  border-radius: variables.$radius-medium;
+  box-shadow: none;
+  white-space: nowrap;
 
-  // Can't apply these atm
-  // due to (presumably https://bugs.chromium.org/p/chromium/issues/detail?id=375693)
-  // display: grid;
-  // grid-auto-flow: column;
   display: flex;
   flex-direction: row;
+  align-items: center;
   justify-content: center;
+  gap: variables.$padding-small;
 
   &:hover,
   &:focus,
   .is-open &,
   &.is-active {
-    // background: $color-primary;
     text-decoration: none;
   }
-  &:hover,
-  &:focus {
-    svg {
-      // fill: $text-light;
-    }
-  }
-  // overrides on panel.scss's .button
-  // svg:not(:root) {
-  // }
+
   svg {
-    height: 15px;
-    width: 15px;
-    // opacity: 0.35;
-    // margin: auto 5px auto 7px;
+    height: 14px;
+    width: 14px;
+    margin: 0;
     vertical-align: middle;
     display: inline-block;
-
-    margin: auto variables.$padding-small;
-    margin-left: variables.$padding-small + 2px;
-    margin-right: variables.$padding-small - 2px;
-
-    // fill: $text-light;
-    // fill: #6487ae;
-    // fill: $map-button-color;
+    flex-shrink: 0;
   }
 
   span {
-    // vertical-align: top;
     vertical-align: middle;
-    margin: auto variables.$padding-small + 1px;
+    margin: 0;
   }
 }
 

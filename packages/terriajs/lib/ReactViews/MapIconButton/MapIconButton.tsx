@@ -24,45 +24,48 @@ interface IStyledMapIconButtonProps {
   engaged?: boolean;
 }
 
-// styles half ripped from nav.scss
+// MapLibre-style map control: light square button with a soft outline
+// shadow, kept light regardless of the UI theme (like GeoLibre does).
 const StyledMapIconButton = styled(RawButton)<IStyledMapIconButtonProps>`
-  border-radius: 16px;
-  ${(props) => props.roundLeft && `border-radius: 16px 0 0 16px;`}
-  ${(props) => props.roundRight && `border-radius: 0 16px 16px 0;`}
+  border-radius: ${(props) => props.theme.radiusMedium};
+  ${(props) =>
+    props.roundLeft &&
+    `border-radius: ${props.theme.radiusMedium} 0 0 ${props.theme.radiusMedium};`}
+  ${(props) =>
+    props.roundRight &&
+    `border-radius: 0 ${props.theme.radiusMedium} ${props.theme.radiusMedium} 0;`}
 
-  background:  ${(props) => props.theme.dark};
-  color: ${(props) => props.theme.textLight};
-  border: 1px solid ${(props) => props.theme.darkLighter};
+  background: ${(props) => props.theme.mapControlBg};
+  color: ${(props) => props.theme.mapControlColor};
+  border: none;
 
-  height: 32px;
-  min-width: 32px;
+  height: ${(props) => props.theme.mapControlSize}px;
+  min-width: ${(props) => props.theme.mapControlSize}px;
   direction: rtl;
-  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: ${(props) => props.theme.mapControlShadow};
+  transition: background-color 0.15s ease;
+
   svg {
-    height: 20px;
-    width: 20px;
+    height: 18px;
+    width: 18px;
     margin: 0 auto;
     vertical-align: middle;
-    fill: ${(props) => props.theme.grey};
+    fill: ${(props) => props.theme.mapControlColor};
+  }
+
+  &:hover,
+  &:focus-visible {
+    background-image: linear-gradient(
+      ${(props) => props.theme.mapControlHoverBg},
+      ${(props) => props.theme.mapControlHoverBg}
+    );
   }
 
   ${(props) =>
-    props.primary &&
-    `
-    background: ${props.theme.colorPrimary};
-    border: 1px solid ${props.theme.colorPrimary};
-    color: ${props.theme.textLight};
-    svg {
-      fill: ${props.theme.textLight};
-      stroke: ${props.theme.textLight};
-    }
-  `}
-  ${(props) =>
-    props.engaged &&
+    (props.primary || props.engaged) &&
     !props.disabled &&
     `
-    background: ${props.theme.colorSecondary};
-    border: 1px solid ${props.theme.colorSecondary};
+    background: ${props.theme.colorPrimary};
     color: ${props.theme.textLight};
     svg {
       fill: ${props.theme.textLight};
@@ -90,15 +93,16 @@ const StyledMapIconButton = styled(RawButton)<IStyledMapIconButtonProps>`
     }
   `}
 
-
   ${(props) =>
     props.disabled &&
     `
-    background-color: ${props.theme.grey};
-    color: ${props.theme.grey};
-    opacity: 0.7;
+    cursor: not-allowed;
     svg {
-      fill: ${props.theme.textLightDimmed};
+      opacity: 0.3;
+    }
+    &:hover,
+    &:focus-visible {
+      background-image: none;
     }
   `}
 `;
@@ -135,8 +139,8 @@ function MapIconButton(props: IMapIconButtonProps) {
   const expanded = !noExpand && (isExpanded || neverCollapse) && children;
   const buttonRef = useRef();
   const theme = useTheme();
+  const size = `${theme.mapControlSize}px`;
 
-  // const handleAway = () => setTimeout(() => setExpanded(false), 1000);
   const handleAway = () => setExpanded(false);
   const handleFocus = (expanded: boolean) => {
     if (!disabled) {
@@ -164,13 +168,13 @@ function MapIconButton(props: IMapIconButtonProps) {
       onClick={props.onClick}
       css={`
         svg {
-          margin: 0px 6px;
+          margin: 0px 5px;
         }
       `}
     >
       <ButtonWrapper>
         {/* only spans are valid html for buttons (even though divs work) */}
-        {primary && props.closeIconElement && (
+        {!noExpand && primary && props.closeIconElement && (
           <span
             css={`
               display: block;
@@ -179,7 +183,7 @@ function MapIconButton(props: IMapIconButtonProps) {
             {props.closeIconElement()}
           </span>
         )}
-        {children && (
+        {children && !noExpand && (
           <TextSpan
             noWrap
             medium
@@ -220,16 +224,9 @@ function MapIconButton(props: IMapIconButtonProps) {
           expandInPlace &&
           `
             position:relative;
-            width: 32px;
-            height: 32px;
+            width: ${size};
+            height: ${size};
             margin:auto;
-            @media (max-width: ${theme.mobile}px) {
-              width: ${
-                primary && !!props.closeIconElement && !isExpanded
-                  ? "64px"
-                  : "32px"
-              };
-            }
           `
         }
       >
@@ -250,11 +247,5 @@ function MapIconButton(props: IMapIconButtonProps) {
     );
   } else return MapIconButtonRaw;
 }
-
-// const MapIconButtonWithRef = (props, ref) => (
-//   <MapIconButton {...props} buttonRef={ref} />
-// );
-
-// export default React.forwardRef(MapIconButtonWithRef);
 
 export default MapIconButton;

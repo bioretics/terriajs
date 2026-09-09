@@ -363,7 +363,17 @@
       "denyText": "Maybe later"
     },
     "showWorkbench": "Explore Datasets [{{count}}]",
-    "hideWorkbench": "Hide Workbench"
+    "hideWorkbench": "Hide Workbench",
+    "sideRail": {
+      "layers": "Layers",
+      "catalog": "Catalogue",
+      "showPanel": "Show {{name}}",
+      "hidePanel": "Hide {{name}}"
+    },
+    "statusBar": {
+      "coords": "Coords",
+      "elevation": "Elev"
+    }
   },
   "featureInfo": {
     "catalogItem": {

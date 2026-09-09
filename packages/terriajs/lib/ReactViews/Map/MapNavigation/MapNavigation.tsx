@@ -27,8 +27,8 @@ import { Control, MapNavigationItem } from "./Items";
 import { registerMapNavigations } from "./registerMapNavigations";
 import { MeasureToolsController } from "./Items/MeasureTools";
 
-const OVERFLOW_ACTION_SIZE = 42;
-const MOBILE_BOTTOM_OFFSET = 50;
+const OVERFLOW_ACTION_SIZE = 39;
+const MOBILE_BOTTOM_OFFSET = 10;
 
 interface StyledMapNavigationProps {
   trainerBarVisible: boolean;
@@ -43,13 +43,13 @@ interface StyledMapNavigationProps {
  */
 const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
   position: absolute;
-  right: 5px;
+  right: ${(props) => props.theme.workbenchMargin}px;
   z-index: 1;
-  top: 25px;
+  top: ${(props) => props.theme.mapNavigationTop}px;
   @media (min-width: ${(props) => props.theme.sm}px) {
-    top: 80px;
-    bottom: 50px;
-    right: 21px;
+    top: ${(props) => props.theme.mapNavigationTop}px;
+    bottom: ${(props) => props.theme.workbenchMargin}px;
+    right: ${(props) => props.theme.workbenchMargin}px;
   }
   pointer-events: none;
   button {

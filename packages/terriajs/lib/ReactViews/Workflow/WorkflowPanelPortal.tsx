@@ -8,6 +8,10 @@ type PropsType = {
   show: boolean;
 };
 
+/**
+ * Host for workflow panels. It takes the docked workbench's slot (same width,
+ * same surface) while a workflow is active.
+ */
 const WorkflowPanelPortal: FC<PropsType> = ({ show }) => {
   const viewState = useViewState();
   return (
@@ -21,21 +25,18 @@ const WorkflowPanelPortal: FC<PropsType> = ({ show }) => {
 };
 
 const Container = styled.div<{ show: boolean }>`
+  display: ${(p) => (p.show ? "flex" : "none")};
+  flex-direction: column;
+  flex: 0 0 auto;
   width: ${(p) => p.theme.workflowPanelWidth}px;
   max-width: ${(p) => p.theme.workflowPanelWidth}px;
-  position: absolute;
-  left: ${(p) => p.theme.workbenchMargin}px;
-  top: ${(p) => p.theme.workbenchMargin}px;
-  max-height: calc(100% - 2 * ${(p) => p.theme.workbenchMargin}px);
+  height: 100%;
+  min-height: 0;
+  box-sizing: border-box;
   z-index: 100;
-  background: ${(p) => p.theme.transparentDark};
-  backdrop-filter: ${(p) => p.theme.blur};
-  transition: all 0.25s;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  visibility: ${(p) => (p.show ? "visible" : "hidden")};
-  margin-left: ${(p) => (p.show ? "0px" : `-${p.theme.workflowPanelWidth}px`)};
-  opacity: ${(p) => (p.show ? 1 : 0)};
-  border-radius: ${(p) => p.theme.radiusXL};
+  background: ${(p) => p.theme.card};
+  border-right: 1px solid ${(p) => p.theme.border};
+  overflow: hidden;
 `;
 
 export default WorkflowPanelPortal;

@@ -96,7 +96,17 @@
       "message": "Volete vederlo ora?"
     },
     "hideWorkbench": "Nascondi Workbench",
-    "showWorkbench": "Mostra Workbench"
+    "showWorkbench": "Mostra Workbench",
+    "sideRail": {
+      "layers": "Layer",
+      "catalog": "Catalogo",
+      "showPanel": "Mostra {{name}}",
+      "hidePanel": "Nascondi {{name}}"
+    },
+    "statusBar": {
+      "coords": "Coord.",
+      "elevation": "Quota"
+    }
   },
   "helpMenu": {
     "next": "SUCCESSIVO",

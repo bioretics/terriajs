@@ -39,7 +39,7 @@
 :global {
   .story.tjs-notification-window__wrapper {
     @media (min-width: variables.$md) {
-      left: variables.$work-bench-width;
+      left: variables.$side-rail-width + variables.$work-bench-width;
     }
 
     .tjs-notification-window__notification {

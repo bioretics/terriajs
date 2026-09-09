@@ -1,84 +1,71 @@
 @use "../../../Sass/common/_variables";
 
+// Docked top toolbar (GeoLibre-style). The menu bar used to float over the
+// map; it now sits above the workspace as a full-width header holding the
+// branding, the app title and every menu.
 .menu-bar {
-  position: absolute;
+  position: relative;
   z-index: 108;
-  top: variables.$map-button-top;
-  left: variables.$work-bench-width;
-  right: variables.$padding * 2;
-
-  // todo: find some non-layout-change animation technique for
-  // this flex-menu-bar-workbench problem
-  transition: margin-left 0.25s;
-  // margin-left: variables.$work-bench-width + 40px;
-  margin-left: 50px;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: variables.$top-toolbar-height;
+  padding: variables.$padding-small variables.$padding-small * 2;
+  background: variables.$surface-card;
+  border-bottom: 1px solid variables.$border-color;
+  color: variables.$text-light;
+  font-family: variables.$font-base;
 
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  flex-flow: wrap;
+  flex-wrap: wrap;
+  gap: variables.$padding-small;
 }
 
-.menu-bar--workbenchClosed {
-  // transition-delay: 0.25s; // temporary disable delays for splitter lag w/o resizing on transitionend
-  margin-left: 35px;
+.left,
+.right {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: variables.$padding-small;
+  min-width: 0;
+}
+
+.right {
+  margin-left: auto;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: variables.$padding-small * 2;
+  margin-right: variables.$padding-small * 2;
+  flex-shrink: 0;
+}
+
+.app-title {
+  font-size: 0.875rem;
+  font-weight: variables.$font-weight-bold;
+  color: variables.$color-primary;
+  white-space: nowrap;
 }
 
 .menu {
   composes: list-reset from "../../../Sass/common/_base.scss";
-  composes: clearfix from "../../../Sass/common/_base.scss";
-  composes: sm-show from "../../../Sass/common/_base.scss";
-
-  margin: 0 variables.$padding-small 0 variables.$padding-small;
-
-  /* Align About button with compass */
-  // margin-right: 7px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: variables.$padding-small;
+  margin: 0;
 }
 
 .menu-item {
   pointer-events: auto;
   position: relative;
-  display: block;
-  float: left;
-
-  // Prettier in flex-supported-browsers
   display: flex;
   justify-content: center;
   flex-direction: row;
   align-items: center;
-
-  margin-right: variables.$padding-tiny;
-
-  &:last-child {
-    margin-right: 0;
-  }
-
-  // TODO(?)
-  // These selectors are here so that we can support the various implementations of
-  // menu item, a prop calculated with javascript would be a better option for later
-  &:first-child > div > button,
-  &:first-child > div > a,
-  &:first-child > button,
-  &:first-child > a {
-    border-radius: variables.$map-button-border-radius 0 0
-      variables.$map-button-border-radius;
-  }
-
-  &:last-child > div > button,
-  &:last-child > div > a,
-  &:last-child > button,
-  &:last-child > a {
-    border-radius: 0 variables.$map-button-border-radius
-      variables.$map-button-border-radius 0;
-  }
-
-  &:only-child > div > button,
-  &:only-child > div > a,
-  &:only-child > button,
-  &:only-child > a {
-    border-radius: variables.$map-button-border-radius
-      variables.$map-button-border-radius variables.$map-button-border-radius
-      variables.$map-button-border-radius;
-  }
 }
 
 .flex {

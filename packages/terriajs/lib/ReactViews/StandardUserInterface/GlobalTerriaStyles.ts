@@ -4,10 +4,25 @@ import Color from "terriajs-cesium/Source/Core/Color";
 export const GlobalTerriaStyles = createGlobalStyle`
 body {
   font-family: ${(p) => p.theme.fontBase};
+  background: ${(p) => p.theme.dark};
+  color: ${(p) => p.theme.textLight};
 
-  *:focus {
-    outline: 3px solid #C390F9;
+  // Keyboard focus ring: visible only for keyboard navigation, in the accent
+  // colour and offset like GeoLibre's :focus-visible rule.
+  *:focus-visible {
+    outline: 2px solid ${(p) => p.theme.ring};
+    outline-offset: 2px;
   }
+  *:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 // Theme-ify sass classes until they are removed
@@ -38,7 +53,7 @@ body {
 }
 
 .tjs-share-panel__catalog-share-inner {
-  background: ${(p) => p.theme.greyLightest};
+  background: ${(p) => p.theme.popover};
 }
 
 .tjs-share-panel__btn--catalogShare {
@@ -49,16 +64,17 @@ body {
   }
 }
 .tjs-dropdown__btn--dropdown {
-  color: ${(p) => p.theme.textDark};
-  background: ${(p) => p.theme.textLight};
+  color: ${(p) => p.theme.textLight};
+  background: ${(p) => p.theme.popover};
+  border: 1px solid ${(p) => p.theme.inputBorder};
   &:hover,
   &:focus {
-    color: ${(p) => p.theme.textDark};
-    background: ${(p) => p.theme.textLight};
+    color: ${(p) => p.theme.textLight};
+    background: ${(p) => p.theme.popover};
     border: 1px solid ${(p) => p.theme.colorPrimary};
   }
   svg {
-    fill: ${(p) => p.theme.textDark};
+    fill: ${(p) => p.theme.textLight};
   }
 }
 .tjs-dropdown__btn--option.tjs-dropdown__is-selected {
@@ -84,8 +100,21 @@ button {
   touch-action: none;
 }
 
-// Global theme variables 
+// Global theme variables (also usable from plain CSS / SCSS at runtime)
 :root {
+  --theme-background: ${(p) => p.theme.dark};
+  --theme-card: ${(p) => p.theme.card};
+  --theme-popover: ${(p) => p.theme.popover};
+  --theme-muted: ${(p) => p.theme.muted};
+  --theme-accent: ${(p) => p.theme.accent};
+  --theme-border: ${(p) => p.theme.border};
+  --theme-input-border: ${(p) => p.theme.inputBorder};
+  --theme-foreground: ${(p) => p.theme.textLight};
+  --theme-muted-foreground: ${(p) => p.theme.mutedForeground};
+  --theme-primary: ${(p) => p.theme.colorPrimary};
+  --theme-ring: ${(p) => p.theme.ring};
+  --theme-radius-md: ${(p) => p.theme.radiusMedium};
+  --theme-radius-lg: ${(p) => p.theme.radiusLarge};
 
   // Derive transparent dark from dark theme color and alpha
   --theme-transparent-dark: ${(p) =>

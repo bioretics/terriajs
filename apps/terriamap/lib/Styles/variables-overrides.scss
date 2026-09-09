@@ -1,21 +1,121 @@
-// Regione Emilia-Romagna (rer3d-map) theme values, carried over from the legacy
-// lib/Styles/variables.scss during the merge onto the TerriaJS monorepo.
+// Regione Emilia-Romagna (rer3d-map) theme, restyled after GeoLibre
+// (https://github.com/opengeos/GeoLibre): dark neutral surface ladder, blue
+// accent, IBM Plex typography, 4/6px radii. Token sources and the rationale are
+// documented in UI-GEOLIBRE-PLAN.md at the monorepo root.
 @forward "~terriajs/lib/Sass/common/_default_variables.scss" with (
-  $dark: #222a33,
-  $dark-with-overlay: #333d48,
-  $dark-mid: #333d48,
-  $dark-lighter: #4a5764,
-  $grey: #8b98a5,
-  $grey-lighter: #c8cfd6,
-  $color-primary: #1f6f9c,
-  $color-secondary: #ce3b84,
+  // Typography
+  $font-import-url:
+    "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap",
+  $font-pop: (
+    "IBM Plex Sans",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif
+  ),
+  $font-base: (
+    "IBM Plex Sans",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    sans-serif
+  ),
+  $font-mono: (
+    "IBM Plex Mono",
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    "Liberation Mono",
+    monospace
+  ),
 
-  $radius-small: 3px,
+  // Accent
+  $color-primary: #3b82f6,
+  $color-primary-disabled: #2a303c,
+  // Amber: only used for the splitter / compare tools.
+  $color-secondary: #f97316,
+
+  // Neutral surface ladder (background -> card -> popover -> muted -> accent)
+  $dark: #11151c,
+  $dark-mid: #181c25,
+  $dark-with-overlay: #1e232e,
+  $dark-lighter: #2a303c,
+  $dark-alpha: 0.85,
+  $blur: blur(12px) saturate(140%),
+  $surface-card: #181c25,
+  $surface-popover: #1e232e,
+  $surface-muted: #2a303c,
+  $surface-accent: #2e3542,
+  $charcoal-grey: #2e3542,
+
+  // Text and lines
+  $grey: #94a3b8,
+  $grey-lighter: #cbd5e1,
+  $text-muted: #94a3b8,
+  $text-light: #f8fafc,
+  $text-light-dimmed: #94a3b8,
+  $text-warning: #f47b7b,
+  $warning: #f47b7b,
+  $border-color: #393f4c,
+  $input-border: #555d6d,
+  $field-border: #555d6d,
+  $overlay: #2a303c,
+  $map-button-color: #94a3b8,
+
+  // Modals and catalogue (dark, like GeoLibre dialogs)
+  $modal-bg: #1e232e,
+  $modal-text: #f8fafc,
+  $modal-secondary-bg: #181c25,
+  $modal-border: #393f4c,
+  $modal-overlay: rgba(0, 0, 0, 0.8),
+  $data-catalog-color: #f8fafc,
+  $mobile-main-bg: #181c25,
+  $mobile-text: #f8fafc,
+
+  // Panels floating over the map ("map glass")
+  $feature-info-bg: rgba(17, 21, 28, 0.85),
+  $feature-info-header-bg: #181c25,
+  $feature-info-table-border-style: 1px solid #393f4c,
+
+  // Radii and elevation
+  $radius-small: 2px,
   $radius-medium: 4px,
   $radius-large: 6px,
-  $radius-xlarge: 10px,
-  $panel-radius: 10px,
-  $map-button-border-radius: 10px,
+  $radius-xlarge: 6px,
+  $panel-radius: 6px,
+  $map-button-border-radius: 4px,
+  $box-shadow: (
+    0 2px 4px -1px rgba(0, 0, 0, 0.4),
+    0 4px 8px -2px rgba(0, 0, 0, 0.55)
+  ),
+  $shadow-sm: (0 1px 2px 0 rgba(0, 0, 0, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.55)),
+  $shadow-md: (
+    0 2px 4px -1px rgba(0, 0, 0, 0.4),
+    0 4px 8px -2px rgba(0, 0, 0, 0.55)
+  ),
+  $shadow-lg: (
+    0 4px 8px -2px rgba(0, 0, 0, 0.4),
+    0 12px 20px -4px rgba(0, 0, 0, 0.55)
+  ),
+  $shadow-xl: (
+    0 8px 16px -4px rgba(0, 0, 0, 0.4),
+    0 24px 40px -8px rgba(0, 0, 0, 0.55)
+  ),
 
-  $border-color: rgba(255, 255, 255, 0.16)
+  // Sizes
+  $input-height: 36px,
+  $input-height-large: 40px,
+  $mobile-header-height: 44px,
+  $logo-height: 28px,
+  $work-bench-width: 320px,
+  $scrollbar-color: rgba(148, 163, 184, 0.45)
 );

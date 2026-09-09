@@ -1,41 +1,52 @@
-import { VFC } from "react";
-import Box from "../../../Styled/Box";
+import { observer } from "mobx-react";
+import { FC } from "react";
+import styled from "styled-components";
 import { useViewState } from "../../Context";
 import { MapCredits } from "./Credits";
-import { DistanceLegend } from "./DistanceLegend";
 import { LocationBar } from "./LocationBar";
-import { useTheme } from "styled-components";
 
-export const BottomBar: VFC = () => {
+// Docked status bar under the workspace (GeoLibre-style): monospace
+// coordinate readout on the left, map credits on the right.
+const StatusBarContainer = styled.footer`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 0 0 auto;
+  height: ${(p) => p.theme.statusBarHeight}px;
+  padding: 0 12px;
+  box-sizing: border-box;
+  border-top: 1px solid ${(p) => p.theme.border};
+  background: ${(p) => p.theme.statusBarBg};
+  color: ${(p) => p.theme.mutedForeground};
+  font-family: ${(p) => p.theme.fontMono};
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+`;
+
+const Spacer = styled.div`
+  flex: 1 1 auto;
+  min-width: 0;
+`;
+
+export const StatusBar: FC = observer(() => {
   const viewState = useViewState();
-  const theme = useTheme();
   return (
-    <Box
-      justifySpaceBetween
-      css={`
-        /* Fork (rer3d): rounded translucent bottom bar */
-        border-radius: 8px 8px 8px 8px;
-        font-size: 0.7rem;
-        width: 96%;
-        background: ${theme.darkTranslucent ?? theme.transparentDark};
-        backdrop-filter: blur(5px);
-        margin-top: 2px;
-      `}
-    >
+    <StatusBarContainer>
+      {!viewState.useSmallScreenInterface && (
+        <LocationBar mouseCoords={viewState.terria.currentViewer.mouseCoords} />
+      )}
+      <Spacer />
       <MapCredits
         hideTerriaLogo={!!viewState.terria.configParameters.hideTerriaLogo}
         credits={viewState.terria.configParameters.extraCreditLinks?.slice()}
         currentViewer={viewState.terria.mainViewer.currentViewer}
         searchBarModel={viewState.terria.searchBarModel}
       />
-      <Box paddedHorizontally={4} gap={2}>
-        {!viewState.useSmallScreenInterface && (
-          <LocationBar
-            mouseCoords={viewState.terria.currentViewer.mouseCoords}
-          />
-        )}
-        <DistanceLegend />
-      </Box>
-    </Box>
+    </StatusBarContainer>
   );
-};
+});
+
+/** @deprecated use StatusBar */
+export const BottomBar = StatusBar;

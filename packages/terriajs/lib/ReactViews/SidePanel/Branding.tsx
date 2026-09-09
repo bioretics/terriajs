@@ -9,13 +9,29 @@ import { useTheme } from "styled-components";
 const DEFAULT_BRANDING =
   '<a target="_blank" href="http://terria.io"><img src="images/terria_logo.png" height="52" title="Version: {{ version }}" /></a>';
 
+interface BrandingProps {
+  viewState: ViewState;
+  version?: string;
+  /**
+   * Show the reduced logo set (brandBarSmallElements / displayOneBrand) at the
+   * small logo height. Used by the docked top toolbar, which has room for one
+   * mark rather than a full brand bar.
+   */
+  compact?: boolean;
+}
+
 export default withViewState(
-  observer((props: { viewState: ViewState; version?: string }) => {
+  observer((props: BrandingProps) => {
+    const viewState = useViewState();
+    const theme = useTheme();
+
     // Set brandingHtmlElements to brandBarElements or default Terria branding as default
     let brandingHtmlElements = props.viewState.terria.configParameters
       .brandBarElements ?? [DEFAULT_BRANDING];
 
-    if (props.viewState.useSmallScreenInterface) {
+    const useSmallBranding = viewState.useSmallScreenInterface || props.compact;
+
+    if (useSmallBranding) {
       const brandBarSmallElements =
         props.viewState.terria.configParameters.brandBarSmallElements;
       const displayOne =
@@ -31,12 +47,16 @@ export default withViewState(
             brandingHtmlElements.find((item) => item.length > 0)) ??
             DEFAULT_BRANDING
         ];
+      // Fall back to the first non-empty element so the toolbar never shows
+      // the full brand bar.
+      else if (props.compact && brandingHtmlElements.length > 1)
+        brandingHtmlElements = [
+          brandingHtmlElements.find((item) => item.length > 0) ??
+            DEFAULT_BRANDING
+        ];
     }
 
-    const theme = useTheme();
-    const viewState = useViewState();
-
-    const logoHeight = viewState.useSmallScreenInterface
+    const logoHeight = useSmallBranding
       ? theme.logoSmallHeight
       : theme.logoHeight;
 
@@ -46,17 +66,20 @@ export default withViewState(
         className="drag-handle"
         css={`
           display: flex;
-          justify-content: center;
+          justify-content: flex-start;
+          align-items: center;
+          gap: 8px;
 
           box-sizing: border-box;
 
-          width: 100%;
-          min-height: ${logoHeight};
+          width: auto;
+          height: ${logoHeight};
 
           overflow: hidden;
 
           a {
             display: flex;
+            height: 100%;
             -webkit-box-align: center;
             align-items: center;
             -webkit-box-pack: center;
@@ -65,9 +88,14 @@ export default withViewState(
           span {
             display: block;
           }
+          /* Config supplies raw <img height="52">, so constrain it to the
+             available bar height rather than its intrinsic size. */
           img {
+            height: 100%;
             max-height: 100%;
+            width: auto;
             max-width: 100%;
+            object-fit: contain;
           }
 
           font-family: ${(p: any) => p.theme.fontPop};
@@ -80,11 +108,6 @@ export default withViewState(
 
             padding: ${(p: any) => p.theme.logoSmallPaddingHorizontal}
               ${(p: any) => p.theme.logoSmallPaddingVertical};
-
-            // Remove a "display: flex" on small screen if only showing one brandingHtmlElement
-            a {
-              ${brandingHtmlElements.length > 0 ? "display: unset;" : ""}
-            }
           }
         `}
       >

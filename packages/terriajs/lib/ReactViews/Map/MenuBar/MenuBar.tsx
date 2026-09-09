@@ -2,9 +2,10 @@ import classNames from "classnames";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import React from "react";
-import styled, { useTheme } from "styled-components";
+import { useTheme } from "styled-components";
 import { useViewState } from "../../Context";
 import withControlledVisibility from "../../HOCs/withControlledVisibility";
+import Branding from "../../SidePanel/Branding";
 import LangPanel from "../Panels/LangPanel/LangPanel";
 import SettingPanel from "../Panels/SettingPanel";
 import SharePanel from "../Panels/SharePanel/SharePanel";
@@ -21,23 +22,20 @@ import StoryButton from "./StoryButton/StoryButton";
 import IElementConfig from "../../../Models/IElementConfig";
 import Styles from "./menu-bar.scss";
 
-const StyledMenuBar = styled.div<{ trainerBarVisible: boolean }>`
-  pointer-events: none;
-  ${(p) =>
-    p.trainerBarVisible &&
-    `
-    top: ${Number(p.theme.trainerHeight) + Number(p.theme.mapButtonTop)}px;
-  `}
-`;
-
 interface PropsType {
   animationDuration?: number;
-  menuItems: React.ReactElement[];
-  menuLeftItems: React.ReactElement[];
+  // Custom elements come from processCustomElements(), which returns ReactNode.
+  menuItems: React.ReactNode[];
+  menuLeftItems: React.ReactNode[];
   elementConfig?: IElementConfig;
+  version?: string;
 }
 
-// The map navigation region
+/**
+ * Docked top toolbar (GeoLibre-style): branding + app title on the left,
+ * followed by the map menus; share / login / custom menus on the right.
+ * Every menu keeps its own dropdown panel, so only the container changed.
+ */
 const MenuBar = observer((props: PropsType) => {
   const theme = useTheme();
   const viewState = useViewState();
@@ -55,19 +53,21 @@ const MenuBar = observer((props: PropsType) => {
   const microzonationEnabled = !!terria.configParameters.microzonationConfig;
 
   return (
-    <StyledMenuBar
+    <header
       className={classNames(
         viewState.topElement === "MenuBar" ? "top-element" : "",
-        Styles.menuBar,
-        {
-          [Styles.menuBarWorkbenchClosed]: viewState.isMapFullScreen
-        }
+        Styles.menuBar
       )}
       onClick={handleClick}
-      trainerBarVisible={viewState.trainerBarVisible}
     >
-      <section>
-        <ul className={classNames(Styles.menu)}>
+      <section className={Styles.left}>
+        <div className={Styles.brand}>
+          <Branding compact version={props.version} />
+          {terria.appName && (
+            <span className={Styles.appTitle}>{terria.appName}</span>
+          )}
+        </div>
+        <ul className={Styles.menu}>
           {enableTools && (
             <li className={Styles.menuItem}>
               <ToolsPanel
@@ -81,10 +81,6 @@ const MenuBar = observer((props: PropsType) => {
                 {element}
               </li>
             ))}
-        </ul>
-      </section>
-      <section className={classNames(Styles.flex)}>
-        <ul className={classNames(Styles.menu)}>
           <li className={Styles.menuItem}>
             <SettingPanel
               terria={terria}
@@ -100,10 +96,41 @@ const MenuBar = observer((props: PropsType) => {
           <li className={Styles.menuItem}>
             <ColorPanel terria={terria} viewState={viewState} />
           </li>
+          {storyEnabled && (
+            <li className={Styles.menuItem}>
+              <StoryButton
+                terria={terria}
+                viewState={viewState}
+                theme={theme}
+                elementConfig={terria.elements.get("menu-bar-story")}
+              />
+            </li>
+          )}
+          {microzonationEnabled && (
+            <>
+              <li className={Styles.menuItem}>
+                <MicrozonationButton
+                  terria={terria}
+                  viewState={viewState}
+                  theme={theme}
+                />
+              </li>
+              <li className={Styles.menuItem}>
+                <EmergencyPlansButton
+                  terria={terria}
+                  viewState={viewState}
+                  theme={theme}
+                />
+              </li>
+            </>
+          )}
           <li className={Styles.menuItem}>
             <HelpButton elementConfig={terria.elements.get("menu-bar-help")} />
           </li>
-
+        </ul>
+      </section>
+      <section className={Styles.right}>
+        <ul className={Styles.menu}>
           {terria.configParameters?.languageConfiguration?.enabled ? (
             <li className={Styles.menuItem}>
               <LangPanel
@@ -113,38 +140,6 @@ const MenuBar = observer((props: PropsType) => {
               />
             </li>
           ) : null}
-        </ul>
-        {storyEnabled && (
-          <ul className={classNames(Styles.menu)}>
-            <li className={Styles.menuItem}>
-              <StoryButton
-                terria={terria}
-                viewState={viewState}
-                theme={theme}
-                elementConfig={terria.elements.get("menu-bar-story")}
-              />
-            </li>
-          </ul>
-        )}
-        {microzonationEnabled && (
-          <ul className={classNames(Styles.menu)}>
-            <li className={Styles.menuItem}>
-              <MicrozonationButton
-                terria={terria}
-                viewState={viewState}
-                theme={theme}
-              />
-            </li>
-            <li className={Styles.menuItem}>
-              <EmergencyPlansButton
-                terria={terria}
-                viewState={viewState}
-                theme={theme}
-              />
-            </li>
-          </ul>
-        )}
-        <ul className={classNames(Styles.menu)}>
           <li className={Styles.menuItem}>
             <SharePanel
               terria={terria}
@@ -152,9 +147,7 @@ const MenuBar = observer((props: PropsType) => {
               elementConfig={terria.elements.get("menu-bar-share")}
             />
           </li>
-        </ul>
-        {loginEnabled && (
-          <ul className={classNames(Styles.menu)}>
+          {loginEnabled && (
             <li className={Styles.menuItem}>
               <LoginButton
                 terria={terria}
@@ -162,16 +155,16 @@ const MenuBar = observer((props: PropsType) => {
                 theme={theme}
               />
             </li>
-          </ul>
-        )}
-        {!viewState.useSmallScreenInterface &&
-          menuItems.map((element, i) => (
-            <li className={Styles.menuItem} key={i}>
-              {element}
-            </li>
-          ))}
+          )}
+          {!viewState.useSmallScreenInterface &&
+            menuItems.map((element, i) => (
+              <li className={Styles.menuItem} key={i}>
+                {element}
+              </li>
+            ))}
+        </ul>
       </section>
-    </StyledMenuBar>
+    </header>
   );
 });
 

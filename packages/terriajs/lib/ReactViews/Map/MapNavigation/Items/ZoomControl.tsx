@@ -225,21 +225,41 @@ class ZoomControlBase extends Component<PropTypes> {
   }
 }
 
+// MapLibre-style grouped control: light column of square buttons separated
+// by hairlines, with the soft outline shadow shared with MapIconButton.
 const StyledZoomControl = styled(Box).attrs((props) => ({
-  backgroundColor: props.theme.dark,
   centered: true,
   column: true,
-  styledWidth: "32px"
+  styledWidth: `${props.theme.mapControlSize}px`
 }))`
-  border-radius: 100px;
-  border: 1px solid ${(props) => props.theme.darkLighter};
+  background: ${(props) => props.theme.mapControlBg};
+  border-radius: ${(props) => props.theme.radiusMedium};
+  box-shadow: ${(props) => props.theme.mapControlShadow};
+  overflow: hidden;
   svg {
-    height: 20px;
-    width: 20px;
-    fill: ${(props) => props.theme.grey};
+    height: 18px;
+    width: 18px;
+    fill: ${(props) => props.theme.mapControlColor};
   }
   ${Li} {
-    margin: 5px 0;
+    margin: 0;
+    width: 100%;
+    button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: ${(props) => props.theme.mapControlSize}px;
+      transition: background-color 0.15s ease;
+      &:hover,
+      &:focus-visible {
+        background-color: ${(props) => props.theme.mapControlHoverBg};
+      }
+    }
+  }
+  /* Hairline between stacked buttons, like MapLibre's ctrl-group. */
+  ${Li} + ${Li} {
+    border-top: 1px solid ${(props) => props.theme.mapControlSeparator};
   }
 `;
 

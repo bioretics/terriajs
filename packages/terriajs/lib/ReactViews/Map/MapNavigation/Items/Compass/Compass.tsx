@@ -58,6 +58,8 @@ const StyledCompass = styled.div<StyledCompassProps>`
   position: relative;
   width: ${(props) => props.theme.compassWidth}px;
   height: ${(props) => props.theme.compassWidth}px;
+  // Light control over the map (like the other MapLibre-style buttons).
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
   @media (min-width: ${(props) => props.theme.sm}px) {
     display: block;
   }
@@ -399,7 +401,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         <StyledCompassOuterRing active={false}>
           <div style={outerCircleStyle}>
             <StyledIcon
-              fillColor={this.props.theme.dark}
+              fillColor={this.props.theme.mapControlBg}
               // if it's active hide outer ring
               glyph={active ? null : Icon.GLYPHS.compassOuter}
             />
@@ -415,7 +417,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         >
           <div ref={this.props.refFromHOC} style={outerCircleStyle}>
             <StyledIcon
-              fillColor={this.props.theme.dark}
+              fillColor={this.props.theme.mapControlBg}
               glyph={Icon.GLYPHS.compassOuter}
             />
           </div>
@@ -424,7 +426,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         {/* "Center circle icon" */}
         <StyledCompassInnerRing title={t(($) => $.compass.title)}>
           <StyledIcon
-            fillColor={this.props.theme.dark}
+            fillColor={this.props.theme.mapControlBg}
             glyph={
               active ? Icon.GLYPHS.compassInnerArrows : Icon.GLYPHS.compassInner
             }
@@ -455,7 +457,7 @@ class Compass extends PureComponent<PropTypes, IStateTypes> {
         >
           <div style={rotationMarkerStyle}>
             <StyledIcon
-              fillColor={this.props.theme.dark}
+              fillColor={this.props.theme.mapControlBg}
               glyph={Icon.GLYPHS.compassRotationMarker}
             />
           </div>

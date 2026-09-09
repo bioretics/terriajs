@@ -41,10 +41,11 @@ const Container = styled.div<{ isMapFullScreen: boolean }>`
   left: 0;
   right: unset;
   bottom: unset;
+  // Right of the side rail and of the docked workbench (when open).
   margin-left: ${(props) =>
-    props.isMapFullScreen
-      ? 15
-      : parseInt(props.theme.workbenchWidth, 10) + 42}px;
+    Number(props.theme.sideRailWidth) +
+    (props.isMapFullScreen ? 0 : parseInt(props.theme.workbenchWidth, 10)) +
+    Number(props.theme.workbenchMargin)}px;
   transition: margin-left 0.25s;
 `;
 

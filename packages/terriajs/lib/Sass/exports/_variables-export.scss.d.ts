@@ -1,6 +1,9 @@
 declare namespace VariablesExportScssNamespace {
   export interface IVariablesExportScss {
+    accent: string;
     blur: string;
+    border: string;
+    card: string;
     charcoalGrey: string;
     colorPrimary: string;
     colorSecondary: string;
@@ -22,6 +25,7 @@ declare namespace VariablesExportScssNamespace {
     greyLighter2: string;
     greyLightest: string;
     infoColor: string;
+    inputBorder: string;
     inputHeight: string;
     inputHeightLarge: string;
     lg: string;
@@ -33,12 +37,20 @@ declare namespace VariablesExportScssNamespace {
     logoSmallPaddingVertical: string;
     mapButtonColor: string;
     mapButtonTop: string;
+    mapControlBg: string;
+    mapControlColor: string;
+    mapControlHoverBg: string;
+    mapControlSeparator: string;
+    mapControlShadow: string;
+    mapControlSize: string;
     mapNavigationTop: string;
     md: string;
     mobile: string;
     modalBg: string;
     modalHighlight: string;
     modalText: string;
+    muted: string;
+    mutedForeground: string;
     notificationWindowZIndex: string;
     overlay: string;
     overlayInvert: string;
@@ -47,16 +59,26 @@ declare namespace VariablesExportScssNamespace {
     paddingSmall: string;
     paddingTiny: string;
     panelRadius: string;
+    popover: string;
     radius40Button: string;
     radiusLarge: string;
+    radiusMedium: string;
     radiusSmall: string;
     radiusXL: string;
     radiusXl: string;
+    ring: string;
     ringWidth: string;
     scrollbarColor: string;
     scrollbarTrackColor: string;
+    shadowLg: string;
+    shadowMd: string;
+    shadowSm: string;
+    shadowXl: string;
+    sideRailWidth: string;
     sm: string;
     spacing: string;
+    statusBarBg: string;
+    statusBarHeight: string;
     textBlack: string;
     textDark: string;
     textDarker: string;
@@ -66,10 +88,13 @@ declare namespace VariablesExportScssNamespace {
     textSuccess: string;
     textWarning: string;
     toolPrimaryColor: string;
+    topToolbarHeight: string;
     trainerHeight: string;
     transparentDark: string;
     turquoiseBlue: string;
     workbenchMargin: string;
+    workbenchMaxWidth: string;
+    workbenchMinWidth: string;
     workbenchWidth: string;
     workflowPanelWidth: string;
   }

@@ -112,20 +112,25 @@ export const addTerriaTertiaryBtnStyles = (props: MixinProps) => `
   }
 `;
 
+// Toolbar "ghost" button (GeoLibre-style): transparent at rest, accent fill
+// on hover / while its dropdown is open.
 export const addTerriaMapBtnStyles = (props: MixinProps) => `
   color: ${props.theme.textLight};
-  background-color: ${props.theme.dark};
+  background-color: transparent;
+  transition: background-color 0.15s ease;
   &:hover,
-  &:focus,
+  &:focus-visible,
   .is-open &,
   &.is-active {
-    background: ${props.theme.colorPrimary};
+    background: ${props.theme.accent};
   }
   svg {
-    fill: ${props.theme.mapButtonColor};
+    fill: ${props.theme.mutedForeground};
   }
   &:hover,
-  &:focus {
+  &:focus-visible,
+  .is-open &,
+  &.is-active {
     svg {
       fill: ${props.theme.textLight};
     }

@@ -11,9 +11,9 @@ import WorkbenchItem from "./WorkbenchItem";
 import WorkbenchSplitScreen from "./WorkbenchSplitScreen";
 
 const StyledUl = styled(Ul)`
-  gap: 5px;
-  margin: 15px 0;
-  padding: 0 15px;
+  gap: 4px;
+  margin: 0;
+  padding: 8px;
   li {
     &:first-child {
       margin-top: 0;

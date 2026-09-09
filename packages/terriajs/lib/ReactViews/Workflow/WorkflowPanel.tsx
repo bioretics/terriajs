@@ -117,7 +117,7 @@ const Container = styled.div`
   flex-direction: column;
   font-family: ${(p) => p.theme.fontPop}px;
   width: ${(p) => p.theme.workflowPanelWidth}px;
-  height: calc(100vh - 2 * ${(p) => p.theme.workbenchMargin}px);
+  height: 100%;
   max-width: ${(p) => p.theme.workflowPanelWidth}px;
   box-sizing: border-box;
   padding: 0 0 5px;

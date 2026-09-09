@@ -6,7 +6,8 @@ export const Loader = () => {
     <div
       className={Styles.loaderUi}
       style={{
-        backgroundColor: "#383F4D"
+        // Matches the theme background ($dark in lib/Styles/variables-overrides.scss)
+        backgroundColor: "#11151c"
       }}
     >
       <img src={globeGif} />
