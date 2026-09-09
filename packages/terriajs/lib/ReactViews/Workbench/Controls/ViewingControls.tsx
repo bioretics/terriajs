@@ -302,16 +302,16 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
     item?.uniqueId?.includes(".geojson")
   );
 
-  const visualizePointsClicked = useCallback(async () => {
+  const visualizePointsClicked = useCallback(async (): Promise<boolean> => {
     try {
       if (item?.uniqueId?.includes(".csv")) {
         await (item as CsvCatalogItem).sampleFromCsvData();
-        return;
+        return true;
       }
 
       if (item?.uniqueId?.includes(".kml")) {
         await (item as KmlCatalogItem).sampleFromKmlData();
-        return;
+        return true;
       }
 
       if (
@@ -319,7 +319,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         !(CatalogMemberMixin.isMixedInto(item) && item.disableAboutData)
       ) {
         await (item as GeoJsonCatalogItem).sampleFromGeojsonData();
-        return;
+        return true;
       }
 
       if (
@@ -327,7 +327,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         item?.uniqueId?.includes(".geojson")
       ) {
         const fc = await (item as GeoJsonCatalogItem).forceLoadGeojsonData();
-        if (!fc) return;
+        if (!fc) return false;
 
         const positions: Cartographic[] = [];
         const descriptions: string[] = [];
@@ -391,8 +391,8 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
           }
         });
 
-        if (positions.length === 0) return;
-        if (!item.terria) return;
+        if (positions.length === 0) return false;
+        if (!item.terria) return false;
         const terrainProvider = item.terria.cesium?.scene?.terrainProvider;
         const canSampleTerrain =
           !!terrainProvider && !!(terrainProvider as any).availability;
@@ -416,7 +416,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
           undefined,
           { sourceItemId: item.uniqueId }
         );
-        return;
+        return true;
       }
     } catch (error) {
       viewState.terria.raiseErrorToUser(
@@ -426,6 +426,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         })
       );
     }
+    return false;
   }, [item, viewState]);
 
   const deactivateMeasureTools = useCallback(() => {
@@ -470,10 +471,14 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         });
         if (item.canUseAsPath) {
           await Promise.resolve(item.computePath());
-        } else {
-          await visualizePointsClicked();
+          return;
         }
-        return;
+        if (await visualizePointsClicked()) {
+          return;
+        }
+        runInAction(() => {
+          viewState.closeMeasurableDownloadPanel();
+        });
       } catch (_e) {
         // Fall through to plain file download if path/sampling fails.
       }
