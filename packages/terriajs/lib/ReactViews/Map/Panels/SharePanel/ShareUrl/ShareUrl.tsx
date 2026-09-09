@@ -78,10 +78,6 @@ export const ShareUrl = forwardRef<
         .catch((error) => {
           // `getShareToken` has already chosen the message for this failure
           // (status code / too large / generic) from the HTTP status.
-          const userMessage =
-            error instanceof TerriaError
-              ? error.highestImportanceError.message
-              : t(($) => $.models.shareData.generateErrorMessage);
           if (!cancelled) {
             // Also raise the error as a modal so a failed share is hard to
             // miss. Skip it when cancelled, so a stale request (e.g. after the
@@ -92,9 +88,15 @@ export const ShareUrl = forwardRef<
                 severity: TerriaErrorSeverity.Error
               });
             }
-            setShareUrl(userMessage);
-            setFailed(true);
           }
+          // Fork (rer3d): fall back to the long URL so sharing still works when
+          // the short-link service fails. Unlike the modal above, do not gate
+          // on `cancelled` so a stale failed POST still produces a usable link.
+          setShareUrl(
+            buildShareLink(terria, viewState, {
+              includeStories
+            })
+          );
         })
         .finally(() => {
           if (!cancelled) setShorteningInProgress(false);

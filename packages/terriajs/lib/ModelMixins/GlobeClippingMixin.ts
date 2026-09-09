@@ -9,6 +9,7 @@ import GlobeClippingTraits from "../Traits/TraitsClasses/GlobeClippingTraits";
 import i18next from "i18next";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import CommonStrata from "../Models/Definition/CommonStrata";
+import ViewerMode from "../Models/ViewerMode";
 import DataSource from "terriajs-cesium/Source/DataSources/DataSource";
 import ClippingPlane from "terriajs-cesium/Source/Scene/ClippingPlane";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
@@ -31,19 +32,21 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       makeObservable(this);
 
       this._globeClippingDisposer = autorun(() => {
+        const is3D = this.terria.mainViewer.viewerMode === ViewerMode.Cesium;
         const ownerId = this.terria.activeGlobeClippingItemId;
         const isOwnedByOther =
           ownerId !== undefined && ownerId !== this.uniqueId;
+        const isBlocked = !is3D || isOwnedByOther;
 
         // Force trait off so checkbox shows unchecked
-        if (this.globeClippingEnabled && isOwnedByOther) {
+        if (this.globeClippingEnabled && isBlocked) {
           this.setTrait(CommonStrata.user, "globeClippingEnabled", false);
           return;
         }
 
         const boundingSphere =
           this.globeClippingEnabled &&
-          !isOwnedByOther &&
+          !isBlocked &&
           this.terria.workbench.contains(this)
             ? this.globeClippingBoundingSphere
             : undefined;
@@ -77,8 +80,10 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     @computed
     get globeClippingSelectableDimensions(): SelectableDimension[] {
+      const is3D = this.terria.mainViewer.viewerMode === ViewerMode.Cesium;
       const ownerId = this.terria.activeGlobeClippingItemId;
       const isOwnedByOther = ownerId !== undefined && ownerId !== this.uniqueId;
+      const isBlocked = !is3D || isOwnedByOther;
 
       const globeClippingCheckbox: SelectableDimensionCheckbox | undefined =
         this.globeClippingControlShowed
@@ -86,7 +91,7 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               type: "checkbox",
               id: "globe-clipping-box",
               selectedId: this.globeClippingEnabled ? "true" : "false",
-              readOnly: isOwnedByOther,
+              readOnly: isBlocked,
               options: [
                 {
                   id: "true",
@@ -99,7 +104,7 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
               ],
               setDimensionValue: action((stratumId, value) => {
                 const enabling = value === "true";
-                if (enabling && isOwnedByOther) return; // blocked
+                if (enabling && isBlocked) return; // blocked
                 this.setTrait(stratumId, "globeClippingEnabled", enabling);
                 this.terria.activeGlobeClippingItemId = enabling
                   ? this.uniqueId
