@@ -916,6 +916,8 @@ const MeasurablePanel = observer((props: Props) => {
     }
 
     if (activeToolIsPolygon() || currentGeom.hasArea || currentGeom.isClosed) {
+      // geodeticArea and airArea are computed in MeasurableGeometryManager
+      // (PolygonGeometryLibrary triangulation + Heron's formula), not here.
       return (
         <>
           {!isMobile && (

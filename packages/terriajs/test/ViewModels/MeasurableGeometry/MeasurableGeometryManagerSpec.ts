@@ -170,6 +170,43 @@ describe("MeasurableGeometryManager", function () {
     });
   });
 
+  describe("calculateAirArea", function () {
+    const flatSquare = [
+      carto(11.34, 44.49),
+      carto(11.35, 44.49),
+      carto(11.35, 44.5),
+      carto(11.34, 44.5)
+    ];
+
+    it("measures zero for fewer than three points", function () {
+      expect(manager.calculateAirArea([])).toEqual(0);
+      expect(manager.calculateAirArea([carto(11.34, 44.49)])).toEqual(0);
+    });
+
+    it("matches geodetic area on flat terrain at constant height", function () {
+      const geodetic = manager.calculateGeodeticArea(flatSquare);
+      const air = manager.calculateAirArea(flatSquare);
+      expect(air).toBeCloseTo(geodetic, -2);
+    });
+
+    it("is larger than geodetic area when vertices span different elevations", function () {
+      const slopedSquare = [
+        carto(11.34, 44.49, 0),
+        carto(11.35, 44.49, 100),
+        carto(11.35, 44.5, 100),
+        carto(11.34, 44.5, 0)
+      ];
+      const geodetic = manager.calculateGeodeticArea(slopedSquare);
+      const air = manager.calculateAirArea(slopedSquare);
+      expect(air).toBeGreaterThan(geodetic);
+    });
+
+    it("measures a roughly 800 by 1100 metre square at zero height", function () {
+      const square = manager.calculateAirArea(flatSquare);
+      expect(square).toBeCloseTo(1113 * 794, -4);
+    });
+  });
+
   describe("sampleFromCartographics", function () {
     const stopPoints = [
       carto(144.424868, -37.951033, 100),
@@ -231,6 +268,37 @@ describe("MeasurableGeometryManager", function () {
       expect(terria.measurableGeomList[0].isClosed).toBe(true);
       expect(terria.measurableGeomList[0].geodeticArea).toBeGreaterThan(0);
       expect(terria.measurableGeomList[0].airArea).toBeGreaterThan(0);
+    });
+
+    it("includes the closing edge in perimeter when the path is closed", async function () {
+      const triangle = [
+        carto(11.34, 44.49),
+        carto(11.35, 44.49),
+        carto(11.35, 44.5)
+      ];
+      manager.sampleFromCartographics(triangle, true);
+      await flushSampling();
+
+      const sideSum = triangle.reduce((sum, point, index) => {
+        if (index === 0) return sum;
+        const geodesic = new EllipsoidGeodesic(
+          triangle[index - 1],
+          point,
+          Ellipsoid.WGS84
+        );
+        return sum + geodesic.surfaceDistance;
+      }, 0);
+      const closingGeodesic = new EllipsoidGeodesic(
+        triangle[2],
+        triangle[0],
+        Ellipsoid.WGS84
+      );
+      const expectedPerimeter = sideSum + closingGeodesic.surfaceDistance;
+
+      expect(terria.measurableGeomList[0].geodeticDistance).toBeCloseTo(
+        expectedPerimeter,
+        1
+      );
     });
 
     it("keeps point descriptions when the geometry is only points", async function () {
