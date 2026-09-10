@@ -290,6 +290,30 @@ describe("MeasurableGeometryManager", function () {
       expect(geom.airDistance).toEqual(0);
       expect(geom.groundDistance).toEqual(0);
     });
+
+    it("ignores stale sampling after abortPendingSampling", async function () {
+      manager.sampleFromCartographics(stopPoints);
+      await flushSampling();
+
+      const geodeticDistanceBefore =
+        terria.measurableGeomList[0].geodeticDistance;
+      const sampledPointsBefore =
+        terria.measurableGeomList[0].sampledPoints?.length;
+
+      manager.sampleFromCartographics([
+        carto(11.34, 44.49, 0),
+        carto(11.35, 44.5, 0)
+      ]);
+      manager.abortPendingSampling();
+      await flushSampling();
+
+      expect(terria.measurableGeomList[0].geodeticDistance).toEqual(
+        geodeticDistanceBefore
+      );
+      expect(terria.measurableGeomList[0].sampledPoints?.length).toEqual(
+        sampledPointsBefore
+      );
+    });
   });
 
   describe("updateCircleGeometry", function () {

@@ -42,6 +42,21 @@ export interface MeasurableGeometry {
   sourceItemId?: string;
 }
 
+const samplingGenerationByManager = new WeakMap<
+  MeasurableGeometryManager,
+  number
+>();
+
+function getSamplingGeneration(manager: MeasurableGeometryManager): number {
+  return samplingGenerationByManager.get(manager) ?? 0;
+}
+
+function bumpSamplingGeneration(manager: MeasurableGeometryManager): number {
+  const generation = getSamplingGeneration(manager) + 1;
+  samplingGenerationByManager.set(manager, generation);
+  return generation;
+}
+
 export default class MeasurableGeometryManager {
   readonly terria: Terria;
 
@@ -51,6 +66,10 @@ export default class MeasurableGeometryManager {
     makeObservable(this);
     this.terria = terria;
     this.geoidModel = new EarthGravityModel1996(geoidFile);
+  }
+
+  abortPendingSampling(): void {
+    bumpSamplingGeneration(this);
   }
 
   resample(index: number = this.terria.measurableGeometryIndex) {
@@ -274,6 +293,7 @@ export default class MeasurableGeometryManager {
     circleCenter?: Cartographic,
     geomProperties?: Partial<MeasurableGeometry> | JsonObject
   ) {
+    const generation = bumpSamplingGeneration(this);
     const terrainProvider = this.terria.cesium?.scene.terrainProvider;
     const ellipsoid =
       this.terria.cesium?.scene?.globe?.ellipsoid ?? Ellipsoid.WGS84;
@@ -326,6 +346,9 @@ export default class MeasurableGeometryManager {
       );
     }
     Promise.all(terrainPromises).then((sampledCartographics) => {
+      if (generation !== getSamplingGeneration(this)) {
+        return;
+      }
       if (sampledCartographics.length === 2) {
         const geoidHeights = sampledCartographics[1];
         sampledCartographics[0].forEach(
