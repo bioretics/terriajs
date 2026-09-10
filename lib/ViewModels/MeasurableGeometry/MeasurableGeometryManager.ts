@@ -8,6 +8,12 @@ import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSourc
 import EarthGravityModel1996 from "../../Map/Vector/EarthGravityModel1996";
 import { JsonObject } from "../../Core/Json";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import EllipsoidTangentPlane from "terriajs-cesium/Source/Core/EllipsoidTangentPlane";
+import PolygonGeometryLibrary from "terriajs-cesium/Source/Core/PolygonGeometryLibrary";
+import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
+import VertexFormat from "terriajs-cesium/Source/Core/VertexFormat";
+import ArcType from "terriajs-cesium/Source/Core/ArcType";
 import { profileSamplingStep } from "./MeasurableGeometrySamplingStep";
 export interface MeasurableGeometry {
   isClosed: boolean;
@@ -260,6 +266,174 @@ export default class MeasurableGeometryManager {
     );
   }
 
+  /**
+   * Returns polygon vertices without a duplicated closing point.
+   */
+  private normalizePolygonVertices(stopPoints: Cartographic[]): Cartographic[] {
+    if (stopPoints.length < 2) {
+      return stopPoints;
+    }
+
+    const first = stopPoints[0];
+    const last = stopPoints[stopPoints.length - 1];
+    if (
+      first.longitude === last.longitude &&
+      first.latitude === last.latitude &&
+      first.height === last.height
+    ) {
+      return stopPoints.slice(0, -1);
+    }
+
+    return stopPoints;
+  }
+
+  private isSameCartographic(a: Cartographic, b: Cartographic): boolean {
+    return (
+      a.longitude === b.longitude &&
+      a.latitude === b.latitude &&
+      a.height === b.height
+    );
+  }
+
+  /**
+   * Ensures closed paths include the closing edge in perimeter calculations.
+   */
+  private withClosingVertexIfNeeded(
+    cartoPositions: Cartographic[],
+    closeLoop: boolean
+  ): Cartographic[] {
+    if (!closeLoop || cartoPositions.length < 3) {
+      return cartoPositions;
+    }
+
+    const first = cartoPositions[0];
+    const last = cartoPositions[cartoPositions.length - 1];
+    if (this.isSameCartographic(first, last)) {
+      return cartoPositions;
+    }
+
+    return [...cartoPositions, Cartographic.clone(first)];
+  }
+
+  private heronArea(a: number, b: number, c: number): number {
+    const s = (a + b + c) / 2.0;
+    const area = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+    return isNaN(area) ? 0 : area;
+  }
+
+  /**
+   * Triangulates a polygon via Cesium PolygonGeometryLibrary (supports concave
+   * polygons). Returns triangle vertex positions or undefined when triangulation
+   * fails.
+   */
+  private triangulatePolygon(
+    stopPoints: Cartographic[],
+    ellipsoid: Ellipsoid
+  ): Cartesian3[] | undefined {
+    const positions = this.normalizePolygonVertices(stopPoints).map((point) =>
+      Cartographic.toCartesian(point, ellipsoid)
+    );
+
+    if (positions.length < 3) {
+      return undefined;
+    }
+
+    try {
+      const perPositionHeight = true;
+      const tangentPlane = EllipsoidTangentPlane.fromPoints(
+        positions,
+        ellipsoid
+      );
+      const polygons = PolygonGeometryLibrary.polygonsFromHierarchy(
+        new PolygonHierarchy(positions),
+        false,
+        tangentPlane.projectPointsOntoPlane.bind(tangentPlane),
+        !perPositionHeight,
+        ellipsoid
+      );
+
+      const geom = PolygonGeometryLibrary.createGeometryFromPositions(
+        ellipsoid,
+        polygons.polygons[0],
+        undefined,
+        CesiumMath.RADIANS_PER_DEGREE,
+        perPositionHeight,
+        VertexFormat.POSITION_ONLY,
+        ArcType.GEODESIC
+      );
+
+      if (
+        geom.indices.length % 3 !== 0 ||
+        geom.attributes.position.values.length % 3 !== 0
+      ) {
+        return undefined;
+      }
+
+      const coords: Cartesian3[] = [];
+      for (let i = 0; i < geom.attributes.position.values.length; i += 3) {
+        coords.push(
+          new Cartesian3(
+            geom.attributes.position.values[i],
+            geom.attributes.position.values[i + 1],
+            geom.attributes.position.values[i + 2]
+          )
+        );
+      }
+
+      const triangles: Cartesian3[] = [];
+      for (let i = 0; i < geom.indices.length; i += 3) {
+        triangles.push(
+          coords[geom.indices[i]],
+          coords[geom.indices[i + 1]],
+          coords[geom.indices[i + 2]]
+        );
+      }
+
+      return triangles;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private sumTriangulatedArea(
+    stopPoints: Cartographic[],
+    ellipsoid: Ellipsoid,
+    useGeodeticEdges: boolean
+  ): number {
+    const triangles = this.triangulatePolygon(stopPoints, ellipsoid);
+    if (!triangles) {
+      return useGeodeticEdges
+        ? this.calculateGeodeticAreaFan(stopPoints, ellipsoid)
+        : this.calculateAirAreaFan(stopPoints, ellipsoid);
+    }
+
+    let totalArea = 0;
+    for (let i = 0; i < triangles.length; i += 3) {
+      const p1 = triangles[i];
+      const p2 = triangles[i + 1];
+      const p3 = triangles[i + 2];
+
+      if (useGeodeticEdges) {
+        const carto1 = Cartographic.fromCartesian(p1, ellipsoid);
+        const carto2 = Cartographic.fromCartesian(p2, ellipsoid);
+        const carto3 = Cartographic.fromCartesian(p3, ellipsoid);
+        const a = new EllipsoidGeodesic(carto1, carto2, ellipsoid)
+          .surfaceDistance;
+        const b = new EllipsoidGeodesic(carto2, carto3, ellipsoid)
+          .surfaceDistance;
+        const c = new EllipsoidGeodesic(carto3, carto1, ellipsoid)
+          .surfaceDistance;
+        totalArea += this.heronArea(a, b, c);
+      } else {
+        const a = Cartesian3.distance(p1, p2);
+        const b = Cartesian3.distance(p2, p3);
+        const c = Cartesian3.distance(p3, p1);
+        totalArea += this.heronArea(a, b, c);
+      }
+    }
+
+    return totalArea;
+  }
   // sample the entire path (polyline) every "samplingStep" meters
   @action
   sampleFromCartographics(
@@ -284,17 +458,21 @@ export default class MeasurableGeometryManager {
       !!ellipsoid &&
       cartoPositions.length > 0;
 
-    const samplingStep = this.samplingStepFor(cartoPositions, ellipsoid);
+    const pathPositions = this.withClosingVertexIfNeeded(
+      cartoPositions,
+      closeLoop
+    );
+    const samplingStep = this.samplingStepFor(pathPositions, ellipsoid);
     // index of the original stops in the new array of sampling points
     const originalStopsIndex: number[] = [0];
     // geodetic distance between two stops
     const stopGeodeticDistances: number[] = [0];
     // compute sampling points every "samplingStep" meters
-    const interpolatedCartographics = [cartoPositions[0]];
-    for (let i = 0; i < cartoPositions.length - 1; ++i) {
+    const interpolatedCartographics = [pathPositions[0]];
+    for (let i = 0; i < pathPositions.length - 1; ++i) {
       const geodesic = new EllipsoidGeodesic(
-        cartoPositions[i],
-        cartoPositions[i + 1],
+        pathPositions[i],
+        pathPositions[i + 1],
         ellipsoid
       );
       const segmentDistance = geodesic.surfaceDistance;
@@ -307,7 +485,7 @@ export default class MeasurableGeometryManager {
       }
       // original points have to be used
       originalStopsIndex.push(interpolatedCartographics.length);
-      interpolatedCartographics.push(cartoPositions[i + 1]);
+      interpolatedCartographics.push(pathPositions[i + 1]);
     }
     // sample points on terrain
     const terrainPromises = [
@@ -354,7 +532,7 @@ export default class MeasurableGeometryManager {
       const stopAirDistances: number[] = [0];
       const stopGroundDistances: number[] = [0];
       for (let i = 0; i < originalStopsIndex.length - 1; ++i) {
-        cartoPositions[i].height = sampledPoints[originalStopsIndex[i]].height;
+        pathPositions[i].height = sampledPoints[originalStopsIndex[i]].height;
 
         stopAirDistances.push(
           Cartesian3.distance(
@@ -378,7 +556,7 @@ export default class MeasurableGeometryManager {
       // update state of Terria
       const updatePathParams: Parameters<typeof this.updatePath> = onlyPoints
         ? [
-            cartoPositions,
+            pathPositions,
             [],
             [],
             [],
@@ -396,7 +574,7 @@ export default class MeasurableGeometryManager {
             geomProperties
           ]
         : [
-            cartoPositions,
+            pathPositions,
             stopGeodeticDistances,
             stopAirDistances,
             stopGroundDistances,
@@ -496,6 +674,11 @@ export default class MeasurableGeometryManager {
     }
   }
 
+  /**
+   * Geodetic (horizontal) area in m². Projects the polygon onto the ellipsoid
+   * using geodesic edge lengths and Heron's formula on each triangulated facet.
+   * Vertex height is ignored. Displayed by MeasurablePanel as "Geodetic area".
+   */
   public calculateGeodeticArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
@@ -503,40 +686,56 @@ export default class MeasurableGeometryManager {
       this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
-    let totalArea = 0;
-
-    for (let i = 1; i < stopPoints.length - 1; i++) {
-      const p1 = stopPoints[0];
-      const p2 = stopPoints[i];
-      const p3 = stopPoints[i + 1];
-
-      const geo12 = new EllipsoidGeodesic(p1, p2, ellipsoid);
-      const geo23 = new EllipsoidGeodesic(p2, p3, ellipsoid);
-      const geo31 = new EllipsoidGeodesic(p3, p1, ellipsoid);
-
-      const a = geo12.surfaceDistance;
-      const b = geo23.surfaceDistance;
-      const c = geo31.surfaceDistance;
-
-      const s = (a + b + c) / 2.0;
-      const triangleArea = Math.sqrt(s * (s - a) * (s - b) * (s - c));
-
-      if (!isNaN(triangleArea)) {
-        totalArea += triangleArea;
-      }
-    }
-
-    return totalArea;
+    return this.sumTriangulatedArea(stopPoints, ellipsoid, true);
   }
 
-  private calculateAirArea(stopPoints: Cartographic[]): number {
+  /**
+   * Air (3D vertex-based) area in m². Uses 3D chord distances between vertex
+   * positions (including elevation) and Heron's formula on each triangulated
+   * facet. Displayed by MeasurablePanel as "Air area".
+   */
+  public calculateAirArea(stopPoints: Cartographic[]): number {
     if (stopPoints.length < 3) return 0;
 
     const ellipsoid =
       this.terria.cesium?.scene.globe.ellipsoid ?? Ellipsoid.WGS84;
     if (!ellipsoid) return 0;
 
-    const cartesianPoints = stopPoints.map((point) =>
+    return this.sumTriangulatedArea(stopPoints, ellipsoid, false);
+  }
+
+  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
+  private calculateGeodeticAreaFan(
+    stopPoints: Cartographic[],
+    ellipsoid: Ellipsoid
+  ): number {
+    const vertices = this.normalizePolygonVertices(stopPoints);
+    if (vertices.length < 3) return 0;
+
+    let totalArea = 0;
+    for (let i = 1; i < vertices.length - 1; i++) {
+      const p1 = vertices[0];
+      const p2 = vertices[i];
+      const p3 = vertices[i + 1];
+
+      const a = new EllipsoidGeodesic(p1, p2, ellipsoid).surfaceDistance;
+      const b = new EllipsoidGeodesic(p2, p3, ellipsoid).surfaceDistance;
+      const c = new EllipsoidGeodesic(p3, p1, ellipsoid).surfaceDistance;
+      totalArea += this.heronArea(a, b, c);
+    }
+
+    return totalArea;
+  }
+
+  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
+  private calculateAirAreaFan(
+    stopPoints: Cartographic[],
+    ellipsoid: Ellipsoid
+  ): number {
+    const vertices = this.normalizePolygonVertices(stopPoints);
+    if (vertices.length < 3) return 0;
+
+    const cartesianPoints = vertices.map((point) =>
       Cartographic.toCartesian(point, ellipsoid)
     );
 
@@ -551,12 +750,7 @@ export default class MeasurableGeometryManager {
       const b = Cartesian3.distance(p2, p3);
       const c = Cartesian3.distance(p3, p1);
 
-      const s = (a + b + c) / 2.0;
-      const triangleArea = Math.sqrt(s * (s - a) * (s - b) * (s - c));
-
-      if (!isNaN(triangleArea)) {
-        totalArea += triangleArea;
-      }
+      totalArea += this.heronArea(a, b, c);
     }
 
     return totalArea;
