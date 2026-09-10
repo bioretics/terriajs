@@ -10,7 +10,6 @@ import { FC, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import filterOutUndefined from "../../Core/filterOutUndefined";
-import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
 import MappableMixin, { ImageryParts } from "../../ModelMixins/MappableMixin";
 import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import CommonStrata from "../../Models/Definition/CommonStrata";
@@ -21,8 +20,11 @@ import ViewerMode from "../../Models/ViewerMode";
 import MappableTraits from "../../Traits/TraitsClasses/MappableTraits";
 import TerriaViewer from "../../ViewModels/TerriaViewer";
 import Styles from "./data-preview-map.scss";
-
-type PreviewedItem = MappableMixin.Instance & CatalogMemberMixin.Instance;
+import {
+  PreviewedItem,
+  translatePreviewUnavailableMessage,
+  useDataPreviewMapSupport
+} from "./DataPreviewMapSupport";
 
 // AdaptForPreviewMap class remains largely the same
 class AdaptForPreviewMap extends MappableMixin(CreateModel(MappableTraits)) {
@@ -245,59 +247,14 @@ const DataPreviewMap: FC<DataPreviewMapProps> = observer((props) => {
     terria.baseMapsModel.previewBaseMapId
   ]);
 
-  const toggleZoom = action(() => {
-    isZoomedToExtentRef.current = !isZoomedToExtentRef.current;
-
-    if (isZoomedToExtentRef.current) {
-      boundingRectangleCatalogItem?.setTrait(
-        CommonStrata.override,
-        "show",
-        true
-      );
-      zoomedOutBoundingRectangleCatalogItem?.setTrait(
-        CommonStrata.override,
-        "show",
-        false
-      );
-      if (previewed) {
-        previewViewer?.currentViewer.zoomTo(previewed);
-      }
-    } else {
-      boundingRectangleCatalogItem?.setTrait(
-        CommonStrata.override,
-        "show",
-        false
-      );
-      zoomedOutBoundingRectangleCatalogItem?.setTrait(
-        CommonStrata.override,
-        "show",
-        true
-      );
-      previewViewer.currentViewer.zoomTo(previewViewer?.homeCamera);
-    }
-  });
-
-  const previewBadgeState = useMemo(() => {
-    if (previewed?.isLoading) return "loading";
-    if (
-      previewed?.loadMetadataResult?.error ||
-      previewed?.loadMapItemsResult?.error
-    )
-      return "dataPreviewError";
-
-    if (
-      (!previewed?.mapItems || previewed.mapItems.length === 0) &&
-      !boundingRectangleCatalogItem
-    )
-      return "noPreviewAvailable";
-    return "dataPreview";
-  }, [
-    boundingRectangleCatalogItem,
-    previewed?.isLoading,
-    previewed?.loadMapItemsResult?.error,
-    previewed?.loadMetadataResult?.error,
-    previewed?.mapItems
-  ]);
+  const { toggleZoom, previewBadgeState, isPreviewUnavailableIn2d } =
+    useDataPreviewMapSupport(
+      previewed,
+      previewViewer,
+      boundingRectangleCatalogItem,
+      zoomedOutBoundingRectangleCatalogItem,
+      isZoomedToExtentRef
+    );
 
   const previewBadgeLabels: Record<string, string> = {
     loading: t(($) => $.preview.loading),
@@ -323,6 +280,11 @@ const DataPreviewMap: FC<DataPreviewMapProps> = observer((props) => {
       <label className={Styles.badge}>
         {previewBadgeLabels[previewBadgeState] || ""}
       </label>
+      {isPreviewUnavailableIn2d && (
+        <p className={Styles.unavailableMessage}>
+          {translatePreviewUnavailableMessage(t)}
+        </p>
+      )}
     </div>
   );
 });

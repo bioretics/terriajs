@@ -5,6 +5,7 @@ declare namespace DataPreviewMapScssNamespace {
     placeholder: string;
     "terria-preview": string;
     terriaPreview: string;
+    unavailableMessage: string;
   }
 }
 

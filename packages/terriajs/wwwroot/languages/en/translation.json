@@ -561,7 +561,8 @@
     "modified": "Modified",
     "updateFrequency": "Update Frequency",
     "dataCustodian": "Data Custodian",
-    "mayBeExperiencingIssues": "This dataset may currently be experiencing issues"
+    "mayBeExperiencingIssues": "This dataset may currently be experiencing issues",
+    "cannotPreviewInPreviewMap": "This dataset cannot be displayed in the catalogue preview."
   },
   "description": {
     "name": "Description",

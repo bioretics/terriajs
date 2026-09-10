@@ -1202,7 +1202,8 @@
     "selectToPreviewSeparator": "O",
     "goToTheMap": "Vai alla mappa",
     "doesNotContainGeospatialData": "Questo file non contiene dati geospaziali.",
-    "selectMultipleDatasets": "<0>Premi<strong>Shift</strong> e clicca</0><1 /><2>per aggiungere multipli datasets</2>"
+    "selectMultipleDatasets": "<0>Premi<strong>Shift</strong> e clicca</0><1 /><2>per aggiungere multipli datasets</2>",
+    "cannotPreviewInPreviewMap": "Questo set di dati non può essere visualizzato nell'anteprima del catalogo."
   },
   "legend": {
     "n": "N",

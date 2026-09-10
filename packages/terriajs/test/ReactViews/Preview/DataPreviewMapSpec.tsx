@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import GltfCatalogItem from "../../../lib/Models/Catalog/Gltf/GltfCatalogItem";
 import GeoJsonCatalogItem from "../../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import CommonStrata from "../../../lib/Models/Definition/CommonStrata";
 import Terria from "../../../lib/Models/Terria";
@@ -143,6 +144,18 @@ describe("DataPreviewMapSpec", () => {
     await userEvent.click(containerElement);
 
     expect(attachSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows unavailable message for 3D-only catalog items", async () => {
+    const gltf = new GltfCatalogItem("test-gltf", terria);
+    gltf.setTrait("definition", "url", "test/gltf/Cesium_Air.glb");
+    await gltf.loadMapItems();
+
+    render(<DataPreviewMap terria={terria} previewed={gltf} showMap />);
+
+    expect(screen.getByText("preview.noPreviewAvailable")).toBeVisible();
+    expect(screen.getByText("preview.cannotPreviewInPreviewMap")).toBeVisible();
+    expect(screen.queryByText("preview.dataPreview")).toBeNull();
   });
 
   it("should not reinitialize the map after rerender", async () => {
