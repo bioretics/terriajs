@@ -40,7 +40,7 @@ $explorer-vertical-chrome: variables.$top-toolbar-height +
   position: relative;
   color: variables.$modal-text;
   border-radius: variables.$radius-xlarge;
-  box-shadow: 0 0 15px 6px rgba(100, 100, 100, 0.3);
+  box-shadow: variables.$shadow-xl;
   z-index: variables.$front-component-z-index - 1;
   height: 100%;
   max-width: 1200px;
@@ -88,8 +88,14 @@ $explorer-vertical-chrome: variables.$top-toolbar-height +
   &,
   &:hover,
   &:focus {
-    color: variables.$text-light;
-    border: 2px solid rgba(#ffffff, 0.7);
-    border-radius: 3px;
+    color: variables.$modal-text;
+    border: 1px solid variables.$modal-border;
+    border-radius: variables.$radius-medium;
+  }
+
+  &:hover,
+  &:focus {
+    background: variables.$surface-accent;
+    border-color: variables.$input-border;
   }
 }

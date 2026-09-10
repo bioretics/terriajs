@@ -9,14 +9,25 @@ const SearchInput = styled.input<{ rounded?: boolean }>`
   box-sizing: border-box;
   margin-top: 0;
   margin-bottom: 0;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid ${(p) => p.theme.inputBorder};
+  border-radius: ${(p) => p.theme.radiusMedium};
+  background: ${(p) => p.theme.dark};
+  color: ${(p) => p.theme.textLight};
   height: 40px;
   width: 100%;
   display: block;
   padding: 0.5rem 40px;
   vertical-align: middle;
   -webkit-appearance: none;
+
+  &::placeholder {
+    color: ${(p) => p.theme.mutedForeground};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${(p) => p.theme.ring};
+  }
 `;
 
 interface SearchBoxProps {
@@ -88,8 +99,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
           <StyledIcon
             glyph={Icon.GLYPHS.search}
             styledWidth={"20px"}
-            fillColor={theme.charcoalGrey}
-            opacity={0.5}
+            fillColor={theme.mutedForeground}
             css={`
               position: absolute;
             `}
@@ -125,8 +135,7 @@ export const SearchBox: React.FC<SearchBoxProps> = ({
               <StyledIcon
                 glyph={Icon.GLYPHS.close}
                 styledWidth={"15px"}
-                fillColor={theme.charcoalGrey}
-                opacity={0.5}
+                fillColor={theme.mutedForeground}
               />
             </BoxSpan>
           </RawButton>

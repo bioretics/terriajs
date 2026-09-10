@@ -31,6 +31,7 @@
   composes: btn from "../../Sass/common/_buttons.scss";
   @extend %wrap;
 
+  color: inherit;
   text-align: left;
   font-size: variables.$font-size-small;
   padding: 10px 0 10px (24px + variables.$padding);
@@ -48,7 +49,7 @@
   @media (max-width: variables.$sm) {
     padding-top: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid variables.$grey-lighter;
+    border-bottom: 1px solid variables.$modal-border;
   }
 
   &:hover,
@@ -60,7 +61,7 @@
 
 .btnCatalogTopLevel {
   font-weight: 600;
-  border-bottom: 1px solid variables.$grey-lighter;
+  border-bottom: 1px solid variables.$modal-border;
   padding-left: variables.$padding;
 }
 
@@ -109,7 +110,7 @@
 
   &--lower-level {
     margin-left: 16px;
-    border-left: 1px solid variables.$grey-lighter;
+    border-left: 1px solid variables.$modal-border;
   }
 }
 

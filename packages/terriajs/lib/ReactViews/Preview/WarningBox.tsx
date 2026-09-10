@@ -1,5 +1,6 @@
 import { runInAction } from "mobx";
 import { FC } from "react";
+import { useTheme } from "styled-components";
 import TerriaError from "../../Core/TerriaError";
 import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
@@ -26,6 +27,7 @@ const WarningBox: FC<{
   error?: TerriaError;
   viewState?: ViewState;
 }> = (props) => {
+  const theme = useTheme();
   // We only show FeedbankLink if the error message doesn't include the <feedbacklink> custom component (so we don't get duplicates)
   const includesFeedbackLink =
     props.error?.highestImportanceError.message.includes(
@@ -37,7 +39,7 @@ const WarningBox: FC<{
       <Spacing right={1} />
       <WarningIcon />
       <Spacing right={2} />
-      <Box backgroundColor="#ffffff" rounded fullWidth paddedRatio={3}>
+      <Box backgroundColor={theme.modalBg} rounded fullWidth paddedRatio={3}>
         {props.error ? (
           <div>
             {parseCustomMarkdownToReact(

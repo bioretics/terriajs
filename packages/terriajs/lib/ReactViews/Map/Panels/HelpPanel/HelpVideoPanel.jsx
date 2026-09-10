@@ -63,10 +63,9 @@ class HelpVideoPanel extends Component {
             fullWidth
             fullHeight
             displayInlineBlock
-            paddedHorizontally={4}
-            paddedVertically={18}
+            styledPadding="16px 16px 24px"
             css={`
-              overflow: auto;
+              box-sizing: border-box;
               overflow-x: hidden;
               overflow-y: auto;
             `}

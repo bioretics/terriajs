@@ -11,7 +11,9 @@
   height: 16px;
   font-size: 75%;
   position: absolute;
-  background: #fff;
+  background: variables.$surface-popover;
+  color: variables.$text-light;
+  border-radius: variables.$radius-small;
 }
 
 //Preview map

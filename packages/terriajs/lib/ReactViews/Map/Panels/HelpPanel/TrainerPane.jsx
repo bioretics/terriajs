@@ -20,7 +20,22 @@ const UlTrainerItems = styled(Box).attrs({
   ${(p) => p.theme.removeListStyles()}
 `;
 
-const TrainerButton = styled(Button)``;
+const TrainerButton = styled(Button)`
+  background: transparent;
+  border: 1px solid ${(p) => p.theme.border};
+  border-radius: ${(p) => p.theme.radiusMedium};
+  color: ${(p) => p.theme.textLight};
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    background: ${(p) => p.theme.accent};
+    border-color: ${(p) => p.theme.inputBorder};
+  }
+`;
 
 @observer
 class TrainerPane extends Component {
@@ -37,7 +52,7 @@ class TrainerPane extends Component {
     const { content, i18n, viewState } = this.props;
     const { trainerItems, markdownText } = content;
     return (
-      <Text textDark noFontSize>
+      <Text textLight noFontSize>
         <Box column>
           {markdownText && (
             <StyledHtml viewState={viewState} markdown={markdownText} />
@@ -47,8 +62,9 @@ class TrainerPane extends Component {
               {trainerItems.map((item, index) => (
                 <li key={index}>
                   <TrainerButton
-                    secondary
+                    shortMinHeight
                     fullWidth
+                    textProps={{ medium: true, textLight: true }}
                     onClick={() => {
                       viewState.hideHelpPanel();
                       viewState.setSelectedTrainerItem(content.itemName);

@@ -7,7 +7,9 @@
 .tab-list {
   composes: list-reset from "../../Sass/common/_base.scss";
   composes: clearfix from "../../Sass/common/_base.scss";
-  padding-right: 100px;
+  padding: 10px 100px 0 24px;
+  background: variables.$dark;
+  border-bottom: 1px solid variables.$modal-border;
 }
 
 .tab-list__item {
@@ -30,7 +32,7 @@
   position: relative;
   background: variables.$modal-bg;
   color: variables.$modal-text;
-  border-top: 1px solid variables.$grey-lighter;
+  border-top: 0;
   height: 100%;
   overflow: hidden;
   border-bottom-left-radius: variables.$radius-xlarge;

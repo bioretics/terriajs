@@ -15,8 +15,10 @@ const Numbers = styled(Text)`
   width: 22px;
   height: 22px;
   line-height: 22px;
+  font-size: 12px;
+  font-weight: 600;
   border-radius: 50%;
-  background-color: ${(props) => props.theme.textDarker};
+  background-color: ${(props) => props.theme.colorPrimary};
 `;
 
 const renderOrderedList = function (contents) {
@@ -28,7 +30,7 @@ const renderOrderedList = function (contents) {
         </Numbers>
         <Spacing right={3} />
       </Box>
-      <Text medium textDark>
+      <Text medium textLight>
         {content}
       </Text>
     </Box>
@@ -77,7 +79,7 @@ export class StyledHtmlRaw extends Component {
                 <Text
                   as={item.type}
                   key={i}
-                  textDark
+                  textLight
                   medium={item.type === "p"}
                   {...styledTextProps}
                 >
@@ -98,7 +100,7 @@ export class StyledHtmlRaw extends Component {
                   We can style more tags as necessary */
             } else {
               return (
-                <Text key={i} textDark medium {...styledTextProps}>
+                <Text key={i} textLight medium {...styledTextProps}>
                   {item}
                 </Text>
               );

@@ -141,11 +141,7 @@ class Tabs extends Component {
 
     return (
       <div className={Styles.tabs}>
-        <ul
-          className={Styles.tabList}
-          role="tablist"
-          style={{ padding: "10px 24px", background: "#fff" }}
-        >
+        <ul className={Styles.tabList} role="tablist">
           {tabs.map((item, i) => (
             <li
               key={i}
@@ -165,7 +161,7 @@ class Tabs extends Component {
                 className={classNames(Styles.btnTab, {
                   [Styles.btnSelected]: item === currentTab
                 })}
-                isCurrent={item === currentTab}
+                $isCurrent={item === currentTab}
               >
                 {item.name}
               </ButtonTab>
@@ -190,26 +186,38 @@ class Tabs extends Component {
 
 const ButtonTab = styled.button`
   ${(props) => `
-    /* overrides padding and margin in scss */
-    padding: 10px 12px;
-    margin: 0;
+    && {
+      /* overrides padding and margin in scss */
+      padding: 8px 14px;
+      margin: 0;
 
-    background: transparent;
-    color: ${props.theme.dark};
-    border: 1px solid transparent;
-    &:hover,
-    &:focus {
-      background: ${props.theme.textLight};
-      ${props.isCurrent && `border: 1px solid ${props.theme.greyLighter};`}
+      background: transparent;
+      color: ${props.theme.textLightDimmed};
+      border: 0;
+      border-bottom: 2px solid transparent;
+      border-radius: ${props.theme.radiusMedium} ${props.theme.radiusMedium} 0 0;
+      font-weight: 600;
+      transition:
+        background-color 0.15s ease,
+        color 0.15s ease;
+
+      &:hover,
+      &:focus-visible {
+        background: ${props.theme.accent};
+        color: ${props.theme.textLight};
+      }
     }
+
     ${
-      props.isCurrent &&
+      props.$isCurrent &&
       `
-      background: ${props.theme.textLight};
-      border: 1px solid ${props.theme.greyLighter};
+      && {
+        background: ${props.theme.modalBg};
+        color: ${props.theme.textLight};
+        border-bottom-color: ${props.theme.colorPrimary};
+      }
     `
     }
-
   `}
 `;
 

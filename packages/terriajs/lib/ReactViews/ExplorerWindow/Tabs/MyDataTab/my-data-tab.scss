@@ -18,7 +18,7 @@
     .left-col {
       width: 100%;
       border-right: 0;
-      border-bottom: 1px solid variables.$grey-lighter;
+      border-bottom: 1px solid variables.$modal-border;
     }
   }
 }
@@ -33,16 +33,16 @@
 
 .data-catalog {
   composes: list-reset from "../../../../Sass/common/_base.scss";
-  border-top: 1px solid variables.$grey-lighter;
-  border-bottom: 1px solid variables.$grey-lighter;
+  border-top: 1px solid variables.$modal-border;
+  border-bottom: 1px solid variables.$modal-border;
 }
 
 .left-col {
   composes: tab-left-col from "../../tabs.scss";
   composes: scrollbars from "../../../../Sass/common/_base.scss";
   overflow-y: auto;
-  background: #ffffff;
-  border-right: 1px solid variables.$grey-lighter;
+  background: variables.$modal-secondary-bg;
+  border-right: 1px solid variables.$modal-border;
   padding-right: 0;
 
   .dataTypeTab {
@@ -56,7 +56,7 @@
   width: calc(100% - 30px);
   overflow: auto;
   text-align: center;
-  color: variables.$dark-lighter;
+  color: variables.$modal-text;
   line-height: 2;
   padding: 3vh 6vh;
   text-align: center;
@@ -71,7 +71,7 @@
 .tabLeft {
   text-align: left;
   padding: 0 variables.$padding;
-  border-top: 1px solid variables.$grey-lighter;
+  border-top: 1px solid variables.$modal-border;
 }
 
 .tab-list {
@@ -117,24 +117,24 @@
 }
 
 .dndBox {
-  border: 2px dashed #ddd;
+  border: 2px dashed variables.$input-border;
   flex-grow: 1;
-  border-radius: 3px;
+  border-radius: variables.$radius-large;
   display: flex;
   justify-content: center;
   flex-direction: column;
   text-align: center;
-  background: #f6f6f7;
+  background: variables.$modal-secondary-bg;
   width: 100%;
   margin: 6px 0;
-  color: variables.$dark-lighter;
+  color: variables.$text-muted;
 
   div {
     margin-top: 5%;
   }
 
   svg {
-    fill: variables.$grey-lighter;
+    fill: variables.$text-muted;
     height: 15%;
     width: 15%;
     margin: 5% auto;
@@ -169,15 +169,16 @@
   position: absolute;
   left: 40px;
   top: 40px;
-  background: #ffffff;
-  border-radius: 2px;
+  background: transparent;
+  border-radius: variables.$radius-medium;
   padding: 3px 10px;
-  border: 1px solid #ddd;
-  // color: variables.$color-primary;
+  border: 1px solid variables.$modal-border;
+  color: variables.$modal-text;
 
   &:hover,
   &:focus {
-    // border: 1px solid variables.$color-primary;
+    background: variables.$surface-accent;
+    border-color: variables.$input-border;
   }
 
   svg {

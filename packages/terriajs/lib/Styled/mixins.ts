@@ -102,13 +102,17 @@ export const addTerriaSecondaryBtnStyles = (props: MixinProps) => `
 
 export const addTerriaTertiaryBtnStyles = (props: MixinProps) => `
   color: ${props.theme.modalText};
-  background: ${props.theme.modalBg};
-  border: 2px solid ${props.theme.modalText};
+  background: transparent;
+  border: 1px solid ${props.theme.border};
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 
   &:hover,
   &:focus {
-    border: 2px solid ${props.theme.colorPrimary};
-    color: ${props.theme.colorPrimary};
+    background: ${props.theme.accent};
+    border-color: ${props.theme.inputBorder};
+    color: ${props.theme.modalText};
   }
 `;
 

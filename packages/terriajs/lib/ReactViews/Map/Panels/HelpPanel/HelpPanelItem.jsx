@@ -43,9 +43,10 @@ class HelpPanelItem extends Component {
       ? Icon.GLYPHS.right
       : Icon.GLYPHS.externalLink;
     return (
-      <div>
+      <ItemRoot>
         <MenuButton
-          isSelected={itemSelected}
+          type="button"
+          $isSelected={itemSelected}
           role={paneMode === "externalLink" ? "link" : undefined}
           onClick={() => {
             this.props.terria.analytics.logEvent(
@@ -63,11 +64,7 @@ class HelpPanelItem extends Component {
           }}
         >
           <MenuItemText>{title}</MenuItemText>
-          <StyledIcon
-            styledWidth={"12px"}
-            fillColor={this.props.theme.textLightDimmed}
-            glyph={iconGlyph}
-          />
+          <StyledIcon styledWidth={"12px"} glyph={iconGlyph} />
         </MenuButton>
         {opensInPanel && (
           <HelpVideoPanel
@@ -93,42 +90,53 @@ class HelpPanelItem extends Component {
             videoCoverImageOpacity={this.props.content.videoCoverImageOpacity}
           />
         )}
-      </div>
+      </ItemRoot>
     );
   }
 }
+
+const ItemRoot = styled.div`
+  &:last-child > button {
+    border-bottom: 0;
+  }
+`;
 
 const MenuButton = styled.button`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   width: 100%;
-  height: 100%;
-  padding: 16px 0;
+  box-sizing: border-box;
+  padding: 12px 8px;
   border: 0;
-  border-bottom: 1px solid #ddd;
-  background: transparent;
+  border-bottom: 1px solid ${(p) => p.theme.border};
+  border-radius: ${(p) => p.theme.radiusMedium};
+  background: ${(p) => (p.$isSelected ? p.theme.accent : "transparent")};
+  color: ${(p) =>
+    p.$isSelected ? p.theme.textLight : p.theme.mutedForeground};
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 
-  &:hover {
-    color: ${(p) => p.theme.textBlack};
-    & ${StyledIcon} {
-      fill: ${(p) => p.theme.textBlack};
-    }
+  & ${StyledIcon} {
+    fill: currentColor;
+    flex-shrink: 0;
   }
 
-  color: ${(p) => (p.isSelected ? p.theme.textBlack : p.theme.textDark)};
-  & ${StyledIcon} {
-    fill: ${(p) => (p.isSelected ? p.theme.textBlack : p.theme.textDark)};
+  &:hover,
+  &:focus-visible {
+    background: ${(p) => p.theme.accent};
+    color: ${(p) => p.theme.textLight};
   }
 `;
 
 const MenuItemText = styled(Text).attrs({
   semiBold: true,
-  large: true
+  medium: true
 })`
-  padding-right: 25px;
-  padding-left: 5px;
   text-align: left;
+  color: inherit;
 `;
 
 export default withTranslation()(withTheme(HelpPanelItem));

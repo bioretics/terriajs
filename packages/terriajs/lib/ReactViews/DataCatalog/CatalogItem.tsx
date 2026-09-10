@@ -107,6 +107,7 @@ const ItemTitleButton = styled(RawButton)<{
   padding: 10px;
   width: 100%;
   font-size: 0.8125rem;
+  color: inherit;
 
   &:focus,
   &:hover {
@@ -119,7 +120,7 @@ const ItemTitleButton = styled(RawButton)<{
     font-size: 0.9rem;
     padding-top: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid ${(p) => p.theme.greyLighter};
+    border-bottom: 1px solid ${(p) => p.theme.border};
   }
 `;
 

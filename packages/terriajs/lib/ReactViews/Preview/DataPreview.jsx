@@ -125,7 +125,7 @@ class DataPreview extends Component {
                   width: "20px",
                   margin: "0px 5px",
                   verticalAlign: "middle",
-                  fill: `${(p) => p.theme.charcoalGrey}`
+                  fill: "currentColor"
                 }}
               />
               <span>to add multiple datasets</span>
