@@ -402,9 +402,7 @@ export default class MeasurableGeometryManager {
   ): number {
     const triangles = this.triangulatePolygon(stopPoints, ellipsoid);
     if (!triangles) {
-      return useGeodeticEdges
-        ? this.calculateGeodeticAreaFan(stopPoints, ellipsoid)
-        : this.calculateAirAreaFan(stopPoints, ellipsoid);
+      return 0;
     }
 
     let totalArea = 0;
@@ -702,57 +700,5 @@ export default class MeasurableGeometryManager {
     if (!ellipsoid) return 0;
 
     return this.sumTriangulatedArea(stopPoints, ellipsoid, false);
-  }
-
-  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
-  private calculateGeodeticAreaFan(
-    stopPoints: Cartographic[],
-    ellipsoid: Ellipsoid
-  ): number {
-    const vertices = this.normalizePolygonVertices(stopPoints);
-    if (vertices.length < 3) return 0;
-
-    let totalArea = 0;
-    for (let i = 1; i < vertices.length - 1; i++) {
-      const p1 = vertices[0];
-      const p2 = vertices[i];
-      const p3 = vertices[i + 1];
-
-      const a = new EllipsoidGeodesic(p1, p2, ellipsoid).surfaceDistance;
-      const b = new EllipsoidGeodesic(p2, p3, ellipsoid).surfaceDistance;
-      const c = new EllipsoidGeodesic(p3, p1, ellipsoid).surfaceDistance;
-      totalArea += this.heronArea(a, b, c);
-    }
-
-    return totalArea;
-  }
-
-  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
-  private calculateAirAreaFan(
-    stopPoints: Cartographic[],
-    ellipsoid: Ellipsoid
-  ): number {
-    const vertices = this.normalizePolygonVertices(stopPoints);
-    if (vertices.length < 3) return 0;
-
-    const cartesianPoints = vertices.map((point) =>
-      Cartographic.toCartesian(point, ellipsoid)
-    );
-
-    let totalArea = 0;
-
-    for (let i = 1; i < cartesianPoints.length - 1; i++) {
-      const p1 = cartesianPoints[0];
-      const p2 = cartesianPoints[i];
-      const p3 = cartesianPoints[i + 1];
-
-      const a = Cartesian3.distance(p1, p2);
-      const b = Cartesian3.distance(p2, p3);
-      const c = Cartesian3.distance(p3, p1);
-
-      totalArea += this.heronArea(a, b, c);
-    }
-
-    return totalArea;
   }
 }
