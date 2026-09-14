@@ -270,29 +270,14 @@ export default class MeasurableGeometryManager {
    * Returns polygon vertices without a duplicated closing point.
    */
   private normalizePolygonVertices(stopPoints: Cartographic[]): Cartographic[] {
-    if (stopPoints.length < 2) {
-      return stopPoints;
-    }
-
-    const first = stopPoints[0];
-    const last = stopPoints[stopPoints.length - 1];
     if (
-      first.longitude === last.longitude &&
-      first.latitude === last.latitude &&
-      first.height === last.height
+      stopPoints.length >= 2 &&
+      Cartographic.equals(stopPoints[0], stopPoints[stopPoints.length - 1])
     ) {
       return stopPoints.slice(0, -1);
     }
 
     return stopPoints;
-  }
-
-  private isSameCartographic(a: Cartographic, b: Cartographic): boolean {
-    return (
-      a.longitude === b.longitude &&
-      a.latitude === b.latitude &&
-      a.height === b.height
-    );
   }
 
   /**
@@ -308,7 +293,7 @@ export default class MeasurableGeometryManager {
 
     const first = cartoPositions[0];
     const last = cartoPositions[cartoPositions.length - 1];
-    if (this.isSameCartographic(first, last)) {
+    if (Cartographic.equals(first, last)) {
       return cartoPositions;
     }
 
