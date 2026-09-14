@@ -48,6 +48,7 @@ const backgroundColor = "#ffffff";
 
 const Container = styled.div`
   background-color: ${backgroundColor};
+  color: ${(p) => p.theme.textBlack};
   box-shadow: 0 4px 8px 4px rgb(0 0 0 / 5%);
   border-radius: 3px;
 `;

@@ -100,3 +100,34 @@ export function calculateTopPosition(helpScreen: HelpScreen) {
   topPosition += helpScreen.offsetTop || 0;
   return topPosition;
 }
+
+export const TOUR_VIEWPORT_MARGIN = 10;
+
+interface ScreenBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+export function calculateViewportShift(
+  box: ScreenBox,
+  margin: number = TOUR_VIEWPORT_MARGIN
+): { x: number; y: number } {
+  const viewportWidth =
+    window.innerWidth || document.documentElement.clientWidth || 0;
+  const viewportHeight =
+    window.innerHeight || document.documentElement.clientHeight || 0;
+
+  let x = Math.min(0, viewportWidth - margin - (box.left + box.width));
+  if (box.left + x < margin) {
+    x = margin - box.left;
+  }
+
+  let y = Math.min(0, viewportHeight - margin - (box.top + box.height));
+  if (box.top + y < margin) {
+    y = margin - box.top;
+  }
+
+  return { x, y };
+}

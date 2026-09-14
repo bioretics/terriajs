@@ -31,16 +31,29 @@ const DropdownPanel = createReactClass({
         dropdownOffset: "50%"
       });
     } else if (innerElement) {
-      const btnRef = this.props.btnRef;
-      const buttonElementOffsetLeft =
-        btnRef?.current?.offsetLeft || this.buttonElement?.offsetLeft || 0;
-      const buttonElementClientWidth =
-        btnRef?.current?.clientWidth || this.buttonElement?.clientWidth || 0;
-      // how much further right the panel is from the button
-      const offset = buttonElementOffsetLeft - innerElement.offsetLeft;
-      // if the panel is left of the button leave its offset as is, otherwise move it right so it's level with the button.
-      const dropdownOffset =
-        offset < innerElement.offsetLeft ? offset : innerElement.offsetLeft;
+      const buttonElement = this.props.btnRef?.current || this.buttonElement;
+      const buttonElementOffsetLeft = buttonElement?.offsetLeft || 0;
+      const buttonElementClientWidth = buttonElement?.clientWidth || 0;
+      const buttonElementScreenLeft =
+        buttonElement?.getBoundingClientRect().left || 0;
+      const panelWidth = innerElement.offsetWidth;
+      const viewportWidth = document.documentElement.clientWidth;
+      const viewportMargin = 5;
+
+      let dropdownOffset = buttonElementOffsetLeft;
+      if (
+        buttonElementScreenLeft + panelWidth + viewportMargin >
+        viewportWidth
+      ) {
+        dropdownOffset =
+          buttonElementOffsetLeft + buttonElementClientWidth - panelWidth;
+      }
+      const panelScreenLeft =
+        buttonElementScreenLeft + (dropdownOffset - buttonElementOffsetLeft);
+      if (panelScreenLeft < viewportMargin) {
+        dropdownOffset += viewportMargin - panelScreenLeft;
+      }
+
       // offset the caret to line up with the middle of the button - note that the caret offset is relative to the panel, whereas
       // the offsets for the button/panel are relative to their container.
       const caretOffset = Math.max(
@@ -51,7 +64,7 @@ const DropdownPanel = createReactClass({
       );
 
       this.setState({
-        caretOffset: caretOffset >= 0 && caretOffset + "px",
+        caretOffset: caretOffset + "px",
         dropdownOffset: dropdownOffset + "px"
       });
     } else {

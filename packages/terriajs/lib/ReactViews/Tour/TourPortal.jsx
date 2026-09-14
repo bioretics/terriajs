@@ -12,7 +12,7 @@
 import { autorun } from "mobx";
 import { observer } from "mobx-react";
 import PropTypes from "prop-types";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useTheme, withTheme } from "styled-components";
 import Box from "../../Styled/Box";
@@ -28,7 +28,9 @@ import { applyTranslationIfExists } from "../../Language/languageHelpers";
 import {
   calculateLeftPosition,
   calculateTopPosition,
-  getOffsetsFromTourPoint
+  calculateViewportShift,
+  getOffsetsFromTourPoint,
+  TOUR_WIDTH
 } from "./tour-helpers.ts";
 import TourExplanationBox, {
   TourExplanationBoxZIndex
@@ -86,6 +88,23 @@ export const TourExplanation = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const boxRef = useRef(null);
+  const [shift, setShift] = useState({ x: 0, y: 0 });
+
+  useLayoutEffect(() => {
+    if (!active || !boxRef.current) return;
+    const rect = boxRef.current.getBoundingClientRect();
+    const next = calculateViewportShift({
+      left: rect.left - shift.x,
+      top: rect.top - shift.y,
+      width: rect.width,
+      height: rect.height
+    });
+    if (next.x !== shift.x || next.y !== shift.y) {
+      setShift(next);
+    }
+  }, [active, shift.x, shift.y, topStyle, leftStyle]);
+
   if (!active) {
     // Tour explanation requires the various positioning even if only just
     // showing the "tour indicator" button, as it is offset against the caret
@@ -117,13 +136,21 @@ export const TourExplanation = ({
       </Box>
     );
   }
+  const shiftStyle = (value, delta) =>
+    value && delta ? `calc(${value} + ${delta}px)` : value;
+  const shiftedCaretOffsetLeft = Math.min(
+    Math.max(caretOffsetLeft - shift.x, 0),
+    TOUR_WIDTH - 20
+  );
+
   return (
     <TourExplanationBox
+      ref={boxRef}
       paddedRatio={3}
       column
       style={{
-        top: topStyle,
-        left: leftStyle
+        top: shiftStyle(topStyle, shift.y),
+        left: shiftStyle(leftStyle, shift.x)
       }}
     >
       <CloseButton
@@ -135,7 +162,7 @@ export const TourExplanation = ({
       <Caret
         style={{
           top: `${caretOffsetTop}px`,
-          left: `${caretOffsetLeft}px`
+          left: `${shiftedCaretOffsetLeft}px`
         }}
       />
       <Text light medium textDarker>

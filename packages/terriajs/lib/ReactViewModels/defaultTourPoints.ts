@@ -45,17 +45,11 @@ export const defaultTourPoints = [
   {
     appRefName: "MenuBarMapSettingsButton",
     priority: 40,
-    caretOffsetLeft: TOUR_WIDTH - 25,
-    offsetLeft: -TOUR_WIDTH - 30,
-    positionLeft: RelativePosition.RECT_RIGHT,
     content: "translate#tour.menuBarMapSettingsButton.content"
   },
   {
     appRefName: "MenuBarStoryButton",
     priority: 50,
-    caretOffsetLeft: TOUR_WIDTH - 25,
-    offsetLeft: -TOUR_WIDTH - 10,
-    positionLeft: RelativePosition.RECT_RIGHT,
     content: "translate#tour.menuBarStoryButton.content"
   },
   {
