@@ -61,6 +61,9 @@ export function setViewerMode(
       viewer.viewerOptions.useTerrain = false;
       if (viewer.terria.cesium) {
         viewer.terria.cesium.scene.mode = SceneMode.SCENE2D;
+        // Morphing from 3D does not clamp the orthographic frustum to the 2D
+        // max zoom; a zero zoom applies Cesium's existing zoom2D clamp.
+        viewer.terria.cesium.scene.camera.zoomIn(0);
       }
     } else if (viewerMode === "2d") {
       viewer.viewerMode = ViewerMode.Leaflet;
