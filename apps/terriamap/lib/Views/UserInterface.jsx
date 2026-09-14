@@ -22,7 +22,9 @@ export const TerriaUserInterface = ({ terria, viewState, themeOverrides }) => {
       version={version}
     >
       <MenuLeft>
-        {viewState.terria.configParameters.userProfileLoginServiceUrl ? (
+        {viewState.terria.configParameters.userProfileLoginServiceUrl &&
+        viewState.terria.configParameters.userProfileLoginServiceType !==
+          "Geoserver" ? (
           <MenuItem
             target="_self"
             key="login-link"

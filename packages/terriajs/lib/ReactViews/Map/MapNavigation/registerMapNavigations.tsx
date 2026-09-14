@@ -143,6 +143,10 @@ export const registerMapNavigations = (viewState: ViewState) => {
     );
   };
 
+  const abortAllMeasureSampling = () => {
+    terria.measurableGeometryManager.forEach((m) => m.abortPendingSampling());
+  };
+
   const clearCurrentMeasureGeometryData = () => {
     const currentGeometry =
       viewState.terria.measurableGeomList[
@@ -184,6 +188,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
       },
       onClose: () => {
         runInAction(() => {
+          abortAllMeasureSampling();
           setMeasureToolsEnabled(siblingToolIds, true);
           resetMeasureUi(resetChartOnClose);
           resetMeasureGeometryCollections();
@@ -198,6 +203,7 @@ export const registerMapNavigations = (viewState: ViewState) => {
     measureTools: measureTools,
     onClose: () => {
       runInAction(() => {
+        abortAllMeasureSampling();
         resetMeasureUi();
         setMeasureToolsEnabled(allMeasureToolIds, true);
         resetMeasureGeometryCollections();
