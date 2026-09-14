@@ -1060,6 +1060,9 @@ export default class ViewState {
   @action
   toggleStoryBuilder(): void {
     this.storyBuilderShown = !this.storyBuilderShown;
+    if (this.storyBuilderShown) {
+      this.showHelpMenu = false;
+    }
   }
 
   @action
@@ -1280,6 +1283,19 @@ export default class ViewState {
     this.helpPanelExpanded = false;
     this.selectedHelpMenuItem = "";
     this.setTopElement("HelpPanel");
+    if (this.storyBuilderShown) {
+      this.storyBuilderShown = false;
+      setTimeout(() => triggerResize(), animationDuration || 1);
+    }
+  }
+
+  @action
+  toggleHelpPanel(): void {
+    if (this.showHelpMenu) {
+      this.hideHelpPanel();
+    } else {
+      this.showHelpPanel();
+    }
   }
 
   @action
