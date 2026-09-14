@@ -21,9 +21,9 @@ import {
 import Clipboard from "../../../../Clipboard";
 import { buildShareLink, buildShortShareLink } from "../BuildShareLink";
 import { ShareUrlWarning } from "./ShareUrlWarning";
-import TerriaError, {
-  TerriaErrorSeverity
-} from "../../../../../Core/TerriaError";
+//import TerriaError, {
+//  TerriaErrorSeverity
+//} from "../../../../../Core/TerriaError";
 // Fork (rer3d): import/export map buttons.
 import Box from "../../../../../Styled/Box";
 import Button from "../../../../../Styled/Button";
@@ -75,20 +75,20 @@ export const ShareUrl = forwardRef<
         .then((shareUrl) => {
           if (!cancelled) setShareUrl(shareUrl);
         })
-        .catch((error) => {
+        .catch(() => {
           // `getShareToken` has already chosen the message for this failure
           // (status code / too large / generic) from the HTTP status.
-          if (!cancelled) {
-            // Also raise the error as a modal so a failed share is hard to
-            // miss. Skip it when cancelled, so a stale request (e.g. after the
-            // share options changed) doesn't pop a modal for a share the user
-            // has moved past.
-            if (error instanceof TerriaError) {
-              terria.raiseErrorToUser(error, {
-                severity: TerriaErrorSeverity.Error
-              });
-            }
-          }
+          //if (!cancelled) {
+          // Also raise the error as a modal so a failed share is hard to
+          // miss. Skip it when cancelled, so a stale request (e.g. after the
+          // share options changed) doesn't pop a modal for a share the user
+          // has moved past.
+          //if (error instanceof TerriaError) {
+          // terria.raiseErrorToUser(error, {
+          //  severity: TerriaErrorSeverity.Error
+          //  });
+          //   }
+          // }
           // Fork (rer3d): fall back to the long URL so sharing still works when
           // the short-link service fails. Unlike the modal above, do not gate
           // on `cancelled` so a stale failed POST still produces a usable link.
