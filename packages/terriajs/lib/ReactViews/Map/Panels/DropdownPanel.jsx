@@ -24,13 +24,7 @@ const DropdownPanel = createReactClass({
   },
 
   onInnerMounted(innerElement) {
-    const centerInnerDropdown = this.props.showDropdownInCenter;
-    if (centerInnerDropdown) {
-      this.setState({
-        caretOffset: "50%",
-        dropdownOffset: "50%"
-      });
-    } else if (innerElement) {
+    if (innerElement) {
       const buttonElement = this.props.btnRef?.current || this.buttonElement;
       const buttonElementOffsetLeft = buttonElement?.offsetLeft || 0;
       const buttonElementClientWidth = buttonElement?.clientWidth || 0;
@@ -40,18 +34,32 @@ const DropdownPanel = createReactClass({
       const viewportWidth = document.documentElement.clientWidth;
       const viewportMargin = 5;
 
-      let dropdownOffset = buttonElementOffsetLeft;
-      if (
-        buttonElementScreenLeft + panelWidth + viewportMargin >
-        viewportWidth
-      ) {
+      let dropdownOffset;
+      if (this.props.showDropdownInCenter) {
         dropdownOffset =
-          buttonElementOffsetLeft + buttonElementClientWidth - panelWidth;
+          buttonElementOffsetLeft +
+          buttonElementClientWidth / 2 -
+          panelWidth / 2;
+      } else {
+        dropdownOffset = buttonElementOffsetLeft;
+        if (
+          buttonElementScreenLeft + panelWidth + viewportMargin >
+          viewportWidth
+        ) {
+          dropdownOffset =
+            buttonElementOffsetLeft + buttonElementClientWidth - panelWidth;
+        }
       }
-      const panelScreenLeft =
+
+      const panelScreenLeft = () =>
         buttonElementScreenLeft + (dropdownOffset - buttonElementOffsetLeft);
-      if (panelScreenLeft < viewportMargin) {
-        dropdownOffset += viewportMargin - panelScreenLeft;
+      const overflowRight =
+        panelScreenLeft() + panelWidth + viewportMargin - viewportWidth;
+      if (overflowRight > 0) {
+        dropdownOffset -= overflowRight;
+      }
+      if (panelScreenLeft() < viewportMargin) {
+        dropdownOffset += viewportMargin - panelScreenLeft();
       }
 
       // offset the caret to line up with the middle of the button - note that the caret offset is relative to the panel, whereas
@@ -126,7 +134,8 @@ const DropdownPanel = createReactClass({
         </button>
         {this.isOpen() && (
           <InnerPanel
-            showDropdownInCenter={this.props.showDropdownInCenter}
+            // Centring is resolved above into a pixel offset that is kept
+            // inside the viewport, so the CSS-only centring is not used.
             showDropdownAsModal={this.props.showDropdownAsModal}
             modalWidth={this.props.modalWidth}
             onDismissed={this.onDismissed}
