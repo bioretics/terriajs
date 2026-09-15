@@ -155,6 +155,7 @@ import measureAngle from "../../wwwroot/images/icons/measure_angle.svg";
 import measurePoint from "../../wwwroot/images/icons/measure_point.svg";
 import measurePolygon from "../../wwwroot/images/icons/measure_polygon.svg";
 import measureTools from "../../wwwroot/images/icons/measure-tools.svg";
+import palette from "../../wwwroot/images/icons/palette.svg";
 
 // Icon
 export const GLYPHS = {
@@ -308,7 +309,8 @@ export const GLYPHS = {
   measureAngle,
   measurePoint,
   measurePolygon,
-  measureTools
+  measureTools,
+  palette
 };
 
 export interface IconGlyph {

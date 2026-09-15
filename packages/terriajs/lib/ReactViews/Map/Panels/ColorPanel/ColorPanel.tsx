@@ -112,7 +112,8 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
     const { t } = this.props;
     const { modalWidth } = this.props;
     const dropdownTheme = {
-      inner: classNames(Styles.dropdownInner)
+      inner: classNames(Styles.dropdownInner),
+      icon: "palette"
     };
 
     return (
