@@ -1,4 +1,6 @@
 @use "../../Sass/common/_variables";
+@use "../../Sass/common/mixins";
+
 
 .sectionTitle {
   margin-top: 16px;
@@ -6,7 +8,7 @@
   font-size: variables.$font-size-mid-mini;
   font-weight: variables.$font-weight-bold;
   text-transform: uppercase;
-  color: variables.$text-light-dimmed;
+  color: variables.$text-muted;
   letter-spacing: 0.6px;
 }
 
@@ -16,12 +18,23 @@
   top: 0;
   width: 6px;
   height: 100%;
-  cursor: ew-resize;
+  cursor: col-resize;
   background: transparent;
   z-index: 2;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    background: transparent;
+    transition: background-color 0.15s ease;
+  }
+
+  &:hover::after {
+    background: variables.$color-primary;
   }
 }
 
@@ -52,13 +65,13 @@
 .notice {
   margin-top: 8px;
   font-size: variables.$font-size-mid-mini;
-  color: variables.$text-light-dimmed;
+  color: variables.$text-muted;
 }
 
 .error {
   margin-top: 8px;
   font-size: variables.$font-size-mid-mini;
-  color: variables.$warning;
+  color: variables.$text-warning;
 }
 
 .tableWrapper {
@@ -75,33 +88,34 @@
   th,
   td {
     padding: 8px 10px;
-    border-bottom: 1px solid variables.$overlay;
+    border-bottom: 1px solid variables.$border-color;
     text-align: left;
     white-space: nowrap;
     color: variables.$text-light;
   }
 
   th {
-    color: variables.$text-light-dimmed;
+    color: variables.$text-muted;
     font-weight: variables.$font-weight-bold;
   }
 }
 
 .rowClickable {
   cursor: pointer;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: variables.$surface-accent;
   }
 }
 
 .rowSelected {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(variables.$color-primary, 0.15);
 }
 
 .emptyState {
   text-align: center;
-  color: variables.$text-light-dimmed;
+  color: variables.$text-muted;
   padding: 12px;
 }
 
@@ -114,7 +128,7 @@
 
 .detailSection {
   padding-top: 8px;
-  border-top: 1px solid variables.$overlay;
+  border-top: 1px solid variables.$border-color;
 }
 
 .detailHeading {
@@ -131,24 +145,25 @@
 
   td {
     padding: 6px 8px;
-    border-bottom: 1px solid variables.$overlay;
+    border-bottom: 1px solid variables.$border-color;
     color: variables.$text-light;
   }
 
   td:first-child {
     width: 45%;
-    color: variables.$text-light-dimmed;
+    color: variables.$text-muted;
   }
 }
 
-a {
+.table a,
+.detailTable a,
+.emergencyPlansLink a {
+  @include mixins.link(variables.$surface-card);
   font-size: variables.$font-size-mid-mini;
   font-weight: variables.$font-weight-bold;
-  color: #64b5f6;
-  text-decoration: none;
 
-  &:hover {
-    color: #90caf9;
+  &:hover,
+  &:focus-visible {
     text-decoration: underline;
   }
 }
@@ -157,20 +172,8 @@ a {
   margin-top: 24px;
   margin-bottom: 24px;
   padding: 12px;
-  background: rgba(73, 151, 230, 0.15);
-  border: 1px solid rgba(73, 151, 230, 0.4);
-  border-radius: 4px;
+  background: rgba(variables.$color-primary, 0.1);
+  border: 1px solid rgba(variables.$color-primary, 0.4);
+  border-radius: variables.$radius-medium;
   text-align: center;
-
-  a {
-    font-size: variables.$font-size-mid-mini;
-    font-weight: variables.$font-weight-bold;
-    color: #64b5f6;
-    text-decoration: none;
-
-    &:hover {
-      color: #90caf9;
-      text-decoration: underline;
-    }
-  }
 }

@@ -10,11 +10,12 @@ import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import triggerResize from "../../Core/triggerResize";
 import Box from "../../Styled/Box";
-import Button, { RawButton } from "../../Styled/Button";
+import Button from "../../Styled/Button";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import Select from "../../Styled/Select";
 import Text from "../../Styled/Text";
 import { useViewState } from "../Context";
+import { PanelIconButton } from "../SidePanel/SidePanel";
 
 import Styles from "./microzonation-panel.scss";
 import {
@@ -50,6 +51,9 @@ const Panel = styled(Box)<{
   min-width: ${(props) => props.$panelWidth}px;
   height: 100vh;
   will-change: width, min-width;
+  background: ${(props) => props.theme.card};
+  border-left: 1px solid ${(props) => props.theme.border};
+  color: ${(props) => props.theme.textLight};
   ${(props) =>
     props.isVisible &&
     `
@@ -341,7 +345,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
       ref={panelRef}
       isVisible={props.isVisible}
       isHidden={!props.isVisible}
-      charcoalGreyBg
       column
       $panelWidth={panelWidth}
     >
@@ -351,20 +354,15 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
         aria-orientation="vertical"
         onMouseDown={onResizeStart}
       />
-      <Box right>
-        <RawButton
-          css={`
-            padding: 15px;
-          `}
+      <Box right paddedRatio={2}>
+        <PanelIconButton
+          type="button"
+          title={t(($) => $.general.close)}
+          aria-label={t(($) => $.general.close)}
           onClick={closePanel}
         >
-          <StyledIcon
-            styledWidth={"16px"}
-            fillColor={theme.textLightDimmed}
-            opacity={0.5}
-            glyph={Icon.GLYPHS.closeLight}
-          />
-        </RawButton>
+          <StyledIcon glyph={Icon.GLYPHS.closeLight} />
+        </PanelIconButton>
       </Box>
       <Box
         column
@@ -395,7 +393,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 const value = event.target.value;
                 setFilters((prev) => ({ ...prev, province: value }));
               }}
-              light
             >
               <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {provinceOptions.map((value) => (
@@ -415,7 +412,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 const value = event.target.value;
                 setFilters((prev) => ({ ...prev, municipality: value }));
               }}
-              light
             >
               <option value="">{t(($) => $.microzonation.allMasculine)}</option>
               {municipalityOptions.map((value) => (
@@ -435,7 +431,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 const value = event.target.value;
                 setFilters((prev) => ({ ...prev, microzonation: value }));
               }}
-              light
             >
               <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {Object.entries(microzonationLabels).map(([value, label]) => (
@@ -455,7 +450,6 @@ const MicrozonationPanel: React.FC<Props> = observer((props) => {
                 const value = event.target.value;
                 setFilters((prev) => ({ ...prev, cle: value }));
               }}
-              light
             >
               <option value="">{t(($) => $.microzonation.allFeminine)}</option>
               {Object.entries(cleLabels).map(([value, label]) => (
