@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import { FC } from "react";
 import ReactDOM from "react-dom";
 import { useTranslation } from "react-i18next";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import Box from "../../../../../Styled/Box";
 import Ul, { Li } from "../../../../../Styled/List";
 import Spacing from "../../../../../Styled/Spacing";
@@ -19,8 +19,9 @@ interface IDataAttributionModalProps {
 }
 
 const AttributionText = styled(Text).attrs(() => ({ medium: true }))`
+  color: ${(props) => props.theme.modalText};
   a {
-    color: ${(props) => props.theme.textDark};
+    color: ${(props) => props.theme.colorPrimary};
     text-decoration: underline;
     img {
       height: 19px;
@@ -29,12 +30,11 @@ const AttributionText = styled(Text).attrs(() => ({ medium: true }))`
   }
 `;
 
+// Dialog surface (GeoLibre-style), same tokens as the catalogue modal.
 const DataAttributionBox = styled(Box).attrs({
   position: "absolute",
   styledWidth: "500px",
   styledMaxHeight: "320px",
-  backgroundColor: "white",
-  rounded: true,
   paddedRatio: 4,
   overflowY: "auto",
   scroll: true,
@@ -44,25 +44,20 @@ const DataAttributionBox = styled(Box).attrs({
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  box-shadow:
-    0 6px 6px 0 rgba(0, 0, 0, 0.12),
-    0 10px 20px 0 rgba(0, 0, 0, 0.05);
+  background: ${(props) => props.theme.modalBg};
+  color: ${(props) => props.theme.modalText};
+  border: 1px solid ${(props) => props.theme.border};
+  border-radius: ${(props) => props.theme.radiusLarge};
+  box-shadow: ${(props) => props.theme.shadowXl};
   @media (max-width: ${(props) => props.theme.mobile}px) {
     width: 100%;
-  }
-
-  /* Default cesium bing map logo is white on transparent which is rendered invisible
-     on our modal with white background. This rule forces the background color of the
-      bing imagery to grey so that it is visible.
-  */
-  ${AttributionText} img[title="Bing Imagery"] {
-    filter: invert(1);
   }
 `;
 
 export const DataAttributionModal: FC<IDataAttributionModalProps> = observer(
   ({ closeModal, attributions, searchAttributions }) => {
     const { t } = useTranslation();
+    const theme = useTheme();
     if (!attributions || attributions.length === 0) {
       return null;
     }
@@ -77,13 +72,17 @@ export const DataAttributionModal: FC<IDataAttributionModalProps> = observer(
           css={{ top: 0, left: 0, zIndex: 99989 }}
         />
         <DataAttributionBox>
-          <CloseButton color="#red" topRight onClick={closeModal} />
-          <Text extraExtraLarge bold textDarker>
+          <CloseButton
+            color={theme.mutedForeground}
+            topRight
+            onClick={closeModal}
+          />
+          <Text extraExtraLarge bold textLight>
             {t(($) => $.map.extraCreditLinks.mapCredits)}
           </Text>
           <Spacing bottom={2} />
           <Box column>
-            <Text extraLarge medium textDarker>
+            <Text extraLarge medium textLight>
               {t(($) => $.map.extraCreditLinks.dataProvider)}
             </Text>
             <Spacing bottom={2} />
@@ -101,7 +100,7 @@ export const DataAttributionModal: FC<IDataAttributionModalProps> = observer(
           </Box>
           <Spacing bottom={4} />
           <Box column>
-            <Text extraLarge medium textDarker>
+            <Text extraLarge medium textLight>
               {t(($) => $.map.extraCreditLinks.searchProvider)}
             </Text>
             <Spacing bottom={2} />
