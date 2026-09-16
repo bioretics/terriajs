@@ -269,29 +269,14 @@ export default class MeasurableGeometryManager {
    * Returns polygon vertices without a duplicated closing point.
    */
   private normalizePolygonVertices(stopPoints: Cartographic[]): Cartographic[] {
-    if (stopPoints.length < 2) {
-      return stopPoints;
-    }
-
-    const first = stopPoints[0];
-    const last = stopPoints[stopPoints.length - 1];
     if (
-      first.longitude === last.longitude &&
-      first.latitude === last.latitude &&
-      first.height === last.height
+      stopPoints.length >= 2 &&
+      Cartographic.equals(stopPoints[0], stopPoints[stopPoints.length - 1])
     ) {
       return stopPoints.slice(0, -1);
     }
 
     return stopPoints;
-  }
-
-  private isSameCartographic(a: Cartographic, b: Cartographic): boolean {
-    return (
-      a.longitude === b.longitude &&
-      a.latitude === b.latitude &&
-      a.height === b.height
-    );
   }
 
   /**
@@ -307,7 +292,7 @@ export default class MeasurableGeometryManager {
 
     const first = cartoPositions[0];
     const last = cartoPositions[cartoPositions.length - 1];
-    if (this.isSameCartographic(first, last)) {
+    if (Cartographic.equals(first, last)) {
       return cartoPositions;
     }
 
@@ -401,9 +386,7 @@ export default class MeasurableGeometryManager {
   ): number {
     const triangles = this.triangulatePolygon(stopPoints, ellipsoid);
     if (!triangles) {
-      return useGeodeticEdges
-        ? this.calculateGeodeticAreaFan(stopPoints, ellipsoid)
-        : this.calculateAirAreaFan(stopPoints, ellipsoid);
+      return 0;
     }
 
     let totalArea = 0;
@@ -433,7 +416,6 @@ export default class MeasurableGeometryManager {
 
     return totalArea;
   }
-
   // sample the entire path (polyline) every "samplingStep" meters
   @action
   sampleFromCartographics(
@@ -702,55 +684,5 @@ export default class MeasurableGeometryManager {
     if (!ellipsoid) return 0;
 
     return this.sumTriangulatedArea(stopPoints, ellipsoid, false);
-  }
-
-  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
-  private calculateGeodeticAreaFan(
-    stopPoints: Cartographic[],
-    ellipsoid: Ellipsoid
-  ): number {
-    const vertices = this.normalizePolygonVertices(stopPoints);
-    if (vertices.length < 3) return 0;
-
-    let totalArea = 0;
-    for (let i = 1; i < vertices.length - 1; i++) {
-      const p1 = vertices[0];
-      const p2 = vertices[i];
-      const p3 = vertices[i + 1];
-
-      const a = new EllipsoidGeodesic(p1, p2, ellipsoid).surfaceDistance;
-      const b = new EllipsoidGeodesic(p2, p3, ellipsoid).surfaceDistance;
-      const c = new EllipsoidGeodesic(p3, p1, ellipsoid).surfaceDistance;
-      totalArea += this.heronArea(a, b, c);
-    }
-
-    return totalArea;
-  }
-
-  /** Fallback triangle-fan decomposition when PolygonGeometryLibrary fails. */
-  private calculateAirAreaFan(
-    stopPoints: Cartographic[],
-    ellipsoid: Ellipsoid
-  ): number {
-    const vertices = this.normalizePolygonVertices(stopPoints);
-    if (vertices.length < 3) return 0;
-
-    const cartesianPoints = vertices.map((point) =>
-      Cartographic.toCartesian(point, ellipsoid)
-    );
-
-    let totalArea = 0;
-    for (let i = 1; i < cartesianPoints.length - 1; i++) {
-      const p1 = cartesianPoints[0];
-      const p2 = cartesianPoints[i];
-      const p3 = cartesianPoints[i + 1];
-
-      const a = Cartesian3.distance(p1, p2);
-      const b = Cartesian3.distance(p2, p3);
-      const c = Cartesian3.distance(p3, p1);
-      totalArea += this.heronArea(a, b, c);
-    }
-
-    return totalArea;
   }
 }
