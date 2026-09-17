@@ -1,3 +1,4 @@
+import { MAPBOX_DEFAULT_LINE_COLOR } from "../../Core/DefaultVisualStyles";
 import { JsonObject } from "../../Core/Json";
 import anyTrait from "../Decorators/anyTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
@@ -19,7 +20,7 @@ import UrlTraits from "./UrlTraits";
       "Federal electoral boundaries which will apply at the 2019 federal election. Produced by combining boundary datasets provided by AEC for each state.",
     url: "https://tiles.terria.io/ELB_2019/{z}/{x}/{y}.pbf",
     opacity: 1,
-    lineColor: "hsl(180,80%,30%)",
+    lineColor: MAPBOX_DEFAULT_LINE_COLOR,
     layer: "ELB_2019",
     maximumNativeZoom: 12,
     minimumZoom: 0,

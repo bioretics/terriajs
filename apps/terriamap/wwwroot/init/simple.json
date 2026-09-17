@@ -7,6 +7,261 @@
   },
   "catalog": [
     {
+      "type": "rer-poi",
+      "name": "RER POI",
+      "id": "rer-poi",
+      "url": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/rer3d_poi/MapServer/0",
+      "clustering": true,
+      "showDebugBBox": false,
+      "nameField": "NOME",
+      "levelIdField": "LEVEL_ID",
+      "labelOutlineWidth": 4,
+      "labelOutlineColor": "rgba(0, 0, 0, 0.5)",
+      "labelTextColor": "#ffffff",
+      "labelFontSize": 10,
+      "queryBboxPaddingRatio": 0.2,
+      "dynamicRequestDebounceMs": 350,
+      "cameraTiltLimitDegrees": 60,
+      "defaultMarkerColor": "royalblue",
+      "markerSize": 48,
+      "iconStrokeWidth": 1,
+      "iconStrokeColor": "#000000",
+      "queryableProperties": [
+        {
+          "propertyName": "REG",
+          "propertyLabel": "Regione",
+          "propertyType": "enum"
+        },
+        {
+          "propertyName": "ORDINE",
+          "propertyLabel": "Tipologia",
+          "propertyType": "enum"
+        }
+      ],
+      "perPropertyStyles": [
+        {
+          "properties": {
+            "ID_DOMINIO": 1
+          },
+          "style": {
+            "marker-symbol": "village"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 2
+          },
+          "style": {
+            "marker-symbol": "village"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 3
+          },
+          "style": {
+            "marker-symbol": "industrial"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 4
+          },
+          "style": {
+            "marker-symbol": "village",
+            "marker-color": "#ff0"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 5
+          },
+          "style": {
+            "marker-symbol": "village",
+            "marker-color": "#333"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 6
+          },
+          "style": {
+            "marker-symbol": "village",
+            "marker-color": "#fff"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 7
+          },
+          "style": {
+            "marker-symbol": "square"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 8
+          },
+          "style": {
+            "marker-symbol": "cross"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 9
+          },
+          "style": {
+            "marker-symbol": "mountain",
+            "marker-color": "#ff00ff"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 10
+          },
+          "style": {
+            "marker-symbol": "triangle"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 11
+          },
+          "style": {
+            "marker-symbol": "triangle-stroked"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 12
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 13
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 14
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 15
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 16
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 17
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 18
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 19
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 20
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 21
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 22
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 23
+          },
+          "style": {
+            "marker-symbol": "water"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 24
+          },
+          "style": {
+            "marker-symbol": "marker"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 601
+          },
+          "style": {
+            "marker-symbol": "town"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 602
+          },
+          "style": {
+            "marker-symbol": "city"
+          }
+        },
+        {
+          "properties": {
+            "ID_DOMINIO": 603
+          },
+          "style": {
+            "marker-symbol": "city"
+          }
+        }
+      ]
+    },
+    {
       "id": "aB3dE4FgHi",
       "type": "group",
       "name": "Featured Examples",

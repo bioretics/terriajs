@@ -1,11 +1,34 @@
 {
   /* Names of init files (in wwwroot/init), without the .json extension, to load by default */
-  "initializationUrls": ["basemaps", "0_emiro_init", "1_emiro_rapido"],
+  "initializationUrls": [
+    "basemaps",
+    "0_emiro_init",
+    "1_emiro_rapido",
+    "simple"
+  ],
   "parameters": {
-    "cesiumIonAccessToken": "",
-    "cesiumTerrainAssetId": 754445,
+    "microzonationEnabled": true,
+    "microzonationConfig": {
+      "url": "https://servizigis.regione.emilia-romagna.it/geoserver/wfs",
+      "typeName": "emiro:emiro_microzonazione",
+      "outputFormat": "application/json"
+    },
+    "regionMappingDefinitionsUrls": [
+      "data/regionMapping_it.json",
+      "build/TerriaJS/data/regionMapping.json"
+    ],
+    "userProfileLoginServiceUrl": "http://localhost:8080/geoserver/rest/security/usergroup/user/<username>/groups",
+    "userProfileLoginServiceType": "Geoserver",
+    "cesiumIonAccessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI5Y2Q0OTVlNC1kOTI3LTQzMDUtOTg1MS0zMWM1MWNhYWUxOGUiLCJpZCI6NzcyMjIsImlhdCI6MTY0MDA4NzI5Mn0.D4ZKDAENBaRw9Ui_iSdMZLVccsV9WOtKyetij1dYaLA",
+    "cesiumTerrainAssetId": 1,
     "useCesiumIonTerrain": false,
-    "bingMapsKey": "",
+    "bingMapsKey": "Ap3-3lzCO0---yJ-IKWdbxq3QVFykIJ8vJrqrCqsYofNT5ETG1g8ei-Squ9cFxxV",
+    "useMyLocationFromDesktop": false,
+    "leafletMaxZoom": 21,
+    "mapViewers": ["3d", "2dcesium", "2d"],
+    "extraCreditLinks": [],
+    "aboutButtonHrefUrl": null,
+    "relatedMaps": null,
     "useCesiumIonBingImagery": false,
     "googleUrlShortenerKey": null,
     "googleAnalyticsKey": null,
@@ -23,7 +46,6 @@
       "fieldResultDetailed": "DETTAGLIO"
     },
     "coordsConverterUrl": "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project",
-    "useMyLocationFromDesktop": true,
     "mouseAsInfoDefaultValue": false,
     "useElevationMeanSeaLevel": false,
 

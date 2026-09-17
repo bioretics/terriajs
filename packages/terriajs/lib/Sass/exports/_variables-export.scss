@@ -33,6 +33,16 @@
   frontComponentZIndex: variables.$front-component-z-index;
   notificationWindowZIndex: variables.$notification-window-z-index;
 
+  // Z-index stacking scale
+  zBase: variables.$z-base;
+  zChrome: variables.$z-chrome;
+  zDropdown: variables.$z-dropdown;
+  zPanelFloat: variables.$z-panel-float;
+  zSplitter: variables.$z-splitter;
+  zModal: variables.$z-modal;
+  zToast: variables.$z-toast;
+  zOverlayTop: variables.$z-overlay-top;
+
   // ..radius? (no standardised radius at the moment, pull in as needed from variables
   radius40Button: 20;
   radiusLarge: variables.$radius-large;
@@ -145,4 +155,17 @@
 
   inputHeight: variables.$input-height;
   inputHeightLarge: variables.$input-height-large;
+
+  // Chart (FeatureInfoPanel / measurable charts)
+  chartBaseColor: variables.$chart-base-color;
+
+  // Warning / accent
+  warningAccent: variables.$warning-accent;
+
+  // Focus ring
+  focusRing: variables.$focus-ring;
+
+  // Input error state
+  inputErrorBorder: variables.$input-error-border;
+  inputErrorBg: variables.$input-error-bg;
 }
