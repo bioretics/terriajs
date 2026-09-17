@@ -1,3 +1,4 @@
+import { TRAIL_COLOR } from "../../../Core/DefaultVisualStyles";
 import { TableStyleMapModel } from "../../../Table/TableStyleMap";
 import objectArrayTrait from "../../Decorators/objectArrayTrait";
 import objectTrait from "../../Decorators/objectTrait";
@@ -18,7 +19,7 @@ export class SolidColorMaterialTraits extends ModelTraits {
     description: "The color.",
     type: "string"
   })
-  color = "#ffffff";
+  color = TRAIL_COLOR;
 }
 
 /** Supports CZML PolylineGlowMaterial https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/PolylineGlowMaterial */
@@ -28,7 +29,7 @@ export class PolylineGlowMaterialTraits extends ModelTraits {
     description: "The color.",
     type: "string"
   })
-  color = "#ffffff";
+  color = TRAIL_COLOR;
 
   @primitiveTrait({
     name: "Glow power",

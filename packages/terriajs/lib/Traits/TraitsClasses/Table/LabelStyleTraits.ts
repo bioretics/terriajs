@@ -1,3 +1,8 @@
+import {
+  LABEL_FILL_COLOR,
+  LABEL_OUTLINE_COLOR,
+  LABEL_FONT
+} from "../../../Core/DefaultVisualStyles";
 import { TableStyleMapModel } from "../../../Table/TableStyleMap";
 import objectArrayTrait from "../../Decorators/objectArrayTrait";
 import objectTrait from "../../Decorators/objectTrait";
@@ -43,7 +48,7 @@ export class LabelSymbolTraits extends mixTraits(TableStyleMapSymbolTraits) {
     description: "Font CSS string. Default is `30px sans-serif`.",
     type: "string"
   })
-  font = "30px sans-serif";
+  font = LABEL_FONT;
 
   @primitiveTrait({
     name: "Style",
@@ -83,14 +88,14 @@ export class LabelSymbolTraits extends mixTraits(TableStyleMapSymbolTraits) {
     description: "The fill color of the label.",
     type: "string"
   })
-  fillColor = "#ffffff";
+  fillColor = LABEL_FILL_COLOR;
 
   @primitiveTrait({
     name: "Outline color",
     description: "The outline color of the label.",
     type: "string"
   })
-  outlineColor = "#000000";
+  outlineColor = LABEL_OUTLINE_COLOR;
 
   @primitiveTrait({
     name: "Outline width",

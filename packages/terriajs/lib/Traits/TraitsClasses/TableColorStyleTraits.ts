@@ -1,3 +1,4 @@
+import { REGION_COLOR } from "../../Core/DefaultVisualStyles";
 import { StyleMapType } from "../../Table/TableStyleMap";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
 import objectTrait from "../Decorators/objectTrait";
@@ -60,7 +61,7 @@ export default class TableColorStyleTraits extends ModelTraits {
       "The color to use when the styling the region, specified as a CSS color string.",
     type: "string"
   })
-  regionColor: string = "#02528d";
+  regionColor: string = REGION_COLOR;
 
   @primitiveTrait({
     name: "Null Label",

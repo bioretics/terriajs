@@ -1,3 +1,4 @@
+import { BASEMAP_CONTRAST_WHITE } from "../../Core/DefaultVisualStyles";
 import CatalogMemberFactory from "../../Models/Catalog/CatalogMemberFactory";
 import modelReferenceTrait from "../Decorators/modelReferenceTrait";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
@@ -20,7 +21,7 @@ export class BaseMapTraits extends ModelTraits {
     description:
       "Color which should be used to contrast with basemap (eg for region mapping feature borders)"
   })
-  contrastColor?: string = "#ffffff";
+  contrastColor?: string = BASEMAP_CONTRAST_WHITE;
 
   @primitiveTrait({
     type: "string",

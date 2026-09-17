@@ -237,8 +237,19 @@ $sm: 768px !default;
 $md: 992px !default;
 $lg: 1300px !default;
 
+// Z-index stacking scale — use these instead of ad-hoc numeric literals.
+// Low → high: base controls, chrome bars, dropdowns, floating panels,
+// splitter, modals, toasts, top-level overlays (disclaimer, drag-drop).
+$z-base: 1 !default;
+$z-chrome: 3 !default;
+$z-dropdown: 10 !default;
 $front-component-z-index: 99 !default;
+$z-panel-float: 100 !default;
+$z-splitter: 999 !default;
+$z-modal: 1000 !default;
+$z-toast: 99989 !default;
 $notification-window-z-index: 99999 !default;
+$z-overlay-top: $notification-window-z-index !default;
 // TinyMCE editor popups (menus/dialogs) mount on document.body, outside the
 // story editor modal, so they must sit just above $notification-window-z-index.
 $editor-popup-z-index: $notification-window-z-index + 1 !default;
@@ -252,6 +263,19 @@ $chart-preview-line-color: $chart-line-color !default;
 $chart-darker: color.adjust($dark, $lightness: -8%) !default;
 $chart-panel-background: $dark !default;
 $chart-panel-header: $dark-with-overlay !default;
+// Opaque light-grey base color for FeatureInfoPanel / measurable charts
+// (distinct from $chart-grid-color which is semi-transparent on the bottom dock).
+$chart-base-color: #efefef !default;
+
+// Warning / accent
+$warning-accent: #f69900 !default;
+
+// Focus ring (Checkbox, interactive controls)
+$focus-ring: #c390f9 !default;
+
+// Input error state
+$input-error-border: #d60000 !default;
+$input-error-bg: #fdf2f2 !default;
 
 $charcoal-grey: #3f4854 !default;
 $turquoise-blue: #08abd5 !default;

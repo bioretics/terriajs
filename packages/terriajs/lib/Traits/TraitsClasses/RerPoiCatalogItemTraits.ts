@@ -1,3 +1,8 @@
+import {
+  POI_LABEL_TEXT_COLOR,
+  POI_LABEL_OUTLINE_COLOR,
+  POI_ICON_STROKE_COLOR
+} from "../../Core/DefaultVisualStyles";
 import primitiveTrait from "../Decorators/primitiveTrait";
 import { traitClass } from "../Trait";
 import mixTraits from "../mixTraits";
@@ -54,7 +59,7 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     name: "Label text color",
     description: "The color of the label text for POI markers."
   })
-  labelTextColor: string = "#ffffff";
+  labelTextColor: string = POI_LABEL_TEXT_COLOR;
 
   @primitiveTrait({
     type: "number",
@@ -75,7 +80,7 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     name: "Label outline color",
     description: "The outline color for POI marker labels."
   })
-  labelOutlineColor: string = "rgba(0, 0, 0, 0.65)";
+  labelOutlineColor: string = POI_LABEL_OUTLINE_COLOR;
 
   @primitiveTrait({
     type: "string",
@@ -161,7 +166,7 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     description:
       "The color of the stroke around icon symbols. Accepts CSS color strings."
   })
-  iconStrokeColor: string = "#000000";
+  iconStrokeColor: string = POI_ICON_STROKE_COLOR;
 }
 
 export const defaultRerPoiCatalogItemTraits = new RerPoiCatalogItemTraits();
