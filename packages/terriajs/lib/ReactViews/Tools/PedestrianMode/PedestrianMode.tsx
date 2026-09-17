@@ -29,10 +29,22 @@ const PedestrianMode: FC<PedestrianModeProps> = observer((props) => {
   const [isDropped, setIsDropped] = useState<boolean>(false);
   const [view, setView] = useState<MiniMapView | undefined>();
 
-  const onDropCancelled = () => viewState.closeTool();
+  const deactivatePedestrianMode = () => {
+    const controller =
+      viewState.terria.mapNavigationModel.findItem(
+        PEDESTRIAN_MODE_ID
+      )?.controller;
+    if (controller) {
+      controller.deactivate();
+    } else {
+      viewState.closeTool();
+    }
+  };
+
+  const onDropCancelled = () => deactivatePedestrianMode();
   //if viewer is not cesium close tool.
   if (!(cesium instanceof Cesium)) {
-    viewState.closeTool();
+    deactivatePedestrianMode();
     return null;
   }
 
@@ -64,7 +76,7 @@ const PedestrianMode: FC<PedestrianModeProps> = observer((props) => {
     return reaction(
       () => cesium.isMapZooming,
       (isMapZooming) => {
-        if (isMapZooming) viewState.closeTool();
+        if (isMapZooming) deactivatePedestrianMode();
       }
     );
     /* eslint-disable-next-line react-hooks/exhaustive-deps */

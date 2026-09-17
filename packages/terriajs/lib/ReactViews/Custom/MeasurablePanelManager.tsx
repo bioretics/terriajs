@@ -62,13 +62,15 @@ export default class MeasurablePanelManager {
 
   private static initializeModel() {
     if (!MeasurablePanelManager.markerModel && MeasurablePanelManager.terria) {
-      MeasurablePanelManager.markerModel = new MeasurablePanelMarkerModel(
+      const overlays = MeasurablePanelManager.terria.overlays;
+      const markerModel = new MeasurablePanelMarkerModel(
         createGuid(),
         MeasurablePanelManager.terria
       );
-      MeasurablePanelManager.terria.overlays.add(
-        MeasurablePanelManager.markerModel
-      );
+      MeasurablePanelManager.markerModel = markerModel;
+      overlays.add(markerModel).then(() => {
+        overlays.moveItemToIndex(markerModel, overlays.items.length - 1);
+      });
     }
   }
 

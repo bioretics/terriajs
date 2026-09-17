@@ -117,12 +117,14 @@ describe("ViewerMode", function () {
     });
 
     it("puts the Cesium scene into SCENE2D for 2dcesium", function () {
-      const scene = { mode: SceneMode.SCENE3D };
+      const zoomIn = jasmine.createSpy("zoomIn");
+      const scene = { mode: SceneMode.SCENE3D, camera: { zoomIn } };
       spyOnProperty(terria, "cesium", "get").and.returnValue({ scene } as any);
 
       setViewerMode("2dcesium", viewer);
 
       expect(scene.mode).toEqual(SceneMode.SCENE2D);
+      expect(zoomIn).toHaveBeenCalledWith(0);
     });
 
     it("puts the Cesium scene back into SCENE3D for 3d", function () {
