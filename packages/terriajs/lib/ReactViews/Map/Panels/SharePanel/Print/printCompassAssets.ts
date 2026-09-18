@@ -1,9 +1,8 @@
 import {
   BASEMAP_CONTRAST_BLACK,
-  BASEMAP_CONTRAST_WHITE,
-  COMPASS_PRIMARY_COLOR,
-  COMPASS_SECONDARY_COLOR
+  BASEMAP_CONTRAST_WHITE
 } from "../../../../../Core/DefaultVisualStyles";
+import Variables from "../../../../../Sass/exports/_variables-export.scss";
 
 function svgToDataUri(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -17,9 +16,9 @@ const NORTH_ARROW_SVG = `<svg width="32" height="44" xmlns="http://www.w3.org/20
     </filter>
   </defs>
   <g filter="url(#s)">
-    <text x="16" y="12" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="13" fill="${COMPASS_PRIMARY_COLOR}" stroke="${BASEMAP_CONTRAST_WHITE}" stroke-width="2.5" paint-order="stroke">N</text>
-    <polygon points="16,16 10,40 16,34 22,40" fill="${COMPASS_PRIMARY_COLOR}" stroke="${BASEMAP_CONTRAST_WHITE}" stroke-width="1.2" stroke-linejoin="round"/>
-    <polygon points="16,16 16,34 22,40" fill="${COMPASS_SECONDARY_COLOR}"/>
+    <text x="16" y="12" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="13" fill="${Variables.compassPrintPrimary}" stroke="${BASEMAP_CONTRAST_WHITE}" stroke-width="2.5" paint-order="stroke">N</text>
+    <polygon points="16,16 10,40 16,34 22,40" fill="${Variables.compassPrintPrimary}" stroke="${BASEMAP_CONTRAST_WHITE}" stroke-width="1.2" stroke-linejoin="round"/>
+    <polygon points="16,16 16,34 22,40" fill="${Variables.compassPrintSecondary}"/>
   </g>
 </svg>`;
 

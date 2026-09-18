@@ -14,10 +14,7 @@ import filterOutUndefined from "../../Core/filterOutUndefined";
 import isDefined from "../../Core/isDefined";
 import {
   BASEMAP_CONTRAST_BLACK,
-  BASEMAP_CONTRAST_WHITE,
-  WORKFLOW_FALLBACK_COLOR,
-  WORKFLOW_PREVIEW_ICON_SIZE,
-  WORKFLOW_PREVIEW_SWATCH_SIZE
+  BASEMAP_CONTRAST_WHITE
 } from "../../Core/DefaultVisualStyles";
 import { isJsonObject, JsonObject } from "../../Core/Json";
 import stripFileExtension from "../../Core/stripFileExtension";
@@ -36,6 +33,7 @@ import {
   QuantitativeColorSchemeOptionRenderer
 } from "../../ReactViews/SelectableDimensions/ColorSchemeOptionRenderer";
 import { MarkerOptionRenderer } from "../../ReactViews/SelectableDimensions/MarkerOptionRenderer";
+import Variables from "../../Sass/exports/_variables-export.scss";
 import Icon from "../../Styled/Icon";
 import {
   DEFAULT_DIVERGING,
@@ -1035,7 +1033,7 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
 
                 name: getColorPreview(
                   this.tableStyle.tableColorMap.binColors[idx] ??
-                    WORKFLOW_FALLBACK_COLOR,
+                    Variables.workflowFallbackColor,
                   i18next.t(
                     ($) =>
                       $.models.tableStyling.bins.selectableDimensions.start
@@ -1147,7 +1145,7 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
             type: "group",
             id: `enum-${idx}-start`,
             name: getColorPreview(
-              enumCol.color ?? WORKFLOW_FALLBACK_COLOR,
+              enumCol.color ?? Variables.workflowFallbackColor,
               enumCol.value
             ),
             isOpen: this.openBinIndex.get("fill") === idx,
@@ -2486,7 +2484,7 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
             : undefined
         ]),
       (point, nullValue, label) =>
-        `<div><img height="${WORKFLOW_PREVIEW_ICON_SIZE}px" style="margin-bottom: -4px; transform: rotate(${
+        `<div><img height="${Variables.workflowPreviewIconSize}px" style="margin-bottom: -4px; transform: rotate(${
           point.rotation ?? 0
         }deg)" src="${
           getMakiIcon(
@@ -2494,8 +2492,8 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
             BASEMAP_CONTRAST_WHITE,
             1,
             BASEMAP_CONTRAST_BLACK,
-            WORKFLOW_PREVIEW_ICON_SIZE,
-            WORKFLOW_PREVIEW_ICON_SIZE
+            Number(Variables.workflowPreviewIconSize),
+            Number(Variables.workflowPreviewIconSize)
           ) ?? point.marker
         }"></img> ${label}</div>`
     );
@@ -2535,7 +2533,7 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
       ],
       (outline, nullValue, label) =>
         getColorPreview(
-          outline.color ?? nullValue.color ?? WORKFLOW_FALLBACK_COLOR,
+          outline.color ?? nullValue.color ?? Variables.workflowFallbackColor,
           label
         )
     );
@@ -3332,5 +3330,5 @@ export default class TableStylingWorkflow implements SelectableDimensionWorkflow
 }
 
 function getColorPreview(col: string, label: string) {
-  return `<div><div style="margin-bottom: -4px; width:${WORKFLOW_PREVIEW_SWATCH_SIZE}; height:${WORKFLOW_PREVIEW_SWATCH_SIZE}; display:inline-block; background-color:${col} ;"></div> ${label}</div>`;
+  return `<div><div style="margin-bottom: -4px; width:${Variables.workflowPreviewSwatchSize}; height:${Variables.workflowPreviewSwatchSize}; display:inline-block; background-color:${col} ;"></div> ${label}</div>`;
 }

@@ -27,6 +27,8 @@
   // bumped up to 56 to hit an even number
   compassWidth: 56;
   ringWidth: 10;
+  compassPrintPrimary: variables.$compass-print-primary;
+  compassPrintSecondary: variables.$compass-print-secondary;
 
   spacing: 5;
 
@@ -162,6 +164,12 @@
 
   // Chart (FeatureInfoPanel / measurable charts)
   chartBaseColor: variables.$chart-base-color;
+  rechartsDefaultFill: variables.$recharts-default-fill;
+
+  // Table styling workflow preview chrome
+  workflowFallbackColor: variables.$workflow-fallback-color;
+  workflowPreviewIconSize: variables.$workflow-preview-icon-size;
+  workflowPreviewSwatchSize: variables.$workflow-preview-swatch-size;
 
   // Warning / accent
   warningAccent: variables.$warning-accent;

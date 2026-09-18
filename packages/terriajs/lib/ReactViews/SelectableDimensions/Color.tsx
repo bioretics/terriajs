@@ -6,10 +6,7 @@ import { ChromePicker } from "react-color";
 import { useTranslation } from "react-i18next";
 import { useTheme } from "styled-components";
 import isDefined from "../../Core/isDefined";
-import {
-  BASEMAP_CONTRAST_BLACK,
-  WORKFLOW_FALLBACK_COLOR
-} from "../../Core/DefaultVisualStyles";
+import { BASEMAP_CONTRAST_BLACK } from "../../Core/DefaultVisualStyles";
 import CommonStrata from "../../Models/Definition/CommonStrata";
 import { SelectableDimensionColor as SelectableDimensionColorModel } from "../../Models/SelectableDimensions/SelectableDimensions";
 import { RawButton } from "../../Styled/Button";
@@ -51,7 +48,7 @@ export const SelectableDimensionColor: FC<{
               width: "36px",
               height: "14px",
               borderRadius: "2px",
-              background: dim.value ?? (theme.grey || WORKFLOW_FALLBACK_COLOR)
+              background: dim.value ?? theme.grey
             }}
           />
         </div>

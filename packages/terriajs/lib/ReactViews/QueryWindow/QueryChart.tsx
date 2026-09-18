@@ -15,9 +15,10 @@ import {
 import { ChartType } from "./QueryTabAggregation";
 import Box from "../../Styled/Box";
 import StandardCssColors from "../../Core/StandardCssColors";
-import { RECHARTS_DEFAULT_FILL } from "../../Core/DefaultVisualStyles";
+import Variables from "../../Sass/exports/_variables-export.scss";
 
 const COLORS = StandardCssColors.queryChartSeries;
+const RECHARTS_DEFAULT_FILL = Variables.rechartsDefaultFill;
 
 export interface DataType {
   name: string;

@@ -75,7 +75,7 @@ const FeatureInfoPanelChart: FC<FeatureInfoPanelChartPropTypes> = observer(
     const theme = useTheme();
     const canShowChart = chartStatus === undefined;
     const margin = { ...defaultMargin, ...props.margin };
-    const baseColor = props.baseColor ?? theme.chartBaseColor ?? "#efefef";
+    const baseColor = props.baseColor ?? theme.chartBaseColor;
 
     useEffect(() => {
       if (MappableMixin.isMixedInto(catalogItem)) {

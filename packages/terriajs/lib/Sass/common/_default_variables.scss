@@ -233,6 +233,9 @@ $radius-small: 2px !default;
 
 $ring-width: 10px !default;
 $compass-width: 55px !default;
+// Print north-arrow SVG fills (SharePanel print assets)
+$compass-print-primary: #222222 !default;
+$compass-print-secondary: #555555 !default;
 
 //screen sizes
 $mobile: 767px !default;
@@ -269,6 +272,13 @@ $chart-panel-header: $dark-with-overlay !default;
 // Opaque light-grey base color for FeatureInfoPanel / measurable charts
 // (distinct from $chart-grid-color which is semi-transparent on the bottom dock).
 $chart-base-color: #efefef !default;
+// Default Recharts series fill (QueryChart Pie/Bar fallback).
+$recharts-default-fill: #8884d8 !default;
+
+// Table styling workflow preview chrome (HTML string builders).
+$workflow-fallback-color: #aaa !default;
+$workflow-preview-icon-size: 24 !default;
+$workflow-preview-swatch-size: 20px !default;
 
 // Warning / accent
 $warning-accent: #f69900 !default;

@@ -6,7 +6,8 @@
  * here as a named constant. Consumers import these constants instead of
  * duplicating magic literals.
  *
- * UI-chrome tokens (spacing, shadows, z-index for overlays) live in the Sass
+ * UI-chrome tokens (chart chrome, workflow preview sizes, compass print
+ * fills, breakpoints, spacing, shadows, overlay z-index) live in the Sass
  * layer — see `_default_variables.scss` → `_variables-export.scss` → theme.
  * This module covers non-chrome visual defaults only.
  */
@@ -63,17 +64,11 @@ export const NULL_TRANSPARENT = "rgba(0, 0, 0, 0)";
 /** Default gradient color for globe elevation color ramp panel. */
 export const ELEVATION_GRADIENT_DEFAULT_COLOR = "#0000FF";
 
-/** Base grid, axis, and label color for charts. */
-export const CHART_BASE_COLOR = "#efefef";
-
 /** Elevation chart ground profile line color. */
 export const ELEVATION_GROUND_COLOR = "#0f0";
 
 /** Elevation chart air profile line color. */
 export const ELEVATION_AIR_COLOR = "#f00";
-
-/** Default fallback fill color for Recharts components (Pie, Bar). */
-export const RECHARTS_DEFAULT_FILL = "#8884d8";
 
 // ---------------------------------------------------------------------------
 // Colors — ESRI / ArcGIS
@@ -153,19 +148,6 @@ export const LOCATION_MARKER_SIZE = "25";
 export const LOCATION_MARKER_STROKE_WIDTH = 3;
 
 // ---------------------------------------------------------------------------
-// Colors — workflow / styling UI
-// ---------------------------------------------------------------------------
-
-/** Fallback preview color in table styling workflows. */
-export const WORKFLOW_FALLBACK_COLOR = "#aaa";
-
-/** Preview icon dimension (px) in table styling workflow. */
-export const WORKFLOW_PREVIEW_ICON_SIZE = 24;
-
-/** Preview swatch dimension in table styling workflow. */
-export const WORKFLOW_PREVIEW_SWATCH_SIZE = "20px";
-
-// ---------------------------------------------------------------------------
 // Colors — BoxDrawing
 // ---------------------------------------------------------------------------
 
@@ -241,20 +223,3 @@ export const SELECTION_INDICATOR_DIMENSION = 50;
 
 /** Selection indicator marker z-index offset. */
 export const SELECTION_INDICATOR_Z_INDEX_OFFSET = 1;
-
-// ---------------------------------------------------------------------------
-// Layout — responsive breakpoints
-// ---------------------------------------------------------------------------
-
-/** Default minimum screen width (in px) for large screen / desktop interface. */
-export const DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH = 1100;
-
-// ---------------------------------------------------------------------------
-// Colors — compass north arrow
-// ---------------------------------------------------------------------------
-
-/** Compass north arrow primary fill color. */
-export const COMPASS_PRIMARY_COLOR = "#222222";
-
-/** Compass north arrow secondary (shadow) fill color. */
-export const COMPASS_SECONDARY_COLOR = "#555555";

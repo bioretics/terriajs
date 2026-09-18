@@ -8,6 +8,8 @@ declare namespace VariablesExportScssNamespace {
     chartBaseColor: string;
     colorPrimary: string;
     colorSecondary: string;
+    compassPrintPrimary: string;
+    compassPrintSecondary: string;
     compassWidth: string;
     dark: string;
     darkAlpha: string;
@@ -73,6 +75,7 @@ declare namespace VariablesExportScssNamespace {
     radiusSmall: string;
     radiusXL: string;
     radiusXl: string;
+    rechartsDefaultFill: string;
     ring: string;
     ringWidth: string;
     scrollbarColor: string;
@@ -106,7 +109,10 @@ declare namespace VariablesExportScssNamespace {
     workbenchMaxWidth: string;
     workbenchMinWidth: string;
     workbenchWidth: string;
+    workflowFallbackColor: string;
     workflowPanelWidth: string;
+    workflowPreviewIconSize: string;
+    workflowPreviewSwatchSize: string;
     zBase: string;
     zChrome: string;
     zDropdown: string;

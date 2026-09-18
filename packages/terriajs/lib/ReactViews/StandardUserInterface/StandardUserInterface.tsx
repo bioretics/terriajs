@@ -6,7 +6,6 @@ import { FC, DragEvent, ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DefaultTheme } from "styled-components";
 import combine from "terriajs-cesium/Source/Core/combine";
-import { DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH } from "../../Core/DefaultVisualStyles";
 import ViewState from "../../ReactViewModels/ViewState";
 import Disclaimer from "../Disclaimer";
 import DragDropFile from "../DragDropFile";
@@ -67,6 +66,13 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
   (props) => {
     const { t } = useTranslation();
 
+    // Merge theme in order of highest priority: themeOverrides props -> theme config parameter -> default terriaTheme
+    const theme = combine(
+      props.themeOverrides,
+      combine(props.terria.configParameters.theme, terriaTheme, true),
+      true
+    );
+
     const acceptDragDropFile = action(() => {
       props.viewState.isDraggingDroppingFile = true;
       // if explorer window is already open, we open my data tab
@@ -90,9 +96,9 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
 
     const shouldUseMobileInterface = () =>
       !props.terria.configParameters.disableMobileInterface &&
-      // Fork (rer3d): wider small-screen breakpoint (1100px).
+      // Fork (rer3d): wider small-screen breakpoint (theme.sm / 1100px).
       document.body.clientWidth <
-        (props.minimumLargeScreenWidth ?? DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH);
+        (props.minimumLargeScreenWidth ?? Number(theme.sm));
 
     const resizeListener = action(() => {
       props.viewState.useSmallScreenInterface = shouldUseMobileInterface();
@@ -138,14 +144,6 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
       /* eslint-disable-next-line react-hooks/exhaustive-deps */
     }, [props.terria.storyPromptShown]);
 
-    // Merge theme in order of highest priority: themeOverrides props -> theme config parameter -> default terriaTheme
-    const mergedTheme = combine(
-      props.themeOverrides,
-      combine(props.terria.configParameters.theme, terriaTheme, true),
-      true
-    );
-    const theme = mergedTheme;
-
     const customElements = processCustomElements(
       props.viewState.useSmallScreenInterface,
       props.children
@@ -169,7 +167,7 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
     const showChrome = !props.viewState.hideMapUi;
 
     return (
-      <ContextProviders viewState={props.viewState} theme={mergedTheme}>
+      <ContextProviders viewState={props.viewState} theme={theme}>
         <GlobalTerriaStyles />
         <TourPortal />
         <CollapsedNavigation />
