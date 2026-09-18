@@ -267,7 +267,7 @@ const Story = (props: Props) => {
         css={`
           cursor: move;
           float: none !important;
-          border: 1px solid #baebf8;
+          border: 1px solid ${theme.storyHighlightColor || "#baebf8"};
         `}
         style={props.style}
         className={classNames(props.className)}
@@ -285,7 +285,8 @@ const Story = (props: Props) => {
           css={`
             padding-left: 15px;
             padding-right: 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            border-bottom: 1px solid
+              ${theme.border || "rgba(255, 255, 255, 0.15)"};
           `}
         >
           <div
@@ -297,7 +298,7 @@ const Story = (props: Props) => {
           >
             <TextSpan
               css={`
-                color: #baebf8;
+                color: ${theme.storyHighlightColor || "#baebf8"};
                 margin-right: 8px;
               `}
               medium

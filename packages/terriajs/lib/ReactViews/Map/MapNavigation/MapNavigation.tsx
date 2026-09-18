@@ -44,7 +44,7 @@ interface StyledMapNavigationProps {
 const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
   position: absolute;
   right: ${(props) => props.theme.workbenchMargin}px;
-  z-index: 1;
+  z-index: ${(props) => props.theme.zBase || 1};
   top: ${(props) => props.theme.mapNavigationTop}px;
   @media (min-width: ${(props) => props.theme.sm}px) {
     top: ${(props) => props.theme.mapNavigationTop}px;

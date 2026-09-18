@@ -26,6 +26,7 @@ import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
 import html2canvas from "terriajs-html2canvas";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import isDefined from "../Core/isDefined";
+import { LEAFLET_BASE_Z_INDEX } from "../Core/DefaultVisualStyles";
 import LatLonHeight from "../Core/LatLonHeight";
 import runLater from "../Core/runLater";
 import ProtomapsImageryProvider from "../Map/ImageryProvider/ProtomapsImageryProvider";
@@ -436,7 +437,7 @@ export default class Leaflet extends GlobeOrMap {
       });
 
       // Add layer and update its zIndex
-      let zIndex = 100; // Start at an arbitrary value
+      let zIndex = LEAFLET_BASE_Z_INDEX;
       allImagery.reverse().forEach(({ parts, layer }) => {
         if (layer && parts.show) {
           layer.setOpacity(parts.alpha);

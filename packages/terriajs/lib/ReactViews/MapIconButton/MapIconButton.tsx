@@ -237,7 +237,7 @@ function MapIconButton(props: IMapIconButtonProps) {
               position:absolute;
               top:0;
               right:0;
-              ${isExpanded && `z-index:10;`}
+              ${isExpanded && `z-index: ${theme.zDropdown || 10};`}
             `
           }
         >

@@ -8,6 +8,7 @@ import i18next from "i18next";
 import ViewState from "../../ReactViewModels/ViewState";
 import classNames from "classnames";
 import { observer } from "mobx-react";
+import { useTheme } from "styled-components";
 
 interface Props {
   terria: Terria;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 const MeasurableDownloadPanel = observer((props: Props) => {
+  const theme = useTheme();
   const { onClose, ...downloadProps } = props;
   const isMobile = downloadProps.viewState.useSmallScreenInterface;
   const downloadGeomState =
@@ -104,7 +106,7 @@ const MeasurableDownloadPanel = observer((props: Props) => {
           transform: "translate(-50%, -50%)",
           width: "90%",
           maxWidth: "400px",
-          boxShadow: "0 2px 10px rgba(0,0,0,0.3)"
+          boxShadow: theme?.shadowLg || "0 2px 10px rgba(0,0,0,0.3)"
         }}
       >
         {panelContent}

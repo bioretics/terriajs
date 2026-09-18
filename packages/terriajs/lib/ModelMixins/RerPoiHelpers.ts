@@ -1,3 +1,4 @@
+import { POI_ICON_COLOR, POI_DOMAIN_STYLES } from "../Core/DefaultVisualStyles";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
@@ -89,7 +90,7 @@ function getPinCanvas(
 
   const svgUrl = getMakiIcon(
     iconId,
-    "#ffffff",
+    POI_ICON_COLOR,
     iconStrokeWidth,
     iconStrokeColor,
     24,
@@ -216,7 +217,11 @@ function buildCompositeMarkerCanvas(
 }
 
 function flattenPoiDomainStyles(
-  groups: Array<{ symbol: string; color?: string; domainIds: number[] }>
+  groups: readonly {
+    readonly symbol: string;
+    readonly color?: string;
+    readonly domainIds: readonly number[];
+  }[]
 ): Record<number, PoiDomainStyle> {
   return groups.reduce<Record<number, PoiDomainStyle>>((acc, group) => {
     for (const domainId of group.domainIds) {
@@ -227,22 +232,7 @@ function flattenPoiDomainStyles(
 }
 
 const DEFAULT_POI_DOMAIN_STYLES: Record<number, PoiDomainStyle> =
-  flattenPoiDomainStyles([
-    { symbol: "village", domainIds: [1, 2] },
-    { symbol: "industrial", domainIds: [3] },
-    { symbol: "village", color: "#ff0", domainIds: [4] },
-    { symbol: "village", color: "#333", domainIds: [5] },
-    { symbol: "village", color: "#fff", domainIds: [6] },
-    { symbol: "square", domainIds: [7] },
-    { symbol: "cross", domainIds: [8] },
-    { symbol: "mountain", color: "#ff00ff", domainIds: [9] },
-    { symbol: "triangle", domainIds: [10] },
-    { symbol: "triangle-stroked", domainIds: [11] },
-    { symbol: "marker", domainIds: [12, 15, 19, 20, 21, 22, 24] },
-    { symbol: "water", domainIds: [13, 14, 16, 17, 18, 23] },
-    { symbol: "town", domainIds: [601] },
-    { symbol: "city", domainIds: [602, 603] }
-  ]);
+  flattenPoiDomainStyles(POI_DOMAIN_STYLES);
 
 function getRerPoiIconId(symbol: unknown): string {
   return typeof symbol === "string" && symbol.trim() ? symbol.trim() : "marker";

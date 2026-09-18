@@ -3,6 +3,7 @@ import { VFC, useCallback, useEffect, useState } from "react";
 import styled, { css, keyframes, useTheme } from "styled-components";
 import EventHelper from "terriajs-cesium/Source/Core/EventHelper";
 import { useViewState } from "../Context";
+import { BASEMAP_CONTRAST_WHITE } from "../../Core/DefaultVisualStyles";
 
 export const ProgressBar: VFC = observer(() => {
   const [loadPercentage, setLoadPercentage] = useState(0);
@@ -35,7 +36,9 @@ export const ProgressBar: VFC = observer(() => {
   }, []);
 
   const backgroundColor =
-    terria.baseMapContrastColor === "#ffffff" ? "#ffffff" : theme.colorPrimary;
+    terria.baseMapContrastColor === BASEMAP_CONTRAST_WHITE
+      ? theme.textLight
+      : theme.colorPrimary;
 
   const allComplete = loadPercentage === 100 && !indeterminateLoading;
 

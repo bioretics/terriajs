@@ -1,3 +1,7 @@
+import {
+  BASEMAP_CONTRAST_BLACK,
+  BASEMAP_CONTRAST_WHITE
+} from "../../Core/DefaultVisualStyles";
 import Terria from "../Terria";
 import { BaseMapJson } from "./BaseMapsModel";
 
@@ -17,7 +21,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-aerial-labels.png",
-      contrastColor: "#ffffff"
+      contrastColor: BASEMAP_CONTRAST_WHITE
     });
 
     baseMaps.push({
@@ -29,7 +33,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-aerial.png",
-      contrastColor: "#ffffff"
+      contrastColor: BASEMAP_CONTRAST_WHITE
     });
     baseMaps.push({
       item: {
@@ -40,7 +44,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-maps-roads.png",
-      contrastColor: "#000000"
+      contrastColor: BASEMAP_CONTRAST_BLACK
     });
   } else if (terria.configParameters.useCesiumIonBingImagery === true) {
     baseMaps.push({
@@ -52,7 +56,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-aerial-labels.png",
-      contrastColor: "#ffffff"
+      contrastColor: BASEMAP_CONTRAST_WHITE
     });
 
     baseMaps.push({
@@ -64,7 +68,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-aerial.png",
-      contrastColor: "#ffffff"
+      contrastColor: BASEMAP_CONTRAST_WHITE
     });
     baseMaps.push({
       item: {
@@ -75,7 +79,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
         opacity: 1.0
       },
       image: "build/TerriaJS/images/bing-maps-roads.png",
-      contrastColor: "#000000"
+      contrastColor: BASEMAP_CONTRAST_BLACK
     });
   }
 
@@ -91,7 +95,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
       opacity: 1.0
     },
     image: "build/TerriaJS/images/natural-earth.png",
-    contrastColor: "#000000"
+    contrastColor: BASEMAP_CONTRAST_BLACK
   });
 
   baseMaps.push({
@@ -105,7 +109,7 @@ export function defaultBaseMaps(terria: Terria): BaseMapJson[] {
       opacity: 1.0
     },
     image: "build/TerriaJS/images/openstreetmap.png",
-    contrastColor: "#000000"
+    contrastColor: BASEMAP_CONTRAST_BLACK
   });
 
   return baseMaps;

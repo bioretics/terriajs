@@ -12,9 +12,15 @@ import CommonStrata from "../../../../Models/Definition/CommonStrata";
 import createStratumInstance from "../../../../Models/Definition/createStratumInstance";
 import Terria from "../../../../Models/Terria";
 import ViewerMode from "../../../../Models/ViewerMode";
-import { GLYPHS } from "../../../../Styled/Icon";
 import StyleTraits from "../../../../Traits/TraitsClasses/StyleTraits";
 import MapNavigationItemController from "../../../../ViewModels/MapNavigation/MapNavigationItemController";
+import {
+  LOCATION_MARKER_COLOR,
+  LOCATION_MARKER_STROKE,
+  LOCATION_MARKER_SIZE,
+  LOCATION_MARKER_STROKE_WIDTH
+} from "../../../../Core/DefaultVisualStyles";
+import { GLYPHS } from "../../../../Styled/Icon";
 
 interface PropTypes {
   terria: Terria;
@@ -143,10 +149,10 @@ export class MyLocation extends MapNavigationItemController {
         CommonStrata.user,
         "style",
         createStratumInstance(StyleTraits, {
-          "marker-size": "25",
-          "marker-color": "#08ABD5",
-          stroke: "#ffffff",
-          "stroke-width": 3
+          "marker-size": LOCATION_MARKER_SIZE,
+          "marker-color": LOCATION_MARKER_COLOR,
+          stroke: LOCATION_MARKER_STROKE,
+          "stroke-width": LOCATION_MARKER_STROKE_WIDTH
         })
       );
       this._marker.setTrait(CommonStrata.user, "disableDepthTest", true);

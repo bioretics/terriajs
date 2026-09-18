@@ -250,7 +250,9 @@ class StepAccordionRaw extends Component<
             // onBlur={() => {
             //   if (!isExpanded) setIsPeeking(false);
             // }}
-            css={"z-index:2;"}
+            css={`
+              z-index: ${theme.zChrome || 2};
+            `}
           >
             <StyledIcon
               styledWidth="26px"

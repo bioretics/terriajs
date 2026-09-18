@@ -66,11 +66,11 @@ const DragDropNotification: FC<DragDropNotificationProps> = observer(
       <RawButton
         css={`
           display: flex;
-          background: #ffffff;
+          background: ${theme.textLight || "#ffffff"};
           position: fixed;
           right: -280px;
           top: 80px;
-          z-index: 9;
+          z-index: ${theme.zDropdown || 9};
           transition: all 0.25s;
           transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
           ${showNotification && fileNames.length > 0 && `right: 100px;`};

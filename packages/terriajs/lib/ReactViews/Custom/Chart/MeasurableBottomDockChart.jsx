@@ -33,10 +33,11 @@ import MeasurablePanelManager from "../MeasurablePanelManager";
 import { terriaTheme } from "../../StandardUserInterface";
 import html2canvas from "html2canvas";
 import downloadChartPoints from "./downloadChartPoints";
+import { CHART_BASE_COLOR } from "../../../Core/DefaultVisualStyles";
 
 const chartMinWidth = 110;
-const defaultGridColor = "#efefef";
-const labelColor = "#efefef";
+const defaultGridColor = CHART_BASE_COLOR;
+const labelColor = CHART_BASE_COLOR;
 
 @observer
 class BottomDockChart extends React.Component {
@@ -792,10 +793,10 @@ class XAxis extends React.PureComponent {
     const { scale, ...restProps } = this.props;
     return (
       <AxisBottom
-        stroke="#efefef"
-        tickStroke="#efefef"
+        stroke={CHART_BASE_COLOR}
+        tickStroke={CHART_BASE_COLOR}
         tickLabelProps={() => ({
-          fill: "#efefef",
+          fill: CHART_BASE_COLOR,
           textAnchor: "middle",
           fontSize: 12,
           fontFamily: "Arial"

@@ -15,6 +15,7 @@ import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/Constan
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
+import { MARKER_SVG_SIZE } from "../Core/DefaultVisualStyles";
 import isDefined from "../Core/isDefined";
 import DragPoints from "../Map/DragPoints/DragPoints";
 import MappableMixin from "../ModelMixins/MappableMixin";
@@ -125,8 +126,7 @@ export default class UserDrawingViewshed extends MappableMixin(
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
      */
     const svgDataDeclare = "data:image/svg+xml,";
-    const svgPrefix =
-      '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
+    const svgPrefix = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="${MARKER_SVG_SIZE}" height="${MARKER_SVG_SIZE}" xml:space="preserve">`;
     const svgCircle =
       '<circle cx="10" cy="10" r="5" stroke="orange" stroke-width="4" fill="white" /> ';
     const svgSuffix = "</svg>";
@@ -142,8 +142,7 @@ export default class UserDrawingViewshed extends MappableMixin(
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
      */
     const svgDataDeclare = "data:image/svg+xml,";
-    const svgPrefix =
-      '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
+    const svgPrefix = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="${MARKER_SVG_SIZE}" height="${MARKER_SVG_SIZE}" xml:space="preserve">`;
     const svgCircle =
       '<circle cx="10" cy="10" r="5" stroke="purple" stroke-width="4" fill="white" /> ';
     const svgSuffix = "</svg>";

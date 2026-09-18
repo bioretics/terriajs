@@ -182,9 +182,9 @@ const PlayPathPanel = observer((props: Props) => {
           right: 0,
           background: theme.colorPrimary,
           padding: "8px 12px",
-          borderRadius: "4px",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-          zIndex: 1000
+          borderRadius: theme.radiusLarge || "4px",
+          boxShadow: theme.shadowMd || "0 2px 4px rgba(0,0,0,0.2)",
+          zIndex: Number(theme.zModal) || 1000
         }}
       >
         <Text small textLight>

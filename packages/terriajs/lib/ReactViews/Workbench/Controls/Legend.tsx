@@ -4,6 +4,7 @@ import defined from "terriajs-cesium/Source/Core/defined";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import URI from "urijs";
 import isDefined from "../../../Core/isDefined";
+import { MAKI_ICON_DEFAULT_COLOR } from "../../../Core/DefaultVisualStyles";
 import { getMakiIcon } from "../../../Map/Icons/Maki/MakiIcons";
 import MinMaxLevelMixin from "../../../ModelMixins/MinMaxLevelMixin";
 import TableMixin from "../../../ModelMixins/TableMixin";
@@ -171,7 +172,7 @@ export default class Legend extends Component<{
       imageUrl =
         getMakiIcon(
           legendItem.marker,
-          legendItem.color ?? "#fff", // We have to have a fallback color here for `getMakiIcon`
+          legendItem.color ?? MAKI_ICON_DEFAULT_COLOR, // We have to have a fallback color here for `getMakiIcon`
           legendItem.outlineWidth,
           legendItem.outlineColor,
           legendItem.imageHeight,

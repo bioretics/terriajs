@@ -267,7 +267,8 @@ class StoryPanel extends Component<Props, State> {
             >
               <Box
                 css={{
-                  backgroundColor: "rgba(255, 255, 255, 0.85)",
+                  backgroundColor:
+                    this.props.theme.storyBodyBg || "rgba(255, 255, 255, 0.85)",
                   backdropFilter: this.props.theme.blur
                 }}
               >

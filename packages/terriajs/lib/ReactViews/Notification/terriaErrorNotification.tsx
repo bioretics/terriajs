@@ -5,6 +5,7 @@ import ViewState from "../../ReactViewModels/ViewState";
 import Box from "../../Styled/Box";
 import Spacing from "../../Styled/Spacing";
 import { Text } from "../../Styled/Text";
+import { useTheme } from "styled-components";
 import Collapsible from "../Custom/Collapsible/Collapsible";
 import FeedbackLinkCustomComponent, {
   FeedbackLink
@@ -15,6 +16,7 @@ const ErrorsBox = (props: {
   errors: (Error | TerriaError)[];
   viewState: ViewState;
 }) => {
+  const theme = useTheme();
   return (
     <>
       {props.errors.map((error, idx) => (
@@ -22,7 +24,7 @@ const ErrorsBox = (props: {
           displayInlineBlock
           css={{
             paddingLeft: "6px",
-            borderLeft: "solid 1px rgba(255,255,255,.1)"
+            borderLeft: `solid 1px ${theme.border || "rgba(255,255,255,.1)"}`
           }}
           key={idx}
         >

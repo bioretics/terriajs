@@ -8,6 +8,7 @@ import { Category, ViewAction } from "../../Core/Analytics/analyticEvents";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import withControlledVisibility from "../HOCs/withControlledVisibility";
 import { withViewState } from "../Context";
+import { withTheme } from "styled-components";
 import Styles from "./full_screen_button.scss";
 import Button from "../../Styled/Button";
 import Branding from "./Branding";
@@ -20,6 +21,7 @@ class FullScreenButton extends Component {
     btnText: PropTypes.string,
     minified: PropTypes.bool,
     animationDuration: PropTypes.number, // Defaults to 1 millisecond.
+    theme: PropTypes.object,
     t: PropTypes.func.isRequired
   };
 
@@ -111,7 +113,7 @@ class FullScreenButton extends Component {
             )
           }
           style={{
-            backgroundColor: "#111827",
+            backgroundColor: this.props.theme?.dark || "#111827",
             opacity: 0.75,
             marginLeft: "5px"
           }}
@@ -124,5 +126,5 @@ class FullScreenButton extends Component {
 }
 
 export default withTranslation()(
-  withViewState(withControlledVisibility(FullScreenButton))
+  withTheme(withViewState(withControlledVisibility(FullScreenButton)))
 );

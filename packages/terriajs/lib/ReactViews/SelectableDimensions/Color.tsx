@@ -4,7 +4,12 @@ import { observer } from "mobx-react";
 import { FC, useState } from "react";
 import { ChromePicker } from "react-color";
 import { useTranslation } from "react-i18next";
+import { useTheme } from "styled-components";
 import isDefined from "../../Core/isDefined";
+import {
+  BASEMAP_CONTRAST_BLACK,
+  WORKFLOW_FALLBACK_COLOR
+} from "../../Core/DefaultVisualStyles";
 import CommonStrata from "../../Models/Definition/CommonStrata";
 import { SelectableDimensionColor as SelectableDimensionColorModel } from "../../Models/SelectableDimensions/SelectableDimensions";
 import { RawButton } from "../../Styled/Button";
@@ -26,15 +31,16 @@ export const SelectableDimensionColor: FC<{
 }> = observer(({ dim }) => {
   const [open, setIsOpen] = useState(false);
   const { t } = useTranslation();
+  const theme = useTheme();
   return (
     <div>
       {dim.value ? (
         <div
           css={{
             padding: "5px",
-            background: "#fff",
+            background: theme.textLight || "#fff",
             borderRadius: "1px",
-            boxShadow: "0 0 0 1px rgba(0,0,0,.1)",
+            boxShadow: theme.shadowSm || "0 0 0 1px rgba(0,0,0,.1)",
             display: "inline-block",
             cursor: "pointer"
           }}
@@ -45,7 +51,7 @@ export const SelectableDimensionColor: FC<{
               width: "36px",
               height: "14px",
               borderRadius: "2px",
-              background: dim.value ?? "#aaa"
+              background: dim.value ?? (theme.grey || WORKFLOW_FALLBACK_COLOR)
             }}
           />
         </div>
@@ -57,7 +63,7 @@ export const SelectableDimensionColor: FC<{
           <RawButton
             onClick={() =>
               runInAction(() =>
-                dim.setDimensionValue(CommonStrata.user, "#000000")
+                dim.setDimensionValue(CommonStrata.user, BASEMAP_CONTRAST_BLACK)
               )
             }
             activeStyles

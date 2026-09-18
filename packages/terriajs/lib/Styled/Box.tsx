@@ -74,14 +74,15 @@ export const Box = styled.div<IBoxProps>`
   display: flex;
   box-sizing: border-box;
   ${(props) => props.position && `position: ${props.position};`}
-  ${(props) => props.position === "absolute" && `z-index:1;`}
+  ${(props) =>
+    props.position === "absolute" && `z-index: ${props.theme.zBase || 1};`}
   ${(props) => !props.position && `position: relative;`}
 
   ${(props) =>
     props.topRight &&
     `
-    right: 0px;
-    top: 0px;
+    right: 0;
+    top: 0;
   `}
 
   ${(props) => props.displayInlineBlock && `display: inline-block;`}
@@ -141,7 +142,9 @@ export const Box = styled.div<IBoxProps>`
   ${(props) => props.flex && `flex: ${props.flex};`}
   ${(props) => props.flexShrinkZero && `flex-shrink: 0;`}
 
-  ${(props) => props.boxShadow && `box-shadow: 0 2px 8px 0 rgba(0,0,0,0.16);`}
+  ${(props) =>
+    props.boxShadow &&
+    `box-shadow: ${props.theme.shadowMd || "0 2px 8px 0 rgba(0,0,0,0.16)"};`}
 
   /* Background colours? unsure how to handle this on theme level yet */
   ${(props) =>
@@ -154,29 +157,42 @@ export const Box = styled.div<IBoxProps>`
 
   /* Unsure of padding API as yet */
 
-  ${(props) => props.padded && `padding: 5px;`}
+  ${(props) => props.padded && `padding: ${props.theme.spacing}px;`}
 
-  ${(props) => props.paddedRatio && `padding: ${5 * props.paddedRatio}px;`}
-  ${(props) =>
-    props.paddedHorizontally &&
-    `
+  ${(props) => {
+    const spacing = Number(props.theme.spacing) || 5;
+    return props.paddedRatio && `padding: ${spacing * props.paddedRatio}px;`;
+  }}
+  ${(props) => {
+    const spacing = Number(props.theme.spacing) || 5;
+    return (
+      props.paddedHorizontally &&
+      `
       padding-left:${
-        5 * (props.paddedHorizontally === true ? 1 : props.paddedHorizontally)
+        spacing *
+        (props.paddedHorizontally === true ? 1 : props.paddedHorizontally)
       }px;
       padding-right:${
-        5 * (props.paddedHorizontally === true ? 1 : props.paddedHorizontally)
+        spacing *
+        (props.paddedHorizontally === true ? 1 : props.paddedHorizontally)
       }px;
-    `}
-  ${(props) =>
-    props.paddedVertically &&
     `
+    );
+  }}
+  ${(props) => {
+    const spacing = Number(props.theme.spacing) || 5;
+    return (
+      props.paddedVertically &&
+      `
       padding-top: ${
-        5 * (props.paddedVertically === true ? 1 : props.paddedVertically)
+        spacing * (props.paddedVertically === true ? 1 : props.paddedVertically)
       }px;
       padding-bottom: ${
-        5 * (props.paddedVertically === true ? 1 : props.paddedVertically)
+        spacing * (props.paddedVertically === true ? 1 : props.paddedVertically)
       }px;
-    `}
+    `
+    );
+  }}
   ${(props) => props.styledPadding && `padding: ${props.styledPadding};`}
 
   ${(props) => props.styledMargin && `margin: ${props.styledMargin};`}
@@ -216,11 +232,15 @@ export const Box = styled.div<IBoxProps>`
     `
         overflow-x: ${props.overflowX};
       `}
-  ${(props) =>
-    props.gap &&
-    `
-    gap: ${5 * (props.gap === true ? 1 : props.gap)}px;;
-  `}
+  ${(props) => {
+    const spacing = Number(props.theme.spacing) || 5;
+    return (
+      props.gap &&
+      `
+     gap: ${spacing * (props.gap === true ? 1 : props.gap)}px;
+   `
+    );
+  }}
 
   ${(props) =>
     props.scroll &&

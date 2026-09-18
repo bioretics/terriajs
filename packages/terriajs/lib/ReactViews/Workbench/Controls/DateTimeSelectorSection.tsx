@@ -175,8 +175,10 @@ class DateTimeSelectorSection extends Component<IProps, IState> {
               onClick={this.onPreviousButtonClicked}
               title={t(($) => $.dateTime.previous)}
               css={`
-                border-right: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 2px 0 0 2px;
+                border-right: 1px solid
+                  ${this.props.theme.border || "rgba(255, 255, 255, 0.15)"};
+                border-radius: ${this.props.theme.radiusSmall || "2px"} 0 0
+                  ${this.props.theme.radiusSmall || "2px"};
               `}
             >
               <StyledIcon
@@ -205,8 +207,10 @@ class DateTimeSelectorSection extends Component<IProps, IState> {
               onClick={this.onNextButtonClicked}
               title={t(($) => $.dateTime.next)}
               css={`
-                border-left: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 0 2px 2px 0;
+                border-left: 1px solid
+                  ${this.props.theme.border || "rgba(255, 255, 255, 0.15)"};
+                border-radius: 0 ${this.props.theme.radiusSmall || "2px"}
+                  ${this.props.theme.radiusSmall || "2px"} 0;
               `}
             >
               <StyledIcon glyph={GLYPHS.next} styledWidth={"8px"} />
@@ -265,15 +269,16 @@ const StyledButton = styled(RawButton)`
       opacity: 0.4;
       cursor: default;
       outline: 0;
-      background: rgba(250, 250, 250, 0.2);
+      background: ${props.theme.greyLighter2 || "rgba(250, 250, 250, 0.2)"};
     }
   `}
 `;
 
 const TimelineButton = styled(RawButton)<{ active: boolean }>`
   padding: 0 5px;
-  border-radius: 2px;
-  background-color: rgba(250, 250, 250, 0.2);
+  border-radius: ${(props) => props.theme.radiusSmall || "2px"};
+  background-color: ${(props) =>
+    props.theme.greyLighter2 || "rgba(250, 250, 250, 0.2)"};
   ${(props) =>
     props.active &&
     `

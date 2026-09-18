@@ -40,7 +40,7 @@ const DataAttributionBox = styled(Box).attrs({
   scroll: true,
   column: true
 })`
-  z-index: 99989;
+  z-index: ${(props) => props.theme.zToast || 99989};
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
@@ -69,7 +69,7 @@ export const DataAttributionModal: FC<IDataAttributionModalProps> = observer(
           role="presentation"
           aria-hidden="true"
           pseudoBg
-          css={{ top: 0, left: 0, zIndex: 99989 }}
+          css={{ top: 0, left: 0, zIndex: Number(theme.zToast) || 99989 }}
         />
         <DataAttributionBox>
           <CloseButton

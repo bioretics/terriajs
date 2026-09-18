@@ -194,11 +194,12 @@ const CursorPrompt = styled.div.attrs<CursorPromptProps>(({ x, y }) => ({
   overflow: visible;
   white-space: nowrap;
   max-width: 500px;
-  background-color: #2563eb;
-  color: white;
+  background-color: ${(props) => props.theme.colorPrimary};
+  color: ${(props) => props.theme.textLight};
   padding: 12px;
-  border-radius: 6px;
-  box-shadow: 0px 10px 15px -3px #0000001a;
+  border-radius: ${(props) => props.theme.radiusMedium || "6px"};
+  box-shadow: ${(props) =>
+    props.theme.shadowLg || "0px 10px 15px -3px #0000001a"};
 `;
 
 function setCursor(el: HTMLElement, cursorName: string) {

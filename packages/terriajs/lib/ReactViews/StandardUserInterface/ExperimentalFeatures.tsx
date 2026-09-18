@@ -12,7 +12,7 @@ const ControlsWrapper = styled.div`
   position: absolute;
   left: 25px;
   bottom: 25px;
-  z-index: 1;
+  z-index: ${(props) => props.theme.zBase || 1};
   @media (min-width: ${(props) => props.theme.sm}px) {
     top: auto;
     bottom: 100px;

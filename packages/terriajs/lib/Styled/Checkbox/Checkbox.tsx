@@ -85,11 +85,12 @@ const Checkbox = forwardRef(function Checkbox(
       css={`
         display: flex;
         flex-shrink: 0;
-        ${isSwitch && `gap: 5px;`}
+        ${isSwitch && `gap: ${(props: any) => props.theme.spacing || 5}px;`}
         align-items: center;
         &:focus-within {
           //copy the global focus
-          outline: 3px solid #c390f9;
+          outline: 3px solid
+            ${(props: any) => props.theme.focusRing || "#c390f9"};
         }
         ${!isDisabled &&
         `

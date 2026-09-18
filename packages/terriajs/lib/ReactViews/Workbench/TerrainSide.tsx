@@ -115,7 +115,7 @@ const TerrainSide: FC<ITerrainSideProps> = observer(
                 width: 100%;
                 border: 1px solid
                   ${side === currentSide
-                    ? `rgba(255, 255, 255, 0.5)`
+                    ? theme.border || `rgba(255, 255, 255, 0.5)`
                     : `transparent`};
                 ${props.buttonProps && props.buttonProps.css}
                 ${props.activeColor &&

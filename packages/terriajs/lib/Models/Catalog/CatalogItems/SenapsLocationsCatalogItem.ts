@@ -1,6 +1,7 @@
 import i18next from "i18next";
 import { computed, runInAction, makeObservable } from "mobx";
 import URI from "urijs";
+import { TEMPLATE_ELEMENT_SPACING } from "../../../Core/DefaultVisualStyles";
 import isDefined from "../../../Core/isDefined";
 import { JsonObject } from "../../../Core/Json";
 import loadJson from "../../../Core/loadJson";
@@ -179,7 +180,7 @@ export class SenapsLocationsStratum extends LoadableStratum(
         template: `<h4>${i18next.t(
           ($) => $.models.senaps.locationHeadingFeatureInfo
         )}: {{id}}</h4>
-  <h5 style="margin-bottom:5px;">${i18next.t(
+  <h5 style="margin-bottom:${TEMPLATE_ELEMENT_SPACING};">${i18next.t(
     ($) => $.models.senaps.availableStreamsHeadingFeatureInfo
   )}</h5>
   {{#hasStreams}}

@@ -34,7 +34,7 @@ const ResizeHandle = styled.div<{ isResizing: boolean }>`
   width: 8px;
   height: 100%;
   cursor: col-resize;
-  z-index: 3;
+  z-index: ${(p) => p.theme.zChrome || 3};
   touch-action: none;
   user-select: none;
 

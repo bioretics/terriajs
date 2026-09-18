@@ -10,6 +10,7 @@ import { FC, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import filterOutUndefined from "../../Core/filterOutUndefined";
+import { LOCATION_MARKER_COLOR } from "../../Core/DefaultVisualStyles";
 import CatalogMemberMixin from "../../ModelMixins/CatalogMemberMixin";
 import MappableMixin, { ImageryParts } from "../../ModelMixins/MappableMixin";
 import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
@@ -71,7 +72,7 @@ const createBoundingRectangleCatalogItem = (
       {
         type: "Feature",
         properties: {
-          stroke: "#08ABD5",
+          stroke: LOCATION_MARKER_COLOR,
           "stroke-width": 2,
           "stroke-opacity": 1
         },

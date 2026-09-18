@@ -24,9 +24,10 @@ interface IChartItemSelector {
 export const ChartItem: FC<IChartItem> = observer(
   ({ chartItem }: IChartItem) => {
     const { t } = useTranslation();
+    const theme = useTheme();
     const lineColor = chartItem.isSelectedInWorkbench
       ? chartItem.getColor()
-      : "#fff";
+      : theme.textLight || "#fff";
 
     const toggleActive = () => {
       const catalogItem = chartItem.item;

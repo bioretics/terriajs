@@ -32,6 +32,7 @@ import { Analytics } from "../Core/Analytics/types";
 import AsyncLoader from "../Core/AsyncLoader";
 import Class from "../Core/Class";
 import CorsProxy from "../Core/CorsProxy";
+import { BASEMAP_CONTRAST_WHITE } from "../Core/DefaultVisualStyles";
 import {
   JsonArray,
   JsonObject,
@@ -954,7 +955,7 @@ export default class Terria {
   get baseMapContrastColor() {
     return (
       this.baseMapsModel.findBaseMapById(this.mainViewer.baseMap?.uniqueId)
-        ?.contrastColor ?? "#ffffff"
+        ?.contrastColor ?? BASEMAP_CONTRAST_WHITE
     );
   }
 

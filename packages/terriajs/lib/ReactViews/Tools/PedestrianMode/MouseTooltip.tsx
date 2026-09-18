@@ -55,8 +55,8 @@ const TooltipText = styled(Text).attrs({
   width: 200px;
   padding: 0.7em;
   border-radius: ${(p) => p.theme.radiusSmall};
-  border: 1px solid grey;
-  background-color: #ffffff;
+  border: 1px solid ${(p) => p.theme.grey};
+  background-color: ${(p) => p.theme.textLight};
 `;
 
 export default MouseTooltip;

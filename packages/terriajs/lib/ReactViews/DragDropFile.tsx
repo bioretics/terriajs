@@ -33,7 +33,7 @@ const DropZone = styled.div<{ isActive: boolean }>`
 
     width: 100vw;
     height: 100vh;
-    z-index: 99999;
+    z-index: ${theme.zOverlayTop || 99999};
 
     transition: opacity, 0.2s;
 

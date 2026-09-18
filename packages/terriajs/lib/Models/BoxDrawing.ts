@@ -38,6 +38,7 @@ import PositionProperty from "terriajs-cesium/Source/DataSources/PositionPropert
 import Axis from "terriajs-cesium/Source/Scene/Axis";
 import Scene from "terriajs-cesium/Source/Scene/Scene";
 import isDefined from "../Core/isDefined";
+import { BOX_HIGHLIGHT_CYAN_ALPHA } from "../Core/DefaultVisualStyles";
 import { CustomCursorType, getCustomCssCursor } from "./BoxDrawing/cursors";
 import Cesium from "./Cesium";
 
@@ -1200,7 +1201,7 @@ export default class BoxDrawing {
     const scene = this.scene;
     const style = {
       color: Color.WHITE.withAlpha(0.1),
-      highlightColor: Color.CYAN.withAlpha(0.7)
+      highlightColor: Color.CYAN.withAlpha(BOX_HIGHLIGHT_CYAN_ALPHA)
     };
     const position1 = new Cartesian3();
     const position2 = new Cartesian3();

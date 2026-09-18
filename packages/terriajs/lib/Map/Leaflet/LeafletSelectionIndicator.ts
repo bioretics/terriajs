@@ -5,6 +5,10 @@ import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import TweenCollection from "terriajs-cesium/Source/Scene/TweenCollection";
 import selectionIndicatorUrl from "../../../wwwroot/images/NM-LocationTarget.svg";
+import {
+  SELECTION_INDICATOR_DIMENSION,
+  SELECTION_INDICATOR_Z_INDEX_OFFSET
+} from "../../Core/DefaultVisualStyles";
 import isDefined from "../../Core/isDefined";
 import Leaflet from "../../Models/Leaflet";
 
@@ -31,10 +35,13 @@ export default class LeafletSelectionIndicator {
         html:
           '<img src="' +
           selectionIndicatorUrl +
-          '" width="50" height="50" alt="" />',
-        iconSize: L.point(50, 50)
+          `" width="${SELECTION_INDICATOR_DIMENSION}" height="${SELECTION_INDICATOR_DIMENSION}" alt="" />`,
+        iconSize: L.point(
+          SELECTION_INDICATOR_DIMENSION,
+          SELECTION_INDICATOR_DIMENSION
+        )
       }),
-      zIndexOffset: 1, // We increment the z index so that the selection marker appears above the item.
+      zIndexOffset: SELECTION_INDICATOR_Z_INDEX_OFFSET, // We increment the z index so that the selection marker appears above the item.
       interactive: false,
       keyboard: false
     });

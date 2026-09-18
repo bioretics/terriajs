@@ -12,9 +12,6 @@ import FeedbackLinkCustomComponent, {
 } from "../Custom/FeedbackLinkCustomComponent";
 import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
 
-// Hard code colour for now
-const warningColor = "#f69900";
-
 const showErrorNotification = (viewState: ViewState, error: TerriaError) => {
   runInAction(() => {
     error.showDetails = true;
@@ -35,7 +32,7 @@ const WarningBox: FC<{
     );
 
   return (
-    <Box backgroundColor={warningColor} rounded padded>
+    <Box backgroundColor={theme.warningAccent || "#f69900"} rounded padded>
       <Spacing right={1} />
       <WarningIcon />
       <Spacing right={2} />

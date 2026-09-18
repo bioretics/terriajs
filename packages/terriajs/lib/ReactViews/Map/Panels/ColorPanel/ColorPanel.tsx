@@ -7,6 +7,7 @@ import React, { ChangeEventHandler } from "react";
 import { WithTranslation, withTranslation } from "react-i18next";
 import createElevationBandMaterial from "terriajs-cesium/Source/Scene/createElevationBandMaterial";
 import Color from "terriajs-cesium/Source/Core/Color";
+import { ELEVATION_GRADIENT_DEFAULT_COLOR } from "../../../../Core/DefaultVisualStyles";
 import Styles from "./color-panel.scss";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
@@ -97,9 +98,9 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
   addLayer() {
     this.layers.push({
       fromHeight: 0,
-      fromColor: "#0000FF",
+      fromColor: ELEVATION_GRADIENT_DEFAULT_COLOR,
       toHeight: 0,
-      toColor: "#0000FF"
+      toColor: ELEVATION_GRADIENT_DEFAULT_COLOR
     });
   }
 

@@ -60,6 +60,21 @@ export const TABLE_DEFAULT_COLOR = "yellow";
 /** Transparent null: used when a legend/style has no assigned color. */
 export const NULL_TRANSPARENT = "rgba(0, 0, 0, 0)";
 
+/** Default gradient color for globe elevation color ramp panel. */
+export const ELEVATION_GRADIENT_DEFAULT_COLOR = "#0000FF";
+
+/** Base grid, axis, and label color for charts. */
+export const CHART_BASE_COLOR = "#efefef";
+
+/** Elevation chart ground profile line color. */
+export const ELEVATION_GROUND_COLOR = "#0f0";
+
+/** Elevation chart air profile line color. */
+export const ELEVATION_AIR_COLOR = "#f00";
+
+/** Default fallback fill color for Recharts components (Pie, Bar). */
+export const RECHARTS_DEFAULT_FILL = "#8884d8";
+
 // ---------------------------------------------------------------------------
 // Colors — ESRI / ArcGIS
 // ---------------------------------------------------------------------------
@@ -73,6 +88,9 @@ export const ESRI_NULL_COLOR = "#FFFFFF";
 
 /** Default POI icon (maki) color rendered inside the pin. */
 export const POI_ICON_COLOR = "#ffffff";
+
+/** Default fallback icon color for Maki icons (e.g. in Legend). */
+export const MAKI_ICON_DEFAULT_COLOR = "#ffffff";
 
 /** Default POI label text color. */
 export const POI_LABEL_TEXT_COLOR = "#ffffff";
@@ -128,6 +146,12 @@ export const LOCATION_MARKER_COLOR = "#08ABD5";
 /** Marker stroke for MyLocation and DataPreviewMap. */
 export const LOCATION_MARKER_STROKE = "#ffffff";
 
+/** Default location marker size for MyLocation. */
+export const LOCATION_MARKER_SIZE = "25";
+
+/** Default location marker stroke width for MyLocation. */
+export const LOCATION_MARKER_STROKE_WIDTH = 3;
+
 // ---------------------------------------------------------------------------
 // Colors — workflow / styling UI
 // ---------------------------------------------------------------------------
@@ -135,12 +159,24 @@ export const LOCATION_MARKER_STROKE = "#ffffff";
 /** Fallback preview color in table styling workflows. */
 export const WORKFLOW_FALLBACK_COLOR = "#aaa";
 
+/** Preview icon dimension (px) in table styling workflow. */
+export const WORKFLOW_PREVIEW_ICON_SIZE = 24;
+
+/** Preview swatch dimension in table styling workflow. */
+export const WORKFLOW_PREVIEW_SWATCH_SIZE = "20px";
+
 // ---------------------------------------------------------------------------
 // Colors — BoxDrawing
 // ---------------------------------------------------------------------------
 
 /** Highlight color for 3D box drawing handles (Cesium Color.CYAN equivalent). */
 export const BOX_HIGHLIGHT_CYAN_ALPHA = 0.7;
+
+/** Custom cursor SVG width/height dimension. */
+export const BOX_CURSOR_SIZE = 64;
+
+/** Custom cursor filter dimensions. */
+export const BOX_CURSOR_FILTER_SIZE = "180%";
 
 // ---------------------------------------------------------------------------
 // Fonts — data-visual defaults
@@ -173,6 +209,16 @@ export const LEAFLET_BASE_Z_INDEX = 100;
 export const MARKER_SVG_SIZE = "20px";
 
 // ---------------------------------------------------------------------------
+// Spacing — template & feature info defaults
+// ---------------------------------------------------------------------------
+
+/** Default element margin/padding in catalog item featureInfo templates. */
+export const TEMPLATE_ELEMENT_SPACING = "5px";
+
+/** Default inline template indicator icon width. */
+export const TEMPLATE_ICON_WIDTH = "10px";
+
+// ---------------------------------------------------------------------------
 // Colors — search providers
 // ---------------------------------------------------------------------------
 
@@ -189,3 +235,26 @@ export const SELECTION_OFFSCREEN = "-1000px";
 
 /** Selection indicator image dimension. */
 export const SELECTION_INDICATOR_SIZE = "50px";
+
+/** Selection indicator numeric pixel dimension. */
+export const SELECTION_INDICATOR_DIMENSION = 50;
+
+/** Selection indicator marker z-index offset. */
+export const SELECTION_INDICATOR_Z_INDEX_OFFSET = 1;
+
+// ---------------------------------------------------------------------------
+// Layout — responsive breakpoints
+// ---------------------------------------------------------------------------
+
+/** Default minimum screen width (in px) for large screen / desktop interface. */
+export const DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH = 1100;
+
+// ---------------------------------------------------------------------------
+// Colors — compass north arrow
+// ---------------------------------------------------------------------------
+
+/** Compass north arrow primary fill color. */
+export const COMPASS_PRIMARY_COLOR = "#222222";
+
+/** Compass north arrow secondary (shadow) fill color. */
+export const COMPASS_SECONDARY_COLOR = "#555555";

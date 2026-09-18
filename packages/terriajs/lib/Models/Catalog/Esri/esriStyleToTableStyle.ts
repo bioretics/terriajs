@@ -1,4 +1,5 @@
 import Color from "terriajs-cesium/Source/Core/Color";
+import { ESRI_NULL_COLOR } from "../../../Core/DefaultVisualStyles";
 import isDefined from "../../../Core/isDefined";
 import { OutlineSymbolTraits } from "../../../Traits/TraitsClasses/Table/OutlineStyleTraits";
 import TablePointSizeStyleTraits from "../../../Traits/TraitsClasses/Table/PointSizeStyleTraits";
@@ -21,7 +22,7 @@ export function esriStyleToTableStyle(
     // This is so marker icons aren't colored by default
     color:
       esriStyle.type === "esriPMS"
-        ? "#FFFFFF"
+        ? ESRI_NULL_COLOR
         : convertEsriColorToCesiumColor(esriStyle.color)?.toCssColorString(),
     pointSize: createStratumInstance(TablePointSizeStyleTraits, {}),
     point: createStratumInstance(PointSymbolTraits, {
