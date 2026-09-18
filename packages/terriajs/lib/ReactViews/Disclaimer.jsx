@@ -16,7 +16,7 @@ import { withViewState } from "./Context";
 import FadeIn from "./Transitions/FadeIn/FadeIn";
 
 const TopElementBox = styled(Box)`
-  z-index: 99999;
+  z-index: ${(props) => props.theme.zOverlayTop || props.theme.zToast || 99999};
   top: 0;
   right: 0;
 `;
@@ -24,7 +24,7 @@ const TopElementBox = styled(Box)`
 // background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
 //   url(${bingAerialBackground});
 const BackgroundImage = styled(Box)`
-  background: rgba(0, 0, 0, 0.75);
+  background: ${(props) => props.theme.modalOverlay || "rgba(0, 0, 0, 0.75)"};
   // background-size: cover;
   // background-repeat: no-repeat;
   // background-position: center;

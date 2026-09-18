@@ -188,7 +188,7 @@ const NextButton = styled(PagerButton).attrs({
 const DateButton = styled(Button)<{ isOpen: boolean }>`
   // z-index: 1000; // (Nanda): So that we don't loose the button clicks to the date picker popup
   z-index: 0;
-  ${(props) => props.isOpen && `z-index: 1000;`};
+  ${(props) => props.isOpen && `z-index: ${props.theme.zModal || 1000};`};
 
   border-radius: 0px;
   border: 1px solid ${(props) => props.theme.colorPrimary};

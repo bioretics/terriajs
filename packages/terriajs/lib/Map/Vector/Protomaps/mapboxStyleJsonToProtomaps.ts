@@ -8,6 +8,7 @@ import {
   PolygonSymbolizer,
   exp
 } from "protomaps-leaflet";
+import { PROTOMAPS_FALLBACK_FONT } from "../../../Core/DefaultVisualStyles";
 import JsonValue from "../../../Core/Json";
 import TerriaError from "../../../Core/TerriaError";
 
@@ -190,7 +191,7 @@ export function getFont(obj: any, fontSubMap: Record<string, FontSub>) {
     };
   }
   console.log("Can't parse font: ", obj);
-  return (_: number) => "12px sans-serif";
+  return (_: number) => PROTOMAPS_FALLBACK_FONT;
 }
 
 /** Convert mapbox style json to Protomaps paint and label rules.

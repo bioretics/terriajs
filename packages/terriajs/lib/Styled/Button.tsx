@@ -49,8 +49,8 @@ export const StyledButton = styled.button<IStyledButtonProps>`
   /* min-width: 75px; */
 padding: 0 16px;
 
-  border: 1px solid #e4e5e7;
-  border-radius: 4px;
+  border: 1px solid ${(props) => props.theme.greyLighter};
+  border-radius: ${(props) => props.theme.radiusSmall};
 
   ${(props) => props.fullWidth && `width: 100%;`}
   ${(props) => props.fullHeight && `height: 100%;`}
@@ -76,10 +76,10 @@ ${(props) => props.marginRight && `margin-right: ${4 * props.marginRight}px;`}
 
   ${(props) =>
     props.primary &&
-    `     color: #fff;
+    `     color: ${props.theme.textLight};
     background-color: ${props.theme.colorPrimary};
     border: none;
-    border-radius: 4px;
+    border-radius: ${props.theme.radiusSmall};
   `}
 
 ${(props) => props.rounded && `border-radius: 32px;`}
@@ -91,7 +91,7 @@ ${(props) =>
     `     /* background-color: #4d5766; */
     background-color: ${props.theme.textLight};
     color: ${props.theme.darkWithOverlay};
-    border-radius: 4px;
+    border-radius: ${props.theme.radiusSmall};
     border: 2px solid ${props.theme.darkWithOverlay};
   `}
 

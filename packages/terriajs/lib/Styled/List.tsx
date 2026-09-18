@@ -25,17 +25,17 @@ export const Ul = styled(Box).attrs({
     props.spaced &&
     css`
       ${Li}:not(:first-child) {
-        padding-top: 5px;
+        padding-top: ${(props) => props.theme.spacing}px;
       }
     `}
   ${(props) =>
     props.lined &&
     css`
       ${Li}:first-child {
-        padding-bottom: 5px;
+        padding-bottom: ${(props) => props.theme.spacing}px;
       }
       ${Li}:not(:first-child) {
-        border-top: 1px solid grey;
+        border-top: 1px solid ${(props) => props.theme.grey};
       }
     `}
 `;

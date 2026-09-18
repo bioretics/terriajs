@@ -15,6 +15,10 @@ import Scene from "terriajs-cesium/Source/Scene/Scene";
 import SceneTransforms from "terriajs-cesium/Source/Scene/SceneTransforms";
 import TweenCollection from "terriajs-cesium/Source/Scene/TweenCollection";
 import locationTargetIcon from "../../../wwwroot/images/NM-LocationTarget.svg";
+import {
+  SELECTION_INDICATOR_SIZE,
+  SELECTION_OFFSCREEN
+} from "../../Core/DefaultVisualStyles";
 import isDefined from "../../Core/isDefined";
 
 declare module "terriajs-cesium/Source/Scene/Scene" {
@@ -27,7 +31,7 @@ declare module "terriajs-cesium/Source/Scene/Scene" {
 }
 
 const screenSpacePos = new Cartesian2();
-const offScreen = "-1000px";
+const offScreen = SELECTION_OFFSCREEN;
 
 export default class CesiumSelectionIndicator {
   /**
@@ -81,8 +85,8 @@ export default class CesiumSelectionIndicator {
     const img = document.createElement("img");
     img.setAttribute("src", locationTargetIcon);
     img.setAttribute("alt", "");
-    img.setAttribute("width", "50px");
-    img.setAttribute("height", "50px");
+    img.setAttribute("width", SELECTION_INDICATOR_SIZE);
+    img.setAttribute("height", SELECTION_INDICATOR_SIZE);
     el.appendChild(img);
 
     this._disposeAutorun = autorun(() => {

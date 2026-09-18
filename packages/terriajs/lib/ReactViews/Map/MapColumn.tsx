@@ -53,7 +53,7 @@ export const MapColumn: FC<IMapColumnProps> = observer(({ customElements }) => {
             position: "absolute",
             top: "0",
             left: "0",
-            zIndex: 1,
+            zIndex: Number(theme.zBase) || 1,
             width: "100%"
           }}
         >

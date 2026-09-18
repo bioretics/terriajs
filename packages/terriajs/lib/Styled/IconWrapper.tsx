@@ -13,10 +13,11 @@ export const IconWrapper = styled.span<IconWrapperProps>`
   & > * {
     margin: auto;
   }
-  ${(props) => props.marginRight && `margin-right: 8px;`}
+  ${(props) =>
+    props.marginRight && `margin-right: ${props.theme.paddingSmall || "8px"};`}
 
   flex-shrink: 0;
-  ${(props) => props.wide && `margin: auto 16px;`}
+  ${(props) => props.wide && `margin: auto ${props.theme.padding || "16px"};`}
 `;
 
 export default IconWrapper;

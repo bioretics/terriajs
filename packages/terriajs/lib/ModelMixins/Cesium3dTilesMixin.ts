@@ -1,3 +1,4 @@
+import { TILES_FALLBACK_COLOR } from "../Core/DefaultVisualStyles";
 import i18next from "i18next";
 import {
   action,
@@ -533,7 +534,10 @@ function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       const color = normalizeColorExpression(style?.color);
       color.conditions.unshift([newColorExpr.condition, newColorExpr.value]);
       if (!color.conditions.find((c) => c[0] === "true")) {
-        color.conditions.push(["true", "color('#ffffff')"]); // ensure there is a default color
+        color.conditions.push([
+          "true",
+          "color('" + TILES_FALLBACK_COLOR + "')"
+        ]); // ensure there is a default color
       }
       this.setTrait(CommonStrata.user, "style", {
         ...style,

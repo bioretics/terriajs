@@ -28,13 +28,11 @@ const CollapsedNavigationBox = styled(Box).attrs({
   overflowY: "auto",
   scroll: true
 })`
-  z-index: 1000;
+  z-index: ${(props) => props.theme.zModal || 1000};
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  box-shadow:
-    0 6px 6px 0 rgba(0, 0, 0, 0.12),
-    0 10px 20px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: ${(props) => props.theme.shadowLg};
   @media (max-width: ${(props) => props.theme.mobile}px) {
     width: 100%;
   }

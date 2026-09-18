@@ -28,6 +28,7 @@ import {
 } from "mobx";
 import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
+import { useTheme } from "styled-components";
 import MenuPanel from "../../../StandardUserInterface/customizable/MenuPanel";
 
 interface ICoordsTextProps {
@@ -44,6 +45,7 @@ interface ICoordsTextProps {
 
 const CoordsText = (props: ICoordsTextProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const handleCopy = async () => {
     if (!props.value || !navigator.clipboard) {
@@ -98,7 +100,7 @@ const CoordsText = (props: ICoordsTextProps) => {
             width: 35px;
             border-radius: 2px;
             margin: 2px;
-            background: #519ac2;
+            background: ${theme.colorPrimary || "#519ac2"};
           `}
           disabled={!props.isCartographic}
           onClick={props.moveTo}

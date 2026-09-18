@@ -2,6 +2,7 @@ import i18next from "i18next";
 import { computed, makeObservable } from "mobx";
 import proj4 from "proj4";
 import URI from "urijs";
+import { ESRI_NULL_COLOR } from "../../../Core/DefaultVisualStyles";
 import isDefined from "../../../Core/isDefined";
 import loadJson from "../../../Core/loadJson";
 import replaceUnderscores from "../../../Core/replaceUnderscores";
@@ -413,7 +414,7 @@ export class ArcGisFeatureServerStratum extends LoadableStratum(
           id: "ESRI",
           hidden: false,
           color: createStratumInstance(TableColorStyleTraits, {
-            nullColor: symbolStyle.color ?? "#ffffff"
+            nullColor: symbolStyle.color ?? ESRI_NULL_COLOR
           }),
           pointSize: symbolStyle.pointSize,
           point: createStratumInstance(TablePointStyleTraits, {
@@ -477,13 +478,13 @@ export class ArcGisFeatureServerStratum extends LoadableStratum(
                 enumColors: uniqueValueRenderer.uniqueValueInfos.map((v, i) =>
                   createStratumInstance(EnumColorTraits, {
                     value: v.value,
-                    color: symbolStyles[i].color ?? "#ffffff"
+                    color: symbolStyles[i].color ?? ESRI_NULL_COLOR
                   })
                 ),
                 nullColor: defaultSymbolStyle.color
               })
             : createStratumInstance(TableColorStyleTraits, {
-                nullColor: "#FFFFFF"
+                nullColor: ESRI_NULL_COLOR
               }),
           pointSize: createStratumInstance(TablePointSizeStyleTraits, {}),
           point: createStratumInstance(TablePointStyleTraits, {
@@ -555,7 +556,7 @@ export class ArcGisFeatureServerStratum extends LoadableStratum(
                 nullColor: defaultSymbolStyle.color
               })
             : createStratumInstance(TableColorStyleTraits, {
-                nullColor: "#FFFFFF"
+                nullColor: ESRI_NULL_COLOR
               }),
           pointSize: createStratumInstance(TablePointSizeStyleTraits, {}),
           point: createStratumInstance(TablePointStyleTraits, {

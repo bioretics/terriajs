@@ -2,6 +2,7 @@ import { runInAction } from "mobx";
 import { observer } from "mobx-react";
 import { useEffect } from "react";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
+import { LOCATION_MARKER_STROKE } from "../../../Core/DefaultVisualStyles";
 import LatLonHeight from "../../../Core/LatLonHeight";
 import GeoJsonCatalogItem from "../../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import CommonStrata from "../../../Models/Definition/CommonStrata";
@@ -28,7 +29,7 @@ export const PointOnMap: React.FC<PropsType> = observer((props: PropsType) => {
         createStratumInstance(StyleTraits, {
           "stroke-width": 3,
           "marker-size": "30",
-          stroke: "#ffffff",
+          stroke: LOCATION_MARKER_STROKE,
           "marker-color": props.color,
           "marker-opacity": 1
         })

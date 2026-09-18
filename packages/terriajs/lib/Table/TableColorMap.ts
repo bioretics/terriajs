@@ -1,3 +1,4 @@
+import { TABLE_DEFAULT_COLOR } from "../Core/DefaultVisualStyles";
 import * as d3Scale from "d3-scale-chromatic";
 import { computed, makeObservable } from "mobx";
 import Color from "terriajs-cesium/Source/Core/Color";
@@ -22,7 +23,7 @@ import TableColumnType from "./TableColumnType";
 import { StyleMapType } from "./TableStyleMap";
 
 const getColorForId = createColorForIdTransformer();
-const DEFAULT_COLOR = "yellow";
+const DEFAULT_COLOR = TABLE_DEFAULT_COLOR;
 
 /** Diverging scales (can be used for continuous and discrete).
  * Discrete scales support a size n ranging from 3 to 11

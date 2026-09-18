@@ -5,7 +5,7 @@ import { scaleLinear, scaleTime } from "@visx/scale";
 import { observer } from "mobx-react";
 import { FC, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import ChartableMixin, { ChartItem } from "../../../ModelMixins/ChartableMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
 import LineChart from "./LineChart";
@@ -72,9 +72,10 @@ const FeatureInfoPanelChart: FC<FeatureInfoPanelChartPropTypes> = observer(
             ? keyFromSelector(($) => $.chart.noData)
             : undefined;
 
+    const theme = useTheme();
     const canShowChart = chartStatus === undefined;
     const margin = { ...defaultMargin, ...props.margin };
-    const baseColor = props.baseColor ?? "#efefef";
+    const baseColor = props.baseColor ?? theme.chartBaseColor ?? "#efefef";
 
     useEffect(() => {
       if (MappableMixin.isMixedInto(catalogItem)) {
@@ -126,6 +127,7 @@ interface ChartPropsType {
  */
 const Chart: FC<ChartPropsType> = observer(
   ({ width, height, margin, chartItem, baseColor, xAxisLabel }) => {
+    const theme: any = useTheme();
     const xAxisHeight = 30;
     const yAxisWidth = 10;
 
@@ -193,8 +195,8 @@ const Chart: FC<ChartPropsType> = observer(
             // See: https://stackoverflow.com/questions/21753126/d3-js-starting-and-ending-tick
             scale={scales.x.nice()}
             numTicks={4}
-            stroke="#a0a0a0"
-            tickStroke="#a0a0a0"
+            stroke={theme.chartLineColor || "#a0a0a0"}
+            tickStroke={theme.chartLineColor || "#a0a0a0"}
             tickLabelProps={(_value, i, ticks) => {
               // To prevent the first and last values from getting clipped,
               // we position the first label text to start at the tick position

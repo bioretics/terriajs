@@ -78,7 +78,7 @@ ${(props) =>
     props.white &&
     `
   color: ${props.theme.textDark};
-  background: #FFFFFF;
+  background: ${props.theme.textLight};
 `}
 ${(props) => props.fullHeight && `height: 100%;`}
 ${(props) => props.styledWidth && `width: ${props.styledWidth};`}
@@ -91,8 +91,8 @@ ${(props) => props.disabled && `opacity: 0.3;`}
 ${(props) =>
     props.invalidValue &&
     `
-  border-color: #d60000;
-  background-color: #fdf2f2;
+  border-color: ${props.theme.inputErrorBorder || props.theme.textWarning};
+  background-color: ${props.theme.inputErrorBg};
 `}
 `;
 

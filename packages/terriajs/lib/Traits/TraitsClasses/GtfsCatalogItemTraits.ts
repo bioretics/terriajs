@@ -1,3 +1,7 @@
+import {
+  TEMPLATE_ELEMENT_SPACING,
+  TEMPLATE_ICON_WIDTH
+} from "../../Core/DefaultVisualStyles";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
 import objectTrait from "../Decorators/objectTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
@@ -50,8 +54,7 @@ export class HeadersTraits extends ModelTraits {
     refreshInterval: 60,
     featureInfoTemplate: {
       name: "{{vehicle_trip_bus_number}}",
-      template:
-        "<b>Bus:</b> {{route_short_name}}<br><b>Occupancy:</b> {{occupancy_status_str}}<br><b>Speed:</b> {{speed_km}} km/h<br><b style='padding-right: 5px'>Direction:</b> <span style='transform: rotate({{bearing}}deg); width: 10px; display: inline-block' aria-label='{{bearing}} degrees' role='img' title='{{bearing}} degrees'>&#x2B06;</div>"
+      template: `<b>Bus:</b> {{route_short_name}}<br><b>Occupancy:</b> {{occupancy_status_str}}<br><b>Speed:</b> {{speed_km}} km/h<br><b style='padding-right: ${TEMPLATE_ELEMENT_SPACING}'>Direction:</b> <span style='transform: rotate({{bearing}}deg); width: ${TEMPLATE_ICON_WIDTH}; display: inline-block' aria-label='{{bearing}} degrees' role='img' title='{{bearing}} degrees'>&#x2B06;</div>`
     },
     model: {
       url: "https://tiles.terria.io/terriajs-examples/gtfs/lowpoly_bus/scene.gltf",

@@ -59,11 +59,11 @@ const PanelMenuContainer = styled.div`
   ul {
     position: absolute;
     right: 2px;
-    z-index: 1;
+    z-index: ${(p) => p.theme.zBase || 1};
     margin: 2px 1px 0 0;
     padding: 0;
     list-style: none;
-    border-radius: 3px;
+    border-radius: ${(p) => p.theme.radiusMedium || "3px"};
     border: 1px solid ${(p) => p.theme.grey};
     background-color: ${(p) => p.theme.dark};
   }

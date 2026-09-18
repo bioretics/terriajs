@@ -4,6 +4,7 @@ import groupBy from "lodash-es/groupBy";
 import { observer } from "mobx-react";
 import { memo, useMemo, useRef, type CSSProperties } from "react";
 import { CSSTransition } from "react-transition-group";
+import { useTheme } from "styled-components";
 import type { ChartPoint } from "../../../Charts/ChartData";
 import type { ChartItem } from "../../../ModelMixins/ChartableMixin";
 import Styles from "./tooltip.scss";
@@ -22,6 +23,7 @@ interface TooltipProps {
 }
 
 const Tooltip: React.FC<TooltipProps> = observer((props) => {
+  const theme = useTheme();
   const prevItems = useRef<Item[]>([]);
 
   const items = useMemo(() => {
@@ -64,9 +66,9 @@ const Tooltip: React.FC<TooltipProps> = observer((props) => {
       top: top === undefined ? "" : `${top}px`,
       bottom: bottom === undefined ? "" : `${bottom}px`,
       position: "absolute",
-      boxShadow: "0 1px 2px rgba(33,33,33,0.2)"
+      boxShadow: theme?.shadowSm || "0 1px 2px rgba(33,33,33,0.2)"
     };
-  }, [props]);
+  }, [props, theme]);
 
   const show = props.items.length > 0;
 

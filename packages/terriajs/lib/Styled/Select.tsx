@@ -34,13 +34,17 @@ const StyledSelect = styled.select<SelectProps>`
   -moz-appearance: none;
   -webkit-appearance: none;
 
-  min-height: 34px; // use a bool prop when we figure out the smaller size
+  min-height: ${(p) =>
+    p.theme.inputHeight ||
+    "34px"}; // use a bool prop when we figure out the smaller size
   width: 100%;
 
   border: none;
   border-radius: ${(p) => p.theme.radiusSmall};
-  padding-left: ${(p) => p.paddingForLeftIcon || "10px"};
-  padding-right: 30px; // For icon
+  padding-left: ${(p) =>
+    p.paddingForLeftIcon || `${2 * (Number(p.theme.spacing) || 5)}px`};
+  padding-right: ${(p) =>
+    `${6 * (Number(p.theme.spacing) || 5)}px`}; // For icon
 
   color: ${(p) => p.theme.textLight};
   background: ${(p) => p.theme.overlay};
@@ -61,7 +65,7 @@ const StyledSelect = styled.select<SelectProps>`
 
 const ArrowPositioning = styled.div`
   ${(props) => props.theme.verticalAlign("absolute")}
-  right: 10px;
+  right: ${(props) => `${2 * (Number(props.theme.spacing) || 5)}px`};
 
   // Stops presentational icon preventing select activation via mouse
   pointer-events: none;

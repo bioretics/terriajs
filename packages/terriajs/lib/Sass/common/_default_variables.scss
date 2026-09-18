@@ -188,6 +188,8 @@ $panel-radius: 8px !default;
 
 $badge-height: $input-height !default;
 $story-title-height: $input-height !default;
+$story-highlight-color: #baebf8 !default;
+$story-body-bg: rgba(#fff, 0.85) !default;
 $workbench-header: $input-height * 2 + $padding-small * 2 + $badge-height + 1px !default;
 $chart-height: 250px !default;
 
@@ -222,6 +224,7 @@ $map-control-color: #333 !default;
 $map-control-hover-bg: rgba(0, 0, 0, 0.05) !default;
 $map-control-separator: #ddd !default;
 $map-control-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1) !default;
+$map-scale-bg: rgba(255, 255, 255, 0.75) !default;
 
 $radius-xlarge: 8px !default;
 $radius-large: 4px !default;
@@ -276,6 +279,7 @@ $focus-ring: #c390f9 !default;
 // Input error state
 $input-error-border: #d60000 !default;
 $input-error-bg: #fdf2f2 !default;
+$disclaimer-bg: #9a4b4b !default;
 
 $charcoal-grey: #3f4854 !default;
 $turquoise-blue: #08abd5 !default;

@@ -200,14 +200,18 @@ const FilterFeaturesSection: React.FC<PropsType> = observer(
                                 left: 0;
                                 min-width: 100%;
                                 width: max-content;
-                                z-index: 99;
+                                z-index: ${(p: any) =>
+                                  p.theme.zPanelFloat || 99};
                                 background: ${(p: any) => p.theme.darkLighter};
                                 border: 1px solid ${(p: any) => p.theme.dark};
                                 max-height: 250px;
                                 overflow-y: auto;
                                 margin-top: 2px;
-                                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-                                border-radius: 2px;
+                                box-shadow: ${(p: any) =>
+                                  p.theme.shadowMd ||
+                                  "0 4px 8px rgba(0, 0, 0, 0.3)"};
+                                border-radius: ${(p: any) =>
+                                  p.theme.radiusSmall || "2px"};
                               `}
                             >
                               {enumValues.map((value) => {

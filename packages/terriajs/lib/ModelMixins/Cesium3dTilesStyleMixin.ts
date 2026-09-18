@@ -1,3 +1,4 @@
+import { HIGHLIGHT_COLOR } from "../Core/DefaultVisualStyles";
 import Cesium3DTileStyle from "terriajs-cesium/Source/Scene/Cesium3DTileStyle";
 import AbstractConstructor from "../Core/AbstractConstructor";
 import isDefined from "../Core/isDefined";
@@ -30,7 +31,7 @@ StratumOrder.instance.addLoadStratum(Cesium3dTilesStyleStratum.name);
 
 type BaseType = Model<Cesium3dTilesTraits>;
 
-const DEFAULT_HIGHLIGHT_COLOR = "#ff3f00";
+const DEFAULT_HIGHLIGHT_COLOR = HIGHLIGHT_COLOR;
 
 function Cesium3dTilesStyleMixin<T extends AbstractConstructor<BaseType>>(
   Base: T

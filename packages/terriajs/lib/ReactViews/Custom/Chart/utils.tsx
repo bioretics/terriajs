@@ -9,8 +9,9 @@ import MomentLinesChart from "./MomentLinesChart";
 import MomentPointsChart from "./MomentPointsChart";
 import PointOnMap from "./PointOnMap";
 import type { ChartZoomHandle, XScale, YScale } from "./types";
+import { CHART_BASE_COLOR } from "../../../Core/DefaultVisualStyles";
 
-const LABEL_COLOR = "#efefef";
+const LABEL_COLOR = CHART_BASE_COLOR;
 const Y_AXIS_NUM_TICKS = 4;
 const Y_AXIS_TICK_LABEL_FONT_SIZE = 10;
 
@@ -118,10 +119,10 @@ interface XAxisProps {
 export const XAxis = memo(({ scale, ...restProps }: XAxisProps) => {
   return (
     <AxisBottom
-      stroke="#efefef"
-      tickStroke="#efefef"
+      stroke={CHART_BASE_COLOR}
+      tickStroke={CHART_BASE_COLOR}
       tickLabelProps={() => ({
-        fill: "#efefef",
+        fill: CHART_BASE_COLOR,
         textAnchor: "middle",
         fontSize: 12,
         fontFamily: "Arial"

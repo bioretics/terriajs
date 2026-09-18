@@ -15,11 +15,11 @@ import MapIconButton from "../../MapIconButton/MapIconButton";
 
 // Use padding to avoid other UI elements
 const AttributionsContainer = styled(Text)`
-  text-shadow: 0 0 2px #000000;
-  padding-left: 8px;
+  text-shadow: 0 0 2px ${(props) => props.theme.textBlack || "#000000"};
+  padding-left: ${(props) => props.theme.spacing || "8px"};
   padding-right: 56px;
   @media (max-width: ${(props) => props.theme.mobile}px) {
-    padding-right: 8px;
+    padding-right: ${(props) => props.theme.spacing || "8px"};
     padding-bottom: 32px;
   }
 `;

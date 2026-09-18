@@ -78,7 +78,11 @@ class HelpVideoPanel extends Component {
                     <div
                       className={Styles.videoLink}
                       style={{
-                        backgroundImage: `linear-gradient(rgba(0,0,0,0.35),rgba(0,0,0,0.35)), url(${this.props.placeholderImage})`
+                        backgroundImage: `linear-gradient(${
+                          this.props.theme?.overlay || "rgba(0,0,0,0.35)"
+                        }, ${
+                          this.props.theme?.overlay || "rgba(0,0,0,0.35)"
+                        }), url(${this.props.placeholderImage})`
                       }}
                     >
                       <button

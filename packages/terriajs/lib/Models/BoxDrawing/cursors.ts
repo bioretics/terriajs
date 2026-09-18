@@ -1,3 +1,8 @@
+import {
+  BOX_CURSOR_FILTER_SIZE,
+  BOX_CURSOR_SIZE
+} from "../../Core/DefaultVisualStyles";
+
 /**
  * Define only the SVG geometry for individual custom cursors
  */
@@ -31,7 +36,7 @@ export function getCustomCssCursor(opts: {
   const geometry = CUSTOM_CURSOR_GEOMETRIES[type];
 
   // Build a complete SVG element with rotation applied
-  const svg = `<svg height='64' width='64' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='180px' height='180%' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(${rotation} 16 16)' filter='url(%23shadow)'>${geometry}</g></svg>`;
+  const svg = `<svg height='${BOX_CURSOR_SIZE}' width='${BOX_CURSOR_SIZE}' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg' style='color: black;'><defs><filter id='shadow' y='-40%' x='-40%' width='${BOX_CURSOR_FILTER_SIZE}' height='${BOX_CURSOR_FILTER_SIZE}' color-interpolation-filters='sRGB'><feDropShadow dx='1' dy='1' stdDeviation='1.2' flood-opacity='.5'/></filter></defs><g fill='none' transform='rotate(${rotation} 16 16)' filter='url(%23shadow)'>${geometry}</g></svg>`;
   const dataUrl = `data:image/svg+xml,${svg}`;
   const cursor = `url("${dataUrl}") 32 32, ${fallback}`;
   return cursor;

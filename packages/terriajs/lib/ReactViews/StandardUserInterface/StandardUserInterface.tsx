@@ -6,6 +6,7 @@ import { FC, DragEvent, ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DefaultTheme } from "styled-components";
 import combine from "terriajs-cesium/Source/Core/combine";
+import { DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH } from "../../Core/DefaultVisualStyles";
 import ViewState from "../../ReactViewModels/ViewState";
 import Disclaimer from "../Disclaimer";
 import DragDropFile from "../DragDropFile";
@@ -90,7 +91,8 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
     const shouldUseMobileInterface = () =>
       !props.terria.configParameters.disableMobileInterface &&
       // Fork (rer3d): wider small-screen breakpoint (1100px).
-      document.body.clientWidth < (props.minimumLargeScreenWidth ?? 1100);
+      document.body.clientWidth <
+        (props.minimumLargeScreenWidth ?? DEFAULT_MINIMUM_LARGE_SCREEN_WIDTH);
 
     const resizeListener = action(() => {
       props.viewState.useSmallScreenInterface = shouldUseMobileInterface();

@@ -1,5 +1,6 @@
 import { observer } from "mobx-react";
 import { FC, Fragment } from "react";
+import { useTheme } from "styled-components";
 import ChartView from "../../Charts/ChartView";
 import filterOutUndefined from "../../Core/filterOutUndefined";
 import hasTraits from "../../Models/Definition/hasTraits";
@@ -17,6 +18,7 @@ interface ChartDisclaimerProps {
 }
 
 const ChartDisclaimer: FC<ChartDisclaimerProps> = ({ terria }) => {
+  const theme = useTheme();
   const chartView = new ChartView(terria);
 
   const uniqueChartDisclaimers: string[] = [
@@ -40,7 +42,7 @@ const ChartDisclaimer: FC<ChartDisclaimerProps> = ({ terria }) => {
 
   return (
     <Box
-      backgroundColor="#9a4b4b"
+      backgroundColor={theme.disclaimerBg || "#9a4b4b"}
       column
       paddedHorizontally={2}
       css={`

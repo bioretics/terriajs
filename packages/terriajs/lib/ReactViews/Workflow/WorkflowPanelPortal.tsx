@@ -33,7 +33,7 @@ const Container = styled.div<{ show: boolean }>`
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  z-index: 100;
+  z-index: ${(p) => p.theme.zPanelFloat || 100};
   background: ${(p) => p.theme.card};
   border-right: 1px solid ${(p) => p.theme.border};
   overflow: hidden;

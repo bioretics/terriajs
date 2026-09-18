@@ -604,7 +604,7 @@ const Main: React.FC<MainPropsType> = observer((props) => {
                   `}
                 >
                   <StyledIcon
-                    fillColor="#ccc"
+                    fillColor={theme.greyLighter || "#ccc"}
                     styledWidth="16px"
                     styledHeight="16px"
                     glyph={GLYPHS.info}

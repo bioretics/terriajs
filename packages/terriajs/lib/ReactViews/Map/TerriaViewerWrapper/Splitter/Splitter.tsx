@@ -62,7 +62,7 @@ export const Splitter: FC<ISplitterProps> = observer(
               bottom: "0",
               backgroundColor: viewState.terria.baseMapContrastColor,
               width: "1px",
-              zIndex: 999
+              zIndex: Number(theme.zSplitter) || 999
             }}
           />
         </div>
@@ -75,8 +75,8 @@ export const Splitter: FC<ISplitterProps> = observer(
             height: `${thumbSize}px`,
             borderRadius: `${thumbSize * 0.5}px`,
             border: `1px solid ${theme.greyLighter}`,
-            padding: "8px",
-            zIndex: 999,
+            padding: theme.spacing || "8px",
+            zIndex: Number(theme.zSplitter) || 999,
             cursor: "ew-resize",
             backgroundColor: theme.colorSecondary,
             display: "flex",

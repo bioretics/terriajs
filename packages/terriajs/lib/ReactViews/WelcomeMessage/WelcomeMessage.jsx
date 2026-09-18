@@ -22,8 +22,8 @@ export const LOCAL_PROPERTY_KEY = `${WELCOME_MESSAGE_NAME}Prompted`;
 const WELCOME_MESSAGE_VIDEO = "welcomeMessageVideo";
 
 const WelcomeModalWrapper = styled(Box)`
-  z-index: 99999;
-  background-color: rgba(0, 0, 0, 0.75);
+  z-index: ${(p) => p.theme.zOverlayTop || p.theme.zToast || 99999};
+  background-color: ${(p) => p.theme.modalOverlay || "rgba(0, 0, 0, 0.75)"};
 `;
 
 function WelcomeMessageButton(props) {

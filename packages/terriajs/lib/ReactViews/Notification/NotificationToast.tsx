@@ -1,5 +1,5 @@
 import { FC, useEffect, useRef } from "react";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { Notification } from "../../ReactViewModels/NotificationState";
 import { Button } from "../../Styled/Button";
 import Icon, { StyledIcon } from "../../Styled/Icon";
@@ -9,6 +9,7 @@ const NotificationToast: FC<{
   notification: Notification;
 }> = ({ notification }) => {
   const viewState = useViewState();
+  const theme = useTheme();
   const nodeRef = useRef(null);
 
   const notificationState = viewState.terria.notificationState;
@@ -36,7 +37,7 @@ const NotificationToast: FC<{
         styledWidth="24px"
         styledHeight="24px"
         glyph={Icon.GLYPHS.warning}
-        fillColor="#EA580C"
+        fillColor={theme.warningAccent || "#EA580C"}
       />
       <div>{message}</div>
       <CloseButton
@@ -58,14 +59,14 @@ const Wrapper = styled.div`
   bottom: 70px;
   left: 50%;
   transform: translate(-35%);
-  border: 1px solid #ea580c;
-  border-radius: 6px;
+  border: 1px solid ${(p) => p.theme.warningAccent || "#ea580c"};
+  border-radius: ${(p) => p.theme.radiusLarge || "6px"};
   z-index: ${(p) => p.theme.notificationWindowZIndex};
 
   max-width: 50%;
   padding: 16px;
   gap: 16px;
-  background-color: #f2f2f2;
+  background-color: ${(p) => p.theme.greyLightest || "#f2f2f2"};
 `;
 
 const CloseButton = styled(Button).attrs({

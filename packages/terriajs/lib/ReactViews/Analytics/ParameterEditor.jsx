@@ -18,6 +18,7 @@ import defined from "terriajs-cesium/Source/Core/defined";
 import Styles from "./parameter-editors.scss";
 import InfoParameterEditor from "./InfoParameterEditor";
 import parseCustomMarkdownToReact from "../Custom/parseCustomMarkdownToReact";
+import { terriaTheme } from "../StandardUserInterface";
 
 const ParameterEditor = createReactClass({
   displayName: "ParameterEditor",
@@ -70,7 +71,9 @@ const ParameterEditor = createReactClass({
         return (
           <div
             style={{
-              color: this.props.parameter.isValid ? "inherit" : "#ff0000"
+              color: this.props.parameter.isValid
+                ? "inherit"
+                : terriaTheme?.inputErrorBorder || "#ff0000"
             }}
           >
             {editor}

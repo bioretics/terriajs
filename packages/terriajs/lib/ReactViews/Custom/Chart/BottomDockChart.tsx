@@ -16,9 +16,10 @@ import Tooltip from "./Tooltip";
 import type { XScale, YScale } from "./types";
 import { Cursor, Plot, PointsOnMap, XAxis, YAxis } from "./utils";
 import ZoomX from "./ZoomX";
+import { CHART_BASE_COLOR } from "../../../Core/DefaultVisualStyles";
 
 const CHART_MIN_WIDTH = 110;
-const DEFAULT_GRID_COLOR = "#efefef";
+const DEFAULT_GRID_COLOR = CHART_BASE_COLOR;
 const Y_AXIS_NUM_TICKS = 4;
 const Y_AXIS_TICK_LABEL_FONT_SIZE = 10;
 

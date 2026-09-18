@@ -58,6 +58,7 @@
 
   overlay: variables.$overlay;
   overlayInvert: variables.$overlay-invert;
+  modalOverlay: variables.$modal-overlay;
 
   // Colours
   colorPrimary: variables.$color-primary;
@@ -72,6 +73,8 @@
   textSuccess: variables.$text-success;
   infoColor: variables.$info-color;
   turquoiseBlue: variables.$turquoise-blue;
+  storyHighlightColor: variables.$story-highlight-color;
+  storyBodyBg: variables.$story-body-bg;
   darkAlpha: variables.$dark-alpha;
   transparentDark: variables.$transparent-dark;
   // Fork (rer3d): translucent dark used by floating panels over the map.
@@ -127,6 +130,7 @@
   mapControlHoverBg: variables.$map-control-hover-bg;
   mapControlSeparator: variables.$map-control-separator;
   mapControlShadow: variables.$map-control-shadow;
+  mapScaleBg: variables.$map-scale-bg;
 
   trainerHeight: 64;
   workbenchMargin: 10;
@@ -168,4 +172,5 @@
   // Input error state
   inputErrorBorder: variables.$input-error-border;
   inputErrorBg: variables.$input-error-bg;
+  disclaimerBg: variables.$disclaimer-bg;
 }

@@ -634,7 +634,10 @@ type IButtonProps = {
 const SettingsButton = styled(Button)<IButtonProps>`
   background-color: ${(props) => props.theme.overlay};
   border: 1px solid
-    ${(props) => (props.isActive ? "rgba(255, 255, 255, 0.5)" : "transparent")};
+    ${(props) =>
+      props.isActive
+        ? props.theme.border || "rgba(255, 255, 255, 0.5)"
+        : "transparent"};
 `;
 
 const StyledBasemapButton = styled(RawButton)<IButtonProps>`
@@ -642,7 +645,9 @@ const StyledBasemapButton = styled(RawButton)<IButtonProps>`
   position: relative;
   border: 2px solid
     ${(props) =>
-      props.isActive ? props.theme.turquoiseBlue : "rgba(255, 255, 255, 0.5)"};
+      props.isActive
+        ? props.theme.turquoiseBlue
+        : props.theme.border || "rgba(255, 255, 255, 0.5)"};
 `;
 
 const StyledImage = styled(Box).attrs({

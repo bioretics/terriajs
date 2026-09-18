@@ -2,7 +2,7 @@ import { observer } from "mobx-react";
 import PropTypes from "prop-types";
 import { Component } from "react";
 import { withTranslation } from "react-i18next";
-import { withTheme } from "styled-components";
+import { withTheme, useTheme } from "styled-components";
 import Box from "../../../../Styled/Box";
 import FadeIn from "../../../Transitions/FadeIn/FadeIn";
 import Loader from "../../../Loader";
@@ -12,6 +12,7 @@ import Icon, { StyledIcon } from "../../../../Styled/Icon";
 
 const VideoWrapperBox = (props) => {
   const { viewState } = props;
+  const theme = useTheme();
   const handleClose = () => viewState.setVideoGuideVisible("");
 
   useKeyPress("Escape", () => {
@@ -27,12 +28,12 @@ const VideoWrapperBox = (props) => {
       }}
       css={`
         position: fixed;
-        z-index: 99999;
+        z-index: ${theme.zOverlayTop || 99999};
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.75);
+        background: ${theme.modalOverlay || "rgba(0, 0, 0, 0.75)"};
       `}
     >
       <Box paddedRatio={4} position="absolute" topRight>
@@ -88,7 +89,7 @@ class VideoGuide extends Component {
             backgroundBlackOverlay={backgroundBlackOverlay}
             css={`
               svg {
-                fill: #fff;
+                fill: ${(props) => props.theme.textLight || "#fff"};
                 width: 60px;
                 height: 60px;
                 top: -30px;

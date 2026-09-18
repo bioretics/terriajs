@@ -24,6 +24,13 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import PolylineGlowMaterialProperty from "terriajs-cesium/Source/DataSources/PolylineGlowMaterialProperty";
 import filterOutUndefined from "../Core/filterOutUndefined";
 import isDefined from "../Core/isDefined";
+import {
+  DRAWING_FILL_COLOR,
+  DRAWING_FONT,
+  DRAWING_FONT_BOLD,
+  DRAWING_MARKER_STROKE,
+  MARKER_SVG_SIZE
+} from "../Core/DefaultVisualStyles";
 import DragPoints from "../Map/DragPoints/DragPoints";
 import MappableMixin from "../ModelMixins/MappableMixin";
 import ViewState from "../ReactViewModels/ViewState";
@@ -227,10 +234,8 @@ export default class UserDrawing extends MappableMixin(
      * http://stackoverflow.com/questions/24869733/how-to-draw-custom-dynamic-billboards-in-cesium-js
      */
     const svgDataDeclare = "data:image/svg+xml,";
-    const svgPrefix =
-      '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="20px" height="20px" xml:space="preserve">';
-    const svgCircle =
-      '<circle cx="10" cy="10" r="5" stroke="rgb(0,170,215)" stroke-width="4" fill="white" /> ';
+    const svgPrefix = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="${MARKER_SVG_SIZE}" height="${MARKER_SVG_SIZE}" xml:space="preserve">`;
+    const svgCircle = `<circle cx="10" cy="10" r="5" stroke="${DRAWING_MARKER_STROKE}" stroke-width="4" fill="white" /> `;
     const svgSuffix = "</svg>";
     const svgString = svgPrefix + svgCircle + svgSuffix;
 
@@ -295,7 +300,7 @@ export default class UserDrawing extends MappableMixin(
 
           return `${distanceMetres.toFixed(2)} m`;
         }, false),
-        font: "18px sans-serif",
+        font: DRAWING_FONT,
         style: LabelStyle.FILL_AND_OUTLINE,
         fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
@@ -404,9 +409,9 @@ export default class UserDrawing extends MappableMixin(
           if (radius < 50) return `${area.toFixed(1)} m²`;
           return `${(area / 1_000_000).toFixed(2)} km²`;
         }, false),
-        font: "bold 17px sans-serif",
+        font: DRAWING_FONT_BOLD,
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.fromCssColorString("#E8A200"),
+        fillColor: Color.fromCssColorString(DRAWING_FILL_COLOR),
         outlineColor: Color.BLACK,
         outlineWidth: 3,
         heightReference: this.labelHeightReference,
@@ -457,7 +462,7 @@ export default class UserDrawing extends MappableMixin(
           if (radius >= 1000) return `${(radius / 1000).toFixed(2)} km`;
           return `${radius.toFixed(2)} m`;
         }, false),
-        font: "18px sans-serif",
+        font: DRAWING_FONT,
         style: LabelStyle.FILL_AND_OUTLINE,
         fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,
@@ -623,9 +628,9 @@ export default class UserDrawing extends MappableMixin(
       position: labelPosition,
       label: {
         text: labelText,
-        font: "bold 17px sans-serif",
+        font: DRAWING_FONT_BOLD,
         style: LabelStyle.FILL_AND_OUTLINE,
-        fillColor: Color.fromCssColorString("#E8A200"),
+        fillColor: Color.fromCssColorString(DRAWING_FILL_COLOR),
         outlineColor: Color.BLACK,
         outlineWidth: 3,
         heightReference: this.labelHeightReference,
@@ -685,7 +690,7 @@ export default class UserDrawing extends MappableMixin(
       position: labelPosition,
       label: {
         text: labelText,
-        font: "18px sans-serif",
+        font: DRAWING_FONT,
         style: LabelStyle.FILL_AND_OUTLINE,
         fillColor: Color.DARKBLUE,
         outlineColor: Color.WHITE,

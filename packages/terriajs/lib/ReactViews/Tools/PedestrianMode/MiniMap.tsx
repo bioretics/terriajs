@@ -75,9 +75,10 @@ const MiniMap: FC<MiniMapProps> = observer((props) => {
 const MapContainer = styled.div`
   height: 180px;
   box-sizing: border;
-  border: 2px solid white;
-  border-radius: 4px;
-  box-shadow: 0 4px 8px 4px rgb(0 0 0 / 5%);
+  border: 2px solid ${(props) => props.theme.textLight || "white"};
+  border-radius: ${(props) => props.theme.radiusSmall || "4px"};
+  box-shadow: ${(props) =>
+    props.theme.shadowSm || "0 4px 8px 4px rgb(0 0 0 / 5%)"};
 
   & .leaflet-control-attribution {
     display: none;

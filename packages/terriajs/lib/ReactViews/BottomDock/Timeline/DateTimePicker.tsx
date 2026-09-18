@@ -314,7 +314,7 @@ const DateTimePicker: React.FC<PropsType> = ({
             position: relative;
             top: -170px;
             left: 0;
-            z-index: 100;
+            z-index: ${(p: any) => p.theme.zPanelFloat || 100};
 
             ${openDirection === "down"
               ? `

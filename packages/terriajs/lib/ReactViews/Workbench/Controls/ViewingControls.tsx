@@ -834,10 +834,8 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         <Box
           css={`
             position: absolute;
-            z-index: 100;
+            z-index: ${(props: any) => props.theme.zPanelFloat || 100};
             right: 0;
-            top: 0;
-            top: 32px;
             top: 42px;
 
             padding: 0;

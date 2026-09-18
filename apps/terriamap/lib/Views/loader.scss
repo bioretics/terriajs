@@ -1,3 +1,5 @@
+@use "../Styles/variables-overrides" as variables;
+
 .loader-ui img {
   display: block;
   margin: calc(50vh - 150px) auto;
@@ -15,6 +17,7 @@
 }
 
 .loader-ui {
+  background-color: variables.$dark;
   transition: opacity, 2s;
   opacity: 1;
   height: 100vh;

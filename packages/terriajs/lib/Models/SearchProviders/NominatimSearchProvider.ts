@@ -4,6 +4,7 @@ import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import { Category, SearchAction } from "../../Core/Analytics/analyticEvents";
+import { NOMINATIM_MARKER_STYLE } from "../../Core/DefaultVisualStyles";
 import loadJson from "../../Core/loadJson";
 import LocationSearchProviderMixin from "../../ModelMixins/SearchProviders/LocationSearchProviderMixin";
 import NominatimSearchProviderTraits from "../../Traits/SearchProviders/NominatimSearchProviderTraits";
@@ -27,7 +28,7 @@ export default class NominatimSearchProvider extends LocationSearchProviderMixin
     console.warn(
       "%c" +
         "This map is using the Nominatim search provider. It is not recommended for production use, consider using a different search provider instead.",
-      "color: white; font-size: 24px; font-weight: bold; font-family: Helvetica, sans-serif;"
+      NOMINATIM_MARKER_STYLE
     );
 
     makeObservable(this);

@@ -180,7 +180,7 @@ const ScaleBar = styled.div`
   padding: 0 5px;
   border: 2px solid ${(p) => p.theme.mapControlColor};
   border-top: none;
-  background: rgba(255, 255, 255, 0.75);
+  background: ${(p) => p.theme.mapScaleBg || "rgba(255, 255, 255, 0.75)"};
   color: ${(p) => p.theme.mapControlColor};
   font-family: ${(p) => p.theme.fontMono};
   font-size: 10px;

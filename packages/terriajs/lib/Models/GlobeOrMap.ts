@@ -11,6 +11,10 @@ import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/Constan
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import ImageryLayerFeatureInfo from "terriajs-cesium/Source/Scene/ImageryLayerFeatureInfo";
 import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
+import {
+  GLOBE_HIGHLIGHT_COLOR,
+  NULL_TRANSPARENT
+} from "../Core/DefaultVisualStyles";
 import LatLonHeight from "../Core/LatLonHeight";
 import TerriaError from "../Core/TerriaError";
 import isDefined from "../Core/isDefined";
@@ -254,7 +258,7 @@ export default abstract class GlobeOrMap {
 
       if (isDefined(feature._cesium3DTileFeature)) {
         const originalColor = feature._cesium3DTileFeature.color;
-        const defaultColor = Color.fromCssColorString("#fffffe");
+        const defaultColor = Color.fromCssColorString(GLOBE_HIGHLIGHT_COLOR);
 
         // Get the highlight color from the catalogItem trait or default to baseMapContrastColor
         const catalogItem = feature._catalogItem;
@@ -413,7 +417,7 @@ export default abstract class GlobeOrMap {
                   })
                 }),
                 color: createStratumInstance(TableColorStyleTraits, {
-                  nullColor: "rgba(0,0,0,0)"
+                  nullColor: NULL_TRANSPARENT
                 })
               })
             );

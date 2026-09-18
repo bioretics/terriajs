@@ -59,7 +59,9 @@ const StyledCompass = styled.div<StyledCompassProps>`
   width: ${(props) => props.theme.compassWidth}px;
   height: ${(props) => props.theme.compassWidth}px;
   // Light control over the map (like the other MapLibre-style buttons).
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: drop-shadow(
+    0 1px 2px ${(props) => props.theme.overlay || "rgba(0, 0, 0, 0.35)"}
+  );
   @media (min-width: ${(props) => props.theme.sm}px) {
     display: block;
   }
@@ -136,7 +138,7 @@ const StyledCompassInnerRing = styled.div`
 
 const StyledCompassRotationMarker = styled.div`
   ${(props) => props.theme.centerWithoutFlex()}
-  z-index: 3;
+  z-index: ${(props) => props.theme.zChrome || 3};
   cursor: pointer;
   width: ${(props) =>
     Number(props.theme.compassWidth) + Number(props.theme.ringWidth) - 4}px;

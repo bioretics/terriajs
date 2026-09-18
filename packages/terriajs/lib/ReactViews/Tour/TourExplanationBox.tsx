@@ -9,15 +9,13 @@ export const TourExplanationBox = styled(Box)<{ longer?: boolean }>`
   width: ${(p) => (p.longer ? `${TOUR_WIDTH + 55}` : `${TOUR_WIDTH}`)}px;
   // background-color: $modal-bg;
   z-index: ${TourExplanationBoxZIndex};
-  background: white;
+  background: ${(p) => p.theme.modalBg || "white"};
   // color: ${(p) => p.theme.textDarker};
 
   min-height: 136px;
-  border-radius: 4px;
+  border-radius: ${(p) => p.theme.radiusLarge || "4px"};
 
-  box-shadow:
-    0 6px 6px 0 rgba(0, 0, 0, 0.12),
-    0 10px 20px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: ${(p) => p.theme.shadowLg};
 
   // extend parseCustomMarkdownToReact() to inject our <Text /> with relevant props to cut down on # of styles?
   // Force styling from markdown?
@@ -33,7 +31,7 @@ export const TourExplanationBox = styled(Box)<{ longer?: boolean }>`
   h1,
   h2,
   h3 {
-    margin-bottom: ${(p) => (p.theme.spacing as any) * 3}px;
+    margin-bottom: ${(p) => (Number(p.theme.spacing) || 5) * 3}px;
     font-size: 16px;
     font-weight: bold;
   }

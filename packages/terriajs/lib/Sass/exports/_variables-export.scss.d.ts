@@ -5,6 +5,7 @@ declare namespace VariablesExportScssNamespace {
     border: string;
     card: string;
     charcoalGrey: string;
+    chartBaseColor: string;
     colorPrimary: string;
     colorSecondary: string;
     compassWidth: string;
@@ -14,6 +15,8 @@ declare namespace VariablesExportScssNamespace {
     darkMid: string;
     darkTranslucent: string;
     darkWithOverlay: string;
+    disclaimerBg: string;
+    focusRing: string;
     font: string;
     fontBase: string;
     fontFeatureInfo: string;
@@ -26,6 +29,8 @@ declare namespace VariablesExportScssNamespace {
     greyLightest: string;
     infoColor: string;
     inputBorder: string;
+    inputErrorBg: string;
+    inputErrorBorder: string;
     inputHeight: string;
     inputHeightLarge: string;
     lg: string;
@@ -44,10 +49,12 @@ declare namespace VariablesExportScssNamespace {
     mapControlShadow: string;
     mapControlSize: string;
     mapNavigationTop: string;
+    mapScaleBg: string;
     md: string;
     mobile: string;
     modalBg: string;
     modalHighlight: string;
+    modalOverlay: string;
     modalText: string;
     muted: string;
     mutedForeground: string;
@@ -79,6 +86,8 @@ declare namespace VariablesExportScssNamespace {
     spacing: string;
     statusBarBg: string;
     statusBarHeight: string;
+    storyBodyBg: string;
+    storyHighlightColor: string;
     textBlack: string;
     textDark: string;
     textDarker: string;
@@ -92,11 +101,20 @@ declare namespace VariablesExportScssNamespace {
     trainerHeight: string;
     transparentDark: string;
     turquoiseBlue: string;
+    warningAccent: string;
     workbenchMargin: string;
     workbenchMaxWidth: string;
     workbenchMinWidth: string;
     workbenchWidth: string;
     workflowPanelWidth: string;
+    zBase: string;
+    zChrome: string;
+    zDropdown: string;
+    zModal: string;
+    zOverlayTop: string;
+    zPanelFloat: string;
+    zSplitter: string;
+    zToast: string;
   }
 }
 

@@ -11,6 +11,6 @@ export const PrefaceBox = styled(Box)<PropTypes>`
   width: 100%;
   height: 100%;
   background: ${(p) => (p.pseudoBg ? "black" : "transparent")};
-  z-index: 1000;
+  z-index: ${(p) => p.theme.zModal || 1000};
   opacity: ${(p) => (p.pseudoBg ? 0.45 : 1)};
 `;

@@ -63,19 +63,17 @@ const MovementControls: FC<MovementControlsProps> = (props) => {
   );
 };
 
-const backgroundColor = "#ffffff";
-
 const Container = styled.div`
-  background-color: ${backgroundColor};
-  box-shadow: 0 4px 8px 4px rgb(0 0 0 / 5%);
-  border-radius: 3px;
+  background-color: ${(p) => p.theme.textLight};
+  box-shadow: ${(p) => p.theme.shadowSm || "0 4px 8px 4px rgb(0 0 0 / 5%)"};
+  border-radius: ${(p) => p.theme.radiusSmall || "3px"};
 `;
 
 const Title = styled(Box)`
   justify-content: space-between;
   align-items: center;
   padding: 0 0.5em;
-  border-bottom: 1px solid #c0c0c0;
+  border-bottom: 1px solid ${(p) => p.theme.greyLighter2 || "#c0c0c0"};
 `;
 
 const MinimizeMaximizeButton = styled(Button).attrs(({ maximized }) => ({
@@ -88,7 +86,7 @@ const MinimizeMaximizeButton = styled(Button).attrs(({ maximized }) => ({
   padding: 0;
   margin: 0;
   border: 0;
-  background-color: ${backgroundColor};
+  background-color: ${(p) => p.theme.textLight};
 `;
 
 const ButtonIcon = styled(StyledIcon)`

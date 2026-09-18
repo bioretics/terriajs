@@ -14,6 +14,10 @@ import { Cartographic } from "terriajs-cesium";
 import MeasurablePanelManager from "../MeasurablePanelManager";
 
 import i18next from "i18next";
+import {
+  ELEVATION_GROUND_COLOR,
+  ELEVATION_AIR_COLOR
+} from "../../../Core/DefaultVisualStyles";
 
 enum ChartKeys {
   AirChart = "path",
@@ -153,7 +157,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           key: ChartKeys.GroundChart,
           type: "lineAndPoint",
           glyphStyle: "circle",
-          getColor: () => "#0f0",
+          getColor: () => ELEVATION_GROUND_COLOR,
           points: groundData?.chartPoints,
           domain: groundData?.chartDomain
         });
@@ -166,7 +170,7 @@ const MeasurableGeometryChartPanel = observer((props: Props) => {
           key: ChartKeys.AirChart,
           type: "lineAndPoint",
           glyphStyle: "circle",
-          getColor: () => "#f00",
+          getColor: () => ELEVATION_AIR_COLOR,
           points: airData?.chartPoints,
           domain: airData?.chartDomain
         });

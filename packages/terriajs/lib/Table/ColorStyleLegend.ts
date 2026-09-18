@@ -1,3 +1,4 @@
+import { NULL_TRANSPARENT } from "../Core/DefaultVisualStyles";
 import i18next from "i18next";
 import { computed, makeObservable } from "mobx";
 import isDefined from "../Core/isDefined";
@@ -122,7 +123,7 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
         ? [
             createStratumInstance(LegendItemTraits, {
               ...legendItemOverrides,
-              color: style.colorTraits.nullColor || "rgba(0, 0, 0, 0)",
+              color: style.colorTraits.nullColor || NULL_TRANSPARENT,
               addSpacingAbove: true,
               title:
                 style.colorTraits.nullLabel ||
@@ -182,7 +183,7 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
         ? [
             createStratumInstance(LegendItemTraits, {
               ...legendItemOverrides,
-              color: style.colorTraits.nullColor || "rgba(0, 0, 0, 0)",
+              color: style.colorTraits.nullColor || NULL_TRANSPARENT,
               addSpacingAbove: true,
               title: style.colorTraits.nullLabel || "(No value)"
             })
@@ -228,7 +229,7 @@ export class ColorStyleLegend extends LoadableStratum(LegendTraits) {
         ? [
             createStratumInstance(LegendItemTraits, {
               ...legendItemOverrides,
-              color: style.colorTraits.nullColor || "rgba(0, 0, 0, 0)",
+              color: style.colorTraits.nullColor || NULL_TRANSPARENT,
               addSpacingAbove: true,
               title: style.colorTraits.nullLabel || "(No value)"
             })
