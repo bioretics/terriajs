@@ -553,6 +553,7 @@ export default class ViewState {
   private _disposePlayPathSamplingStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _panelSourceItemRemovedSubscription: IReactionDisposer;
+  private _openLayersOnWorkbenchAddSubscription: IReactionDisposer;
   private _isResamplingInProgress: boolean = false;
 
   constructor(options: ViewStateOptions) {
@@ -771,6 +772,21 @@ export default class ViewState {
       () => this.closePanelsOfRemovedSourceItems()
     );
 
+    // Open SideRail Layers when a workbench item is added while Layers is closed.
+    this._openLayersOnWorkbenchAddSubscription = reaction(
+      () => this.terria.workbench.itemIds.length,
+      (length, prevLength) => {
+        if (
+          length > prevLength &&
+          this.isMapFullScreen &&
+          terria.elements.get("show-workbench")?.visible !== false &&
+          terria.userProperties.get("hideWorkbench") !== "1"
+        ) {
+          this.setIsMapFullScreen(false);
+        }
+      }
+    );
+
     this._viewshedPanelIsVisibleSubscription = reaction(
       () => this.terria.viewshedDistances,
       (viewshedDistances?: (number | undefined)[]) => {
@@ -866,6 +882,7 @@ export default class ViewState {
     this._disposePlayPathSamplingStep();
     this._viewshedPanelIsVisibleSubscription();
     this._panelSourceItemRemovedSubscription();
+    this._openLayersOnWorkbenchAddSubscription();
     this.searchState.dispose();
   }
 

@@ -684,6 +684,35 @@ describe("ViewState", function () {
     });
   });
 
+  describe("open Layers on workbench add", function () {
+    it("opens Layers when a layer is added while map is fullscreen", async function () {
+      runInAction(() => {
+        viewState.isMapFullScreen = true;
+        viewState.explorerPanelIsVisible = false;
+      });
+
+      const item = new SimpleCatalogItem("layer-to-add", terria);
+      terria.addModel(item);
+      await terria.workbench.add(item);
+
+      expect(viewState.isMapFullScreen).toBe(false);
+      expect(viewState.explorerPanelIsVisible).toBe(false);
+    });
+
+    it("does not open Layers when hideWorkbench is set", async function () {
+      runInAction(() => {
+        viewState.isMapFullScreen = true;
+        terria.userProperties.set("hideWorkbench", "1");
+      });
+
+      const item = new SimpleCatalogItem("hidden-workbench-item", terria);
+      terria.addModel(item);
+      await terria.workbench.add(item);
+
+      expect(viewState.isMapFullScreen).toBe(true);
+    });
+  });
+
   describe("tourPointsWithValidRefs", function () {
     it("returns tourPoints ordered by priority", function () {
       runInAction(() => {
