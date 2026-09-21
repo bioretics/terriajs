@@ -43,18 +43,6 @@ export const TILES_FALLBACK_COLOR = "#ffffff";
 // Colors — table / data-vis
 // ---------------------------------------------------------------------------
 
-/** Default region fill color for choropleth maps. */
-export const REGION_COLOR = "#02528d";
-
-/** Default label fill (text) color. */
-export const LABEL_FILL_COLOR = "#ffffff";
-
-/** Default label outline color. */
-export const LABEL_OUTLINE_COLOR = "#000000";
-
-/** Default trail color. */
-export const TRAIL_COLOR = "#ffffff";
-
 /** Fallback color when no data color is specified for a table series. */
 export const TABLE_DEFAULT_COLOR = "yellow";
 
@@ -86,15 +74,6 @@ export const POI_ICON_COLOR = "#ffffff";
 
 /** Default fallback icon color for Maki icons (e.g. in Legend). */
 export const MAKI_ICON_DEFAULT_COLOR = "#ffffff";
-
-/** Default POI label text color. */
-export const POI_LABEL_TEXT_COLOR = "#ffffff";
-
-/** Default POI label outline color (semi-transparent black). */
-export const POI_LABEL_OUTLINE_COLOR = "rgba(0, 0, 0, 0.65)";
-
-/** Default POI icon stroke color. */
-export const POI_ICON_STROKE_COLOR = "#000000";
 
 /** Default POI domain styles — mapping domain IDs to symbol + color overrides. */
 export const POI_DOMAIN_STYLES = [
@@ -163,9 +142,6 @@ export const BOX_CURSOR_FILTER_SIZE = "180%";
 // ---------------------------------------------------------------------------
 // Fonts — data-visual defaults
 // ---------------------------------------------------------------------------
-
-/** Default font for table labels (Cesium LabelGraphics). */
-export const LABEL_FONT = "30px sans-serif";
 
 /** Default font for protomaps / mapbox style text fallback. */
 export const PROTOMAPS_FALLBACK_FONT = "12px sans-serif";

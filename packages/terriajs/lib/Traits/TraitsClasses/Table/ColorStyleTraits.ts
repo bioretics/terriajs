@@ -1,4 +1,3 @@
-import { REGION_COLOR } from "../../../Core/DefaultVisualStyles";
 import { StyleMapType } from "../../../Table/TableStyleMap";
 import objectArrayTrait from "../../Decorators/objectArrayTrait";
 import objectTrait from "../../Decorators/objectTrait";
@@ -6,6 +5,8 @@ import primitiveArrayTrait from "../../Decorators/primitiveArrayTrait";
 import primitiveTrait from "../../Decorators/primitiveTrait";
 import ModelTraits from "../../ModelTraits";
 import LegendTraits from "../LegendTraits";
+
+const REGION_COLOR = "#02528d";
 
 export class EnumColorTraits extends ModelTraits {
   @primitiveTrait({

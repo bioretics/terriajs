@@ -1,12 +1,11 @@
-import {
-  POI_LABEL_TEXT_COLOR,
-  POI_LABEL_OUTLINE_COLOR,
-  POI_ICON_STROKE_COLOR
-} from "../../Core/DefaultVisualStyles";
 import primitiveTrait from "../Decorators/primitiveTrait";
 import { traitClass } from "../Trait";
 import mixTraits from "../mixTraits";
 import ArcGisFeatureServerCatalogItemTraits from "./ArcGisFeatureServerCatalogItemTraits";
+
+const POI_LABEL_TEXT_COLOR = "#ffffff";
+const POI_LABEL_OUTLINE_COLOR = "rgba(0, 0, 0, 0.65)";
+const POI_ICON_STROKE_COLOR = "#000000";
 
 @traitClass({
   description: `Creates a single item in the catalog from RER3D POI (Regione Emilia-Romagna 3D Points of Interest) service.

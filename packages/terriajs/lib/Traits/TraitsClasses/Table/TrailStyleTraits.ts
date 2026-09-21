@@ -1,4 +1,3 @@
-import { TRAIL_COLOR } from "../../../Core/DefaultVisualStyles";
 import { TableStyleMapModel } from "../../../Table/TableStyleMap";
 import objectArrayTrait from "../../Decorators/objectArrayTrait";
 import objectTrait from "../../Decorators/objectTrait";
@@ -11,6 +10,8 @@ import {
   TableStyleMapSymbolTraits,
   TableStyleMapTraits
 } from "./StyleMapTraits";
+
+const TRAIL_COLOR = "#ffffff";
 
 /** Supports CZML SolidColorMaterial https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/SolidColorMaterial */
 export class SolidColorMaterialTraits extends ModelTraits {

@@ -1,8 +1,3 @@
-import {
-  LABEL_FILL_COLOR,
-  LABEL_OUTLINE_COLOR,
-  LABEL_FONT
-} from "../../Core/DefaultVisualStyles";
 import { TableStyleMapModel } from "../../Table/TableStyleMap";
 import objectArrayTrait from "../Decorators/objectArrayTrait";
 import objectTrait from "../Decorators/objectTrait";
@@ -15,6 +10,10 @@ import {
   TableStyleMapSymbolTraits,
   TableStyleMapTraits
 } from "./TableStyleMapTraits";
+
+const LABEL_FILL_COLOR = "#ffffff";
+const LABEL_OUTLINE_COLOR = "#000000";
+const LABEL_FONT = "30px sans-serif";
 
 /** Supports subset of CZML Label https://github.com/AnalyticalGraphicsInc/czml-writer/wiki/Label
  *
