@@ -14,6 +14,11 @@ import styled from "styled-components";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import {
+  coerceNumericStringRows,
+  pickAnalysisRows,
+  type ChartRow
+} from "../../Core/AttributeTable/attributeCharts";
+import {
   attributeRowsToCsv,
   attributeRowsToGeoJson,
   formatAttributeValue,
@@ -33,6 +38,9 @@ import TerriaFeature from "../../Models/Feature/Feature";
 import Terria from "../../Models/Terria";
 import ViewState from "../../ReactViewModels/ViewState";
 import Icon, { StyledIcon } from "../../Styled/Icon";
+import AttributeChartDialog from "./AttributeChartDialog";
+import ColumnExplorerDialog from "./ColumnExplorerDialog";
+import FieldStatisticsDialog from "./FieldStatisticsDialog";
 import {
   PanelButton,
   PanelCheckboxLabel,
@@ -62,8 +70,12 @@ const ZOOM_DURATION = 1.5;
 /** Stable empty values, so a missing layer does not churn the memos below. */
 const NO_ROWS: AttributeTableRow[] = [];
 const NO_COLUMNS: string[] = [];
+const NO_CHART_ROWS: ChartRow[] = [];
 
 type SortState = { key: string; direction: "asc" | "desc" };
+
+/** Which analysis dialog is open over the table, if any. */
+type AnalysisDialog = "explorer" | "statistics" | "chart";
 
 const Wrapper = styled.div<{ styledHeight: number; isCollapsed: boolean }>`
   display: flex;
@@ -300,6 +312,9 @@ const AttributeTablePanel = observer((props: PropsType) => {
   const [collapsed, setCollapsed] = useState(false);
   const [panelHeight, setPanelHeight] = useState(DEFAULT_PANEL_HEIGHT);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const [openDialog, setOpenDialog] = useState<AnalysisDialog | undefined>(
+    undefined
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   /** The feature this panel last put on the map, so it can ignore its own echo. */
@@ -313,6 +328,7 @@ const AttributeTablePanel = observer((props: PropsType) => {
     setFeatureView("all");
     setSelectedIds([]);
     setAnchorId(undefined);
+    setOpenDialog(undefined);
   }, [itemId]);
 
   const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -342,6 +358,27 @@ const AttributeTablePanel = observer((props: PropsType) => {
       }),
     [rows, haystacks, query, featureView, selectedIdSet]
   );
+
+  // The analysis dialogs read numbers, but most sources hand every property
+  // over as text; the rows they see are coerced (only while one is open, and
+  // without touching the table or the layer itself). Both subsets are picked
+  // out of those same coerced rows, so a field keeps one numeric/text reading
+  // whichever scope a dialog is showing.
+  const analysisOpen = openDialog !== undefined;
+  const analysisRows = useMemo(
+    () => (analysisOpen ? coerceNumericStringRows(rows) : rows),
+    [analysisOpen, rows]
+  );
+  const analysisFilteredRows = useMemo(() => {
+    if (!analysisOpen) return filtered;
+    if (filtered.length === rows.length) return analysisRows;
+    const filteredIds = new Set(filtered.map((row) => row.featureId));
+    return pickAnalysisRows(analysisRows, rows, filteredIds);
+  }, [analysisOpen, analysisRows, rows, filtered]);
+  const analysisSelectedRows = useMemo(() => {
+    if (!analysisOpen || selectedIdSet.size === 0) return NO_CHART_ROWS;
+    return pickAnalysisRows(analysisRows, rows, selectedIdSet);
+  }, [analysisOpen, analysisRows, rows, selectedIdSet]);
 
   const sorted = useMemo(() => {
     const ordered = [...filtered];
@@ -580,6 +617,40 @@ const AttributeTablePanel = observer((props: PropsType) => {
           {t("attributeTable.title")}
           <PanelMutedText>{source.name}</PanelMutedText>
         </Title>
+        <PanelButton
+          type="button"
+          disabled={!hasRows}
+          active={openDialog === "explorer"}
+          title={t("attributeTable.columnExplorer.buttonTitle")}
+          onClick={() => setOpenDialog("explorer")}
+        >
+          <StyledIcon glyph={Icon.GLYPHS.data} styledWidth="13px" light />
+          {t("attributeTable.columnExplorer.button")}
+        </PanelButton>
+        <PanelButton
+          type="button"
+          disabled={!hasRows}
+          active={openDialog === "statistics"}
+          title={t("attributeTable.statistics.buttonTitle")}
+          onClick={() => setOpenDialog("statistics")}
+        >
+          <StyledIcon
+            glyph={Icon.GLYPHS.oneTwoThree}
+            styledWidth="13px"
+            light
+          />
+          {t("attributeTable.statistics.button")}
+        </PanelButton>
+        <PanelButton
+          type="button"
+          disabled={!hasRows}
+          active={openDialog === "chart"}
+          title={t("attributeTable.chart.buttonTitle")}
+          onClick={() => setOpenDialog("chart")}
+        >
+          <StyledIcon glyph={Icon.GLYPHS.barChart} styledWidth="13px" light />
+          {t("attributeTable.chart.button")}
+        </PanelButton>
         <PanelInput
           type="text"
           value={search}
@@ -780,6 +851,34 @@ const AttributeTablePanel = observer((props: PropsType) => {
             </PanelMutedText>
           </StatusBar>
         </>
+      )}
+
+      {openDialog === "explorer" && (
+        <ColumnExplorerDialog
+          rows={analysisRows}
+          filteredRows={analysisFilteredRows}
+          columns={columns}
+          layerName={source.name}
+          onClose={() => setOpenDialog(undefined)}
+        />
+      )}
+      {openDialog === "statistics" && (
+        <FieldStatisticsDialog
+          rows={analysisRows}
+          filteredRows={analysisFilteredRows}
+          selectedRows={analysisSelectedRows}
+          columns={columns}
+          layerName={source.name}
+          onClose={() => setOpenDialog(undefined)}
+        />
+      )}
+      {openDialog === "chart" && (
+        <AttributeChartDialog
+          rows={analysisRows}
+          columns={columns}
+          layerName={source.name}
+          onClose={() => setOpenDialog(undefined)}
+        />
       )}
     </Wrapper>
   );
