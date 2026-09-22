@@ -2521,6 +2521,7 @@
     "featureView": "Feature view",
     "showAllFeatures": "Show all features",
     "showSelectedFeatures": "Show selected ({{count}})",
+    "showSelectedFeatures_plural": "Show selected ({{count}})",
     "export": "Export",
     "exportTitle": "Download the rows currently shown in the table",
     "clearSelection": "Clear the selection",
@@ -2630,6 +2631,7 @@
       "captionScatter": "{{count}} point",
       "captionScatter_plural": "{{count}} points",
       "captionSampled": "showing {{count}} sampled",
+      "captionSampled_plural": "showing {{count}} sampled",
       "captionBar": {
         "count": "row count on y",
         "sum": "sum on y",

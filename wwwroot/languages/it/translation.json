@@ -2064,6 +2064,7 @@
     "featureView": "Vista elementi",
     "showAllFeatures": "Mostra tutti gli elementi",
     "showSelectedFeatures": "Mostra selezionati ({{count}})",
+    "showSelectedFeatures_plural": "Mostra selezionati ({{count}})",
     "export": "Esporta",
     "exportTitle": "Scarica le righe mostrate nella tabella",
     "clearSelection": "Annulla la selezione",
@@ -2173,6 +2174,7 @@
       "captionScatter": "{{count}} punto",
       "captionScatter_plural": "{{count}} punti",
       "captionSampled": "ne sono mostrati {{count}} campionati",
+      "captionSampled_plural": "ne sono mostrati {{count}} campionati",
       "captionBar": {
         "count": "numero di righe sull'asse y",
         "sum": "somma sull'asse y",
