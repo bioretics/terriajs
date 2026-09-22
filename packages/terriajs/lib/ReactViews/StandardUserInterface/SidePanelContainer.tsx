@@ -9,18 +9,22 @@ type PropsType = {
   children?: React.ReactNode;
 };
 
-// Docked workbench panel (GeoLibre-style). It sits between the side rail and
-// the map, is resizable from its right edge and collapses into the rail when
-// `viewState.isMapFullScreen` is set.
+// Overlay workbench panel (GeoLibre-style). Floats over the map to the right of
+// the side rail, is resizable from its right edge, and collapses when
+// `viewState.isMapFullScreen` is set. Background is 50% transparent so the map
+// shows through; the rail itself stays opaque.
 const SidePanelContainer = styled.div`
-  position: relative;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: ${(p) => p.theme.sideRailWidth}px;
   display: flex;
   flex-direction: column;
-  flex: 0 0 auto;
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  background: ${(p) => p.theme.card};
+  z-index: ${(p) => p.theme.zPanelFloat || 100};
+  background: ${(p) => p.theme.cardOverlay};
   border-right: 1px solid ${(p) => p.theme.border};
   color: ${(p) => p.theme.textLight};
   font-family: ${(p) => p.theme.fontBase};
@@ -88,8 +92,6 @@ const DockedSidePanel: React.FC<PropsType> = (props) => {
     dragState.current = null;
     setResizing(false);
     e.currentTarget.releasePointerCapture?.(e.pointerId);
-    // Let the map viewer pick up its new size.
-    viewState.triggerResizeEvent();
   };
 
   if (!show) return null;

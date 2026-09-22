@@ -76,6 +76,8 @@ export interface InitSourceData {
       turquoiseBlue?: string;
       dark?: string;
       darkTranslucent?: string;
+      card?: string;
+      cardOverlay?: string;
       darkWithOverlay?: string;
       darkLighter?: string;
       grey?: string;

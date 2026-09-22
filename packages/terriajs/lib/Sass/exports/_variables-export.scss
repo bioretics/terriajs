@@ -94,6 +94,8 @@
 
   // Semantic surface / text tokens (see _default_variables.scss)
   card: variables.$surface-card;
+  // Layers / workflow panels overlaid on the map (50% transparent by default).
+  cardOverlay: variables.$surface-card-overlay;
   popover: variables.$surface-popover;
   muted: variables.$surface-muted;
   accent: variables.$surface-accent;

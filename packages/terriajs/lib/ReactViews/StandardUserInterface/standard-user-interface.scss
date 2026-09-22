@@ -9,12 +9,12 @@
 // Shell layout (GeoLibre-style):
 //
 //   [ top toolbar (MenuBar) ]
-//   [ side rail | docked workbench | map ]
+//   [ side rail | map ]
 //   [ status bar ]
 //
-// Panels that float over the map (feature info, story panel, trainer bar)
-// are positioned inside the `.map` section so they follow the map area no
-// matter how wide the workbench is.
+// The Layers workbench (and workflow panel) overlay the map to the right of
+// the side rail; they do not push the map aside. Other floating UI (feature
+// info, story panel, trainer bar) is positioned inside the `.map` section.
 
 .story-wrapper {
   @media (min-width: variables.$sm) {
@@ -79,7 +79,7 @@
   overflow: hidden;
 }
 
-// Row holding the side rail, the docked workbench and the map.
+// Row holding the side rail and the map (workbench overlays the map).
 .workspace {
   position: relative;
   display: flex;

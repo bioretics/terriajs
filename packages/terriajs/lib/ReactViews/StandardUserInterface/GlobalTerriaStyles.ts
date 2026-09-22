@@ -104,6 +104,7 @@ button {
 :root {
   --theme-background: ${(p) => p.theme.dark};
   --theme-card: ${(p) => p.theme.card};
+  --theme-card-overlay: ${(p) => p.theme.cardOverlay};
   --theme-popover: ${(p) => p.theme.popover};
   --theme-muted: ${(p) => p.theme.muted};
   --theme-accent: ${(p) => p.theme.accent};

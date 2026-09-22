@@ -74,6 +74,12 @@ $text-success: #6ee7b7 !default;
 // Semantic surface / text tokens (GeoLibre-style elevation ladder). Defaults
 // derive from the legacy palette so themes that don't set them look unchanged.
 $surface-card: $dark-mid !default; // toolbar, rails, docked panels
+// Translucent card used by Layers/workflow panels that overlay the map.
+$surface-card-overlay-alpha: 0.75 !default;
+$surface-card-overlay: rgba(
+  $surface-card,
+  $surface-card-overlay-alpha
+) !default;
 $surface-popover: $dark-with-overlay !default; // menus, tooltips, dialogs
 $surface-muted: $dark-lighter !default; // inset fills, badges
 $surface-accent: $dark-lighter !default; // hover fills
