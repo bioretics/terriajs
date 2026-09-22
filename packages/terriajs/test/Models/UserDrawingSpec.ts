@@ -11,7 +11,9 @@ import PickedFeatures from "../../lib/Map/PickedFeatures/PickedFeatures";
 import TerriaFeature from "../../lib/Models/Feature/Feature";
 import MapInteractionMode from "../../lib/Models/MapInteractionMode";
 import Terria from "../../lib/Models/Terria";
-import UserDrawing from "../../lib/Models/UserDrawing";
+import UserDrawing, {
+  distanceSquaredToSegment2D
+} from "../../lib/Models/UserDrawing";
 
 const describeIfSupported = supportsWebGL() ? describe : xdescribe;
 
@@ -798,5 +800,34 @@ describe("UserDrawing", function () {
       expect(completedPoints.length).toEqual(2);
     }
     expect(completedRectangle).toBeDefined();
+  });
+});
+
+describe("distanceSquaredToSegment2D", function () {
+  it("returns 0 for a point on the segment", function () {
+    expect(distanceSquaredToSegment2D(5, 0, 0, 0, 10, 0)).toEqual(0);
+  });
+
+  it("returns squared distance to the nearest endpoint when outside the segment", function () {
+    // Point to the left of (0,0)-(10,0)
+    expect(distanceSquaredToSegment2D(-3, 0, 0, 0, 10, 0)).toEqual(9);
+  });
+
+  it("returns squared perpendicular distance to the segment", function () {
+    // Point 4 px above the middle of a horizontal segment
+    expect(distanceSquaredToSegment2D(5, 4, 0, 0, 10, 0)).toEqual(16);
+  });
+
+  it("treats points within half stroke width as overlapping (threshold check)", function () {
+    const halfWidth = 10;
+    const thresholdSquared = halfWidth * halfWidth;
+    // 9 px off the line -> within half of width 20
+    expect(
+      distanceSquaredToSegment2D(5, 9, 0, 0, 10, 0) <= thresholdSquared
+    ).toBe(true);
+    // 11 px off the line -> outside
+    expect(
+      distanceSquaredToSegment2D(5, 11, 0, 0, 10, 0) <= thresholdSquared
+    ).toBe(false);
   });
 });
