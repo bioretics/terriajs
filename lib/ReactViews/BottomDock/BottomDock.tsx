@@ -10,6 +10,7 @@ import Styles from "./bottom-dock.scss";
 import ChartDisclaimer from "./ChartDisclaimer";
 import Timeline from "./Timeline/Timeline";
 import MeasurableGeometryChartPanel from "../Custom/Chart/MeasurableGeometryChartPanel";
+import AttributeTablePanel from "../AttributeTable/AttributeTablePanel";
 
 interface PropsType {
   terria: Terria;
@@ -62,6 +63,12 @@ class BottomDock extends React.Component<PropsType & MeasureElementProps> {
         <ChartPanel terria={terria} viewState={this.props.viewState} />
         {this.props.viewState.measurableChartIsVisible && (
           <MeasurableGeometryChartPanel
+            terria={terria}
+            viewState={this.props.viewState}
+          />
+        )}
+        {this.props.viewState.attributeTableIsVisible && (
+          <AttributeTablePanel
             terria={terria}
             viewState={this.props.viewState}
           />

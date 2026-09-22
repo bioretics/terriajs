@@ -2053,5 +2053,28 @@
     "buttonTitle": "Vedi i collegamenti",
     "panelHeading": "Collegamenti",
     "panelText": "Cliccando su una delle immagini seguenti aprirà il link alla mappa (in un'altra finestra o tab)."
+  },
+  "attributeTable": {
+    "title": "Tabella attributi",
+    "resize": "Ridimensiona la tabella attributi",
+    "searchPlaceholder": "Cerca negli attributi...",
+    "zoomToSelection": "Zoom sulla selezione",
+    "featureView": "Vista elementi",
+    "showAllFeatures": "Mostra tutti gli elementi",
+    "showSelectedFeatures": "Mostra selezionati ({{count}})",
+    "export": "Esporta",
+    "exportTitle": "Scarica le righe mostrate nella tabella",
+    "clearSelection": "Annulla la selezione",
+    "expand": "Espandi la tabella attributi",
+    "collapse": "Comprimi la tabella attributi",
+    "close": "Chiudi la tabella attributi",
+    "loading": "Caricamento degli attributi del layer...",
+    "noAttributes": "Questo layer non ha attributi da mostrare.",
+    "statusFeatures": "{{count}} elemento",
+    "statusFeatures_plural": "{{count}} elementi",
+    "statusShown": "{{count}} mostrato",
+    "statusShown_plural": "{{count}} mostrati",
+    "statusSelected": "{{count}} selezionato",
+    "statusSelected_plural": "{{count}} selezionati"
   }
 }

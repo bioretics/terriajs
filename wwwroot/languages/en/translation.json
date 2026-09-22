@@ -2510,5 +2510,28 @@
     "buttonTitle": "See related maps",
     "panelHeading": "Related Maps",
     "panelText": "Clicking on a map below will open it in a separate window or tab."
+  },
+  "attributeTable": {
+    "title": "Attribute table",
+    "resize": "Resize the attribute table",
+    "searchPlaceholder": "Search attributes...",
+    "zoomToSelection": "Zoom to selection",
+    "featureView": "Feature view",
+    "showAllFeatures": "Show all features",
+    "showSelectedFeatures": "Show selected ({{count}})",
+    "export": "Export",
+    "exportTitle": "Download the rows currently shown in the table",
+    "clearSelection": "Clear the selection",
+    "expand": "Expand the attribute table",
+    "collapse": "Collapse the attribute table",
+    "close": "Close the attribute table",
+    "loading": "Loading the layer attributes...",
+    "noAttributes": "This layer has no attributes to show.",
+    "statusFeatures": "{{count}} feature",
+    "statusFeatures_plural": "{{count}} features",
+    "statusShown": "{{count}} shown",
+    "statusShown_plural": "{{count}} shown",
+    "statusSelected": "{{count}} selected",
+    "statusSelected_plural": "{{count}} selected"
   }
 }

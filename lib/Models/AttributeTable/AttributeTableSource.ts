@@ -1,6 +1,7 @@
 import bbox from "@turf/bbox";
 import { Feature as GeoJsonFeature } from "@turf/helpers";
 import { computed, makeObservable } from "mobx";
+import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CatalogMemberMixin, {
   getName
@@ -9,6 +10,8 @@ import GeoJsonMixin, { FEATURE_ID_PROP } from "../../ModelMixins/GeojsonMixin";
 import MappableMixin from "../../ModelMixins/MappableMixin";
 import TableMixin from "../../ModelMixins/TableMixin";
 import { BaseModel } from "../Definition/Model";
+import TerriaFeature from "../Feature/Feature";
+import { isTerriaFeatureData } from "../Feature/FeatureData";
 
 /** One feature of the layer, as the attribute table reads it. */
 export interface AttributeTableRow {
@@ -64,6 +67,32 @@ export function rectangleForGeoJsonFeature(
     // A malformed geometry should cost the row its zoom, not the whole table.
     return undefined;
   }
+}
+
+/**
+ * The attribute table row a feature picked on the map belongs to, or undefined
+ * when it belongs to another layer or cannot be traced back to a row.
+ *
+ * Features Terria builds from a table carry their row ids in `data`; features
+ * built from GeoJSON (as entities or as vector tiles) carry the same `_id_`
+ * property the rows are keyed by. The catalog item is checked first, because a
+ * row id only means something within the layer it was picked from.
+ */
+export function attributeRowIdOfFeature(
+  feature: TerriaFeature | undefined,
+  item: BaseModel,
+  time: JulianDate
+): string | undefined {
+  if (!feature || feature._catalogItem !== item) return undefined;
+
+  const data = feature.data;
+  if (isTerriaFeatureData(data) && data.rowIds && data.rowIds.length > 0) {
+    return String(data.rowIds[0]);
+  }
+
+  const properties = feature.properties?.getValue(time);
+  const id = properties?.[FEATURE_ID_PROP];
+  return id === undefined || id === null ? undefined : String(id);
 }
 
 /** The union of some rectangles, or undefined when there is none. */

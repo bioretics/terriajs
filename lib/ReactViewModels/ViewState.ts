@@ -497,6 +497,18 @@ export default class ViewState {
   > = observable.map();
 
   /**
+   * Gets or sets a value indicating whether the AttributeTablePanel is visible.
+   * @type {Boolean}
+   */
+  @observable attributeTableIsVisible: boolean = false;
+
+  /**
+   * Unique id of the workbench item the AttributeTablePanel was opened for.
+   * @type {String}
+   */
+  @observable attributeTableSourceItemId: string | undefined;
+
+  /**
    * Gets or sets a value indicating whether the QueryPanel is visible.
    * @type {Boolean}
    */
@@ -937,6 +949,12 @@ export default class ViewState {
     ) {
       this.closePlayPathPanel();
     }
+    if (
+      this.attributeTableIsVisible &&
+      removed(this.attributeTableSourceItemId)
+    ) {
+      this.closeAttributeTable();
+    }
 
     [...this.measurableGeomBySourceItemId.keys()]
       .filter((id) => !itemIds.includes(id))
@@ -1029,6 +1047,22 @@ export default class ViewState {
     if (sourceId) {
       this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
     }
+  }
+
+  /**
+   * Show the attribute table for a workbench item. Only one layer at a time is
+   * shown, so opening it for another item simply retargets the panel.
+   */
+  @action
+  openAttributeTable(itemId: string | undefined) {
+    this.attributeTableSourceItemId = itemId;
+    this.attributeTableIsVisible = itemId !== undefined;
+  }
+
+  @action
+  closeAttributeTable() {
+    this.attributeTableIsVisible = false;
+    this.attributeTableSourceItemId = undefined;
   }
 
   @action
