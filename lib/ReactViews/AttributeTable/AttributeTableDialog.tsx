@@ -48,7 +48,7 @@ const DialogBox = styled.div<{ maxWidth: string }>`
   padding: 20px;
   color: ${(p) => p.theme.textBlack};
   background: #fff;
-  border-radius: ${(p) => p.theme.radiusLarge}px;
+  border-radius: ${(p) => p.theme.radiusLarge};
   box-shadow: 0 6px 6px 0 rgba(0, 0, 0, 0.12), 0 10px 20px 0 rgba(0, 0, 0, 0.05);
   font-family: ${(p) => p.theme.fontBase};
 `;
