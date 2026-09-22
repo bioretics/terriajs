@@ -1588,7 +1588,9 @@
     "addItemErrorTitle": "L'articolo del catalogo non può essere aggiunto alla workbench.",
     "diffImageTitle": "Visualizza le differenze nelle immagini tra le due date",
     "displayPercent": "Visualizzazione come percentuale del totale della regione",
-    "splitScreenMode": "MODALITA' SCHERMO DIVISO"
+    "splitScreenMode": "MODALITA' SCHERMO DIVISO",
+    "attributeTable": "Tabella attributi",
+    "attributeTableTitle": "Mostra gli attributi di questo layer in una tabella"
   },
   "mobile": {
     "toggleNavigation": "Attiva/disattiva la navigazione",

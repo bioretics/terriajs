@@ -25,6 +25,7 @@ import ExportableMixin from "../../../ModelMixins/ExportableMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
 import SearchableItemMixin from "../../../ModelMixins/SearchableItemMixin";
 import TimeVarying from "../../../ModelMixins/TimeVarying";
+import AttributeTableSource from "../../../Models/AttributeTable/AttributeTableSource";
 import CameraView from "../../../Models/CameraView";
 import addUserCatalogMember from "../../../Models/Catalog/addUserCatalogMember";
 import SplitItemReference from "../../../Models/Catalog/CatalogReferences/SplitItemReference";
@@ -229,6 +230,11 @@ class ViewingControls extends React.Component<
     viewer.zoomTo(zoomToView).finally(() => {
       this.setState({ isMapZoomingToCatalogItem: false });
     });
+  }
+
+  @action
+  openAttributeTable() {
+    this.props.viewState.openAttributeTable(this.props.item.uniqueId);
   }
 
   @action
@@ -738,6 +744,20 @@ class ViewingControls extends React.Component<
               </ViewingControlMenuButton>
             </li>
           )}
+        {viewState.useSmallScreenInterface === false &&
+        AttributeTableSource.canOpen(item) ? (
+          <li key={"workbench.attributeTable"}>
+            <ViewingControlMenuButton
+              onClick={this.openAttributeTable.bind(this)}
+              title={t("workbench.attributeTableTitle")}
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.chartTable} />
+                <span>{t("workbench.attributeTable")}</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        ) : null}
         <li key={"workbench.removeFromMap"}>
           <ViewingControlMenuButton
             onClick={this.removeFromMap.bind(this)}

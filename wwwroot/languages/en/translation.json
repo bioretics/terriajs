@@ -864,7 +864,9 @@
     "circleItem": "Circle",
     "pathItem": "Measurements",
     "pointsItem": "Points",
-    "playPath": "Flight"
+    "playPath": "Flight",
+    "attributeTable": "Attribute table",
+    "attributeTableTitle": "Show the attributes of this layer in a table"
   },
   "dateTime": {
     "selectorLabel": "Time:",
