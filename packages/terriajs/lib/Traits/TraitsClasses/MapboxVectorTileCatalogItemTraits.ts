@@ -1,4 +1,3 @@
-import { MAPBOX_DEFAULT_LINE_COLOR } from "../../Core/DefaultVisualStyles";
 import { JsonObject } from "../../Core/Json";
 import anyTrait from "../Decorators/anyTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
@@ -11,6 +10,9 @@ import LegendOwnerTraits from "./LegendOwnerTraits";
 import MappableTraits from "./MappableTraits";
 import UrlTraits from "./UrlTraits";
 
+/** Example-only line color for the @traitClass docs (not a field default). */
+const EXAMPLE_LINE_COLOR = "hsl(180,80%,30%)";
+
 @traitClass({
   description: `Creates one catalog item from url that points to a mvt service.`,
   example: {
@@ -20,7 +22,7 @@ import UrlTraits from "./UrlTraits";
       "Federal electoral boundaries which will apply at the 2019 federal election. Produced by combining boundary datasets provided by AEC for each state.",
     url: "https://tiles.terria.io/ELB_2019/{z}/{x}/{y}.pbf",
     opacity: 1,
-    lineColor: MAPBOX_DEFAULT_LINE_COLOR,
+    lineColor: EXAMPLE_LINE_COLOR,
     layer: "ELB_2019",
     maximumNativeZoom: 12,
     minimumZoom: 0,

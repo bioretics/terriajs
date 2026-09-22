@@ -6,6 +6,26 @@ import ArcGisFeatureServerCatalogItemTraits from "./ArcGisFeatureServerCatalogIt
 const POI_LABEL_TEXT_COLOR = "#ffffff";
 const POI_LABEL_OUTLINE_COLOR = "rgba(0, 0, 0, 0.65)";
 const POI_ICON_STROKE_COLOR = "#000000";
+/** Default POI icon (maki) color rendered inside the pin. */
+export const POI_ICON_COLOR = "#ffffff";
+
+/** Default POI domain styles — mapping domain IDs to symbol + color overrides. */
+export const POI_DOMAIN_STYLES = [
+  { symbol: "village", domainIds: [1, 2] },
+  { symbol: "industrial", domainIds: [3] },
+  { symbol: "village", color: "#ff0", domainIds: [4] },
+  { symbol: "village", color: "#333", domainIds: [5] },
+  { symbol: "village", color: "#fff", domainIds: [6] },
+  { symbol: "square", domainIds: [7] },
+  { symbol: "cross", domainIds: [8] },
+  { symbol: "mountain", color: "#ff00ff", domainIds: [9] },
+  { symbol: "triangle", domainIds: [10] },
+  { symbol: "triangle-stroked", domainIds: [11] },
+  { symbol: "marker", domainIds: [12, 15, 19, 20, 21, 22, 24] },
+  { symbol: "water", domainIds: [13, 14, 16, 17, 18, 23] },
+  { symbol: "town", domainIds: [601] },
+  { symbol: "city", domainIds: [602, 603] }
+] as const;
 
 @traitClass({
   description: `Creates a single item in the catalog from RER3D POI (Regione Emilia-Romagna 3D Points of Interest) service.
@@ -158,6 +178,14 @@ export default class RerPoiCatalogItemTraits extends mixTraits(
     description: "The width of the stroke around icon symbols in pixels."
   })
   iconStrokeWidth: number = 1;
+
+  @primitiveTrait({
+    type: "string",
+    name: "Icon color",
+    description:
+      "The fill color of the maki icon symbol rendered inside the pin. Accepts CSS color strings."
+  })
+  iconColor: string = POI_ICON_COLOR;
 
   @primitiveTrait({
     type: "string",

@@ -66,39 +66,11 @@ export const ELEVATION_AIR_COLOR = "#f00";
 export const ESRI_NULL_COLOR = "#FFFFFF";
 
 // ---------------------------------------------------------------------------
-// Colors — POI (RER)
+// Colors — Maki icons (UI / legend)
 // ---------------------------------------------------------------------------
-
-/** Default POI icon (maki) color rendered inside the pin. */
-export const POI_ICON_COLOR = "#ffffff";
 
 /** Default fallback icon color for Maki icons (e.g. in Legend). */
 export const MAKI_ICON_DEFAULT_COLOR = "#ffffff";
-
-/** Default POI domain styles — mapping domain IDs to symbol + color overrides. */
-export const POI_DOMAIN_STYLES = [
-  { symbol: "village", domainIds: [1, 2] },
-  { symbol: "industrial", domainIds: [3] },
-  { symbol: "village", color: "#ff0", domainIds: [4] },
-  { symbol: "village", color: "#333", domainIds: [5] },
-  { symbol: "village", color: "#fff", domainIds: [6] },
-  { symbol: "square", domainIds: [7] },
-  { symbol: "cross", domainIds: [8] },
-  { symbol: "mountain", color: "#ff00ff", domainIds: [9] },
-  { symbol: "triangle", domainIds: [10] },
-  { symbol: "triangle-stroked", domainIds: [11] },
-  { symbol: "marker", domainIds: [12, 15, 19, 20, 21, 22, 24] },
-  { symbol: "water", domainIds: [13, 14, 16, 17, 18, 23] },
-  { symbol: "town", domainIds: [601] },
-  { symbol: "city", domainIds: [602, 603] }
-] as const;
-
-// ---------------------------------------------------------------------------
-// Colors — Mapbox Vector Tiles
-// ---------------------------------------------------------------------------
-
-/** Default line color for MapboxVectorTile catalog items. */
-export const MAPBOX_DEFAULT_LINE_COLOR = "hsl(180,80%,30%)";
 
 // ---------------------------------------------------------------------------
 // Colors — user drawing

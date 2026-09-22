@@ -1,4 +1,3 @@
-import { POI_ICON_COLOR, POI_DOMAIN_STYLES } from "../Core/DefaultVisualStyles";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Color from "terriajs-cesium/Source/Core/Color";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
@@ -10,7 +9,8 @@ import VerticalOrigin from "terriajs-cesium/Source/Scene/VerticalOrigin";
 import PinBuilder from "terriajs-cesium/Source/Core/PinBuilder";
 import { getMakiIcon } from "../Map/Icons/Maki/MakiIcons";
 import RerPoiCatalogItemTraits, {
-  defaultRerPoiCatalogItemTraits
+  defaultRerPoiCatalogItemTraits,
+  POI_DOMAIN_STYLES
 } from "./../Traits/TraitsClasses/RerPoiCatalogItemTraits";
 import isDefined from "../Core/isDefined";
 
@@ -34,6 +34,7 @@ export interface RerPoiStylingOptions {
   isCesium2D?: boolean;
   defaultMarkerColor?: string;
   markerSize?: number;
+  iconColor?: string;
   iconStrokeWidth?: number;
   iconStrokeColor?: string;
   showLabels?: boolean;
@@ -74,6 +75,7 @@ function getPinCanvas(
   iconId: string,
   color: string,
   markerSize: number,
+  iconColor: string,
   iconStrokeWidth: number,
   iconStrokeColor: string
 ): HTMLCanvasElement | Promise<HTMLCanvasElement> | undefined {
@@ -81,6 +83,7 @@ function getPinCanvas(
     iconId,
     color,
     markerSize,
+    iconColor,
     iconStrokeWidth,
     iconStrokeColor
   ].join("|");
@@ -90,7 +93,7 @@ function getPinCanvas(
 
   const svgUrl = getMakiIcon(
     iconId,
-    POI_ICON_COLOR,
+    iconColor,
     iconStrokeWidth,
     iconStrokeColor,
     24,
@@ -283,6 +286,8 @@ export function applyRerPoiEntityStyles(
     defaultRerPoiCatalogItemTraits.defaultMarkerColor;
   const markerSize =
     options?.markerSize ?? defaultRerPoiCatalogItemTraits.markerSize;
+  const iconColor =
+    options?.iconColor ?? defaultRerPoiCatalogItemTraits.iconColor;
   const iconStrokeWidth =
     options?.iconStrokeWidth ?? defaultRerPoiCatalogItemTraits.iconStrokeWidth;
   const iconStrokeColor =
@@ -364,6 +369,7 @@ export function applyRerPoiEntityStyles(
         symbol,
         color,
         markerSize,
+        iconColor,
         iconStrokeWidth,
         iconStrokeColor,
         name,
@@ -400,6 +406,7 @@ export function applyRerPoiEntityStyles(
         symbol,
         color,
         markerSize,
+        iconColor,
         iconStrokeWidth,
         iconStrokeColor
       );

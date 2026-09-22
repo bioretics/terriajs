@@ -81,6 +81,7 @@ interface RerPoiTraitSnapshot {
   defaultMarkerColor: string;
   domainIdField: string;
   dynamicRequestDebounceMs: number;
+  iconColor: string;
   iconStrokeColor: string;
   iconStrokeWidth: number;
   labelFontSize: number;
@@ -407,6 +408,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       dynamicRequestDebounceMs: this.getRerPoiTraitForSnapshot(
         "dynamicRequestDebounceMs"
       ),
+      iconColor: this.getRerPoiTraitForSnapshot("iconColor"),
       iconStrokeColor: this.getRerPoiTraitForSnapshot("iconStrokeColor"),
       iconStrokeWidth: this.getRerPoiTraitForSnapshot("iconStrokeWidth"),
       labelFontSize: this.getRerPoiTraitForSnapshot("labelFontSize"),
@@ -1025,6 +1027,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItemBas
       isCesium2D: this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D,
       defaultMarkerColor: this.getRerPoiTrait("defaultMarkerColor"),
       markerSize: this.getRerPoiTrait("markerSize"),
+      iconColor: this.getRerPoiTrait("iconColor"),
       iconStrokeWidth: this.getRerPoiTrait("iconStrokeWidth"),
       iconStrokeColor: this.getRerPoiTrait("iconStrokeColor"),
       showLabels,
@@ -1929,6 +1932,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     defaultMarkerColor: getDefaultRerPoiTrait("defaultMarkerColor"),
     domainIdField: getDefaultRerPoiTrait("domainIdField"),
     dynamicRequestDebounceMs: getDefaultRerPoiTrait("dynamicRequestDebounceMs"),
+    iconColor: getDefaultRerPoiTrait("iconColor"),
     iconStrokeColor: getDefaultRerPoiTrait("iconStrokeColor"),
     iconStrokeWidth: getDefaultRerPoiTrait("iconStrokeWidth"),
     labelFontSize: getDefaultRerPoiTrait("labelFontSize"),
