@@ -8,6 +8,8 @@
  * every supported catalog item (see `AttributeTableSource`).
  */
 
+import { formatAttributeValue } from "./attributeValue";
+
 export type ChartType =
   | "histogram"
   | "scatter"
@@ -377,7 +379,7 @@ export function categoricalColumns(
       const raw = row.properties[key];
       if (raw === null || raw === undefined || raw === "") continue;
       nonNull += 1;
-      distinct.add(String(raw));
+      distinct.add(formatAttributeValue(raw));
       if (distinct.size > maxCardinality) return false;
     }
     if (distinct.size < 1) return false;
@@ -455,7 +457,7 @@ export function computeBar(
     const label =
       raw === null || raw === undefined || raw === ""
         ? BLANK_CATEGORY_LABEL
-        : String(raw);
+        : formatAttributeValue(raw);
     const group = groups.get(label) ?? { count: 0, sum: 0, numericCount: 0 };
     group.count += 1;
     if (aggregation !== "count" && valueKey) {
@@ -535,7 +537,7 @@ export function computePie(
     const label =
       raw === null || raw === undefined || raw === ""
         ? BLANK_CATEGORY_LABEL
-        : String(raw);
+        : formatAttributeValue(raw);
     const group = groups.get(label) ?? { count: 0, sum: 0 };
     group.count += 1;
     if (aggregation !== "count" && valueKey) {

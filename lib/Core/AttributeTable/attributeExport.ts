@@ -1,28 +1,15 @@
 /**
  * Turning attribute table rows back into files: the CSV and GeoJSON the Export
- * button writes, plus the value formatting the table cells and the CSV share so
- * a downloaded file reads exactly like what was on screen.
+ * button writes. Cells are written with the same `formatAttributeValue` the
+ * table renders with, so a downloaded file reads exactly like what was on
+ * screen.
  */
 
 import Papa from "papaparse";
 import { AttributeTableRow } from "../../Models/AttributeTable/AttributeTableSource";
+import { formatAttributeValue } from "./attributeValue";
 
-/**
- * How a raw attribute value is shown in a table cell (and written to CSV).
- * Nullish values become an empty cell; objects and arrays are stringified,
- * because a GeoJSON property is free to hold either.
- */
-export function formatAttributeValue(value: unknown): string {
-  if (value === null || value === undefined) return "";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean")
-    return String(value);
-  try {
-    return JSON.stringify(value);
-  } catch {
-    return String(value);
-  }
-}
+export { formatAttributeValue };
 
 /**
  * The rows as CSV, one column per field plus a leading `id` column holding the

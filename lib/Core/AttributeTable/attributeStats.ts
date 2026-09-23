@@ -12,6 +12,7 @@
  */
 
 import { isNumericFieldValue, type ChartRow } from "./attributeCharts";
+import { formatAttributeValue } from "./attributeValue";
 
 export interface NumericFieldStats {
   kind: "numeric";
@@ -140,7 +141,7 @@ export function computeTextStats(
       nulls += 1;
       continue;
     }
-    const value = String(raw);
+    const value = formatAttributeValue(raw);
     counts.set(value, (counts.get(value) ?? 0) + 1);
   }
 

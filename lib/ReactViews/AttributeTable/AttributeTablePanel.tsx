@@ -21,9 +21,9 @@ import {
 import {
   attributeRowsToCsv,
   attributeRowsToGeoJson,
-  formatAttributeValue,
   sanitizeExportFileName
 } from "../../Core/AttributeTable/attributeExport";
+import { formatAttributeValue } from "../../Core/AttributeTable/attributeValue";
 import { computeRowSelection } from "../../Core/AttributeTable/attributeSelection";
 import { compareAttributeValues } from "../../Core/AttributeTable/attributeSort";
 import filterOutUndefined from "../../Core/filterOutUndefined";
