@@ -131,6 +131,13 @@ const TableScroll = styled.div`
   flex: 1;
   min-height: 0;
   overflow: auto;
+  /* A table of many columns is wider than the map. Without a width of its own
+     that intrinsic width travels up to the map column - a flex item with
+     min-width: auto - and stretches the whole user interface sideways. Zero
+     width contributes nothing to that calculation, and min-width fills the
+     panel again, so the extra columns scroll here instead. */
+  width: 0;
+  min-width: 100%;
 `;
 
 const Table = styled.table`
@@ -603,7 +610,11 @@ const AttributeTablePanel = observer((props: PropsType) => {
     sort.key === key ? (sort.direction === "asc" ? " ▲" : " ▼") : "";
 
   return (
-    <Wrapper styledHeight={panelHeight} isCollapsed={collapsed}>
+    <Wrapper
+      styledHeight={panelHeight}
+      isCollapsed={collapsed}
+      data-testid="attribute-table-panel"
+    >
       {!collapsed && (
         <ResizeHandle
           onMouseDown={startResize}
@@ -754,7 +765,7 @@ const AttributeTablePanel = observer((props: PropsType) => {
             </EmptyState>
           ) : (
             <TableScroll ref={scrollRef}>
-              <Table>
+              <Table data-testid="attribute-table">
                 <thead>
                   <tr>
                     <HeaderCell columnWidth={FEATURE_ID_COLUMN_WIDTH}>
@@ -835,7 +846,7 @@ const AttributeTablePanel = observer((props: PropsType) => {
               </Table>
             </TableScroll>
           )}
-          <StatusBar>
+          <StatusBar data-testid="attribute-table-status">
             <PanelMutedText>
               {t("attributeTable.statusFeatures", { count: rows.length })}
             </PanelMutedText>

@@ -86,6 +86,9 @@ const TypeBadge = styled.span`
 `;
 
 const Completeness = styled(BarTrack)`
+  /* BarTrack grows to fill a row of top values; in this column-stacked card
+     "flex: 1" would instead stretch it vertically into a solid block. */
+  flex: none;
   height: 5px;
   border-radius: 3px;
 `;
