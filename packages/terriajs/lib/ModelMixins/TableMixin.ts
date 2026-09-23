@@ -470,6 +470,14 @@ function TableMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
             )
           ),
           icon: { glyph: Icon.GLYPHS.layers }
+        },
+        {
+          id: "attribute-table",
+          name: i18next.t(($) => $.attributeTable.open),
+          onClick: action((viewState) => {
+            viewState.openAttributeTable(this);
+          }),
+          icon: { glyph: Icon.GLYPHS.chartTable }
         }
       ]);
     }

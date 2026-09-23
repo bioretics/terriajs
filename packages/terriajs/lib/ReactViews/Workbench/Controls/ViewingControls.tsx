@@ -1,7 +1,7 @@
 import { sortBy, uniqBy } from "lodash-es";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
@@ -495,10 +495,15 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
     });
   }, [item, viewState, visualizePointsClicked]);
 
-  const viewingControls = useMemo(() => {
+  // Read viewingControls during render (not behind a stale useMemo) so MobX
+  // tracks data-dependent entries such as attribute-table after GeoJSON load.
+  // `item` identity alone does not change when table rows become available.
+  const viewingControls = (() => {
     if (!CatalogMemberMixin.isMixedInto(item)) {
       return [];
     }
+
+    const itemViewingControls: ViewingControl[] = item.viewingControls;
 
     // Global viewing controls (usually defined by plugins).
     const globalViewingControls = filterOutUndefined(
@@ -513,8 +518,6 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
         }
       )
     );
-    // Item specific viewing controls
-    const itemViewingControls: ViewingControl[] = item.viewingControls;
 
     // Collate list, unique by id and sorted by name
     return sortBy(
@@ -524,7 +527,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
       // Exclude disabled controls
       return isControlEnabled(controls, id);
     });
-  }, [item, controls, viewState.globalViewingControlOptions]);
+  })();
 
   const renderViewingControlsMenu = () => {
     const canSplit =

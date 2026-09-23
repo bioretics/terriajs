@@ -1,0 +1,161 @@
+@use "../../Sass/common/_variables";
+@use "../../Sass/common/mixins";
+
+.tab-list {
+  composes: list-reset from "../../Sass/common/_base.scss";
+  composes: clearfix from "../../Sass/common/_base.scss";
+  padding-right: 100px;
+  background: variables.$color-primary;
+  border-radius: 3px 3px 0 0;
+  height: 50px;
+}
+
+.tab-list__item {
+  display: inline-block;
+  float: left;
+}
+
+.tab-panel {
+  width: 100%;
+  height: variables.$modal-content-height;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.panel-content {
+  composes: clearfix from "../../Sass/common/_base.scss";
+  position: relative;
+  background: variables.$modal-bg;
+  color: variables.$modal-text;
+  border-top: 1px solid variables.$grey-lighter;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid variables.$grey-lighter;
+  background: variables.$modal-bg;
+  flex-shrink: 0;
+}
+
+.toolbar-spacer {
+  flex: 1;
+}
+
+.search-input {
+  min-width: 160px;
+  max-width: 280px;
+  padding: 4px 8px;
+  border: 1px solid variables.$grey-lighter;
+  border-radius: 3px;
+  background: #fff;
+  color: #333;
+}
+
+.status-bar {
+  display: flex;
+  gap: 16px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-top: 1px solid variables.$grey-lighter;
+  background: variables.$modal-bg;
+  flex-shrink: 0;
+}
+
+.grid-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog {
+  background: #fff;
+  color: #222;
+  border-radius: 4px;
+  max-width: 640px;
+  width: 90%;
+  max-height: 80%;
+  overflow: auto;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.dialog h3 {
+  margin: 0 0 12px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  overflow: auto;
+  flex: 1;
+}
+
+.dashboard-widget {
+  border: 1px solid variables.$grey-lighter;
+  border-radius: 4px;
+  background: #fff;
+  color: #222;
+  padding: 10px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  opacity: 0.8;
+}
+
+.error-banner {
+  background: #fdecea;
+  color: #b71c1c;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.editable-cell input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #90caf9;
+  padding: 2px 4px;
+  border-radius: 2px;
+}

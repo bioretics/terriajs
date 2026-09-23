@@ -33,6 +33,8 @@ import { getMarkerCatalogItem } from "../Models/LocationMarkerUtils";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 import Terria from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
+import AttributeTableController from "../ReactViews/AttributeTable/AttributeTableController";
+import { ATTRIBUTE_TABLE_ELEMENT_NAME } from "../ReactViews/AttributeTable/types";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
 import { FeatureInfoPanelButtonGenerator } from "../ViewModels/FeatureInfoPanel";
@@ -86,7 +88,8 @@ export default class ViewState {
     preview: "preview",
     nowViewing: "nowViewing",
     locationSearchResults: "locationSearchResults",
-    query: "query"
+    query: "query",
+    attributeTable: "attributeTable"
   });
   readonly searchState: SearchState;
   readonly terria: Terria;
@@ -500,6 +503,16 @@ export default class ViewState {
   @observable queryPanelIsVisible: boolean = false;
 
   /**
+   * Gets or sets a value indicating whether the Attribute Table panel is visible.
+   */
+  @observable attributeTablePanelIsVisible: boolean = false;
+
+  /**
+   * Controller for the Attribute Table feature (state is shell-agnostic).
+   */
+  readonly attributeTableController: AttributeTableController;
+
+  /**
    * Gets or sets a value indicating whether the QueryPanel is collapsed.
    * @type {Boolean}
    */
@@ -569,6 +582,7 @@ export default class ViewState {
     }
 
     this.terria = terria;
+    this.attributeTableController = new AttributeTableController(terria);
 
     // When features are picked, show the feature info panel.
     this._pickedFeaturesSubscription = reaction(
@@ -1098,6 +1112,23 @@ export default class ViewState {
   closeQuery(): void {
     this.queryPanelIsVisible = false;
     this.terria.itemToQuery = undefined;
+  }
+
+  @action
+  openAttributeTable(item: BaseModel): void {
+    this.attributeTableController.open(item);
+    this.setTopElement(ATTRIBUTE_TABLE_ELEMENT_NAME);
+    if (this.useSmallScreenInterface) {
+      this.switchMobileView(this.mobileViewOptions.attributeTable);
+    } else {
+      this.attributeTablePanelIsVisible = true;
+    }
+  }
+
+  @action
+  closeAttributeTable(): void {
+    this.attributeTablePanelIsVisible = false;
+    this.attributeTableController.close();
   }
 
   @action
