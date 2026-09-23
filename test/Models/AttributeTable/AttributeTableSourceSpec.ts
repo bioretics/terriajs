@@ -52,10 +52,15 @@ describe("AttributeTableSource", function () {
 
     it("reads one row per feature, keyed by the Terria feature id", function () {
       const source = new AttributeTableSource(item);
-      expect(source.rows.length).toBe(3);
-      expect(source.rows.map((row) => row.featureId)).toEqual(["0", "1", "2"]);
+      // GeoJsonMixin drops features without a geometry while loading, so the
+      // third feature of the collection never reaches the table.
+      expect(source.rows.length).toBe(2);
+      expect(source.rows.map((row) => row.featureId)).toEqual(["0", "1"]);
       expect(source.rows[0].properties.NOME).toBe("Forli");
       expect(source.rows[0].properties.QUOTA).toBe(34);
+      expect(
+        source.rows.some((row) => row.properties.NOME === "Senza geometria")
+      ).toBe(false);
     });
 
     it("hides the internal feature id property from the columns", function () {
@@ -64,13 +69,12 @@ describe("AttributeTableSource", function () {
       expect(source.rows[0].properties._id_).toBeUndefined();
     });
 
-    it("gives a padded rectangle to a point feature and none to a null geometry", function () {
+    it("gives a point feature a padded rectangle to zoom to", function () {
       const source = new AttributeTableSource(item);
       const rectangle = source.rows[0].rectangle;
       expect(rectangle).toBeDefined();
       expect(rectangle!.width).toBeGreaterThan(0);
       expect(rectangle!.height).toBeGreaterThan(0);
-      expect(source.rows[2].rectangle).toBeUndefined();
     });
 
     it("keeps the GeoJSON feature so the map can highlight it", function () {

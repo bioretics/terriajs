@@ -114,7 +114,9 @@ export function unionRectangles(
  *
  * - anything built on `GeoJsonMixin` (GeoJSON, GPX, KML/KMZ, Shapefile, ...):
  *   rows come straight from `readyData`, so they carry their geometry and the
- *   table can highlight and zoom to a feature on the map;
+ *   table can highlight and zoom to a feature on the map. Note that the mixin
+ *   drops features without a geometry while loading, so those never reach the
+ *   table either;
  * - anything else built on `TableMixin` (CSV, and GeoJSON styled through vector
  *   tiles falls back here only when it has no ready data): rows come from the
  *   column-major table, and a row can be located only when the item declares
