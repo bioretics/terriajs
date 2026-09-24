@@ -2,6 +2,10 @@ declare namespace AttributeTableScssNamespace {
   export interface IAttributeTableScss {
     "chart-preview": string;
     chartPreview: string;
+    "column-explorer-row": string;
+    "column-explorer-row--hidden": string;
+    columnExplorerRow: string;
+    columnExplorerRowHidden: string;
     "dashboard-grid": string;
     "dashboard-widget": string;
     "dashboard-widget-header": string;

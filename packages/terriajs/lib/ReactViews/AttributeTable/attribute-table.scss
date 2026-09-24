@@ -217,3 +217,12 @@
   padding: 2px 4px;
   border-radius: 2px;
 }
+
+.column-explorer-row {
+  border-bottom: 1px solid variables.$grey-lighter;
+  padding: 8px 0;
+}
+
+.column-explorer-row--hidden {
+  opacity: 0.55;
+}
