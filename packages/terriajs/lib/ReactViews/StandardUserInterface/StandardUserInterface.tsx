@@ -49,7 +49,6 @@ import QueryWindow from "../QueryWindow/QueryWindow";
 import { MessageModal } from "../MessageModal/MessageModal";
 import ViewshedPanel from "../Viewshed/ViewshedPanel";
 import LoginPanel from "../Login/LoginPanel";
-import AttributeTableWindow from "../AttributeTable/AttributeTableWindow";
 
 export const animationDuration = 250;
 
@@ -260,7 +259,6 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
                     <ExplorerWindowComponents.ExplorerWindow />
                     {/* Fork (rer3d): query-data window + message modal */}
                     <QueryWindow />
-                    <AttributeTableWindow />
                     {props.terria.messageModal?.isVisible && (
                       <MessageModal
                         closeModal={() => props.viewState.closeMessageModal()}

@@ -1,27 +1,44 @@
 @use "../../Sass/common/_variables";
 @use "../../Sass/common/mixins";
 
-.tab-list {
-  composes: list-reset from "../../Sass/common/_base.scss";
-  composes: clearfix from "../../Sass/common/_base.scss";
-  padding-right: 100px;
-  background: variables.$color-primary;
-  border-radius: 3px 3px 0 0;
-  height: 50px;
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.tab-list__item {
-  display: inline-block;
-  float: left;
+.header-tabs {
+  position: absolute;
+  right: 48px;
+  top: 0;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.tab-panel {
-  width: 100%;
-  height: variables.$modal-content-height;
+.header-tab {
+  composes: btn from "../../Sass/common/_buttons.scss";
+  background: transparent;
+  border: none;
+  color: variables.$text-light;
+  font-size: variables.$font-size-mid-small;
+  padding: 6px 10px;
+  border-radius: 3px;
+  cursor: pointer;
 
+  &:hover,
   &:focus {
-    outline: none;
+    background: variables.$text-light;
+    color: variables.$color-primary;
   }
+}
+
+.header-tab--current {
+  background: variables.$text-light;
+  color: variables.$color-primary;
 }
 
 .panel-content {
@@ -30,7 +47,8 @@
   background: variables.$modal-bg;
   color: variables.$modal-text;
   border-top: 1px solid variables.$grey-lighter;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border-radius: 3px;
   display: flex;
@@ -76,6 +94,12 @@
   flex: 1;
   overflow: auto;
   min-height: 0;
+
+  :global {
+    .rdt_Table {
+      min-width: max-content;
+    }
+  }
 }
 
 .dialog-backdrop {
@@ -118,6 +142,7 @@
   padding: 12px;
   overflow: auto;
   flex: 1;
+  min-height: 0;
 }
 
 .dashboard-widget {

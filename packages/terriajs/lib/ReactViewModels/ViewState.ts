@@ -34,7 +34,6 @@ import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDi
 import Terria from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
 import AttributeTableController from "../ReactViews/AttributeTable/AttributeTableController";
-import { ATTRIBUTE_TABLE_ELEMENT_NAME } from "../ReactViews/AttributeTable/types";
 import { SATELLITE_HELP_PROMPT_KEY } from "../ReactViews/HelpScreens/SatelliteHelpPrompt";
 import { animationDuration } from "../ReactViews/StandardUserInterface/StandardUserInterface";
 import { FeatureInfoPanelButtonGenerator } from "../ViewModels/FeatureInfoPanel";
@@ -1117,7 +1116,6 @@ export default class ViewState {
   @action
   openAttributeTable(item: BaseModel): void {
     this.attributeTableController.open(item);
-    this.setTopElement(ATTRIBUTE_TABLE_ELEMENT_NAME);
     if (this.useSmallScreenInterface) {
       this.switchMobileView(this.mobileViewOptions.attributeTable);
     } else {

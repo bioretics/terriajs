@@ -1,18 +1,18 @@
 import { action } from "mobx";
 import { observer } from "mobx-react";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import classNames from "classnames";
-import styled from "styled-components";
+import Icon from "../../Styled/Icon";
 import { useViewState } from "../Context";
-import ModalPopup from "../ExplorerWindow/ModalPopup";
-import { Button } from "../../Styled/Button";
+import ChartStyles from "../Custom/Chart/chart-panel.scss";
 import AttributeTableContent from "./AttributeTableContent";
-import { ATTRIBUTE_TABLE_ELEMENT_NAME } from "./types";
 import Styles from "./attribute-table.scss";
 
+const PANEL_HEIGHT = 400;
+
 /**
- * Attribute Table modal shell. Content is isolated so it can later be
- * remounted inside a resizable bottom dock without changing table logic.
+ * Attribute Table bottom-dock panel shell. Table logic lives in AttributeTableContent.
  */
 export default observer(function AttributeTableWindow() {
   const { t } = useTranslation();
@@ -23,89 +23,95 @@ export default observer(function AttributeTableWindow() {
     viewState.closeAttributeTable();
   });
 
-  const onStartAnimatingIn = action(() => {
-    viewState.explorerPanelAnimating = true;
-  });
-
-  const onDoneAnimatingIn = action(() => {
-    viewState.explorerPanelAnimating = false;
-  });
-
   const isVisible =
     !viewState.useSmallScreenInterface &&
     !viewState.hideMapUi &&
     viewState.attributeTablePanelIsVisible &&
     controller.isOpen;
 
-  if (!controller.activeItem && !isVisible) return null;
+  useEffect(() => {
+    viewState.triggerResizeEvent();
+  }, [isVisible, viewState]);
+
+  useEffect(() => {
+    if (!isVisible) {
+      return;
+    }
+    const escKeyListener = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !viewState.shareModalIsVisible) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", escKeyListener, true);
+    return () => window.removeEventListener("keydown", escKeyListener, true);
+  }, [isVisible, onClose, viewState.shareModalIsVisible]);
+
+  if (!controller.activeItem && !isVisible) {
+    return null;
+  }
+
+  if (!isVisible) {
+    return null;
+  }
+
+  const itemName =
+    (controller.activeItem as { nameInCatalog?: string; name?: string })
+      ?.nameInCatalog ??
+    (controller.activeItem as { name?: string })?.name ??
+    t(($) => $.attributeTable.tableTab);
 
   return (
-    <ModalPopup
-      viewState={viewState}
-      isVisible={isVisible}
-      isTopElement={viewState.topElement === ATTRIBUTE_TABLE_ELEMENT_NAME}
-      onClose={onClose}
-      onStartAnimatingIn={onStartAnimatingIn}
-      onDoneAnimatingIn={onDoneAnimatingIn}
-    >
-      <div
-        onPointerDown={action(() => {
-          viewState.setTopElement(ATTRIBUTE_TABLE_ELEMENT_NAME);
-        })}
-      >
-        <ul className={Styles.tabList} role="tablist">
-          <li className={Styles.tabListItem} role="tab">
-            <div style={{ marginTop: 17, marginLeft: 10, color: "white" }}>
-              <ButtonTab
+    <div className={ChartStyles.holder}>
+      <div className={ChartStyles.inner}>
+        <div
+          className={ChartStyles.chartPanel}
+          style={{
+            height: PANEL_HEIGHT,
+            display: "flex",
+            flexDirection: "column"
+          }}
+        >
+          <div className={ChartStyles.header}>
+            <label className={ChartStyles.sectionLabel}>{itemName}</label>
+            <div className={Styles.headerTabs} role="tablist">
+              <button
                 type="button"
+                role="tab"
+                aria-selected={controller.activeTab === "table"}
+                className={classNames(Styles.headerTab, {
+                  [Styles.headerTabCurrent]: controller.activeTab === "table"
+                })}
                 onClick={() => controller.setActiveTab("table")}
-                isCurrent={controller.activeTab === "table"}
               >
                 {t(($) => $.attributeTable.tableTab)}
-              </ButtonTab>
-            </div>
-          </li>
-          <li className={Styles.tabListItem} role="tab">
-            <div style={{ marginTop: 17, marginLeft: 10, color: "white" }}>
-              <ButtonTab
+              </button>
+              <button
                 type="button"
+                role="tab"
+                aria-selected={controller.activeTab === "dashboard"}
+                className={classNames(Styles.headerTab, {
+                  [Styles.headerTabCurrent]:
+                    controller.activeTab === "dashboard"
+                })}
                 onClick={() => controller.setActiveTab("dashboard")}
-                isCurrent={controller.activeTab === "dashboard"}
               >
                 {t(($) => $.attributeTable.dashboard)}
-              </ButtonTab>
+              </button>
             </div>
-          </li>
-        </ul>
-        <section className={classNames(Styles.tabPanel)}>
-          <AttributeTableContent controller={controller} />
-        </section>
+            <button
+              type="button"
+              className={ChartStyles.btnCloseChartPanel}
+              onClick={onClose}
+              title={t(($) => $.attributeTable.close)}
+            >
+              <Icon glyph={Icon.GLYPHS.close} />
+            </button>
+          </div>
+          <div className={Styles.panelBody}>
+            <AttributeTableContent controller={controller} />
+          </div>
+        </div>
       </div>
-    </ModalPopup>
+    </div>
   );
 });
-
-const ButtonTab = styled(Button)<{ isCurrent: boolean }>`
-  ${(props) => `
-    background: transparent;
-    font-size: $font-size-mid-small;
-    padding: $padding-small;
-    margin: $padding;
-    height: 3vh;
-    min-height: 3vh;
-    border-radius: 3px;
-    color: ${props.theme.textLight};
-    &:hover,
-    &:focus {
-      background: ${props.theme.textLight};
-      color: ${props.theme.colorPrimary};
-    }
-    ${
-      props.isCurrent &&
-      `
-      background: ${props.theme.textLight};
-      color: ${props.theme.colorPrimary};
-    `
-    }
-  `}
-`;

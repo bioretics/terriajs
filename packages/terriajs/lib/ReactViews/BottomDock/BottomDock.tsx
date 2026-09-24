@@ -11,6 +11,7 @@ import Timeline from "./Timeline/Timeline";
 import { DefaultTheme, withTheme } from "styled-components";
 // Fork (rer3d): elevation-profile chart for measured paths.
 import MeasurableGeometryChartPanel from "../Custom/Chart/MeasurableGeometryChartPanel";
+import AttributeTableWindow from "../AttributeTable/AttributeTableWindow";
 
 interface PropsType {
   terria: Terria;
@@ -75,6 +76,10 @@ class BottomDock extends Component<PropsType & MeasureElementProps> {
             viewState={this.props.viewState}
           />
         )}
+        {this.props.viewState.attributeTablePanelIsVisible &&
+          this.props.viewState.attributeTableController.isOpen && (
+            <AttributeTableWindow />
+          )}
         {top && (
           <Timeline
             terria={terria}

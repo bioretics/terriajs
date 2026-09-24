@@ -15,9 +15,7 @@ interface Props {
   controller: AttributeTableController;
 }
 
-/**
- * Presentation-agnostic attribute table content (modal or future bottom dock).
- */
+/** Attribute table body (toolbar, grid/dashboard, dialogs) for the bottom dock panel. */
 const AttributeTableContent: React.FC<Props> = observer(
   function AttributeTableContent({ controller }) {
     const { t } = useTranslation();
