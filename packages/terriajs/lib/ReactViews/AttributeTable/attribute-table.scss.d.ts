@@ -9,8 +9,10 @@ declare namespace AttributeTableScssNamespace {
     dialog: string;
     "dialog-actions": string;
     "dialog-backdrop": string;
+    "dialog-body": string;
     dialogActions: string;
     dialogBackdrop: string;
+    dialogBody: string;
     "editable-cell": string;
     editableCell: string;
     "empty-state": string;

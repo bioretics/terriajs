@@ -81,6 +81,7 @@ const ViewingControlMenuButton = styled(RawButton).attrs({
 
   svg {
     fill: ${(props) => props.theme.textDarker};
+    stroke: ${(props) => props.theme.textDarker};
     width: 18px;
     height: 18px;
   }
@@ -102,6 +103,7 @@ const ViewingControlMenuButton = styled(RawButton).attrs({
     background-color: ${(props) => props.theme.colorPrimary};
     svg {
       fill: ${(props) => props.theme.textLight};
+      stroke: ${(props) => props.theme.textLight};
     }
   }
 `;

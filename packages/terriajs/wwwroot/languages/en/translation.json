@@ -2601,7 +2601,7 @@
     "aggregationNotPossible": "The filter combination does not allow generating aggregation charts"
   },
   "attributeTable": {
-    "open": "Open attribute table",
+    "open": "Attribute table",
     "tableTab": "Attribute table",
     "dashboard": "Dashboard",
     "dashboardEmpty": "No dashboard widgets yet. Add charts from the Charts dialog or create a filter selector below.",

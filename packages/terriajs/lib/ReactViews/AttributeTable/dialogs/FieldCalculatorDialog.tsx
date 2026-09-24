@@ -45,37 +45,44 @@ const FieldCalculatorDialog: React.FC<Props> = observer(
           onClick={(e) => e.stopPropagation()}
         >
           <h3>{t(($) => $.attributeTable.fieldCalculator)}</h3>
-          <label>
-            {t(($) => $.attributeTable.targetField)}
-            <input
-              style={{ width: "100%", marginTop: 4 }}
-              value={targetField}
-              onChange={(e) => setTargetField(e.target.value)}
-            />
-          </label>
-          <label style={{ display: "block", marginTop: 12 }}>
-            {t(($) => $.attributeTable.expression)}
-            <textarea
-              style={{ width: "100%", minHeight: 80, marginTop: 4 }}
-              value={expression}
-              onChange={(e) => setExpression(e.target.value)}
-              placeholder="e.g. fieldA * 2 + Math.max(fieldB, 0)"
-            />
-          </label>
-          <div
-            style={{ marginTop: 8, display: "flex", flexWrap: "wrap", gap: 4 }}
-          >
-            {controller.visibleColumns.map((c) => (
-              <Button
-                key={c.key}
-                type="button"
-                onClick={() => insertField(c.key)}
-              >
-                {c.key}
-              </Button>
-            ))}
+          <div className={Styles.dialogBody}>
+            <label>
+              {t(($) => $.attributeTable.targetField)}
+              <input
+                style={{ width: "100%", marginTop: 4 }}
+                value={targetField}
+                onChange={(e) => setTargetField(e.target.value)}
+              />
+            </label>
+            <label style={{ display: "block", marginTop: 12 }}>
+              {t(($) => $.attributeTable.expression)}
+              <textarea
+                style={{ width: "100%", minHeight: 80, marginTop: 4 }}
+                value={expression}
+                onChange={(e) => setExpression(e.target.value)}
+                placeholder="e.g. fieldA * 2 + Math.max(fieldB, 0)"
+              />
+            </label>
+            <div
+              style={{
+                marginTop: 8,
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 4
+              }}
+            >
+              {controller.visibleColumns.map((c) => (
+                <Button
+                  key={c.key}
+                  type="button"
+                  onClick={() => insertField(c.key)}
+                >
+                  {c.key}
+                </Button>
+              ))}
+            </div>
+            {error && <div className={Styles.errorBanner}>{error}</div>}
           </div>
-          {error && <div className={Styles.errorBanner}>{error}</div>}
           <div className={Styles.dialogActions}>
             <Button type="button" onClick={onClose}>
               {t(($) => $.attributeTable.cancel)}

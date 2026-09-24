@@ -40,98 +40,103 @@ const ColumnExplorerDialog: React.FC<Props> = observer(
           role="dialog"
           aria-label={t(($) => $.attributeTable.explore)}
           onClick={(e) => e.stopPropagation()}
-          style={{ maxWidth: 720 }}
         >
           <h3>{t(($) => $.attributeTable.columnExplorer)}</h3>
-          <input
-            type="search"
-            placeholder={t(($) => $.attributeTable.filterColumns)}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            style={{ width: "100%", marginBottom: 12 }}
-          />
-          <div style={{ maxHeight: 400, overflow: "auto" }}>
-            {filtered.map((summary) => (
-              <div
-                key={summary.key}
-                style={{
-                  borderBottom: "1px solid #eee",
-                  padding: "8px 0"
-                }}
-              >
-                <strong>{summary.key}</strong>{" "}
-                <span style={{ opacity: 0.7 }}>
-                  ({summary.stats.kind}) · populated {populatedCount(summary)}/
-                  {summary.total} · unique {summary.stats.unique}
-                </span>
-                {summary.stats.kind === "numeric" ? (
-                  <div style={{ fontSize: 12, marginTop: 4 }}>
-                    min {formatStatValue(summary.stats.min)} · mean{" "}
-                    {formatStatValue(summary.stats.mean)} · max{" "}
-                    {formatStatValue(summary.stats.max)}
-                    {summary.histogram && (
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-end",
-                          gap: 2,
-                          height: 32,
-                          marginTop: 4
-                        }}
-                      >
-                        {summary.histogram.bins.map((bin, i) => (
-                          <div
-                            key={i}
-                            title={`${bin.count}`}
-                            style={{
-                              width: 8,
-                              height: `${Math.max(
-                                2,
-                                (bin.count /
-                                  (summary.histogram!.maxCount || 1)) *
-                                  100
-                              )}%`,
-                              background: "#4ca2f9"
-                            }}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <ul
-                    style={{ fontSize: 12, margin: "4px 0 0", paddingLeft: 16 }}
-                  >
-                    {summary.stats.top.slice(0, 5).map((entry) => (
-                      <li key={entry.value}>
-                        {entry.value}: {entry.count}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {controller.capabilities.canManageColumns && (
-                  <div style={{ marginTop: 4 }}>
-                    <Button
-                      type="button"
-                      onClick={() =>
-                        controller.setColumnHidden(
-                          summary.key,
-                          !controller.workingColumns.find(
-                            (c) => c.key === summary.key
-                          )?.hidden
-                        )
-                      }
+          <div className={Styles.dialogBody}>
+            <input
+              type="search"
+              placeholder={t(($) => $.attributeTable.filterColumns)}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              style={{ width: "100%", marginBottom: 12 }}
+            />
+            <div>
+              {filtered.map((summary) => (
+                <div
+                  key={summary.key}
+                  style={{
+                    borderBottom: "1px solid #eee",
+                    padding: "8px 0"
+                  }}
+                >
+                  <strong>{summary.key}</strong>{" "}
+                  <span style={{ opacity: 0.7 }}>
+                    ({summary.stats.kind}) · populated {populatedCount(summary)}
+                    /{summary.total} · unique {summary.stats.unique}
+                  </span>
+                  {summary.stats.kind === "numeric" ? (
+                    <div style={{ fontSize: 12, marginTop: 4 }}>
+                      min {formatStatValue(summary.stats.min)} · mean{" "}
+                      {formatStatValue(summary.stats.mean)} · max{" "}
+                      {formatStatValue(summary.stats.max)}
+                      {summary.histogram && (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "flex-end",
+                            gap: 2,
+                            height: 32,
+                            marginTop: 4
+                          }}
+                        >
+                          {summary.histogram.bins.map((bin, i) => (
+                            <div
+                              key={i}
+                              title={`${bin.count}`}
+                              style={{
+                                width: 8,
+                                height: `${Math.max(
+                                  2,
+                                  (bin.count /
+                                    (summary.histogram!.maxCount || 1)) *
+                                    100
+                                )}%`,
+                                background: "#4ca2f9"
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <ul
+                      style={{
+                        fontSize: 12,
+                        margin: "4px 0 0",
+                        paddingLeft: 16
+                      }}
                     >
-                      {controller.workingColumns.find(
-                        (c) => c.key === summary.key
-                      )?.hidden
-                        ? t(($) => $.attributeTable.showColumn)
-                        : t(($) => $.attributeTable.hideColumn)}
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
+                      {summary.stats.top.slice(0, 5).map((entry) => (
+                        <li key={entry.value}>
+                          {entry.value}: {entry.count}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {controller.capabilities.canManageColumns && (
+                    <div style={{ marginTop: 4 }}>
+                      <Button
+                        type="button"
+                        onClick={() =>
+                          controller.setColumnHidden(
+                            summary.key,
+                            !controller.workingColumns.find(
+                              (c) => c.key === summary.key
+                            )?.hidden
+                          )
+                        }
+                      >
+                        {controller.workingColumns.find(
+                          (c) => c.key === summary.key
+                        )?.hidden
+                          ? t(($) => $.attributeTable.showColumn)
+                          : t(($) => $.attributeTable.hideColumn)}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
           <div className={Styles.dialogActions}>
             <Button primary type="button" onClick={onClose}>

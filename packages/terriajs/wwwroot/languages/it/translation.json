@@ -1992,7 +1992,7 @@
     "aggregationNotPossible": "La combinazione di filtri non permette di generare grafici di aggregazione"
   },
   "attributeTable": {
-    "open": "Apri tabella attributi",
+    "open": "Tabella attributi",
     "tableTab": "Tabella attributi",
     "dashboard": "Dashboard",
     "dashboardEmpty": "Nessun widget nella dashboard. Aggiungi grafici dalla finestra Charts o crea un filtro qui sotto.",

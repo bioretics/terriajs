@@ -36,6 +36,11 @@ import {
 import AttributeTableController from "../AttributeTableController";
 import Styles from "../attribute-table.scss";
 
+const CHART_PREVIEW_HEIGHT = Math.min(
+  240,
+  Math.max(180, Math.floor(window.innerHeight * 0.35))
+);
+
 const COLORS = [
   "#63b598",
   "#ce7d78",
@@ -91,7 +96,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
           i
         }));
         return (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
             <BarChart data={data}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" hide />
@@ -106,7 +111,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
         const result = computeScatter(rows, field, fieldY);
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
             <ScatterChart>
               <CartesianGrid />
               <XAxis type="number" dataKey="x" name={field} />
@@ -126,7 +131,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
         );
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
             <BarChart data={result.bars}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="label" />
@@ -146,7 +151,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
         );
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
             <PieChart>
               <Pie
                 data={result.slices}
@@ -168,7 +173,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
         const result = computeLine(rows, field);
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={280}>
+          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
             <LineChart data={result.points}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="index" />
@@ -212,103 +217,104 @@ const AttributeChartDialog: React.FC<Props> = observer(
           role="dialog"
           aria-label={t(($) => $.attributeTable.charts)}
           onClick={(e) => e.stopPropagation()}
-          style={{ maxWidth: 720 }}
         >
           <h3>{t(($) => $.attributeTable.charts)}</h3>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <label>
-              Type{" "}
-              <select
-                value={chartType}
-                onChange={(e) => setChartType(e.target.value as ChartType)}
-              >
-                <option value="histogram">Histogram</option>
-                <option value="scatter">Scatter</option>
-                <option value="bar">Bar</option>
-                <option value="line">Line</option>
-                <option value="box">Box</option>
-                <option value="pie">Pie</option>
-              </select>
-            </label>
-            {(chartType === "histogram" ||
-              chartType === "line" ||
-              chartType === "box" ||
-              chartType === "scatter" ||
-              ((chartType === "bar" || chartType === "pie") &&
-                aggregation !== "count")) && (
+          <div className={Styles.dialogBody}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <label>
-                Field{" "}
+                Type{" "}
                 <select
-                  value={field}
-                  onChange={(e) => setField(e.target.value)}
+                  value={chartType}
+                  onChange={(e) => setChartType(e.target.value as ChartType)}
                 >
-                  {(numeric.length ? numeric : keys).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
+                  <option value="histogram">Histogram</option>
+                  <option value="scatter">Scatter</option>
+                  <option value="bar">Bar</option>
+                  <option value="line">Line</option>
+                  <option value="box">Box</option>
+                  <option value="pie">Pie</option>
                 </select>
               </label>
-            )}
-            {chartType === "scatter" && (
-              <label>
-                Y{" "}
-                <select
-                  value={fieldY}
-                  onChange={(e) => setFieldY(e.target.value)}
-                >
-                  {(numeric.length ? numeric : keys).map((k) => (
-                    <option key={k} value={k}>
-                      {k}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            {(chartType === "bar" || chartType === "pie") && (
-              <>
+              {(chartType === "histogram" ||
+                chartType === "line" ||
+                chartType === "box" ||
+                chartType === "scatter" ||
+                ((chartType === "bar" || chartType === "pie") &&
+                  aggregation !== "count")) && (
                 <label>
-                  Category{" "}
+                  Field{" "}
                   <select
-                    value={categoryField}
-                    onChange={(e) => setCategoryField(e.target.value)}
+                    value={field}
+                    onChange={(e) => setField(e.target.value)}
                   >
-                    {(categorical.length ? categorical : keys).map((k) => (
+                    {(numeric.length ? numeric : keys).map((k) => (
                       <option key={k} value={k}>
                         {k}
                       </option>
                     ))}
                   </select>
                 </label>
+              )}
+              {chartType === "scatter" && (
                 <label>
-                  Aggregation{" "}
+                  Y{" "}
                   <select
-                    value={aggregation}
-                    onChange={(e) =>
-                      setAggregation(e.target.value as BarAggregation)
-                    }
+                    value={fieldY}
+                    onChange={(e) => setFieldY(e.target.value)}
                   >
-                    <option value="count">Count</option>
-                    <option value="sum">Sum</option>
-                    <option value="mean">Mean</option>
+                    {(numeric.length ? numeric : keys).map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
                   </select>
                 </label>
-              </>
-            )}
-            {chartType === "histogram" && (
-              <label>
-                Bins{" "}
-                <input
-                  type="number"
-                  min={1}
-                  max={50}
-                  value={bins}
-                  onChange={(e) => setBins(Number(e.target.value) || 10)}
-                />
-              </label>
-            )}
+              )}
+              {(chartType === "bar" || chartType === "pie") && (
+                <>
+                  <label>
+                    Category{" "}
+                    <select
+                      value={categoryField}
+                      onChange={(e) => setCategoryField(e.target.value)}
+                    >
+                      {(categorical.length ? categorical : keys).map((k) => (
+                        <option key={k} value={k}>
+                          {k}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    Aggregation{" "}
+                    <select
+                      value={aggregation}
+                      onChange={(e) =>
+                        setAggregation(e.target.value as BarAggregation)
+                      }
+                    >
+                      <option value="count">Count</option>
+                      <option value="sum">Sum</option>
+                      <option value="mean">Mean</option>
+                    </select>
+                  </label>
+                </>
+              )}
+              {chartType === "histogram" && (
+                <label>
+                  Bins{" "}
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={bins}
+                    onChange={(e) => setBins(Number(e.target.value) || 10)}
+                  />
+                </label>
+              )}
+            </div>
+            <div style={{ marginTop: 12 }}>{chartBody}</div>
           </div>
-          <div style={{ marginTop: 12 }}>{chartBody}</div>
           <div className={Styles.dialogActions}>
             {onAddToDashboard && (
               <Button

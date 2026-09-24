@@ -102,63 +102,67 @@ const AttributeStatsDialog: React.FC<Props> = observer(
           onClick={(e) => e.stopPropagation()}
         >
           <h3>{t(($) => $.attributeTable.statistics)}</h3>
-          <label>
-            {t(($) => $.attributeTable.field)}{" "}
-            <select value={field} onChange={(e) => setField(e.target.value)}>
-              {columns.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.title}
+          <div className={Styles.dialogBody}>
+            <label>
+              {t(($) => $.attributeTable.field)}{" "}
+              <select value={field} onChange={(e) => setField(e.target.value)}>
+                {columns.map((c) => (
+                  <option key={c.key} value={c.key}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </label>{" "}
+            <label>
+              {t(($) => $.attributeTable.scope)}{" "}
+              <select
+                value={resolved}
+                onChange={(e) => setScope(e.target.value as StatsScope)}
+              >
+                <option value="all">
+                  {t(($) => $.attributeTable.scopeAll)}
                 </option>
-              ))}
-            </select>
-          </label>{" "}
-          <label>
-            {t(($) => $.attributeTable.scope)}{" "}
-            <select
-              value={resolved}
-              onChange={(e) => setScope(e.target.value as StatsScope)}
-            >
-              <option value="all">{t(($) => $.attributeTable.scopeAll)}</option>
-              {availability.hasFilter && (
-                <option value="filtered">
-                  {t(($) => $.attributeTable.scopeFiltered)}
-                </option>
-              )}
-              {availability.hasSelection && (
-                <option value="selected">
-                  {t(($) => $.attributeTable.scopeSelected)}
-                </option>
-              )}
-            </select>
-          </label>
-          {stats && (
-            <div style={{ marginTop: 12 }}>
-              {stats.kind === "numeric" ? (
-                <ul>
-                  <li>Count: {stats.count}</li>
-                  <li>Nulls: {stats.nulls}</li>
-                  <li>Unique: {stats.unique}</li>
-                  <li>Min: {formatStatValue(stats.min)}</li>
-                  <li>Max: {formatStatValue(stats.max)}</li>
-                  <li>Mean: {formatStatValue(stats.mean)}</li>
-                  <li>Median: {formatStatValue(stats.median)}</li>
-                  <li>Std: {formatStatValue(stats.std)}</li>
-                  <li>Sum: {formatStatValue(stats.sum)}</li>
-                </ul>
-              ) : (
-                <ul>
-                  <li>Count: {stats.count}</li>
-                  <li>Nulls: {stats.nulls}</li>
-                  <li>Unique: {stats.unique}</li>
-                  {stats.top.map((entry) => (
-                    <li key={entry.value}>
-                      {entry.value}: {entry.count}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
+                {availability.hasFilter && (
+                  <option value="filtered">
+                    {t(($) => $.attributeTable.scopeFiltered)}
+                  </option>
+                )}
+                {availability.hasSelection && (
+                  <option value="selected">
+                    {t(($) => $.attributeTable.scopeSelected)}
+                  </option>
+                )}
+              </select>
+            </label>
+            {stats && (
+              <div style={{ marginTop: 12 }}>
+                {stats.kind === "numeric" ? (
+                  <ul>
+                    <li>Count: {stats.count}</li>
+                    <li>Nulls: {stats.nulls}</li>
+                    <li>Unique: {stats.unique}</li>
+                    <li>Min: {formatStatValue(stats.min)}</li>
+                    <li>Max: {formatStatValue(stats.max)}</li>
+                    <li>Mean: {formatStatValue(stats.mean)}</li>
+                    <li>Median: {formatStatValue(stats.median)}</li>
+                    <li>Std: {formatStatValue(stats.std)}</li>
+                    <li>Sum: {formatStatValue(stats.sum)}</li>
+                  </ul>
+                ) : (
+                  <ul>
+                    <li>Count: {stats.count}</li>
+                    <li>Nulls: {stats.nulls}</li>
+                    <li>Unique: {stats.unique}</li>
+                    {stats.top.map((entry) => (
+                      <li key={entry.value}>
+                        {entry.value}: {entry.count}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </div>
           <div className={Styles.dialogActions}>
             <Button type="button" onClick={copySummary}>
               {t(($) => $.attributeTable.copy)}
