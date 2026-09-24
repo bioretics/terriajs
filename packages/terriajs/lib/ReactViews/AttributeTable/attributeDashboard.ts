@@ -8,6 +8,7 @@ import {
   ChartType,
   filterRowsBySelections
 } from "./attributeCharts";
+import { type ChartSpec } from "./chartSpec";
 import { AttributeTableRow } from "./types";
 
 export type DashboardWidgetType = ChartType | "selector";
@@ -34,6 +35,56 @@ export interface SelectorDashboardWidget extends DashboardWidgetBase {
 }
 
 export type DashboardWidget = ChartDashboardWidget | SelectorDashboardWidget;
+
+/** Map a persisted dashboard chart widget to a {@link ChartSpec} for rendering. */
+export function widgetToChartSpec(
+  widget: ChartDashboardWidget
+): ChartSpec | undefined {
+  switch (widget.type) {
+    case "histogram":
+      return widget.field
+        ? {
+            type: "histogram",
+            field: widget.field,
+            bins: widget.bins
+          }
+        : undefined;
+    case "scatter":
+      return widget.field && widget.fieldY
+        ? {
+            type: "scatter",
+            xField: widget.field,
+            yField: widget.fieldY
+          }
+        : undefined;
+    case "bar":
+      return widget.categoryField
+        ? {
+            type: "bar",
+            category: widget.categoryField,
+            aggregation: widget.aggregation ?? "count",
+            valueField:
+              widget.aggregation === "count" ? undefined : widget.field
+          }
+        : undefined;
+    case "pie":
+      return widget.categoryField
+        ? {
+            type: "pie",
+            category: widget.categoryField,
+            aggregation: widget.aggregation ?? "count",
+            valueField:
+              widget.aggregation === "count" ? undefined : widget.field
+          }
+        : undefined;
+    case "line":
+      return widget.field ? { type: "line", field: widget.field } : undefined;
+    case "box":
+      return widget.field ? { type: "box", field: widget.field } : undefined;
+    default:
+      return undefined;
+  }
+}
 
 export interface AttributeDashboardState {
   widgets: DashboardWidget[];

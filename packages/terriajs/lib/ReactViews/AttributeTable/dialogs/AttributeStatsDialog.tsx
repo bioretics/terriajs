@@ -1,17 +1,8 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { observer } from "mobx-react";
-import { useTranslation } from "react-i18next";
-import Button from "../../../Styled/Button";
 import { coerceNumericStringRows, pickAnalysisRows } from "../attributeCharts";
-import {
-  computeFieldStats,
-  formatStatValue,
-  resolveStatsScope,
-  statsScopeAvailability,
-  StatsScope
-} from "../attributeStats";
 import AttributeTableController from "../AttributeTableController";
-import Styles from "../attribute-table.scss";
+import FieldStatisticsDialog from "./FieldStatisticsDialog";
 
 interface Props {
   controller: AttributeTableController;
@@ -20,161 +11,44 @@ interface Props {
 
 const AttributeStatsDialog: React.FC<Props> = observer(
   function AttributeStatsDialog({ controller, onClose }) {
-    const { t } = useTranslation();
-    const columns = controller.visibleColumns;
-    const [field, setField] = useState(columns[0]?.key ?? "");
-    const [scope, setScope] = useState<StatsScope>("all");
-
-    const analysisRows = useMemo(
+    const rows = useMemo(
       () => coerceNumericStringRows(controller.baseRows),
       [controller.baseRows]
     );
-    const filtered = useMemo(
+    const filteredRows = useMemo(
       () =>
         pickAnalysisRows(
-          analysisRows,
+          rows,
           controller.baseRows,
           new Set(controller.searchFilteredRows.map((r) => r.featureId))
         ),
-      [analysisRows, controller.baseRows, controller.searchFilteredRows]
+      [rows, controller.baseRows, controller.searchFilteredRows]
     );
-    const selected = useMemo(
+    const selectedRows = useMemo(
       () =>
         pickAnalysisRows(
-          analysisRows,
+          rows,
           controller.baseRows,
           new Set(controller.selectedIds)
         ),
-      [analysisRows, controller.baseRows, controller.selectedIds]
+      [rows, controller.baseRows, controller.selectedIds]
     );
-
-    const availability = statsScopeAvailability(
-      analysisRows,
-      filtered,
-      selected
-    );
-    const resolved = resolveStatsScope(scope, availability);
-    const rowsForStats =
-      resolved === "filtered"
-        ? filtered
-        : resolved === "selected"
-          ? selected
-          : analysisRows;
-
-    const stats = field ? computeFieldStats(rowsForStats, field) : null;
-
-    const copySummary = () => {
-      if (!stats) return;
-      const lines =
-        stats.kind === "numeric"
-          ? [
-              `Field: ${field}`,
-              `Count: ${stats.count}`,
-              `Nulls: ${stats.nulls}`,
-              `Unique: ${stats.unique}`,
-              `Min: ${formatStatValue(stats.min)}`,
-              `Max: ${formatStatValue(stats.max)}`,
-              `Mean: ${formatStatValue(stats.mean)}`,
-              `Median: ${formatStatValue(stats.median)}`,
-              `Std: ${formatStatValue(stats.std)}`,
-              `Sum: ${formatStatValue(stats.sum)}`
-            ]
-          : [
-              `Field: ${field}`,
-              `Count: ${stats.count}`,
-              `Nulls: ${stats.nulls}`,
-              `Unique: ${stats.unique}`,
-              ...stats.top.map((t) => `${t.value}: ${t.count}`)
-            ];
-      void navigator.clipboard?.writeText(lines.join("\n"));
-    };
+    const columns = controller.visibleColumns.map((c) => c.key);
+    const layerName =
+      (controller.activeItem as { nameInCatalog?: string; name?: string })
+        ?.nameInCatalog ??
+      (controller.activeItem as { name?: string })?.name ??
+      "";
 
     return (
-      <div
-        className={Styles.dialogBackdrop}
-        role="presentation"
-        onClick={onClose}
-      >
-        <div
-          className={Styles.dialog}
-          role="dialog"
-          aria-label={t(($) => $.attributeTable.statistics)}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className={Styles.dialogHeader}>
-            <h3>{t(($) => $.attributeTable.statistics)}</h3>
-          </div>
-          <div className={Styles.dialogBody}>
-            <label>
-              {t(($) => $.attributeTable.field)}{" "}
-              <select value={field} onChange={(e) => setField(e.target.value)}>
-                {columns.map((c) => (
-                  <option key={c.key} value={c.key}>
-                    {c.title}
-                  </option>
-                ))}
-              </select>
-            </label>{" "}
-            <label>
-              {t(($) => $.attributeTable.scope)}{" "}
-              <select
-                value={resolved}
-                onChange={(e) => setScope(e.target.value as StatsScope)}
-              >
-                <option value="all">
-                  {t(($) => $.attributeTable.scopeAll)}
-                </option>
-                {availability.hasFilter && (
-                  <option value="filtered">
-                    {t(($) => $.attributeTable.scopeFiltered)}
-                  </option>
-                )}
-                {availability.hasSelection && (
-                  <option value="selected">
-                    {t(($) => $.attributeTable.scopeSelected)}
-                  </option>
-                )}
-              </select>
-            </label>
-            {stats && (
-              <div style={{ marginTop: 12 }}>
-                {stats.kind === "numeric" ? (
-                  <ul>
-                    <li>Count: {stats.count}</li>
-                    <li>Nulls: {stats.nulls}</li>
-                    <li>Unique: {stats.unique}</li>
-                    <li>Min: {formatStatValue(stats.min)}</li>
-                    <li>Max: {formatStatValue(stats.max)}</li>
-                    <li>Mean: {formatStatValue(stats.mean)}</li>
-                    <li>Median: {formatStatValue(stats.median)}</li>
-                    <li>Std: {formatStatValue(stats.std)}</li>
-                    <li>Sum: {formatStatValue(stats.sum)}</li>
-                  </ul>
-                ) : (
-                  <ul>
-                    <li>Count: {stats.count}</li>
-                    <li>Nulls: {stats.nulls}</li>
-                    <li>Unique: {stats.unique}</li>
-                    {stats.top.map((entry) => (
-                      <li key={entry.value}>
-                        {entry.value}: {entry.count}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </div>
-          <div className={Styles.dialogActions}>
-            <Button type="button" onClick={copySummary}>
-              {t(($) => $.attributeTable.copy)}
-            </Button>
-            <Button primary type="button" onClick={onClose}>
-              {t(($) => $.attributeTable.close)}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <FieldStatisticsDialog
+        rows={rows}
+        filteredRows={filteredRows}
+        selectedRows={selectedRows}
+        columns={columns}
+        layerName={layerName}
+        onClose={onClose}
+      />
     );
   }
 );

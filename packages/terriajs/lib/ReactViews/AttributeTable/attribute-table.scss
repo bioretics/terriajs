@@ -44,13 +44,11 @@
 .panel-content {
   composes: clearfix from "../../Sass/common/_base.scss";
   position: relative;
-  background: variables.$modal-bg;
-  color: variables.$modal-text;
-  border-top: 1px solid variables.$grey-lighter;
+  background: variables.$chart-darker;
+  color: variables.$text-light;
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border-radius: 3px;
   display: flex;
   flex-direction: column;
 }
@@ -61,8 +59,8 @@
   align-items: center;
   gap: 6px;
   padding: 8px 10px;
-  border-bottom: 1px solid variables.$grey-lighter;
-  background: variables.$modal-bg;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
 }
 
@@ -70,23 +68,15 @@
   flex: 1;
 }
 
-.search-input {
-  min-width: 160px;
-  max-width: 280px;
-  padding: 4px 8px;
-  border: 1px solid variables.$grey-lighter;
-  border-radius: 3px;
-  background: #fff;
-  color: #333;
-}
-
 .status-bar {
   display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   padding: 6px 10px;
-  font-size: 12px;
-  border-top: 1px solid variables.$grey-lighter;
-  background: variables.$modal-bg;
+  font-size: 11px;
+  color: variables.$text-light-dimmed;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
@@ -98,74 +88,51 @@
   :global {
     .rdt_Table {
       min-width: max-content;
+      background: transparent;
+      color: variables.$text-light;
+    }
+
+    .rdt_TableHeadRow {
+      background: variables.$chart-panel-header;
+      color: variables.$text-light;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      min-height: 36px;
+    }
+
+    .rdt_TableHeadRow .rdt_TableCol {
+      color: variables.$text-light;
+      font-size: 12px;
+    }
+
+    .rdt_TableRow {
+      background: rgba(255, 255, 255, 0.04);
+      color: variables.$text-light;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      min-height: 32px;
+      font-size: 12px;
+    }
+
+    .rdt_TableRow:nth-child(even) {
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .rdt_TableRow:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .rdt_Pagination {
+      background: rgba(0, 0, 0, 0.2);
+      color: variables.$text-light-dimmed;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      min-height: 40px;
+    }
+
+    .rdt_Pagination button,
+    .rdt_Pagination select {
+      color: variables.$text-light;
+      fill: variables.$text-light;
     }
   }
-}
-
-.dialog-backdrop {
-  position: fixed;
-  inset: 0;
-  box-sizing: border-box;
-  padding: max(24px, env(safe-area-inset-top, 0px) + 16px)
-    max(24px, env(safe-area-inset-right, 0px) + 16px)
-    max(24px, env(safe-area-inset-bottom, 0px) + 16px)
-    max(24px, env(safe-area-inset-left, 0px) + 16px);
-  background: rgba(0, 0, 0, 0.45);
-  z-index: 1100;
-  overflow: hidden;
-  overscroll-behavior: none;
-  display: grid;
-  place-items: center;
-}
-
-.dialog {
-  background: #fff;
-  color: #222;
-  border-radius: 4px;
-  box-sizing: border-box;
-  width: min(720px, 100%);
-  min-height: 0;
-  max-height: 100%;
-  overflow: hidden;
-  padding: 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-  display: flex;
-  flex-direction: column;
-}
-
-.dialog-header {
-  flex-shrink: 0;
-  padding: 16px 16px 0;
-}
-
-.dialog h3 {
-  margin: 0 0 12px;
-}
-
-.dialog-body {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 0 16px;
-  overflow-x: auto;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
-
-.dialog-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
-  padding: 16px;
-  border-top: 1px solid variables.$grey-lighter;
-  background: #fff;
-}
-
-.chart-preview {
-  width: 100%;
-  min-height: 240px;
-  height: min(280px, 40vh);
-  margin-top: 12px;
 }
 
 .dashboard-grid {
@@ -179,10 +146,10 @@
 }
 
 .dashboard-widget {
-  border: 1px solid variables.$grey-lighter;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 4px;
-  background: #fff;
-  color: #222;
+  background: rgba(255, 255, 255, 0.06);
+  color: variables.$text-light;
   padding: 10px;
   min-height: 200px;
   display: flex;
@@ -195,17 +162,31 @@
   align-items: center;
   margin-bottom: 8px;
   font-weight: 600;
+  font-size: 13px;
+}
+
+.dashboard-chart-wrap {
+  flex: 1;
+  min-height: 160px;
+  overflow: hidden;
+
+  svg {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+  }
 }
 
 .empty-state {
   padding: 24px;
   text-align: center;
-  opacity: 0.8;
+  opacity: 0.85;
+  color: variables.$text-light-dimmed;
 }
 
 .error-banner {
-  background: #fdecea;
-  color: #b71c1c;
+  background: rgba(183, 28, 28, 0.85);
+  color: #fff;
   padding: 8px 12px;
   font-size: 13px;
 }
@@ -213,16 +194,9 @@
 .editable-cell input {
   width: 100%;
   box-sizing: border-box;
-  border: 1px solid #90caf9;
+  border: 1px solid rgba(144, 202, 249, 0.8);
   padding: 2px 4px;
   border-radius: 2px;
-}
-
-.column-explorer-row {
-  border-bottom: 1px solid variables.$grey-lighter;
-  padding: 8px 0;
-}
-
-.column-explorer-row--hidden {
-  opacity: 0.55;
+  background: rgba(255, 255, 255, 0.95);
+  color: #222;
 }

@@ -35,6 +35,18 @@ export function rowsToCsv(
   return lines.join("\n");
 }
 
+export function sanitizeExportFileName(
+  name: string,
+  fallback = "layer"
+): string {
+  const cleaned = name
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 120);
+  return cleaned.length > 0 ? cleaned : fallback;
+}
+
 export function downloadTextFile(
   content: string,
   filename: string,

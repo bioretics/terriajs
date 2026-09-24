@@ -1,44 +1,22 @@
 import React, { useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useTranslation } from "react-i18next";
+import AttributeChartView from "./AttributeChartView";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis
-} from "recharts";
-import Button from "../../Styled/Button";
+  ChartDashboardWidget,
+  SelectorDashboardWidget,
+  widgetToChartSpec
+} from "./attributeDashboard";
 import {
   categoricalColumns,
   coerceNumericStringRows,
-  computeBar,
-  computeHistogram,
-  computePie,
   distinctCategoryValues,
-  numericColumns,
-  numericValues
+  type ChartRow
 } from "./attributeCharts";
-import {
-  ChartDashboardWidget,
-  SelectorDashboardWidget
-} from "./attributeDashboard";
+import { computeChart } from "./chartSpec";
 import AttributeTableController from "./AttributeTableController";
+import { PanelButton, PanelSelect } from "./AttributeTableStyles";
 import Styles from "./attribute-table.scss";
-
-const COLORS = [
-  "#63b598",
-  "#ce7d78",
-  "#ea9e70",
-  "#0d5ac1",
-  "#4ca2f9",
-  "#a4e43f"
-];
 
 interface Props {
   controller: AttributeTableController;
@@ -70,8 +48,15 @@ const AttributeDashboard: React.FC<Props> = observer(
       return (
         <div className={Styles.emptyState}>
           <p>{t(($) => $.attributeTable.dashboardEmpty)}</p>
-          <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
-            <select
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+              flexWrap: "wrap"
+            }}
+          >
+            <PanelSelect
               value={selectorField}
               onChange={(e) => setSelectorField(e.target.value)}
             >
@@ -80,16 +65,16 @@ const AttributeDashboard: React.FC<Props> = observer(
                   {k}
                 </option>
               ))}
-            </select>
-            <Button primary type="button" onClick={addSelector}>
+            </PanelSelect>
+            <PanelButton type="button" onClick={addSelector}>
               {t(($) => $.attributeTable.addSelector)}
-            </Button>
-            <Button
+            </PanelButton>
+            <PanelButton
               type="button"
               onClick={() => controller.setActiveTab("table")}
             >
               {t(($) => $.attributeTable.backToTable)}
-            </Button>
+            </PanelButton>
           </div>
         </div>
       );
@@ -105,7 +90,7 @@ const AttributeDashboard: React.FC<Props> = observer(
         }}
       >
         <div className={Styles.toolbar}>
-          <select
+          <PanelSelect
             value={selectorField}
             onChange={(e) => setSelectorField(e.target.value)}
           >
@@ -114,16 +99,16 @@ const AttributeDashboard: React.FC<Props> = observer(
                 {k}
               </option>
             ))}
-          </select>
-          <Button type="button" onClick={addSelector}>
+          </PanelSelect>
+          <PanelButton type="button" onClick={addSelector}>
             {t(($) => $.attributeTable.addSelector)}
-          </Button>
-          <Button
+          </PanelButton>
+          <PanelButton
             type="button"
             onClick={() => controller.setActiveTab("table")}
           >
             {t(($) => $.attributeTable.backToTable)}
-          </Button>
+          </PanelButton>
           <span className={Styles.toolbarSpacer} />
           <span>
             {controller.dashboardFilteredRows.length} /{" "}
@@ -135,12 +120,13 @@ const AttributeDashboard: React.FC<Props> = observer(
             <div key={widget.id} className={Styles.dashboardWidget}>
               <div className={Styles.dashboardWidgetHeader}>
                 <span>{widget.title}</span>
-                <Button
+                <PanelButton
                   type="button"
                   onClick={() => controller.removeDashboardWidget(widget.id)}
+                  aria-label={t(($) => $.general.close)}
                 >
                   ×
-                </Button>
+                </PanelButton>
               </div>
               {widget.type === "selector" ? (
                 <SelectorWidget
@@ -152,7 +138,6 @@ const AttributeDashboard: React.FC<Props> = observer(
                 <ChartWidget
                   widget={widget as ChartDashboardWidget}
                   rows={rows}
-                  keys={keys}
                 />
               )}
             </div>
@@ -165,15 +150,15 @@ const AttributeDashboard: React.FC<Props> = observer(
 
 const SelectorWidget: React.FC<{
   widget: SelectorDashboardWidget;
-  rows: { properties: Record<string, unknown> }[];
+  rows: ChartRow[];
   onChange: (w: SelectorDashboardWidget) => void;
 }> = ({ widget, rows, onChange }) => {
   const values = distinctCategoryValues(rows, widget.field);
   const selected = new Set(widget.selectedValues);
   return (
-    <div style={{ overflow: "auto", maxHeight: 180 }}>
+    <div style={{ overflow: "auto", maxHeight: 180, fontSize: 13 }}>
       {values.map((value) => (
-        <label key={value} style={{ display: "block", fontSize: 13 }}>
+        <label key={value} style={{ display: "block" }}>
           <input
             type="checkbox"
             checked={selected.has(value)}
@@ -193,95 +178,21 @@ const SelectorWidget: React.FC<{
 
 const ChartWidget: React.FC<{
   widget: ChartDashboardWidget;
-  rows: { properties: Record<string, unknown> }[];
-  keys: string[];
-}> = ({ widget, rows, keys }) => {
-  if (widget.type === "histogram" && widget.field) {
-    const result = computeHistogram(
-      numericValues(rows, widget.field),
-      widget.bins ?? 10
-    );
-    if (!result) return <p>No data</p>;
-    const data = result.bins.map((b) => ({
-      name: `${b.x0.toFixed(1)}`,
-      count: b.count
-    }));
-    return (
-      <ResponsiveContainer width="100%" height={160}>
-        <BarChart data={data}>
-          <Bar dataKey="count" fill={COLORS[0]} />
-          <Tooltip />
-        </BarChart>
-      </ResponsiveContainer>
-    );
+  rows: ChartRow[];
+}> = ({ widget, rows }) => {
+  const spec = widgetToChartSpec(widget);
+  const result = useMemo(
+    () => (spec ? computeChart(rows, spec) : undefined),
+    [rows, spec]
+  );
+  if (!result) {
+    return <p style={{ opacity: 0.7, fontSize: 12 }}>No data</p>;
   }
-  if (widget.type === "bar" && widget.categoryField) {
-    const result = computeBar(
-      rows,
-      widget.categoryField,
-      widget.aggregation ?? "count",
-      widget.aggregation === "count" ? null : (widget.field ?? null)
-    );
-    if (!result) return <p>No data</p>;
-    return (
-      <ResponsiveContainer width="100%" height={160}>
-        <BarChart data={result.bars}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="label" hide />
-          <YAxis />
-          <Tooltip />
-          <Bar dataKey="value" fill={COLORS[1]} />
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  }
-  if (widget.type === "pie" && widget.categoryField) {
-    const result = computePie(
-      rows,
-      widget.categoryField,
-      widget.aggregation ?? "count",
-      widget.aggregation === "count" ? null : (widget.field ?? null)
-    );
-    if (!result) return <p>No data</p>;
-    return (
-      <ResponsiveContainer width="100%" height={160}>
-        <PieChart>
-          <Pie
-            data={result.slices}
-            dataKey="value"
-            nameKey="label"
-            outerRadius={60}
-          >
-            {result.slices.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
-            ))}
-          </Pie>
-          <Tooltip />
-        </PieChart>
-      </ResponsiveContainer>
-    );
-  }
-  // Fallback: show numeric field histogram if possible
-  const numeric = numericColumns(rows, keys);
-  if (numeric[0]) {
-    const result = computeHistogram(numericValues(rows, numeric[0]), 10);
-    if (result) {
-      return (
-        <ResponsiveContainer width="100%" height={160}>
-          <BarChart
-            data={result.bins.map((b) => ({
-              name: String(b.x0),
-              count: b.count
-            }))}
-          >
-            <Bar dataKey="count" fill={COLORS[2]} />
-            <Tooltip />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-  }
-  return <p>Unsupported widget</p>;
+  return (
+    <div className={Styles.dashboardChartWrap}>
+      <AttributeChartView result={result} />
+    </div>
+  );
 };
 
 export default AttributeDashboard;

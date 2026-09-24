@@ -278,6 +278,16 @@ export function computeScatter(
   return { points, total: all.length, xMin, xMax, yMin, yMax };
 }
 
+export function formatAxisValue(value: number): string {
+  if (!Number.isFinite(value)) return "";
+  const abs = Math.abs(value);
+  if (abs !== 0 && (abs < 1e-3 || abs >= 1e7)) {
+    return value.toExponential(1);
+  }
+  if (Number.isInteger(value)) return String(value);
+  return parseFloat(value.toFixed(3)).toString();
+}
+
 const CATEGORY_ABSOLUTE_LIMIT = 15;
 const CATEGORY_RATIO = 0.5;
 

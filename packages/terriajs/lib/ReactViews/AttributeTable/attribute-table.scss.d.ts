@@ -1,26 +1,13 @@
 declare namespace AttributeTableScssNamespace {
   export interface IAttributeTableScss {
-    "chart-preview": string;
-    chartPreview: string;
-    "column-explorer-row": string;
-    "column-explorer-row--hidden": string;
-    columnExplorerRow: string;
-    columnExplorerRowHidden: string;
+    "dashboard-chart-wrap": string;
     "dashboard-grid": string;
     "dashboard-widget": string;
     "dashboard-widget-header": string;
+    dashboardChartWrap: string;
     dashboardGrid: string;
     dashboardWidget: string;
     dashboardWidgetHeader: string;
-    dialog: string;
-    "dialog-actions": string;
-    "dialog-backdrop": string;
-    "dialog-body": string;
-    "dialog-header": string;
-    dialogActions: string;
-    dialogBackdrop: string;
-    dialogBody: string;
-    dialogHeader: string;
     "editable-cell": string;
     editableCell: string;
     "empty-state": string;
@@ -39,8 +26,6 @@ declare namespace AttributeTableScssNamespace {
     "panel-content": string;
     panelBody: string;
     panelContent: string;
-    "search-input": string;
-    searchInput: string;
     "status-bar": string;
     statusBar: string;
     toolbar: string;
