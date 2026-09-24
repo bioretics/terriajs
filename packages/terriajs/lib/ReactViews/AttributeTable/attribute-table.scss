@@ -105,44 +105,67 @@
 .dialog-backdrop {
   position: fixed;
   inset: 0;
+  box-sizing: border-box;
+  padding: max(24px, env(safe-area-inset-top, 0px) + 16px)
+    max(24px, env(safe-area-inset-right, 0px) + 16px)
+    max(24px, env(safe-area-inset-bottom, 0px) + 16px)
+    max(24px, env(safe-area-inset-left, 0px) + 16px);
   background: rgba(0, 0, 0, 0.45);
   z-index: 1100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  overscroll-behavior: none;
+  display: grid;
+  place-items: center;
 }
 
 .dialog {
   background: #fff;
   color: #222;
   border-radius: 4px;
-  width: min(720px, 92vw);
-  max-height: min(85vh, 640px);
+  box-sizing: border-box;
+  width: min(720px, 100%);
+  min-height: 0;
+  max-height: 100%;
   overflow: hidden;
-  padding: 16px;
+  padding: 0;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
 }
 
+.dialog-header {
+  flex-shrink: 0;
+  padding: 16px 16px 0;
+}
+
 .dialog h3 {
   margin: 0 0 12px;
-  flex-shrink: 0;
 }
 
 .dialog-body {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
+  padding: 0 16px;
   overflow-x: auto;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .dialog-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 16px;
   flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid variables.$grey-lighter;
+  background: #fff;
+}
+
+.chart-preview {
+  width: 100%;
+  min-height: 240px;
+  height: min(280px, 40vh);
+  margin-top: 12px;
 }
 
 .dashboard-grid {

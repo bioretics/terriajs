@@ -36,11 +36,6 @@ import {
 import AttributeTableController from "../AttributeTableController";
 import Styles from "../attribute-table.scss";
 
-const CHART_PREVIEW_HEIGHT = Math.min(
-  240,
-  Math.max(180, Math.floor(window.innerHeight * 0.35))
-);
-
 const COLORS = [
   "#63b598",
   "#ce7d78",
@@ -96,30 +91,34 @@ const AttributeChartDialog: React.FC<Props> = observer(
           i
         }));
         return (
-          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
-            <BarChart data={data}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" hide />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill={COLORS[0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className={Styles.chartPreview}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" hide />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill={COLORS[0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         );
       }
       if (chartType === "scatter" && field && fieldY) {
         const result = computeScatter(rows, field, fieldY);
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
-            <ScatterChart>
-              <CartesianGrid />
-              <XAxis type="number" dataKey="x" name={field} />
-              <YAxis type="number" dataKey="y" name={fieldY} />
-              <Tooltip cursor={{ strokeDasharray: "3 3" }} />
-              <Scatter data={result.points} fill={COLORS[1]} />
-            </ScatterChart>
-          </ResponsiveContainer>
+          <div className={Styles.chartPreview}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ScatterChart>
+                <CartesianGrid />
+                <XAxis type="number" dataKey="x" name={field} />
+                <YAxis type="number" dataKey="y" name={fieldY} />
+                <Tooltip cursor={{ strokeDasharray: "3 3" }} />
+                <Scatter data={result.points} fill={COLORS[1]} />
+              </ScatterChart>
+            </ResponsiveContainer>
+          </div>
         );
       }
       if (chartType === "bar" && categoryField) {
@@ -131,15 +130,17 @@ const AttributeChartDialog: React.FC<Props> = observer(
         );
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
-            <BarChart data={result.bars}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="label" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill={COLORS[2]} />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className={Styles.chartPreview}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={result.bars}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="label" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="value" fill={COLORS[2]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         );
       }
       if (chartType === "pie" && categoryField) {
@@ -151,42 +152,46 @@ const AttributeChartDialog: React.FC<Props> = observer(
         );
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
-            <PieChart>
-              <Pie
-                data={result.slices}
-                dataKey="value"
-                nameKey="label"
-                outerRadius={100}
-                label
-              >
-                {result.slices.map((_, i) => (
-                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+          <div className={Styles.chartPreview}>
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={result.slices}
+                  dataKey="value"
+                  nameKey="label"
+                  outerRadius={100}
+                  label
+                >
+                  {result.slices.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         );
       }
       if (chartType === "line" && field) {
         const result = computeLine(rows, field);
         if (!result) return <p>No data</p>;
         return (
-          <ResponsiveContainer width="100%" height={CHART_PREVIEW_HEIGHT}>
-            <LineChart data={result.points}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="index" />
-              <YAxis />
-              <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="value"
-                stroke={COLORS[3]}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className={Styles.chartPreview}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={result.points}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="index" />
+                <YAxis />
+                <Tooltip />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={COLORS[3]}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         );
       }
       if (chartType === "box" && field) {
@@ -218,7 +223,9 @@ const AttributeChartDialog: React.FC<Props> = observer(
           aria-label={t(($) => $.attributeTable.charts)}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3>{t(($) => $.attributeTable.charts)}</h3>
+          <div className={Styles.dialogHeader}>
+            <h3>{t(($) => $.attributeTable.charts)}</h3>
+          </div>
           <div className={Styles.dialogBody}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <label>
@@ -313,7 +320,7 @@ const AttributeChartDialog: React.FC<Props> = observer(
                 </label>
               )}
             </div>
-            <div style={{ marginTop: 12 }}>{chartBody}</div>
+            {chartBody}
           </div>
           <div className={Styles.dialogActions}>
             {onAddToDashboard && (

@@ -41,7 +41,9 @@ const ColumnExplorerDialog: React.FC<Props> = observer(
           aria-label={t(($) => $.attributeTable.explore)}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3>{t(($) => $.attributeTable.columnExplorer)}</h3>
+          <div className={Styles.dialogHeader}>
+            <h3>{t(($) => $.attributeTable.columnExplorer)}</h3>
+          </div>
           <div className={Styles.dialogBody}>
             <input
               type="search"

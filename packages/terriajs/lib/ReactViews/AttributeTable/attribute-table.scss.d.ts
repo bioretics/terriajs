@@ -1,5 +1,7 @@
 declare namespace AttributeTableScssNamespace {
   export interface IAttributeTableScss {
+    "chart-preview": string;
+    chartPreview: string;
     "dashboard-grid": string;
     "dashboard-widget": string;
     "dashboard-widget-header": string;
@@ -10,9 +12,11 @@ declare namespace AttributeTableScssNamespace {
     "dialog-actions": string;
     "dialog-backdrop": string;
     "dialog-body": string;
+    "dialog-header": string;
     dialogActions: string;
     dialogBackdrop: string;
     dialogBody: string;
+    dialogHeader: string;
     "editable-cell": string;
     editableCell: string;
     "empty-state": string;

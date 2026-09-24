@@ -44,7 +44,9 @@ const FieldCalculatorDialog: React.FC<Props> = observer(
           aria-label={t(($) => $.attributeTable.fieldCalculator)}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3>{t(($) => $.attributeTable.fieldCalculator)}</h3>
+          <div className={Styles.dialogHeader}>
+            <h3>{t(($) => $.attributeTable.fieldCalculator)}</h3>
+          </div>
           <div className={Styles.dialogBody}>
             <label>
               {t(($) => $.attributeTable.targetField)}

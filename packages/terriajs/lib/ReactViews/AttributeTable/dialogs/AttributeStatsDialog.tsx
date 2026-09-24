@@ -101,7 +101,9 @@ const AttributeStatsDialog: React.FC<Props> = observer(
           aria-label={t(($) => $.attributeTable.statistics)}
           onClick={(e) => e.stopPropagation()}
         >
-          <h3>{t(($) => $.attributeTable.statistics)}</h3>
+          <div className={Styles.dialogHeader}>
+            <h3>{t(($) => $.attributeTable.statistics)}</h3>
+          </div>
           <div className={Styles.dialogBody}>
             <label>
               {t(($) => $.attributeTable.field)}{" "}
