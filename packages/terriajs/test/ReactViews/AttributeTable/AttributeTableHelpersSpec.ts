@@ -32,7 +32,8 @@ import {
   applyColumnAdd,
   applyColumnDelete,
   applyColumnRename,
-  applyDraftsToRows
+  applyDraftsToRows,
+  buildDataColumnMajorFromRows
 } from "../../../lib/ReactViews/AttributeTable/attributeEditing";
 import {
   applyDashboardCrossFilters,
@@ -208,6 +209,27 @@ describe("AttributeTable helpers", function () {
 
       const deleted = applyColumnDelete(renamed.rows, renamed.columns, "newer");
       expect(deleted.columns.some((c) => c.key === "newer")).toBe(false);
+    });
+
+    it("builds column-major table data from edited rows", function () {
+      const existing = [
+        ["name", "Alpha", "Beta", "Gamma"],
+        ["value", "10", "30", "20"]
+      ];
+      const edited = [
+        { featureId: "0", rowId: 0, properties: { name: "A1", value: 11 } },
+        { featureId: "1", rowId: 1, properties: { name: "B1", value: 31 } },
+        { featureId: "2", rowId: 2, properties: { name: "G1", value: 21 } }
+      ];
+      const columns = [
+        { key: "name", title: "name", hidden: false },
+        { key: "value", title: "value", hidden: false }
+      ];
+      const built = buildDataColumnMajorFromRows(edited, columns, existing);
+      expect(built).toEqual([
+        ["name", "A1", "B1", "G1"],
+        ["value", "11", "31", "21"]
+      ]);
     });
   });
 

@@ -8,8 +8,14 @@ import { FEATURE_ID_PROP } from "../../ModelMixins/GeojsonMixin";
 import GeoJsonCatalogItem from "../../Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import CommonStrata from "../../Models/Definition/CommonStrata";
 import { BaseModel } from "../../Models/Definition/Model";
+import TableMixin from "../../ModelMixins/TableMixin";
+import MappableMixin from "../../ModelMixins/MappableMixin";
 import { AttributeTableColumn, AttributeTableRow } from "./types";
-import { isWritableGeoJsonItem } from "./canOpenAttributeTable";
+import {
+  isWritableGeoJsonItem,
+  isWritableTableItem
+} from "./canOpenAttributeTable";
+import { hasLoadedTableRows } from "./attributeTableRows";
 
 export type CellDrafts = Map<string, Map<string, unknown>>;
 
@@ -121,6 +127,108 @@ export async function commitGeoJsonAttributeEdits(
   }
 
   return true;
+}
+
+function tableCellString(value: unknown): string {
+  return value === null || value === undefined ? "" : String(value);
+}
+
+/**
+ * Rebuild TableMixin column-major data from attribute rows (header row at index 0).
+ */
+export function buildDataColumnMajorFromRows(
+  rows: AttributeTableRow[],
+  columns: AttributeTableColumn[],
+  existing: string[][] | undefined
+): string[][] | undefined {
+  if (!existing?.length) return undefined;
+
+  const nDataRows = existing[0].length - 1;
+  const columnKeys = columns.map((c) => c.key);
+  const rowByRowId = new Map(rows.map((r) => [r.rowId, r]));
+
+  const result = existing.map((col) => [...col]);
+
+  for (let colIndex = 0; colIndex < result.length; colIndex++) {
+    const colName = result[colIndex][0];
+    if (colName === FEATURE_ID_PROP) {
+      continue;
+    }
+    if (!columnKeys.includes(colName)) {
+      continue;
+    }
+    for (let dataIndex = 0; dataIndex < nDataRows; dataIndex++) {
+      const row = rowByRowId.get(dataIndex);
+      if (!row) continue;
+      result[colIndex][dataIndex + 1] = tableCellString(
+        row.properties[colName]
+      );
+    }
+  }
+
+  for (const colDef of columns) {
+    const exists = result.some((col) => col[0] === colDef.key);
+    if (exists) continue;
+    const newCol = new Array(nDataRows + 1).fill("");
+    newCol[0] = colDef.key;
+    for (let dataIndex = 0; dataIndex < nDataRows; dataIndex++) {
+      const row = rowByRowId.get(dataIndex);
+      if (row) {
+        newCol[dataIndex + 1] = tableCellString(row.properties[colDef.key]);
+      }
+    }
+    result.push(newCol);
+  }
+
+  return result;
+}
+
+export async function commitTableAttributeEdits(
+  item: BaseModel,
+  rows: AttributeTableRow[],
+  columns: AttributeTableColumn[]
+): Promise<boolean> {
+  if (!isWritableTableItem(item) || !TableMixin.isMixedInto(item)) {
+    return false;
+  }
+  if (!hasLoadedTableRows(item)) {
+    return false;
+  }
+
+  const built = buildDataColumnMajorFromRows(
+    rows,
+    columns,
+    item.dataColumnMajor
+  );
+  if (!built) return false;
+
+  item.dataColumnMajor = built;
+
+  if (
+    MappableMixin.isMixedInto(item) &&
+    typeof item.loadMapItems === "function"
+  ) {
+    await item.loadMapItems(true);
+  }
+
+  return true;
+}
+
+/**
+ * Persist attribute edits for the active catalog item (GeoJSON or table-backed).
+ */
+export async function commitAttributeEdits(
+  item: BaseModel,
+  rows: AttributeTableRow[],
+  columns: AttributeTableColumn[]
+): Promise<boolean> {
+  if (isWritableGeoJsonItem(item)) {
+    return commitGeoJsonAttributeEdits(item, rows, columns);
+  }
+  if (isWritableTableItem(item)) {
+    return commitTableAttributeEdits(item, rows, columns);
+  }
+  return false;
 }
 
 export function applyColumnRename(

@@ -39,8 +39,8 @@ export function supportsAttributeTable(item: BaseModel | undefined): boolean {
 
 /**
  * Capability flags for the attribute table toolbar / editing.
- * Editing is enabled only for GeoJsonCatalogItem instances that expose
- * mutable in-memory GeoJSON (geoJsonData / geoJsonString / blob or readyData).
+ * Editing uses in-memory GeoJSON (user stratum) or TableMixin column data;
+ * remote files are not written back to disk.
  */
 export function getAttributeTableCapabilities(
   item: BaseModel | undefined
@@ -57,7 +57,7 @@ export function getAttributeTableCapabilities(
     };
   }
 
-  const canEdit = isWritableGeoJsonItem(item);
+  const canEdit = isWritableGeoJsonItem(item) || isWritableTableItem(item);
   const hasGeometry =
     (GeoJsonMixin.isMixedInto(item) &&
       !!item.readyData?.features?.length &&
@@ -85,6 +85,10 @@ export function isWritableGeoJsonItem(item: BaseModel): boolean {
   // Allow editing when readyData is present and the item is a plain GeoJSON
   // catalog item: commits write through geoJsonData user stratum.
   return GeoJsonMixin.isMixedInto(item) && !!item.readyData;
+}
+
+export function isWritableTableItem(item: BaseModel): boolean {
+  return TableMixin.isMixedInto(item) && hasLoadedTableRows(item);
 }
 
 export interface AttributeTableSnapshot {

@@ -15,7 +15,7 @@ import {
   applyColumnReorder,
   applyDraftsToRows,
   CellDrafts,
-  commitGeoJsonAttributeEdits
+  commitAttributeEdits
 } from "./attributeEditing";
 import {
   applyDashboardCrossFilters,
@@ -328,7 +328,7 @@ export default class AttributeTableController {
     if (!this.activeItem || !this.capabilities.canEdit) return;
     const rows = applyDraftsToRows(this.workingRows, this.drafts);
     try {
-      const ok = await commitGeoJsonAttributeEdits(
+      const ok = await commitAttributeEdits(
         this.activeItem,
         rows,
         this.workingColumns
@@ -337,9 +337,11 @@ export default class AttributeTableController {
         this.errorMessage = "Unable to save attribute edits for this layer.";
         return;
       }
+      this.terria.currentViewer?.notifyRepaintRequired();
       runInAction(() => {
         this.isEditing = false;
         this.drafts = new Map();
+        this.errorMessage = undefined;
         this.reloadFromItem();
       });
     } catch (e) {

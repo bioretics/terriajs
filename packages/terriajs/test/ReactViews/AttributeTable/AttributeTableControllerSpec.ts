@@ -48,7 +48,7 @@ describe("AttributeTable eligibility and controller", function () {
     expect(snap?.rows.length).toBe(2);
     expect(snap?.columns.map((c) => c.key)).toContain("name");
     expect(snap?.capabilities.canOpen).toBe(true);
-    expect(snap?.capabilities.canEdit).toBe(false);
+    expect(snap?.capabilities.canEdit).toBe(true);
   });
 
   it("always exposes attribute-table viewing control for TableMixin items", function () {
@@ -88,10 +88,22 @@ describe("AttributeTable eligibility and controller", function () {
     expect(controller.selectedIds).toEqual(["0", "1"]);
   });
 
-  it("reports read-only capabilities for plain table items", function () {
+  it("allows edit for table items with loaded rows", function () {
     const caps = getAttributeTableCapabilities(item);
-    expect(caps.canEdit).toBe(false);
+    expect(caps.canEdit).toBe(true);
     expect(caps.canExport).toBe(true);
-    expect(caps.canManageColumns).toBe(false);
+    expect(caps.canManageColumns).toBe(true);
+  });
+
+  it("enters edit mode and applies cell drafts", function () {
+    const controller = new AttributeTableController(terria);
+    controller.open(item);
+    controller.startEditing();
+    expect(controller.isEditing).toBe(true);
+    controller.setCellDraft("0", "name", "Edited");
+    expect(controller.baseRows[0].properties.name).toBe("Edited");
+    controller.cancelEditing();
+    expect(controller.isEditing).toBe(false);
+    expect(controller.baseRows[0].properties.name).toBe("Alpha");
   });
 });
