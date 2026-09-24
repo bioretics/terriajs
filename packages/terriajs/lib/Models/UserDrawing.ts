@@ -14,6 +14,7 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import createGuid from "terriajs-cesium/Source/Core/createGuid";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import PolygonHierarchy from "terriajs-cesium/Source/Core/PolygonHierarchy";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
@@ -33,6 +34,7 @@ import MapInteractionMode from "./MapInteractionMode";
 import Terria from "./Terria";
 import ConstantProperty from "terriajs-cesium/Source/DataSources/ConstantProperty";
 import HeightReference from "terriajs-cesium/Source/Scene/HeightReference";
+import SceneTransforms from "terriajs-cesium/Source/Scene/SceneTransforms";
 import { clone } from "terriajs-cesium";
 import * as turf from "@turf/turf";
 import LabelStyle from "terriajs-cesium/Source/Scene/LabelStyle";
@@ -49,6 +51,36 @@ import ViewerMode from "./ViewerMode";
 interface OnDrawingCompleteParams {
   points: Cartesian3[];
   rectangle?: Rectangle;
+}
+
+interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+const DEFAULT_LINE_STROKE_HALF_WIDTH_PX = 10;
+
+/** Squared distance from point (px, py) to segment (x0,y0)-(x1,y1) in screen space. */
+export function distanceSquaredToSegment2D(
+  px: number,
+  py: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number
+): number {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  if (dx === 0 && dy === 0) {
+    const ex = px - x0;
+    const ey = py - y0;
+    return ex * ex + ey * ey;
+  }
+  let t = ((px - x0) * dx + (py - y0) * dy) / (dx * dx + dy * dy);
+  t = Math.max(0, Math.min(1, t));
+  const nx = x0 + t * dx - px;
+  const ny = y0 + t * dy - py;
+  return nx * nx + ny * ny;
 }
 
 interface Options {
@@ -1185,40 +1217,11 @@ export default class UserDrawing extends MappableMixin(
           }
           if (isDefined(pickedFeatures.pickPosition)) {
             const pickedPoint = pickedFeatures.pickPosition;
-            const pickedCarto = Cartographic.fromCartesian(pickedPoint);
 
-            let changeOrder: number = -1;
-            for (
-              let i: number = 1;
-              i < this.pointEntities.entities.values.length;
-              ++i
-            ) {
-              const pos0 = this.pointEntities.entities.values[
-                i - 1
-              ].position?.getValue(this.terria.timelineClock.currentTime);
-              const pos1 = this.pointEntities.entities.values[
-                i
-              ].position?.getValue(this.terria.timelineClock.currentTime);
-              if (pos0 && pos1) {
-                const carto0 = Cartographic.fromCartesian(pos0);
-                const carto1 = Cartographic.fromCartesian(pos1);
-                const pt = turf.point([
-                  pickedCarto.longitude,
-                  pickedCarto.latitude
-                ]);
-                const line = turf.lineString([
-                  [carto1.longitude, carto1.latitude],
-                  [carto0.longitude, carto0.latitude]
-                ]);
-                const distance = turf.pointToLineDistance(pt, line, {
-                  units: "meters"
-                });
-                if (distance < Cartesian3.distance(pos1, pos0) * 0.001) {
-                  changeOrder = i;
-                  break;
-                }
-              }
-            }
+            // Insert only when the click overlaps the visible stroke in screen
+            // space (half of the live polyline width). Otherwise append.
+            const changeOrder =
+              this.findSegmentInsertIndexAtClickScreenPosition();
 
             // If existing point was picked, _clickedExistingPoint handles that, and returns true.
             // getDragCount helps us determine if the point was actually dragged rather than clicked. If it was
@@ -1238,15 +1241,15 @@ export default class UserDrawing extends MappableMixin(
                 );
               } else {
                 this.addPointToPointEntities("Another Point", pickedPoint);
-                if (
-                  !this.isAngleMeasuring &&
-                  !this.isPointMeasuring &&
-                  this.terria.measurableGeomList[
-                    this.terria.measurableGeometryIndex
-                  ]?.showDistanceLabels
-                ) {
-                  this.updateSegmentLabels();
-                }
+              }
+              if (
+                !this.isAngleMeasuring &&
+                !this.isPointMeasuring &&
+                this.terria.measurableGeomList[
+                  this.terria.measurableGeometryIndex
+                ]?.showDistanceLabels
+              ) {
+                this.updateSegmentLabels();
               }
             } else {
               this.dragHelper?.resetDragCount();
@@ -1269,6 +1272,106 @@ export default class UserDrawing extends MappableMixin(
         }
       }
     );
+  }
+
+  /**
+   * Screen-space index at which to insert a vertex when the click overlaps the
+   * drawn line stroke. Returns -1 to append instead.
+   */
+  private findSegmentInsertIndexAtClickScreenPosition(): number {
+    const screenPoint = this.getClickScreenPosition();
+    if (!screenPoint) {
+      return -1;
+    }
+
+    const halfWidth = this.getLineStrokeHalfWidthPixels();
+    const thresholdSquared = halfWidth * halfWidth;
+    const now = this.terria.timelineClock.currentTime;
+    const points = this.pointEntities.entities.values;
+
+    for (let i = 1; i < points.length; ++i) {
+      const pos0 = points[i - 1].position?.getValue(now);
+      const pos1 = points[i].position?.getValue(now);
+      if (!pos0 || !pos1) {
+        continue;
+      }
+
+      const screen0 = this.worldToScreen(pos0);
+      const screen1 = this.worldToScreen(pos1);
+      if (!screen0 || !screen1) {
+        continue;
+      }
+
+      const distSq = distanceSquaredToSegment2D(
+        screenPoint.x,
+        screenPoint.y,
+        screen0.x,
+        screen0.y,
+        screen1.x,
+        screen1.y
+      );
+      if (distSq <= thresholdSquared) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
+  private getClickScreenPosition(): ScreenPoint | undefined {
+    const screenPos = this.terria.currentViewer.mouseCoords.screenPosition;
+    if (isDefined(screenPos)) {
+      return { x: screenPos.x, y: screenPos.y };
+    }
+    return undefined;
+  }
+
+  private worldToScreen(position: Cartesian3): ScreenPoint | undefined {
+    const scene = this.terria.cesium?.scene;
+    if (scene) {
+      let positionForProjection = position;
+      if (this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D) {
+        const carto = Cartographic.fromCartesian(position);
+        positionForProjection = Cartesian3.fromRadians(
+          carto.longitude,
+          carto.latitude,
+          0,
+          scene.globe?.ellipsoid
+        );
+      }
+      const windowPos = SceneTransforms.worldToWindowCoordinates(
+        scene,
+        positionForProjection
+      );
+      if (!isDefined(windowPos)) {
+        return undefined;
+      }
+      return { x: windowPos.x, y: windowPos.y };
+    }
+
+    const leaflet = this.terria.leaflet;
+    if (leaflet?.map) {
+      const carto = Cartographic.fromCartesian(position);
+      const point = leaflet.map.latLngToContainerPoint([
+        CesiumMath.toDegrees(carto.latitude),
+        CesiumMath.toDegrees(carto.longitude)
+      ]);
+      return { x: point.x, y: point.y };
+    }
+
+    return undefined;
+  }
+
+  private getLineStrokeHalfWidthPixels(): number {
+    const now = this.terria.timelineClock.currentTime;
+    const lineEntity = this.otherEntities.entities.values.find(
+      (entity) => entity.name === "Line"
+    );
+    const width = lineEntity?.polyline?.width?.getValue(now);
+    if (typeof width === "number" && width > 0) {
+      return width / 2;
+    }
+    return DEFAULT_LINE_STROKE_HALF_WIDTH_PX;
   }
 
   /**
