@@ -62,9 +62,9 @@ const PanelHeader = styled.div`
 const HeaderTitle = styled.h2`
   margin: 0;
   font-family: ${(p) => p.theme.fontBase};
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 23px;
   color: ${(p) => p.theme.textLight};
   white-space: nowrap;
   overflow: hidden;
@@ -86,8 +86,8 @@ const IntroSection = styled.div`
 
 const IntroText = styled(Text)`
   color: ${(p) => p.theme.mutedForeground};
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
 
   p {
     margin: 0 0 8px;

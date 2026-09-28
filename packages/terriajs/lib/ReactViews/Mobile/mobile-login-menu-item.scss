@@ -7,7 +7,7 @@
 }
 
 .logoutConfirmMessage {
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.4;
   margin-bottom: $padding-small * 2;
 }
@@ -22,7 +22,7 @@
   composes: btn from "../../Sass/common/_buttons.scss";
 
   border-radius: $radius-small;
-  font-size: 0.9rem;
+  font-size: 1rem;
   padding: $padding-small $padding-small * 2;
 }
 

@@ -632,6 +632,7 @@ type IButtonProps = {
 };
 
 const SettingsButton = styled(Button)<IButtonProps>`
+  padding: 0 calc(${(props) => props.theme.paddingSmall} * 2);
   background-color: ${(props) => props.theme.overlay};
   border: 1px solid
     ${(props) => (props.isActive ? "rgba(255, 255, 255, 0.5)" : "transparent")};
@@ -652,6 +653,6 @@ const StyledImage = styled(Box).attrs({
 `;
 
 const BaseMapStatus = styled(Text)`
-  font-size: 11px;
+  font-size: 12px;
   padding: ${(p) => p.theme.padding} 0;
 `;

@@ -216,10 +216,10 @@ export const WelcomeMessagePure = (props) => {
                   bold
                   textLight
                   styledFontSize={
-                    viewState.useSmallScreenInterface ? "26px" : "36px"
+                    viewState.useSmallScreenInterface ? "29px" : "41px"
                   }
                   textAlignCenter={viewState.useSmallScreenInterface}
-                  styledLineHeight={"49px"}
+                  styledLineHeight={"55px"}
                 >
                   {t(($) => $.welcomeMessage.title)}
                 </Text>

@@ -48,7 +48,7 @@ const RailButton = styled(RawButton)<{ active?: boolean }>`
 
 const RailLabel = styled.span`
   font-family: ${(p) => p.theme.fontBase};
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;

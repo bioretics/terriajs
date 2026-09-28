@@ -19,7 +19,7 @@ const StatusBarContainer = styled.footer`
   background: ${(p) => p.theme.statusBarBg};
   color: ${(p) => p.theme.mutedForeground};
   font-family: ${(p) => p.theme.fontMono};
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;

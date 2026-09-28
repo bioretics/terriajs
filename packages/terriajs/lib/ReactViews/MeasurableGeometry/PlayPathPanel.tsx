@@ -444,7 +444,7 @@ const PlayPathPanel = observer((props: Props) => {
                   {i18next.t(($) => $.playPath.samplingStepButtonText)}
                 </Button>
               </div>
-              <Text textLight style={{ fontSize: "10px", lineHeight: 1.2 }}>
+              <Text textLight style={{ fontSize: "11px", lineHeight: 1.2 }}>
                 {playPathSamplingStepIsAuto
                   ? i18next.t(($) => $.playPath.samplingStepAutoHelp)
                   : i18next.t(($) => $.playPath.samplingStepHelp, {

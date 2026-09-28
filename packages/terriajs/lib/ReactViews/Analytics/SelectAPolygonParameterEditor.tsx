@@ -36,7 +36,7 @@ export function selectOnMap(
   let pickedFeaturesSubscription: IReactionPublic;
   const pickPolygonMode = new MapInteractionMode({
     message:
-      '<div>Select existing polygon<div style="font-size:12px"><p><i>If there are no polygons to select, add a layer that provides polygons.</i></p></div></div>',
+      '<div>Select existing polygon<div style="font-size:14px"><p><i>If there are no polygons to select, add a layer that provides polygons.</i></p></div></div>',
     onCancel: function () {
       terria.mapInteractionModeStack.pop();
       viewState.openAddData();

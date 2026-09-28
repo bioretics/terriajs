@@ -106,7 +106,7 @@ const ItemTitleButton = styled(RawButton)<{
   overflow-wrap: anywhere;
   padding: 10px;
   width: 100%;
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   color: inherit;
 
   &:focus,
@@ -117,7 +117,7 @@ const ItemTitleButton = styled(RawButton)<{
   ${(p) => p.selected && `color: ${p.theme.modalHighlight};`}
 
   @media (max-width: ${(p) => p.theme.sm}px) {
-    font-size: 0.9rem;
+    font-size: 1rem;
     padding-top: 10px;
     padding-bottom: 10px;
     border-bottom: 1px solid ${(p) => p.theme.border};

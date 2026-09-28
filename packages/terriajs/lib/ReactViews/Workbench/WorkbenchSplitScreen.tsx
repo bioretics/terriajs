@@ -49,7 +49,7 @@ const WorkbenchSplitScreen: FC<IWorkbenchSplitScreenProps> = observer(
               border-radius: 2px 2px 0 0;
               padding: 0 10px;
               font-weight: bold;
-              font-size: 14px;
+              font-size: 16px;
               color: ${theme.textLight};
               line-height: 34px;
             `}

@@ -15,7 +15,7 @@ const Numbers = styled(Text)`
   width: 22px;
   height: 22px;
   line-height: 22px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   border-radius: 50%;
   background-color: ${(props) => props.theme.colorPrimary};

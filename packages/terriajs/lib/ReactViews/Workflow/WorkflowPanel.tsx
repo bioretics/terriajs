@@ -172,7 +172,7 @@ const CloseIconButton = styled(Button).attrs({
 const CloseTextButton = styled(Button).attrs({
   primary: true
 })`
-  font-size: 14px;
+  font-size: 16px;
 `;
 
 const Error = styled.div`
@@ -182,7 +182,7 @@ const Error = styled.div`
   justify-content: center;
   text-align: center;
   color: ${(p) => p.theme.textLight};
-  font-size: 14px;
+  font-size: 16px;
 `;
 
 export default WorkflowPanel;

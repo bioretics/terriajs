@@ -183,7 +183,7 @@ const ScaleBar = styled.div`
   background: rgba(255, 255, 255, 0.75);
   color: ${(p) => p.theme.mapControlColor};
   font-family: ${(p) => p.theme.fontMono};
-  font-size: 10px;
+  font-size: 11px;
   line-height: 16px;
   white-space: nowrap;
   transition: width 0.5s ease-in-out;

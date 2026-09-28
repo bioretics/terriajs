@@ -397,7 +397,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             }}
           />
           {dataPurged.length <= 20 && (
-            <Legend wrapperStyle={{ fontSize: "14px" }} />
+            <Legend wrapperStyle={{ fontSize: "16px" }} />
           )}
         </PieChart>
       );
@@ -423,7 +423,7 @@ const QueryChart = React.forwardRef<HTMLDivElement, PropsType>(
             height={xLabelsHeight}
             angle={90}
             textAnchor="start"
-            style={{ fontSize: "0.8rem" }}
+            style={{ fontSize: "0.875rem" }}
           />
           <YAxis
             type="number"

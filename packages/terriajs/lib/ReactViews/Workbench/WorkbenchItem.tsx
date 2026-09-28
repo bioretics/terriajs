@@ -287,8 +287,8 @@ const TypeBadge = styled.span`
   background: ${(p) => p.theme.muted};
   color: ${(p) => p.theme.mutedForeground};
   font-family: ${(p) => p.theme.fontBase};
-  font-size: 10px;
-  line-height: 14px;
+  font-size: 11px;
+  line-height: 16px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 `;

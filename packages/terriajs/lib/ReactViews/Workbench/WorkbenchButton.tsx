@@ -10,8 +10,19 @@ const ButtonWrapper = styled(Box).attrs({
   as: "span"
 })`
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  align-content: flex-start;
+  height: 100%;
+  padding: 0 ${(p) => p.theme.paddingSmall};
+  overflow: hidden;
+`;
+
+const Slot = styled.span`
+  display: flex;
+  align-items: center;
+  height: 100%;
 `;
 
 interface IStyledWorkbenchButton {
@@ -103,9 +114,9 @@ const WorkbenchButton: FC<IProps> = (props: IProps) => {
     >
       <ButtonWrapper>
         {/* only spans are valid html for buttons (even though divs work) */}
-        {props.iconElement && props.iconElement()}
+        {props.iconElement && <Slot>{props.iconElement()}</Slot>}
         {children && (
-          <>
+          <Slot>
             <SpacingSpan right={1} />
             <TextSpan
               noWrap
@@ -118,7 +129,7 @@ const WorkbenchButton: FC<IProps> = (props: IProps) => {
             >
               {children}
             </TextSpan>
-          </>
+          </Slot>
         )}
       </ButtonWrapper>
     </StyledWorkbenchButton>

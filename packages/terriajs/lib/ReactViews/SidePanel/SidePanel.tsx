@@ -41,9 +41,9 @@ const PanelHeader = styled.div`
 
 const HeaderTitle = styled(Text).attrs({ as: "h2" })`
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 20px;
+  line-height: 23px;
   color: ${(p) => p.theme.textLight};
   white-space: nowrap;
   overflow: hidden;
@@ -102,12 +102,12 @@ const SearchArea = styled.div`
 
 const EmptyHint = styled(Box)`
   color: ${(p) => p.theme.mutedForeground};
-  font-size: 12px;
-  line-height: 18px;
+  font-size: 14px;
+  line-height: 20px;
 
   h5 {
     margin: 0 0 4px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 600;
     color: ${(p) => p.theme.textLight};
   }

@@ -189,7 +189,7 @@ const DragDropFile: FC = observer(() => {
               >
                 Drag & Drop
               </Text>
-              <Text textLight pop textAlignCenter styledFontSize="24px">
+              <Text textLight pop textAlignCenter styledFontSize="27px">
                 Your data anywhere to view on the map
               </Text>
             </Trans>

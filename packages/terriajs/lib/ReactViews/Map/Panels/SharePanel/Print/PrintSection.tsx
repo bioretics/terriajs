@@ -71,6 +71,7 @@ export const PrintSection: FC<IPrintSectionProps> = ({ viewState }) => {
 };
 
 const PrintButton = styled(Button)`
+  padding: 0 calc(${(p) => p.theme.paddingSmall} * 2);
   border-radius: 4px;
 `;
 

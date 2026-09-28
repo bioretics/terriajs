@@ -43,7 +43,7 @@ export const Grid = styled.div`
 export const GridHeading = styled.div`
   text-align: center;
   color: ${(p) => p.theme.textLight};
-  font-size: 12px;
+  font-size: 14px;
   margin-bottom: 10px;
 `;
 
@@ -58,7 +58,7 @@ export const GridLabel = styled.span`
   float: left;
   display: inline-block;
   width: 35px;
-  font-size: 10px;
+  font-size: 11px;
   padding-left: 3px;
 `;
 

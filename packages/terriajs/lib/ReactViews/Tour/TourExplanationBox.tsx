@@ -34,13 +34,13 @@ export const TourExplanationBox = styled(Box)<{ longer?: boolean }>`
   h2,
   h3 {
     margin-bottom: ${(p) => (p.theme.spacing as any) * 3}px;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
   }
   h4,
   h5,
   h6 {
-    font-size: 15px;
+    font-size: 17px;
   }
 
   p {

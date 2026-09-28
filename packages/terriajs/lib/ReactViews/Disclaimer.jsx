@@ -101,8 +101,8 @@ class Disclaimer extends Component {
             `}
           >
             <Text
-              styledFontSize={"18px"}
-              styledLineHeight={"24px"}
+              styledFontSize={"20px"}
+              styledLineHeight={"27px"}
               bold
               textLight
             >

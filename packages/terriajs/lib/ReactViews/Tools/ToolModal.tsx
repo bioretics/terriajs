@@ -125,7 +125,7 @@ const Title: FC<TitleProps> = (props) => {
         semiBold
         // font-size is non standard with what we have so far in terria,
         // lineheight as well to hit nonstandard paddings
-        styledFontSize="17px"
+        styledFontSize="19px"
         styledLineHeight="30px"
         overflowEllipsis
         overflowHide
