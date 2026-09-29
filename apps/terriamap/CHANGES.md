@@ -193,6 +193,8 @@
 
 #### next release
 
+- Migrate to pnpm
+
 #### 0.4.8
 
 - Upgrade terriajs-server to 5.0.0
