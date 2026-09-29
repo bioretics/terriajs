@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import styled, { useTheme } from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
@@ -9,22 +9,33 @@ type PropsType = {
   children?: React.ReactNode;
 };
 
+export const SIDE_PANEL_WIDTH_VAR = "--side-panel-width";
+
 // Docked workbench panel (GeoLibre-style). It sits between the side rail and
 // the map, is resizable from its right edge and collapses into the rail when
 // `viewState.isMapFullScreen` is set.
 const SidePanelContainer = styled.div`
   position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   flex: 0 0 auto;
   height: 100%;
   min-height: 0;
   box-sizing: border-box;
-  background: ${(p) => p.theme.card};
   border-right: 1px solid ${(p) => p.theme.border};
   color: ${(p) => p.theme.textLight};
   font-family: ${(p) => p.theme.fontBase};
   overflow: visible;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: ${(p) => p.theme.cardOverlay};
+    backdrop-filter: ${(p) => p.theme.blur};
+    pointer-events: none;
+  }
 `;
 
 const ResizeHandle = styled.div<{ isResizing: boolean }>`
@@ -64,6 +75,16 @@ const DockedSidePanel: React.FC<PropsType> = (props) => {
   const [width, setWidth] = useState(defaultWidth);
   const [isResizing, setResizing] = useState(false);
   const dragState = useRef<{ startX: number; startWidth: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const workspace = containerRef.current?.parentElement;
+    if (!workspace) return;
+    workspace.style.setProperty(SIDE_PANEL_WIDTH_VAR, `${width}px`);
+    return () => {
+      workspace.style.removeProperty(SIDE_PANEL_WIDTH_VAR);
+    };
+  }, [show, width]);
 
   const clamp = (value: number) =>
     Math.min(maxWidth, Math.max(minWidth, Math.round(value)));
@@ -96,6 +117,7 @@ const DockedSidePanel: React.FC<PropsType> = (props) => {
 
   return (
     <SidePanelContainer
+      ref={containerRef}
       style={{ width }}
       className={
         viewState.topElement === "SidePanel" ? "top-element" : undefined

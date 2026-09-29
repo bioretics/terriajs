@@ -4,6 +4,7 @@ declare namespace VariablesExportScssNamespace {
     blur: string;
     border: string;
     card: string;
+    cardOverlay: string;
     charcoalGrey: string;
     colorPrimary: string;
     colorSecondary: string;

@@ -6,6 +6,7 @@ import ActionBarPortal from "../ActionBar/ActionBarPortal";
 import BottomDock from "../BottomDock/BottomDock";
 import { useViewState } from "../Context";
 import Loader from "../Loader";
+import { SIDE_PANEL_WIDTH_VAR } from "../StandardUserInterface/SidePanelContainer";
 import SlideUpFadeIn from "../Transitions/SlideUpFadeIn/SlideUpFadeIn";
 import { DistanceLegend } from "./BottomBar";
 import BottomLeftBar from "./BottomLeftBar/BottomLeftBar";
@@ -74,8 +75,12 @@ export const MapColumn: FC<IMapColumnProps> = observer(({ customElements }) => {
         )}
         <Box
           position="absolute"
-          css={{ top: "0", zIndex: 0 }}
-          fullWidth
+          css={{
+            top: "0",
+            left: `calc(-1 * var(${SIDE_PANEL_WIDTH_VAR}, 0px))`,
+            width: `calc(100% + var(${SIDE_PANEL_WIDTH_VAR}, 0px))`,
+            zIndex: 0
+          }}
           fullHeight
         >
           <TerriaViewerWrapper />
