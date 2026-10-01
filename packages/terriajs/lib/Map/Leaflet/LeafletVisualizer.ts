@@ -569,6 +569,11 @@ class LeafletGeomVisualizer {
       time,
       defaultColor
     );
+    const backgroundColor = getValueOrDefault(
+      labelGraphics.backgroundColor,
+      time,
+      Color.TRANSPARENT
+    );
     const verticalOrigin = getValueOrDefault(
       labelGraphics.verticalOrigin,
       time,
@@ -589,6 +594,7 @@ class LeafletGeomVisualizer {
       text: text,
       font: font,
       color: fillColor.toCssColorString(),
+      backgroundColor: backgroundColor.toCssColorString(),
       scale: scale,
       horizontalOrigin: horizontalOrigin, //value: left, center, right
       verticalOrigin: verticalOrigin //value: bottom, center, top
@@ -638,7 +644,9 @@ class LeafletGeomVisualizer {
 
       const canvas = writeTextToCanvas(text, {
         fillColor: fillColor,
-        font: font
+        backgroundColor: backgroundColor,
+        font: font,
+        padding: 5
       });
       if (isDefined(canvas)) {
         const imageUrl = canvas.toDataURL();
