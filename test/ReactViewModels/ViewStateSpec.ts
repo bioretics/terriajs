@@ -1,10 +1,14 @@
-import { runInAction } from "mobx";
+import { runInAction, when } from "mobx";
+import GeoJsonCatalogItem from "../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import { AutoStartData } from "../../lib/Models/InitSource";
 import Terria from "../../lib/Models/Terria";
+import ViewerMode from "../../lib/Models/ViewerMode";
 import ViewState from "../../lib/ReactViewModels/ViewState";
 import SimpleCatalogItem from "../Helpers/SimpleCatalogItem";
 import TerriaReference from "../../lib/Models/Catalog/CatalogReferences/TerriaReference";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import CatalogIndexReference from "../../lib/Models/Catalog/CatalogReferences/CatalogIndexReference";
+import SplitItemReference from "../../lib/Models/Catalog/CatalogReferences/SplitItemReference";
 
 describe("ViewState", function () {
   let terria: Terria;
@@ -115,6 +119,180 @@ describe("ViewState", function () {
       expect(viewState.trainerBarExpanded).toEqual(false);
       expect(viewState.trainerBarShowingAllSteps).toEqual(false);
       expect(viewState.showTour).toEqual(true);
+    });
+  });
+
+  describe("share link autoStart", function () {
+    let container: HTMLElement;
+    let item: GeoJsonCatalogItem;
+
+    const start = (autoStart: Partial<AutoStartData> = {}) =>
+      runInAction(() => {
+        terria.autoStart = {
+          itemId: "path-layer",
+          feature: "playPath",
+          play: true,
+          tour: true,
+          ...autoStart
+        };
+      });
+
+    beforeEach(async function () {
+      container = document.createElement("div");
+      document.body.appendChild(container);
+      terria.mainViewer.attach(container);
+      runInAction(() => (terria.mainViewer.viewerMode = ViewerMode.Leaflet));
+      await when(() => terria.leaflet !== undefined);
+
+      item = new GeoJsonCatalogItem("path-layer", terria);
+      item.setTrait(CommonStrata.user, "geoJsonData", {
+        type: "FeatureCollection",
+        features: [
+          {
+            type: "Feature",
+            properties: {},
+            geometry: {
+              type: "LineString",
+              coordinates: [
+                [11, 44],
+                [11.1, 44.1]
+              ]
+            }
+          }
+        ]
+      });
+      terria.addModel(item, ["old-path-id"]);
+      (await terria.workbench.add(item)).throwIfError();
+      spyOn(item, "computePath");
+    });
+
+    afterEach(function () {
+      terria.mainViewer.destroy();
+      document.body.removeChild(container);
+    });
+
+    it("opens the PlayPath panel once the app is ready", function () {
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+      expect(viewState.playPathPanelSourceItemId).toBe("path-layer");
+      expect(item.computePath).toHaveBeenCalled();
+      expect(viewState.autoStartPlay).toBe(true);
+      expect(viewState.autoStartTour).toBe("playPath");
+      expect(terria.autoStart).toBeUndefined();
+    });
+
+    it("opens the Measures panel for the measure feature", function () {
+      start({ feature: "measure" });
+      expect(viewState.measurablePanelSourceItemId).toBe("path-layer");
+      expect(item.computePath).toHaveBeenCalled();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      expect(viewState.autoStartPlay).toBe(false);
+      expect(viewState.autoStartTour).toBe("measure");
+    });
+
+    it("waits until the story prompt is declined", function () {
+      runInAction(() => {
+        terria.stories = [
+          {
+            id: "s1",
+            title: "Scene",
+            text: "",
+            shareData: { version: "8.0.0", initSources: [] }
+          }
+        ];
+      });
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      runInAction(() => (viewState.storyShown = true));
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      runInAction(() => (viewState.storyShown = false));
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+    });
+
+    it("waits for the welcome message", function () {
+      viewState.setShowWelcomeMessage(true);
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      viewState.setShowWelcomeMessage(false);
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+    });
+
+    it("skips the tour on small screens", function () {
+      runInAction(() => (viewState.useSmallScreenInterface = true));
+      start();
+      expect(viewState.autoStartTour).toBeUndefined();
+      expect(viewState.autoStartPlay).toBe(true);
+    });
+
+    it("resolves the item through a share key", function () {
+      start({ itemId: "old-path-id" });
+      expect(viewState.playPathPanelSourceItemId).toBe("path-layer");
+    });
+
+    it("is consumed once, even when the layer is missing", async function () {
+      runInAction(() => terria.workbench.remove(item));
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      expect(terria.autoStart).toBeUndefined();
+      (await terria.workbench.add(item)).throwIfError();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+    });
+
+    it("opens the target of a referenced layer", async function () {
+      const ref = new SplitItemReference("split-layer", terria);
+      ref.setTrait(CommonStrata.user, "splitSourceItemId", "path-layer");
+      terria.addModel(ref);
+      (await ref.loadReference()).throwIfError();
+      (await terria.workbench.add(ref)).throwIfError();
+      const target = ref.target as GeoJsonCatalogItem;
+      spyOn(target, "computePath");
+      start({ itemId: "split-layer" });
+      expect(viewState.playPathPanelSourceItemId).toBe("split-layer");
+      expect(target.computePath).toHaveBeenCalled();
+    });
+
+    it("waits while a notification is shown", function () {
+      terria.notificationState.addNotificationToQueue({
+        title: "Error",
+        message: "A layer failed to load"
+      });
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      terria.notificationState.dismissCurrentNotification();
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+    });
+
+    it("waits for the camera to stop zooming", function () {
+      runInAction(() => (terria.currentViewer.isMapZooming = true));
+      start();
+      expect(viewState.playPathPanelIsVisible).toBe(false);
+      runInAction(() => (terria.currentViewer.isMapZooming = false));
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+    });
+
+    it("deactivates an active measure tool before opening the panel", function () {
+      const controller = {
+        active: true,
+        deactivate: jasmine.createSpy("deactivate")
+      };
+      spyOn(terria.mapNavigationModel, "findItem").and.callFake((id: string) =>
+        id === "measure-line-tool" ? ({ controller } as any) : undefined
+      );
+      start();
+      expect(controller.deactivate).toHaveBeenCalled();
+      expect(viewState.playPathPanelIsVisible).toBe(true);
+    });
+
+    it("closing the PlayPath panel cancels a pending flight", function () {
+      start();
+      viewState.closePlayPathPanel();
+      expect(viewState.autoStartPlay).toBe(false);
+    });
+
+    it("hiding the PlayPath panel by any path cancels a pending flight", function () {
+      start();
+      runInAction(() => (viewState.playPathPanelIsVisible = false));
+      expect(viewState.autoStartPlay).toBe(false);
     });
   });
 });

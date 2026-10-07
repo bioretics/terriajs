@@ -11,6 +11,7 @@ import {
 import React, { Ref } from "react";
 import defined from "terriajs-cesium/Source/Core/defined";
 import addedByUser from "../Core/addedByUser";
+import getDereferencedIfExists from "../Core/getDereferencedIfExists";
 import {
   Category,
   HelpAction,
@@ -28,6 +29,8 @@ import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAcces
 import CommonStrata from "../Models/Definition/CommonStrata";
 import { BaseModel } from "../Models/Definition/Model";
 import getAncestors from "../Models/getAncestors";
+import { AutoStartData } from "../Models/InitSource";
+import NoViewer from "../Models/NoViewer";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
 import Terria from "../Models/Terria";
 import { ViewingControl } from "../Models/ViewingControls";
@@ -497,6 +500,19 @@ export default class ViewState {
    * @type {String}
    */
   @observable playPathPlaybackSourceItemId: string | undefined;
+
+  /**
+   * Feature tour requested by a share link, started by the feature panel
+   * once it is visible.
+   */
+  @observable autoStartTour: AutoStartData["feature"] | undefined;
+
+  /**
+   * PlayPath flight requested by a share link, started by PlayPathPanel once
+   * the path and the camera are ready.
+   */
+  @observable autoStartPlay: boolean = false;
+
   /**
    * Per-workbench-item snapshots of measurable geometry so panels stay fixed
    * on the layer they were opened for.
@@ -564,6 +580,7 @@ export default class ViewState {
   private _disposePlayPathSamplingStep: IReactionDisposer;
   private _viewshedPanelIsVisibleSubscription: IReactionDisposer;
   private _panelSourceItemRemovedSubscription: IReactionDisposer;
+  private _autoStartSubscription: IReactionDisposer;
   private _isResamplingInProgress: boolean = false;
 
   constructor(options: ViewStateOptions) {
@@ -770,6 +787,11 @@ export default class ViewState {
       () => this.closePanelsOfRemovedSourceItems()
     );
 
+    this._autoStartSubscription = reaction(
+      () => (this.canAutoStart ? this.terria.autoStart : undefined),
+      (autoStart) => autoStart && this.runAutoStart(autoStart)
+    );
+
     this._viewshedPanelIsVisibleSubscription = reaction(
       () => this.terria.viewshedDistances,
       (viewshedDistances?: (number | undefined)[]) => {
@@ -827,6 +849,8 @@ export default class ViewState {
       (isVisible) => {
         if (isVisible) {
           this.terria.playPathSamplingStepIsAuto = true;
+        } else {
+          this.autoStartPlay = false;
         }
       }
     );
@@ -866,6 +890,7 @@ export default class ViewState {
     this._disposePlayPathSamplingStep();
     this._viewshedPanelIsVisibleSubscription();
     this._panelSourceItemRemovedSubscription();
+    this._autoStartSubscription();
     this.searchState.dispose();
   }
 
@@ -1076,6 +1101,47 @@ export default class ViewState {
     if (sourceId) {
       this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
     }
+  }
+
+  @computed
+  private get canAutoStart(): boolean {
+    return (
+      this.terria.currentViewer.type !== NoViewer.type &&
+      !this.terria.cesium?.isTerrainLoading &&
+      !this.terria.currentViewer.isMapZooming &&
+      !this.showWelcomeMessage &&
+      !this.disclaimerVisible &&
+      !this.terria.notificationState.currentNotification &&
+      this.currentTourIndex === -1 &&
+      !(
+        this.terria.configParameters.storyEnabled &&
+        this.terria.stories.length > 0 &&
+        this.storyShown !== false
+      )
+    );
+  }
+
+  @action
+  private runAutoStart({ itemId, feature, play, tour }: AutoStartData) {
+    this.terria.autoStart = undefined;
+    const model = this.terria.getModelByIdOrShareKey(BaseModel, itemId);
+    const item = model && getDereferencedIfExists(model);
+    if (
+      !item ||
+      !this.terria.workbench.contains(item) ||
+      !MeasurableGeometryMixin.isMixedInto(item) ||
+      !item.canUseAsPath
+    ) {
+      return;
+    }
+    if (feature === "playPath") {
+      this.openPlayPathPanel(item);
+    } else {
+      this.openMeasurablePanel(item);
+    }
+    this.autoStartTour =
+      tour && !this.useSmallScreenInterface ? feature : undefined;
+    this.autoStartPlay = feature === "playPath" && !!play;
   }
 
   @action
