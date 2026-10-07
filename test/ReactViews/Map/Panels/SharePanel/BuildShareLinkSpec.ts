@@ -9,6 +9,7 @@ import loadBlob from "../../../../../lib/Core/loadBlob";
 import PickedFeatures from "../../../../../lib/Map/PickedFeatures/PickedFeatures";
 import addUserCatalogMember from "../../../../../lib/Models/Catalog/addUserCatalogMember";
 import GeoJsonCatalogItem from "../../../../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
+import SplitItemReference from "../../../../../lib/Models/Catalog/CatalogReferences/SplitItemReference";
 import WebMapServiceCatalogItem from "../../../../../lib/Models/Catalog/Ows/WebMapServiceCatalogItem";
 import CommonStrata from "../../../../../lib/Models/Definition/CommonStrata";
 import { BaseModel } from "../../../../../lib/Models/Definition/Model";
@@ -19,6 +20,7 @@ import { setViewerMode } from "../../../../../lib/Models/ViewerMode";
 import ViewState from "../../../../../lib/ReactViewModels/ViewState";
 import {
   buildShareLink,
+  getAutoStartSource,
   isShareable,
   SHARE_VERSION
 } from "../../../../../lib/ReactViews/Map/Panels/SharePanel/BuildShareLink";
@@ -350,6 +352,104 @@ describe("BuildShareLink", function () {
         terrainSplitDirection: -1,
         depthTestAgainstTerrainEnabled: true
       });
+    });
+  });
+
+  describe("autoStart", function () {
+    it("is not included by default", function () {
+      const params = decodeAndParseStartHash(buildShareLink(terria, viewState));
+      expect(flattenInitSources(params.initSources).autoStart).toBeUndefined();
+    });
+
+    it("is included when passed in the options", function () {
+      const autoStart = {
+        itemId: "path-layer",
+        feature: "playPath" as const,
+        play: true,
+        tour: true
+      };
+      const params = decodeAndParseStartHash(
+        buildShareLink(terria, viewState, { includeStories: true, autoStart })
+      );
+      expect(flattenInitSources(params.initSources).autoStart).toEqual(
+        autoStart
+      );
+    });
+  });
+
+  describe("getAutoStartSource", function () {
+    let item: GeoJsonCatalogItem;
+
+    beforeEach(function () {
+      item = new GeoJsonCatalogItem("path-layer", terria);
+      terria.addModel(item);
+      runInAction(() => (terria.workbench.items = [item]));
+    });
+
+    const openPlayPath = (itemId: string) =>
+      runInAction(() => {
+        viewState.playPathPanelIsVisible = true;
+        viewState.playPathPanelSourceItemId = itemId;
+      });
+
+    it("is undefined when no feature panel is open", function () {
+      expect(getAutoStartSource(terria, viewState)).toBeUndefined();
+    });
+
+    it("returns the item of the open PlayPath panel", function () {
+      openPlayPath("path-layer");
+      const source = getAutoStartSource(terria, viewState);
+      expect(source?.feature).toBe("playPath");
+      expect(source?.item).toBe(item);
+    });
+
+    it("returns the item of the open Measures panel", function () {
+      runInAction(() => {
+        viewState.measurablePanelIsVisible = true;
+        viewState.measurablePanelSourceItemId = "path-layer";
+      });
+      const source = getAutoStartSource(terria, viewState);
+      expect(source?.feature).toBe("measure");
+      expect(source?.item).toBe(item);
+    });
+
+    it("prefers PlayPath when both panels are open", function () {
+      const other = new GeoJsonCatalogItem("other-layer", terria);
+      terria.addModel(other);
+      runInAction(() => {
+        terria.workbench.items = [item, other];
+        viewState.measurablePanelIsVisible = true;
+        viewState.measurablePanelSourceItemId = "other-layer";
+      });
+      openPlayPath("path-layer");
+      const source = getAutoStartSource(terria, viewState);
+      expect(source?.feature).toBe("playPath");
+      expect(source?.item).toBe(item);
+    });
+
+    it("returns the target of a referenced layer", async function () {
+      const ref = new SplitItemReference("split-layer", terria);
+      ref.setTrait(CommonStrata.user, "splitSourceItemId", "path-layer");
+      terria.addModel(ref);
+      (await ref.loadReference()).throwIfError();
+      runInAction(() => (terria.workbench.items = [ref.target!]));
+      openPlayPath("split-layer");
+      const source = getAutoStartSource(terria, viewState);
+      expect(source?.feature).toBe("playPath");
+      expect(source?.item).toBe(ref.target!);
+    });
+
+    it("ignores items that are not in the workbench or not shareable", function () {
+      runInAction(() => (terria.workbench.items = []));
+      openPlayPath("path-layer");
+      expect(getAutoStartSource(terria, viewState)).toBeUndefined();
+
+      runInAction(() => {
+        terria.workbench.items = [item];
+        item.setTrait(CommonStrata.user, "shareable", false);
+      });
+      openPlayPath("path-layer");
+      expect(getAutoStartSource(terria, viewState)).toBeUndefined();
     });
   });
 });

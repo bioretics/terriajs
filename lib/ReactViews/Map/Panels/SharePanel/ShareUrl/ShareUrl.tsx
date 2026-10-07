@@ -7,6 +7,7 @@ import React, {
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
+import { AutoStartData } from "../../../../../Models/InitSource";
 import Terria from "../../../../../Models/Terria";
 import ViewState from "../../../../../ReactViewModels/ViewState";
 
@@ -28,6 +29,7 @@ interface IShareUrlProps {
   terria: Terria;
   viewState: ViewState;
   includeStories: boolean;
+  autoStart?: AutoStartData;
   shouldShorten: boolean;
   theme: "light" | "dark";
   inputTheme?: "light" | "dark";
@@ -48,6 +50,7 @@ export const ShareUrl = React.forwardRef<
     terria,
     viewState,
     includeStories,
+    autoStart,
     shouldShorten,
     children,
     theme,
@@ -78,13 +81,15 @@ export const ShareUrl = React.forwardRef<
       setPlaceholder(t("share.shortLinkShortening"));
       setShorteningInProgress(true);
       buildShortShareLink(terria, viewState, {
-        includeStories
+        includeStories,
+        autoStart
       })
         .then((shareUrl) => setShareUrl(shareUrl))
         .catch(() => {
           setShareUrl(
             buildShareLink(terria, viewState, {
-              includeStories
+              includeStories,
+              autoStart
             })
           );
         })
@@ -92,12 +97,13 @@ export const ShareUrl = React.forwardRef<
     } else {
       setShareUrl(
         buildShareLink(terria, viewState, {
-          includeStories
+          includeStories,
+          autoStart
         })
       );
     }
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [terria, viewState, shouldShorten, includeStories]);
+  }, [terria, viewState, shouldShorten, includeStories, autoStart]);
 
   const exportMap = () => {
     const link = document.createElement("a");

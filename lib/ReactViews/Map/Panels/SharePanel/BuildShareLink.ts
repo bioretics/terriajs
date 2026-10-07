@@ -15,6 +15,7 @@ import saveStratumToJson from "../../../../Models/Definition/saveStratumToJson";
 import GlobeOrMap from "../../../../Models/GlobeOrMap";
 import HasLocalData from "../../../../Models/HasLocalData";
 import {
+  AutoStartData,
   InitSourceData,
   InitSourcePickedFeatures,
   ShareInitSourceData,
@@ -31,6 +32,11 @@ import CatalogMemberMixin from "../../../../ModelMixins/CatalogMemberMixin";
 const userPropsToShare = ["hideExplorerPanel", "activeTabId"];
 
 export const SHARE_VERSION = "8.0.0";
+
+export interface ShareDataOptions {
+  includeStories: boolean;
+  autoStart?: AutoStartData;
+}
 
 /** Create base share link URL - with `hashParameters` applied on top.
  * This will copy over some `userProperties` - see `userPropsToShare`
@@ -71,12 +77,13 @@ function buildBaseShareUrl(
  * @param {ViewState} [viewState] The viewState to read whether we're viewing the catalog or not
  * @param {Object} [options] Options for building the share link.
  * @param {Boolean} [options.includeStories=true] True to include stories in the share link, false to exclude them.
+ * @param {AutoStartData} [options.autoStart] Feature to start automatically when the link is opened.
  * @returns {String} A URI that will rebuild the current state when viewed in a browser.
  */
 export function buildShareLink(
   terria: Terria,
   viewState?: ViewState,
-  options = { includeStories: true }
+  options: ShareDataOptions = { includeStories: true }
 ) {
   return buildBaseShareUrl(terria, {
     start: JSON.stringify(getShareData(terria, viewState, options))
@@ -91,7 +98,7 @@ export function buildShareLink(
 export async function buildShortShareLink(
   terria: Terria,
   viewState?: ViewState,
-  options = { includeStories: true }
+  options: ShareDataOptions = { includeStories: true }
 ) {
   if (!isDefined(terria.shareDataService))
     throw TerriaError.from(
@@ -119,10 +126,10 @@ export async function buildShortShareLink(
 export function getShareData(
   terria: Terria,
   viewState?: ViewState,
-  options = { includeStories: true }
+  options: ShareDataOptions = { includeStories: true }
 ): ShareInitSourceData {
   return runInAction(() => {
-    const { includeStories } = options;
+    const { includeStories, autoStart } = options;
     const initSource: InitSourceData = {};
     const initSources = [initSource];
 
@@ -134,6 +141,9 @@ export function getShareData(
     if (includeStories) {
       // info that are not needed in scene share data
       addStories(terria, initSource);
+    }
+    if (autoStart) {
+      initSource.autoStart = autoStart;
     }
 
     return {
@@ -287,6 +297,41 @@ export function isShareable(terria: Terria) {
         !HasLocalData.is(dereferenced))
     );
   };
+}
+
+/**
+ * The open feature panel (PlayPath first, then Measures) whose workbench item
+ * a share link can start automatically, if that item is shareable.
+ */
+export function getAutoStartSource(
+  terria: Terria,
+  viewState: ViewState
+): { feature: AutoStartData["feature"]; item: BaseModel } | undefined {
+  const panels: [AutoStartData["feature"], boolean, string | undefined][] = [
+    [
+      "playPath",
+      viewState.playPathPanelIsVisible,
+      viewState.playPathPanelSourceItemId
+    ],
+    [
+      "measure",
+      viewState.measurablePanelIsVisible,
+      viewState.measurablePanelSourceItemId
+    ]
+  ];
+  for (const [feature, isVisible, itemId] of panels) {
+    if (!isVisible || !itemId) continue;
+    const model = terria.getModelById(BaseModel, itemId);
+    const item = model && getDereferencedIfExists(model);
+    if (
+      item &&
+      terria.workbench.contains(item) &&
+      isShareable(terria)(itemId)
+    ) {
+      return { feature, item };
+    }
+  }
+  return undefined;
 }
 
 /**
