@@ -1521,6 +1521,43 @@ describe("Terria", function () {
         expect(terria.getLocalProperty("shortenShareUrls")).toBeFalsy();
       });
     });
+
+    describe("autoStart", function () {
+      const autoStart = {
+        itemId: "path-layer",
+        feature: "playPath" as const,
+        play: true,
+        tour: false
+      };
+      const openLink = (initSource: object) =>
+        terria.updateFromStartData({
+          version: "8.0.0",
+          initSources: [initSource]
+        });
+
+      it("arms the autoStart of the opened link", async function () {
+        await openLink({ autoStart });
+        expect(terria.autoStart).toEqual(autoStart);
+      });
+
+      it("ignores an invalid autoStart", async function () {
+        for (const invalid of [
+          { itemId: 3, feature: "playPath" },
+          { itemId: "path-layer", feature: "fly" },
+          { itemId: "path-layer", feature: "measure", tour: "yes" }
+        ]) {
+          await openLink({ autoStart: invalid });
+          expect(terria.autoStart).toBeUndefined();
+        }
+      });
+
+      it("does not re-arm the autoStart of a link applied earlier", async function () {
+        await openLink({ autoStart });
+        runInAction(() => (terria.autoStart = undefined));
+        await openLink({});
+        expect(terria.autoStart).toBeUndefined();
+      });
+    });
   });
 
   describe("mapSettings", function () {

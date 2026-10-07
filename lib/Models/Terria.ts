@@ -104,11 +104,13 @@ import TerriaFeature from "./Feature/Feature";
 import GlobeOrMap from "./GlobeOrMap";
 import IElementConfig from "./IElementConfig";
 import InitSource, {
+  AutoStartData,
   InitSourceData,
   InitSourceFromData,
   MicrozonationConfig,
   ShareInitSourceData,
   StoryData,
+  isAutoStartData,
   isInitFromData,
   isInitFromDataPromise,
   isInitFromOptions,
@@ -909,6 +911,12 @@ export default class Terria {
     return this._previewedItemId;
   }
 
+  /**
+   * Feature to start once the app is ready, from the init data of the last
+   * opened link. This is observed and consumed in ViewState.
+   */
+  @observable.ref autoStart: AutoStartData | undefined;
+
   @computed
   get profile() {
     return this.userProfile
@@ -1699,6 +1707,13 @@ export default class Terria {
         );
       }
     }
+
+    const lastInitData = loadedInitSources[loadedInitSources.length - 1]?.data;
+    runInAction(() => {
+      this.autoStart = isAutoStartData(lastInitData?.autoStart)
+        ? lastInitData?.autoStart
+        : undefined;
+    });
 
     // Load basemap
     runInAction(() => {

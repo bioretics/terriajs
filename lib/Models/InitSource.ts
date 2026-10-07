@@ -54,6 +54,25 @@ export interface MicrozonationConfig {
   outputFormat?: string;
 }
 
+export interface AutoStartData {
+  itemId: string;
+  feature: "playPath" | "measure";
+  play?: boolean;
+  tour?: boolean;
+}
+
+export function isAutoStartData(value: unknown): value is AutoStartData {
+  const v = value as AutoStartData | undefined;
+  const isOptionalBoolean = (b: unknown) =>
+    b === undefined || typeof b === "boolean";
+  return (
+    typeof v?.itemId === "string" &&
+    (v.feature === "playPath" || v.feature === "measure") &&
+    isOptionalBoolean(v.play) &&
+    isOptionalBoolean(v.tour)
+  );
+}
+
 export interface InitSourceData {
   stratum?: string;
   corsDomains?: string[];
@@ -98,6 +117,7 @@ export interface InitSourceData {
   timeline?: string[];
   models?: { [key: string]: ModelJson };
   previewedItemId?: string;
+  autoStart?: AutoStartData;
   pickedFeatures?: InitSourcePickedFeatures;
   /** These settings will override localStorage persistent settings. They are used for shares/stories */
   settings?: {
