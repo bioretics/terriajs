@@ -414,6 +414,14 @@ const MeasurablePanel = observer((props: Props) => {
     }
   };
 
+  useEffect(() => {
+    if (measurablePanelIsVisible && viewState.autoStartTour === "measure") {
+      runInAction(() => (viewState.autoStartTour = undefined));
+      startMeasurableTour();
+    }
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [measurablePanelIsVisible, viewState.autoStartTour]);
+
   const renderTourPrompt = () => {
     if (!showTourPrompt) return null;
 

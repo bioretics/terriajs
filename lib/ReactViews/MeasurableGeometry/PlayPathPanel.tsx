@@ -143,6 +143,65 @@ const PlayPathPanel = observer((props: Props) => {
     }
   };
 
+  useEffect(() => {
+    if (
+      props.viewState.playPathPanelIsVisible &&
+      props.viewState.autoStartTour === "playPath"
+    ) {
+      runInAction(() => (props.viewState.autoStartTour = undefined));
+      startPlayPathTour();
+    }
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [props.viewState.playPathPanelIsVisible, props.viewState.autoStartTour]);
+
+  const autoCountdownRef = useRef(false);
+  useEffect(() => {
+    if (countdown === null) {
+      autoCountdownRef.current = false;
+    } else if (
+      !props.viewState.playPathPanelIsVisible &&
+      autoCountdownRef.current
+    ) {
+      autoCountdownRef.current = false;
+      resetPlayPath();
+    }
+  }, [countdown, props.viewState.playPathPanelIsVisible, resetPlayPath]);
+
+  const autoStartPlay = props.viewState.autoStartPlay;
+  const tourBusy =
+    props.viewState.autoStartTour !== undefined ||
+    props.viewState.currentTourIndex !== -1;
+  const isMapZooming = props.terria.currentViewer.isMapZooming;
+  useEffect(() => {
+    if (
+      autoStartPlay &&
+      props.viewState.playPathPanelIsVisible &&
+      (pointsSize ?? 0) > 0 &&
+      !playingPath &&
+      countdown === null &&
+      !isCameraMoving &&
+      !isMapZooming &&
+      !tourBusy &&
+      props.viewState.currentTourIndex === -1
+    ) {
+      runInAction(() => (props.viewState.autoStartPlay = false));
+      if (!isPitchTooLow()) {
+        autoCountdownRef.current = true;
+        onPlay();
+      }
+    }
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [
+    autoStartPlay,
+    props.viewState.playPathPanelIsVisible,
+    pointsSize,
+    playingPath,
+    countdown,
+    isCameraMoving,
+    isMapZooming,
+    tourBusy
+  ]);
+
   const renderHeader = () => {
     return (
       <div className={Styles.header}>
