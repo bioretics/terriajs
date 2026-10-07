@@ -62,6 +62,7 @@ import {
   MeasureCircleTool
 } from "../../Map/MapNavigation/Items";
 import { MeasureToolsController } from "../../Map/MapNavigation/Items/MeasureTools";
+import raiseErrorNotShownInPreview from "../../Preview/raiseErrorNotShownInPreview";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -244,7 +245,7 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
       });
     viewState
       .viewCatalogMember(item)
-      .then((result) => result.raiseError(viewState.terria));
+      .then((result) => raiseErrorNotShownInPreview(viewState, item, result));
   }, [item, viewState]);
 
   // Fork (rer3d): duplicate a layer (without splitting the screen).
