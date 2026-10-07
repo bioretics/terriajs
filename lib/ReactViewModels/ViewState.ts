@@ -22,6 +22,7 @@ import PickedFeatures from "../Map/PickedFeatures/PickedFeatures";
 import CatalogMemberMixin, { getName } from "../ModelMixins/CatalogMemberMixin";
 import GroupMixin from "../ModelMixins/GroupMixin";
 import MappableMixin from "../ModelMixins/MappableMixin";
+import MeasurableGeometryMixin from "../ModelMixins/MeasurableGeometryMixin";
 import ReferenceMixin from "../ModelMixins/ReferenceMixin";
 import { ensureCatalogMemberAccess } from "../Models/Authentication/CatalogAccessControl";
 import CommonStrata from "../Models/Definition/CommonStrata";
@@ -63,6 +64,15 @@ export const USER_DATA_NAME = "my-data";
 // check showWorkbenchButton delay and transforms
 // export const WORKBENCH_RESIZE_ANIMATION_DURATION = 250;
 export const WORKBENCH_RESIZE_ANIMATION_DURATION = 500;
+
+const MEASURE_TOOLS_ID = "measure-tool";
+const MEASURE_TOOL_IDS = [
+  "measure-line-tool",
+  "measure-polygon-tool",
+  "measure-point-tool",
+  "measure-angle-tool",
+  "measure-circle-tool"
+];
 
 interface ViewStateOptions {
   terria: Terria;
@@ -1005,20 +1015,57 @@ export default class ViewState {
     if (sourceId) {
       this.deleteMeasurableGeomSnapshotIfUnused(sourceId);
     }
-    [
-      "measure-tool",
-      "measure-line-tool",
-      "measure-polygon-tool",
-      "measure-point-tool",
-      "measure-angle-tool",
-      "measure-circle-tool"
-    ].forEach((id) => {
+    [MEASURE_TOOLS_ID, ...MEASURE_TOOL_IDS].forEach((id) => {
       const item = this.terria.mapNavigationModel.findItem(id)?.controller;
       if (item && item.active) {
         item.deactivate();
       }
       this.terria.mapNavigationModel.enable(id);
     });
+  }
+
+  @action
+  deactivateMeasureTools() {
+    let hadActiveTool = false;
+    MEASURE_TOOL_IDS.forEach((id) => {
+      const controller =
+        this.terria.mapNavigationModel.findItem(id)?.controller;
+      if (controller && controller.active) {
+        controller.deactivate();
+        hadActiveTool = true;
+      }
+    });
+    if (hadActiveTool) {
+      [MEASURE_TOOLS_ID, ...MEASURE_TOOL_IDS].forEach((id) =>
+        this.terria.mapNavigationModel.enable(id)
+      );
+    }
+  }
+
+  @action
+  openMeasurablePanel(item: MeasurableGeometryMixin.Instance) {
+    this.deactivateMeasureTools();
+    this.measurablePanelSourceItemId = item.uniqueId;
+    if (this.playPathPanelIsVisible || this.measurableDownloadPanelIsVisible) {
+      this.measurablePanelIsVisible = true;
+    }
+    item.computePath();
+    [MEASURE_TOOLS_ID, ...MEASURE_TOOL_IDS].forEach((id) =>
+      this.terria.mapNavigationModel.disable(id)
+    );
+  }
+
+  @action
+  openPlayPathPanel(item: MeasurableGeometryMixin.Instance) {
+    this.deactivateMeasureTools();
+    const isPlayingSameLayer =
+      this.isPlayingPath && this.playPathPlaybackSourceItemId === item.uniqueId;
+    this.playPathPanelSourceItemId = item.uniqueId;
+    this.playPathPlaybackSourceItemId = item.uniqueId;
+    this.playPathPanelIsVisible = true;
+    if (!isPlayingSameLayer) {
+      item.computePath();
+    }
   }
 
   @action

@@ -50,14 +50,6 @@ import GeoJsonCatalogItem from "../../../Models/Catalog/CatalogItems/GeoJsonCata
 import KmlCatalogItem from "../../../Models/Catalog/CatalogItems/KmlCatalogItem";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import sampleTerrainMostDetailed from "terriajs-cesium/Source/Core/sampleTerrainMostDetailed";
-import {
-  MeasureAngleTool,
-  MeasureLineTool,
-  MeasurePointTool,
-  MeasurePolygonTool,
-  MeasureCircleTool
-} from "../../Map/MapNavigation/Items";
-import { MeasureToolsController } from "../../Map/MapNavigation/Items/MeasureTools";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -468,31 +460,6 @@ class ViewingControls extends React.Component<
       .then((result) => result.raiseError(this.props.viewState.terria));
   }
 
-  deactivateMeasureTools() {
-    const viewState = this.props.viewState;
-    const toolIds = [
-      MeasureLineTool.id,
-      MeasurePolygonTool.id,
-      MeasurePointTool.id,
-      MeasureAngleTool.id,
-      MeasureCircleTool.id
-    ];
-    let hadActiveTool = false;
-    toolIds.forEach((id) => {
-      const controller =
-        viewState.terria.mapNavigationModel.findItem(id)?.controller;
-      if (controller && controller.active) {
-        controller.deactivate();
-        hadActiveTool = true;
-      }
-    });
-    if (hadActiveTool) {
-      [MeasureToolsController.id, ...toolIds].forEach((id) =>
-        viewState.terria.mapNavigationModel.enable(id)
-      );
-    }
-  }
-
   async exportDataClicked() {
     const item = this.props.item;
     if (!ExportableMixin.isMixedInto(item)) return;
@@ -665,30 +632,7 @@ class ViewingControls extends React.Component<
                     this.props.viewState.terria.measurableGeometryIndex
                   ].isFileUploaded
                 }
-                onClick={() =>
-                  runInAction(() => {
-                    this.deactivateMeasureTools();
-                    this.props.viewState.measurablePanelSourceItemId =
-                      item.uniqueId;
-                    if (
-                      this.props.viewState.playPathPanelIsVisible ||
-                      this.props.viewState.measurableDownloadPanelIsVisible
-                    ) {
-                      this.props.viewState.measurablePanelIsVisible = true;
-                    }
-                    item.computePath();
-                    [
-                      MeasureToolsController.id,
-                      MeasureLineTool.id,
-                      MeasurePolygonTool.id,
-                      MeasurePointTool.id,
-                      MeasureAngleTool.id,
-                      MeasureCircleTool.id
-                    ].forEach((id) =>
-                      viewState.terria.mapNavigationModel.disable(id)
-                    );
-                  })
-                }
+                onClick={() => viewState.openMeasurablePanel(item)}
                 title="Usa il dato del layer come percorso di cui misurare altitudine e statistiche"
               >
                 <BoxViewingControl>
@@ -701,19 +645,7 @@ class ViewingControls extends React.Component<
               <ViewingControlMenuButton
                 onClick={() => {
                   if (MeasurableGeometryMixin.isMixedInto(item)) {
-                    runInAction(() => {
-                      this.deactivateMeasureTools();
-                      const isPlayingSameLayer =
-                        viewState.isPlayingPath &&
-                        viewState.playPathPlaybackSourceItemId ===
-                          item.uniqueId;
-                      viewState.playPathPanelSourceItemId = item.uniqueId;
-                      viewState.playPathPlaybackSourceItemId = item.uniqueId;
-                      viewState.playPathPanelIsVisible = true;
-                      if (!isPlayingSameLayer) {
-                        item.computePath();
-                      }
-                    });
+                    viewState.openPlayPathPanel(item);
                   }
                 }}
               >
