@@ -38,7 +38,7 @@ function GlobeClippingMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
           ownerId !== undefined && ownerId !== this.uniqueId;
         const isBlocked = !is3D || isOwnedByOther;
         // Force trait off so checkbox shows unchecked
-         if (this.globeClippingEnabled && isBlocked) {
+        if (this.globeClippingEnabled && isBlocked) {
           this.setTrait(CommonStrata.user, "globeClippingEnabled", false);
           return;
         }
