@@ -340,6 +340,45 @@ describeIfSupported("Cesium Model", function () {
           `wms-1`
         );
       });
+
+      describe("with the imageryLayerGuard experimental feature enabled", function () {
+        beforeEach(function () {
+          terria.configParameters.nextExperimentalFeatures = {
+            imageryLayerGuard: true
+          };
+        });
+
+        it("must not destroy draped imagery layers when the tileset is removed from the viewer", async function () {
+          const tileset2 = items[4].mapItems[0] as Cesium3DTileset;
+          const drapedLayers = [
+            tileset2.imageryLayers.get(0),
+            tileset2.imageryLayers.get(1)
+          ];
+
+          items.splice(4, 1);
+          runInAction(() => viewerItems.set(items));
+          await runLater(() => {});
+
+          expect(tileset2.isDestroyed()).toBe(true);
+          drapedLayers.forEach((layer) => {
+            expect(layer.isDestroyed()).toBe(false);
+            expect(cesium.scene.imageryLayers.contains(layer)).toBe(true);
+          });
+        });
+
+        it("must replace a memoised imagery layer that has been destroyed", function () {
+          const layer = cesium.scene.imageryLayers.get(0);
+          const provider = layer.imageryProvider;
+          cesium.scene.imageryLayers.remove(layer, true);
+
+          runInAction(() => viewerItems.set(items.slice()));
+
+          const newLayer = cesium.scene.imageryLayers.get(0);
+          expect(newLayer.isDestroyed()).toBe(false);
+          expect(newLayer).not.toBe(layer);
+          expect(newLayer.imageryProvider).toBe(provider);
+        });
+      });
     });
   });
 
@@ -585,6 +624,162 @@ describeIfSupported("Cesium Model", function () {
       expect(currentNotificationTitle).toBe(
         "map.cesium.terrainServerErrorTitle"
       );
+    });
+  });
+
+  describe("shadow-disabled-for-performance notification", function () {
+    let tilesetItem: Cesium3DTilesCatalogItem;
+
+    beforeEach(
+      action(async function () {
+        // We need a cesium instance bound to terria.mainViewer for workbench
+        // changes to be reflected in these specs
+        cesium.destroy();
+        cesium = new Cesium(terria.mainViewer, container);
+
+        tilesetItem = new Cesium3DTilesCatalogItem("shadow-tileset", terria);
+        updateModelFromJson(tilesetItem, CommonStrata.definition, {
+          id: "shadow-tileset",
+          url: "test/Cesium3DTiles/tileset.json",
+          shadows: "BOTH"
+        });
+        (await terria.workbench.add(tilesetItem)).throwIfError();
+      })
+    );
+
+    function currentNotificationTitle(): string | undefined {
+      const notification = terria.notificationState.currentNotification;
+      if (notification === undefined) return undefined;
+      return typeof notification.title === "string"
+        ? notification.title
+        : notification.title();
+    }
+
+    it("does not notify on its own just from the quality slider changing", function () {
+      // Reacting passively would either spam on unrelated recomputes or (if
+      // de-duplicated) miss a genuine new interaction - so nothing should
+      // fire until a caller explicitly asks via notifyIfShadowsSuppressed().
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      expect(currentNotificationTitle()).toBeUndefined();
+    });
+
+    it("notifies when asked, if the quality slider is forcing shadows off for a dataset that wants them", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBe(
+        "models.shadowsDisabledForPerformance.title"
+      );
+      expect(terria.notificationState.currentNotification?.showAsToast).toBe(
+        true
+      );
+      expect(
+        terria.notificationState.currentNotification?.toastVisibleDuration
+      ).toBeUndefined();
+    });
+
+    it("notifies again on a second, separate interaction rather than just once per session", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      terria.notificationState.dismissCurrentNotification();
+      expect(currentNotificationTitle()).toBeUndefined();
+
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBe(
+        "models.shadowsDisabledForPerformance.title"
+      );
+    });
+
+    it("does not notify while quality stays high enough to keep shadows on", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(1);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBeUndefined();
+    });
+
+    it("does not notify once shadows are force-enabled via the override hook", function () {
+      runInAction(() => {
+        cesium.enableShadowsOverride();
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBeUndefined();
+    });
+
+    it("notifies again once the override is cleared, if quality is still low and shadows are still wanted", function () {
+      runInAction(() => {
+        cesium.enableShadowsOverride();
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBeUndefined();
+
+      runInAction(() => {
+        cesium.clearShadowsOverride();
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBe(
+        "models.shadowsDisabledForPerformance.title"
+      );
+    });
+
+    it("does not notify when no workbench item asks for shadows", function () {
+      runInAction(() => {
+        tilesetItem.setTrait(CommonStrata.definition, "shadows", "NONE");
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationTitle()).toBeUndefined();
+    });
+
+    function currentNotificationIgnored(): boolean {
+      const ignore = terria.notificationState.currentNotification?.ignore;
+      return typeof ignore === "function" ? ignore() : (ignore ?? false);
+    }
+
+    it("marks the toast to auto-dismiss once quality is raised back out of the low-spec tier", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationIgnored()).toBe(false);
+
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(1);
+      });
+      expect(currentNotificationIgnored()).toBe(true);
+    });
+
+    it("marks the toast to auto-dismiss once shadows are force-enabled via the override hook", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationIgnored()).toBe(false);
+
+      runInAction(() => {
+        cesium.enableShadowsOverride();
+      });
+      expect(currentNotificationIgnored()).toBe(true);
+    });
+
+    it("marks the toast to auto-dismiss if the requesting workbench item is removed", function () {
+      runInAction(() => {
+        terria.setBaseMaximumScreenSpaceError(3);
+      });
+      cesium.notifyIfShadowsSuppressed();
+      expect(currentNotificationIgnored()).toBe(false);
+
+      runInAction(() => {
+        tilesetItem.setTrait(CommonStrata.definition, "shadows", "NONE");
+      });
+      expect(currentNotificationIgnored()).toBe(true);
     });
   });
 

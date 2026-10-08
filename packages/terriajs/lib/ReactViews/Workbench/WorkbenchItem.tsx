@@ -1,8 +1,9 @@
 import { action } from "mobx";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { sortable } from "react-anything-sortable";
 import { useTranslation } from "react-i18next";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import getPath from "../../Core/getPath";
 import CatalogMemberMixin, {
   getName
@@ -16,14 +17,17 @@ import Box, { BoxSpan } from "../../Styled/Box";
 import { RawButton } from "../../Styled/Button";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import { Li } from "../../Styled/List";
-import { TextSpan } from "../../Styled/Text";
+import { Text, TextSpan } from "../../Styled/Text";
 import Loader from "../Loader";
+import { terriaErrorNotification } from "../Notification/terriaErrorNotification";
 import PrivateIndicator from "../PrivateIndicator/PrivateIndicator";
 import WorkbenchItemControls from "./Controls/WorkbenchItemControls";
 
+const DRAG_THRESHOLD_PX = 5;
+
 interface IProps {
   item: BaseModel;
-  onMouseDown(): void;
+  onMouseDown(e: MouseEvent): void;
   onTouchStart(): void;
   viewState: ViewState;
   className: any;
@@ -48,6 +52,41 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
     props;
 
   const { t } = useTranslation();
+  const theme = useTheme();
+  const [showErrors, setShowErrors] = useState(false);
+  const errors = viewState.terria.workbench.getItemErrors(item);
+
+  const removeDragListeners = useRef<() => void>();
+  useEffect(() => () => removeDragListeners.current?.(), []);
+
+  const onDraggableMouseDown = (e: MouseEvent) => {
+    removeDragListeners.current?.();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const onMove = (moveEvent: globalThis.MouseEvent) => {
+      if ((moveEvent.buttons & 1) === 0) {
+        removeListeners();
+        return;
+      }
+      if (
+        Math.abs(moveEvent.clientX - startX) +
+          Math.abs(moveEvent.clientY - startY) <
+        DRAG_THRESHOLD_PX
+      ) {
+        return;
+      }
+      removeListeners();
+      onMouseDown(e);
+    };
+    const removeListeners = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", removeListeners, true);
+      removeDragListeners.current = undefined;
+    };
+    removeDragListeners.current = removeListeners;
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", removeListeners, true);
+  };
 
   const toggleDisplay = action(() => {
     if (!CatalogMemberMixin.isMixedInto(item)) return;
@@ -80,10 +119,10 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
   const typeLabel = item.type;
 
   return (
-    <StyledLi style={style} className={className}>
+    <StyledLi style={style} className={`${className} no-drag`}>
       <ItemRow>
         <DragHandle
-          onMouseDown={onMouseDown}
+          onMouseDown={onDraggableMouseDown}
           onTouchStart={onTouchStart}
           title={getPath(item, " → ")}
         >
@@ -113,7 +152,7 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
           )
         )}
         <NameBox
-          onMouseDown={onMouseDown}
+          onMouseDown={onDraggableMouseDown}
           onTouchStart={onTouchStart}
           title={getPath(item, " → ")}
           dimmed={isMappable && !isShown}
@@ -137,6 +176,28 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
           </BoxSpan>
         )}
         {typeLabel && <TypeBadge title={typeLabel}>{typeLabel}</TypeBadge>}
+        {errors.length > 0 && (
+          <ErrorButton
+            type="button"
+            onClick={() => setShowErrors(!showErrors)}
+            title={t(($) => $.workbench.showErrors)}
+            aria-expanded={showErrors}
+          >
+            <StyledIcon
+              styledWidth="14px"
+              fillColor={theme.colorSecondary}
+              glyph={Icon.GLYPHS.warning}
+            />
+            {errors.length > 1 && (
+              <TextSpan
+                small
+                css={{ color: theme.colorSecondary, marginLeft: "2px" }}
+              >
+                {errors.length}
+              </TextSpan>
+            )}
+          </ErrorButton>
+        )}
         {CatalogMemberMixin.isMixedInto(item) ? (
           <ChevronButton
             type="button"
@@ -153,6 +214,28 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
           </ChevronButton>
         ) : null}
       </ItemRow>
+      {showErrors && errors.length > 0 && (
+        <ItemBody column gap={3}>
+          {errors.map((error, index) => (
+            <Box column key={index}>
+              <Text medium bold css={{ color: theme.colorSecondary }}>
+                {error.highestImportanceError.title}
+              </Text>
+              <Box
+                column
+                css={{
+                  fontSize: "14px",
+                  color: theme.greyLighter,
+                  "& div, & p, & span": { color: theme.greyLighter },
+                  "& a": { color: theme.colorPrimary }
+                }}
+              >
+                {terriaErrorNotification(error)(viewState)}
+              </Box>
+            </Box>
+          ))}
+        </ItemBody>
+      )}
       {isOpen && (
         <ItemBody column gap={2}>
           <WorkbenchItemControls item={item} viewState={viewState} />
@@ -273,6 +356,21 @@ const ChevronButton = styled(RawButton)`
   &:focus-visible {
     background: ${(p) => p.theme.muted};
     color: ${(p) => p.theme.textLight};
+  }
+`;
+
+const ErrorButton = styled(RawButton)`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: ${(p) => p.theme.radiusSmall};
+
+  &:hover,
+  &:focus-visible {
+    background: ${(p) => p.theme.muted};
   }
 `;
 

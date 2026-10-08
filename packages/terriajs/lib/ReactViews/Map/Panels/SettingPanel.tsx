@@ -13,6 +13,7 @@ import {
 import { useTranslation, withTranslation } from "react-i18next";
 import styled, { withTheme } from "styled-components";
 import SplitDirection from "terriajs-cesium/Source/Scene/SplitDirection";
+import { isLowSpecQualityTier } from "../../../Core/QualityTier";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
 import { BaseMapItem } from "../../../Models/BaseMaps/BaseMapsModel";
@@ -185,6 +186,7 @@ const SettingPanel: FC = observer(() => {
   const onBaseMaximumScreenSpaceErrorChange = (bmsse: number) => {
     terria.setBaseMaximumScreenSpaceError(bmsse);
     terria.setLocalProperty("baseMaximumScreenSpaceError", bmsse.toString());
+    terria.cesium?.notifyIfShadowsSuppressed();
   };
 
   const toggleUseNativeResolution = () => {
@@ -508,6 +510,14 @@ const SettingPanel: FC = observer(() => {
                 />
                 <Text mini>{t(($) => $.settingPanel.performanceLabel)}</Text>
               </Box>
+              {isLowSpecQualityTier(terria.baseMaximumScreenSpaceError) && (
+                <>
+                  <Spacing bottom={1} />
+                  <Text mini textLightDimmed>
+                    {t(($) => $.settingPanel.lowPerformanceQualityNote)}
+                  </Text>
+                </>
+              )}
             </Box>
           </>
         )}
