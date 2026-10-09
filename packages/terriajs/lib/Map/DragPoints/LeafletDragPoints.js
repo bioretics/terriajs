@@ -17,8 +17,15 @@ import L from "../LeafletPatched";
  *
  * @param {Terria} terria The Terria instance.
  * @param {PointMovedCallback} pointMovedCallback A function that is called when a point is moved.
+ * @param {PointMovingCallback} pointMovingCallback A function that is called when a point is moving.
+ * @param {MapPickedObjectCallback} mapPickedObjectCallback An optional function that maps the picked object to another object, eg a snap point.
  */
-const LeafletDragPoints = function (terria, pointMovedCallback) {
+const LeafletDragPoints = function (
+  terria,
+  pointMovedCallback,
+  pointMovingCallback,
+  mapPickedObjectCallback
+) {
   this._terria = terria;
   this._setUp = false;
   this.type = "Leaflet";
@@ -29,6 +36,23 @@ const LeafletDragPoints = function (terria, pointMovedCallback) {
    * @default undefined
    */
   this._pointMovedCallback = pointMovedCallback;
+
+  /**
+   * Callback that occurs when point is moving. Function takes a CustomDataSource which is a list of PointEntities.
+   * @type {PointMovingCallback}
+   * @default undefined
+   */
+  this._pointMovingCallback = pointMovingCallback;
+
+  /**
+   * Callback that occurs when user presses the mouse button. Function takes a
+   * picked object or undefined if there is no object at the cursor
+   * position. The function may return another object that must be dragged
+   * instead of the picked one.
+   * @type {PointMovingCallback}
+   * @default undefined
+   */
+  this._mapPickedObjectCallback = mapPickedObjectCallback;
 
   /**
    * List of entities that can be dragged, which is populated with user-created points only.
@@ -60,57 +84,58 @@ LeafletDragPoints.prototype.setUp = function () {
     // Test context or something has gone *so* badly wrong
     return;
   }
-  this._terria.leaflet.scene.featureMousedown.addEventListener(
-    this._onMouseDownOnPoint,
-    this
-  );
+  this._disposeOnMouseDownListener =
+    this._terria.leaflet.scene.featureMousedown.addEventListener(
+      this._onMouseDownOnPoint,
+      this
+    );
   this._setUp = true;
 };
 
 /**
  * Function that is called when the user clicks and holds on a point that was previously drawn.
  *
- * @param {Entity} entity The entity that user mouse downs on.
- * @param {Leaflet.MouseEvent} [event] The Leaflet mouse event.
+ * @param {Entity} pickedEntity The entity that user mouse downs on.
  */
-LeafletDragPoints.prototype._onMouseDownOnPoint = function (entity, event) {
-  if (
-    !defined(this._draggableObjects.entities) ||
-    this._draggableObjects.entities.values.length === 0
-  ) {
+LeafletDragPoints.prototype._onMouseDownOnPoint = function (pickedEntity) {
+  if (!defined(this._draggableObjects.entities)) {
     return;
   }
 
-  var dragEntity = this._draggableObjects.entities.values.filter(
-    function (dragObjEntity) {
-      // Not necessarily same entity, but will have same id.
-      return dragObjEntity.id === entity.id;
-    }
-  )[0];
-  if (defined(dragEntity)) {
-    // Billboard points are rendered as <img> markers. Without preventing the
-    // default, the browser starts a native image-drag and map mousemove/mouseup
-    // never drive the point. Mirror Leaflet.Draggable: stop the event, disable
-    // image drag, and track the pointer on document.
-    if (defined(event) && defined(event.originalEvent)) {
-      L.DomEvent.preventDefault(event.originalEvent);
-      L.DomEvent.stopPropagation(event.originalEvent);
-    }
-    L.DomUtil.disableImageDrag();
-    L.DomUtil.disableTextSelection();
+  // Map the picked entity to another if a map function is specified, for
+  // example to return a snap point if no point was picked but the position
+  // is close enough to a snap point
+  const mappedEntity = this._mapPickedObjectCallback
+    ? this._mapPickedObjectCallback(pickedEntity)
+    : pickedEntity;
 
-    L.DomEvent.on(document, "mousemove", this._onMouseMove, this);
-    L.DomEvent.on(document, "touchmove", this._onMouseMove, this);
-    L.DomEvent.on(document, "mouseup", this._onMouseUp, this);
-    L.DomEvent.on(document, "touchend", this._onMouseUp, this);
+  if (!mappedEntity) {
+    return;
+  }
+
+  // Ensure the mapped entity is part of draggable objects
+  const draggedEntity = this._draggableObjects.entities.values.find(
+    function (e) {
+      // Not necessarily same entity, but will have same id.
+      return e.id === mappedEntity.id;
+    }
+  );
+
+  if (defined(draggedEntity)) {
+    // The touch events below don't actually work because Leaflet doesn't
+    // expose these events.  See here for a possible workaround:
+    // https://github.com/Leaflet/Leaflet/issues/1542
+    this._terria.leaflet.map.on("mousemove", this._onMouseMove, this);
+    this._terria.leaflet.map.on("touchmove", this._onMouseMove, this);
+    this._terria.leaflet.map.on("mouseup", this._onMouseUp, this);
+    this._terria.leaflet.map.on("touchend", this._onMouseUp, this);
 
     this._dragInProgress = true;
-    this._entityDragged = dragEntity;
+    this._entityDragged = draggedEntity;
 
     this._terria.currentViewer.pauseMapInteraction();
-    this._originalPosition = dragEntity.position.getValue(
-      this._terria.timelineClock.currentTime
-    );
+
+    this._originalPosition = draggedEntity.position;
   }
 };
 
@@ -134,6 +159,7 @@ LeafletDragPoints.prototype._onMouseMove = function (move) {
       latlng.lng,
       latlng.lat
     );
+    this._pointMovingCallback(this._entityDragged);
   }
 };
 
@@ -193,6 +219,7 @@ LeafletDragPoints.prototype.destroy = function () {
     );
   }
   this._setUp = false;
+  this._disposeOnMouseDownListener?.();
 };
 
 export default LeafletDragPoints;
