@@ -153,6 +153,20 @@ class HelpPanel extends Component {
         $offsetRight={offsetRight}
         $isTopElement={this.props.viewState.topElement === "HelpPanel"}
         onClick={() => this.props.viewState.setTopElement("HelpPanel")}
+        css={`
+          position: fixed;
+          top: 0;
+          z-index: ${
+            this.props.viewState.topElement === "HelpPanel" ? 99999 : 110
+          };
+          transition: right 0.25s;
+          transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+          right: ${isAnimatingOpen ? -320 : isExpanded ? 490 : 0}px;
+
+          @media (max-width: 830px) {
+            right: ${isAnimatingOpen ? -320 : 0}px;
+          }
+        `}
       >
         <PanelHeader>
           <HeaderTitle title={t(($) => $.helpPanel.menuPaneTitle)}>

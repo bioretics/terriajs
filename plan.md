@@ -167,13 +167,13 @@ Dependency-ordered sub-batches, each `git add` + scoped typecheck before next:
 - **4d MenuBar (S3):** port fork buttons (Emergency/Login/Microzonation/Coords/Color) into upstream
   `MenuBar.tsx`; delete `MenuBar.jsx`/`.d.ts`; verify fork button subdirs stay wired.
 - **4e Catalog:** `Kml/Gpx/ArcGisFeatureServer(+Stratum)/CartoMapV3/Csv/GeoJson/WFS/WMTS/
-ArcGisMapServer`; `registerCatalogMembers.ts` (**union**: fork GoogleTileMaps + upstream TileMapService);
+  ArcGisMapServer`; `registerCatalogMembers.ts` (**union**: fork GoogleTileMaps + upstream TileMapService);
   clustering→theirs, COG→theirs (decision-4).
 - **4f Remaining UU + substantive AA:** `registerMapNavigations.tsx` (viewshed/measure tools),
   `ViewingControls.tsx`, `SettingPanel.tsx`, `SidePanel.tsx`/`SidePanelContainer.tsx`
   (**RelatedMaps→theirs**, port fork positioning if unique), `Story.tsx`, `StandardUserInterface.tsx`,
   `ShareUrl.tsx` (import/export map), `BottomBar/BottomLeftBar/WorkbenchItemControls/WorkbenchList/
-ZoomControl/PedestrianMode/LocationSearchResults/highlightKeyword`, `Reproject.ts` (proj4 API),
+  ZoomControl/PedestrianMode/LocationSearchResults/highlightKeyword`, `Reproject.ts` (proj4 API),
   `EarthGravityModel1996.js`, `MobileHeader/MobileModalWindow.jsx`.
 - **4g UD-real ports:** **`BottomDockChart.jsx` (+297 lines → onto upstream `.tsx`)**,
   `SearchBoxAndResults.jsx`→`.tsx`, `ZoomX.jsx`→`.tsx`.
