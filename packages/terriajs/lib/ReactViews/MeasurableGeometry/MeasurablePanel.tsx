@@ -631,9 +631,9 @@ const MeasurablePanel = observer((props: Props) => {
                 css={`
                   border: solid;
                   border-width: ${isValidSamplingPathStep ? 1 : 2}px;
-                  border-color: ${isValidSamplingPathStep
-                    ? theme.textLight
-                    : "red"};
+                  border-color: ${
+                    isValidSamplingPathStep ? theme.textLight : "red"
+                  };
                 `}
                 title={i18next.t(
                   ($) => $.measurableGeometry.samplingStepHeader

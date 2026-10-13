@@ -406,9 +406,9 @@ const PlayPathPanel = observer((props: Props) => {
                     css={`
                       border: solid;
                       border-width: ${isValidSamplingStep ? 1 : 2}px;
-                      border-color: ${isValidSamplingStep
-                        ? theme.textLight
-                        : "red"};
+                      border-color: ${
+                        isValidSamplingStep ? theme.textLight : "red"
+                      };
                     `}
                     title={i18next.t(($) => $.playPath.samplingStepHeader)}
                     light={false}

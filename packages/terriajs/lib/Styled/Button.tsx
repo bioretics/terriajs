@@ -47,21 +47,21 @@ export const StyledButton = styled.button<IStyledButtonProps>`
   min-height: 40px;
   ${(props) => props.shortMinHeight && `min-height: 34px;`}
   /* min-width: 75px; */
-padding: 0 16px;
+  padding: 0 16px;
 
   border: 1px solid #e4e5e7;
   border-radius: 4px;
 
   ${(props) => props.fullWidth && `width: 100%;`}
   ${(props) => props.fullHeight && `height: 100%;`}
-${(props) => props.styledWidth && `width: ${props.styledWidth};`}
-${(props) => props.styledMinWidth && `min-width: ${props.styledMinWidth};`}
+  ${(props) => props.styledWidth && `width: ${props.styledWidth};`}
+  ${(props) => props.styledMinWidth && `min-width: ${props.styledMinWidth};`}
 
-${(props) => props.marginLeft && `margin-left: ${4 * props.marginLeft}px;`}
-${(props) => props.marginRight && `margin-right: ${4 * props.marginRight}px;`}
+  ${(props) => props.marginLeft && `margin-left: ${4 * props.marginLeft}px;`}
+  ${(props) => props.marginRight && `margin-right: ${4 * props.marginRight}px;`}
 
-&:hover,
-&:focus {
+  &:hover,
+  &:focus {
     opacity: 0.9;
   }
 
@@ -82,11 +82,11 @@ ${(props) => props.marginRight && `margin-right: ${4 * props.marginRight}px;`}
     border-radius: 4px;
   `}
 
-${(props) => props.rounded && `border-radius: 32px;`}
-${(props) => props.roundLeft && `border-radius: 32px 0 0 32px;`}
-${(props) => props.roundRight && `border-radius: 0 32px 32px 0;`}
+  ${(props) => props.rounded && `border-radius: 32px;`}
+  ${(props) => props.roundLeft && `border-radius: 32px 0 0 32px;`}
+  ${(props) => props.roundRight && `border-radius: 0 32px 32px 0;`}
 
-${(props) =>
+  ${(props) =>
     props.secondary &&
     `     /* background-color: #4d5766; */
     background-color: ${props.theme.textLight};
@@ -95,27 +95,27 @@ ${(props) =>
     border: 2px solid ${props.theme.darkWithOverlay};
   `}
 
-${(props) =>
+  ${(props) =>
     props.denyButton &&
     `     border: 2px solid ${props.theme.grey};
     color: ${props.theme.grey};
     background-color: transparent;
   `}
 
-${(props) =>
+  ${(props) =>
     props.warning &&
     `     background-color: red;
   `}
 
-${(props) =>
+  ${(props) =>
     props.splitter &&
     `     background-color: ${props.theme.colorSecondary};
     color: ${props.theme.textLight};
   `}
 
-${(props) => props.transparentBg && `background: transparent;`}
+  ${(props) => props.transparentBg && `background: transparent;`}
 
-${(props) =>
+  ${(props) =>
     props.disabled &&
     `     /* normalize.css has some silly overrides so this specificity is needed here to re-override */
     &[disabled] {
@@ -157,11 +157,11 @@ export const RawButton = styled.button<IButtonProps>`
     }
   `}
 
-${(props) => props.fullWidth && `width: 100%;`}
-${(props) => props.fullHeight && `height: 100%;`}
-${(props) => props.styledWidth && `width: ${props.styledWidth};`}
+  ${(props) => props.fullWidth && `width: 100%;`}
+  ${(props) => props.fullHeight && `height: 100%;`}
+  ${(props) => props.styledWidth && `width: ${props.styledWidth};`}
 
-${(props) =>
+  ${(props) =>
     props.textLight ? `color: ${props.theme.textLight}` : `color: inherit`}
 `;
 

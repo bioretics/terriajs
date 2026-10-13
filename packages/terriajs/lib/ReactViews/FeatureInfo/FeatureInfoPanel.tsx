@@ -378,9 +378,9 @@ class FeatureInfoPanel extends Component<Props> {
                   width: 14px;
                   border-radius: 2px;
                   margin: 2px;
-                  border-width: ${isMarkerVisible(this.props.viewState.terria)
-                    ? "2px"
-                    : "0px"};
+                  border-width: ${
+                    isMarkerVisible(this.props.viewState.terria) ? "2px" : "0px"
+                  };
                   border-color: red;
                 `}
               >
