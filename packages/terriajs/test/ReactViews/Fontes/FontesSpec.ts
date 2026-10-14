@@ -23,6 +23,7 @@ import {
   showResultsOnMap
 } from "../../../lib/ReactViews/Fontes/fontesMap";
 import Terria from "../../../lib/Models/Terria";
+import UserDrawing from "../../../lib/Models/UserDrawing";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { worker } from "../../mocks/browser";
 
@@ -607,6 +608,20 @@ describe("Fontes", function () {
       expect(
         resultsLayerJson([georeferenced], "R", true).initialTimeSource
       ).toEqual("start");
+    });
+  });
+
+  describe("drawing a search area", function () {
+    it("shows the dialog whose button finishes the drawing", function () {
+      const terria = new Terria();
+      new UserDrawing({ terria, allowPolygon: true }).enterDrawMode();
+      expect(terria.mapInteractionModeStack.at(-1)?.invisible).toBeFalsy();
+    });
+
+    it("still hides it for tools that bring their own panel", function () {
+      const terria = new Terria();
+      new UserDrawing({ terria, invisible: true }).enterDrawMode();
+      expect(terria.mapInteractionModeStack.at(-1)?.invisible).toBe(true);
     });
   });
 

@@ -1175,7 +1175,7 @@ export default class UserDrawing extends MappableMixin(
           }, false) as any;
         }
       },
-      invisible: true /* this.invisible */
+      invisible: this.invisible
     });
     runInAction(() => {
       this.pickPointMode = pickPointMode;
