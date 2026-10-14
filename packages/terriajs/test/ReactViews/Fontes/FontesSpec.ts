@@ -17,6 +17,11 @@ import {
   maxNativeZoom,
   tileRequest
 } from "../../../lib/ReactViews/Fontes/FontesImageViewer";
+import {
+  rectoMapItemJson,
+  resultsLayerJson,
+  showResultsOnMap
+} from "../../../lib/ReactViews/Fontes/fontesMap";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { worker } from "../../mocks/browser";
@@ -486,6 +491,96 @@ describe("Fontes", function () {
       expect(tileRequest({ x: 4, y: 0, z: 2 }, levels)).toBeUndefined();
       expect(tileRequest({ x: 0, y: 3, z: 2 }, levels)).toBeUndefined();
       expect(tileRequest({ x: -1, y: 0, z: 2 }, levels)).toBeUndefined();
+    });
+  });
+
+  describe("map layers", function () {
+    const config = {
+      documentsUrl: "documenti.geojson",
+      wmsUrl: "https://example.com/geoserver/fontes/wms"
+    };
+    const georeferenced = normalizeFontesDocument({
+      type: "Feature",
+      geometry: { type: "MultiPoint", coordinates: [[10.376, 44.929]] },
+      properties: {
+        id: "A",
+        titolo_schedatore: "Colorno",
+        recto_georef: true,
+        recto_wms_layer: "fontes:A_r",
+        recto_cog_url: "https://example.com/cog/A_r.tif",
+        data_produzione: "1627"
+      }
+    });
+
+    it("overlays a georeferenced recto from the WMS when it is published there", function () {
+      expect(rectoMapItemJson(georeferenced, config)).toEqual({
+        id: "fontes-A-recto",
+        type: "wms",
+        name: "A – Colorno",
+        url: "https://example.com/geoserver/fontes/wms",
+        layers: "fontes:A_r"
+      });
+    });
+
+    it("falls back to the COG of a georeferenced recto", function () {
+      expect(
+        rectoMapItemJson(georeferenced, { documentsUrl: "documenti.geojson" })
+      ).toEqual({
+        id: "fontes-A-recto",
+        type: "cog",
+        name: "A – Colorno",
+        url: "https://example.com/cog/A_r.tif"
+      });
+    });
+
+    it("has nothing to overlay for a recto that is not georeferenced", function () {
+      const scan = normalizeFontesDocument({
+        type: "Feature",
+        geometry: null,
+        properties: {
+          id: "B",
+          recto_cog_url: "https://example.com/cog/B_r.tif"
+        }
+      });
+      expect(rectoMapItemJson(scan, config)).toBeUndefined();
+    });
+
+    it("shows the results as one layer coloured by document type", function () {
+      const json = resultsLayerJson([georeferenced], "Risultati", false);
+      expect(json.id).toEqual("fontes-risultati");
+      expect(json.type).toEqual("geojson");
+      expect(json.name).toEqual("Risultati");
+      expect(json.geoJsonData).toEqual(
+        toResultsGeoJson([georeferenced]) as any
+      );
+      expect((json.featureInfoTemplate as any).template).toContain(
+        '<fontes-document id="{{id}}">'
+      );
+      expect((json.defaultStyle as any).color.colorColumn).toEqual("tipo");
+    });
+
+    it("updates the results layer of a new search instead of adding another", async function () {
+      const terria = new Terria();
+      await showResultsOnMap(terria, [georeferenced], "Risultati", false);
+      await showResultsOnMap(terria, [georeferenced], "Risultati", true);
+      expect(
+        terria.workbench.items.filter((i) => i.uniqueId === "fontes-risultati")
+          .length
+      ).toEqual(1);
+      expect(
+        terria.catalog.userAddedDataGroup.members.filter(
+          (id) => id === "fontes-risultati"
+        ).length
+      ).toEqual(1);
+    });
+
+    it("leaves the timeline off unless asked to animate the results in time", function () {
+      expect(
+        (resultsLayerJson([georeferenced], "R", false).defaultStyle as any).time
+      ).toEqual({ timeColumn: null });
+      expect(
+        (resultsLayerJson([georeferenced], "R", true).defaultStyle as any).time
+      ).toEqual({ timeColumn: "data_da", endTimeColumn: "data_a" });
     });
   });
 
