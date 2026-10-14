@@ -165,21 +165,22 @@ const ConditionRow: FC<{
             )}
           </>
         )}
-        <Select
-          light
-          aria-label={t(($) => $.fontes.logic)}
-          value={row.logic}
-          css={"width: 110px; flex-shrink: 0;"}
-          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-            onChange({ ...row, logic: e.target.value as FontesLogic })
-          }
-        >
-          {LOGICS.map((logic) => (
-            <option key={logic} value={logic}>
-              {logic}
-            </option>
-          ))}
-        </Select>
+        <Box css={"width: 110px; flex-shrink: 0;"}>
+          <Select
+            light
+            aria-label={t(($) => $.fontes.logic)}
+            value={row.logic}
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+              onChange({ ...row, logic: e.target.value as FontesLogic })
+            }
+          >
+            {LOGICS.map((logic) => (
+              <option key={logic} value={logic}>
+                {logic}
+              </option>
+            ))}
+          </Select>
+        </Box>
         <RawButton
           aria-label={t(($) => $.fontes.removeCondition)}
           title={t(($) => $.fontes.removeCondition)}
@@ -251,7 +252,13 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
   };
 
   const columns: TableColumn<FontesDocument>[] = [
-    { name: t(($) => $.fontes.id), selector: (d) => d.id, sortable: true },
+    {
+      name: t(($) => $.fontes.id),
+      selector: (d) => d.id,
+      sortable: true,
+      wrap: true,
+      width: "135px"
+    },
     {
       name: t(($) => $.fontes.title),
       selector: (d) => d.title,
