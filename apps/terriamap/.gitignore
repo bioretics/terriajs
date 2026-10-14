@@ -30,3 +30,5 @@ yarn-error.log
 
 package-lock.json
 .nvmrc
+
+wwwroot/test/fontes/*.tif
