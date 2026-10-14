@@ -1,7 +1,13 @@
 import { http, HttpResponse } from "msw";
 import {
+  ALL_FIELDS,
+  distinctValues,
+  filterDocuments,
+  FontesCondition,
+  FontesDocument,
   getFontesDocuments,
   normalizeFontesDocument,
+  OPERATORS,
   parseFontesDate
 } from "../../../lib/ReactViews/Fontes/Fontes";
 import { worker } from "../../mocks/browser";
@@ -80,6 +86,196 @@ describe("Fontes", function () {
       expect(
         normalizeFontesDocument({ ...colorno, geometry: null }).geometry
       ).toBeNull();
+    });
+  });
+
+  describe("filterDocuments", function () {
+    const point = (lon: number, lat: number) => ({
+      type: "MultiPoint",
+      coordinates: [[lon, lat]]
+    });
+    const doc = (geometry: any, properties: any) =>
+      normalizeFontesDocument({ type: "Feature", geometry, properties });
+
+    const docs: FontesDocument[] = [
+      doc(point(10.376, 44.929), {
+        id: "A",
+        titolo_schedatore: "Colorno",
+        autori: ["Smeraldi Smeraldo"],
+        data_produzione: "1627-08-07?",
+        documento_testuale: false,
+        larghezza_documento: 403,
+        luoghi: [{ nome: "Colorno", nome_storico: "Colurni" }]
+      }),
+      doc(point(10.0, 45.0), {
+        id: "B",
+        titolo_originale: "Argine del Po a Mezzano",
+        autori: ["Pinzoni Pietro"],
+        data_produzione: "16XX",
+        documento_testuale: false,
+        larghezza_documento: 250
+      }),
+      doc(null, {
+        id: "C",
+        titolo_archivista: "Lettera sul Taro",
+        autori: ["Smeraldi Smeraldo", "Rossi Carlo"],
+        data_produzione: "/1590",
+        documento_testuale: true
+      }),
+      doc(point(10.33, 44.8), {
+        id: "D",
+        titolo_schedatore: "Pianta della Città",
+        data_produzione: "1700/1750",
+        documento_testuale: false
+      })
+    ];
+
+    const ids = (result: FontesDocument[]) => result.map((d) => d.id);
+    const condition = (
+      field: string,
+      operator: FontesCondition["operator"],
+      value = "",
+      logic: FontesCondition["logic"] = "AND"
+    ): FontesCondition => ({ field, operator, value, logic });
+    const search = (...conditions: FontesCondition[]) =>
+      ids(filterDocuments(docs, { conditions }));
+
+    it("keeps every document while no condition has a value", function () {
+      expect(search(condition(ALL_FIELDS, "contains"))).toEqual([
+        "A",
+        "B",
+        "C",
+        "D"
+      ]);
+    });
+
+    it("finds text in any field, ignoring case and accents", function () {
+      expect(search(condition(ALL_FIELDS, "contains", "citta"))).toEqual(["D"]);
+      expect(search(condition(ALL_FIELDS, "contains", "COLURNI"))).toEqual([
+        "A"
+      ]);
+    });
+
+    it("matches a list field when any of its values matches", function () {
+      expect(
+        search(condition("autori", "equals", "smeraldi smeraldo"))
+      ).toEqual(["A", "C"]);
+      expect(search(condition("autori", "contains", "pinz"))).toEqual(["B"]);
+    });
+
+    it("compares numbers", function () {
+      expect(search(condition("larghezza_documento", "gt", "300"))).toEqual([
+        "A"
+      ]);
+      expect(search(condition("larghezza_documento", "lt", "300"))).toEqual([
+        "B"
+      ]);
+      expect(search(condition("larghezza_documento", "equals", "403"))).toEqual(
+        ["A"]
+      );
+    });
+
+    it("filters yes/no fields", function () {
+      expect(search(condition("documento_testuale", "true"))).toEqual(["C"]);
+      expect(search(condition("documento_testuale", "false"))).toEqual([
+        "A",
+        "B",
+        "D"
+      ]);
+    });
+
+    it("finds documents whose date overlaps the requested FONTES date", function () {
+      expect(
+        search(condition("data_produzione", "period", "1600/1650"))
+      ).toEqual(["A", "B"]);
+      expect(
+        search(condition("data_produzione", "period", "1500/1550"))
+      ).toEqual(["C"]);
+      expect(search(condition("data_produzione", "period", "1740/"))).toEqual([
+        "D"
+      ]);
+    });
+
+    it("matches nothing for a value that is not a FONTES date", function () {
+      expect(search(condition("data_produzione", "period", "16"))).toEqual([]);
+    });
+
+    it("joins each condition to the next with AND, OR or AND NOT", function () {
+      const smeraldi = condition("autori", "equals", "Smeraldi Smeraldo");
+      const textual = condition("documento_testuale", "true");
+      expect(search({ ...smeraldi, logic: "AND" }, textual)).toEqual(["C"]);
+      expect(search({ ...smeraldi, logic: "AND NOT" }, textual)).toEqual(["A"]);
+      expect(
+        search(
+          condition("larghezza_documento", "gt", "300", "OR"),
+          condition("documento_testuale", "true")
+        )
+      ).toEqual(["A", "C"]);
+    });
+
+    it("evaluates the conditions from left to right, without precedence", function () {
+      expect(
+        search(
+          condition("autori", "equals", "Pinzoni Pietro", "OR"),
+          condition("documento_testuale", "true", "", "AND"),
+          condition("data_produzione", "period", "1500/1590")
+        )
+      ).toEqual(["C"]);
+    });
+
+    it("skips conditions without a value when joining the others", function () {
+      expect(
+        search(
+          condition("autori", "equals", "Pinzoni Pietro", "OR"),
+          condition("titolo_originale", "contains", "", "AND"),
+          condition("documento_testuale", "true")
+        )
+      ).toEqual(["B", "C"]);
+    });
+
+    it("keeps the documents of the requested years", function () {
+      const years = (from?: number, to?: number) =>
+        ids(filterDocuments(docs, { conditions: [], period: { from, to } }));
+      expect(years(1600, 1650)).toEqual(["A", "B"]);
+      expect(years(undefined, 1595)).toEqual(["C"]);
+      expect(years(1720)).toEqual(["D"]);
+    });
+
+    it("keeps the documents with a place inside the area", function () {
+      const area = {
+        type: "Polygon" as const,
+        coordinates: [
+          [
+            [10.3, 44.9],
+            [10.45, 44.9],
+            [10.45, 44.96],
+            [10.3, 44.96],
+            [10.3, 44.9]
+          ]
+        ]
+      };
+      expect(ids(filterDocuments(docs, { conditions: [], area }))).toEqual([
+        "A"
+      ]);
+    });
+
+    it("lists the distinct values of a field for autocompletion", function () {
+      expect(distinctValues(docs, "autori")).toEqual([
+        "Pinzoni Pietro",
+        "Rossi Carlo",
+        "Smeraldi Smeraldo"
+      ]);
+      expect(distinctValues(docs, "luoghi")).toEqual(["Colorno", "Colurni"]);
+      expect(distinctValues(docs, ALL_FIELDS)).toEqual([]);
+    });
+
+    it("offers the operators that make sense for each field type", function () {
+      expect(OPERATORS.text).toEqual(["contains", "equals"]);
+      expect(OPERATORS.list).toEqual(["contains", "equals"]);
+      expect(OPERATORS.objects).toEqual(["contains", "equals"]);
+      expect(OPERATORS.number).toEqual(["equals", "lt", "gt"]);
+      expect(OPERATORS.bool).toEqual(["true", "false"]);
+      expect(OPERATORS.date).toEqual(["period"]);
     });
   });
 

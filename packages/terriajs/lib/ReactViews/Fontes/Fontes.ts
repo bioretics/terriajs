@@ -1,7 +1,8 @@
+import booleanIntersects from "@turf/boolean-intersects";
 import type { Geometry } from "geojson";
 import CorsProxy from "../../Core/CorsProxy";
 import loadJson from "../../Core/loadJson";
-import { FONTES_FIELDS } from "./fontesFields";
+import { FONTES_FIELDS, FontesFieldType } from "./fontesFields";
 
 export interface FontesDateRange {
   start: string | undefined;
@@ -143,4 +144,149 @@ export function getFontesDocuments(
     documentsByUrl.set(url, documents);
   }
   return documents;
+}
+
+export const ALL_FIELDS = "*";
+
+export type FontesOperator =
+  | "contains"
+  | "equals"
+  | "lt"
+  | "gt"
+  | "true"
+  | "false"
+  | "period";
+
+export type FontesLogic = "AND" | "OR" | "AND NOT";
+
+export interface FontesCondition {
+  field: string;
+  operator: FontesOperator;
+  value: string;
+  logic: FontesLogic;
+}
+
+export interface FontesFilter {
+  conditions: FontesCondition[];
+  period?: { from?: number; to?: number };
+  area?: Geometry;
+}
+
+export const OPERATORS: Record<FontesFieldType, FontesOperator[]> = {
+  text: ["contains", "equals"],
+  list: ["contains", "equals"],
+  objects: ["contains", "equals"],
+  number: ["equals", "lt", "gt"],
+  bool: ["true", "false"],
+  date: ["period"]
+};
+
+const NUMBER_FIELDS = new Set(
+  FONTES_FIELDS.filter((f) => f.type === "number").map((f) => f.key)
+);
+const TEXT_FIELDS = FONTES_FIELDS.filter(
+  (f) => f.type !== "number" && f.type !== "bool"
+).map((f) => f.key);
+
+const fold = (text: string) =>
+  text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .trim();
+
+function textValues(value: unknown): string[] {
+  if (value === undefined || value === null) return [];
+  if (Array.isArray(value)) return value.flatMap(textValues);
+  if (typeof value === "object")
+    return Object.values(value).flatMap(textValues);
+  return [String(value)];
+}
+
+const overlaps = (a: FontesDateRange, b: FontesDateRange) =>
+  (a.start === undefined || b.end === undefined || a.start <= b.end) &&
+  (a.end === undefined || b.start === undefined || a.end >= b.start);
+
+function matches(doc: FontesDocument, condition: FontesCondition): boolean {
+  const { field, operator, value } = condition;
+  if (operator === "true" || operator === "false") {
+    return doc.properties[field] === (operator === "true");
+  }
+  if (operator === "period") {
+    const period = parseFontesDate(value);
+    return !!period && !!doc.date && overlaps(doc.date, period);
+  }
+  if (NUMBER_FIELDS.has(field)) {
+    const actual = doc.properties[field];
+    const expected = Number(value);
+    if (typeof actual !== "number" || isNaN(expected)) return false;
+    return operator === "lt"
+      ? actual < expected
+      : operator === "gt"
+        ? actual > expected
+        : actual === expected;
+  }
+  const wanted = fold(value);
+  return (field === ALL_FIELDS ? TEXT_FIELDS : [field]).some((key) =>
+    textValues(doc.properties[key]).some((text) =>
+      operator === "equals"
+        ? fold(text) === wanted
+        : fold(text).includes(wanted)
+    )
+  );
+}
+
+const isActive = (condition: FontesCondition) =>
+  condition.operator === "true" ||
+  condition.operator === "false" ||
+  condition.value.trim() !== "";
+
+const year = (value: number) => String(value).padStart(4, "0");
+
+export function filterDocuments(
+  docs: FontesDocument[],
+  { conditions, period, area }: FontesFilter
+): FontesDocument[] {
+  const rows = conditions.filter(isActive);
+  const years: FontesDateRange | undefined =
+    period?.from !== undefined || period?.to !== undefined
+      ? {
+          start:
+            period.from !== undefined
+              ? `${year(period.from)}-01-01`
+              : undefined,
+          end: period.to !== undefined ? `${year(period.to)}-12-31` : undefined
+        }
+      : undefined;
+
+  return docs.filter((doc) => {
+    if (years && !(doc.date && overlaps(doc.date, years))) return false;
+    if (area && !(doc.geometry && booleanIntersects(doc.geometry, area))) {
+      return false;
+    }
+    if (rows.length === 0) return true;
+    return rows.slice(1).reduce(
+      (result, row, i) => {
+        const match = matches(doc, row);
+        const logic = rows[i].logic;
+        return logic === "OR"
+          ? result || match
+          : logic === "AND NOT"
+            ? result && !match
+            : result && match;
+      },
+      matches(doc, rows[0])
+    );
+  });
+}
+
+export function distinctValues(
+  docs: FontesDocument[],
+  field: string
+): string[] {
+  if (field === ALL_FIELDS) return [];
+  const values = new Set(
+    docs.flatMap((doc) => textValues(doc.properties[field]))
+  );
+  return [...values].sort((a, b) => a.localeCompare(b, "it"));
 }
