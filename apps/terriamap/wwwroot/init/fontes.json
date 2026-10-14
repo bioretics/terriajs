@@ -1,0 +1,36 @@
+{
+  "parameters": {
+    "fontesConfig": {
+      "documentsUrl": "test/fontes/documenti.geojson"
+    }
+  },
+  "homeCamera": {
+    "west": 6.6,
+    "south": 43.9,
+    "east": 12.6,
+    "north": 46.6
+  },
+  "initialCamera": {
+    "west": 9.9,
+    "south": 44.6,
+    "east": 10.8,
+    "north": 45.1
+  },
+  "catalog": [
+    {
+      "type": "group",
+      "name": "FONTES - cartografia storica (dati di prova)",
+      "members": [
+        {
+          "type": "geojson",
+          "id": "fontes-documenti-prova",
+          "name": "Documenti FONTES (dati di prova)",
+          "url": "test/fontes/documenti.geojson",
+          "featureInfoTemplate": {
+            "template": "<p><strong>{{segnatura}}</strong></p><p><fontes-document id=\"{{id}}\"></fontes-document></p>"
+          }
+        }
+      ]
+    }
+  ]
+}

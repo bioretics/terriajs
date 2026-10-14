@@ -1,0 +1,122 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "MultiPoint", "coordinates": [[10.376, 44.929]] },
+      "properties": {
+        "id": "ASPR_MD0351",
+        "documento_testuale": false,
+        "segnatura": "ASPR, Mappe e disegni, 68/41",
+        "titolo_schedatore": "Colorno",
+        "luoghi": [{ "nome": "Colorno", "prov": "PR", "tipo": "toponimo" }],
+        "numero_immagini": 2,
+        "recto_georef": false,
+        "recto_cog_url": "test/fontes/ASPR_md0351_68.41_r.tif",
+        "verso_cog_url": "test/fontes/ASPR_md0351_68.41_v.tif",
+        "download_consentito": true,
+        "note": "Scheda di prova per lo sviluppo del geoportale: le scansioni sono reali, i metadati sono parziali."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "MultiPoint", "coordinates": [[10.299, 44.936]] },
+      "properties": {
+        "id": "ASPR_CAVCT0232",
+        "documento_testuale": false,
+        "segnatura": "ASPR, Congregazione dei Cavamenti, Canali e torrenti, 195/32",
+        "titolo_schedatore": "Argine guasto di Mezzano de Rondani",
+        "altezza_supporto_originale": 304,
+        "larghezza_supporto_originale": 403,
+        "altezza_documento": 304,
+        "larghezza_documento": 403,
+        "data_produzione": "1627-08-07",
+        "autori": ["Smeraldi Smeraldo"],
+        "tecnica_preparazione": ["fori guida"],
+        "tecnica_esecuzione": ["inchiostro nero a penna"],
+        "stato_conservazione": "discreto",
+        "supporto": "carta vergata",
+        "dettagli_conservazione": ["fori da filza"],
+        "stato": ["stato di progetto"],
+        "filigrana": "Presente",
+        "tipologia": ["mappa"],
+        "tradizione_documento": ["originale"],
+        "metodo_rappresentazione": ["misto"],
+        "forma_documento": "manoscritta",
+        "lingua": ["italiano"],
+        "originale": true,
+        "dichiarazioni_autore": "sul r.: sono presenti annotazioni relative agli elementi naturali, alle infrastrutture e agli edifici\nsul v.: \"A\"",
+        "elementi_naturali": [
+          { "elemento": "fiumi" },
+          { "elemento": "ghiaie", "trascrizione": "Giarra del Lupo" }
+        ],
+        "note_elementi_naturali": "foci Parma/Enza: non rappresentate",
+        "luoghi": [
+          {
+            "nome": "Mezzano Rondani",
+            "prov": "PR",
+            "tipo": "toponimo",
+            "nome_storico": "Mezzano de Rondani"
+          }
+        ],
+        "identificazione_orientamento": ["nessuno"],
+        "orientamento_desunto": "nord",
+        "scala_riferimento": "scala grafica",
+        "unita_misura": ["pertica"],
+        "lunghezza_scala_grafica": 62,
+        "note_scala": "questa scala è longa pertiche 110 (100+10)",
+        "numero_immagini": 0,
+        "recto_georef": false,
+        "note": "Scheda di prova (valori dagli esempi del manuale del plugin), senza scansioni."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "MultiPoint", "coordinates": [[10.43, 44.79]] },
+      "properties": {
+        "id": "ASPR_CAVCT0031",
+        "documento_testuale": true,
+        "segnatura": "ASPR, Congregazione dei Cavamenti, Canali e torrenti, 289/13",
+        "fascicolo_allegato": "in relazione di visita di Smeraldo Smeraldi all'argine del torrente Enza presso Taneto su ordinazione dell'Ufficio della Congregazione dei Cavamenti e su istanza delle Monache di San Basilide di Parma",
+        "titolo_schedatore": "Relazione di visita all'argine del torrente Enza presso Taneto",
+        "data_produzione": "1630?",
+        "autori": ["Smeraldi Smeraldo"],
+        "committenti": ["Congregazione dei Cavamenti"],
+        "luoghi": [
+          { "nome": "Taneto", "prov": "RE", "tipo": "toponimo" },
+          { "nome": "Enza", "prov": "RE", "tipo": "idronimo" }
+        ],
+        "numero_immagini": 0,
+        "note": "Scheda di prova (documento testuale), senza scansioni."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "MultiPoint", "coordinates": [[10.328, 44.801]] },
+      "properties": {
+        "id": "ASPR_MD0125",
+        "documento_testuale": false,
+        "segnatura": "ASPR, Mappe e disegni, 12/5",
+        "titolo_originale": "Ducato di Parma",
+        "data_produzione": "16XX",
+        "tematiche": ["confini"],
+        "luoghi": [{ "nome": "Parma", "prov": "PR", "tipo": "toponimo" }],
+        "numero_immagini": 0,
+        "note": "Scheda di prova (data imprecisata), senza scansioni."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": null,
+      "properties": {
+        "id": "ASPR_MPS0076",
+        "documento_testuale": false,
+        "segnatura": "ASPR, Mappe e disegni, 3/2",
+        "titolo_archivista": "Carta geografica del corso del Po",
+        "data_produzione": "/1590",
+        "numero_immagini": 0,
+        "note": "Scheda di prova (data ante quem, nessun luogo con coordinate), senza scansioni."
+      }
+    }
+  ]
+}
