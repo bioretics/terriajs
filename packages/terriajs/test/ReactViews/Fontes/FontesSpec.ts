@@ -1,4 +1,6 @@
 import { http, HttpResponse } from "msw";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import Papa from "papaparse";
 import {
   ALL_FIELDS,
@@ -18,6 +20,8 @@ import {
   tileRequest
 } from "../../../lib/ReactViews/Fontes/FontesImageViewer";
 import {
+  pointsToPolygon,
+  rectangleToPolygon,
   rectoMapItemJson,
   resultsLayerJson,
   showResultsOnMap
@@ -608,6 +612,48 @@ describe("Fontes", function () {
       expect(
         resultsLayerJson([georeferenced], "R", true).initialTimeSource
       ).toEqual("start");
+    });
+  });
+
+  describe("search areas", function () {
+    const rounded = (polygon: any) =>
+      polygon.coordinates[0].map((p: number[]) =>
+        p.map((v) => Math.round(v * 1000) / 1000)
+      );
+
+    it("turns the visible map rectangle into a polygon", function () {
+      expect(
+        rounded(rectangleToPolygon(Rectangle.fromDegrees(10, 44, 11, 45)))
+      ).toEqual([
+        [10, 44],
+        [11, 44],
+        [11, 45],
+        [10, 45],
+        [10, 44]
+      ]);
+    });
+
+    it("closes the polygon drawn on the map", function () {
+      const polygon = pointsToPolygon([
+        Cartesian3.fromDegrees(10, 44),
+        Cartesian3.fromDegrees(11, 44),
+        Cartesian3.fromDegrees(10.5, 45)
+      ]);
+      expect(rounded(polygon)).toEqual([
+        [10, 44],
+        [11, 44],
+        [10.5, 45],
+        [10, 44]
+      ]);
+    });
+
+    it("needs three points for an area", function () {
+      expect(
+        pointsToPolygon([
+          Cartesian3.fromDegrees(10, 44),
+          Cartesian3.fromDegrees(11, 44)
+        ])
+      ).toBeUndefined();
     });
   });
 

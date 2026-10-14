@@ -1,4 +1,8 @@
 import bbox from "@turf/bbox";
+import type { Polygon } from "geojson";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import { JsonObject } from "../../Core/Json";
 import MappableMixin from "../../ModelMixins/MappableMixin";
@@ -132,4 +136,37 @@ export async function showResultsOnMap(
     if (animate) terria.timelineStack.addToTop(item);
     else terria.timelineStack.remove(item);
   }
+}
+
+export function rectangleToPolygon(rectangle: Rectangle): Polygon {
+  const [west, south, east, north] = [
+    rectangle.west,
+    rectangle.south,
+    rectangle.east,
+    rectangle.north
+  ].map(CesiumMath.toDegrees);
+  return {
+    type: "Polygon",
+    coordinates: [
+      [
+        [west, south],
+        [east, south],
+        [east, north],
+        [west, north],
+        [west, south]
+      ]
+    ]
+  };
+}
+
+export function pointsToPolygon(points: Cartesian3[]): Polygon | undefined {
+  if (points.length < 3) return undefined;
+  const ring = points.map((point) => {
+    const { longitude, latitude } =
+      Ellipsoid.WGS84.cartesianToCartographic(point);
+    return [CesiumMath.toDegrees(longitude), CesiumMath.toDegrees(latitude)];
+  });
+  const [first, last] = [ring[0], ring[ring.length - 1]];
+  if (first[0] !== last[0] || first[1] !== last[1]) ring.push(first);
+  return { type: "Polygon", coordinates: [ring] };
 }

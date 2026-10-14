@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import GeoJsonCatalogItem from "../../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import Terria from "../../../lib/Models/Terria";
@@ -349,6 +350,20 @@ describe("FontesPanel", function () {
     expect(shownOn("1627-06-01")).toEqual(["ASPR_MD0351"]);
     expect(shownOn("1700-06-01")).toEqual(["ASPR_CAVCT0232"]);
     expect(shownOn("1650-06-01")).toEqual([]);
+  });
+
+  it("keeps the documents inside the visible map area", async function () {
+    await terria.currentViewer.zoomTo(
+      Rectangle.fromDegrees(10.35, 44.9, 10.4, 44.95)
+    );
+    showPanel();
+    fireEvent.click(screen.getByLabelText("fontes.visibleArea"));
+    await searchWhenLoaded();
+    expect(screen.getByText("Colorno")).toBeVisible();
+    expect(
+      screen.queryByText("Argine guasto di Mezzano de Rondani")
+    ).toBeNull();
+    expect(screen.getByText("fontes.withoutPlaces")).toBeVisible();
   });
 
   it("opens the window of a result", async function () {

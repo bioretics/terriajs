@@ -1,9 +1,11 @@
+import type { Geometry } from "geojson";
 import { observer } from "mobx-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import DataTable, { TableColumn } from "react-data-table-component";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import triggerResize from "../../Core/triggerResize";
+import UserDrawing from "../../Models/UserDrawing";
 import Box from "../../Styled/Box";
 import Button, { RawButton } from "../../Styled/Button";
 import Checkbox from "../../Styled/Checkbox";
@@ -29,6 +31,8 @@ import {
   FontesFieldType
 } from "./fontesFields";
 import {
+  pointsToPolygon,
+  rectangleToPolygon,
   RESULTS_LAYER_ID,
   showResultsOnMap,
   zoomToDocument
@@ -218,6 +222,9 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
   const [yearTo, setYearTo] = useState("");
   const [results, setResults] = useState<FontesDocument[]>();
   const [animate, setAnimate] = useState(false);
+  const [visibleArea, setVisibleArea] = useState(false);
+  const [drawnArea, setDrawnArea] = useState<Geometry>();
+  const [withoutPlaces, setWithoutPlaces] = useState(0);
 
   useEffect(() => {
     if (!isVisible || !config || documents) return;
@@ -242,15 +249,36 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
       animateInTime
     ).catch((error) => terria.raiseErrorToUser(error));
 
+  const drawArea = () => {
+    new UserDrawing({
+      terria,
+      messageHeader: t(($) => $.fontes.drawAreaMessage),
+      allowPolygon: true,
+      onDrawingComplete: ({ points }) => setDrawnArea(pointsToPolygon(points))
+    }).enterDrawMode();
+  };
+
   const search = () => {
     if (!documents) return;
-    const found = filterDocuments(documents, {
+    const filter = {
       conditions: rows,
       period: {
         from: yearFrom ? Number(yearFrom) : undefined,
         to: yearTo ? Number(yearTo) : undefined
       }
-    });
+    };
+    const area = visibleArea
+      ? rectangleToPolygon(
+          terria.currentViewer.getCurrentCameraView().rectangle
+        )
+      : drawnArea;
+    const found = filterDocuments(documents, { ...filter, area });
+    setWithoutPlaces(
+      area
+        ? filterDocuments(documents, filter).filter((doc) => !doc.geometry)
+            .length
+        : 0
+    );
     setResults(found);
     if (resultsOnMap()) showOnMap(found, animate);
   };
@@ -259,6 +287,8 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
     setRows([newRow(nextKey.current++)]);
     setYearFrom("");
     setYearTo("");
+    setVisibleArea(false);
+    setDrawnArea(undefined);
     setResults(undefined);
   };
 
@@ -375,6 +405,31 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
           />
         </Box>
 
+        <SectionTitle>{t(($) => $.fontes.area)}</SectionTitle>
+        <Checkbox
+          isChecked={visibleArea}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setVisibleArea(e.target.checked)
+          }
+        >
+          <TextSpan textLight>{t(($) => $.fontes.visibleArea)}</TextSpan>
+        </Checkbox>
+        <Box gap={1} verticalCenter css={"margin-top: 8px;"}>
+          <Button secondary disabled={visibleArea} onClick={drawArea}>
+            {t(($) => $.fontes.drawArea)}
+          </Button>
+          {drawnArea && (
+            <Button secondary onClick={() => setDrawnArea(undefined)}>
+              {t(($) => $.fontes.clearArea)}
+            </Button>
+          )}
+        </Box>
+        {drawnArea && !visibleArea && (
+          <Text textLight small css={"margin-top: 6px;"}>
+            {t(($) => $.fontes.areaDrawn)}
+          </Text>
+        )}
+
         <SectionTitle>{t(($) => $.fontes.conditions)}</SectionTitle>
         {rows.map((row) => (
           <ConditionRow
@@ -418,6 +473,11 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
                 ? t(($) => $.fontes.results, { count: results.length })
                 : t(($) => $.fontes.noResults)}
             </Text>
+            {withoutPlaces > 0 && (
+              <Text textLight small css={"margin: 0 0 6px 0;"}>
+                {t(($) => $.fontes.withoutPlaces, { count: withoutPlaces })}
+              </Text>
+            )}
             {results.length > 0 && (
               <Box gap={2} verticalCenter css={"margin-bottom: 8px;"}>
                 <Button secondary onClick={() => showOnMap(results, animate)}>
