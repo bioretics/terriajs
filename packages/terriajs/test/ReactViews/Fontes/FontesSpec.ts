@@ -1,4 +1,5 @@
 import { http, HttpResponse } from "msw";
+import Papa from "papaparse";
 import {
   ALL_FIELDS,
   distinctValues,
@@ -8,7 +9,9 @@ import {
   getFontesDocuments,
   normalizeFontesDocument,
   OPERATORS,
-  parseFontesDate
+  parseFontesDate,
+  toCsv,
+  toResultsGeoJson
 } from "../../../lib/ReactViews/Fontes/Fontes";
 import { worker } from "../../mocks/browser";
 
@@ -276,6 +279,93 @@ describe("Fontes", function () {
       expect(OPERATORS.number).toEqual(["equals", "lt", "gt"]);
       expect(OPERATORS.bool).toEqual(["true", "false"]);
       expect(OPERATORS.date).toEqual(["period"]);
+    });
+  });
+
+  describe("results export", function () {
+    const doc = (geometry: any, properties: any) =>
+      normalizeFontesDocument({ type: "Feature", geometry, properties });
+    const mapped = doc(
+      { type: "MultiPoint", coordinates: [[10.376, 44.929]] },
+      {
+        id: "A",
+        segnatura: "ASPR, Mappe e disegni, 68/41",
+        titolo_schedatore: "Colorno",
+        data_produzione: "/1590",
+        documento_testuale: false,
+        autori: ["Smeraldi Smeraldo", "Rossi Carlo"],
+        luoghi: [{ nome: "Colorno", prov: "PR" }],
+        larghezza_documento: 403
+      }
+    );
+    const textual = doc(null, {
+      id: "B",
+      titolo_originale: "Lettera",
+      documento_testuale: true
+    });
+    const undated = doc(
+      { type: "MultiPoint", coordinates: [[10, 45]] },
+      { id: "C", titolo_originale: "Senza data" }
+    );
+
+    it("puts the documents that have places on the map", function () {
+      const geojson = toResultsGeoJson([mapped, textual, undated]);
+      expect(geojson.features.map((f) => f.properties?.id)).toEqual(["A", "C"]);
+      expect(geojson.features[0].geometry).toEqual(mapped.geometry as any);
+      expect(geojson.features[0].properties).toEqual(
+        jasmine.objectContaining({
+          id: "A",
+          titolo: "Colorno",
+          segnatura: "ASPR, Mappe e disegni, 68/41",
+          data_produzione: "/1590",
+          tipo: "Mappa"
+        })
+      );
+    });
+
+    it("closes open dates at the bounds of the FONTES calendar for the timeline", function () {
+      const [feature] = toResultsGeoJson([mapped]).features;
+      expect(feature.properties?.data_da).toEqual("1000-01-01");
+      expect(feature.properties?.data_a).toEqual("1590-12-31");
+    });
+
+    it("leaves the timeline dates empty for undated documents", function () {
+      const [feature] = toResultsGeoJson([undated]).features;
+      expect(feature.properties?.data_da).toBeUndefined();
+      expect(feature.properties?.data_a).toBeUndefined();
+    });
+
+    it("writes a CSV for Excel: BOM, semicolons, field labels as header", function () {
+      const csv = toCsv([mapped, textual]);
+      expect(csv.charAt(0)).toEqual("﻿");
+      const rows = Papa.parse<string[]>(csv.slice(1), { delimiter: ";" }).data;
+      expect(rows[0].slice(0, 4)).toEqual([
+        "ID",
+        "Documento testuale",
+        "Collocazione",
+        "Segnatura"
+      ]);
+      expect(rows.length).toEqual(3);
+    });
+
+    it("fits lists, records and yes/no values in single cells", function () {
+      const [header, row] = Papa.parse<string[]>(toCsv([mapped]).slice(1), {
+        delimiter: ";"
+      }).data;
+      const cell = (label: string) => row[header.indexOf(label)];
+      expect(cell("Autori")).toEqual("Smeraldi Smeraldo, Rossi Carlo");
+      expect(cell("Luoghi")).toEqual("Colorno PR");
+      expect(cell("Documento testuale")).toEqual("No");
+      expect(cell("Larghezza del documento")).toEqual("403");
+      expect(cell("Note")).toEqual("");
+    });
+
+    it("neutralises text a spreadsheet would run as a formula", function () {
+      const risky = doc(null, { id: "R", note: '=HYPERLINK("http://x")' });
+      const [header, row] = Papa.parse<string[]>(toCsv([risky]).slice(1), {
+        delimiter: ";"
+      }).data;
+      expect(row[header.indexOf("Note")]).toEqual('\'=HYPERLINK("http://x")');
     });
   });
 

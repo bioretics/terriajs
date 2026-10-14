@@ -1,8 +1,10 @@
 import booleanIntersects from "@turf/boolean-intersects";
-import type { Geometry } from "geojson";
+import type { FeatureCollection, Geometry } from "geojson";
+import Papa from "papaparse";
 import CorsProxy from "../../Core/CorsProxy";
+import { sanitizeCsvValue } from "../../Core/sanitizeCsv";
 import loadJson from "../../Core/loadJson";
-import { FONTES_FIELDS, FontesFieldType } from "./fontesFields";
+import { FONTES_FIELDS, FontesField, FontesFieldType } from "./fontesFields";
 
 export interface FontesDateRange {
   start: string | undefined;
@@ -289,4 +291,59 @@ export function distinctValues(
     docs.flatMap((doc) => textValues(doc.properties[field]))
   );
   return [...values].sort((a, b) => a.localeCompare(b, "it"));
+}
+
+const CALENDAR_START = "1000-01-01";
+const CALENDAR_END = "2999-12-31";
+
+export function toResultsGeoJson(docs: FontesDocument[]): FeatureCollection {
+  return {
+    type: "FeatureCollection",
+    features: docs
+      .filter((doc) => doc.geometry)
+      .map((doc) => ({
+        type: "Feature" as const,
+        geometry: doc.geometry!,
+        properties: {
+          id: doc.id,
+          titolo: doc.title,
+          segnatura: doc.properties.segnatura,
+          data_produzione: doc.properties.data_produzione,
+          data_da: doc.date && (doc.date.start ?? CALENDAR_START),
+          data_a: doc.date && (doc.date.end ?? CALENDAR_END),
+          tipo: doc.properties.documento_testuale
+            ? "Documento testuale"
+            : "Mappa"
+        }
+      }))
+  };
+}
+
+function cellText(field: FontesField, value: unknown): string {
+  if (value === undefined || value === null) return "";
+  if (field.type === "bool") return value ? "Sì" : "No";
+  if (field.type === "list") return textValues(value).join(", ");
+  if (field.type === "objects") {
+    return (value as unknown[])
+      .map((record) => textValues(record).join(" "))
+      .join("; ");
+  }
+  return String(value);
+}
+
+export function toCsv(docs: FontesDocument[]): string {
+  return (
+    "﻿" +
+    Papa.unparse(
+      {
+        fields: FONTES_FIELDS.map((field) => field.label),
+        data: docs.map((doc) =>
+          FONTES_FIELDS.map((field) =>
+            sanitizeCsvValue(cellText(field, doc.properties[field.key]))
+          )
+        )
+      },
+      { delimiter: ";" }
+    )
+  );
 }
