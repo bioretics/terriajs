@@ -54,11 +54,11 @@ const FieldValue: FC<{ field: FontesField; value: unknown }> = ({
   const { t } = useTranslation();
   switch (field.type) {
     case "bool":
-      return <>{value ? t(($) => $.fontes.yes) : t(($) => $.fontes.no)}</>;
+      return value ? t(($) => $.fontes.yes) : t(($) => $.fontes.no);
     case "number":
-      return <>{field.unit ? `${value} ${field.unit}` : String(value)}</>;
+      return field.unit ? `${value} ${field.unit}` : String(value);
     case "list":
-      return <>{(value as unknown[]).join(", ")}</>;
+      return (value as unknown[]).join(", ");
     case "objects":
       return <RecordsTable records={value as unknown[]} />;
     default:
