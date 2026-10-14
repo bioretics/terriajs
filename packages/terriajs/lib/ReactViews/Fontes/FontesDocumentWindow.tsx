@@ -2,6 +2,7 @@ import { observer } from "mobx-react";
 import { FC, Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Rnd } from "react-rnd";
+import sanitizeUrl from "../../Core/sanitizeUrl";
 import styled, { useTheme } from "styled-components";
 import Box from "../../Styled/Box";
 import Button, { RawButton } from "../../Styled/Button";
@@ -136,6 +137,8 @@ const FontesDocumentWindow: FC = observer(() => {
   const canDownload =
     properties.download_consentito !== false &&
     terria.isFeatureAllowedByProfile("FontesDownload");
+  const safeUrl = (value: unknown) =>
+    typeof value === "string" ? sanitizeUrl(value) : undefined;
   const downloads = [
     {
       label: t(($) => $.fontes.downloadRecto),
@@ -146,10 +149,12 @@ const FontesDocumentWindow: FC = observer(() => {
       url: properties.verso_download_url ?? properties.verso_cog_url
     },
     { label: t(($) => $.fontes.downloadPdf), url: properties.fascicolo_pdf_url }
-  ].filter(
-    (download): download is { label: string; url: string } =>
-      typeof download.url === "string"
-  );
+  ]
+    .map((download) => ({ ...download, url: safeUrl(download.url) }))
+    .filter(
+      (download): download is { label: string; url: string } =>
+        download.url !== undefined
+    );
 
   return (
     <Overlay

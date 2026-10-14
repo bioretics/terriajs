@@ -98,6 +98,17 @@ describe("FONTES in the standard user interface", function () {
               type: "Feature",
               geometry: null,
               properties: { id: "ASPR_MD0351", titolo_schedatore: "Colorno" }
+            },
+            {
+              type: "Feature",
+              geometry: null,
+              properties: {
+                id: "ASPR_LINKS",
+                titolo_schedatore: "Link",
+                recto_download_url: "https://example.com/r.tif",
+                // eslint-disable-next-line no-script-url
+                fascicolo_pdf_url: "javascript:alert(1)"
+              }
             }
           ]
         })
@@ -130,6 +141,16 @@ describe("FONTES in the standard user interface", function () {
     renderUi();
     expect(screen.queryByText("fontes.menuButton")).toBeNull();
     expect(screen.queryByText("fontes.panelTitle")).toBeNull();
+  });
+
+  it("links the files of a document only at safe addresses", async function () {
+    viewState.openFontesDocument("ASPR_LINKS");
+    renderUi();
+    await screen.findByText("ASPR_LINKS · Link");
+    expect(
+      screen.getByText("fontes.downloadRecto").closest("a")
+    ).toHaveAttribute("href", "https://example.com/r.tif");
+    expect(screen.queryByText("fontes.downloadPdf")).toBeNull();
   });
 
   it("shows the window of the open document", async function () {
