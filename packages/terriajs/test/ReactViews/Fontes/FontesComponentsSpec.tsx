@@ -3,10 +3,13 @@ import { http, HttpResponse } from "msw";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { StandardUserInterface } from "../../../lib/ReactViews/StandardUserInterface/StandardUserInterface";
+import CustomComponent from "../../../lib/ReactViews/Custom/CustomComponent";
+import parseCustomMarkdownToReact from "../../../lib/ReactViews/Custom/parseCustomMarkdownToReact";
+import registerCustomComponentTypes from "../../../lib/ReactViews/Custom/registerCustomComponentTypes";
 import { worker } from "../../mocks/browser";
 import { normalizeFontesDocument } from "../../../lib/ReactViews/Fontes/Fontes";
 import { FontesDocumentDetails } from "../../../lib/ReactViews/Fontes/FontesDocumentWindow";
-import { TerriaThemeProvider } from "../withContext";
+import { renderWithContexts, TerriaThemeProvider } from "../withContext";
 
 const colorno = normalizeFontesDocument({
   type: "Feature",
@@ -102,5 +105,39 @@ describe("FONTES in the standard user interface", function () {
       />
     );
     expect(await screen.findByText("ASPR_MD0351 · Colorno")).toBeVisible();
+  });
+});
+
+describe("<fontes-document> in feature info templates", function () {
+  let viewState: ViewState;
+
+  beforeEach(function () {
+    const terria = new Terria();
+    viewState = new ViewState({ terria });
+    registerCustomComponentTypes(terria);
+  });
+
+  const renderTemplate = (html: string) =>
+    renderWithContexts(
+      <div>{parseCustomMarkdownToReact(html, { viewState })}</div>,
+      viewState
+    );
+
+  it("is one of the registered custom components", function () {
+    expect(CustomComponent.isRegistered("fontes-document")).toBe(true);
+  });
+
+  it("opens the window of its document", function () {
+    renderTemplate('<fontes-document id="ASPR_MD0351"></fontes-document>');
+    fireEvent.click(screen.getByText("fontes.openDocument"));
+    expect(viewState.fontesDocumentId).toEqual("ASPR_MD0351");
+  });
+
+  it("can be given its own label", function () {
+    renderTemplate(
+      '<fontes-document id="ASPR_MD0351">Vedi la mappa</fontes-document>'
+    );
+    fireEvent.click(screen.getByText("Vedi la mappa"));
+    expect(viewState.fontesDocumentId).toEqual("ASPR_MD0351");
   });
 });
