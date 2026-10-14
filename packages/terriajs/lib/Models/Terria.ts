@@ -100,6 +100,7 @@ import TerriaFeature from "./Feature/Feature";
 import GlobeOrMap from "./GlobeOrMap";
 import IElementConfig from "./IElementConfig";
 import InitSource, {
+  FontesConfig,
   InitSourceData,
   InitSourceFromData,
   MicrozonationConfig,
@@ -311,6 +312,8 @@ export interface ConfigParameters {
   disableSplitter?: boolean;
 
   microzonationConfig?: MicrozonationConfig;
+
+  fontesConfig?: FontesConfig;
 
   disablePedestrianMode?: boolean;
 
@@ -794,6 +797,7 @@ export default class Terria {
     brandBarElements: undefined,
     brandBarSmallElements: undefined,
     microzonationConfig: undefined,
+    fontesConfig: undefined,
     displayOneBrand: 0,
     disableMobileInterface: false,
     disableMyLocation: undefined,
@@ -2227,6 +2231,7 @@ export default class Terria {
         brandBarSmallElements,
         displayOneBrand,
         microzonationConfig,
+        fontesConfig,
         relatedMaps
       } = initData.parameters;
 
@@ -2252,6 +2257,11 @@ export default class Terria {
           documentsLayerName: microzonationConfig.documentsLayerName,
           outputFormat: microzonationConfig.outputFormat
         };
+        hasOverrides = true;
+      }
+
+      if (fontesConfig) {
+        parameterOverrides.fontesConfig = fontesConfig;
         hasOverrides = true;
       }
 

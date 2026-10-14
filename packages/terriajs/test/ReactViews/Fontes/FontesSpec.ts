@@ -13,6 +13,7 @@ import {
   toCsv,
   toResultsGeoJson
 } from "../../../lib/ReactViews/Fontes/Fontes";
+import Terria from "../../../lib/Models/Terria";
 import { worker } from "../../mocks/browser";
 
 const colorno = {
@@ -366,6 +367,31 @@ describe("Fontes", function () {
         delimiter: ";"
       }).data;
       expect(row[header.indexOf("Note")]).toEqual('\'=HYPERLINK("http://x")');
+    });
+  });
+
+  describe("fontesConfig", function () {
+    const config = {
+      documentsUrl: "test/fontes/documenti.geojson",
+      wmsUrl: "https://example.com/geoserver/fontes/wms"
+    };
+
+    it("is off unless the map configures it", function () {
+      expect(new Terria().configParameters.fontesConfig).toBeUndefined();
+    });
+
+    it("comes from the map config", function () {
+      const terria = new Terria();
+      terria.updateParameters({ fontesConfig: config });
+      expect(terria.configParameters.fontesConfig).toEqual(config);
+    });
+
+    it("can come from an init file, like microzonationConfig", async function () {
+      const terria = new Terria();
+      await terria.applyInitData({
+        initData: { parameters: { fontesConfig: config } }
+      });
+      expect(terria.configParameters.fontesConfig).toEqual(config);
     });
   });
 

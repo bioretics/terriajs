@@ -55,6 +55,11 @@ export interface MicrozonationConfig {
   outputFormat?: string;
 }
 
+export interface FontesConfig {
+  documentsUrl: string;
+  wmsUrl?: string;
+}
+
 export interface InitSourceData {
   stratum?: string;
   corsDomains?: string[];
@@ -63,6 +68,7 @@ export interface InitSourceData {
     brandBarSmallElements?: string[];
     displayOneBrand?: number;
     microzonationConfig?: MicrozonationConfig;
+    fontesConfig?: FontesConfig;
     relatedMaps?: RelatedMap[];
     theme?: {
       colorPrimary?: string;
