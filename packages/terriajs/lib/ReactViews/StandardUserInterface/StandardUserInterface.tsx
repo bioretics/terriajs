@@ -45,6 +45,7 @@ import MeasurablePanel from "../MeasurableGeometry/MeasurablePanel";
 import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPanel";
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
 import MicrozonationPanel from "../Microzonation/MicrozonationPanel";
+import FontesPanel from "../Fontes/FontesPanel";
 import QueryWindow from "../QueryWindow/QueryWindow";
 import FontesDocumentWindow from "../Fontes/FontesDocumentWindow";
 import { MessageModal } from "../MessageModal/MessageModal";
@@ -361,6 +362,10 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
               animationDuration={animationDuration}
             />
           )}
+          {props.terria.configParameters.fontesConfig &&
+            !props.viewState.useSmallScreenInterface && (
+              <FontesPanel isVisible={props.viewState.fontesPanelShown} />
+            )}
           {showMicrozonationPanel && (
             <MicrozonationPanel
               isVisible={showMicrozonationPanel}

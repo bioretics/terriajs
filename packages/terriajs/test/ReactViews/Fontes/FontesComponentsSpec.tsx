@@ -102,6 +102,30 @@ describe("FONTES in the standard user interface", function () {
     terria.updateParameters({ fontesConfig: { documentsUrl } });
   });
 
+  const renderUi = () =>
+    render(
+      <StandardUserInterface
+        terria={terria}
+        viewState={viewState}
+        version="test"
+        minimumLargeScreenWidth={0}
+      />
+    );
+
+  it("opens the FONTES search from the menu bar", function () {
+    renderUi();
+    expect(screen.queryByText("fontes.panelTitle")).not.toBeVisible();
+    fireEvent.click(screen.getByText("fontes.menuButton"));
+    expect(screen.getByText("fontes.panelTitle")).toBeVisible();
+  });
+
+  it("has no FONTES search without fontesConfig", function () {
+    terria.updateParameters({ fontesConfig: undefined });
+    renderUi();
+    expect(screen.queryByText("fontes.menuButton")).toBeNull();
+    expect(screen.queryByText("fontes.panelTitle")).toBeNull();
+  });
+
   it("shows the window of the open document", async function () {
     viewState.openFontesDocument("ASPR_MD0351");
     render(

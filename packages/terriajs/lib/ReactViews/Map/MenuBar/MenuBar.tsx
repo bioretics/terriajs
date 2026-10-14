@@ -15,6 +15,7 @@ import CoordsPanel from "../Panels/CoordsPanel/CoordsPanel";
 import EmergencyPlansButton from "./EmergencyPlansButton/EmergencyPlansButton";
 import LoginButton from "./LoginButton/LoginButton";
 import MicrozonationButton from "./MicrozonationButton/MicrozonationButton";
+import FontesButton from "./FontesButton/FontesButton";
 import HelpButton from "./HelpButton/HelpButton";
 import StoryButton from "./StoryButton/StoryButton";
 
@@ -53,6 +54,7 @@ const MenuBar = observer((props: PropsType) => {
   const loginEnabled = !!terria.configParameters.userProfileLoginServiceUrl;
   const enableTools = terria.userProperties.get("tools") === "1";
   const microzonationEnabled = !!terria.configParameters.microzonationConfig;
+  const fontesEnabled = !!terria.configParameters.fontesConfig;
 
   return (
     <StyledMenuBar
@@ -122,6 +124,17 @@ const MenuBar = observer((props: PropsType) => {
                 viewState={viewState}
                 theme={theme}
                 elementConfig={terria.elements.get("menu-bar-story")}
+              />
+            </li>
+          </ul>
+        )}
+        {fontesEnabled && (
+          <ul className={classNames(Styles.menu)}>
+            <li className={Styles.menuItem}>
+              <FontesButton
+                terria={terria}
+                viewState={viewState}
+                theme={theme}
               />
             </li>
           </ul>
