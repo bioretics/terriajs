@@ -1,3 +1,8 @@
+import type { Geometry } from "geojson";
+import CorsProxy from "../../Core/CorsProxy";
+import loadJson from "../../Core/loadJson";
+import { FONTES_FIELDS } from "./fontesFields";
+
 export interface FontesDateRange {
   start: string | undefined;
   end: string | undefined;
@@ -55,4 +60,87 @@ export function parseFontesDate(text: string): FontesDateRange | undefined {
     start: from ? firstDay(from) : undefined,
     end: to ? lastDay(to) : undefined
   };
+}
+
+export interface FontesDocument {
+  id: string;
+  title: string;
+  date: FontesDateRange | undefined;
+  geometry: Geometry | null;
+  properties: Record<string, unknown>;
+}
+
+const NOT_AVAILABLE = new Set(["", "N.D", "N.D."]);
+const isMissing = (value: unknown) =>
+  value === null ||
+  value === undefined ||
+  (typeof value === "string" && NOT_AVAILABLE.has(value.trim()));
+
+const MANY_VALUES = new Set(
+  FONTES_FIELDS.filter((f) => f.type === "list" || f.type === "objects").map(
+    (f) => f.key
+  )
+);
+
+function toArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.trim().startsWith("[")) {
+    try {
+      return JSON.parse(value);
+    } catch {}
+  }
+  return [value];
+}
+
+const TITLE_KEYS = [
+  "titolo_originale",
+  "titolo_archivista",
+  "titolo_schedatore"
+];
+
+export function normalizeFontesDocument(feature: any): FontesDocument {
+  const properties: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(feature.properties ?? {})) {
+    if (isMissing(value)) continue;
+    if (MANY_VALUES.has(key)) {
+      const values = toArray(value).filter((v) => !isMissing(v));
+      if (values.length > 0) properties[key] = values;
+    } else {
+      properties[key] = value;
+    }
+  }
+
+  const id = String(properties.id ?? feature.id ?? "");
+  const title = TITLE_KEYS.map((key) => properties[key]).find(
+    (value): value is string => typeof value === "string"
+  );
+  const date =
+    typeof properties.data_produzione === "string"
+      ? parseFontesDate(properties.data_produzione)
+      : undefined;
+
+  return {
+    id,
+    title: title ?? id,
+    date,
+    geometry: feature.geometry ?? null,
+    properties
+  };
+}
+
+const documentsByUrl = new Map<string, Promise<FontesDocument[]>>();
+
+export function getFontesDocuments(
+  url: string,
+  corsProxy?: CorsProxy
+): Promise<FontesDocument[]> {
+  let documents = documentsByUrl.get(url);
+  if (!documents) {
+    documents = loadJson(corsProxy?.getURLProxyIfNecessary(url) ?? url).then(
+      (json) => (json?.features ?? []).map(normalizeFontesDocument)
+    );
+    documents.catch(() => documentsByUrl.delete(url));
+    documentsByUrl.set(url, documents);
+  }
+  return documents;
 }
