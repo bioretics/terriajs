@@ -557,6 +557,10 @@ describe("Fontes", function () {
         '<fontes-document id="{{id}}">'
       );
       expect((json.defaultStyle as any).color.colorColumn).toEqual("tipo");
+      expect(json.activeStyle).toEqual("tipo");
+      expect(
+        (json.defaultStyle as any).color.enumColors.map((c: any) => c.value)
+      ).toEqual(["Mappa", "Documento testuale"]);
     });
 
     it("updates the results layer of a new search instead of adding another", async function () {
@@ -574,13 +578,35 @@ describe("Fontes", function () {
       ).toEqual(1);
     });
 
+    it("animates only the documents that have a date", function () {
+      const undated = normalizeFontesDocument({
+        type: "Feature",
+        geometry: { type: "MultiPoint", coordinates: [[10, 45]] },
+        properties: { id: "U" }
+      });
+      const features = (json: any) => json.geoJsonData.features.length;
+      expect(
+        features(resultsLayerJson([georeferenced, undated], "R", false))
+      ).toEqual(2);
+      expect(
+        features(resultsLayerJson([georeferenced, undated], "R", true))
+      ).toEqual(1);
+    });
+
     it("leaves the timeline off unless asked to animate the results in time", function () {
       expect(
         (resultsLayerJson([georeferenced], "R", false).defaultStyle as any).time
       ).toEqual({ timeColumn: null });
       expect(
         (resultsLayerJson([georeferenced], "R", true).defaultStyle as any).time
-      ).toEqual({ timeColumn: "data_da", endTimeColumn: "data_a" });
+      ).toEqual({
+        timeColumn: "data_da",
+        endTimeColumn: "data_a",
+        idColumns: ["id"]
+      });
+      expect(
+        resultsLayerJson([georeferenced], "R", true).initialTimeSource
+      ).toEqual("start");
     });
   });
 

@@ -2,9 +2,11 @@ import bbox from "@turf/bbox";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
 import { JsonObject } from "../../Core/Json";
 import MappableMixin from "../../ModelMixins/MappableMixin";
+import TimeVarying from "../../ModelMixins/TimeVarying";
 import addUserCatalogMember from "../../Models/Catalog/addUserCatalogMember";
 import CatalogMemberFactory from "../../Models/Catalog/CatalogMemberFactory";
 import CommonStrata from "../../Models/Definition/CommonStrata";
+import { BaseModel } from "../../Models/Definition/Model";
 import upsertModelFromJson from "../../Models/Definition/upsertModelFromJson";
 import { FontesConfig } from "../../Models/InitSource";
 import Terria from "../../Models/Terria";
@@ -53,18 +55,36 @@ export function resultsLayerJson(
     id: RESULTS_LAYER_ID,
     type: "geojson",
     name,
-    geoJsonData: toResultsGeoJson(docs) as unknown as JsonObject,
+    geoJsonData: toResultsGeoJson(
+      animate ? docs.filter((doc) => doc.date) : docs
+    ) as unknown as JsonObject,
     featureInfoTemplate: { template: RESULTS_TEMPLATE },
+    columns: [
+      { name: "data_da", type: "time" },
+      { name: "data_a", type: "time" }
+    ],
+    activeStyle: "tipo",
     defaultStyle: {
-      color: { colorColumn: "tipo" },
+      color: {
+        colorColumn: "tipo",
+        enumColors: [
+          { value: "Mappa", color: "#e6550d" },
+          { value: "Documento testuale", color: "#3182bd" }
+        ]
+      },
       time: animate
-        ? { timeColumn: "data_da", endTimeColumn: "data_a" }
+        ? {
+            timeColumn: "data_da",
+            endTimeColumn: "data_a",
+            idColumns: ["id"]
+          }
         : { timeColumn: null }
-    }
+    },
+    initialTimeSource: "start"
   };
 }
 
-async function showOnMap(terria: Terria, json: JsonObject) {
+async function showOnMap(terria: Terria, json: JsonObject): Promise<BaseModel> {
   const item = upsertModelFromJson(
     CatalogMemberFactory,
     terria,
@@ -75,6 +95,7 @@ async function showOnMap(terria: Terria, json: JsonObject) {
   ).throwIfUndefined();
   await addUserCatalogMember(terria, item, { enable: true });
   if (MappableMixin.isMixedInto(item)) terria.currentViewer.zoomTo(item, 1.5);
+  return item;
 }
 
 export function zoomToDocument(terria: Terria, doc: FontesDocument) {
@@ -106,5 +127,9 @@ export async function showResultsOnMap(
   name: string,
   animate: boolean
 ) {
-  await showOnMap(terria, resultsLayerJson(docs, name, animate));
+  const item = await showOnMap(terria, resultsLayerJson(docs, name, animate));
+  if (TimeVarying.is(item)) {
+    if (animate) terria.timelineStack.addToTop(item);
+    else terria.timelineStack.remove(item);
+  }
 }
