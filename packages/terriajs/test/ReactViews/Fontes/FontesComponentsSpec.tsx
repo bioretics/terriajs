@@ -1,4 +1,10 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within
+} from "@testing-library/react";
 import { http, HttpResponse } from "msw";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
@@ -9,6 +15,7 @@ import registerCustomComponentTypes from "../../../lib/ReactViews/Custom/registe
 import { worker } from "../../mocks/browser";
 import { normalizeFontesDocument } from "../../../lib/ReactViews/Fontes/Fontes";
 import { FontesDocumentDetails } from "../../../lib/ReactViews/Fontes/FontesDocumentWindow";
+import FontesPanel from "../../../lib/ReactViews/Fontes/FontesPanel";
 import { renderWithContexts, TerriaThemeProvider } from "../withContext";
 
 const colorno = normalizeFontesDocument({
@@ -138,6 +145,123 @@ describe("<fontes-document> in feature info templates", function () {
       '<fontes-document id="ASPR_MD0351">Vedi la mappa</fontes-document>'
     );
     fireEvent.click(screen.getByText("Vedi la mappa"));
+    expect(viewState.fontesDocumentId).toEqual("ASPR_MD0351");
+  });
+});
+
+describe("FontesPanel", function () {
+  const documentsUrl = "https://example.com/fontes/panel.json";
+  let terria: Terria;
+  let viewState: ViewState;
+
+  beforeEach(function () {
+    worker.use(
+      http.get(documentsUrl, () =>
+        HttpResponse.json({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: { type: "MultiPoint", coordinates: [[10.376, 44.929]] },
+              properties: {
+                id: "ASPR_MD0351",
+                titolo_schedatore: "Colorno",
+                data_produzione: "1627"
+              }
+            },
+            {
+              type: "Feature",
+              geometry: null,
+              properties: {
+                id: "ASPR_MPS0076",
+                titolo_archivista: "Carta del Po",
+                data_produzione: "/1590",
+                documento_testuale: true
+              }
+            }
+          ]
+        })
+      )
+    );
+    terria = new Terria();
+    viewState = new ViewState({ terria });
+    terria.updateParameters({ fontesConfig: { documentsUrl } });
+  });
+
+  const showPanel = () =>
+    renderWithContexts(<FontesPanel isVisible />, viewState);
+  const searchWhenLoaded = async () => {
+    const button = screen.getByRole("button", {
+      name: "fontes.search"
+    }) as HTMLButtonElement;
+    await waitFor(() => {
+      if (button.disabled) throw new Error("documents still loading");
+    });
+    fireEvent.click(button);
+  };
+
+  it("finds documents by text in any field", async function () {
+    showPanel();
+    fireEvent.change(screen.getByLabelText("fontes.value"), {
+      target: { value: "colorno" }
+    });
+    await searchWhenLoaded();
+    expect(screen.getByText("Colorno")).toBeVisible();
+    expect(screen.queryByText("Carta del Po")).toBeNull();
+  });
+
+  it("adds and removes conditions", function () {
+    showPanel();
+    fireEvent.click(
+      screen.getByRole("button", { name: "fontes.addCondition" })
+    );
+    expect(screen.getAllByLabelText("fontes.value").length).toEqual(2);
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "fontes.removeCondition" })[1]
+    );
+    expect(screen.getAllByLabelText("fontes.value").length).toEqual(1);
+  });
+
+  it("offers the fields of the chosen group", function () {
+    showPanel();
+    fireEvent.change(screen.getByLabelText("fontes.group"), {
+      target: { value: "Dimensioni" }
+    });
+    const fields = within(screen.getByLabelText("fontes.field"))
+      .getAllByRole("option")
+      .map((option) => option.textContent);
+    expect(fields).toContain("Altezza del documento");
+    expect(fields).not.toContain("Segnatura");
+  });
+
+  it("flags a value that is not a FONTES date", function () {
+    showPanel();
+    fireEvent.change(screen.getByLabelText("fontes.field"), {
+      target: { value: "data_produzione" }
+    });
+    fireEvent.change(screen.getByLabelText("fontes.value"), {
+      target: { value: "16" }
+    });
+    expect(screen.getByLabelText("fontes.value")).toHaveAttribute(
+      "aria-invalid",
+      "true"
+    );
+  });
+
+  it("searches by years", async function () {
+    showPanel();
+    fireEvent.change(screen.getByLabelText("fontes.yearTo"), {
+      target: { value: "1600" }
+    });
+    await searchWhenLoaded();
+    expect(screen.getByText("Carta del Po")).toBeVisible();
+    expect(screen.queryByText("Colorno")).toBeNull();
+  });
+
+  it("opens the window of a result", async function () {
+    showPanel();
+    await searchWhenLoaded();
+    fireEvent.click(screen.getAllByRole("button", { name: "fontes.open" })[0]);
     expect(viewState.fontesDocumentId).toEqual("ASPR_MD0351");
   });
 });
