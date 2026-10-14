@@ -6,10 +6,11 @@ import styled, { useTheme } from "styled-components";
 import triggerResize from "../../Core/triggerResize";
 import Box from "../../Styled/Box";
 import Button, { RawButton } from "../../Styled/Button";
+import Checkbox from "../../Styled/Checkbox";
 import Icon, { StyledIcon } from "../../Styled/Icon";
 import Input from "../../Styled/Input";
 import Select from "../../Styled/Select";
-import Text from "../../Styled/Text";
+import Text, { TextSpan } from "../../Styled/Text";
 import { useViewState } from "../Context";
 import {
   ALL_FIELDS,
@@ -27,7 +28,11 @@ import {
   FONTES_SECTIONS,
   FontesFieldType
 } from "./fontesFields";
-import { zoomToDocument } from "./fontesMap";
+import {
+  RESULTS_LAYER_ID,
+  showResultsOnMap,
+  zoomToDocument
+} from "./fontesMap";
 
 const PANEL_WIDTH = 480;
 const ALL_GROUPS = "";
@@ -212,6 +217,7 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
   const [yearFrom, setYearFrom] = useState("");
   const [yearTo, setYearTo] = useState("");
   const [results, setResults] = useState<FontesDocument[]>();
+  const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     if (!isVisible || !config || documents) return;
@@ -225,17 +231,28 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
     };
   }, [isVisible, config, documents, terria]);
 
+  const resultsOnMap = () =>
+    terria.workbench.items.some((item) => item.uniqueId === RESULTS_LAYER_ID);
+
+  const showOnMap = (docs: FontesDocument[], animateInTime: boolean) =>
+    showResultsOnMap(
+      terria,
+      docs,
+      t(($) => $.fontes.resultsLayerName),
+      animateInTime
+    ).catch((error) => terria.raiseErrorToUser(error));
+
   const search = () => {
     if (!documents) return;
-    setResults(
-      filterDocuments(documents, {
-        conditions: rows,
-        period: {
-          from: yearFrom ? Number(yearFrom) : undefined,
-          to: yearTo ? Number(yearTo) : undefined
-        }
-      })
-    );
+    const found = filterDocuments(documents, {
+      conditions: rows,
+      period: {
+        from: yearFrom ? Number(yearFrom) : undefined,
+        to: yearTo ? Number(yearTo) : undefined
+      }
+    });
+    setResults(found);
+    if (resultsOnMap()) showOnMap(found, animate);
   };
 
   const clear = () => {
@@ -401,6 +418,24 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
                 ? t(($) => $.fontes.results, { count: results.length })
                 : t(($) => $.fontes.noResults)}
             </Text>
+            {results.length > 0 && (
+              <Box gap={2} verticalCenter css={"margin-bottom: 8px;"}>
+                <Button secondary onClick={() => showOnMap(results, animate)}>
+                  {t(($) => $.fontes.showOnMap)}
+                </Button>
+                <Checkbox
+                  isChecked={animate}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setAnimate(e.target.checked);
+                    if (resultsOnMap()) showOnMap(results, e.target.checked);
+                  }}
+                >
+                  <TextSpan textLight>
+                    {t(($) => $.fontes.animateTime)}
+                  </TextSpan>
+                </Checkbox>
+              </Box>
+            )}
             {results.length > 0 && (
               <DataTable
                 columns={columns}

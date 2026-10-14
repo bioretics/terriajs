@@ -6,6 +6,9 @@ import {
   within
 } from "@testing-library/react";
 import { http, HttpResponse } from "msw";
+import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
+import GeoJsonCatalogItem from "../../../lib/Models/Catalog/CatalogItems/GeoJsonCatalogItem";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { StandardUserInterface } from "../../../lib/ReactViews/StandardUserInterface/StandardUserInterface";
@@ -16,6 +19,7 @@ import { worker } from "../../mocks/browser";
 import { normalizeFontesDocument } from "../../../lib/ReactViews/Fontes/Fontes";
 import { FontesDocumentDetails } from "../../../lib/ReactViews/Fontes/FontesDocumentWindow";
 import FontesPanel from "../../../lib/ReactViews/Fontes/FontesPanel";
+import { RESULTS_LAYER_ID } from "../../../lib/ReactViews/Fontes/fontesMap";
 import { renderWithContexts, TerriaThemeProvider } from "../withContext";
 
 const colorno = normalizeFontesDocument({
@@ -195,6 +199,15 @@ describe("FontesPanel", function () {
             },
             {
               type: "Feature",
+              geometry: { type: "MultiPoint", coordinates: [[10.299, 44.936]] },
+              properties: {
+                id: "ASPR_CAVCT0232",
+                titolo_schedatore: "Argine guasto di Mezzano de Rondani",
+                data_produzione: "1700"
+              }
+            },
+            {
+              type: "Feature",
               geometry: null,
               properties: {
                 id: "ASPR_MPS0076",
@@ -280,6 +293,62 @@ describe("FontesPanel", function () {
     await searchWhenLoaded();
     expect(screen.getByText("Carta del Po")).toBeVisible();
     expect(screen.queryByText("Colorno")).toBeNull();
+  });
+
+  const resultsLayer = async () => {
+    let layer: GeoJsonCatalogItem | undefined;
+    await waitFor(() => {
+      layer = terria.getModelById(GeoJsonCatalogItem, RESULTS_LAYER_ID);
+      if (!layer || !terria.workbench.contains(layer)) {
+        throw new Error("results not on the map yet");
+      }
+    });
+    return layer!;
+  };
+
+  it("shows the results with places on the map as one layer", async function () {
+    showPanel();
+    await searchWhenLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "fontes.showOnMap" }));
+    const layer = await resultsLayer();
+    expect((layer.geoJsonData as any).features.length).toEqual(2);
+    expect(layer.defaultStyle.time.timeColumn).toBeNull();
+    expect(terria.timelineStack.contains(layer)).toBe(false);
+  });
+
+  it("animates the results in time on request", async function () {
+    showPanel();
+    await searchWhenLoaded();
+    fireEvent.click(screen.getByLabelText("fontes.animateTime"));
+    fireEvent.click(screen.getByRole("button", { name: "fontes.showOnMap" }));
+    const layer = await resultsLayer();
+    expect(layer.defaultStyle.time.timeColumn).toEqual("data_da");
+    expect(layer.defaultStyle.time.endTimeColumn).toEqual("data_a");
+    await waitFor(() => {
+      if (terria.timelineStack.top !== layer) {
+        throw new Error("results not on top of the timeline");
+      }
+    });
+  });
+
+  it("shows each document on the timeline during its period", async function () {
+    showPanel();
+    await searchWhenLoaded();
+    fireEvent.click(screen.getByLabelText("fontes.animateTime"));
+    fireEvent.click(screen.getByRole("button", { name: "fontes.showOnMap" }));
+    const layer = await resultsLayer();
+    await layer.loadMapItems();
+    const points = layer.mapItems.find(
+      (item) => item instanceof CustomDataSource
+    ) as CustomDataSource;
+    const shownOn = (date: string) =>
+      points.entities.values
+        .filter((entity) => entity.isAvailable(JulianDate.fromIso8601(date)))
+        .map((entity) => entity.properties?.id?.getValue())
+        .sort();
+    expect(shownOn("1627-06-01")).toEqual(["ASPR_MD0351"]);
+    expect(shownOn("1700-06-01")).toEqual(["ASPR_CAVCT0232"]);
+    expect(shownOn("1650-06-01")).toEqual([]);
   });
 
   it("opens the window of a result", async function () {
