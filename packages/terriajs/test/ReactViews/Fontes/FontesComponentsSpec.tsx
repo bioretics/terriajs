@@ -5,6 +5,7 @@ import {
   waitFor,
   within
 } from "@testing-library/react";
+import FileSaver from "file-saver";
 import { http, HttpResponse } from "msw";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import Rectangle from "terriajs-cesium/Source/Core/Rectangle";
@@ -364,6 +365,18 @@ describe("FontesPanel", function () {
       screen.queryByText("Argine guasto di Mezzano de Rondani")
     ).toBeNull();
     expect(screen.getByText("fontes.withoutPlaces")).toBeVisible();
+  });
+
+  it("exports the results as a CSV file", async function () {
+    const saveAs = spyOn(FileSaver, "saveAs");
+    showPanel();
+    await searchWhenLoaded();
+    fireEvent.click(screen.getByRole("button", { name: "fontes.exportCsv" }));
+    expect(saveAs).toHaveBeenCalledTimes(1);
+    const [blob, name] = saveAs.calls.mostRecent().args as [Blob, string];
+    expect(name).toEqual("fontes-ricerca.csv");
+    expect(blob.type).toContain("text/csv");
+    expect(await blob.text()).toContain("ASPR_MD0351");
   });
 
   it("opens the window of a result", async function () {

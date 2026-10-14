@@ -1,4 +1,5 @@
 import type { Geometry } from "geojson";
+import FileSaver from "file-saver";
 import { observer } from "mobx-react";
 import { FC, useEffect, useMemo, useRef, useState } from "react";
 import DataTable, { TableColumn } from "react-data-table-component";
@@ -16,6 +17,7 @@ import Text, { TextSpan } from "../../Styled/Text";
 import { useViewState } from "../Context";
 import {
   ALL_FIELDS,
+  distinctValues,
   filterDocuments,
   FontesCondition,
   FontesDocument,
@@ -23,7 +25,7 @@ import {
   getFontesDocuments,
   OPERATORS,
   parseFontesDate,
-  distinctValues
+  toCsv
 } from "./Fontes";
 import {
   FONTES_FIELDS,
@@ -482,6 +484,19 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
               <Box gap={2} verticalCenter css={"margin-bottom: 8px;"}>
                 <Button secondary onClick={() => showOnMap(results, animate)}>
                   {t(($) => $.fontes.showOnMap)}
+                </Button>
+                <Button
+                  secondary
+                  onClick={() =>
+                    FileSaver.saveAs(
+                      new Blob([toCsv(results)], {
+                        type: "text/csv;charset=utf-8"
+                      }),
+                      "fontes-ricerca.csv"
+                    )
+                  }
+                >
+                  {t(($) => $.fontes.exportCsv)}
                 </Button>
                 <Checkbox
                   isChecked={animate}
