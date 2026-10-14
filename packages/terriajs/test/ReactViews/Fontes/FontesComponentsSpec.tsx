@@ -1,4 +1,9 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import Terria from "../../../lib/Models/Terria";
+import ViewState from "../../../lib/ReactViewModels/ViewState";
+import { StandardUserInterface } from "../../../lib/ReactViews/StandardUserInterface/StandardUserInterface";
+import { worker } from "../../mocks/browser";
 import { normalizeFontesDocument } from "../../../lib/ReactViews/Fontes/Fontes";
 import { FontesDocumentDetails } from "../../../lib/ReactViews/Fontes/FontesDocumentWindow";
 import { TerriaThemeProvider } from "../withContext";
@@ -59,5 +64,43 @@ describe("FontesDocumentDetails", function () {
       screen.getByRole("columnheader", { name: "Nome storico" })
     ).toBeVisible();
     expect(screen.getByRole("cell", { name: "Colurni" })).toBeVisible();
+  });
+});
+
+describe("FONTES in the standard user interface", function () {
+  const documentsUrl = "https://example.com/fontes/sui.json";
+  let terria: Terria;
+  let viewState: ViewState;
+
+  beforeEach(function () {
+    worker.use(
+      http.get(documentsUrl, () =>
+        HttpResponse.json({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              geometry: null,
+              properties: { id: "ASPR_MD0351", titolo_schedatore: "Colorno" }
+            }
+          ]
+        })
+      )
+    );
+    terria = new Terria({ baseUrl: "./" });
+    viewState = new ViewState({ terria });
+    terria.updateParameters({ fontesConfig: { documentsUrl } });
+  });
+
+  it("shows the window of the open document", async function () {
+    viewState.openFontesDocument("ASPR_MD0351");
+    render(
+      <StandardUserInterface
+        terria={terria}
+        viewState={viewState}
+        version="test"
+      />
+    );
+    expect(await screen.findByText("ASPR_MD0351 · Colorno")).toBeVisible();
   });
 });

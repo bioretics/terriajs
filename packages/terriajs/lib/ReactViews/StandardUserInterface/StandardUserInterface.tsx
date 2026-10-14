@@ -46,6 +46,7 @@ import MeasurableDownloadPanel from "../MeasurableGeometry/MeasurableDownloadPan
 import PlayPathPanel from "../MeasurableGeometry/PlayPathPanel";
 import MicrozonationPanel from "../Microzonation/MicrozonationPanel";
 import QueryWindow from "../QueryWindow/QueryWindow";
+import FontesDocumentWindow from "../Fontes/FontesDocumentWindow";
 import { MessageModal } from "../MessageModal/MessageModal";
 import ViewshedPanel from "../Viewshed/ViewshedPanel";
 import LoginPanel from "../Login/LoginPanel";
@@ -259,6 +260,7 @@ const StandardUserInterfaceBase: FC<StandardUserInterfaceProps> = observer(
                     <ExplorerWindowComponents.ExplorerWindow />
                     {/* Fork (rer3d): query-data window + message modal */}
                     <QueryWindow />
+                    <FontesDocumentWindow />
                     {props.terria.messageModal?.isVisible && (
                       <MessageModal
                         closeModal={() => props.viewState.closeMessageModal()}
