@@ -13,6 +13,10 @@ import {
   toCsv,
   toResultsGeoJson
 } from "../../../lib/ReactViews/Fontes/Fontes";
+import {
+  maxNativeZoom,
+  tileRequest
+} from "../../../lib/ReactViews/Fontes/FontesImageViewer";
 import Terria from "../../../lib/Models/Terria";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { worker } from "../../mocks/browser";
@@ -420,6 +424,68 @@ describe("Fontes", function () {
       viewState.openFontesDocument("ASPR_MD0351");
       viewState.closeFontesDocument();
       expect(viewState.fontesDocumentId).toBeUndefined();
+    });
+  });
+
+  describe("COG tiles of the image viewer", function () {
+    const levels = [
+      { width: 1000, height: 600 },
+      { width: 500, height: 300 },
+      { width: 250, height: 150 }
+    ];
+
+    it("zooms in until one image pixel fills one screen pixel", function () {
+      expect(maxNativeZoom(23647, 19689)).toEqual(7);
+      expect(maxNativeZoom(256, 100)).toEqual(0);
+      expect(maxNativeZoom(257, 100)).toEqual(1);
+    });
+
+    it("reads full resolution pixels at the native zoom", function () {
+      expect(tileRequest({ x: 0, y: 0, z: 2 }, levels)).toEqual({
+        level: 0,
+        window: [0, 0, 256, 256],
+        width: 256,
+        height: 256
+      });
+    });
+
+    it("crops the tiles on the right and bottom edges", function () {
+      expect(tileRequest({ x: 3, y: 2, z: 2 }, levels)).toEqual({
+        level: 0,
+        window: [768, 512, 1000, 600],
+        width: 232,
+        height: 88
+      });
+    });
+
+    it("reads the overview that matches a lower zoom", function () {
+      expect(tileRequest({ x: 0, y: 0, z: 0 }, levels)).toEqual({
+        level: 2,
+        window: [0, 0, 250, 150],
+        width: 250,
+        height: 150
+      });
+      expect(tileRequest({ x: 1, y: 0, z: 1 }, levels)).toEqual({
+        level: 1,
+        window: [256, 0, 500, 256],
+        width: 244,
+        height: 256
+      });
+    });
+
+    it("magnifies full resolution pixels beyond the native zoom", function () {
+      expect(tileRequest({ x: 1, y: 0, z: 3 }, levels)).toEqual({
+        level: 0,
+        window: [128, 0, 256, 128],
+        width: 256,
+        height: 256
+      });
+    });
+
+    it("requests nothing outside the image", function () {
+      expect(tileRequest({ x: 4, y: 0, z: 2 }, levels)).toBeUndefined();
+      expect(tileRequest({ x: 0, y: 3, z: 2 }, levels)).toBeUndefined();
+      expect(tileRequest({ x: -1, y: 0, z: 2 }, levels)).toBeUndefined();
     });
   });
 
