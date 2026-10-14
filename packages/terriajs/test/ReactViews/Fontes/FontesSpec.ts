@@ -353,7 +353,7 @@ describe("Fontes", function () {
 
     it("writes a CSV for Excel: BOM, semicolons, field labels as header", function () {
       const csv = toCsv([mapped, textual]);
-      expect(csv.charAt(0)).toEqual("﻿");
+      expect(csv.charAt(0)).toEqual("\uFEFF");
       const rows = Papa.parse<string[]>(csv.slice(1), { delimiter: ";" }).data;
       expect(rows[0].slice(0, 4)).toEqual([
         "ID",

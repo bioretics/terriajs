@@ -193,7 +193,7 @@ const TEXT_FIELDS = FONTES_FIELDS.filter(
 const fold = (text: string) =>
   text
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 
@@ -333,7 +333,7 @@ function cellText(field: FontesField, value: unknown): string {
 
 export function toCsv(docs: FontesDocument[]): string {
   return (
-    "﻿" +
+    "\uFEFF" +
     Papa.unparse(
       {
         fields: FONTES_FIELDS.map((field) => field.label),
