@@ -113,6 +113,8 @@ export default class ViewState {
   @observable portals: Map<string, HTMLElement | null> = new Map();
   @observable storyBuilderShown: boolean = false;
   @observable microzonationPanelShown: boolean = false;
+  @observable fontesPanelShown: boolean = false;
+  @observable fontesDocumentId?: string;
 
   // Flesh out later
   @observable showHelpMenu: boolean = false;
@@ -1077,6 +1079,22 @@ export default class ViewState {
   @action
   toggleMicrozonationPanel(): void {
     this.microzonationPanelShown = !this.microzonationPanelShown;
+  }
+
+  @action
+  toggleFontesPanel(): void {
+    this.fontesPanelShown = !this.fontesPanelShown;
+  }
+
+  @action
+  openFontesDocument(id: string): void {
+    this.fontesDocumentId = id;
+    this.topElement = "FontesDocument";
+  }
+
+  @action
+  closeFontesDocument(): void {
+    this.fontesDocumentId = undefined;
   }
 
   @action

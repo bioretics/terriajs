@@ -14,6 +14,7 @@ import {
   toResultsGeoJson
 } from "../../../lib/ReactViews/Fontes/Fontes";
 import Terria from "../../../lib/Models/Terria";
+import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { worker } from "../../mocks/browser";
 
 const colorno = {
@@ -392,6 +393,33 @@ describe("Fontes", function () {
         initData: { parameters: { fontesConfig: config } }
       });
       expect(terria.configParameters.fontesConfig).toEqual(config);
+    });
+  });
+
+  describe("view state", function () {
+    let viewState: ViewState;
+    beforeEach(function () {
+      viewState = new ViewState({ terria: new Terria() });
+    });
+
+    it("toggles the search panel", function () {
+      expect(viewState.fontesPanelShown).toBe(false);
+      viewState.toggleFontesPanel();
+      expect(viewState.fontesPanelShown).toBe(true);
+      viewState.toggleFontesPanel();
+      expect(viewState.fontesPanelShown).toBe(false);
+    });
+
+    it("opens a document window in front of the other panels", function () {
+      viewState.openFontesDocument("ASPR_MD0351");
+      expect(viewState.fontesDocumentId).toEqual("ASPR_MD0351");
+      expect(viewState.topElement).toEqual("FontesDocument");
+    });
+
+    it("closes the document window", function () {
+      viewState.openFontesDocument("ASPR_MD0351");
+      viewState.closeFontesDocument();
+      expect(viewState.fontesDocumentId).toBeUndefined();
     });
   });
 
