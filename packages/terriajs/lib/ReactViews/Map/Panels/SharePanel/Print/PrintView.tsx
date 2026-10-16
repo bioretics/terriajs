@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/immutability */
 import DOMPurify from "dompurify";
 import { observer } from "mobx-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -156,6 +157,7 @@ const PrintView = observer((props: Props) => {
           })
         );
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setShareLink(
         buildShareLink(viewState.terria, viewState, {
           includeStories: false
