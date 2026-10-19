@@ -2,6 +2,21 @@
 // lib/Styles/variables.scss during the merge onto the TerriaJS monorepo.
 @forward "~terriajs/lib/Sass/common/_default_variables.scss" with (
   $color-primary: #519ac2,
+  $color-secondary: #f59e0b,
   $dark: #3f4854,
-  $dark-with-overlay: #4b5563
+  $dark-with-overlay: #4b5563,
+  $dark-mid: #1f2937,
+  $dark-lighter: #374151,
+  $dark-alpha: 0.75,
+  $grey: #9ca3af,
+  $grey-lighter: #d1d5db,
+  $grey-lightest: #f2f2f2,
+  $text-light: #ffffff,
+  $text-light-dimmed: #bbbbbb,
+  $text-dark: #595b60,
+  $text-darker: #4d5766,
+  $text-warning: rgb(255, 105, 97),
+  $text-success: #6ee7b7,
+  $warning: #ff5b6f,
+  $info-color: #fde68a
 );
