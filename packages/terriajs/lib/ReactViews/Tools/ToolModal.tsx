@@ -80,9 +80,7 @@ const Wrapper = styled(Box).attrs({
   max-height: calc(100vh - ${TOP_MARGIN + BOTTOM_MARGIN}px);
   // background: ${(p) => p.theme.dark};
   margin-left: ${(props) =>
-    props.isMapFullScreen
-      ? 16
-      : parseInt(props.theme.workbenchWidth, 10) + 40}px;
+    props.isMapFullScreen ? "16px" : "calc(var(--workbench-width) + 40px)"};
   transition: margin-left 0.25s;
 `;
 

@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
 // Fork (rer3d): draggable/resizable workbench panel.
@@ -32,16 +32,28 @@ const StyledPanel = styled.div<PropsType>`
 // resize-event wiring is preserved below.
 const SidePanelContainer: React.FC<PropsType> = (props) => {
   const { viewState } = props;
+  const theme = useTheme();
   if (!props.show) return null;
 
+  const rootStyle = document.documentElement.style;
   return (
     <Rnd
-      default={{ x: 15, y: 0, width: 355, height: "100%" }}
+      default={{
+        x: 15,
+        y: 0,
+        width:
+          parseFloat(rootStyle.getPropertyValue("--workbench-width")) ||
+          Number(theme.workbenchWidth),
+        height: "100%"
+      }}
       minWidth={300}
       maxWidth="50%"
       bounds="parent"
       disableDragging
       enableResizing={{ right: true }}
+      onResize={(_e, _dir, ref) =>
+        rootStyle.setProperty("--workbench-width", `${ref.offsetWidth}px`)
+      }
       style={{ zIndex: 1 }}
     >
       <StyledPanel
