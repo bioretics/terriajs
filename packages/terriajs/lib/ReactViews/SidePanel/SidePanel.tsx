@@ -170,9 +170,7 @@ const SidePanel = observer<React.FC<SidePanelProps>>(
     const uploadText = t(($) => $.models.catalog.upload);
     return (
       <Box column styledMinHeight={"0"} flex={1}>
-        {/* Fork (rer3d): header acts as the Rnd panel drag handle */}
         <div
-          className="drag-handle"
           css={`
             padding: 0 15px;
             background: none;
