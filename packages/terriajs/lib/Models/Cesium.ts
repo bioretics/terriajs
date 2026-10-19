@@ -91,6 +91,7 @@ import MappableMixin, {
 } from "../ModelMixins/MappableMixin";
 import ShadowMixin from "../ModelMixins/ShadowMixin";
 import TileErrorHandlerMixin from "../ModelMixins/TileErrorHandlerMixin";
+import { shadowsDisabledNotificationMessage } from "../ReactViews/Notification/shadowsDisabledNotification";
 import OpacityTraits from "../Traits/TraitsClasses/OpacityTraits";
 import SplitterTraits from "../Traits/TraitsClasses/SplitterTraits";
 import TerriaViewer from "../ViewModels/TerriaViewer";
@@ -176,6 +177,7 @@ export default class Cesium extends GlobeOrMap {
   private readonly _disposeSplitterReaction: () => void;
   private readonly _disposeBaseMapOpacityReaction: () => void;
   private readonly _disposeQualityReaction: () => void;
+  private readonly _disposeShowGlobeWhenTerrainReady: () => void;
 
   private _createImageryLayer: (
     ip: ImageryProvider,
@@ -497,6 +499,22 @@ export default class Cesium extends GlobeOrMap {
           this.scene.globe.splitDirection;
       }
     });
+    // Hold the globe back until the initial terrain is ready. Swapping terrain
+    // in after the globe has drawn discards every tile, so the globe would
+    // vanish for a moment and its imagery reload.
+    this._disposeShowGlobeWhenTerrainReady = this.terria.progressiveLoading
+      ? reaction(
+          () => this.isTerrainLoading,
+          (loading, _previous, r) => {
+            this.scene.globe.show = !loading;
+            if (!loading) {
+              r.dispose();
+              this.notifyRepaintRequired();
+            }
+          },
+          { fireImmediately: true }
+        )
+      : () => {};
     this._disposeSplitterReaction = this._reactToSplitterChanges();
 
     this._disposeQualityReaction = autorun(() => {
@@ -570,7 +588,7 @@ export default class Cesium extends GlobeOrMap {
     }
     this.terria.notificationState.addNotificationToQueue({
       title: i18next.t(($) => $.models.shadowsDisabledForPerformance.title),
-      message: i18next.t(($) => $.models.shadowsDisabledForPerformance.message),
+      message: shadowsDisabledNotificationMessage,
       showAsToast: true,
       ignore: () =>
         this.effectiveShadowsEnabled || !this.hasShadowRequestingWorkbenchItem
@@ -810,6 +828,7 @@ export default class Cesium extends GlobeOrMap {
     this._updateTilesLoadingIndeterminate(false); // reset progress bar loading state to false for any data sources with indeterminate progress e.g. 3DTilesets.
 
     this._disposeTerrainReaction();
+    this._disposeShowGlobeWhenTerrainReady();
     this._disposeQualityReaction();
 
     this._disposeSelectedFeatureSubscription();
@@ -1495,7 +1514,9 @@ export default class Cesium extends GlobeOrMap {
    * Used for spying in specs
    */
   private createWorldTerrain(): Promise<TerrainProvider> {
-    return this.catchTerrainProviderDown(createWorldTerrainAsync({}));
+    return this.catchTerrainProviderDown(
+      this.terria.preloadedWorldTerrain ?? createWorldTerrainAsync({})
+    );
   }
 
   /**
@@ -2113,12 +2134,17 @@ export default class Cesium extends GlobeOrMap {
       globe.showGroundAtmosphere = true;
       globe.undergroundColor = Color.BLACK;
       globe.translucency.enabled = false;
-      globe.baseColor = Color.BLUE;
+      globe.baseColor = this.terria.progressiveLoading
+        ? GLOBE_BASE_COLOR
+        : Color.BLUE;
     }
   }
 }
 
 const boundingSphereScratch = new BoundingSphere();
+
+/** Shown where the globe has no imagery yet; a dark neutral rather than Cesium's blue. */
+const GLOBE_BASE_COLOR = Color.fromCssColorString("#22364d");
 
 function zoomToDataSource(
   cesium: Cesium,
