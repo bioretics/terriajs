@@ -105,7 +105,13 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
   // Fork (rer3d): "no-drag" opts items out of the Rnd side-panel drag.
   return (
     <StyledLi style={style} className={`${className} no-drag`}>
-      <Box fullWidth justifySpaceBetween paddedRatio={3} styledMinHeight="38px">
+      <Box
+        fullWidth
+        justifySpaceBetween
+        paddedHorizontally={3}
+        paddedVertically={1}
+        styledMinHeight="38px"
+      >
         <Box fullWidth>
           <Box left fullWidth centered>
             <DraggableBox
@@ -254,8 +260,9 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
       {isOpen && (
         <Box
           column
-          gap={3}
-          paddedRatio={3}
+          gap={1}
+          paddedHorizontally={3}
+          paddedVertically={1}
           css={{
             borderTop: `1px solid ${theme.grey}`,
             color: theme.greyLighter
@@ -287,7 +294,7 @@ const StyledLi = styled(Li)`
   border: 1px solid ${(p) => p.theme.grey};
   width: 100%;
 
-  margin-bottom: 20px;
+  margin-bottom: 8px;
   &:last-child {
     margin-bottom: 0px;
   }
