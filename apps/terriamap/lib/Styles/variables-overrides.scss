@@ -3,5 +3,9 @@
 @forward "~terriajs/lib/Sass/common/_default_variables.scss" with (
   $color-primary: #519ac2,
   $dark: #3f4854,
-  $dark-with-overlay: #4b5563
+  $dark-with-overlay: #4b5563,
+  $mobile: 1099px,
+  $sm: 1100px,
+  $md: 1300px,
+  $lg: 1500px
 );
