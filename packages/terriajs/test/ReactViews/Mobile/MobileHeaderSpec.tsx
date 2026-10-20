@@ -116,6 +116,33 @@ describe("MobileHeader", function () {
     );
   });
 
+  it("shows back only in preview", function () {
+    const customElements = processCustomElements(true, undefined);
+
+    viewState.explorerPanelIsVisible = true;
+    viewState.mobileView = viewState.mobileViewOptions.data;
+
+    const { rerender } = renderWithContexts(
+      <MobileHeader
+        menuItems={customElements.menu}
+        menuLeftItems={customElements.menuLeft}
+      />,
+      viewState
+    );
+
+    expect(screen.queryByRole("button", { name: "Back" })).toBeNull();
+
+    viewState.mobileView = viewState.mobileViewOptions.preview;
+    rerender(
+      <MobileHeader
+        menuItems={customElements.menu}
+        menuLeftItems={customElements.menuLeft}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "Back" })).toBeVisible();
+  });
+
   it("renders without workbench items", function () {
     const customElements = processCustomElements(true, undefined);
 
