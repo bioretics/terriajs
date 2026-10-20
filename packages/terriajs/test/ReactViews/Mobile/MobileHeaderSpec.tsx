@@ -69,4 +69,66 @@ describe("MobileHeader", function () {
       "Search the catalogue"
     );
   });
+
+  it("labels the header buttons", function () {
+    const customElements = processCustomElements(true, undefined);
+
+    renderWithContexts(
+      <MobileHeader
+        menuItems={customElements.menu}
+        menuLeftItems={customElements.menuLeft}
+      />,
+      viewState
+    );
+
+    expect(
+      screen.getByRole("button", { name: "toggle navigation" })
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Data Catalogue" })
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "My Data" })).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Search for locations" })
+    ).toBeVisible();
+  });
+
+  it("marks the open view as pressed", function () {
+    const customElements = processCustomElements(true, undefined);
+
+    viewState.explorerPanelIsVisible = true;
+    viewState.mobileView = viewState.mobileViewOptions.data;
+
+    renderWithContexts(
+      <MobileHeader
+        menuItems={customElements.menu}
+        menuLeftItems={customElements.menuLeft}
+      />,
+      viewState
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Data Catalogue" })
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: "My Data" })).toHaveAttribute(
+      "aria-pressed",
+      "false"
+    );
+  });
+
+  it("renders without workbench items", function () {
+    const customElements = processCustomElements(true, undefined);
+
+    renderWithContexts(
+      <MobileHeader
+        menuItems={customElements.menu}
+        menuLeftItems={customElements.menuLeft}
+      />,
+      viewState
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /^Explore Datasets/ })
+    ).toBeNull();
+  });
 });

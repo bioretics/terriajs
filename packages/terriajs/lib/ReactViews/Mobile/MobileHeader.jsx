@@ -190,6 +190,10 @@ class MobileHeader extends Component {
       this.props.viewState.terria.workbench.items !== undefined
         ? this.props.viewState.terria.workbench.items.length
         : 0;
+    const mobileViewOptions = this.props.viewState.mobileViewOptions;
+    const openView = this.props.viewState.explorerPanelIsVisible
+      ? this.props.viewState.mobileView
+      : null;
 
     return (
       <div className={Styles.ui}>
@@ -203,12 +207,7 @@ class MobileHeader extends Component {
           {!searchState.showMobileLocationSearch &&
           !searchState.showMobileCatalogSearch ? (
             <>
-              <Box
-                position="absolute"
-                css={`
-                  left: 5px;
-                `}
-              >
+              <div className={Styles.groupLeft}>
                 <HamburgerButton
                   type="button"
                   onClick={this.props.viewState.toggleMobileMenu.bind(
@@ -228,17 +227,13 @@ class MobileHeader extends Component {
                   viewState={this.props.viewState}
                   version={this.props.version}
                 />
-              </Box>
-              <div
-                className={Styles.groupRight}
-                css={`
-                  background-color: ${(p) => p.theme.dark};
-                `}
-              >
+              </div>
+              <div className={Styles.groupRight}>
                 {this.props.viewState.mobileMeasureToolsButtonVisible && (
                   <button
                     type="button"
-                    className={Styles.btnAdd}
+                    className={Styles.btnIcon}
+                    aria-label={t(($) => $.measure.measureToolTitle)}
                     onClick={() => {
                       runInAction(() => {
                         this.props.viewState.measurablePanelIsVisible =
@@ -255,7 +250,8 @@ class MobileHeader extends Component {
                 )}
                 <button
                   type="button"
-                  className={Styles.btnViewMode}
+                  className={Styles.btnIcon}
+                  title={t(($) => $.settingPanel.mapView)}
                   onClick={this.onMobileSwitchViewClicked.bind(this)}
                 >
                   {this.props.viewState.terria.mainViewer.viewerMode ===
@@ -265,7 +261,9 @@ class MobileHeader extends Component {
                 </button>
                 <button
                   type="button"
-                  className={Styles.btnAdd}
+                  className={Styles.btnIcon}
+                  aria-label={t(($) => $.addData.dataCatalogue)}
+                  aria-pressed={openView === mobileViewOptions.data}
                   onClick={this.onMobileDataCatalogClicked.bind(this)}
                 >
                   {/* Fork (rer3d): icon-only add-data button on mobile */}
@@ -277,7 +275,9 @@ class MobileHeader extends Component {
                 </button>
                 <button
                   type="button"
-                  className={Styles.btnAdd}
+                  className={Styles.btnIcon}
+                  aria-label={t(($) => $.addData.myData)}
+                  aria-pressed={openView === mobileViewOptions.addData}
                   onClick={this.onMobileAddDataCatalogClicked.bind(this)}
                 >
                   <StyledIcon
@@ -290,6 +290,10 @@ class MobileHeader extends Component {
                   <button
                     type="button"
                     className={Styles.btnNowViewing}
+                    aria-label={t(($) => $.sui.showWorkbench, {
+                      count: nowViewingLength
+                    })}
+                    aria-pressed={openView === mobileViewOptions.nowViewing}
                     onClick={this.onMobileNowViewingClicked.bind(this)}
                   >
                     <Icon glyph={Icon.GLYPHS.eye} />
@@ -303,8 +307,9 @@ class MobileHeader extends Component {
                   </button>
                 )}
                 <button
-                  className={Styles.btnSearch}
+                  className={Styles.btnIcon}
                   type="button"
+                  aria-label={t(($) => $.search.placeholder)}
                   onClick={this.showSearch.bind(this)}
                 >
                   <StyledIcon
@@ -344,12 +349,12 @@ class MobileHeader extends Component {
 
 const HamburgerButton = styled(RawButton)`
   border-radius: 4px;
-  padding: 0 5px;
-  margin-right: 3px;
+  padding: 0;
+  flex: none;
   background: ${(p) => p.theme.darkLighter};
-  width: 50px;
-  height: 38px;
-  box-sizing: content-box;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: center;

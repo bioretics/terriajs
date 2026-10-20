@@ -1,12 +1,10 @@
 declare namespace MobileHeaderScssNamespace {
   export interface IMobileHeaderScss {
     btn: string;
-    "btn-add": string;
+    "btn-icon": string;
     "btn-now-viewing": string;
-    "btn-search": string;
-    btnAdd: string;
+    btnIcon: string;
     btnNowViewing: string;
-    btnSearch: string;
     doubleDigit: string;
     formSearchData: string;
     "group-left": string;
