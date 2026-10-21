@@ -66,9 +66,9 @@ export const Control = styled(Box).attrs({
   }
 
   @media (max-width: ${(props) => props.theme.mobile}px) {
-    padding-right: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
     padding-top: 15px;
-    margin-bottom: 10px;
   }
   text-align: center;
 `;

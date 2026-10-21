@@ -31,6 +31,7 @@ const OVERFLOW_ACTION_SIZE = 42;
 
 interface StyledMapNavigationProps {
   trainerBarVisible: boolean;
+  horizontal: boolean;
   theme: DefaultTheme;
 }
 
@@ -63,6 +64,17 @@ const StyledMapNavigation = styled.div<StyledMapNavigationProps>`
     p.trainerBarVisible &&
     `
     top: ${Number(p.theme.trainerHeight) + Number(p.theme.mapNavigationTop)}px;
+  `}
+  ${(p) =>
+    p.horizontal &&
+    `
+    position: relative;
+    top: auto;
+    right: auto;
+    & > div {
+      flex-direction: row;
+      justify-content: center;
+    }
   `}
 `;
 
@@ -279,7 +291,10 @@ class MapNavigationBase extends Component<PropTypes> {
       items = items.filter((item) => item.location === "TOP");
     }
     return (
-      <StyledMapNavigation trainerBarVisible={viewState.trainerBarVisible}>
+      <StyledMapNavigation
+        trainerBarVisible={viewState.trainerBarVisible}
+        horizontal={this.orientation === Orientation.HORIZONTAL}
+      >
         <Box
           centered
           column
@@ -293,8 +308,7 @@ class MapNavigationBase extends Component<PropTypes> {
             css={`
               ${
                 this.orientation === Orientation.HORIZONTAL &&
-                `margin-bottom: 5px;
-                flex-wrap: wrap;`
+                `flex-wrap: wrap;`
               }
             `}
           >
