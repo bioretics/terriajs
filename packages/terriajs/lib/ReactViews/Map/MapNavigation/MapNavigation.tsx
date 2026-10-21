@@ -109,6 +109,7 @@ class MapNavigationBase extends Component<PropTypes> {
   @observable private model: MapNavigationModel;
   @observable private overflows: boolean;
   private viewerModeReactionDisposer: IReactionDisposer | undefined;
+  private expandedItem: { id: string; width: number } | undefined;
 
   constructor(props: PropTypes) {
     super(props);
@@ -178,6 +179,16 @@ class MapNavigationBase extends Component<PropTypes> {
     });
   }
 
+  private setExpandedItem(id: string, width: number) {
+    if (width > 0) {
+      this.expandedItem = { id, width };
+      this.updateNavigation();
+    } else if (this.expandedItem?.id === id) {
+      this.expandedItem = undefined;
+      setTimeout(() => this.updateNavigation(), 300);
+    }
+  }
+
   /**
    * Check if we need to collapse navigation items and determine which one need to be collapsed.
    */
@@ -200,16 +211,16 @@ class MapNavigationBase extends Component<PropTypes> {
     // items that are possible to be collapsed
     const possibleToCollapse = itemsToShow
       .filter(
-        (item) => !pinnedItems.some((pinnedItem) => pinnedItem.id === item.id)
+        (item) =>
+          !pinnedItems.some((pinnedItem) => pinnedItem.id === item.id) &&
+          item.id !== this.expandedItem?.id
       )
       .reverse();
 
     // Ensure we are not showing more composites than we have height for
     let maxVisible = itemsToShow.length;
     let size = 0;
-    if (this.overflows) {
-      size += OVERFLOW_ACTION_SIZE;
-    }
+    this.overflows = false;
     const limit =
       this.orientation === Orientation.VERTICAL
         ? this.navigationRef.current.clientHeight
@@ -219,13 +230,17 @@ class MapNavigationBase extends Component<PropTypes> {
           : this.navigationRef.current.clientWidth;
 
     for (let i = 0; i < itemsToShow.length; i++) {
-      size += this.itemSizeInBar.get(itemsToShow[i].id) || 0;
+      size += this.itemSizeInBar.get(itemsToShow[i].id) || OVERFLOW_ACTION_SIZE;
+      if (itemsToShow[i].id === this.expandedItem?.id) {
+        size += this.expandedItem.width;
+      }
       if (size <= limit) {
         maxVisible = i + 1;
       }
     }
 
     if (pinnedItems.length > maxVisible) {
+      this.overflows = true;
       possibleToCollapse.forEach((item) => {
         this.model.setCollapsed(item.id, true);
       });
@@ -249,7 +264,7 @@ class MapNavigationBase extends Component<PropTypes> {
           continue;
         }
         itemsToCollapseId.push(item.id);
-        size -= this.itemSizeInBar.get(item.id) || 0;
+        size -= this.itemSizeInBar.get(item.id) || OVERFLOW_ACTION_SIZE;
         if (size <= limit) {
           break;
         }
@@ -258,7 +273,7 @@ class MapNavigationBase extends Component<PropTypes> {
         for (let i = 0; i < activeCollapsible.length; i++) {
           const itemId = activeCollapsible[i];
           itemsToCollapseId.push(itemId);
-          size -= this.itemSizeInBar.get(itemId) || 0;
+          size -= this.itemSizeInBar.get(itemId) || OVERFLOW_ACTION_SIZE;
           if (size <= limit) {
             break;
           }
@@ -318,6 +333,11 @@ class MapNavigationBase extends Component<PropTypes> {
               return (
                 <MapNavigationItem
                   expandInPlace={this.orientation !== Orientation.HORIZONTAL}
+                  onExpandedChange={
+                    this.orientation === Orientation.HORIZONTAL
+                      ? (width: number) => this.setExpandedItem(item.id, width)
+                      : undefined
+                  }
                   key={item.id}
                   item={item}
                   terria={terria}
