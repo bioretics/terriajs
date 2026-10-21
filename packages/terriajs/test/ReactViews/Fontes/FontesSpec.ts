@@ -40,12 +40,12 @@ const colorno = {
     titolo_originale: "N.D",
     titolo_archivista: "",
     titolo_schedatore: "Colorno",
-    data_produzione: "1627-08-07?",
+    data_di_produzione: "1627-08-07?",
     autori: '["Smeraldi Smeraldo","Pinzoni Pietro"]',
-    tematiche: "acque",
-    luoghi: '[{"nome":"Colorno","prov":"PR","tipo":"toponimo"}]',
+    tematica: "acque",
+    luoghi: '[{"nome":"Colorno","prov":"PR","tipo_luogo":"toponimo"}]',
     note: "N.D.",
-    larghezza_documento: 403
+    w_documento: 403
   }
 };
 
@@ -73,12 +73,12 @@ describe("Fontes", function () {
         "Pinzoni Pietro"
       ]);
       expect(doc.properties.luoghi).toEqual([
-        { nome: "Colorno", prov: "PR", tipo: "toponimo" }
+        { nome: "Colorno", prov: "PR", tipo_luogo: "toponimo" }
       ]);
     });
 
     it("keeps a single value of a list field as a one-item list", function () {
-      expect(normalizeFontesDocument(colorno).properties.tematiche).toEqual([
+      expect(normalizeFontesDocument(colorno).properties.tematica).toEqual([
         "acque"
       ]);
     });
@@ -88,7 +88,7 @@ describe("Fontes", function () {
       expect(properties.note).toBeUndefined();
       expect(properties.titolo_originale).toBeUndefined();
       expect(properties.titolo_archivista).toBeUndefined();
-      expect(properties.larghezza_documento).toEqual(403);
+      expect(properties.w_documento).toEqual(403);
     });
 
     it("resolves the production date", function () {
@@ -121,31 +121,31 @@ describe("Fontes", function () {
         id: "A",
         titolo_schedatore: "Colorno",
         autori: ["Smeraldi Smeraldo"],
-        data_produzione: "1627-08-07?",
-        documento_testuale: false,
-        larghezza_documento: 403,
+        data_di_produzione: "1627-08-07?",
+        testuale: false,
+        w_documento: 403,
         luoghi: [{ nome: "Colorno", nome_storico: "Colurni" }]
       }),
       doc(point(10.0, 45.0), {
         id: "B",
         titolo_originale: "Argine del Po a Mezzano",
         autori: ["Pinzoni Pietro"],
-        data_produzione: "16XX",
-        documento_testuale: false,
-        larghezza_documento: 250
+        data_di_produzione: "16XX",
+        testuale: false,
+        w_documento: 250
       }),
       doc(null, {
         id: "C",
         titolo_archivista: "Lettera sul Taro",
         autori: ["Smeraldi Smeraldo", "Rossi Carlo"],
-        data_produzione: "/1590",
-        documento_testuale: true
+        data_di_produzione: "/1590",
+        testuale: true
       }),
       doc(point(10.33, 44.8), {
         id: "D",
         titolo_schedatore: "Pianta della Città",
-        data_produzione: "1700/1750",
-        documento_testuale: false
+        data_di_produzione: "1700/1750",
+        testuale: false
       })
     ];
 
@@ -183,51 +183,43 @@ describe("Fontes", function () {
     });
 
     it("compares numbers", function () {
-      expect(search(condition("larghezza_documento", "gt", "300"))).toEqual([
-        "A"
-      ]);
-      expect(search(condition("larghezza_documento", "lt", "300"))).toEqual([
-        "B"
-      ]);
-      expect(search(condition("larghezza_documento", "equals", "403"))).toEqual(
-        ["A"]
-      );
+      expect(search(condition("w_documento", "gt", "300"))).toEqual(["A"]);
+      expect(search(condition("w_documento", "lt", "300"))).toEqual(["B"]);
+      expect(search(condition("w_documento", "equals", "403"))).toEqual(["A"]);
     });
 
     it("filters yes/no fields", function () {
-      expect(search(condition("documento_testuale", "true"))).toEqual(["C"]);
-      expect(search(condition("documento_testuale", "false"))).toEqual([
-        "A",
-        "B",
-        "D"
-      ]);
+      expect(search(condition("testuale", "true"))).toEqual(["C"]);
+      expect(search(condition("testuale", "false"))).toEqual(["A", "B", "D"]);
     });
 
     it("finds documents whose date overlaps the requested FONTES date", function () {
       expect(
-        search(condition("data_produzione", "period", "1600/1650"))
+        search(condition("data_di_produzione", "period", "1600/1650"))
       ).toEqual(["A", "B"]);
       expect(
-        search(condition("data_produzione", "period", "1500/1550"))
+        search(condition("data_di_produzione", "period", "1500/1550"))
       ).toEqual(["C"]);
-      expect(search(condition("data_produzione", "period", "1740/"))).toEqual([
-        "D"
-      ]);
+      expect(
+        search(condition("data_di_produzione", "period", "1740/"))
+      ).toEqual(["D"]);
     });
 
     it("matches nothing for a value that is not a FONTES date", function () {
-      expect(search(condition("data_produzione", "period", "16"))).toEqual([]);
+      expect(search(condition("data_di_produzione", "period", "16"))).toEqual(
+        []
+      );
     });
 
     it("joins each condition to the next with AND, OR or AND NOT", function () {
       const smeraldi = condition("autori", "equals", "Smeraldi Smeraldo");
-      const textual = condition("documento_testuale", "true");
+      const textual = condition("testuale", "true");
       expect(search({ ...smeraldi, logic: "AND" }, textual)).toEqual(["C"]);
       expect(search({ ...smeraldi, logic: "AND NOT" }, textual)).toEqual(["A"]);
       expect(
         search(
-          condition("larghezza_documento", "gt", "300", "OR"),
-          condition("documento_testuale", "true")
+          condition("w_documento", "gt", "300", "OR"),
+          condition("testuale", "true")
         )
       ).toEqual(["A", "C"]);
     });
@@ -236,8 +228,8 @@ describe("Fontes", function () {
       expect(
         search(
           condition("autori", "equals", "Pinzoni Pietro", "OR"),
-          condition("documento_testuale", "true", "", "AND"),
-          condition("data_produzione", "period", "1500/1590")
+          condition("testuale", "true", "", "AND"),
+          condition("data_di_produzione", "period", "1500/1590")
         )
       ).toEqual(["C"]);
     });
@@ -247,7 +239,7 @@ describe("Fontes", function () {
         search(
           condition("autori", "equals", "Pinzoni Pietro", "OR"),
           condition("titolo_originale", "contains", "", "AND"),
-          condition("documento_testuale", "true")
+          condition("testuale", "true")
         )
       ).toEqual(["B", "C"]);
     });
@@ -307,17 +299,17 @@ describe("Fontes", function () {
         id: "A",
         segnatura: "ASPR, Mappe e disegni, 68/41",
         titolo_schedatore: "Colorno",
-        data_produzione: "/1590",
-        documento_testuale: false,
+        data_di_produzione: "/1590",
+        testuale: false,
         autori: ["Smeraldi Smeraldo", "Rossi Carlo"],
         luoghi: [{ nome: "Colorno", prov: "PR" }],
-        larghezza_documento: 403
+        w_documento: 403
       }
     );
     const textual = doc(null, {
       id: "B",
       titolo_originale: "Lettera",
-      documento_testuale: true
+      testuale: true
     });
     const undated = doc(
       { type: "MultiPoint", coordinates: [[10, 45]] },
@@ -333,7 +325,7 @@ describe("Fontes", function () {
           id: "A",
           titolo: "Colorno",
           segnatura: "ASPR, Mappe e disegni, 68/41",
-          data_produzione: "/1590",
+          data_di_produzione: "/1590",
           tipo: "Mappa"
         })
       );
@@ -513,7 +505,7 @@ describe("Fontes", function () {
         recto_georef: true,
         recto_wms_layer: "fontes:A_r",
         recto_cog_url: "https://example.com/cog/A_r.tif",
-        data_produzione: "1627"
+        data_di_produzione: "1627"
       }
     });
 

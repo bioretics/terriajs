@@ -317,7 +317,7 @@ const FontesPanel: FC<{ isVisible: boolean }> = observer(({ isVisible }) => {
     },
     {
       name: t(($) => $.fontes.date),
-      selector: (d) => String(d.properties.data_produzione ?? ""),
+      selector: (d) => String(d.properties.data_di_produzione ?? ""),
       sortable: true,
       sortFunction: (a, b) =>
         (a.date?.start ?? "").localeCompare(b.date?.start ?? "")

@@ -148,7 +148,7 @@ const FontesDocumentWindow: FC = observer(() => {
       label: t(($) => $.fontes.downloadVerso),
       url: properties.verso_download_url ?? properties.verso_cog_url
     },
-    { label: t(($) => $.fontes.downloadPdf), url: properties.fascicolo_pdf_url }
+    { label: t(($) => $.fontes.downloadPdf), url: properties.pdf_url }
   ]
     .map((download) => ({ ...download, url: safeUrl(download.url) }))
     .filter(

@@ -30,9 +30,9 @@ const colorno = normalizeFontesDocument({
   properties: {
     id: "ASPR_MD0351",
     segnatura: "ASPR, Mappe e disegni, 68/41",
-    documento_testuale: false,
+    testuale: false,
     titolo_schedatore: "Colorno",
-    larghezza_documento: 403,
+    w_documento: 403,
     autori: ["Smeraldi Smeraldo", "Rossi Carlo"],
     luoghi: [{ nome: "Colorno", prov: "PR", nome_storico: "Colurni" }]
   }
@@ -107,7 +107,7 @@ describe("FONTES in the standard user interface", function () {
                 titolo_schedatore: "Link",
                 recto_download_url: "https://example.com/r.tif",
                 // eslint-disable-next-line no-script-url
-                fascicolo_pdf_url: "javascript:alert(1)"
+                pdf_url: "javascript:alert(1)"
               }
             }
           ]
@@ -217,7 +217,7 @@ describe("FontesPanel", function () {
               properties: {
                 id: "ASPR_MD0351",
                 titolo_schedatore: "Colorno",
-                data_produzione: "1627"
+                data_di_produzione: "1627"
               }
             },
             {
@@ -226,7 +226,7 @@ describe("FontesPanel", function () {
               properties: {
                 id: "ASPR_CAVCT0232",
                 titolo_schedatore: "Argine guasto di Mezzano de Rondani",
-                data_produzione: "1700"
+                data_di_produzione: "1700"
               }
             },
             {
@@ -235,8 +235,8 @@ describe("FontesPanel", function () {
               properties: {
                 id: "ASPR_MPS0076",
                 titolo_archivista: "Carta del Po",
-                data_produzione: "/1590",
-                documento_testuale: true
+                data_di_produzione: "/1590",
+                testuale: true
               }
             }
           ]
@@ -297,7 +297,7 @@ describe("FontesPanel", function () {
   it("flags a value that is not a FONTES date", function () {
     showPanel();
     fireEvent.change(screen.getByLabelText("fontes.field"), {
-      target: { value: "data_produzione" }
+      target: { value: "data_di_produzione" }
     });
     fireEvent.change(screen.getByLabelText("fontes.value"), {
       target: { value: "16" }

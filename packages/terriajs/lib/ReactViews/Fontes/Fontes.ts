@@ -118,8 +118,8 @@ export function normalizeFontesDocument(feature: any): FontesDocument {
     (value): value is string => typeof value === "string"
   );
   const date =
-    typeof properties.data_produzione === "string"
-      ? parseFontesDate(properties.data_produzione)
+    typeof properties.data_di_produzione === "string"
+      ? parseFontesDate(properties.data_di_produzione)
       : undefined;
 
   return {
@@ -308,12 +308,10 @@ export function toResultsGeoJson(docs: FontesDocument[]): FeatureCollection {
           id: doc.id,
           titolo: doc.title,
           segnatura: doc.properties.segnatura,
-          data_produzione: doc.properties.data_produzione,
+          data_di_produzione: doc.properties.data_di_produzione,
           data_da: doc.date && (doc.date.start ?? CALENDAR_START),
           data_a: doc.date && (doc.date.end ?? CALENDAR_END),
-          tipo: doc.properties.documento_testuale
-            ? "Documento testuale"
-            : "Mappa"
+          tipo: doc.properties.testuale ? "Documento testuale" : "Mappa"
         }
       }))
   };

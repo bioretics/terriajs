@@ -32,11 +32,11 @@ export const FONTES_SECTIONS: FontesSection[] = [
     title: "Collocazione",
     fields: [
       text("id", "ID"),
-      bool("documento_testuale", "Documento testuale"),
+      bool("testuale", "Documento testuale"),
       text("collocazione", "Collocazione"),
       text("segnatura", "Segnatura"),
       text("altre_segnature", "Altre segnature"),
-      text("titolo_serie", "Titolo della serie"),
+      text("serie", "Titolo della serie"),
       text("numerazione_serie", "Numerazione all'interno della serie"),
       text("fascicolo_allegato", "Fascicolo a cui è allegato"),
       text("note_collocazione", "Note collocazione")
@@ -48,28 +48,28 @@ export const FONTES_SECTIONS: FontesSection[] = [
       text("titolo_originale", "Titolo originale"),
       text("titolo_archivista", "Titolo attribuito dall'archivista"),
       text("titolo_schedatore", "Titolo attribuito dallo schedatore"),
-      text("titoli_varianti", "Titoli varianti"),
+      text("titolo_variante", "Titolo variante"),
       text("note_titolo", "Note titolo")
     ]
   },
   {
     title: "Dimensioni",
     fields: [
-      mm("altezza_supporto_aggiunto", "Altezza del supporto aggiunto"),
-      mm("larghezza_supporto_aggiunto", "Larghezza del supporto aggiunto"),
-      mm("altezza_supporto_originale", "Altezza del supporto originale"),
-      mm("larghezza_supporto_originale", "Larghezza del supporto originale"),
-      mm("altezza_cornice", "Altezza della cornice"),
-      mm("larghezza_cornice", "Larghezza della cornice"),
-      mm("altezza_documento", "Altezza del documento"),
-      mm("larghezza_documento", "Larghezza del documento"),
+      mm("h_supporto_aggiunto", "Altezza del supporto aggiunto"),
+      mm("w_supporto_aggiunto", "Larghezza del supporto aggiunto"),
+      mm("h_supporto_originale", "Altezza del supporto originale"),
+      mm("w_supporto_originale", "Larghezza del supporto originale"),
+      mm("h_cornice", "Altezza della cornice"),
+      mm("w_cornice", "Larghezza della cornice"),
+      mm("h_documento", "Altezza del documento"),
+      mm("w_documento", "Larghezza del documento"),
       text("note_dimensioni", "Note dimensioni")
     ]
   },
   {
     title: "Autori",
     fields: [
-      { key: "data_produzione", label: "Data di produzione", type: "date" },
+      { key: "data_di_produzione", label: "Data di produzione", type: "date" },
       text("data_topica", "Data topica"),
       list("autori", "Autori"),
       list("autori_attribuiti", "Autori attribuiti"),
@@ -98,16 +98,16 @@ export const FONTES_SECTIONS: FontesSection[] = [
       list("tecnica_coloritura", "Tecnica di coloritura"),
       text("stato_conservazione", "Stato di conservazione"),
       text("colorazione", "Colorazione"),
-      text("note_conservazione", "Note conservazione"),
+      text("note_stato_conservazione", "Note conservazione"),
       text("supporto", "Supporto"),
-      list("dettagli_conservazione", "Dettagli di conservazione"),
+      list("dettaglio_stato_conservazione", "Dettagli di conservazione"),
       list("stato", "Stato"),
       text("filigrana", "Filigrana"),
       list("tipologia", "Tipologia"),
       text("tecnica_riproduzione", "Tecnica di riproduzione"),
-      list("tradizione_documento", "Tradizione del documento"),
+      list("tradizione", "Tradizione del documento"),
       list("metodo_rappresentazione", "Metodo di rappresentazione"),
-      text("forma_documento", "Forma del documento"),
+      text("forma", "Forma del documento"),
       list("lingua", "Lingua"),
       bool("originale", "Originale"),
       text("note_dettagli_tecnici", "Note dettagli tecnici")
@@ -117,11 +117,8 @@ export const FONTES_SECTIONS: FontesSection[] = [
     title: "Annotazioni",
     fields: [
       text("dichiarazioni_autore", "Dichiarazioni dell'autore"),
-      text("annotazioni_coeve", "Annotazioni coeve alla stesura"),
-      text(
-        "aggiornamenti_annotazioni",
-        "Aggiornamenti e/o annotazioni successive"
-      ),
+      text("annotazioni_coeve_alla_stesura", "Annotazioni coeve alla stesura"),
+      text("aggiornamenti", "Aggiornamenti e/o annotazioni successive"),
       text("note_annotazioni", "Note annotazioni")
     ]
   },
@@ -136,7 +133,7 @@ export const FONTES_SECTIONS: FontesSection[] = [
       text("dediche", "Dediche"),
       text("corredo_iconografico", "Corredo iconografico"),
       text("elementi_araldici", "Elementi araldici"),
-      list("tematiche", "Tematiche dichiarate o desunte"),
+      list("tematica", "Tematiche dichiarate o desunte"),
       text("note_contenuti", "Note contenuti")
     ]
   },
@@ -144,38 +141,36 @@ export const FONTES_SECTIONS: FontesSection[] = [
     title: "Elementi contenuti",
     fields: [
       objects("elementi_naturali", "Elementi naturali"),
-      text("note_elementi_naturali", "Note elementi naturali"),
+      text("note_elemento_naturale", "Note elementi naturali"),
       objects("infrastrutture", "Infrastrutture"),
-      text("note_infrastrutture", "Note infrastrutture"),
+      text("note_elemento_infrastruttura", "Note infrastrutture"),
       objects("edifici", "Edifici"),
-      text("note_edifici", "Note edifici"),
+      text("note_elemento_edificio", "Note edifici"),
       objects("uso_suolo", "Uso del suolo"),
-      text("note_uso_suolo", "Note uso del suolo")
+      text("note_elemento_uds", "Note uso del suolo")
     ]
   },
   {
     title: "Luoghi",
-    fields: [
-      text("luoghi_attuali", "Luoghi attuali"),
-      objects("luoghi", "Luoghi"),
-      objects("confluenze", "Confluenze"),
-      text("odonimi", "Odonimi")
-    ]
+    fields: [objects("luoghi", "Luoghi"), text("odonimi", "Odonimi")]
   },
   {
     title: "Informazioni cartografiche",
     fields: [
-      list("identificazione_orientamento", "Identificazione dell'orientamento"),
-      text("orientamento_espresso", "Orientamento espresso"),
+      list(
+        "sistema_identificazione_orientamento",
+        "Identificazione dell'orientamento"
+      ),
+      text("orientamento", "Orientamento espresso"),
       text("orientamento_desunto", "Orientamento desunto"),
-      text("scala_riferimento", "Scala di riferimento"),
+      text("scala", "Scala di riferimento"),
       list("unita_misura", "Unità di misura"),
+      text("note_unita_misura", "Note unità di misura"),
       text(
         "rapporto_rappresentazione",
         "Rapporto di rappresentazione esplicitato"
       ),
-      mm("lunghezza_scala_grafica", "Lunghezza della scala grafica"),
-      text("note_scala", "Note alla scala"),
+      mm("lunghezza_scala_mm", "Lunghezza della scala grafica"),
       text("note_cartografiche", "Note cartografiche")
     ]
   },

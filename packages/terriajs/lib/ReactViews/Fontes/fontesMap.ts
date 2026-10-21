@@ -23,7 +23,7 @@ const ZOOM_PADDING_DEGREES = 0.02;
 const RESULTS_TEMPLATE =
   "<p><strong>{{titolo}}</strong></p>" +
   "<p>{{segnatura}}</p>" +
-  "<p>{{data_produzione}}</p>" +
+  "<p>{{data_di_produzione}}</p>" +
   '<p><fontes-document id="{{id}}"></fontes-document></p>';
 
 export function rectoMapItemJson(
