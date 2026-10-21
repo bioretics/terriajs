@@ -149,6 +149,28 @@ describe("LoginPanel", function () {
       expect(authorization).toEqual(EXPECTED_HEADER);
     });
 
+    it("encodes non-ASCII credentials as UTF-8", async function () {
+      let authorization: string | null | undefined;
+      worker.use(
+        http.get(LOGIN_URL, ({ request }) => {
+          authorization = request.headers.get("Authorization");
+          return HttpResponse.json({ ok: true });
+        })
+      );
+
+      const user = render();
+      const { username, password } = fields();
+      await user.type(username, "utènte");
+      await user.type(password, "pàss");
+      await user.click(okButton());
+
+      await waitUntil(
+        () => authorization !== undefined,
+        "the login service was never called"
+      );
+      expect(authorization).toEqual("Basic dXTDqG50ZTpww6Bzcw==");
+    });
+
     it("remembers the token and closes the panel on success", async function () {
       worker.use(http.get(LOGIN_URL, () => HttpResponse.json({ ok: true })));
 
