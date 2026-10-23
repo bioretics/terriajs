@@ -86,6 +86,7 @@ button {
 
 // Global theme variables 
 :root {
+  --workbench-width: ${(p) => p.theme.workbenchWidth}px;
 
   // Derive transparent dark from dark theme color and alpha
   --theme-transparent-dark: ${(p) =>

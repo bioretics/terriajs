@@ -31,6 +31,11 @@ export const MapColumn: FC<IMapColumnProps> = observer(
     const theme = useTheme();
     const { t } = useTranslation();
     const loaderRef = useRef(null);
+    const workbenchHeight =
+      viewState.terria.configParameters.workbenchPanelDefaultHeight;
+    const isWorkbenchFullHeight =
+      workbenchHeight === undefined ||
+      workbenchHeight > window.innerHeight * 0.95;
 
     return (
       <Box
@@ -108,9 +113,9 @@ export const MapColumn: FC<IMapColumnProps> = observer(
                     viewState.terria.elements.get("show-workbench")?.visible ===
                       false
                       ? `0px`
-                      : viewState.isMapFullScreen
+                      : viewState.isMapFullScreen || !isWorkbenchFullHeight
                         ? `${theme.workbenchMargin}px`
-                        : `calc(${theme.workbenchWidth}px + 2 * ${theme.workbenchMargin}px)`
+                        : `calc(var(--workbench-width) + 2 * ${theme.workbenchMargin}px)`
                   };
                   margin-right: ${
                     viewState.useSmallScreenInterface ||

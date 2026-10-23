@@ -10,13 +10,35 @@ import Box from "../../Styled/Box";
 import { RawButton } from "../../Styled/Button";
 import { TextSpan } from "../../Styled/Text";
 import BadgeBar from "../BadgeBar";
-import Icon, { StyledIcon } from "../../Styled/Icon";
+import Icon, { IconGlyph, StyledIcon } from "../../Styled/Icon";
 import WorkbenchList from "./WorkbenchList";
 import {
   Category,
   DataSourceAction
 } from "../../Core/Analytics/analyticEvents";
 import MappableMixin from "../../ModelMixins/MappableMixin";
+
+const HeaderButton = (props: {
+  glyph: IconGlyph;
+  label: string;
+  onClick: () => void;
+}) => (
+  <RawButton
+    onClick={props.onClick}
+    title={props.label}
+    css={`
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0 5px;
+    `}
+  >
+    <StyledIcon glyph={props.glyph} light styledWidth={"18px"} displayInline />
+    <TextSpan textLight small isLink>
+      {props.label}
+    </TextSpan>
+  </RawButton>
+);
 
 interface IProps extends WithTranslation {
   terria: Terria;
@@ -85,115 +107,36 @@ class Workbench extends Component<IProps> {
           badge={this.props.terria.workbench.items.length}
         >
           {showEnableAll ? (
-            <RawButton
+            <HeaderButton
+              glyph={Icon.GLYPHS.enable}
+              label={t(($) => $.workbench.enableAll)}
               onClick={() => this.enableAll()}
-              css={`
-                display: flex;
-                align-items: center;
-                padding-left: 5px;
-                min-width: 90px;
-                justify-content: space-evenly;
-              `}
-            >
-              <StyledIcon
-                glyph={Icon.GLYPHS.enable}
-                light
-                styledWidth={"12px"}
-                displayInline
-              />
-              <TextSpan textLight small isLink>
-                {t(($) => $.workbench.enableAll)}
-              </TextSpan>
-            </RawButton>
+            />
           ) : (
-            <RawButton
+            <HeaderButton
+              glyph={Icon.GLYPHS.disable}
+              label={t(($) => $.workbench.disableAll)}
               onClick={() => this.disableAll()}
-              css={`
-                display: flex;
-                align-items: center;
-                padding-left: 5px;
-                min-width: 90px;
-                justify-content: space-evenly;
-              `}
-            >
-              <StyledIcon
-                glyph={Icon.GLYPHS.disable}
-                light
-                styledWidth={"12px"}
-                displayInline
-              />
-              <TextSpan textLight small isLink>
-                {t(($) => $.workbench.disableAll)}
-              </TextSpan>
-            </RawButton>
+            />
           )}
           {shouldExpandAll ? (
-            <RawButton
+            <HeaderButton
+              glyph={Icon.GLYPHS.expandAll}
+              label={t(($) => $.workbench.expandAll)}
               onClick={this.expandAll}
-              css={`
-                display: flex;
-                align-items: center;
-                padding-left: 5px;
-                min-width: 90px;
-                justify-content: space-evenly;
-              `}
-            >
-              <StyledIcon
-                glyph={Icon.GLYPHS.expandAll}
-                light
-                styledWidth={"12px"}
-                displayInline
-              />
-              <TextSpan textLight small isLink>
-                {t(($) => $.workbench.expandAll)}
-              </TextSpan>
-            </RawButton>
-          ) : (
-            <RawButton
-              onClick={this.collapseAll}
-              css={`
-                display: flex;
-                align-items: center;
-                padding-left: 5px;
-                min-width: 90px;
-                justify-content: space-evenly;
-              `}
-            >
-              <StyledIcon
-                glyph={Icon.GLYPHS.collapse}
-                light
-                styledWidth={"12px"}
-                displayInline
-              />
-              <TextSpan textLight small isLink>
-                {t(($) => $.workbench.collapseAll)}
-              </TextSpan>
-            </RawButton>
-          )}
-          <RawButton
-            onClick={this.removeAll}
-            css={`
-              display: flex;
-              align-items: center;
-              padding: 0 5px;
-              min-width: 90px;
-              justify-content: space-evenly;
-              svg {
-                vertical-align: middle;
-                padding-right: 4px;
-              }
-            `}
-          >
-            <StyledIcon
-              glyph={Icon.GLYPHS.cancel}
-              light
-              styledWidth={"12px"}
-              displayInline
             />
-            <TextSpan textLight small isLink>
-              {t(($) => $.workbench.removeAll)}
-            </TextSpan>
-          </RawButton>
+          ) : (
+            <HeaderButton
+              glyph={Icon.GLYPHS.collapse}
+              label={t(($) => $.workbench.collapseAll)}
+              onClick={this.collapseAll}
+            />
+          )}
+          <HeaderButton
+            glyph={Icon.GLYPHS.cancel}
+            label={t(($) => $.workbench.removeAll)}
+            onClick={this.removeAll}
+          />
         </BadgeBar>
         <WorkbenchList
           viewState={this.props.viewState}
