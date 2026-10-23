@@ -27,7 +27,7 @@ const StyledPortal = styled(Portal)<{ show: boolean }>`
   visibility: ${(p) => (p.show ? "visible" : "hidden")};
   max-width: 60%;
   bottom: ${(p) => (p.show ? "130px" : "-56px")};
-  left: var(--workbench-width);
+  left: ${(p) => p.theme.workbenchWidth}px;
   right: 0;
   margin: auto;
 
