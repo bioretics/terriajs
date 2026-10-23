@@ -15,13 +15,20 @@ interface PropTypes {
   terria: Terria;
   closeTool?: boolean;
   expandInPlace?: boolean;
+  onExpandedChange?: (width: number) => void;
   i18n: i18n;
 }
 
 @observer
 class MapNavigationItemBase extends Component<PropTypes> {
   render() {
-    const { closeTool = true, item, expandInPlace, i18n } = this.props;
+    const {
+      closeTool = true,
+      item,
+      expandInPlace,
+      onExpandedChange,
+      i18n
+    } = this.props;
 
     if (item.render)
       return (
@@ -35,6 +42,7 @@ class MapNavigationItemBase extends Component<PropTypes> {
         <MapIconButton
           expandInPlace={expandInPlace === undefined ? true : expandInPlace}
           noExpand={item.noExpand}
+          onExpandedChange={onExpandedChange}
           iconElement={() => <Icon glyph={item.controller.glyph} />}
           title={applyTranslationIfExists(item.title || item.name, i18n)}
           onClick={() => {
@@ -66,9 +74,9 @@ export const Control = styled(Box).attrs({
   }
 
   @media (max-width: ${(props) => props.theme.mobile}px) {
-    padding-right: 10px;
+    padding-left: 5px;
+    padding-right: 5px;
     padding-top: 15px;
-    margin-bottom: 10px;
   }
   text-align: center;
 `;
