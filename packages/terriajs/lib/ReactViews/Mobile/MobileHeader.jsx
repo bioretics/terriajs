@@ -232,7 +232,7 @@ class MobileHeader extends Component {
                 {this.props.viewState.mobileMeasureToolsButtonVisible && (
                   <button
                     type="button"
-                    className={Styles.btnIcon}
+                    className={Styles.btnAdd}
                     aria-label={t(($) => $.measure.measureToolTitle)}
                     onClick={() => {
                       runInAction(() => {
@@ -250,7 +250,7 @@ class MobileHeader extends Component {
                 )}
                 <button
                   type="button"
-                  className={Styles.btnIcon}
+                  className={Styles.btnAdd}
                   title={t(($) => $.settingPanel.mapView)}
                   onClick={this.onMobileSwitchViewClicked.bind(this)}
                 >
@@ -261,7 +261,7 @@ class MobileHeader extends Component {
                 </button>
                 <button
                   type="button"
-                  className={Styles.btnIcon}
+                  className={Styles.btnAdd}
                   aria-label={t(($) => $.addData.dataCatalogue)}
                   aria-pressed={openView === mobileViewOptions.data}
                   onClick={this.onMobileDataCatalogClicked.bind(this)}
@@ -275,7 +275,7 @@ class MobileHeader extends Component {
                 </button>
                 <button
                   type="button"
-                  className={Styles.btnIcon}
+                  className={Styles.btnAdd}
                   aria-label={t(($) => $.addData.myData)}
                   aria-pressed={openView === mobileViewOptions.addData}
                   onClick={this.onMobileAddDataCatalogClicked.bind(this)}
@@ -307,7 +307,7 @@ class MobileHeader extends Component {
                   </button>
                 )}
                 <button
-                  className={Styles.btnIcon}
+                  className={Styles.btnSearch}
                   type="button"
                   aria-label={t(($) => $.search.placeholder)}
                   onClick={this.showSearch.bind(this)}

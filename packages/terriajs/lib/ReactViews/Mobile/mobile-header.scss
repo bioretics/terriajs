@@ -33,7 +33,7 @@
   vertical-align: top;
 }
 
-.btn-icon {
+.btn-add {
   composes: btn;
 
   display: flex;
@@ -55,8 +55,12 @@
   }
 }
 
+.btn-search {
+  composes: btn-add;
+}
+
 .btn-now-viewing {
-  composes: btn-icon;
+  composes: btn-add;
 
   svg {
     height: 28px;

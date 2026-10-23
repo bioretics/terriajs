@@ -1,7 +1,9 @@
 declare namespace MobileModalWindowScssNamespace {
   export interface IMobileModalWindowScss {
     "back-button": string;
+    "back-button--inactive": string;
     backButton: string;
+    backButtonInactive: string;
     button: string;
     "data-catalog": string;
     dataCatalog: string;
