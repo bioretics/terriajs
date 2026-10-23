@@ -2,10 +2,6 @@ import { createGlobalStyle } from "styled-components";
 import Color from "terriajs-cesium/Source/Core/Color";
 
 export const GlobalTerriaStyles = createGlobalStyle`
-:root {
-  --workbench-width: ${(p) => p.theme.workbenchWidth}px;
-}
-
 body {
   font-family: ${(p) => p.theme.fontBase};
 
@@ -90,6 +86,7 @@ button {
 
 // Global theme variables 
 :root {
+  --workbench-width: ${(p) => p.theme.workbenchWidth}px;
 
   // Derive transparent dark from dark theme color and alpha
   --theme-transparent-dark: ${(p) =>
