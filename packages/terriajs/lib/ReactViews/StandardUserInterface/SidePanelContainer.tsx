@@ -44,17 +44,21 @@ const SidePanelContainer: React.FC<PropsType> = (props) => {
         width:
           parseFloat(rootStyle.getPropertyValue("--workbench-width")) ||
           Number(theme.workbenchWidth),
-        height: "100%"
+        height:
+          viewState.terria.configParameters.workbenchPanelDefaultHeight ??
+          "100%"
       }}
       minWidth={300}
       maxWidth="50%"
       bounds="parent"
       disableDragging
+      dragHandleClassName="drag-handle"
       enableResizing={{ right: true }}
       onResize={(_e, _dir, ref) =>
         rootStyle.setProperty("--workbench-width", `${ref.offsetWidth}px`)
       }
       style={{ zIndex: 1 }}
+      cancel=".no-drag"
     >
       <StyledPanel
         {...props}

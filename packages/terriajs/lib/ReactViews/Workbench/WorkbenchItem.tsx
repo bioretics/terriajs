@@ -102,8 +102,9 @@ const WorkbenchItemRaw: React.FC<IProps> = observer((props) => {
     (CatalogMemberMixin.isMixedInto(item) && item.isLoading) ||
     (ReferenceMixin.isMixedInto(item) && item.isLoadingReference);
 
+  // Fork (rer3d): "no-drag" opts items out of the Rnd side-panel drag.
   return (
-    <StyledLi style={style} className={className}>
+    <StyledLi style={style} className={`${className} no-drag`}>
       <Box
         fullWidth
         justifySpaceBetween

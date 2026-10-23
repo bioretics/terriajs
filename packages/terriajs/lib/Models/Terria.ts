@@ -573,6 +573,11 @@ export interface ConfigParameters {
   playPathCameraPitchThreshold?: number;
 
   /**
+   * Default height in pixels for the workbench.
+   */
+  workbenchPanelDefaultHeight?: number;
+
+  /**
    * Near and far translucency properties of front faces of the globe based on the distance to the camera.
    * The translucency will interpolate between the nearTranslucency and farTranslucency while the camera distance falls within the lower and upper bounds of the specified nearDistance and farDistance.
    * Outside of these ranges the translucency remains clamped to the nearest bound.
@@ -880,6 +885,7 @@ export default class Terria {
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
     playPathCameraPitchThreshold: 30,
+    workbenchPanelDefaultHeight: undefined,
     globeTranslucency: undefined,
     showEnableCollisionControl: false
   };
