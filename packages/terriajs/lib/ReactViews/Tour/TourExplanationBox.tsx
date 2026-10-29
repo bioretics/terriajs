@@ -9,7 +9,7 @@ export const TourExplanationBox = styled(Box)<{ longer?: boolean }>`
   width: ${(p) => (p.longer ? `${TOUR_WIDTH + 55}` : `${TOUR_WIDTH}`)}px;
   // background-color: $modal-bg;
   z-index: ${TourExplanationBoxZIndex};
-  background: white;
+  background: ${(p) => p.theme.modalBg};
   // color: ${(p) => p.theme.textDarker};
 
   min-height: 136px;

@@ -42,7 +42,7 @@ export const ExitBtn = ({ onClick }: BtnProp) => {
         glyph={Icon.GLYPHS.close}
         css={`
           border-radius: 50%;
-          border: 2px solid white;
+          border: 2px solid ${theme.textLight};
           padding: 2px;
           &:hover {
             border-color: ${theme.colorPrimary};
@@ -53,8 +53,8 @@ export const ExitBtn = ({ onClick }: BtnProp) => {
   );
 };
 
-export const StoryIcon = styled(StyledIcon).attrs(() => ({
-  fillColor: "white",
+export const StoryIcon = styled(StyledIcon).attrs((p) => ({
+  fillColor: p.theme.textLight,
   opacity: 0.5
 }))`
   &:hover {

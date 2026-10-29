@@ -158,7 +158,7 @@
   &:focus {
     border: 0;
     svg {
-      fill: #ffffff;
+      fill: variables.$text-light;
     }
   }
 }

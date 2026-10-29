@@ -6,7 +6,7 @@ body {
   font-family: ${(p) => p.theme.fontBase};
 
   *:focus {
-    outline: 3px solid #C390F9;
+    outline: 3px solid ${(p) => p.theme.focusOutlineColor};
   }
 }
 

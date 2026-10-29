@@ -792,10 +792,10 @@ class XAxis extends React.PureComponent {
     const { scale, ...restProps } = this.props;
     return (
       <AxisBottom
-        stroke="#efefef"
-        tickStroke="#efefef"
+        stroke={labelColor}
+        tickStroke={labelColor}
         tickLabelProps={() => ({
-          fill: "#efefef",
+          fill: labelColor,
           textAnchor: "middle",
           fontSize: 12,
           fontFamily: "Arial"

@@ -11,6 +11,7 @@ import {
   useState,
   useId
 } from "react";
+import { useTheme } from "styled-components";
 import { TextSpan } from "../Text";
 import { SpacingSpan } from "../Spacing";
 import CheckboxIcon from "./Elements/CheckboxIcon";
@@ -36,6 +37,7 @@ const Checkbox = forwardRef(function Checkbox(
     ..._rest
   } = props;
 
+  const theme = useTheme();
   const [isCheckedState, setIsCheckedState] = useState(
     isCheckedProp !== undefined ? isCheckedProp : defaultChecked
   );
@@ -89,7 +91,7 @@ const Checkbox = forwardRef(function Checkbox(
         align-items: center;
         &:focus-within {
           //copy the global focus
-          outline: 3px solid #c390f9;
+          outline: 3px solid ${theme.focusOutlineColor};
         }
         ${
           !isDisabled &&

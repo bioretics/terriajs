@@ -41,7 +41,7 @@
   composes: tab-left-col from "../../tabs.scss";
   composes: scrollbars from "../../../../Sass/common/_base.scss";
   overflow-y: auto;
-  background: #ffffff;
+  background: variables.$modal-bg;
   border-right: 1px solid variables.$grey-lighter;
   padding-right: 0;
 
@@ -117,14 +117,14 @@
 }
 
 .dndBox {
-  border: 2px dashed #ddd;
+  border: 2px dashed variables.$field-border;
   flex-grow: 1;
   border-radius: 3px;
   display: flex;
   justify-content: center;
   flex-direction: column;
   text-align: center;
-  background: #f6f6f7;
+  background: variables.$modal-secondary-bg;
   width: 100%;
   margin: 6px 0;
   color: variables.$dark-lighter;
@@ -169,10 +169,10 @@
   position: absolute;
   left: 40px;
   top: 40px;
-  background: #ffffff;
+  background: variables.$modal-bg;
   border-radius: 2px;
   padding: 3px 10px;
-  border: 1px solid #ddd;
+  border: 1px solid variables.$field-border;
   // color: variables.$color-primary;
 
   &:hover,

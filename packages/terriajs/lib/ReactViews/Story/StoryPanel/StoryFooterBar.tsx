@@ -52,7 +52,6 @@ const FooterBar = ({
             <StoryIcon
               displayInline
               styledWidth="15px"
-              fillColor={"white"}
               glyph={Icon.GLYPHS.left}
             />
             <Text medium>{t(($) => $.story.prev)}</Text>
@@ -65,7 +64,6 @@ const FooterBar = ({
             displayInline
             styledWidth="15px"
             glyph={Icon.GLYPHS.menu}
-            fillColor={"white"}
           />
         </FooterButton>
         <Box paddedRatio={3}>
@@ -93,7 +91,6 @@ const FooterBar = ({
                   displayInline
                   styledWidth="15px"
                   glyph={Icon.GLYPHS.revert}
-                  fillColor={"white"}
                 />
               </>
             ) : (
@@ -103,7 +100,6 @@ const FooterBar = ({
                   displayInline
                   styledWidth="15px"
                   glyph={Icon.GLYPHS.right}
-                  fillColor={"white"}
                 />
               </>
             )}

@@ -11,6 +11,7 @@ declare namespace VariablesExportScssNamespace {
     darkMid: string;
     darkTranslucent: string;
     darkWithOverlay: string;
+    focusOutlineColor: string;
     font: string;
     fontBase: string;
     fontFeatureInfo: string;
