@@ -18,10 +18,11 @@ Toast.displayName = "Toast";
 const Container = styled.div`
   position: fixed;
   z-index: 99999;
-  bottom: 80px; //on mobile make it appear above play story button
+  top: 60px;
   left: 35%;
   @media (min-width: ${(props) => props.theme.sm}px) {
     position: absolute;
+    top: auto;
     left: 45%; // on larger screens
     bottom: 60px;
   }
