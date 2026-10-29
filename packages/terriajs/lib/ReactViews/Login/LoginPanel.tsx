@@ -81,8 +81,10 @@ const LoginPanel = observer((props: Props) => {
       setMessageKey(undefined);
       document.body.style.cursor = "wait";
 
-      const header = `Basic ${Buffer.from(`${username}:${password}`).toString(
-        "base64"
+      const header = `Basic ${btoa(
+        String.fromCharCode(
+          ...new TextEncoder().encode(`${username}:${password}`)
+        )
       )}`;
       const loginServiceUrl =
         terria.configParameters.userProfileLoginServiceUrl;
