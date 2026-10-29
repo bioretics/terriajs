@@ -4,7 +4,7 @@
   position: absolute;
   z-index: 108;
   top: variables.$map-button-top;
-  left: variables.$work-bench-width;
+  left: var(--workbench-width);
   right: variables.$padding * 2;
 
   // todo: find some non-layout-change animation technique for

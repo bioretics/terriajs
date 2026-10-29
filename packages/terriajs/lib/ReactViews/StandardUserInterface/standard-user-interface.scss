@@ -100,7 +100,7 @@
   left: 0;
 
   @media (min-width: variables.$sm) {
-    left: variables.$work-bench-width + 22px;
+    left: calc(var(--workbench-width) + 22px);
     top: 62px;
     right: 96px;
     bottom: 0;
@@ -139,7 +139,7 @@
   left: 0;
 
   @media (min-width: variables.$sm) {
-    left: variables.$work-bench-width + 22px;
+    left: calc(var(--workbench-width) + 22px);
     top: 62px;
     right: 96px;
     bottom: 0;

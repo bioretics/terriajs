@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import ViewState from "../../ReactViewModels/ViewState";
 import { withViewState } from "../Context";
 // Fork (rer3d): draggable/resizable workbench panel.
@@ -11,9 +11,6 @@ type PropsType = {
   children?: React.ReactNode;
 };
 
-const MIN_PANEL_HEIGHT = 370;
-const DEFAULT_PANEL_HEIGHT = 600;
-
 const StyledPanel = styled.div<PropsType>`
   display: flex;
   flex-direction: column;
@@ -21,7 +18,8 @@ const StyledPanel = styled.div<PropsType>`
   backdrop-filter: blur(5px);
   font-family: ${(p) => p.theme.fontPop}px;
   width: 100%;
-  height: 100%;
+  height: calc(100% - 10px);
+  margin-top: 5px;
   box-sizing: border-box;
   border-radius: 8px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -34,30 +32,31 @@ const StyledPanel = styled.div<PropsType>`
 // resize-event wiring is preserved below.
 const SidePanelContainer: React.FC<PropsType> = (props) => {
   const { viewState } = props;
+  const theme = useTheme();
   if (!props.show) return null;
 
-  const defaultPanelHeight =
-    viewState.terria.configParameters.workbenchPanelDefaultHeight ??
-    DEFAULT_PANEL_HEIGHT;
-  const initialHeight = Math.max(defaultPanelHeight, MIN_PANEL_HEIGHT);
-
+  const rootStyle = document.documentElement.style;
   return (
     <Rnd
       default={{
         x: 15,
-        y: 5,
-        width: 355,
-        height: initialHeight
+        y: 0,
+        width:
+          parseFloat(rootStyle.getPropertyValue("--workbench-width")) ||
+          Number(theme.workbenchWidth),
+        height:
+          viewState.terria.configParameters.workbenchPanelDefaultHeight ??
+          "100%"
       }}
       minWidth={300}
-      minHeight={MIN_PANEL_HEIGHT}
+      maxWidth="50%"
       bounds="parent"
-      disableDragging={!props.show}
+      disableDragging
       dragHandleClassName="drag-handle"
-      enableResizing={{
-        top: true,
-        bottom: true
-      }}
+      enableResizing={{ right: true }}
+      onResize={(_e, _dir, ref) =>
+        rootStyle.setProperty("--workbench-width", `${ref.offsetWidth}px`)
+      }
       style={{ zIndex: 1 }}
       cancel=".no-drag"
     >

@@ -27,8 +27,8 @@ const TrainerBarWrapper = styled(Box)<{ isMapFullScreen: boolean }>`
   top: 0;
   left: ${(p) =>
     p.isMapFullScreen
-      ? 0
-      : Number(p.theme.workbenchWidth) + Number(p.theme.workbenchMargin) * 2}px;
+      ? "0px"
+      : `calc(var(--workbench-width) + ${Number(p.theme.workbenchMargin) * 2}px)`};
   z-index: ${(p) => Number(p.theme.frontComponentZIndex) + 100};
 `;
 
@@ -346,9 +346,9 @@ export const TrainerBar = observer((props: TrainerBarProps) => {
       styledWidth={
         isMapFullScreen
           ? "100%"
-          : `calc(100% - ${Number(
-              Number(theme.workbenchWidth) + Number(theme.workbenchMargin) * 2
-            )}px)`
+          : `calc(100% - var(--workbench-width) - ${
+              Number(theme.workbenchMargin) * 2
+            }px)`
       }
       isMapFullScreen={isMapFullScreen}
       onClick={() => viewState.setTopElement("TrainerBar")}

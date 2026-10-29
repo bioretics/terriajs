@@ -23,7 +23,7 @@
 }
 
 .minifiedFullscreenBtnWrapper {
-  left: variables.$work-bench-width;
+  left: calc(100% - 5px);
   top: 32px;
 }
 

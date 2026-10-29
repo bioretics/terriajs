@@ -885,7 +885,7 @@ export default class Terria {
     cesiumGlobeColor: undefined,
     polylineWidth: undefined,
     playPathCameraPitchThreshold: 30,
-    workbenchPanelDefaultHeight: 600,
+    workbenchPanelDefaultHeight: undefined,
     globeTranslucency: undefined,
     showEnableCollisionControl: false
   };
