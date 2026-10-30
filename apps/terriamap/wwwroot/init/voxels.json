@@ -1,0 +1,46 @@
+{
+  "initialViewerMode": "3d",
+  "initialCamera": {
+    "west": -98,
+    "south": 18.1,
+    "east": -76.4,
+    "north": 31.9,
+    "position": {
+      "x": -133271.93970370994,
+      "y": -7635144.312082442,
+      "z": 798144.9598400292
+    },
+    "direction": {
+      "x": 0.0903000514212268,
+      "y": 0.7038705177170151,
+      "z": 0.7045652524799281
+    },
+    "up": {
+      "x": 0.05053770546538316,
+      "y": -0.7097825923344768,
+      "z": 0.7026055877554946
+    }
+  },
+  "workbench": ["voxels-gulf"],
+  "catalog": [
+    {
+      "id": "voxels-gulf",
+      "type": "3d-tiles-voxel",
+      "name": "Gulf of Mexico water temperature (HYCOM)",
+      "description": "Sea water temperature (°C) from HYCOM GOMu 0.04° expt_90.1m000 on 2022-08-15 00:00 UTC, 0–1000 m resampled to 25 layers of 40 m, vertical exaggeration ×50. Generated with `apps/terriamap/buildprocess/hycom-voxels.mjs` from https://tds.hycom.org/thredds/dodsC/GOMu0.04/expt_90.1m000.",
+      "url": "test/voxels/gulf-of-mexico/tileset.json",
+      "colorPalette": "Spectral",
+      "minimumValue": 36,
+      "maximumValue": 4,
+      "noDataValue": -999,
+      "nearestSampling": true,
+      "opacity": 1,
+      "rectangle": {
+        "west": -98,
+        "south": 18.1,
+        "east": -76.4,
+        "north": 31.9
+      }
+    }
+  ]
+}
