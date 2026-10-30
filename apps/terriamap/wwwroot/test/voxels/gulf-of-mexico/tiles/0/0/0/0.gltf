@@ -1,0 +1,87 @@
+{
+  "asset": {
+    "version": "2.0"
+  },
+  "extensionsUsed": ["EXT_primitive_voxels", "EXT_structural_metadata"],
+  "extensionsRequired": ["EXT_primitive_voxels", "EXT_structural_metadata"],
+  "extensions": {
+    "EXT_structural_metadata": {
+      "schema": {
+        "classes": {
+          "voxel": {
+            "properties": {
+              "temperature": {
+                "type": "SCALAR",
+                "componentType": "FLOAT32"
+              }
+            }
+          }
+        }
+      },
+      "propertyAttributes": [
+        {
+          "class": "voxel",
+          "properties": {
+            "temperature": {
+              "attribute": "_TEMPERATURE"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [0]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "_TEMPERATURE": 0
+          },
+          "mode": 2147483647,
+          "extensions": {
+            "EXT_primitive_voxels": {
+              "shape": 0,
+              "dimensions": [541, 346, 25]
+            },
+            "EXT_structural_metadata": {
+              "propertyAttributes": [0]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 4679650,
+      "type": "SCALAR"
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 18718600
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "temperature.bin",
+      "byteLength": 18718600
+    }
+  ]
+}
