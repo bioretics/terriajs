@@ -38,8 +38,6 @@ export default class VoxelCatalogItem extends MappableMixin(
 ) {
   static readonly type = "3d-tiles-voxel";
 
-  @observable.ref private provider: Cesium3DTilesVoxelProvider | undefined =
-    undefined;
   @observable.ref private voxelPrimitive: VoxelPrimitive | undefined =
     undefined;
 
@@ -53,19 +51,13 @@ export default class VoxelCatalogItem extends MappableMixin(
   }
 
   protected async forceLoadMapItems(): Promise<void> {
-    runInAction(() => {
-      this.provider = undefined;
-      this.voxelPrimitive = undefined;
-    });
+    runInAction(() => (this.voxelPrimitive = undefined));
     if (this.url === undefined) return;
     try {
       const provider = await Cesium3DTilesVoxelProvider.fromUrl(
         proxyCatalogItemUrl(this, this.url)
       );
-      runInAction(() => {
-        this.provider = provider;
-        this.voxelPrimitive = this.createPrimitive(provider);
-      });
+      runInAction(() => (this.voxelPrimitive = this.createPrimitive(provider)));
     } catch (e) {
       throw TerriaError.from(e, "Failed to load voxel tileset");
     }
@@ -89,7 +81,7 @@ export default class VoxelCatalogItem extends MappableMixin(
 
   @computed({ keepAlive: true })
   private get customShader(): CustomShader | undefined {
-    const name = this.provider?.names[0];
+    const name = this.voxelPrimitive?.provider.names[0];
     if (name === undefined) return undefined;
     const noData =
       this.noDataValue === undefined

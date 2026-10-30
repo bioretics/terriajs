@@ -84,6 +84,14 @@ describe("VoxelCatalogItem", function () {
     expect(second.isDestroyed()).toBe(false);
   });
 
+  it("gives a recreated primitive its own shader", async function () {
+    const first = primitive();
+    const shader = first.customShader;
+    first.destroy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(primitive().customShader).not.toBe(shader);
+  });
+
   it("errors on a non-voxel tileset", async function () {
     set("url", "/test/Cesium3DTiles/tileset.json");
     expect((await item.loadMapItems()).error).toBeDefined();
