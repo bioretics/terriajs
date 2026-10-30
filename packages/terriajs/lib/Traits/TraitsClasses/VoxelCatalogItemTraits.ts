@@ -2,6 +2,7 @@ import primitiveTrait from "../Decorators/primitiveTrait";
 import mixTraits from "../mixTraits";
 import { traitClass } from "../Trait";
 import CatalogMemberTraits from "./CatalogMemberTraits";
+import LegendOwnerTraits from "./LegendOwnerTraits";
 import MappableTraits from "./MappableTraits";
 import OpacityTraits from "./OpacityTraits";
 import UrlTraits from "./UrlTraits";
@@ -25,6 +26,7 @@ export default class VoxelCatalogItemTraits extends mixTraits(
   UrlTraits,
   MappableTraits,
   CatalogMemberTraits,
+  LegendOwnerTraits,
   OpacityTraits
 ) {
   @primitiveTrait({
