@@ -7,6 +7,7 @@ import {
   WithTranslation,
   withTranslation
 } from "react-i18next";
+import { useTheme } from "styled-components";
 import Terria from "../../../../Models/Terria";
 import ViewState from "../../../../ReactViewModels/ViewState";
 import Box from "../../../../Styled/Box";
@@ -44,6 +45,7 @@ interface ICoordsTextProps {
 
 const CoordsText = (props: ICoordsTextProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const handleCopy = async () => {
     if (!props.value || !navigator.clipboard) {
@@ -98,7 +100,7 @@ const CoordsText = (props: ICoordsTextProps) => {
             width: 35px;
             border-radius: 2px;
             margin: 2px;
-            background: #519ac2;
+            background: ${theme.colorPrimary};
           `}
           disabled={!props.isCartographic}
           onClick={props.moveTo}

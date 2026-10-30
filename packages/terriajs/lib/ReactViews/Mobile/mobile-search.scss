@@ -12,12 +12,12 @@
   }
 
   li {
-    background: #ffffff;
+    background: variables.$mobile-main-bg;
   }
 }
 
 .label {
-  color: #3f4854;
+  color: variables.$charcoal-grey;
   font-size: 12px;
   padding: variables.$padding-small variables.$padding;
   display: block;

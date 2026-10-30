@@ -66,7 +66,7 @@ const DragDropNotification: FC<DragDropNotificationProps> = observer(
       <RawButton
         css={`
           display: flex;
-          background: #ffffff;
+          background: ${theme.textLight};
           position: fixed;
           right: -280px;
           top: 80px;

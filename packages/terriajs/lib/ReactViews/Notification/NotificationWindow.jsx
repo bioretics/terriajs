@@ -101,7 +101,7 @@ const NotificationWindow = createReactClass({
                 css={{
                   backgroundColor: this.props.theme.darkLighter,
                   border: "none",
-                  color: "white"
+                  color: this.props.theme.textLight
                 }}
                 onClick={this.deny}
                 textProps={{

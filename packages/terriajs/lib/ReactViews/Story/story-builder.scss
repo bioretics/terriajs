@@ -107,9 +107,9 @@
   padding: variables.$padding-small;
   margin: variables.$padding-small;
   background: variables.$dark;
-  color: #ffffff;
+  color: variables.$text-light;
   margin: variables.$padding;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: variables.$border-style;
 
   h3 {
     font-weight: normal;
@@ -129,7 +129,7 @@
   svg {
     height: 25px;
     width: 25px;
-    fill: #ffffff;
+    fill: variables.$text-light;
   }
 }
 
@@ -152,7 +152,7 @@
   svg {
     width: 25px;
     height: 25px;
-    fill: #ffffff;
+    fill: variables.$text-light;
     position: absolute;
     left: variables.$padding;
     top: 8px;
@@ -196,7 +196,7 @@
     height: 12px;
     width: 12px;
     margin: 4px;
-    fill: #ffffff;
+    fill: variables.$text-light;
     vertical-align: bottom;
     display: inline-block;
   }
@@ -308,7 +308,7 @@
   left: 50%;
 
   svg {
-    fill: white;
+    fill: variables.$text-light;
     width: 60px;
     height: 60px;
     top: -30px;

@@ -6,7 +6,7 @@
   font-family: variables.$font-base;
   width: 320px;
   height: 100%;
-  color: #000;
+  color: variables.$text-black;
   background-color: #fff;
   position: fixed;
   z-index: 110;
@@ -30,7 +30,7 @@
   font-family: variables.$font-base;
   width: 490px;
   height: 100%;
-  color: #000;
+  color: variables.$text-black;
   flex-basis: 400px;
   background-color: #f4f4f4;
   position: fixed;
@@ -130,7 +130,7 @@
   svg {
     width: 50px;
     height: 50px;
-    fill: #fff;
+    fill: variables.$text-light;
     margin: auto;
     position: relative;
   }
@@ -171,7 +171,7 @@
   top: 50%;
   left: 50%;
   svg {
-    fill: white;
+    fill: variables.$text-light;
     width: 60px;
     height: 60px;
     top: -30px;
