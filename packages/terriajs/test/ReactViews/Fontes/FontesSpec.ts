@@ -9,6 +9,7 @@ import {
   FontesCondition,
   FontesDocument,
   getFontesDocuments,
+  imageSource,
   normalizeFontesDocument,
   OPERATORS,
   parseFontesDate,
@@ -488,6 +489,38 @@ describe("Fontes", function () {
       expect(tileRequest({ x: 4, y: 0, z: 2 }, levels)).toBeUndefined();
       expect(tileRequest({ x: 0, y: 3, z: 2 }, levels)).toBeUndefined();
       expect(tileRequest({ x: -1, y: 0, z: 2 }, levels)).toBeUndefined();
+    });
+  });
+
+  describe("image source", function () {
+    const config = {
+      documentsUrl: "documenti.geojson",
+      wmsUrl: "https://example.com/geoserver/fontes/wms"
+    };
+
+    it("prefers the COG of a side, then its WMS layer", function () {
+      const cog = { url: "https://example.com/cog/A_v.tif" };
+      expect(
+        imageSource(
+          { verso_cog_url: cog.url, verso_wms_layer: "fontes:A_v" },
+          "verso",
+          config
+        )
+      ).toEqual(cog);
+      expect(
+        imageSource({ verso_wms_layer: "fontes:A_v" }, "verso", config)
+      ).toEqual({ url: config.wmsUrl, layer: "fontes:A_v" });
+    });
+
+    it("has no image without a COG or a configured WMS", function () {
+      expect(
+        imageSource({ recto_wms_layer: "fontes:A_r" }, "recto", {
+          documentsUrl: "documenti.geojson"
+        })
+      ).toBeUndefined();
+      expect(
+        imageSource({ recto_wms_layer: "fontes:A_r" }, "verso", config)
+      ).toBeUndefined();
     });
   });
 

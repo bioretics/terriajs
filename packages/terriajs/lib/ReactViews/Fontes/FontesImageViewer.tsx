@@ -2,6 +2,7 @@ import type { GeoTIFFImage } from "geotiff";
 import L from "leaflet";
 import { FC, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import WebMapServiceCapabilities from "../../Models/Catalog/Ows/WebMapServiceCapabilities";
 import Box from "../../Styled/Box";
 import Button from "../../Styled/Button";
 import Text from "../../Styled/Text";
@@ -103,11 +104,64 @@ class CogLayer extends L.GridLayer {
   }
 }
 
-interface Props {
-  url: string;
+async function cogImage(url: string) {
+  const { fromUrl } = await import("geotiff");
+  const tiff = await fromUrl(url);
+  const count = await tiff.getImageCount();
+  const images = await Promise.all(
+    Array.from({ length: count }, (_, i) => tiff.getImage(i))
+  );
+  const levels = images.map((image) => ({
+    width: image.getWidth(),
+    height: image.getHeight()
+  }));
+  return {
+    ...levels[0],
+    crs: L.CRS.Simple,
+    layer: (options: L.GridLayerOptions) =>
+      new CogLayer(images, levels, options)
+  };
 }
 
-const FontesImageViewer: FC<Props> = ({ url }) => {
+const PIXEL_CRS = "EPSG:404000";
+
+async function wmsImage(url: string, layers: string) {
+  const capabilities = await WebMapServiceCapabilities.fromUrl(
+    `${url}?service=WMS&version=1.3.0&request=GetCapabilities`
+  );
+  const box = [(capabilities.findLayer(layers) as any)?.BoundingBox]
+    .flat()
+    .find((b) => b?.CRS === PIXEL_CRS);
+  if (!box) throw new Error(`${layers} has no ${PIXEL_CRS} bounding box`);
+  const [minx, miny, maxx, maxy] = [box.minx, box.miny, box.maxx, box.maxy].map(
+    Number
+  );
+  const width = maxx - minx;
+  const height = maxy - miny;
+  const scale = 2 ** -maxNativeZoom(width, height);
+  return {
+    width,
+    height,
+    crs: L.Util.extend({}, L.CRS.Simple, {
+      code: PIXEL_CRS,
+      transformation: new L.Transformation(
+        scale,
+        -scale * minx,
+        -scale,
+        scale * maxy
+      )
+    }),
+    layer: (options: L.TileLayerOptions) =>
+      L.tileLayer.wms(url, { ...options, layers, format: "image/jpeg" })
+  };
+}
+
+interface Props {
+  url: string;
+  layer?: string;
+}
+
+const FontesImageViewer: FC<Props> = ({ url, layer }) => {
   const { t } = useTranslation();
   const container = useRef<HTMLDivElement>(null);
   const map = useRef<{ map: L.Map; bounds: L.LatLngBounds }>(undefined);
@@ -120,37 +174,30 @@ const FontesImageViewer: FC<Props> = ({ url }) => {
     setStatus("loading");
     (async () => {
       try {
-        const { fromUrl } = await import("geotiff");
-        const tiff = await fromUrl(url);
-        const count = await tiff.getImageCount();
-        const images = await Promise.all(
-          Array.from({ length: count }, (_, i) => tiff.getImage(i))
-        );
+        const image = layer ? await wmsImage(url, layer) : await cogImage(url);
         if (cancelled || !container.current) return;
 
-        const levels = images.map((image) => ({
-          width: image.getWidth(),
-          height: image.getHeight()
-        }));
-        const zoom = maxNativeZoom(levels[0].width, levels[0].height);
+        const zoom = maxNativeZoom(image.width, image.height);
         const leaflet = L.map(container.current, {
-          crs: L.CRS.Simple,
+          crs: image.crs,
           minZoom: 0,
           maxZoom: zoom + 2,
           zoomSnap: 0.25,
           attributionControl: false
         });
         const bounds = L.latLngBounds(
-          leaflet.unproject([0, levels[0].height], zoom),
-          leaflet.unproject([levels[0].width, 0], zoom)
+          leaflet.unproject([0, image.height], zoom),
+          leaflet.unproject([image.width, 0], zoom)
         );
-        new CogLayer(images, levels, {
-          bounds,
-          noWrap: true,
-          tileSize: TILE_SIZE,
-          maxNativeZoom: zoom,
-          maxZoom: zoom + 2
-        }).addTo(leaflet);
+        image
+          .layer({
+            bounds,
+            noWrap: true,
+            tileSize: TILE_SIZE,
+            maxNativeZoom: zoom,
+            maxZoom: zoom + 2
+          })
+          .addTo(leaflet);
         leaflet.fitBounds(bounds);
         map.current = { map: leaflet, bounds };
         setStatus("ready");
@@ -164,7 +211,7 @@ const FontesImageViewer: FC<Props> = ({ url }) => {
       map.current?.map.remove();
       map.current = undefined;
     };
-  }, [url]);
+  }, [url, layer]);
 
   return (
     <Box column fullWidth fullHeight position="relative">

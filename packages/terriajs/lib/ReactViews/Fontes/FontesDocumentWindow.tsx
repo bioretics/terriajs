@@ -10,7 +10,7 @@ import Icon, { StyledIcon } from "../../Styled/Icon";
 import Text from "../../Styled/Text";
 import Collapsible from "../Custom/Collapsible/Collapsible";
 import { useViewState } from "../Context";
-import { FontesDocument, getFontesDocuments } from "./Fontes";
+import { FontesDocument, getFontesDocuments, imageSource } from "./Fontes";
 import { FONTES_SECTIONS, FontesField } from "./fontesFields";
 import FontesImageViewer from "./FontesImageViewer";
 import { addRectoToMap, zoomToDocument } from "./fontesMap";
@@ -132,8 +132,9 @@ const FontesDocumentWindow: FC = observer(() => {
   if (!config || !id) return null;
 
   const { properties } = doc ?? { properties: {} as Record<string, unknown> };
-  const imageUrl =
-    side === "recto" ? properties.recto_cog_url : properties.verso_cog_url;
+  const image = (name: "recto" | "verso") =>
+    imageSource(properties, name, config, terria.corsProxy);
+  const current = image(side);
   const canDownload =
     properties.download_consentito !== false &&
     terria.isFeatureAllowedByProfile("FontesDownload");
@@ -207,7 +208,7 @@ const FontesDocumentWindow: FC = observer(() => {
                     key={name}
                     primary={side === name}
                     secondary={side !== name}
-                    disabled={typeof properties[`${name}_cog_url`] !== "string"}
+                    disabled={!image(name)}
                     onClick={() => setSide(name)}
                   >
                     {name === "recto"
@@ -216,8 +217,12 @@ const FontesDocumentWindow: FC = observer(() => {
                   </Button>
                 ))}
               </Box>
-              {typeof imageUrl === "string" ? (
-                <FontesImageViewer key={imageUrl} url={imageUrl} />
+              {current ? (
+                <FontesImageViewer
+                  key={current.layer ?? current.url}
+                  url={current.url}
+                  layer={current.layer}
+                />
               ) : (
                 <Box centered css={"flex: 1;"}>
                   <Text textLight medium>

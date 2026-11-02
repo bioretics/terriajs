@@ -4,6 +4,7 @@ import Papa from "papaparse";
 import CorsProxy from "../../Core/CorsProxy";
 import { sanitizeCsvValue } from "../../Core/sanitizeCsv";
 import loadJson from "../../Core/loadJson";
+import { FontesConfig } from "../../Models/InitSource";
 import { FONTES_FIELDS, FontesField, FontesFieldType } from "./fontesFields";
 
 export interface FontesDateRange {
@@ -146,6 +147,24 @@ export function getFontesDocuments(
     documentsByUrl.set(url, documents);
   }
   return documents;
+}
+
+export function imageSource(
+  properties: Record<string, unknown>,
+  side: "recto" | "verso",
+  config: FontesConfig,
+  corsProxy?: CorsProxy
+): { url: string; layer?: string } | undefined {
+  const cogUrl = properties[`${side}_cog_url`];
+  const layer = properties[`${side}_wms_layer`];
+  if (typeof cogUrl === "string") return { url: cogUrl };
+  if (config.wmsUrl && typeof layer === "string") {
+    return {
+      url: corsProxy?.getURLProxyIfNecessary(config.wmsUrl) ?? config.wmsUrl,
+      layer
+    };
+  }
+  return undefined;
 }
 
 export const ALL_FIELDS = "*";
