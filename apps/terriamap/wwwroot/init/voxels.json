@@ -24,23 +24,49 @@
   "workbench": ["voxels-gulf"],
   "catalog": [
     {
-      "id": "voxels-gulf",
-      "type": "3d-tiles-voxel",
-      "name": "Gulf of Mexico water temperature (HYCOM)",
-      "description": "Sea water temperature (°C) from HYCOM GOMu 0.04° expt_90.1m000 on 2022-08-15 00:00 UTC, 0–1000 m resampled to 25 layers of 40 m, vertical exaggeration ×50. Generated with `apps/terriamap/buildprocess/hycom-voxels.mjs` from https://tds.hycom.org/thredds/dodsC/GOMu0.04/expt_90.1m000.",
-      "url": "test/voxels/gulf-of-mexico/tileset.json",
-      "colorPalette": "Spectral",
-      "minimumValue": 36,
-      "maximumValue": 4,
-      "noDataValue": -999,
-      "nearestSampling": true,
-      "opacity": 1,
-      "rectangle": {
-        "west": -98,
-        "south": 18.1,
-        "east": -76.4,
-        "north": 31.9
-      }
+      "id": "voxels-group",
+      "type": "group",
+      "name": "Voxels",
+      "members": [
+        {
+          "id": "voxels-gulf",
+          "type": "3d-tiles-voxel",
+          "name": "Gulf of Mexico water temperature (HYCOM)",
+          "description": "Sea water temperature (°C) from HYCOM GOMu 0.04° expt_90.1m000 on 2022-08-15 00:00 UTC, 0–1000 m resampled to 25 layers of 40 m, vertical exaggeration ×50. Generated with `apps/terriamap/buildprocess/hycom-voxels.mjs` from https://tds.hycom.org/thredds/dodsC/GOMu0.04/expt_90.1m000.",
+          "url": "test/voxels/gulf-of-mexico/tileset.json",
+          "colorPalette": "Spectral",
+          "minimumValue": 36,
+          "maximumValue": 4,
+          "noDataValue": -999,
+          "nearestSampling": true,
+          "opacity": 1,
+          "rectangle": {
+            "west": -98,
+            "south": 18.1,
+            "east": -76.4,
+            "north": 31.9
+          }
+        },
+        {
+          "id": "voxels-geotop-amsterdam",
+          "type": "3d-tiles-voxel",
+          "name": "GeoTOP Amsterdam lithology (online)",
+          "description": "GeoTOP lithology classes (0 anthropogenic, 1 peat, 2 clay, 3 clayey sand, 5 fine sand, 6 medium sand, 7 coarse sand, 8 gravel) of the Dutch national subsurface model (BRO / TNO), streamed online from https://bedrock.engineer/geotop-voxels/.",
+          "url": "https://bedrock.engineer/geotop-voxels/geotop_amsterdam/tileset.json",
+          "colorPalette": "Turbo",
+          "minimumValue": 0,
+          "maximumValue": 8,
+          "noDataValue": -9999,
+          "nearestSampling": true,
+          "opacity": 1,
+          "rectangle": {
+            "west": 4.6435,
+            "south": 52.2491,
+            "east": 5.1279,
+            "north": 52.4954
+          }
+        }
+      ]
     }
   ]
 }
