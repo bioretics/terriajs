@@ -31,6 +31,13 @@ export const MapColumn: FC<IMapColumnProps> = observer(
     const theme = useTheme();
     const { t } = useTranslation();
     const loaderRef = useRef(null);
+    const mapNavigation = (
+      <MapNavigation
+        viewState={viewState}
+        navItems={customElements.nav}
+        elementConfig={viewState.terria.elements.get("map-navigation")}
+      />
+    );
 
     return (
       <Box
@@ -67,11 +74,7 @@ export const MapColumn: FC<IMapColumnProps> = observer(
                 animationDuration={animationDuration}
                 elementConfig={viewState.terria.elements.get("menu-bar")}
               />
-              <MapNavigation
-                viewState={viewState}
-                navItems={customElements.nav}
-                elementConfig={viewState.terria.elements.get("map-navigation")}
-              />
+              {!viewState.useSmallScreenInterface && mapNavigation}
             </div>
           )}
           <Box
@@ -130,6 +133,7 @@ export const MapColumn: FC<IMapColumnProps> = observer(
                   right: 0;
                 `}
               >
+                {viewState.useSmallScreenInterface && mapNavigation}
                 <BottomLeftBar />
                 <BottomDock
                   terria={viewState.terria}

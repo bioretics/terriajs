@@ -28,6 +28,18 @@ describe("registerMapNavigations", function () {
     expect(controllerFor(MeasurePointTool.id)).toBeDefined();
   });
 
+  it("keeps the registered controllers when called again", function () {
+    const tool = controllerFor(MeasureLineTool.id);
+    tool.activate();
+
+    registerMapNavigations(viewState);
+
+    expect(controllerFor(MeasureLineTool.id)).toBe(tool);
+    expect(controllerFor(MeasureLineTool.id).active).toBe(true);
+
+    tool.deactivate();
+  });
+
   describe("when a measure tool is opened", function () {
     it("closes the play path panel", function () {
       runInAction(() => {

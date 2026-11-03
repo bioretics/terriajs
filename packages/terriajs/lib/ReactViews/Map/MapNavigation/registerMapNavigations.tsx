@@ -43,6 +43,9 @@ import MeasureTools from "../../../Models/MeasureTools";
 export const registerMapNavigations = (viewState: ViewState) => {
   const terria = viewState.terria;
   const mapNavigationModel = terria.mapNavigationModel;
+  if (mapNavigationModel.findItem(ZOOM_CONTROL_ID)) {
+    return;
+  }
 
   const compassController = new GenericMapNavigationItemController({
     viewerMode: ViewerMode.Cesium,

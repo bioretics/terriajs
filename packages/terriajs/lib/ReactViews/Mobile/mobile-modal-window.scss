@@ -6,7 +6,7 @@
   position: fixed;
   top: variables.$mobile-header-height;
   bottom: 0;
-  background: rgba(#fff, 0.9);
+  background: #fff;
   left: 0;
   right: 0;
   color: variables.$modal-text;
@@ -24,6 +24,7 @@
 
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
   padding: 0;
   height: 100%;
 }

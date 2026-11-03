@@ -157,19 +157,16 @@ class MobileModalWindow extends Component {
                 {t(($) => $.mobile.doneBtnText)}
               </button>
             )}
-            <button
-              type="button"
-              disabled={
-                mobileView !== this.props.viewState.mobileViewOptions.preview
-              }
-              className={classNames(Styles.backButton, {
-                [Styles.backButtonInactive]:
-                  mobileView !== this.props.viewState.mobileViewOptions.preview
-              })}
-              onClick={() => this.goBack()}
-            >
-              <Icon className={Styles.iconBack} glyph={Icon.GLYPHS.left} />
-            </button>
+            {mobileView === this.props.viewState.mobileViewOptions.preview && (
+              <button
+                type="button"
+                className={Styles.backButton}
+                aria-label={t(($) => $.general.back)}
+                onClick={() => this.goBack()}
+              >
+                <Icon className={Styles.iconBack} glyph={Icon.GLYPHS.left} />
+              </button>
+            )}
           </div>
 
           {this.renderModalContent()}

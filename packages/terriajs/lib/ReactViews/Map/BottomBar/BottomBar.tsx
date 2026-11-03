@@ -20,6 +20,11 @@ export const BottomBar: VFC = () => {
         background: ${theme.darkTranslucent ?? theme.transparentDark};
         backdrop-filter: blur(5px);
         margin-top: 2px;
+        ${
+          viewState.useSmallScreenInterface &&
+          `margin-left: auto;
+        margin-right: auto;`
+        }
       `}
     >
       <MapCredits
