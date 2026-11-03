@@ -88,7 +88,7 @@ class VideoGuide extends Component {
             backgroundBlackOverlay={backgroundBlackOverlay}
             css={`
               svg {
-                fill: #fff;
+                fill: ${this.props.theme.textLight};
                 width: 60px;
                 height: 60px;
                 top: -30px;

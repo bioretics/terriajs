@@ -18,16 +18,16 @@ interface PropTypes {
   items: IMapNavigationItem[];
 }
 
-const CollapsedNavigationBox = styled(Box).attrs({
+const CollapsedNavigationBox = styled(Box).attrs((p) => ({
   position: "absolute",
   styledWidth: "500px",
   styledMaxHeight: "320px",
-  backgroundColor: "white",
+  backgroundColor: p.theme.modalBg,
   rounded: true,
   paddedRatio: 4,
   overflowY: "auto",
   scroll: true
-})`
+}))`
   z-index: 1000;
   left: 50%;
   top: 50%;

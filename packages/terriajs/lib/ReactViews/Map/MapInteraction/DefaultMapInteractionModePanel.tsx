@@ -40,11 +40,11 @@ const Panel = styled.div<{ isActive: boolean }>`
 
   transform: translateX(-50%);
   left: 50%;
-  background: #fff;
+  background: ${(p) => p.theme.textLight};
   width: 200px;
   top: 50px;
   z-index: 999;
-  color: #000;
+  color: ${(p) => p.theme.textBlack};
   padding: ${(p) => p.theme.padding};
 
   &:empty {

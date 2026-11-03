@@ -76,7 +76,7 @@ export const StyledButton = styled.button<IStyledButtonProps>`
 
   ${(props) =>
     props.primary &&
-    `     color: #fff;
+    `     color: ${props.theme.textLight};
     background-color: ${props.theme.colorPrimary};
     border: none;
     border-radius: 4px;
