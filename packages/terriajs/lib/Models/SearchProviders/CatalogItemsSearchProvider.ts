@@ -46,7 +46,7 @@ export default class CatalogItemsSearchProvider extends CatalogItemsSearchProvid
     this.setTrait(
       CommonStrata.defaults,
       "minCharacters",
-      terria.searchBarModel.minCharacters
+      terria.searchBarModel.config.minCharacters
     );
   }
 
