@@ -99,7 +99,6 @@ import IElementConfig from "./IElementConfig";
 import InitSource, {
   InitSourceData,
   InitSourceFromData,
-  MicrozonationConfig,
   StartData,
   StoryData,
   isInitFromData,
@@ -114,7 +113,7 @@ import CatalogIndex from "./SearchProviders/CatalogIndex";
 import { SearchBarModel } from "./SearchProviders/SearchBarModel";
 import ShareDataService from "./ShareDataService";
 import TimelineStack from "./TimelineStack";
-import { isViewerMode, setViewerMode, MapViewersKey } from "./ViewerMode";
+import { isViewerMode, setViewerMode } from "./ViewerMode";
 import Workbench from "./Workbench";
 import SelectableDimensionWorkflow from "./Workflows/SelectableDimensionWorkflow";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
