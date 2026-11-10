@@ -80,6 +80,7 @@ interface RerPoiTraitSnapshot {
   labelOutlineWidth: number;
   labelTextColor: string;
   levelIdField: string;
+  levelPreloadBuffer: number;
   markerSize: number;
   maxLevelId: number | undefined;
   minLevelId: number | undefined;
@@ -91,6 +92,13 @@ interface RerPoiTraitSnapshot {
   showLabels: boolean;
   labelVisibilityThreshold: number;
   where: string;
+}
+
+interface RenderedGlobeTile {
+  level: number;
+  x: number;
+  y: number;
+  rectangle: Rectangle;
 }
 
 interface RerPoiEntityCache {
@@ -113,6 +121,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   readonly traits = RerPoiCatalogItemTraits.traits;
 
   private removeCesiumCameraChangedListener: (() => void) | undefined;
+  private removeCesiumTileRefineListener: (() => void) | undefined;
   private removeLeafletViewportChangedListener: (() => void) | undefined;
   private removeBeforeViewerChangedListener: (() => void) | undefined;
   private removeViewerChangedListener: (() => void) | undefined;
@@ -129,6 +138,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private dynamicReloadQueued = false;
   private dynamicReloadInProgress = false;
   private currentViewportLevelId: number | undefined;
+  private lastRenderedTilesSignature: string | undefined;
   private readonly webMercatorTilingScheme = new WebMercatorTilingScheme();
 
   @observable private cameraTiltLimitExceeded = false;
@@ -166,6 +176,96 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
 
     this.queueDynamicReload();
   };
+
+  private readonly onCesiumTileRefine = () => {
+    if (!this.isShownOnMainMap || this.isCameraPastTiltLimit()) return;
+    if (!this.isCesium3D) return;
+
+    const signature = this.getRenderedTilesSignature();
+    if (signature === this.lastRenderedTilesSignature) return;
+    this.lastRenderedTilesSignature = signature;
+
+    // Visibility always tracks the current tile set.
+    this.syncCachedEntityVisibility(
+      this.activeDynamicQuery ?? this.getDynamicViewportQuery()
+    );
+
+    // If terrain refined past the preloaded max LEVEL_ID, fetch more.
+    const nextQuery = this.getDynamicViewportQuery();
+    if (
+      nextQuery &&
+      this.activeDynamicQuery &&
+      nextQuery.filterKey !== this.activeDynamicQuery.filterKey
+    ) {
+      this.queueDynamicReload();
+    }
+  };
+
+  private get isCesium3D(): boolean {
+    return this.terria.mainViewer.viewerMode === ViewerMode.Cesium;
+  }
+
+  /**
+   * Returns the Cesium globe surface tiles currently being rendered.
+   * Only meaningful in Cesium 3D (mixed terrain LOD). Uses private Cesium
+   * `_surface._tilesToRender` the same way as pickTriangle.
+   */
+  private getRenderedGlobeTiles(): RenderedGlobeTile[] {
+    if (!this.isCesium3D) return [];
+
+    const globe = this.terria.cesium?.scene.globe as
+      | { _surface?: { _tilesToRender?: any[] } }
+      | undefined;
+    const tiles = globe?._surface?._tilesToRender;
+    if (!tiles?.length) return [];
+
+    const result: RenderedGlobeTile[] = [];
+    for (const tile of tiles) {
+      if (
+        !tile?.rectangle ||
+        !Number.isFinite(tile.level) ||
+        !Number.isFinite(tile.x) ||
+        !Number.isFinite(tile.y)
+      ) {
+        continue;
+      }
+      result.push({
+        level: tile.level as number,
+        x: tile.x as number,
+        y: tile.y as number,
+        rectangle: tile.rectangle as Rectangle
+      });
+    }
+    return result;
+  }
+
+  private getRenderedTilesSignature(): string {
+    const tiles = this.getRenderedGlobeTiles();
+    if (tiles.length === 0) return "";
+    return tiles
+      .map((tile) => `${tile.level}/${tile.x}/${tile.y}`)
+      .sort()
+      .join("|");
+  }
+
+  private findRenderedTileForPosition(
+    longitude: number,
+    latitude: number,
+    tiles: RenderedGlobeTile[]
+  ): RenderedGlobeTile | undefined {
+    for (const tile of tiles) {
+      const rect = tile.rectangle;
+      if (
+        longitude >= rect.west &&
+        longitude <= rect.east &&
+        latitude >= rect.south &&
+        latitude <= rect.north
+      ) {
+        return tile;
+      }
+    }
+    return undefined;
+  }
 
   private readonly onLanguageChanged = (language: string) => {
     runInAction(() => {
@@ -396,6 +496,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       labelOutlineWidth: this.getRerPoiTraitForSnapshot("labelOutlineWidth"),
       labelTextColor: this.getRerPoiTraitForSnapshot("labelTextColor"),
       levelIdField: this.getRerPoiTraitForSnapshot("levelIdField"),
+      levelPreloadBuffer: this.getRerPoiTraitForSnapshot("levelPreloadBuffer"),
       markerSize: this.getRerPoiTraitForSnapshot("markerSize"),
       maxLevelId: this.getRerPoiTraitForSnapshot("maxLevelId"),
       minLevelId: this.getRerPoiTraitForSnapshot("minLevelId"),
@@ -561,6 +662,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
+    this.lastRenderedTilesSignature = undefined;
     this.clearTransientShortReport();
   }
 
@@ -597,6 +699,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     this.pendingDynamicQuery = undefined;
     this.activeDynamicQuery = undefined;
     this.currentViewportLevelId = undefined;
+    this.lastRenderedTilesSignature = undefined;
     this.clearTransientShortReport();
   }
 
@@ -615,6 +718,18 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         removeChanged();
         removeMoveEnd();
       };
+
+      // Cesium 3D only: re-sync POI visibility when terrain tiles refine.
+      if (this.isCesium3D) {
+        const removePostRender = cesium.scene.postRender.addEventListener(
+          this.onCesiumTileRefine
+        );
+        this.removeCesiumTileRefineListener = () => {
+          removePostRender();
+        };
+        this.lastRenderedTilesSignature = this.getRenderedTilesSignature();
+      }
+
       this.onDynamicViewportChanged();
       return;
     }
@@ -667,6 +782,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private detachCurrentViewerListener() {
     this.removeCesiumCameraChangedListener?.();
     this.removeCesiumCameraChangedListener = undefined;
+    this.removeCesiumTileRefineListener?.();
+    this.removeCesiumTileRefineListener = undefined;
     this.removeLeafletViewportChangedListener?.();
     this.removeLeafletViewportChangedListener = undefined;
   }
@@ -1224,30 +1341,67 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     let visiblePoiCount = 0;
     let onScreenPoiCount = 0;
 
+    const usePerTileVisibility = this.isCesium3D;
+    const renderedTiles = usePerTileVisibility
+      ? this.getRenderedGlobeTiles()
+      : [];
+
+    // Cesium 3D with no tiles yet: fall back to global level-range visibility
+    // until the globe surface has something to render.
+    const perTileActive = usePerTileVisibility && renderedTiles.length > 0;
+
     for (const [id, entity] of referenceCache.liveEntityByObjectId) {
-      const inQueryRectangle = isEntityInRectangle(
-        entity,
-        query.queryRectangle
-      );
-      const onScreen = isEntityInRectangle(entity, query.screenRectangle);
-      const inLevelRange = this.isEntityInLevelRange(
-        entity,
-        now,
-        minLevelId,
-        maxLevelId
-      );
       const matchesQueryableFilters = this.matchesQueryableFilters(entity, now);
-      const isVisible =
-        this.isProtectedLevelId(entity, now) ||
-        (inQueryRectangle && inLevelRange && matchesQueryableFilters);
+      const isProtected = this.isProtectedLevelId(entity, now);
+      const entityOnScreen = isEntityInRectangle(entity, query.screenRectangle);
+
+      let isVisible = false;
+      let countsTowardLabelThreshold = false;
+
+      if (isProtected) {
+        isVisible = true;
+        countsTowardLabelThreshold = true;
+      } else if (perTileActive) {
+        const pos = entity.position?.getValue(now);
+        const carto = pos ? Cartographic.fromCartesian(pos) : undefined;
+        const tile = carto
+          ? this.findRenderedTileForPosition(
+              carto.longitude,
+              carto.latitude,
+              renderedTiles
+            )
+          : undefined;
+
+        if (tile) {
+          const inLevelRange = this.isEntityInLevelRange(
+            entity,
+            now,
+            minLevelId,
+            tile.level
+          );
+          isVisible = inLevelRange && matchesQueryableFilters;
+          countsTowardLabelThreshold = isVisible && entityOnScreen;
+        }
+        // No containing rendered tile → hide.
+      } else {
+        const inQueryRectangle = isEntityInRectangle(
+          entity,
+          query.queryRectangle
+        );
+        const inLevelRange = this.isEntityInLevelRange(
+          entity,
+          now,
+          minLevelId,
+          maxLevelId
+        );
+        isVisible = inQueryRectangle && inLevelRange && matchesQueryableFilters;
+        countsTowardLabelThreshold =
+          entityOnScreen && inLevelRange && matchesQueryableFilters;
+      }
+
       visibilityByObjectId.set(id, isVisible);
       if (isVisible) visiblePoiCount += 1;
-      if (
-        this.isProtectedLevelId(entity, now) ||
-        (onScreen && inLevelRange && matchesQueryableFilters)
-      ) {
-        onScreenPoiCount += 1;
-      }
+      if (countsTowardLabelThreshold) onScreenPoiCount += 1;
     }
 
     const labelThreshold = this.getRerPoiTrait("labelVisibilityThreshold");
@@ -1298,7 +1452,14 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       viewerScale: this.getCurrentViewerScale(),
       minLevelId,
       maxLevelId,
-      imageryLevel: this.currentViewportLevelId
+      imageryLevel: this.currentViewportLevelId,
+      perTileVisibility: perTileActive,
+      renderedTileCount: renderedTiles.length,
+      renderedTileLevels: perTileActive
+        ? Array.from(new Set(renderedTiles.map((t) => t.level))).sort(
+            (a, b) => a - b
+          )
+        : undefined
     });
     runInAction(() => {
       this.numberOfTotalElements = totalPoiCount;
@@ -1852,11 +2013,21 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     const levelIdField = this.getRerPoiTrait("levelIdField");
 
     let viewportLevelId: number | undefined;
+    let levelPreloadBuffer = 0;
 
-    if (
-      this.terria.mainViewer.viewerMode === ViewerMode.Cesium ||
-      this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D
-    ) {
+    if (this.isCesium3D) {
+      const renderedTiles = this.getRenderedGlobeTiles();
+      if (renderedTiles.length > 0) {
+        viewportLevelId = Math.max(...renderedTiles.map((tile) => tile.level));
+      } else {
+        viewportLevelId = this.getCesiumWebMercatorLevel();
+      }
+      this.currentViewportLevelId = viewportLevelId;
+      levelPreloadBuffer = Math.max(
+        0,
+        this.getRerPoiTrait("levelPreloadBuffer")
+      );
+    } else if (this.terria.mainViewer.viewerMode === ViewerMode.Cesium2D) {
       this.currentViewportLevelId = this.getCesiumWebMercatorLevel();
       viewportLevelId = this.currentViewportLevelId;
     } else {
@@ -1865,9 +2036,11 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
     }
 
     const maxLevelId =
-      viewportLevelId !== undefined && highestLevelId !== undefined
-        ? Math.min(viewportLevelId, highestLevelId)
-        : viewportLevelId;
+      viewportLevelId !== undefined
+        ? highestLevelId !== undefined
+          ? Math.min(viewportLevelId + levelPreloadBuffer, highestLevelId)
+          : viewportLevelId + levelPreloadBuffer
+        : undefined;
 
     return {
       minLevelId,
@@ -1876,7 +2049,8 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         this.getRerPoiTrait("where"),
         levelIdField,
         minLevelId,
-        maxLevelId
+        maxLevelId,
+        this.isCesium3D ? levelPreloadBuffer : 0
       ].join("|")
     };
   }
@@ -1916,6 +2090,7 @@ function createDefaultRerPoiTraitSnapshot(): RerPoiTraitSnapshot {
     labelOutlineWidth: getDefaultRerPoiTrait("labelOutlineWidth"),
     labelTextColor: getDefaultRerPoiTrait("labelTextColor"),
     levelIdField: getDefaultRerPoiTrait("levelIdField"),
+    levelPreloadBuffer: getDefaultRerPoiTrait("levelPreloadBuffer"),
     markerSize: getDefaultRerPoiTrait("markerSize"),
     maxLevelId: getDefaultRerPoiTrait("maxLevelId"),
     minLevelId: getDefaultRerPoiTrait("minLevelId"),
