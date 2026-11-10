@@ -195,7 +195,7 @@ const CursorPrompt = styled.div.attrs<CursorPromptProps>(({ x, y }) => ({
   white-space: nowrap;
   max-width: 500px;
   background-color: #2563eb;
-  color: white;
+  color: ${(p) => p.theme.textLight};
   padding: 12px;
   border-radius: 6px;
   box-shadow: 0px 10px 15px -3px #0000001a;

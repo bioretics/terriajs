@@ -165,7 +165,7 @@
   composes: btn from "../../Sass/common/_buttons.scss";
 
   padding: 5px;
-  fill: #08abd5;
+  fill: variables.$turquoise-blue;
 
   svg {
     width: 20px;
@@ -191,6 +191,6 @@
   &:focus {
     border: 2px solid #404855;
     background: #404855;
-    color: white;
+    color: variables.$text-light;
   }
 }

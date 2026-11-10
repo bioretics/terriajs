@@ -7,19 +7,19 @@
     margin: 0 auto;
     background: none;
     border: none;
-    color: #000;
+    color: variables.$text-black;
     margin-top: -10px;
   }
 
   .react-datepicker .react-datepicker__day {
-    color: #fff;
+    color: variables.$text-light;
     border: 1px solid #3498db;
     border-radius: 3px;
   }
 
   .react-datepicker .react-datepicker__day:hover {
     background: variables.$color-primary;
-    color: #fff;
+    color: variables.$text-light;
   }
 
   .react-datepicker .react-datepicker__day--disabled,
@@ -34,7 +34,7 @@
   }
 
   .Select {
-    color: #000;
+    color: variables.$text-black;
   }
 
   .terria .react-datepicker__header,
@@ -45,7 +45,7 @@
 
   .terria .react-datepicker__current-month,
   .terria .react-datepicker__day-name {
-    color: #fff;
+    color: variables.$text-light;
   }
 
   .terria .react-datepicker__current-month {
@@ -59,7 +59,7 @@
 
     &:is(:focus-within) .react-datepicker__day--keyboard-selected {
       background-color: variables.get-hover-color(variables.$color-primary);
-      color: #fff;
+      color: variables.$text-light;
     }
   }
 }

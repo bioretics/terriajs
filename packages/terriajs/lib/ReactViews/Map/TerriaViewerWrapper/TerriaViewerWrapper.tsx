@@ -89,12 +89,12 @@ const StyledMapPlaceholder = styled.div`
   left: 0;
   bottom: 0;
   right: 0;
-  color: black;
+  color: ${(p) => p.theme.textBlack};
   text-align: center;
   width: 100%;
   height: 25%;
   margin: auto;
   @media (min-width: ${(p) => p.theme.sm}px) {
-    color: white;
+    color: ${(p) => p.theme.textLight};
   }
 `;
