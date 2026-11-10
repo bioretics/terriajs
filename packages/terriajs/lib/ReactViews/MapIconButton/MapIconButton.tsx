@@ -1,4 +1,4 @@
-import { ReactNode, RefObject, useRef, useState } from "react";
+import { ReactNode, RefObject, useEffect, useRef, useState } from "react";
 import styled, { useTheme } from "styled-components";
 import Box from "../../Styled/Box";
 import { RawButton } from "../../Styled/Button";
@@ -100,6 +100,7 @@ interface IMapIconButtonProps extends IStyledMapIconButtonProps {
   className?: string;
   buttonRef?: RefObject<any>;
   noExpand?: boolean;
+  onExpandedChange?: (width: number) => void;
 }
 
 function MapIconButton(props: IMapIconButtonProps) {
@@ -119,7 +120,19 @@ function MapIconButton(props: IMapIconButtonProps) {
   } = props;
   const expanded = !noExpand && (isExpanded || neverCollapse) && children;
   const buttonRef = useRef();
+  const labelRef = useRef<HTMLDivElement>(null);
+  const onExpandedChangeRef = useRef(props.onExpandedChange);
+  onExpandedChangeRef.current = props.onExpandedChange;
+  const isShown = !!expanded;
   const theme = useTheme();
+
+  useEffect(() => {
+    onExpandedChangeRef.current?.(
+      isShown && labelRef.current
+        ? Math.min(labelRef.current.scrollWidth, 150) + 10
+        : 0
+    );
+  }, [isShown]);
 
   // const handleAway = () => setTimeout(() => setExpanded(false), 1000);
   const handleAway = () => setExpanded(false);
@@ -165,6 +178,7 @@ function MapIconButton(props: IMapIconButtonProps) {
         )}
         {children && (
           <TextSpan
+            ref={labelRef}
             noWrap
             medium
             css={`

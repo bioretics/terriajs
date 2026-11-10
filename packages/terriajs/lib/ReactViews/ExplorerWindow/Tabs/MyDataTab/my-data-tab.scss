@@ -140,6 +140,10 @@
     margin: 5% auto;
     opacity: 0.6;
   }
+
+  @media (hover: none) and (pointer: coarse) {
+    display: none;
+  }
 }
 
 .addedData {

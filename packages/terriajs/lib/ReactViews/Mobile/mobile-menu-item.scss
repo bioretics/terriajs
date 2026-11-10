@@ -27,13 +27,23 @@
   composes: item-simple;
   composes: btn from "../../Sass/common/_buttons.scss";
 
-  &:hover,
   &:focus {
     color: variables.$color-primary;
     text-decoration: underline;
     border-bottom: 1px solid variables.$grey-lighter;
     svg {
       fill: variables.$color-primary;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: variables.$color-primary;
+      text-decoration: underline;
+      border-bottom: 1px solid variables.$grey-lighter;
+      svg {
+        fill: variables.$color-primary;
+      }
     }
   }
 }
