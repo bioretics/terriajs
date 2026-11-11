@@ -7,6 +7,7 @@ import ViewState from "../../../lib/ReactViewModels/ViewState";
 import LoginPanel from "../../../lib/ReactViews/Login/LoginPanel";
 import { worker } from "../../mocks/browser";
 import { renderWithContexts } from "../withContext";
+import { ConfigStrata } from "../../../lib/Models/Config/ConfigStrata";
 
 const LOGIN_URL = "https://example.com/auth/login";
 
@@ -28,7 +29,11 @@ describe("LoginPanel", function () {
   beforeEach(function () {
     terria = new Terria({ baseUrl: "./" });
     viewState = new ViewState({ terria });
-    terria.configParameters.userProfileLoginServiceUrl = LOGIN_URL;
+    terria.configParameters.setValue(
+      ConfigStrata.user,
+      "userProfileLoginServiceUrl",
+      LOGIN_URL
+    );
     spyOn(terria.corsProxy, "getURL").and.returnValue(LOGIN_URL);
     runInAction(() => {
       viewState.isLoginPanelVisible = true;
@@ -214,7 +219,11 @@ describe("LoginPanel", function () {
     });
 
     it("does not call the service when no login url is configured", async function () {
-      terria.configParameters.userProfileLoginServiceUrl = undefined;
+      terria.configParameters.setValue(
+        ConfigStrata.user,
+        "userProfileLoginServiceUrl",
+        undefined
+      );
       let called = false;
       worker.use(
         http.get(LOGIN_URL, () => {
@@ -293,8 +302,11 @@ describe("LoginPanel", function () {
     });
 
     it("asks the service about the user it is signing in", async function () {
-      terria.configParameters.userProfileLoginServiceUrl =
-        "https://example.com/auth/<username>/groups";
+      terria.configParameters.setValue(
+        ConfigStrata.user,
+        "userProfileLoginServiceUrl",
+        "https://example.com/auth/<username>/groups"
+      );
       let requestedUrl: string | undefined;
       (terria.corsProxy.getURL as jasmine.Spy).and.callFake((url: string) => {
         requestedUrl = url;

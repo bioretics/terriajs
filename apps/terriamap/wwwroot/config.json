@@ -7,14 +7,9 @@
     "useCesiumIonTerrain": false,
     "bingMapsKey": "",
     "useCesiumIonBingImagery": false,
-    "googleUrlShortenerKey": null,
     "googleAnalyticsKey": null,
     "googleAnalyticsOptions": null,
 
-    // RER custom search parameters. Consumed by the rer3d-terriajs fork's
-    // RerSearchProvider ("eGeoCoding") and whereAmI/coords services; inert on stock
-    // terriajs 8.12.4 until those providers are ported (see MERGE_LOG.md, flag F3).
-    "customSearchProviderUrl": "eGeoCoding",
     "whereAmIParams": {
       "urlFast": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/where/MapServer/0/query?geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIndexIntersects&outFields=OBJECTID,LOCALIZZAZ,DETTAGLIO&returnGeometry=false&f=pjson",
       "urlSlowButAccurate": "https://servizigis.regione.emilia-romagna.it/geoags/rest/services/portale/where/MapServer/0/query?geometryType=esriGeometryPoint&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID,LOCALIZZAZ,DETTAGLIO&returnGeometry=false&f=pjson",
@@ -23,20 +18,12 @@
       "fieldResultDetailed": "DETTAGLIO"
     },
     "coordsConverterUrl": "http://servizigis.regione.emilia-romagna.it/arcgis/rest/services/Utilities/Geometry/GeometryServer/project",
-    "useMyLocationFromDesktop": true,
-    "mouseAsInfoDefaultValue": false,
     "useElevationMeanSeaLevel": false,
 
     "pickSize": 10,
 
     // Log ConsoleAnalytics events to console
     // logToConsole: true,
-
-    /* Text that appears at the bottom of the map */
-    "disclaimer": {
-      "text": "Disclaimer: questa mappa non può essere usata per la navigazione o calcoli di elevata precisione. @Regione Emilia-Romagna",
-      "url": ""
-    },
 
     // Text that will be added to any pages printed from your site.
     "printDisclaimer": {
@@ -56,11 +43,6 @@
     //     //devHostRegex: "\\b(staging|preview|test|dev)\\.",
     //     enableOnLocalhost: true // If false, don't show this when running on localhost
     // },
-
-    "developerAttribution": {
-      "text": "Bioretics srl",
-      "link": "http://www.bioretics.com"
-    },
     // This is used in various text messages. You should also set <title> in index.html
     "appName": "Geoportale 3D",
 
@@ -79,10 +61,6 @@
     "proj4ServiceBaseUrl": "proj4def/",
     // Or this
     //"feedbackUrl": "feedback",
-
-    // Default mobile viewer mode when loading the map for the first time on mobile platforms.
-    // Options are: "3DTerrain", "3DSmooth", "2D"
-    "mobileDefaultViewerMode": "2d",
     // Enable experimental features, since its nice to have the bleeding edge.
     // Disable it if things go wrong with the experimental features or your users aren't robust to features which might change or disapear completly.
     "experimentalFeatures": true,

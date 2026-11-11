@@ -37,6 +37,21 @@ interface PropsType {
   elementConfig?: IElementConfig;
 }
 
+/**
+ * A menu item that goes when the control inside it does.
+ *
+ * The rounding on each end of a group comes from `:first-child` and
+ * `:last-child` in menu-bar.scss, and a hidden control renders nothing rather
+ * than removing its own list item. Left to itself that empty item still counts
+ * as the last one, so the button beside it keeps a square outer edge: hide the
+ * help and Display settings ends up rounded on its left alone.
+ */
+const MenuItem = withControlledVisibility(
+  ({ children }: { children: React.ReactNode }) => (
+    <li className={Styles.menuItem}>{children}</li>
+  )
+);
+
 // The map navigation region
 const MenuBar = observer((props: PropsType) => {
   const theme = useTheme();
@@ -69,11 +84,9 @@ const MenuBar = observer((props: PropsType) => {
       <section>
         <ul className={classNames(Styles.menu)}>
           {enableTools && (
-            <li className={Styles.menuItem}>
-              <ToolsPanel
-                elementConfig={terria.elements.get("menu-bar-tools")}
-              />
-            </li>
+            <MenuItem elementConfig={terria.elements.get("menu-bar-tools")}>
+              <ToolsPanel />
+            </MenuItem>
           )}
           {!viewState.useSmallScreenInterface &&
             props.menuLeftItems.map((element, i) => (
@@ -85,13 +98,9 @@ const MenuBar = observer((props: PropsType) => {
       </section>
       <section className={classNames(Styles.flex)}>
         <ul className={classNames(Styles.menu)}>
-          <li className={Styles.menuItem}>
-            <SettingPanel
-              terria={terria}
-              viewState={viewState}
-              elementConfig={terria.elements.get("menu-bar-settings")}
-            />
-          </li>
+          <MenuItem elementConfig={terria.elements.get("menu-bar-settings")}>
+            <SettingPanel terria={terria} viewState={viewState} />
+          </MenuItem>
           {terria.configParameters.coordsConverterUrl && (
             <li className={Styles.menuItem}>
               <CoordsPanel terria={terria} viewState={viewState} />
@@ -100,30 +109,28 @@ const MenuBar = observer((props: PropsType) => {
           <li className={Styles.menuItem}>
             <ColorPanel terria={terria} viewState={viewState} />
           </li>
-          <li className={Styles.menuItem}>
-            <HelpButton elementConfig={terria.elements.get("menu-bar-help")} />
-          </li>
+          <MenuItem elementConfig={terria.elements.get("menu-bar-help")}>
+            <HelpButton />
+          </MenuItem>
 
           {terria.configParameters?.languageConfiguration?.enabled ? (
-            <li className={Styles.menuItem}>
+            <MenuItem elementConfig={terria.elements.get("menu-bar-lang")}>
               <LangPanel
                 terria={terria}
                 smallScreen={viewState.useSmallScreenInterface}
-                elementConfig={terria.elements.get("menu-bar-lang")}
               />
-            </li>
+            </MenuItem>
           ) : null}
         </ul>
         {storyEnabled && (
           <ul className={classNames(Styles.menu)}>
-            <li className={Styles.menuItem}>
+            <MenuItem elementConfig={terria.elements.get("menu-bar-story")}>
               <StoryButton
                 terria={terria}
                 viewState={viewState}
                 theme={theme}
-                elementConfig={terria.elements.get("menu-bar-story")}
               />
-            </li>
+            </MenuItem>
           </ul>
         )}
         {microzonationEnabled && (
@@ -145,13 +152,9 @@ const MenuBar = observer((props: PropsType) => {
           </ul>
         )}
         <ul className={classNames(Styles.menu)}>
-          <li className={Styles.menuItem}>
-            <SharePanel
-              terria={terria}
-              viewState={viewState}
-              elementConfig={terria.elements.get("menu-bar-share")}
-            />
-          </li>
+          <MenuItem elementConfig={terria.elements.get("menu-bar-share")}>
+            <SharePanel terria={terria} viewState={viewState} />
+          </MenuItem>
         </ul>
         {loginEnabled && (
           <ul className={classNames(Styles.menu)}>

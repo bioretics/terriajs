@@ -8,6 +8,7 @@ import ViewState from "../../../../lib/ReactViewModels/ViewState";
 import CoordsPanel from "../../../../lib/ReactViews/Map/Panels/CoordsPanel/CoordsPanel";
 import { worker } from "../../../mocks/browser";
 import { renderWithContexts } from "../../withContext";
+import { ConfigStrata } from "../../../../lib/Models/Config/ConfigStrata";
 
 const CONVERTER_URL = "https://example.com/coords/project";
 
@@ -24,7 +25,11 @@ describe("CoordsPanel", function () {
   beforeEach(function () {
     terria = new Terria({ baseUrl: "./" });
     viewState = new ViewState({ terria });
-    terria.configParameters.coordsConverterUrl = CONVERTER_URL;
+    terria.configParameters.setValue(
+      ConfigStrata.user,
+      "coordsConverterUrl",
+      CONVERTER_URL
+    );
   });
 
   async function openPanel() {
@@ -225,7 +230,11 @@ describe("CoordsPanel", function () {
 
     it("does not call the converter when no url is configured", async function () {
       const unusedUrl = "https://example.com/coords/never-called";
-      terria.configParameters.coordsConverterUrl = undefined;
+      terria.configParameters.setValue(
+        ConfigStrata.user,
+        "coordsConverterUrl",
+        undefined
+      );
       let called = false;
       worker.use(
         http.get(unusedUrl, () => {

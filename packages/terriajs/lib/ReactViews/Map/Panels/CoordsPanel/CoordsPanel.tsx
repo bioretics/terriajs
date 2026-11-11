@@ -685,7 +685,6 @@ class CoordsPanel extends React.Component<PropTypes, SharePanelState> {
     };
 
     return (
-      //@ts-expect-error - not yet ready to tackle tsfying MenuPanel
       <MenuPanel
         theme={dropdownTheme}
         btnText={t(($) => $.coordsPanel.header)}
