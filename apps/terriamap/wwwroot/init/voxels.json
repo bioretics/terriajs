@@ -65,6 +65,27 @@
             "east": 5.1279,
             "north": 52.4954
           }
+        },
+        {
+          "id": "voxels-eolie-temperatura",
+          "type": "geojson-voxel",
+          "name": "Temperatura – modello fluidodinamico (Eolie)",
+          "description": "Temperatura (°C, proprietà `T`) delle 15.444 celle di un modello fluidodinamico (26 × 27 colonne × 22 strati, quote −1448…+250 m) presso Panarea, voxelizzate nel browser dal GeoJSON di punti. Volume sollevato di 1500 m per renderlo visibile sopra il globo.",
+          "url": "test/voxels/eolie-modello-fluidodinamico.geojson",
+          "property": "T",
+          "colorPalette": "Plasma",
+          "minimumValue": 18,
+          "maximumValue": 300,
+          "noDataValue": -9999,
+          "nearestSampling": true,
+          "heightOffset": 1500,
+          "opacity": 1,
+          "rectangle": {
+            "west": 14.93999,
+            "south": 38.40624,
+            "east": 14.97323,
+            "north": 38.43552
+          }
         }
       ]
     }
