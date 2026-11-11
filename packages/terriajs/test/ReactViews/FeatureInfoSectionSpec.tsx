@@ -37,6 +37,7 @@ import { act } from "react";
 import { worker } from "../mocks/browser";
 
 import json from "../../wwwroot/test/init/czml-with-template-0.json";
+import { ConfigStrata } from "../../lib/Models/Config/ConfigStrata";
 
 // The templates below format numbers through `toLocaleString`, so both
 // separators follow whichever locale the browser running the specs is in.
@@ -1327,9 +1328,13 @@ describe("FeatureInfoSection", function () {
   describe("per profile fields", function () {
     function useProfiles(profile: string, isAdmin = false) {
       runInAction(() => {
-        terria.configParameters.userProfilesDefinition = {
-          [profile]: { allowed: [], isAdmin }
-        };
+        terria.configParameters.setValue(
+          ConfigStrata.user,
+          "userProfilesDefinition",
+          {
+            [profile]: { allowed: [], isAdmin }
+          }
+        );
         terria.userProfile = profile;
       });
     }

@@ -23,6 +23,7 @@ import { FontesDocumentDetails } from "../../../lib/ReactViews/Fontes/FontesDocu
 import FontesPanel from "../../../lib/ReactViews/Fontes/FontesPanel";
 import { RESULTS_LAYER_ID } from "../../../lib/ReactViews/Fontes/fontesMap";
 import { renderWithContexts, TerriaThemeProvider } from "../withContext";
+import { ConfigStrata } from "../../../lib/Models/Config/ConfigStrata";
 
 const colorno = normalizeFontesDocument({
   type: "Feature",
@@ -116,7 +117,9 @@ describe("FONTES in the standard user interface", function () {
     );
     terria = new Terria({ baseUrl: "./" });
     viewState = new ViewState({ terria });
-    terria.updateParameters({ fontesConfig: { documentsUrl } });
+    terria.configParameters.setValue(ConfigStrata.user, "fontesConfig", {
+      documentsUrl
+    });
   });
 
   const renderUi = () =>
@@ -137,7 +140,11 @@ describe("FONTES in the standard user interface", function () {
   });
 
   it("has no FONTES search without fontesConfig", function () {
-    terria.updateParameters({ fontesConfig: undefined });
+    terria.configParameters.setValue(
+      ConfigStrata.user,
+      "fontesConfig",
+      undefined
+    );
     renderUi();
     expect(screen.queryByText("fontes.menuButton")).toBeNull();
     expect(screen.queryByText("fontes.panelTitle")).toBeNull();
@@ -245,7 +252,9 @@ describe("FontesPanel", function () {
     );
     terria = new Terria();
     viewState = new ViewState({ terria });
-    terria.updateParameters({ fontesConfig: { documentsUrl } });
+    terria.configParameters.setValue(ConfigStrata.user, "fontesConfig", {
+      documentsUrl
+    });
   });
 
   const showPanel = () =>

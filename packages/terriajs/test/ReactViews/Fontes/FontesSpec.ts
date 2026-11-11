@@ -31,6 +31,7 @@ import Terria from "../../../lib/Models/Terria";
 import UserDrawing from "../../../lib/Models/UserDrawing";
 import ViewState from "../../../lib/ReactViewModels/ViewState";
 import { worker } from "../../mocks/browser";
+import { ConfigStrata } from "../../../lib/Models/Config/ConfigStrata";
 
 const colorno = {
   type: "Feature",
@@ -390,7 +391,11 @@ describe("Fontes", function () {
 
     it("comes from the map config", function () {
       const terria = new Terria();
-      terria.updateParameters({ fontesConfig: config });
+      terria.configParameters.setValue(
+        ConfigStrata.user,
+        "fontesConfig",
+        config
+      );
       expect(terria.configParameters.fontesConfig).toEqual(config);
     });
 

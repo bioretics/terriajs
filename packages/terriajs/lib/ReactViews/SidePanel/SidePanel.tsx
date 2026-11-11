@@ -180,7 +180,7 @@ const SidePanel = observer<React.FC<SidePanelProps>>(
         >
           <SearchBoxAndResults
             placeholder={applyTranslationIfExists(
-              terria.searchBarModel.placeholder,
+              terria.searchBarModel.config.placeholder,
               i18n
             )}
           />

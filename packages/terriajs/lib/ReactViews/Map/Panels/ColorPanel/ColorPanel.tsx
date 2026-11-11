@@ -116,7 +116,6 @@ class ColorPanel extends React.Component<PropTypes, ColorPanelState> {
     };
 
     return (
-      //@ts-expect-error - not yet ready to tackle tsfying MenuPanel
       <MenuPanel
         theme={dropdownTheme}
         btnText={t(($) => $.colorPanel.header)}

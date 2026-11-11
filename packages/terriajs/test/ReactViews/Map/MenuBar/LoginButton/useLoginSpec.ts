@@ -8,6 +8,7 @@ import {
   useLogin,
   usernameFromAuthToken
 } from "../../../../../lib/ReactViews/Map/MenuBar/LoginButton/useLogin";
+import { ConfigStrata } from "../../../../../lib/Models/Config/ConfigStrata";
 
 function basicToken(username: string, password: string) {
   return `Basic ${btoa(`${username}:${password}`)}`;
@@ -104,8 +105,11 @@ describe("useLogin", function () {
   describe("the Geoserver service", function () {
     beforeEach(function () {
       runInAction(() => {
-        terria.configParameters.userProfileLoginServiceType =
-          LoginProfileServiceType.Geoserver;
+        terria.configParameters.setValue(
+          ConfigStrata.user,
+          "userProfileLoginServiceType",
+          LoginProfileServiceType.Geoserver
+        );
       });
     });
 
@@ -139,10 +143,16 @@ describe("useLogin", function () {
     beforeEach(function () {
       clicked = [];
       runInAction(() => {
-        terria.configParameters.userProfileLoginServiceType =
-          LoginProfileServiceType.Cohesion;
-        terria.configParameters.userProfileLoginServiceUrl =
-          "https://example.com/login?next=";
+        terria.configParameters.setValue(
+          ConfigStrata.user,
+          "userProfileLoginServiceType",
+          LoginProfileServiceType.Cohesion
+        );
+        terria.configParameters.setValue(
+          ConfigStrata.user,
+          "userProfileLoginServiceUrl",
+          "https://example.com/login?next="
+        );
       });
 
       // The hook navigates by clicking a link it builds itself, so the click

@@ -17,6 +17,7 @@ import MeasurableGeometryManager, {
   MeasurableGeometry
 } from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometryManager";
 import { profileSamplingStep } from "../../lib/ViewModels/MeasurableGeometry/MeasurableGeometrySamplingStep";
+import { ConfigStrata } from "../../lib/Models/Config/ConfigStrata";
 
 describe("ViewState", function () {
   let terria: Terria;
@@ -54,9 +55,11 @@ describe("ViewState", function () {
 
     describe("in tabbed mode", function () {
       beforeEach(async function () {
-        runInAction(() => {
-          terria.configParameters.tabbedCatalog = true;
-        });
+        terria.configParameters.setValue(
+          ConfigStrata.user,
+          "tabbedCatalog",
+          true
+        );
         await terria.applyInitData({
           initData: {
             catalog: [
@@ -748,14 +751,22 @@ describe("ViewState", function () {
   });
 
   it("opens Add Data when openAddData is set to true in config file", function () {
-    terria.configParameters.openAddData = true;
+    terria.configParameters.setValue(
+      ConfigStrata.definition,
+      "openAddData",
+      true
+    );
     viewState.afterTerriaStarted();
     expect(viewState.explorerPanelIsVisible).toEqual(true);
     expect(viewState.activeTabCategory).toEqual(DATA_CATALOG_NAME);
   });
 
   it("does not open Add Data when openAddData is set to false in config file", function () {
-    terria.configParameters.openAddData = false;
+    terria.configParameters.setValue(
+      ConfigStrata.definition,
+      "openAddData",
+      false
+    );
     viewState.afterTerriaStarted();
     expect(viewState.explorerPanelIsVisible).toEqual(false);
   });
