@@ -17,7 +17,8 @@ export default class GeoJsonVoxelCatalogItem extends VoxelCatalogItem {
   }
 
   protected async loadVoxelProvider(url: string): Promise<VoxelProvider> {
-    const property = this.property;
+    const { property, heightOffset } = this;
+    const [nx, ny, nz] = this.gridDimensions;
     if (property === undefined) {
       throw new TerriaError({
         title: "Missing property",
@@ -49,11 +50,10 @@ export default class GeoJsonVoxelCatalogItem extends VoxelCatalogItem {
         message: `No Point features with a numeric "${property}"`
       });
     }
-    const [nx, ny, nz] = this.gridDimensions;
     return createPointColumnsVoxelProvider(
       voxelizePointColumns(points, [nx, ny, nz]),
-      property,
-      this.heightOffset
+      property.replace(/^[^A-Za-z_]|[^A-Za-z0-9_]/g, "_"),
+      heightOffset
     );
   }
 }

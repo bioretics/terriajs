@@ -3,32 +3,69 @@
   "features": [
     {
       "type": "Feature",
-      "properties": { "T": 1, "NAME": "a" },
-      "geometry": { "type": "Point", "coordinates": [10, 45, 0] }
+      "properties": {
+        "T": 1,
+        "NAME": "a",
+        "X(a)": 10
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10, 45, 0]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "T": 2, "NAME": "b" },
-      "geometry": { "type": "Point", "coordinates": [10, 45, 10] }
+      "properties": {
+        "T": 2,
+        "NAME": "b",
+        "X(a)": 20
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10, 45, 10]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "T": 3, "NAME": "c" },
-      "geometry": { "type": "Point", "coordinates": [10.001, 45, 0] }
+      "properties": {
+        "T": 3,
+        "NAME": "c",
+        "X(a)": 30
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.001, 45, 0]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "T": 4, "NAME": "d" },
-      "geometry": { "type": "Point", "coordinates": [10.001, 45, 10] }
+      "properties": {
+        "T": 4,
+        "NAME": "d",
+        "X(a)": 40
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.001, 45, 10]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "T": null, "NAME": "e" },
-      "geometry": { "type": "Point", "coordinates": [10.0005, 45, 5] }
+      "properties": {
+        "T": null,
+        "NAME": "e"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [10.0005, 45, 5]
+      }
     },
     {
       "type": "Feature",
-      "properties": { "T": 7, "NAME": "f" },
+      "properties": {
+        "T": 7,
+        "NAME": "f"
+      },
       "geometry": {
         "type": "LineString",
         "coordinates": [

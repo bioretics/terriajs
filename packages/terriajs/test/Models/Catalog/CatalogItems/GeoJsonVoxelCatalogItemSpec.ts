@@ -47,6 +47,23 @@ describe("GeoJsonVoxelCatalogItem", function () {
     expect(item.mapItems).toEqual([]);
   });
 
+  it("uses a shader-safe name for properties like XCO2(gas)", async function () {
+    set("property", "X(a)");
+    expect((await item.loadMapItems()).error).toBeUndefined();
+    expect(primitive().provider.names).toEqual(["X_a_"]);
+    expect(primitive().customShader.fragmentShaderText).toContain(
+      "metadata.X_a_"
+    );
+  });
+
+  it("reloads when heightOffset changes", async function () {
+    set("property", "T");
+    await item.loadMapItems();
+    set("heightOffset", 100);
+    await item.loadMapItems();
+    expect(primitive().provider.maxBounds!.z).toBe(115);
+  });
+
   it("lifts the volume by heightOffset", async function () {
     set("property", "T");
     set("heightOffset", 100);
