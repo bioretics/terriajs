@@ -33,6 +33,7 @@ import SocrataMapViewCatalogItem from "./CatalogItems/SocrataMapViewCatalogItem"
 import StubCatalogItem from "./CatalogItems/StubCatalogItem";
 import TileMapServiceCatalogItem from "./CatalogItems/TileMapServiceCatalogItem";
 import UrlTemplateImageryCatalogItem from "./CatalogItems/UrlTemplateImageryCatalogItem";
+import GeoJsonVoxelCatalogItem from "./CatalogItems/GeoJsonVoxelCatalogItem";
 import VoxelCatalogItem from "./CatalogItems/VoxelCatalogItem";
 import CatalogMemberFactory from "./CatalogMemberFactory";
 import CatalogIndexReference from "./CatalogReferences/CatalogIndexReference";
@@ -107,6 +108,10 @@ export default function registerCatalogMembers() {
   );
   CatalogMemberFactory.register(GltfCatalogItem.type, GltfCatalogItem);
   CatalogMemberFactory.register(VoxelCatalogItem.type, VoxelCatalogItem);
+  CatalogMemberFactory.register(
+    GeoJsonVoxelCatalogItem.type,
+    GeoJsonVoxelCatalogItem
+  );
   CatalogMemberFactory.register(GeoJsonCatalogItem.type, GeoJsonCatalogItem);
   CatalogMemberFactory.register(GpxCatalogItem.type, GpxCatalogItem);
   CatalogMemberFactory.register(GeoRssCatalogItem.type, GeoRssCatalogItem);

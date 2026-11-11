@@ -1,3 +1,4 @@
+import primitiveArrayTrait from "../Decorators/primitiveArrayTrait";
 import primitiveTrait from "../Decorators/primitiveTrait";
 import mixTraits from "../mixTraits";
 import { traitClass } from "../Trait";
@@ -67,4 +68,28 @@ export default class VoxelCatalogItemTraits extends mixTraits(
       "Sample the nearest voxel instead of interpolating between neighbouring voxels."
   })
   nearestSampling: boolean = false;
+
+  @primitiveTrait({
+    type: "string",
+    name: "Property",
+    description:
+      "Property to colour. For 3D Tiles voxels it defaults to the first metadata property. For GeoJSON voxels it is required and names the numeric feature property to voxelize."
+  })
+  property?: string;
+
+  @primitiveArrayTrait({
+    type: "number",
+    name: "Grid dimensions",
+    description:
+      "GeoJSON voxels only: number of voxels along longitude, latitude and height."
+  })
+  gridDimensions: number[] = [128, 128, 96];
+
+  @primitiveTrait({
+    type: "number",
+    name: "Height offset",
+    description:
+      "GeoJSON voxels only: metres added to the voxel heights, for example to lift an underground model above the globe surface."
+  })
+  heightOffset: number = 0;
 }

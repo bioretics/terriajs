@@ -92,6 +92,13 @@ describe("VoxelCatalogItem", function () {
     expect(primitive().customShader).not.toBe(shader);
   });
 
+  it("falls back to the first property for an unknown name", function () {
+    set("property", "nope");
+    expect(primitive().customShader.fragmentShaderText).toContain(
+      "metadata.temperature"
+    );
+  });
+
   it("errors on a non-voxel tileset", async function () {
     set("url", "/test/Cesium3DTiles/tileset.json");
     expect((await item.loadMapItems()).error).toBeDefined();

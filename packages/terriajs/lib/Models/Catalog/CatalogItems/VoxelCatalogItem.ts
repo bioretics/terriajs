@@ -13,6 +13,7 @@ import CustomShader from "terriajs-cesium/Source/Scene/Model/CustomShader";
 import TextureUniform from "terriajs-cesium/Source/Scene/Model/TextureUniform";
 import UniformType from "terriajs-cesium/Source/Scene/Model/UniformType";
 import VoxelPrimitive from "terriajs-cesium/Source/Scene/VoxelPrimitive";
+import VoxelProvider from "terriajs-cesium/Source/Scene/VoxelProvider";
 import runLater from "../../../Core/runLater";
 import TerriaError from "../../../Core/TerriaError";
 import CatalogMemberMixin from "../../../ModelMixins/CatalogMemberMixin";
@@ -36,7 +37,7 @@ export function paletteTexels(name: string): Uint8Array {
 export default class VoxelCatalogItem extends MappableMixin(
   UrlMixin(CatalogMemberMixin(CreateModel(VoxelCatalogItemTraits)))
 ) {
-  static readonly type = "3d-tiles-voxel";
+  static readonly type: string = "3d-tiles-voxel";
 
   @observable.ref private voxelPrimitive: VoxelPrimitive | undefined =
     undefined;
@@ -54,16 +55,18 @@ export default class VoxelCatalogItem extends MappableMixin(
     runInAction(() => (this.voxelPrimitive = undefined));
     if (this.url === undefined) return;
     try {
-      const provider = await Cesium3DTilesVoxelProvider.fromUrl(
-        proxyCatalogItemUrl(this, this.url)
-      );
+      const provider = await this.loadVoxelProvider(this.url);
       runInAction(() => (this.voxelPrimitive = this.createPrimitive(provider)));
     } catch (e) {
       throw TerriaError.from(e, "Failed to load voxel tileset");
     }
   }
 
-  private createPrimitive(provider: Cesium3DTilesVoxelProvider) {
+  protected loadVoxelProvider(url: string): Promise<VoxelProvider> {
+    return Cesium3DTilesVoxelProvider.fromUrl(proxyCatalogItemUrl(this, url));
+  }
+
+  private createPrimitive(provider: VoxelProvider) {
     const primitive = new VoxelPrimitive({ provider });
     const destroy = primitive.destroy.bind(primitive);
     primitive.destroy = () => {
@@ -81,8 +84,12 @@ export default class VoxelCatalogItem extends MappableMixin(
 
   @computed({ keepAlive: true })
   private get customShader(): CustomShader | undefined {
-    const name = this.voxelPrimitive?.provider.names[0];
-    if (name === undefined) return undefined;
+    const names = this.voxelPrimitive?.provider.names;
+    if (names === undefined || names.length === 0) return undefined;
+    const name =
+      this.property !== undefined && names.includes(this.property)
+        ? this.property
+        : names[0];
     const noData =
       this.noDataValue === undefined
         ? ""
