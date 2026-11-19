@@ -1,5 +1,5 @@
 import i18next from "i18next";
-import { action, makeObservable } from "mobx";
+import { action, makeObservable, observable, override } from "mobx";
 import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
 import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
@@ -17,6 +17,7 @@ import Cesium3DTilesCatalogItemTraits from "../../../Traits/TraitsClasses/Cesium
 import CreateModel from "../../Definition/CreateModel";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import { ItemSearchResult } from "../../ItemSearchProviders/ItemSearchProvider";
+import BoxDrawing from "../../BoxDrawing";
 
 // A property name used for tagging a search result feature for highlighting/hiding.
 const SEARCH_RESULT_TAG = "terriajs_search_result";
@@ -28,6 +29,19 @@ export default class Cesium3DTilesCatalogItem extends SearchableItemMixin(
 ) {
   static readonly type = "3d-tiles";
   readonly type = Cesium3DTilesCatalogItem.type;
+
+  @observable.ref
+  repositionBoxDrawing?: BoxDrawing;
+
+  @override
+  get mapItems() {
+    return [
+      ...super.mapItems,
+      ...(this.repositionBoxDrawing
+        ? [this.repositionBoxDrawing.dataSource]
+        : [])
+    ];
+  }
 
   constructor(...args: ModelConstructorParameters) {
     super(...args);
