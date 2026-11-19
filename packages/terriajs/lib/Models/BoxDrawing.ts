@@ -790,9 +790,19 @@ export default class BoxDrawing {
     });
 
     // Diagonal handles provide a trackball-style free 3D rotation affordance.
-    CORNER_POINT_VECTORS.forEach((corner, i) => {
-      const opposite = CORNER_POINT_VECTORS[(i + 2) % 4];
-      const edge = this.createEdge([corner, opposite], "free");
+    const bottomCornerVectors = CORNER_POINT_VECTORS.map((corner) => {
+      const bottomCorner = Cartesian3.clone(corner, new Cartesian3());
+      bottomCorner.z *= -1;
+      return bottomCorner;
+    });
+    const diagonalEdges: [Cartesian3, Cartesian3][] = [
+      [CORNER_POINT_VECTORS[0], CORNER_POINT_VECTORS[2]],
+      [CORNER_POINT_VECTORS[1], CORNER_POINT_VECTORS[3]],
+      [bottomCornerVectors[0], bottomCornerVectors[2]],
+      [bottomCornerVectors[1], bottomCornerVectors[3]]
+    ];
+    diagonalEdges.forEach((diagonalEdge) => {
+      const edge = this.createEdge(diagonalEdge, "free");
       this.dataSource.entities.add(edge);
       this.edges.push(edge);
     });
@@ -1274,7 +1284,11 @@ export default class BoxDrawing {
       );
       const axisPoint = Cartesian3.add(
         this.trs.translation,
-        Cartesian3.normalize(scratchAxisWorld, scratchAxisWorld),
+        Cartesian3.multiplyByScalar(
+          Cartesian3.normalize(scratchAxisWorld, scratchAxisWorld),
+          Math.max(Cartesian3.maximumComponent(this.trs.scale), 1),
+          scratchAxisWorld
+        ),
         new Cartesian3()
       );
       const axisCanvas = scene.cartesianToCanvasCoordinates(axisPoint);
@@ -1292,7 +1306,7 @@ export default class BoxDrawing {
       const center = scene.cartesianToCanvasCoordinates(this.trs.translation);
       const radius = Math.max(
         40,
-        Math.min(scene.drawingBufferWidth, scene.drawingBufferHeight) * 0.18
+        Math.min(scene.canvas.clientWidth, scene.canvas.clientHeight) * 0.18
       );
       if (!center) return Cartesian3.UNIT_Z.clone(result);
 
