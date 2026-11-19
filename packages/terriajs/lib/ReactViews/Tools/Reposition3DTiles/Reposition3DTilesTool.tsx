@@ -58,6 +58,20 @@ const Reposition3DTilesTool: FC<Props> = observer(
         <Text small textLight>
           Drag the box to move or rotate the layer. Press Escape to cancel.
         </Text>
+        <Legend>
+          <LegendItem>
+            <Swatch color="#22d3ee" />
+            <span>Vertical edge: spin</span>
+          </LegendItem>
+          <LegendItem>
+            <Swatch color="#facc15" />
+            <span>Horizontal edge: tilt</span>
+          </LegendItem>
+          <LegendItem>
+            <Swatch color="#fb923c" />
+            <span>Diagonal: free 3D rotation</span>
+          </LegendItem>
+        </Legend>
         <Actions>
           <StyledButton onClick={() => close(false)}>Cancel</StyledButton>
           <StyledButton primary onClick={() => close(true)}>
@@ -87,6 +101,28 @@ const Actions = styled.div`
   justify-content: flex-end;
   gap: 8px;
   margin-top: 10px;
+`;
+
+const Legend = styled.div`
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+`;
+
+const LegendItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: ${(props) => props.theme.textLight};
+  font-size: 12px;
+`;
+
+const Swatch = styled.span<{ color: string }>`
+  width: 18px;
+  height: 4px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  background: ${(props) => props.color};
 `;
 
 export default Reposition3DTilesTool;

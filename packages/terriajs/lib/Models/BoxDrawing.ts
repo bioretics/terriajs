@@ -13,7 +13,6 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidTerrainProvider from "terriajs-cesium/Source/Core/EllipsoidTerrainProvider";
-import HeadingPitchRoll from "terriajs-cesium/Source/Core/HeadingPitchRoll";
 import IntersectionTests from "terriajs-cesium/Source/Core/IntersectionTests";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import KeyboardEventModifier from "terriajs-cesium/Source/Core/KeyboardEventModifier";
@@ -93,6 +92,8 @@ type Side = Entity &
  * A box edge
  */
 type Edge = Entity & Updatable & Interactable;
+
+type EdgeKind = "vertical" | "horizontal" | "free";
 
 /**
  * Style for a box side
@@ -781,7 +782,17 @@ export default class BoxDrawing {
     });
 
     localEdges.forEach((localEdge) => {
-      const edge = this.createEdge(localEdge);
+      const edgeKind: EdgeKind =
+        localEdge[1].z - localEdge[0].z !== 0 ? "vertical" : "horizontal";
+      const edge = this.createEdge(localEdge, edgeKind);
+      this.dataSource.entities.add(edge);
+      this.edges.push(edge);
+    });
+
+    // Diagonal handles provide a trackball-style free 3D rotation affordance.
+    CORNER_POINT_VECTORS.forEach((corner, i) => {
+      const opposite = CORNER_POINT_VECTORS[(i + 2) % 4];
+      const edge = this.createEdge([corner, opposite], "free");
       this.dataSource.entities.add(edge);
       this.edges.push(edge);
     });
@@ -846,9 +857,9 @@ export default class BoxDrawing {
         ? Axis.Y
         : Axis.Z;
     const style: Readonly<SideStyle> = {
-      fillColor: Color.WHITE.withAlpha(0.1),
+      fillColor: Color.WHITE.withAlpha(0.18),
       outlineColor: Color.WHITE,
-      highlightFillColor: Color.WHITE.withAlpha(0.2),
+      highlightFillColor: Color.WHITE.withAlpha(0.3),
       highlightOutlineColor: Color.CYAN
     };
     let isHighlighted = false;
@@ -1196,18 +1207,20 @@ export default class BoxDrawing {
   /**
    * Creates edges for the side specified as plane in local coordinates.
    */
-  private createEdge(localEdge: [Cartesian3, Cartesian3]): Edge {
+  private createEdge(
+    localEdge: [Cartesian3, Cartesian3],
+    edgeKind: EdgeKind
+  ): Edge {
     const scene = this.scene;
     const style = {
-      color: Color.WHITE.withAlpha(0.1),
-      highlightColor: Color.CYAN.withAlpha(0.7)
+      verticalColor: Color.CYAN.withAlpha(0.85),
+      horizontalColor: Color.YELLOW.withAlpha(0.85),
+      freeColor: Color.ORANGE.withAlpha(0.9),
+      highlightColor: Color.WHITE
     };
     const position1 = new Cartesian3();
     const position2 = new Cartesian3();
     const positions = [position1, position2];
-
-    // Only vertical edges are draggable
-    const isDraggableEdge = localEdge[1].z - localEdge[0].z !== 0;
 
     const update = () => {
       Matrix4.multiplyByPoint(this.modelMatrix, localEdge[0], position1);
@@ -1219,70 +1232,179 @@ export default class BoxDrawing {
       polyline: {
         show: true,
         positions: new CallbackProperty(() => positions, false),
-        width: new CallbackProperty(() => (isDraggableEdge ? 10 : 0), false),
+        width: new CallbackProperty(
+          () => (this.enableRotation ? 10 : 0),
+          false
+        ),
         material: new ColorMaterialProperty(
-          new CallbackProperty(
-            () => (isHighlighted ? style.highlightColor : style.color),
-            false
-          )
+          new CallbackProperty(() => {
+            if (isHighlighted) return style.highlightColor;
+            if (edgeKind === "vertical") return style.verticalColor;
+            if (edgeKind === "horizontal") return style.horizontalColor;
+            return style.freeColor;
+          }, false)
         ) as any,
         arcType: ArcType.NONE
       }
     }) as Edge;
 
+    const axisLocal = Cartesian3.normalize(
+      Cartesian3.subtract(localEdge[1], localEdge[0], new Cartesian3()),
+      new Cartesian3()
+    );
+    const previousTrackballVector = new Cartesian3();
+    const scratchAxisWorld = new Cartesian3();
+    const scratchAxisScreen = new Cartesian2();
+    const scratchDrag = new Cartesian2();
+    const scratchPerpendicular = new Cartesian2();
+    const scratchRotation = new Quaternion();
+    const scratchTrackballEnd = new Cartesian3();
+
+    const getScreenAxis = () => {
+      const center = scene.cartesianToCanvasCoordinates(
+        this.trs.translation,
+        scratchAxisScreen
+      );
+      if (!center) return undefined;
+
+      Matrix4.multiplyByPointAsVector(
+        this.modelMatrix,
+        axisLocal,
+        scratchAxisWorld
+      );
+      const axisPoint = Cartesian3.add(
+        this.trs.translation,
+        Cartesian3.normalize(scratchAxisWorld, scratchAxisWorld),
+        new Cartesian3()
+      );
+      const axisCanvas = scene.cartesianToCanvasCoordinates(axisPoint);
+      if (!axisCanvas) return undefined;
+
+      scratchAxisScreen.x = axisCanvas.x - center.x;
+      scratchAxisScreen.y = axisCanvas.y - center.y;
+      return scratchAxisScreen;
+    };
+
+    const getTrackballVector = (
+      position: Cartesian2,
+      result: Cartesian3
+    ): Cartesian3 => {
+      const center = scene.cartesianToCanvasCoordinates(this.trs.translation);
+      const radius = Math.max(
+        40,
+        Math.min(scene.drawingBufferWidth, scene.drawingBufferHeight) * 0.18
+      );
+      if (!center) return Cartesian3.UNIT_Z.clone(result);
+
+      const x = (position.x - center.x) / radius;
+      const y = (center.y - position.y) / radius;
+      const lengthSquared = x * x + y * y;
+      const z = lengthSquared <= 1 ? Math.sqrt(1 - lengthSquared) : 0;
+      Cartesian3.clone(new Cartesian3(x, y, z), result);
+      return Cartesian3.normalize(result, result);
+    };
+
     const onMouseOver = () => {
-      if (isDraggableEdge) {
-        isHighlighted = true;
-        setCustomCanvasCursor(scene, "rotate", "pointer");
-      }
+      isHighlighted = true;
+      setCustomCanvasCursor(scene, "rotate", "pointer");
     };
 
     const onMouseOut = () => {
-      if (isDraggableEdge) {
-        isHighlighted = false;
-        setCanvasCursor(scene, "auto");
-      }
+      isHighlighted = false;
+      setCanvasCursor(scene, "auto");
     };
 
-    const onPick = () => {
-      if (isDraggableEdge) {
-        isHighlighted = true;
-        setCustomCanvasCursor(scene, "rotate", "pointer");
+    const onPick = (click: MouseClick) => {
+      isHighlighted = true;
+      setCustomCanvasCursor(scene, "rotate", "pointer");
+      if (edgeKind === "free") {
+        getTrackballVector(click.position, previousTrackballVector);
       }
     };
 
     const onRelease = () => {
-      if (isDraggableEdge) {
-        isHighlighted = false;
-        setCanvasCursor(scene, "auto");
-        this.onChange?.({
-          isFinished: true,
-          modelMatrix: this.modelMatrix,
-          translationRotationScale: this.trs
-        });
-      }
+      isHighlighted = false;
+      setCanvasCursor(scene, "auto");
+      this.onChange?.({
+        isFinished: true,
+        modelMatrix: this.modelMatrix,
+        translationRotationScale: this.trs
+      });
     };
 
-    const scratchHpr = new HeadingPitchRoll(0, 0, 0);
-
     const rotateBoxOnDrag = (mouseMove: MouseMove) => {
-      if (!isDraggableEdge) {
-        return;
+      if (edgeKind === "free") {
+        getTrackballVector(mouseMove.endPosition, scratchTrackballEnd);
+        const axis = Cartesian3.cross(
+          previousTrackballVector,
+          scratchTrackballEnd,
+          scratchAxisWorld
+        );
+        const axisMagnitude = Cartesian3.magnitude(axis);
+        if (axisMagnitude > 1e-6) {
+          Cartesian3.normalize(axis, axis);
+          const angle = Math.atan2(
+            axisMagnitude,
+            Cartesian3.dot(previousTrackballVector, scratchTrackballEnd)
+          );
+          const worldAxis = Cartesian3.add(
+            Cartesian3.multiplyByScalar(
+              scene.camera.right,
+              axis.x,
+              new Cartesian3()
+            ),
+            Cartesian3.multiplyByScalar(
+              scene.camera.up,
+              axis.y,
+              new Cartesian3()
+            ),
+            new Cartesian3()
+          );
+          Cartesian3.add(
+            worldAxis,
+            Cartesian3.multiplyByScalar(
+              scene.camera.direction,
+              axis.z,
+              new Cartesian3()
+            ),
+            worldAxis
+          );
+          Quaternion.fromAxisAngle(worldAxis, angle, scratchRotation);
+          Quaternion.multiply(
+            scratchRotation,
+            this.trs.rotation,
+            this.trs.rotation
+          );
+        }
+        Cartesian3.clone(scratchTrackballEnd, previousTrackballVector);
+      } else {
+        const screenAxis = getScreenAxis();
+        Cartesian2.subtract(
+          mouseMove.endPosition,
+          mouseMove.startPosition,
+          scratchDrag
+        );
+        let angle: number;
+        if (edgeKind === "vertical") {
+          // Preserve the established vertical-edge yaw interaction.
+          angle = -scratchDrag.x * 0.05;
+        } else if (screenAxis && Cartesian2.magnitude(screenAxis) > 1e-6) {
+          Cartesian2.normalize(screenAxis, scratchPerpendicular);
+          const perpendicularX = scratchPerpendicular.x;
+          scratchPerpendicular.x = -scratchPerpendicular.y;
+          scratchPerpendicular.y = perpendicularX;
+          angle = Cartesian2.dot(scratchDrag, scratchPerpendicular) * 0.05;
+        } else {
+          angle = -scratchDrag.y * 0.05;
+        }
+
+        Quaternion.fromAxisAngle(axisLocal, angle, scratchRotation);
+        Quaternion.multiply(
+          this.trs.rotation,
+          scratchRotation,
+          this.trs.rotation
+        );
       }
-
-      const dx = mouseMove.endPosition.x - mouseMove.startPosition.x;
-      const sensitivity = 0.05;
-      const hpr = scratchHpr;
-      // -dx because the screen coordinates is opposite to local coordinates space.
-      hpr.heading = -dx * sensitivity;
-      hpr.pitch = 0;
-      hpr.roll = 0;
-
-      Quaternion.multiply(
-        this.trs.rotation,
-        Quaternion.fromHeadingPitchRoll(hpr),
-        this.trs.rotation
-      );
 
       this.updateBox();
       this.updateEntitiesOnOrientationChange();
