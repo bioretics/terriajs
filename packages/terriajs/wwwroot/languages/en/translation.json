@@ -822,6 +822,7 @@
       "carto": "Carto V1",
       "carto-v3": "Carto V3",
       "gltf": "glTF",
+      "ply": "PLY (Polygon File Format)",
       "shp": "Shapefile",
       "socrata-group": "Socrata Server",
       "assimp-local": "3D file converter (zip) (experimental)",

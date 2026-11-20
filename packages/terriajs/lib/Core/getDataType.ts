@@ -191,6 +191,11 @@ const builtinLocalDataTypes: LocalDataType[] = [
     extensions: ["glb"]
   },
   {
+    value: "ply",
+    name: keyFromSelector(($) => $.core.dataType.ply),
+    extensions: ["ply"]
+  },
+  {
     value: "shp",
     name: keyFromSelector(($) => $.core.dataType.shp),
     extensions: ["zip"]

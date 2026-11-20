@@ -12,7 +12,7 @@ describe("UploadDataTypes", function () {
 
   describe("getDataTypes", function () {
     it("returns all the builtin local upload types", function () {
-      expect(UploadDataTypes.getDataTypes().localDataType.length).toEqual(10);
+      expect(UploadDataTypes.getDataTypes().localDataType.length).toEqual(12);
     });
 
     it("returns all the builtin remote upload types", function () {

@@ -1095,6 +1095,7 @@
       "auto": "Rilevamento automatico (raccomandato)",
       "sdmx-group": "SDMX-JSON",
       "gltf": "GLTF",
+      "ply": "PLY (Polygon File Format)",
       "carto": "Carto",
       "carto-v3": "Carto V3",
       "czml": "CZML",
