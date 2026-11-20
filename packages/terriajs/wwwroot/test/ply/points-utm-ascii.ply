@@ -1,0 +1,13 @@
+ply
+format ascii 1.0
+element vertex 3
+property double x
+property double y
+property double z
+property float red
+property float green
+property float blue
+end_header
+686000.125 4929000.250 50.5 1 0 0
+686010.125 4929000.250 52.5 0 1 0
+686000.125 4929020.250 54.5 0 0 0.5

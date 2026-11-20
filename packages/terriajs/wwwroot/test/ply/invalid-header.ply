@@ -1,0 +1,5 @@
+ply
+format binary_middle_endian 1.0
+element vertex 1
+property float x
+end_header
