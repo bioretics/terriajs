@@ -1,6 +1,8 @@
 import i18next from "i18next";
 import { autorun, computed, makeObservable, override } from "mobx";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Color from "terriajs-cesium/Source/Core/Color";
+import CustomShader from "terriajs-cesium/Source/Scene/Model/CustomShader";
 import HeadingPitchRoll from "terriajs-cesium/Source/Core/HeadingPitchRoll";
 import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
 import Transforms from "terriajs-cesium/Source/Core/Transforms";
@@ -166,6 +168,14 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
 
     protected abstract get gltfModelUrl(): string | Resource | undefined;
 
+    protected get modelColor(): Color | undefined {
+      return undefined;
+    }
+
+    protected get modelCustomShader(): CustomShader | undefined {
+      return undefined;
+    }
+
     @computed
     private get modelGraphics() {
       if (this.gltfModelUrl === undefined) {
@@ -173,8 +183,14 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       }
 
       const url = this.gltfModelUrl;
+      const color = this.modelColor;
+      const customShader = this.modelCustomShader;
 
       const options = {
+        ...(color && { color: new ConstantProperty(color) }),
+        ...(customShader && {
+          customShader: new ConstantProperty(customShader)
+        }),
         uri: new ConstantProperty(
           typeof url === "string" ? proxyCatalogItemUrl(this, url) : url
         ),
