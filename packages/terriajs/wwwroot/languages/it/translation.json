@@ -420,6 +420,37 @@
       "serviceErrorMessage": "Questo servizio non ha dettagli disponibili.",
       "dataSourceErrorMessage": "Questa fonte di dati non ha dettagli disponibili."
     },
+    "ply": {
+      "name": "PLY (Polygon File Format)",
+      "errorTitle": "Impossibile caricare il file PLY",
+      "errorDetails": "Dettagli: {{details}}",
+      "errors": {
+        "invalidHeader": "Il file non è un PLY valido: l'intestazione manca o è danneggiata.",
+        "truncated": "Il file è incompleto o danneggiato: termina prima di tutti i dati dichiarati nell'intestazione.",
+        "invalidData": "Il file contiene dati non validi.",
+        "noVertices": "Il file non contiene vertici con coordinate x, y e z.",
+        "unknown": "Si è verificato un errore imprevisto durante la lettura del file.",
+        "tooLarge": "Il file pesa {{size}} MB, più del limite di {{max}} MB."
+      },
+      "invalidCrs": "**Attenzione:** il sistema di riferimento \"{{crs}}\" non è riconosciuto, quindi il modello viene posizionato nell'origine.",
+      "geographicCrs": "**Attenzione:** \"{{crs}}\" è un sistema di riferimento geografico. Scegline uno proiettato (es. UTM) per posizionare il modello dalle sue coordinate.",
+      "largeCoordinates": "**Nota:** le coordinate di questo file sembrano proiettate (es. UTM). Scegli il sistema di riferimento in \"Georeferenziazione\" per posizionare correttamente il modello.",
+      "decimated": "**Nota:** questa nuvola di punti è stata decimata: sono mostrati {{shown}} punti su {{total}}.",
+      "georeferencing": {
+        "name": "Georeferenziazione",
+        "crs": "Sistema di riferimento",
+        "crsNone": "Nessuno (coordinate locali)",
+        "longitude": "Longitudine (°)",
+        "latitude": "Latitudine (°)",
+        "height": "Quota (m)",
+        "heightOffset": "Offset di quota (m)",
+        "heading": "Heading (°)",
+        "pitch": "Pitch (°)",
+        "roll": "Roll (°)",
+        "scale": "Scala",
+        "pointSize": "Dimensione punti (px)"
+      }
+    },
     "geoJson": {
       "firefox": "Mozilla Firefox",
       "chrome": "Google Chrome",

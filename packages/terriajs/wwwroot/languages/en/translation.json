@@ -1208,6 +1208,37 @@
       "error": "Error",
       "unableToRetrieve": "Unable to retrieve feature details from:\n\n{{url}}"
     },
+    "ply": {
+      "name": "PLY (Polygon File Format)",
+      "errorTitle": "Unable to load the PLY file",
+      "errorDetails": "Details: {{details}}",
+      "errors": {
+        "invalidHeader": "This is not a valid PLY file: the header is missing or damaged.",
+        "truncated": "The file is incomplete or damaged: it ends before all the data declared in its header.",
+        "invalidData": "The file contains invalid data.",
+        "noVertices": "The file contains no vertices with x, y and z coordinates.",
+        "unknown": "An unexpected error occurred while reading the file.",
+        "tooLarge": "The file is {{size}} MB, which is more than the {{max}} MB limit."
+      },
+      "invalidCrs": "**Warning:** the coordinate system \"{{crs}}\" is not recognised, so the model is placed at the origin instead.",
+      "geographicCrs": "**Warning:** \"{{crs}}\" is a geographic coordinate system. Choose a projected one (eg UTM) to position the model from its coordinates.",
+      "largeCoordinates": "**Note:** the coordinates in this file look projected (eg UTM). Choose its coordinate system under \"Georeferencing\" to place the model correctly.",
+      "decimated": "**Note:** this point cloud has been decimated: showing {{shown}} of {{total}} points.",
+      "georeferencing": {
+        "name": "Georeferencing",
+        "crs": "Coordinate system",
+        "crsNone": "None (local coordinates)",
+        "longitude": "Longitude (°)",
+        "latitude": "Latitude (°)",
+        "height": "Height (m)",
+        "heightOffset": "Height offset (m)",
+        "heading": "Heading (°)",
+        "pitch": "Pitch (°)",
+        "roll": "Roll (°)",
+        "scale": "Scale",
+        "pointSize": "Point size (px)"
+      }
+    },
     "gpx": {
       "name": "GPX",
       "dataSourceErrorMessage": "This data source does not have any details available.",

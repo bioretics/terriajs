@@ -53,6 +53,7 @@ import ArcGisPortalItemReference from "./Esri/ArcGisPortalItemReference";
 import ArcGisTerrainCatalogItem from "./Esri/ArcGisTerrainCatalogItem";
 import AssImpCatalogItem from "./Gltf/AssImpCatalogItem";
 import GltfCatalogItem from "./Gltf/GltfCatalogItem";
+import PlyCatalogItem from "./Gltf/PlyCatalogItem";
 import GtfsCatalogItem from "./Gtfs/GtfsCatalogItem";
 import CswCatalogGroup from "./Ows/CswCatalogGroup";
 import SensorObservationServiceCatalogItem from "./Ows/SensorObservationServiceCatalogItem";
@@ -105,6 +106,7 @@ export default function registerCatalogMembers() {
     WebMapTileServiceCatalogItem
   );
   CatalogMemberFactory.register(GltfCatalogItem.type, GltfCatalogItem);
+  CatalogMemberFactory.register(PlyCatalogItem.type, PlyCatalogItem);
   CatalogMemberFactory.register(GeoJsonCatalogItem.type, GeoJsonCatalogItem);
   CatalogMemberFactory.register(GpxCatalogItem.type, GpxCatalogItem);
   CatalogMemberFactory.register(GeoRssCatalogItem.type, GeoRssCatalogItem);
