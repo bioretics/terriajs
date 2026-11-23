@@ -49,7 +49,7 @@ function previewModelMatrix(
     new Quaternion()
   );
 
-  let transformedItemMatrix = Matrix4.clone(initialItemMatrix);
+  let transformedItemMatrix: Matrix4;
   if (!is2D) {
     const inverseInitialRotation = Quaternion.inverse(
       initialWorldRotation,

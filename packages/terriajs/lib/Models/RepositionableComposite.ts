@@ -1,4 +1,3 @@
-import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import Cesium3dTilesMixin from "../ModelMixins/Cesium3dTilesMixin";
 import CompositeCatalogItem from "./Catalog/CatalogItems/CompositeCatalogItem";
 import Cesium from "./Cesium";
