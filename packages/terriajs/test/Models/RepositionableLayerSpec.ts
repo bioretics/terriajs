@@ -7,8 +7,18 @@ import RepositionableLayer, {
   RepositionableLayerAdapter
 } from "../../lib/Models/RepositionableLayer";
 import { BaseModel } from "../../lib/Models/Definition/Model";
+import RepositionableMixin from "../../lib/ModelMixins/RepositionableMixin";
+import Terria from "../../lib/Models/Terria";
+import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 
 describe("RepositionableLayer", function () {
+  it("marks 3D Tiles catalog items as repositionable", function () {
+    const terria = new Terria();
+    const item = new Cesium3DTilesCatalogItem("test", terria);
+
+    expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
   function createHarness() {
     let restoredSnapshot: unknown;
     let previewCount = 0;

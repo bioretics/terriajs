@@ -52,6 +52,7 @@ import ClippingMixin from "./ClippingMixin";
 import GlobeClippingMixin from "./GlobeClippingMixin";
 import MappableMixin from "./MappableMixin";
 import ShadowMixin from "./ShadowMixin";
+import RepositionableMixin from "./RepositionableMixin";
 
 interface Cesium3DTilesCatalogItemIface extends InstanceType<
   ReturnType<typeof Cesium3dTilesMixin>
@@ -101,7 +102,11 @@ type BaseType = Model<Cesium3dTilesTraits>;
 function Cesium3dTilesMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
   abstract class Cesium3dTilesMixin extends Cesium3dTilesStyleMixin(
     GlobeClippingMixin(
-      ClippingMixin(ShadowMixin(MappableMixin(CatalogMemberMixin(Base))))
+      ClippingMixin(
+        ShadowMixin(
+          RepositionableMixin(MappableMixin(CatalogMemberMixin(Base)))
+        )
+      )
     )
   ) {
     protected tileset?: ObservableCesium3DTileset;

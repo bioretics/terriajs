@@ -33,7 +33,7 @@ import {
   disableAllControls,
   enableAllControls
 } from "./WorkbenchControls";
-import Reposition3DTilesControl from "./Reposition3DTilesControl";
+import RepositionLayerControl from "./RepositionLayerControl";
 
 type WorkbenchItemControlsProps = {
   item: BaseModel;
@@ -87,7 +87,7 @@ const WorkbenchItemControls: FC<WorkbenchItemControlsProps> = observer(
           />
         )}
         {controls.opacity ? <OpacitySection item={item} /> : null}
-        <Reposition3DTilesControl item={item} viewState={viewState} />
+        <RepositionLayerControl item={item} viewState={viewState} />
         {controls.scaleWorkbench ? <ScaleWorkbenchInfo item={item} /> : null}
         {controls.timer ? <TimerSection item={item} /> : null}
         {controls.compare ? <LeftRightSection item={item as any} /> : null}
