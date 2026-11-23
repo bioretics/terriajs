@@ -12,9 +12,12 @@ import CommonStrata from "../../Definition/CommonStrata";
 import CreateModel from "../../Definition/CreateModel";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import { BaseModel } from "../../Definition/Model";
+import RepositionableMixin from "../../../ModelMixins/RepositionableMixin";
 
 export default class CompositeCatalogItem extends MappableMixin(
-  CatalogMemberMixin(CreateModel(CompositeCatalogItemTraits))
+  RepositionableMixin(
+    CatalogMemberMixin(CreateModel(CompositeCatalogItemTraits))
+  )
 ) {
   static readonly type = "composite";
 
@@ -102,7 +105,9 @@ export default class CompositeCatalogItem extends MappableMixin(
       this.terria.addModel(member);
     }
 
-    const members = this.getTrait(stratumId, "members");
+    const members = this.getTrait(stratumId, "members") as
+      | ModelReference[]
+      | undefined;
     if (isDefined(members)) {
       members.push(member.uniqueId);
     } else {

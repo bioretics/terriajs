@@ -6,9 +6,12 @@ import MappableMixin, { MapItem } from "../../../ModelMixins/MappableMixin";
 import IonImageryCatalogItemTraits from "../../../Traits/TraitsClasses/IonImageryCatalogItemTraits";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import CreateModel from "../../Definition/CreateModel";
+import RepositionableMixin from "../../../ModelMixins/RepositionableMixin";
 
 export default class IonImageryCatalogItem extends MappableMixin(
-  CatalogMemberMixin(CreateModel(IonImageryCatalogItemTraits))
+  RepositionableMixin(
+    CatalogMemberMixin(CreateModel(IonImageryCatalogItemTraits))
+  )
 ) {
   static readonly type = "ion-imagery";
 

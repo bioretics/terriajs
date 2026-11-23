@@ -13,6 +13,8 @@ import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesi
 import GltfCatalogItem from "../../lib/Models/Catalog/Gltf/GltfCatalogItem";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import I3SCatalogItem from "../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
+import CompositeCatalogItem from "../../lib/Models/Catalog/CatalogItems/CompositeCatalogItem";
+import IonImageryCatalogItem from "../../lib/Models/Catalog/CatalogItems/IonImageryCatalogItem";
 
 describe("RepositionableLayer", function () {
   it("marks 3D Tiles catalog items as repositionable", function () {
@@ -32,6 +34,20 @@ describe("RepositionableLayer", function () {
   it("marks I3S catalog items as repositionable", function () {
     const terria = new Terria();
     const item = new I3SCatalogItem("test", terria);
+
+    expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("marks composite catalog items as repositionable", function () {
+    const terria = new Terria();
+    const item = new CompositeCatalogItem("test", terria);
+
+    expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("marks Ion imagery catalog items as repositionable", function () {
+    const terria = new Terria();
+    const item = new IonImageryCatalogItem("test", terria);
 
     expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
   });
