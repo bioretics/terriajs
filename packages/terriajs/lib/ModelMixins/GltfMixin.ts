@@ -25,6 +25,7 @@ import ShadowMixin from "./ShadowMixin";
 import Resource from "terriajs-cesium/Source/Core/Resource";
 import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import { SelectableDimension } from "../Models/SelectableDimensions/SelectableDimensions";
+import RepositionableMixin from "./RepositionableMixin";
 
 type BaseType = Model<GltfTraits>;
 
@@ -43,8 +44,8 @@ export interface GltfTransformationJson {
 }
 
 function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
-  abstract class GltfMixin extends GlobeClippingMixin(
-    ShadowMixin(CatalogMemberMixin(MappableMixin(Base)))
+  abstract class GltfMixin extends RepositionableMixin(
+    GlobeClippingMixin(ShadowMixin(CatalogMemberMixin(MappableMixin(Base))))
   ) {
     // Create stable instances of DataSource and Entity instead
     // of generating a new one each time the traits change and mobx recomputes.
@@ -267,6 +268,33 @@ function GltfMixin<T extends AbstractConstructor<BaseType>>(Base: T) {
       entity.orientation = new ConstantProperty(this.cesiumRotation);
       entity.model = this.modelGraphics;
       return entity;
+    }
+
+    /**
+     * Returns a bounding sphere suitable for positioning a repositioning
+     * editor around this model. Falls back to an origin-centered sphere while
+     * Cesium is still loading the model asset.
+     */
+    getRepositioningBoundingSphere(
+      cesium: import("../Models/Cesium").default
+    ): BoundingSphere {
+      const fallbackRadius = Math.max(this.scale ?? 1, 1);
+      const fallback = new BoundingSphere(this.cesiumPosition, fallbackRadius);
+
+      try {
+        const measured = new BoundingSphere();
+        const state = (cesium.dataSourceDisplay as any).getBoundingSphere(
+          this.modelEntity,
+          false,
+          measured
+        );
+        if (state === BoundingSphereState.DONE && measured.radius > 0) {
+          return BoundingSphere.clone(measured);
+        }
+      } catch {
+        // The model is still loading or its visualizer is unavailable.
+      }
+      return fallback;
     }
 
     @computed

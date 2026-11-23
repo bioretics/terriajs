@@ -1,6 +1,5 @@
 import { observer } from "mobx-react";
 import { FC } from "react";
-import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import RepositionableMixin from "../../../ModelMixins/RepositionableMixin";
 import Cesium from "../../../Models/Cesium";
 import { BaseModel } from "../../../Models/Definition/Model";
@@ -25,10 +24,7 @@ const RepositionLayerControl: FC<Props> = observer(({ item, viewState }) => {
   const cesium = viewState.terria.currentViewer;
   if (item.isLoadingMapItems) return null;
 
-  const canReposition = item.mapItems.some(
-    (mapItem) => mapItem instanceof Cesium3DTileset
-  );
-  if (!canReposition) return null;
+  if (item.mapItems.length === 0) return null;
 
   return (
     <StyledButton

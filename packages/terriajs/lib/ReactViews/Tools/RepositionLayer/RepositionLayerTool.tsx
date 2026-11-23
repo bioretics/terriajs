@@ -3,7 +3,9 @@ import { observer } from "mobx-react";
 import { FC, useEffect, useRef } from "react";
 import styled from "styled-components";
 import Cesium3dTilesMixin from "../../../ModelMixins/Cesium3dTilesMixin";
+import GltfMixin from "../../../ModelMixins/GltfMixin";
 import Repositionable3DTiles from "../../../Models/Repositionable3DTiles";
+import RepositionableGltf from "../../../Models/RepositionableGltf";
 import Cesium from "../../../Models/Cesium";
 import { BaseModel } from "../../../Models/Definition/Model";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -35,6 +37,8 @@ const RepositionLayerTool: FC<Props> = observer(
       let controller: { save(): void; cancel(): void } | undefined;
       if (Cesium3dTilesMixin.isMixedInto(item)) {
         controller = Repositionable3DTiles.create(item, cesium);
+      } else if (GltfMixin.isMixedInto(item)) {
+        controller = RepositionableGltf.create(item, cesium);
       }
 
       controllerRef.current = controller;

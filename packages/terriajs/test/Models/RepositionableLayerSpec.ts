@@ -10,11 +10,19 @@ import { BaseModel } from "../../lib/Models/Definition/Model";
 import RepositionableMixin from "../../lib/ModelMixins/RepositionableMixin";
 import Terria from "../../lib/Models/Terria";
 import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
+import GltfCatalogItem from "../../lib/Models/Catalog/Gltf/GltfCatalogItem";
 
 describe("RepositionableLayer", function () {
   it("marks 3D Tiles catalog items as repositionable", function () {
     const terria = new Terria();
     const item = new Cesium3DTilesCatalogItem("test", terria);
+
+    expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("marks glTF catalog items as repositionable", function () {
+    const terria = new Terria();
+    const item = new GltfCatalogItem("test", terria);
 
     expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
   });
