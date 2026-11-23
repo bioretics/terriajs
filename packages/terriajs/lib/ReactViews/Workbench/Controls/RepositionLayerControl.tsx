@@ -15,6 +15,7 @@ interface Props {
 const RepositionLayerControl: FC<Props> = observer(({ item, viewState }) => {
   if (
     !RepositionableMixin.isMixedInto(item) ||
+    item.isRepositionable !== true ||
     viewState.terria.mainViewer.viewerMode !== ViewerMode.Cesium ||
     !(viewState.terria.currentViewer instanceof Cesium)
   ) {

@@ -305,6 +305,22 @@ class MappableTraits extends mixTraits(AttributionTraits) {
       "The preferred viewer mode for this item - either '2d' '3d' or '3dsmooth'. If this dataset is used as a basemap then we automatically switch the viewer to the preferred mode. However the user can still switch to another mode, so this preference is not strongly enforced."
   })
   preferredViewerMode?: string;
+
+  @primitiveTrait({
+    type: "boolean",
+    name: "Is repositionable",
+    description:
+      "When true, shows the Reposition control for this catalog item. The item must also provide a supported repositioning adapter."
+  })
+  isRepositionable: boolean = false;
+
+  @primitiveTrait({
+    type: "string",
+    name: "Reposition mode",
+    description:
+      "Optional dimensionality override for repositioning: '2d' for ground-only XY and heading movement, or '3d' for full XYZ and heading/pitch/roll movement."
+  })
+  repositionMode?: "2d" | "3d";
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging */

@@ -83,7 +83,9 @@ export default class Repositionable3DTiles extends RepositionableLayer<
     cesium: Cesium,
     tileset: Cesium3DTileset
   ) {
-    const is2D = cesium.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const is2D =
+      cesium.terria.mainViewer.viewerMode === ViewerMode.Cesium2D ||
+      item.repositionMode === "2d";
     const center = tileset.boundingSphere.center;
     const radius = tileset.boundingSphere.radius;
     const initialEditorCenter = Cartesian3.clone(center);

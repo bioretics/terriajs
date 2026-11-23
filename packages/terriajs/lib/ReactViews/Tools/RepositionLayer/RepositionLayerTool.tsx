@@ -21,7 +21,12 @@ interface Props {
 
 const RepositionLayerTool: FC<Props> = observer(
   ({ viewState, item, cesium }) => {
-    const is2D = viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const repositionableItem = item as BaseModel & {
+      repositionMode?: "2d" | "3d";
+    };
+    const is2D =
+      viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium2D ||
+      repositionableItem.repositionMode === "2d";
     const controllerRef = useRef<{ save(): void; cancel(): void } | undefined>(
       undefined
     );

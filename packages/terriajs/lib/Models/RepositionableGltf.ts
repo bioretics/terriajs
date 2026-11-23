@@ -79,7 +79,9 @@ export default class RepositionableGltf extends RepositionableLayer<
   RepositionableItem
 > {
   private constructor(item: RepositionableItem, cesium: Cesium) {
-    const is2D = cesium.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
+    const is2D =
+      cesium.terria.mainViewer.viewerMode === ViewerMode.Cesium2D ||
+      item.repositionMode === "2d";
     const center = item.cesiumPosition;
     const initialEditorCenter = Cartesian3.clone(center);
     const initialItemPosition = Cartesian3.clone(center);

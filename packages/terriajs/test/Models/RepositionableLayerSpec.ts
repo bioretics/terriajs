@@ -11,6 +11,7 @@ import RepositionableMixin from "../../lib/ModelMixins/RepositionableMixin";
 import Terria from "../../lib/Models/Terria";
 import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 import GltfCatalogItem from "../../lib/Models/Catalog/Gltf/GltfCatalogItem";
+import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 
 describe("RepositionableLayer", function () {
   it("marks 3D Tiles catalog items as repositionable", function () {
@@ -25,6 +26,18 @@ describe("RepositionableLayer", function () {
     const item = new GltfCatalogItem("test", terria);
 
     expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("requires the catalog reposition flag", function () {
+    const terria = new Terria();
+    const item = new GltfCatalogItem("test", terria);
+
+    expect(item.isRepositionable).toBeFalse();
+    item.setTrait(CommonStrata.definition, "isRepositionable", true);
+    item.setTrait(CommonStrata.definition, "repositionMode", "2d");
+
+    expect(item.isRepositionable).toBeTrue();
+    expect(item.repositionMode).toBe("2d");
   });
 
   function createHarness() {

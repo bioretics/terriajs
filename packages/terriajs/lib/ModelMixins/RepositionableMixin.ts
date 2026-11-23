@@ -20,6 +20,8 @@ namespace RepositionableMixin {
     readonly hasRepositionableMixin: true;
     readonly isLoadingMapItems: boolean;
     readonly mapItems: unknown[];
+    readonly isRepositionable: boolean;
+    readonly repositionMode?: "2d" | "3d";
   }
 
   export function isMixedInto(model: any): model is Instance {
