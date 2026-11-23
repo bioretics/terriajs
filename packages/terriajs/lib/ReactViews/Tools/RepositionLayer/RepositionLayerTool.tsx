@@ -9,6 +9,7 @@ import RepositionableGltf from "../../../Models/RepositionableGltf";
 import Cesium from "../../../Models/Cesium";
 import { BaseModel } from "../../../Models/Definition/Model";
 import ViewState from "../../../ReactViewModels/ViewState";
+import ViewerMode from "../../../Models/ViewerMode";
 import { StyledButton } from "../../../Styled/Button";
 import Text from "../../../Styled/Text";
 
@@ -20,6 +21,7 @@ interface Props {
 
 const RepositionLayerTool: FC<Props> = observer(
   ({ viewState, item, cesium }) => {
+    const is2D = viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
     const controllerRef = useRef<{ save(): void; cancel(): void } | undefined>(
       undefined
     );
@@ -67,22 +69,37 @@ const RepositionLayerTool: FC<Props> = observer(
           Reposition layer
         </Text>
         <Text small textLight>
-          Drag the box to move or rotate the layer. Press Escape to cancel.
+          {is2D
+            ? "Move on the map and rotate around the map normal. Press Escape to cancel."
+            : "Drag the box to move or rotate the layer. Press Escape to cancel."}
         </Text>
-        <Legend>
-          <LegendItem>
-            <Swatch color="#22d3ee" />
-            <span>Vertical edge: spin</span>
-          </LegendItem>
-          <LegendItem>
-            <Swatch color="#facc15" />
-            <span>Horizontal edge: tilt</span>
-          </LegendItem>
-          <LegendItem>
-            <Swatch color="#fb923c" />
-            <span>Diagonal: free 3D rotation</span>
-          </LegendItem>
-        </Legend>
+        {is2D ? (
+          <Legend>
+            <LegendItem>
+              <Swatch color="#22d3ee" />
+              <span>Map plane: move X/Y</span>
+            </LegendItem>
+            <LegendItem>
+              <Swatch color="#22d3ee" />
+              <span>Vertical edge: rotate heading</span>
+            </LegendItem>
+          </Legend>
+        ) : (
+          <Legend>
+            <LegendItem>
+              <Swatch color="#22d3ee" />
+              <span>Vertical edge: spin</span>
+            </LegendItem>
+            <LegendItem>
+              <Swatch color="#facc15" />
+              <span>Horizontal edge: tilt</span>
+            </LegendItem>
+            <LegendItem>
+              <Swatch color="#fb923c" />
+              <span>Diagonal: free 3D rotation</span>
+            </LegendItem>
+          </Legend>
+        )}
         <Actions>
           <StyledButton onClick={() => close(false)}>Cancel</StyledButton>
           <StyledButton primary onClick={() => close(true)}>

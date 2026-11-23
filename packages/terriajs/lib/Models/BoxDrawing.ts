@@ -158,7 +158,7 @@ export type BoxDrawingChangeParams = {
   isFinished: boolean;
 };
 
-type BoxDrawingOptions = {
+export type BoxDrawingOptions = {
   /**
    * When true, prevents the box from going underground. Note that we only use
    * the center of the bottom face to detect if the box is underground. For
@@ -183,6 +183,18 @@ type BoxDrawingOptions = {
    * Defaults to `false`, i.e top and bottom sides are draggable and dragging them changes the box height.
    */
   disableVerticalMovement?: boolean;
+
+  /**
+   * Translation axes that may be changed through interactions.
+   * Defaults to all axes.
+   */
+  allowedTranslationAxes?: ("x" | "y" | "z")[];
+
+  /**
+   * Rotation kinds that may be changed through interactions.
+   * `map-normal` allows heading/yaw only around the ellipsoid surface normal.
+   */
+  allowedRotationAxes?: ("heading" | "pitch" | "roll" | "map-normal")[];
 };
 
 // The 6 box sides defined as planes in local coordinate space.
@@ -244,6 +256,10 @@ export default class BoxDrawing {
   private drawNonUniformScaleGrips: boolean;
 
   public disableVerticalMovement: boolean;
+  public allowedTranslationAxes: ("x" | "y" | "z")[];
+  public allowedRotationAxes:
+    | ("heading" | "pitch" | "roll" | "map-normal")[]
+    | undefined;
 
   public keepHeightSteadyWhenMovingLaterally = true;
 
@@ -293,6 +309,12 @@ export default class BoxDrawing {
     this.keepBoxAboveGround = options.keepBoxAboveGround ?? false;
     this.drawNonUniformScaleGrips = options.drawNonUniformScaleGrips ?? true;
     this.disableVerticalMovement = options.disableVerticalMovement ?? false;
+    this.allowedTranslationAxes = options.allowedTranslationAxes ?? [
+      "x",
+      "y",
+      "z"
+    ];
+    this.allowedRotationAxes = options.allowedRotationAxes;
     this.onChange = options.onChange;
     this.dataSource = new Proxy(new CustomDataSource(), {
       set: (target, prop, value) => {
@@ -413,6 +435,20 @@ export default class BoxDrawing {
     this.edges.forEach((edge) => (edge.show = enable));
   }
 
+  private isEdgeAllowed(edgeKind: EdgeKind): boolean {
+    if (this.allowedRotationAxes === undefined) return true;
+    if (this.allowedRotationAxes.includes("map-normal")) {
+      return edgeKind === "vertical";
+    }
+    return (
+      (edgeKind === "vertical" &&
+        this.allowedRotationAxes.includes("heading")) ||
+      (edgeKind === "horizontal" &&
+        this.allowedRotationAxes.includes("pitch")) ||
+      (edgeKind === "free" && this.allowedRotationAxes.includes("roll"))
+    );
+  }
+
   /**
    * Moves the box by the provided moveStep with optional clamping applied so that the
    * box does not go underground.
@@ -429,6 +465,26 @@ export default class BoxDrawing {
         moveStep,
         scratchNewPosition
       );
+
+      if (
+        !this.allowedTranslationAxes.includes("z") &&
+        this.allowedTranslationAxes.includes("x") &&
+        this.allowedTranslationAxes.includes("y")
+      ) {
+        const ellipsoid = Ellipsoid.WGS84;
+        const currentCartographic = Cartographic.fromCartesian(
+          this.trs.translation,
+          ellipsoid,
+          scratchCartographic
+        );
+        const nextCartographic = Cartographic.fromCartesian(
+          nextPosition,
+          ellipsoid,
+          new Cartographic()
+        );
+        nextCartographic.height = currentCartographic.height;
+        Cartographic.toCartesian(nextCartographic, ellipsoid, nextPosition);
+      }
 
       if (this.keepBoxAboveGround) {
         const cartographic = Cartographic.fromCartesian(
@@ -1243,7 +1299,7 @@ export default class BoxDrawing {
         show: true,
         positions: new CallbackProperty(() => positions, false),
         width: new CallbackProperty(
-          () => (this.enableRotation ? 10 : 0),
+          () => (this.enableRotation && this.isEdgeAllowed(edgeKind) ? 10 : 0),
           false
         ),
         material: new ColorMaterialProperty(
@@ -1319,6 +1375,7 @@ export default class BoxDrawing {
     };
 
     const onMouseOver = () => {
+      if (!this.isEdgeAllowed(edgeKind)) return;
       isHighlighted = true;
       setCustomCanvasCursor(scene, "rotate", "pointer");
     };
@@ -1329,6 +1386,7 @@ export default class BoxDrawing {
     };
 
     const onPick = (click: MouseClick) => {
+      if (!this.isEdgeAllowed(edgeKind)) return;
       isHighlighted = true;
       setCustomCanvasCursor(scene, "rotate", "pointer");
       if (edgeKind === "free") {
@@ -1347,6 +1405,7 @@ export default class BoxDrawing {
     };
 
     const rotateBoxOnDrag = (mouseMove: MouseMove) => {
+      if (!this.isEdgeAllowed(edgeKind)) return;
       if (edgeKind === "free") {
         getTrackballVector(mouseMove.endPosition, scratchTrackballEnd);
         const axis = Cartesian3.cross(
@@ -1402,6 +1461,26 @@ export default class BoxDrawing {
         if (edgeKind === "vertical") {
           // Preserve the established vertical-edge yaw interaction.
           angle = -scratchDrag.x * 0.05;
+          if (this.allowedRotationAxes?.includes("map-normal")) {
+            const surfaceNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(
+              this.trs.translation,
+              scratchAxisWorld
+            );
+            Quaternion.fromAxisAngle(surfaceNormal, angle, scratchRotation);
+            Quaternion.multiply(
+              scratchRotation,
+              this.trs.rotation,
+              this.trs.rotation
+            );
+            this.updateBox();
+            this.updateEntitiesOnOrientationChange();
+            this.onChange?.({
+              isFinished: false,
+              modelMatrix: this.modelMatrix,
+              translationRotationScale: this.trs
+            });
+            return;
+          }
         } else if (screenAxis && Cartesian2.magnitude(screenAxis) > 1e-6) {
           Cartesian2.normalize(screenAxis, scratchPerpendicular);
           const perpendicularX = scratchPerpendicular.x;

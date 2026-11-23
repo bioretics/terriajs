@@ -12,6 +12,7 @@ import BoxDrawing from "./BoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
+import ViewerMode from "./ViewerMode";
 import RepositionableLayer, {
   RepositionableLayerAdapter
 } from "./RepositionableLayer";
@@ -33,7 +34,8 @@ function previewModelMatrix(
   modelMatrix: Matrix4,
   initialEditorCenter: Cartesian3,
   initialItemPosition: Cartesian3,
-  initialWorldRotation: Quaternion
+  initialWorldRotation: Quaternion,
+  is2D: boolean
 ) {
   const editorPosition = Matrix4.getTranslation(modelMatrix, new Cartesian3());
   const editorMove = Cartesian3.subtract(
@@ -56,11 +58,19 @@ function previewModelMatrix(
     !Quaternion.equalsEpsilon(worldRotation, initialWorldRotation, 0.000001)
   ) {
     const hpr = Transforms.fixedFrameToHeadingPitchRoll(modelMatrix);
-    HeadingPitchRollTraits.setFromHeadingPitchRoll(
-      item.rotation,
-      CommonStrata.user,
-      hpr
-    );
+    if (is2D) {
+      HeadingPitchRollTraits.setFromHeadingPitchRoll(
+        item.rotation,
+        CommonStrata.user,
+        new HeadingPitchRoll(hpr.heading, 0, 0)
+      );
+    } else {
+      HeadingPitchRollTraits.setFromHeadingPitchRoll(
+        item.rotation,
+        CommonStrata.user,
+        hpr
+      );
+    }
   }
 }
 
@@ -73,6 +83,7 @@ export default class Repositionable3DTiles extends RepositionableLayer<
     cesium: Cesium,
     tileset: Cesium3DTileset
   ) {
+    const is2D = cesium.terria.mainViewer.viewerMode === ViewerMode.Cesium2D;
     const center = tileset.boundingSphere.center;
     const radius = tileset.boundingSphere.radius;
     const initialEditorCenter = Cartesian3.clone(center);
@@ -98,7 +109,9 @@ export default class Repositionable3DTiles extends RepositionableLayer<
 
     const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
       keepBoxAboveGround: false,
-      disableVerticalMovement: false,
+      disableVerticalMovement: is2D,
+      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
+      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
       drawNonUniformScaleGrips: false
     });
     const adapter: RepositionableLayerAdapter<
@@ -121,7 +134,8 @@ export default class Repositionable3DTiles extends RepositionableLayer<
           modelMatrix,
           initialEditorCenter,
           initialItemPosition,
-          initialWorldRotation
+          initialWorldRotation,
+          is2D
         );
       },
       restore: (snapshot) => {

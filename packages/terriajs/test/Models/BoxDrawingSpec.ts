@@ -51,6 +51,21 @@ describe("BoxDrawing", function () {
       );
       expect(boxDrawing).toBeDefined();
     });
+
+    it("can be constrained to map-plane translation and heading", function () {
+      const boxDrawing = BoxDrawing.fromTransform(cesium, Matrix4.IDENTITY, {
+        disableVerticalMovement: true,
+        allowedTranslationAxes: ["x", "y"],
+        allowedRotationAxes: ["map-normal"],
+        drawNonUniformScaleGrips: false
+      });
+
+      expect(boxDrawing.disableVerticalMovement).toBeTrue();
+      expect(boxDrawing.allowedTranslationAxes).toEqual(["x", "y"]);
+      expect(boxDrawing.allowedRotationAxes).toEqual(["map-normal"]);
+      boxDrawing.enableScaling = false;
+      expect(boxDrawing.enableScaling).toBeFalse();
+    });
   });
 
   describe("the dataSource", function () {
