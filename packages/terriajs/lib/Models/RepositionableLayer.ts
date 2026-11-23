@@ -30,6 +30,7 @@ export default class RepositionableLayer<
   private readonly previousFeaturePickingPaused: boolean;
   private finished = false;
   private disposed = false;
+  private dataSourceAdded = false;
 
   constructor(
     readonly adapter: RepositionableLayerAdapter<TSnapshot, TItem>,
@@ -43,8 +44,22 @@ export default class RepositionableLayer<
     this.boxDrawing.onChange = action(({ modelMatrix }) => {
       adapter.preview(modelMatrix);
     });
-    this.boxDrawing.dataSource.show = true;
     adapter.activate?.(this.boxDrawing);
+    const itemMapItems = (
+      this.adapter.item as unknown as { mapItems?: unknown[] }
+    ).mapItems;
+    if (
+      !itemMapItems?.some((mapItem) => mapItem === this.boxDrawing.dataSource)
+    ) {
+      this.dataSourceAdded = true;
+      void this.cesium.dataSources.add(this.boxDrawing.dataSource).then(() => {
+        if (!this.disposed) {
+          this.boxDrawing.dataSource.show = true;
+        }
+      });
+    } else {
+      this.boxDrawing.dataSource.show = true;
+    }
   }
 
   get item(): TItem {
@@ -75,7 +90,9 @@ export default class RepositionableLayer<
     ).stopInteractions();
     this.boxDrawing.dataSource.show = false;
     this.adapter.deactivate?.();
-    void this.cesium.dataSources.remove(this.boxDrawing.dataSource);
+    if (this.dataSourceAdded) {
+      void this.cesium.dataSources.remove(this.boxDrawing.dataSource);
+    }
     this.cesium.isFeaturePickingPaused = this.previousFeaturePickingPaused;
   }
 }

@@ -81,6 +81,7 @@ describe("RepositionableLayer", function () {
     const cesium = {
       isFeaturePickingPaused: false,
       dataSources: {
+        add: jasmine.createSpy("add").and.returnValue(true),
         remove: jasmine.createSpy("remove").and.returnValue(true)
       }
     } as unknown as Cesium;

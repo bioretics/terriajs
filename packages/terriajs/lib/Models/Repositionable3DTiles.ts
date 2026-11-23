@@ -34,6 +34,7 @@ function previewModelMatrix(
   modelMatrix: Matrix4,
   initialEditorCenter: Cartesian3,
   initialItemPosition: Cartesian3,
+  initialItemMatrix: Matrix4,
   initialWorldRotation: Quaternion,
   is2D: boolean
 ) {
@@ -43,21 +44,72 @@ function previewModelMatrix(
     initialEditorCenter,
     new Cartesian3()
   );
-  const position = Cartesian3.add(
-    initialItemPosition,
-    editorMove,
-    new Cartesian3()
-  );
-  LatLonHeightTraits.setFromCartesian(item.origin, CommonStrata.user, position);
-
   const worldRotation = Quaternion.fromRotationMatrix(
     Matrix4.getRotation(modelMatrix, new Matrix3()),
     new Quaternion()
   );
+
+  let transformedItemMatrix = Matrix4.clone(initialItemMatrix);
+  if (!is2D) {
+    const inverseInitialRotation = Quaternion.inverse(
+      initialWorldRotation,
+      new Quaternion()
+    );
+    const relativeRotation = Quaternion.multiply(
+      worldRotation,
+      inverseInitialRotation,
+      new Quaternion()
+    );
+    const centerOrigin = Matrix4.fromTranslation(
+      Cartesian3.negate(initialEditorCenter, new Cartesian3())
+    );
+    const centerRotation = Matrix4.fromTranslationQuaternionRotationScale(
+      initialEditorCenter,
+      relativeRotation,
+      new Cartesian3(1, 1, 1)
+    );
+    const moveTranslation = Matrix4.fromTranslation(editorMove);
+    const pivoted = Matrix4.multiply(
+      centerRotation,
+      Matrix4.multiply(centerOrigin, initialItemMatrix, new Matrix4()),
+      new Matrix4()
+    );
+    transformedItemMatrix = Matrix4.multiply(
+      moveTranslation,
+      pivoted,
+      new Matrix4()
+    );
+  } else {
+    const position = Cartesian3.add(
+      initialItemPosition,
+      editorMove,
+      new Cartesian3()
+    );
+    transformedItemMatrix = Matrix4.multiply(
+      Matrix4.fromTranslation(
+        Cartesian3.subtract(position, initialItemPosition, new Cartesian3())
+      ),
+      initialItemMatrix,
+      new Matrix4()
+    );
+  }
+
+  const transformedPosition = Matrix4.getTranslation(
+    transformedItemMatrix,
+    new Cartesian3()
+  );
+  LatLonHeightTraits.setFromCartesian(
+    item.origin,
+    CommonStrata.user,
+    transformedPosition
+  );
+
   if (
     !Quaternion.equalsEpsilon(worldRotation, initialWorldRotation, 0.000001)
   ) {
-    const hpr = Transforms.fixedFrameToHeadingPitchRoll(modelMatrix);
+    const hpr = Transforms.fixedFrameToHeadingPitchRoll(
+      is2D ? modelMatrix : transformedItemMatrix
+    );
     if (is2D) {
       HeadingPitchRollTraits.setFromHeadingPitchRoll(
         item.rotation,
@@ -93,6 +145,7 @@ export default class Repositionable3DTiles extends RepositionableLayer<
       item.modelMatrix,
       new Cartesian3()
     );
+    const initialItemMatrix = Matrix4.clone(item.modelMatrix);
     const savedHpr = HeadingPitchRoll.fromDegrees(
       item.rotation.heading ?? 0,
       item.rotation.pitch ?? 0,
@@ -136,6 +189,7 @@ export default class Repositionable3DTiles extends RepositionableLayer<
           modelMatrix,
           initialEditorCenter,
           initialItemPosition,
+          initialItemMatrix,
           initialWorldRotation,
           is2D
         );
