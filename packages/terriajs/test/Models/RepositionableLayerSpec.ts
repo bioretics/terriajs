@@ -12,6 +12,7 @@ import Terria from "../../lib/Models/Terria";
 import Cesium3DTilesCatalogItem from "../../lib/Models/Catalog/CatalogItems/Cesium3DTilesCatalogItem";
 import GltfCatalogItem from "../../lib/Models/Catalog/Gltf/GltfCatalogItem";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
+import I3SCatalogItem from "../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
 
 describe("RepositionableLayer", function () {
   it("marks 3D Tiles catalog items as repositionable", function () {
@@ -24,6 +25,13 @@ describe("RepositionableLayer", function () {
   it("marks glTF catalog items as repositionable", function () {
     const terria = new Terria();
     const item = new GltfCatalogItem("test", terria);
+
+    expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("marks I3S catalog items as repositionable", function () {
+    const terria = new Terria();
+    const item = new I3SCatalogItem("test", terria);
 
     expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
   });

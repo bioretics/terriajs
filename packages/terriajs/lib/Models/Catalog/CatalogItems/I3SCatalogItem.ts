@@ -10,10 +10,17 @@ import {
 import ArcGISTiledElevationTerrainProvider from "terriajs-cesium/Source/Core/ArcGISTiledElevationTerrainProvider";
 import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import Cartesian2 from "terriajs-cesium/Source/Core/Cartesian2";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import HeadingPitchRoll from "terriajs-cesium/Source/Core/HeadingPitchRoll";
+import Matrix3 from "terriajs-cesium/Source/Core/Matrix3";
+import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
+import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
 import Resource from "terriajs-cesium/Source/Core/Resource";
+import Transforms from "terriajs-cesium/Source/Core/Transforms";
 import Cesium3DTileColorBlendMode from "terriajs-cesium/Source/Scene/Cesium3DTileColorBlendMode";
 import I3SDataProvider from "terriajs-cesium/Source/Scene/I3SDataProvider";
 import I3SNode from "terriajs-cesium/Source/Scene/I3SNode";
+import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import isDefined from "../../../Core/isDefined";
 import CatalogMemberMixin, {
   getName
@@ -27,12 +34,15 @@ import I3SCatalogItemTraits from "../../../Traits/TraitsClasses/I3SCatalogItemTr
 import CreateModel from "../../Definition/CreateModel";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import TerriaFeature from "../../Feature/Feature";
+import RepositionableMixin from "../../../ModelMixins/RepositionableMixin";
 
 export default class I3SCatalogItem extends Cesium3dTilesStyleMixin(
   FeatureInfoUrlTemplateMixin(
     ShadowMixin(
-      MappableMixin(
-        UrlMixin(CatalogMemberMixin(CreateModel(I3SCatalogItemTraits)))
+      RepositionableMixin(
+        MappableMixin(
+          UrlMixin(CatalogMemberMixin(CreateModel(I3SCatalogItemTraits)))
+        )
       )
     )
   )
@@ -42,6 +52,10 @@ export default class I3SCatalogItem extends Cesium3dTilesStyleMixin(
 
   @observable
   private dataProvider?: I3SDataProvider;
+  private readonly originalTilesetMatrices = new WeakMap<
+    Cesium3DTileset,
+    Matrix4
+  >();
 
   constructor(...args: ModelConstructorParameters) {
     super(...args);
@@ -127,6 +141,47 @@ export default class I3SCatalogItem extends Cesium3dTilesStyleMixin(
         const tileset = layer.tileset;
 
         if (tileset) {
+          let originalMatrix = this.originalTilesetMatrices.get(tileset);
+          if (originalMatrix === undefined) {
+            originalMatrix = Matrix4.clone(tileset.modelMatrix);
+            this.originalTilesetMatrices.set(tileset, originalMatrix);
+          }
+
+          let position = Matrix4.getTranslation(
+            originalMatrix,
+            new Cartesian3()
+          );
+          let orientation = Quaternion.fromRotationMatrix(
+            Matrix4.getRotation(originalMatrix, new Matrix3()),
+            new Quaternion()
+          );
+          let scale = Matrix4.getScale(originalMatrix, new Cartesian3());
+
+          const { latitude, longitude, height } = this.origin;
+          if (latitude !== undefined && longitude !== undefined) {
+            position = Cartesian3.fromDegrees(longitude, latitude, height);
+          }
+
+          const { heading, pitch, roll } = this.rotation;
+          if (
+            heading !== undefined &&
+            pitch !== undefined &&
+            roll !== undefined
+          ) {
+            const hpr = HeadingPitchRoll.fromDegrees(heading, pitch, roll);
+            orientation = Transforms.headingPitchRollQuaternion(position, hpr);
+          }
+
+          if (this.scale !== undefined) {
+            scale = new Cartesian3(this.scale, this.scale, this.scale);
+          }
+
+          tileset.modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(
+            position,
+            orientation,
+            scale
+          );
+
           tileset.style = toJS(this.cesiumTileStyle);
           tileset.shadows = this.cesiumShadows;
           // @ts-expect-error - Attach terria catalog item to tileset

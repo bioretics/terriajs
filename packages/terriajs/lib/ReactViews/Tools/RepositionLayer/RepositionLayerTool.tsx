@@ -6,6 +6,8 @@ import Cesium3dTilesMixin from "../../../ModelMixins/Cesium3dTilesMixin";
 import GltfMixin from "../../../ModelMixins/GltfMixin";
 import Repositionable3DTiles from "../../../Models/Repositionable3DTiles";
 import RepositionableGltf from "../../../Models/RepositionableGltf";
+import RepositionableI3S from "../../../Models/RepositionableI3S";
+import I3SCatalogItem from "../../../Models/Catalog/CatalogItems/I3SCatalogItem";
 import Cesium from "../../../Models/Cesium";
 import { BaseModel } from "../../../Models/Definition/Model";
 import ViewState from "../../../ReactViewModels/ViewState";
@@ -46,6 +48,8 @@ const RepositionLayerTool: FC<Props> = observer(
         controller = Repositionable3DTiles.create(item, cesium);
       } else if (GltfMixin.isMixedInto(item)) {
         controller = RepositionableGltf.create(item, cesium);
+      } else if (item instanceof I3SCatalogItem) {
+        controller = RepositionableI3S.create(item, cesium);
       }
 
       controllerRef.current = controller;
