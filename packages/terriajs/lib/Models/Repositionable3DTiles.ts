@@ -20,7 +20,7 @@ import RepositionableLayer, {
 
 type RepositionableItem = Cesium3dTilesMixin.Instance;
 
-interface TransformationSnapshot {
+export interface TransformationSnapshot {
   latitude?: number;
   longitude?: number;
   height?: number;
@@ -28,6 +28,130 @@ interface TransformationSnapshot {
   pitch?: number;
   roll?: number;
   scale?: number;
+}
+
+export function snapshotTransformation(
+  item: RepositionableItem
+): TransformationSnapshot {
+  return {
+    latitude: item.origin.latitude,
+    longitude: item.origin.longitude,
+    height: item.origin.height,
+    heading: item.rotation.heading,
+    pitch: item.rotation.pitch,
+    roll: item.rotation.roll,
+    scale: item.scale
+  };
+}
+
+export function defaultTransformation(
+  item: RepositionableItem
+): TransformationSnapshot {
+  const origin = getDefaultTrait<LatLonHeightTraits>(item, "origin");
+  const rotation = getDefaultTrait<HeadingPitchRollTraits>(item, "rotation");
+  return {
+    latitude: origin?.latitude,
+    longitude: origin?.longitude,
+    height: origin?.height,
+    heading: rotation?.heading,
+    pitch: rotation?.pitch,
+    roll: rotation?.roll,
+    scale: getDefaultTrait<number>(item, "scale")
+  };
+}
+
+export function restoreTransformation(
+  item: RepositionableItem,
+  snapshot: TransformationSnapshot
+) {
+  updateModelFromJson(item.origin, CommonStrata.user, {
+    latitude: snapshot.latitude,
+    longitude: snapshot.longitude,
+    height: snapshot.height
+  }).logError("Failed to restore 3D Tiles origin");
+  updateModelFromJson(item.rotation, CommonStrata.user, {
+    heading: snapshot.heading,
+    pitch: snapshot.pitch,
+    roll: snapshot.roll
+  }).logError("Failed to restore 3D Tiles rotation");
+  item.setTrait(CommonStrata.user, "scale", snapshot.scale);
+}
+
+export function previewWholeTransformation(
+  item: RepositionableItem,
+  modelMatrix: Matrix4,
+  initialAggregateCenter: Cartesian3,
+  initialItemMatrix: Matrix4,
+  is2D: boolean
+) {
+  const aggregatePosition = Matrix4.getTranslation(
+    modelMatrix,
+    new Cartesian3()
+  );
+  const aggregateMove = Cartesian3.subtract(
+    aggregatePosition,
+    initialAggregateCenter,
+    new Cartesian3()
+  );
+  const aggregateWorldRotation = Quaternion.fromRotationMatrix(
+    Matrix4.getRotation(modelMatrix, new Matrix3()),
+    new Quaternion()
+  );
+
+  let transformedItemMatrix: Matrix4;
+  if (!is2D) {
+    const centerOrigin = Matrix4.fromTranslation(
+      Cartesian3.negate(initialAggregateCenter, new Cartesian3())
+    );
+    const centerRotation = Matrix4.fromTranslationQuaternionRotationScale(
+      initialAggregateCenter,
+      aggregateWorldRotation,
+      new Cartesian3(1, 1, 1)
+    );
+    const moveTranslation = Matrix4.fromTranslation(aggregateMove);
+    const pivoted = Matrix4.multiply(
+      centerRotation,
+      Matrix4.multiply(centerOrigin, initialItemMatrix, new Matrix4()),
+      new Matrix4()
+    );
+    transformedItemMatrix = Matrix4.multiply(
+      moveTranslation,
+      pivoted,
+      new Matrix4()
+    );
+  } else {
+    transformedItemMatrix = Matrix4.multiply(
+      Matrix4.fromTranslation(aggregateMove),
+      initialItemMatrix,
+      new Matrix4()
+    );
+  }
+
+  const transformedPosition = Matrix4.getTranslation(
+    transformedItemMatrix,
+    new Cartesian3()
+  );
+  LatLonHeightTraits.setFromCartesian(
+    item.origin,
+    CommonStrata.user,
+    transformedPosition
+  );
+
+  if (is2D) {
+    const hpr = Transforms.fixedFrameToHeadingPitchRoll(modelMatrix);
+    HeadingPitchRollTraits.setFromHeadingPitchRoll(
+      item.rotation,
+      CommonStrata.user,
+      new HeadingPitchRoll(hpr.heading, 0, 0)
+    );
+  } else {
+    const hpr = Transforms.fixedFrameToHeadingPitchRoll(transformedItemMatrix);
+    HeadingPitchRollTraits.setFromHeadingPitchRoll(
+      item.rotation,
+      CommonStrata.user,
+      hpr
+    );
+  }
 }
 
 function previewModelMatrix(

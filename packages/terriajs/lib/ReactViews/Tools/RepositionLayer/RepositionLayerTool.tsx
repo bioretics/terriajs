@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import { FC, useEffect, useRef } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Cesium3dTilesMixin from "../../../ModelMixins/Cesium3dTilesMixin";
 import GltfMixin from "../../../ModelMixins/GltfMixin";
@@ -18,6 +18,7 @@ import ViewState from "../../../ReactViewModels/ViewState";
 import ViewerMode from "../../../Models/ViewerMode";
 import { StyledButton } from "../../../Styled/Button";
 import Text from "../../../Styled/Text";
+import Checkbox from "../../../Styled/Checkbox";
 
 interface Props {
   viewState: ViewState;
@@ -33,6 +34,9 @@ const RepositionLayerTool: FC<Props> = observer(
     const is2D =
       viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium2D ||
       repositionableItem.repositionMode === "2d";
+    const [compositeMode, setCompositeMode] = useState<"whole" | "pieces">(
+      "whole"
+    );
     const controllerRef = useRef<
       { save(): void; cancel(): void; reset(): void } | undefined
     >(undefined);
@@ -62,7 +66,11 @@ const RepositionLayerTool: FC<Props> = observer(
       } else if (item instanceof I3SCatalogItem) {
         controller = RepositionableI3S.create(item, cesium);
       } else if (item instanceof CompositeCatalogItem) {
-        controller = RepositionableComposite.create(item, cesium);
+        controller = RepositionableComposite.create(
+          item,
+          cesium,
+          compositeMode
+        );
       } else if (item instanceof IonImageryCatalogItem) {
         controller = RepositionableImagery.create(item, cesium);
       }
@@ -85,7 +93,7 @@ const RepositionLayerTool: FC<Props> = observer(
         controllerRef.current?.cancel();
         controllerRef.current = undefined;
       };
-    }, [item, cesium, viewState]);
+    }, [item, cesium, viewState, compositeMode]);
 
     return (
       <Panel>
@@ -97,6 +105,21 @@ const RepositionLayerTool: FC<Props> = observer(
             ? "Move on the map and rotate around the map normal. Press Escape to cancel."
             : "Drag the box to move or rotate the layer. Press Escape to cancel."}
         </Text>
+        {item instanceof CompositeCatalogItem &&
+          item.memberModels.filter(Cesium3dTilesMixin.isMixedInto).length >
+            1 && (
+            <ModeControl>
+              <Checkbox
+                isSwitch
+                isChecked={compositeMode === "pieces"}
+                onChange={(event) =>
+                  setCompositeMode(event.target.checked ? "pieces" : "whole")
+                }
+              >
+                Edit components separately
+              </Checkbox>
+            </ModeControl>
+          )}
         {is2D ? (
           <Legend>
             <LegendItem>
@@ -160,6 +183,10 @@ const Legend = styled.div`
   display: grid;
   gap: 4px;
   margin-top: 8px;
+`;
+
+const ModeControl = styled.div`
+  margin-top: 10px;
 `;
 
 const LegendItem = styled.div`
