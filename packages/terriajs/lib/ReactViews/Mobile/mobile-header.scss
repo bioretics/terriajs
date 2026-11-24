@@ -36,53 +36,40 @@
 .btn-add {
   composes: btn;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
   position: relative;
-  margin: 0 variables.$padding-small;
-  padding: variables.$padding variables.$padding variables.$padding
-    variables.$padding * 3;
-  width: auto;
-  text-align: right;
-  font-size: 0.95rem;
+  width: 40px;
+  padding: 0;
+  margin: 0;
   border-radius: 4px;
 
   svg {
-    position: absolute;
-    top: variables.$padding;
-    left: calc(variables.$padding / 2);
-    fill: #ffffff;
+    fill: #fff;
+  }
+
+  &[aria-pressed="true"] {
+    box-shadow: inset 0 0 0 2px #fff;
   }
 }
 
 .btn-search {
-  composes: btn;
-  margin: 0 variables.$padding-small;
-  padding: variables.$padding-small;
-  position: relative;
-  width: 40px;
-  border-radius: 4px;
-
-  svg {
-    fill: #fff;
-    margin: auto;
-  }
+  composes: btn-add;
 }
 
 .btn-now-viewing {
-  composes: btn;
-  margin: 0 variables.$padding-small;
-  padding: variables.$padding-small;
-  padding-right: variables.$padding;
-  position: relative;
-  width: 50px;
+  composes: btn-add;
+
   svg {
     height: 28px;
     width: 28px;
-    fill: #fff;
   }
   .nowViewingCount {
     position: absolute;
-    top: variables.$padding-small;
-    right: variables.$padding-small;
+    top: 0;
+    right: 2px;
   }
   .doubleDigit {
     font-size: 0.8rem;
@@ -90,22 +77,23 @@
 }
 
 .group-left {
-  position: absolute;
-  left: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
 
-  > * {
-    display: inline-block;
+  > div {
+    width: auto;
   }
 }
 
 .group-right {
-  position: absolute;
-  right: 0;
-  z-index: 1;
-
-  > * {
-    display: inline-block;
-  }
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  margin-left: 4px;
 }
 
 .formSearchData {

@@ -1909,6 +1909,14 @@ const MeasurablePanel = observer((props: Props) => {
         width: ${isMobile ? "100%" : "auto"};
         height: ${isMobile ? "40%" : "auto"};
         overflow-y: auto;
+        ${
+          isMobile &&
+          `&& {
+          right: auto;
+          margin-left: auto;
+          margin-right: auto;
+        }`
+        }
       `}
       className={panelClassName}
       style={{ pointerEvents: "auto", position: "relative" }}
