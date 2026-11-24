@@ -84,7 +84,8 @@ export default class MeasurablePanelManager {
             : HeightReference.CLAMP_TO_GROUND,
           eyeOffset: isCesium2D
             ? Cartesian3.ZERO
-            : new Cartesian3(0.0, 0.0, 50.0)
+            : new Cartesian3(0.0, 0.0, -50.0),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY
         }
       })
     );
