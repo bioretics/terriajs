@@ -584,6 +584,58 @@ export default class BoxDrawing {
     });
   }
 
+  async clampToGroundOnce(): Promise<boolean> {
+    if (!this.allowedTranslationAxes.includes("z")) {
+      return false;
+    }
+
+    const terrainProvider = this.scene.terrainProvider;
+    if (!terrainProvider) {
+      return false;
+    }
+
+    const current = Cartographic.fromCartesian(
+      this.trs.translation,
+      Ellipsoid.WGS84,
+      new Cartographic()
+    );
+    let groundHeight = 0;
+
+    if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
+      try {
+        const [sample] = await sampleTerrainMostDetailed(terrainProvider, [
+          new Cartographic(current.longitude, current.latitude, 0)
+        ]);
+        if (sample.height === undefined || !Number.isFinite(sample.height)) {
+          return false;
+        }
+        groundHeight = sample.height;
+      } catch {
+        return false;
+      }
+    }
+
+    const boxHalfHeight = this.trs.scale.z / 2;
+    const desiredHeight = groundHeight + boxHalfHeight;
+    if (!Number.isFinite(desiredHeight)) {
+      return false;
+    }
+
+    const position = Cartographic.toCartesian(
+      new Cartographic(current.longitude, current.latitude, desiredHeight),
+      Ellipsoid.WGS84
+    );
+    this.setPosition(position);
+    if (this.onChange) {
+      this.onChange?.({
+        modelMatrix: this.modelMatrix,
+        translationRotationScale: this.trs,
+        isFinished: true
+      });
+    }
+    return true;
+  }
+
   /**
    * Sets up event handlers if not already done.
    */

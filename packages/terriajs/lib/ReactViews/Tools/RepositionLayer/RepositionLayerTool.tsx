@@ -37,8 +37,17 @@ const RepositionLayerTool: FC<Props> = observer(
     const [compositeMode, setCompositeMode] = useState<"whole" | "pieces">(
       "whole"
     );
+    const [clampStatus, setClampStatus] = useState<
+      "idle" | "working" | "success" | "unavailable"
+    >("idle");
     const controllerRef = useRef<
-      { save(): void; cancel(): void; reset(): void } | undefined
+      | {
+          save(): void;
+          cancel(): void;
+          reset(): void;
+          clampToGround?(): Promise<boolean>;
+        }
+      | undefined
     >(undefined);
 
     const close = action((save: boolean) => {
@@ -55,9 +64,24 @@ const RepositionLayerTool: FC<Props> = observer(
       viewState.closeTool();
     });
 
+    const clampToGround = action(async () => {
+      setClampStatus("working");
+      const controller = controllerRef.current;
+      const success =
+        controller?.clampToGround !== undefined
+          ? await controller.clampToGround()
+          : false;
+      setClampStatus(success ? "success" : "unavailable");
+    });
+
     useEffect(() => {
       let controller:
-        | { save(): void; cancel(): void; reset(): void }
+        | {
+            save(): void;
+            cancel(): void;
+            reset(): void;
+            clampToGround?(): Promise<boolean>;
+          }
         | undefined;
       if (Cesium3dTilesMixin.isMixedInto(item)) {
         controller = Repositionable3DTiles.create(item, cesium);
@@ -156,12 +180,27 @@ const RepositionLayerTool: FC<Props> = observer(
           </Legend>
         )}
         <Actions>
+          {!is2D && (
+            <StyledButton
+              disabled={clampStatus === "working"}
+              onClick={clampToGround}
+            >
+              {clampStatus === "working"
+                ? "Clamping..."
+                : clampStatus === "success"
+                  ? "Ground clamped"
+                  : "Clamp to ground"}
+            </StyledButton>
+          )}
           <StyledButton onClick={reset}>Reset position</StyledButton>
           <StyledButton onClick={() => close(false)}>Cancel</StyledButton>
           <StyledButton primary onClick={() => close(true)}>
             Save
           </StyledButton>
         </Actions>
+        {clampStatus === "unavailable" && (
+          <ClampStatus>Ground height is unavailable</ClampStatus>
+        )}
       </Panel>
     );
   }
@@ -195,6 +234,12 @@ const Legend = styled.div`
 
 const ModeControl = styled.div`
   margin-top: 10px;
+`;
+
+const ClampStatus = styled.div`
+  margin-top: 8px;
+  color: ${(props) => props.theme.textLight};
+  font-size: 12px;
 `;
 
 const LegendItem = styled.div`

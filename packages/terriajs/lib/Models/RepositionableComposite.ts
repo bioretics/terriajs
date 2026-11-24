@@ -179,4 +179,14 @@ export default class RepositionableComposite {
       this.controllers.forEach((controller) => controller.reset());
     }
   }
+
+  async clampToGround(): Promise<boolean> {
+    if (this.wholeController) {
+      return this.wholeController.clampToGround();
+    }
+    const results = await Promise.all(
+      this.controllers.map((controller) => controller.clampToGround())
+    );
+    return results.some((success) => success);
+  }
 }

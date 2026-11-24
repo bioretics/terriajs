@@ -103,6 +103,11 @@ export default class RepositionableLayer<
     this.dispose();
   }
 
+  async clampToGround(): Promise<boolean> {
+    if (this.finished) return false;
+    return this.boxDrawing.clampToGroundOnce();
+  }
+
   dispose() {
     if (this.disposed) return;
     this.disposed = true;

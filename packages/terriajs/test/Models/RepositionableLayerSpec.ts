@@ -75,6 +75,9 @@ describe("RepositionableLayer", function () {
       enableScaling: true,
       enableRotation: true,
       dataSource: { show: false },
+      clampToGroundOnce: jasmine
+        .createSpy("clampToGroundOnce")
+        .and.returnValue(Promise.resolve(true)),
       stopInteractions: jasmine.createSpy("stopInteractions")
     } as unknown as BoxDrawing;
 
@@ -170,6 +173,15 @@ describe("RepositionableLayer", function () {
 
     expect(harness.restoredSnapshot).toBe("default");
     expect(harness.deactivated).toBeTrue();
+  });
+
+  it("delegates ground clamping to BoxDrawing", async function () {
+    const harness = createHarness();
+
+    const result = await harness.controller.clampToGround();
+
+    expect(result).toBeTrue();
+    expect(harness.boxDrawing.clampToGroundOnce).toHaveBeenCalledTimes(1);
   });
 
   it("is safe to dispose more than once", function () {
