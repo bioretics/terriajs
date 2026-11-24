@@ -40,4 +40,8 @@ export default class RepositionableComposite {
   cancel() {
     this.controllers.forEach((controller) => controller.cancel());
   }
+
+  reset() {
+    this.controllers.forEach((controller) => controller.reset());
+  }
 }

@@ -89,6 +89,7 @@ describe("RepositionableLayer", function () {
     const adapter: RepositionableLayerAdapter<string, BaseModel> = {
       item,
       snapshot: () => "original",
+      defaultSnapshot: () => "default",
       preview: () => {
         previewCount++;
       },
@@ -159,6 +160,15 @@ describe("RepositionableLayer", function () {
     harness.controller.save();
 
     expect(harness.restoredSnapshot).toBeUndefined();
+    expect(harness.deactivated).toBeTrue();
+  });
+
+  it("restores the default snapshot on reset", function () {
+    const harness = createHarness();
+
+    harness.controller.reset();
+
+    expect(harness.restoredSnapshot).toBe("default");
     expect(harness.deactivated).toBeTrue();
   });
 

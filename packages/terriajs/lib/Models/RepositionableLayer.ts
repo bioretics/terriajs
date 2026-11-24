@@ -10,10 +10,27 @@ export interface RepositionableLayerAdapter<
 > {
   readonly item: TItem;
   snapshot(): TSnapshot;
+  defaultSnapshot(): TSnapshot;
   preview(modelMatrix: Matrix4): void;
   restore(snapshot: TSnapshot): void;
   activate?(boxDrawing: BoxDrawing): void;
   deactivate?(): void;
+}
+
+export function getDefaultTrait<T>(
+  item: BaseModel,
+  trait: string
+): T | undefined {
+  for (const [stratumId, stratum] of item.strataTopToBottom) {
+    if (
+      stratumId !== "user" &&
+      stratumId !== "edit" &&
+      stratum[trait as keyof typeof stratum] !== undefined
+    ) {
+      return stratum[trait as keyof typeof stratum] as T;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -76,6 +93,13 @@ export default class RepositionableLayer<
     if (this.finished) return;
     this.finished = true;
     this.adapter.restore(this.snapshot);
+    this.dispose();
+  }
+
+  reset() {
+    if (this.finished) return;
+    this.finished = true;
+    this.adapter.restore(this.adapter.defaultSnapshot());
     this.dispose();
   }
 

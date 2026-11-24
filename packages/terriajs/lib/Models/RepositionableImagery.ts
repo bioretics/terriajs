@@ -11,12 +11,14 @@ import Entity from "terriajs-cesium/Source/DataSources/Entity";
 import Color from "terriajs-cesium/Source/Core/Color";
 import IonImageryCatalogItem from "./Catalog/CatalogItems/IonImageryCatalogItem";
 import { ImageryParts } from "../ModelMixins/MappableMixin";
+import { RectangleTraits } from "../Traits/TraitsClasses/MappableTraits";
 import BoxDrawing from "./BoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
 import RepositionableLayer, {
-  RepositionableLayerAdapter
+  RepositionableLayerAdapter,
+  getDefaultTrait
 } from "./RepositionableLayer";
 
 interface RectangleSnapshot {
@@ -28,7 +30,7 @@ interface RectangleSnapshot {
 
 interface ImagerySnapshot {
   rectangle: RectangleSnapshot;
-  clipToRectangle: boolean;
+  clipToRectangle?: boolean;
 }
 
 export default class RepositionableImagery extends RepositionableLayer<
@@ -114,6 +116,18 @@ export default class RepositionableImagery extends RepositionableLayer<
         },
         clipToRectangle: item.clipToRectangle
       }),
+      defaultSnapshot: () => {
+        const rectangle = getDefaultTrait<RectangleTraits>(item, "rectangle");
+        return {
+          rectangle: {
+            west: rectangle?.west,
+            south: rectangle?.south,
+            east: rectangle?.east,
+            north: rectangle?.north
+          },
+          clipToRectangle: getDefaultTrait<boolean>(item, "clipToRectangle")
+        };
+      },
       preview: (modelMatrix) => {
         const position = Matrix4.getTranslation(modelMatrix, new Cartesian3());
         const cartographic = Cartographic.fromCartesian(position);

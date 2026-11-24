@@ -14,7 +14,8 @@ import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
 import ViewerMode from "./ViewerMode";
 import RepositionableLayer, {
-  RepositionableLayerAdapter
+  RepositionableLayerAdapter,
+  getDefaultTrait
 } from "./RepositionableLayer";
 
 type RepositionableItem = Cesium3dTilesMixin.Instance;
@@ -183,6 +184,22 @@ export default class Repositionable3DTiles extends RepositionableLayer<
         roll: item.rotation.roll,
         scale: item.scale
       }),
+      defaultSnapshot: () => {
+        const origin = getDefaultTrait<LatLonHeightTraits>(item, "origin");
+        const rotation = getDefaultTrait<HeadingPitchRollTraits>(
+          item,
+          "rotation"
+        );
+        return {
+          latitude: origin?.latitude,
+          longitude: origin?.longitude,
+          height: origin?.height,
+          heading: rotation?.heading,
+          pitch: rotation?.pitch,
+          roll: rotation?.roll,
+          scale: getDefaultTrait<number>(item, "scale")
+        };
+      },
       preview: (modelMatrix) => {
         previewModelMatrix(
           item,

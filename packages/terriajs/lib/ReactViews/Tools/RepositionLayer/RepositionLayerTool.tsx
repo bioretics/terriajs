@@ -33,9 +33,9 @@ const RepositionLayerTool: FC<Props> = observer(
     const is2D =
       viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium2D ||
       repositionableItem.repositionMode === "2d";
-    const controllerRef = useRef<{ save(): void; cancel(): void } | undefined>(
-      undefined
-    );
+    const controllerRef = useRef<
+      { save(): void; cancel(): void; reset(): void } | undefined
+    >(undefined);
 
     const close = action((save: boolean) => {
       if (save) {
@@ -46,8 +46,15 @@ const RepositionLayerTool: FC<Props> = observer(
       viewState.closeTool();
     });
 
+    const reset = action(() => {
+      controllerRef.current?.reset();
+      viewState.closeTool();
+    });
+
     useEffect(() => {
-      let controller: { save(): void; cancel(): void } | undefined;
+      let controller:
+        | { save(): void; cancel(): void; reset(): void }
+        | undefined;
       if (Cesium3dTilesMixin.isMixedInto(item)) {
         controller = Repositionable3DTiles.create(item, cesium);
       } else if (GltfMixin.isMixedInto(item)) {
@@ -118,6 +125,7 @@ const RepositionLayerTool: FC<Props> = observer(
           </Legend>
         )}
         <Actions>
+          <StyledButton onClick={reset}>Reset position</StyledButton>
           <StyledButton onClick={() => close(false)}>Cancel</StyledButton>
           <StyledButton primary onClick={() => close(true)}>
             Save
