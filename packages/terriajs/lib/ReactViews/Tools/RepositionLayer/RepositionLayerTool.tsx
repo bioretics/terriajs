@@ -123,27 +123,35 @@ const RepositionLayerTool: FC<Props> = observer(
         {is2D ? (
           <Legend>
             <LegendItem>
-              <Swatch color="#22d3ee" />
-              <span>Map plane: move X/Y</span>
+              <AxisSwatch color="#ef4444">X</AxisSwatch>
+              <span>East / west translation</span>
             </LegendItem>
             <LegendItem>
-              <Swatch color="#22d3ee" />
-              <span>Vertical edge: rotate heading</span>
+              <AxisSwatch color="#22c55e">Y</AxisSwatch>
+              <span>North / south translation</span>
+            </LegendItem>
+            <LegendItem>
+              <Swatch color="#38bdf8" />
+              <span>Map-normal edge: heading</span>
             </LegendItem>
           </Legend>
         ) : (
           <Legend>
             <LegendItem>
-              <Swatch color="#22d3ee" />
-              <span>Vertical edge: spin</span>
+              <AxisSwatch color="#ef4444">X</AxisSwatch>
+              <span>East / west translation</span>
             </LegendItem>
             <LegendItem>
-              <Swatch color="#facc15" />
-              <span>Horizontal edge: tilt</span>
+              <AxisSwatch color="#22c55e">Y</AxisSwatch>
+              <span>North / south translation</span>
+            </LegendItem>
+            <LegendItem>
+              <AxisSwatch color="#38bdf8">Z</AxisSwatch>
+              <span>Up / down translation</span>
             </LegendItem>
             <LegendItem>
               <Swatch color="#fb923c" />
-              <span>Diagonal: free 3D rotation</span>
+              <span>Edges: heading, tilt, and 3D rotation</span>
             </LegendItem>
           </Legend>
         )}
@@ -203,6 +211,19 @@ const Swatch = styled.span<{ color: string }>`
   flex: 0 0 auto;
   border-radius: 2px;
   background: ${(props) => props.color};
+`;
+
+const AxisSwatch = styled.span<{ color: string }>`
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 1px solid ${(props) => props.color};
+  border-radius: 50%;
+  color: ${(props) => props.color};
+  font-size: 11px;
+  font-weight: bold;
+  line-height: 16px;
+  text-align: center;
 `;
 
 export default RepositionLayerTool;

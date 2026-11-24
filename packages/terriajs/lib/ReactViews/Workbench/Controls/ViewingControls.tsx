@@ -23,6 +23,7 @@ import CatalogMemberMixin, {
 import DiffableMixin from "../../../ModelMixins/DiffableMixin";
 import ExportableMixin from "../../../ModelMixins/ExportableMixin";
 import MappableMixin from "../../../ModelMixins/MappableMixin";
+import RepositionableMixin from "../../../ModelMixins/RepositionableMixin";
 import SearchableItemMixin from "../../../ModelMixins/SearchableItemMixin";
 import TimeVarying from "../../../ModelMixins/TimeVarying";
 import SplitItemReference from "../../../Models/Catalog/CatalogReferences/SplitItemReference";
@@ -64,6 +65,8 @@ import {
 } from "../../Map/MapNavigation/Items";
 import { MeasureToolsController } from "../../Map/MapNavigation/Items/MeasureTools";
 import raiseErrorNotShownInPreview from "../../Preview/raiseErrorNotShownInPreview";
+import Cesium from "../../../Models/Cesium";
+import ViewerMode from "../../../Models/ViewerMode";
 
 const BoxViewingControl = styled(Box).attrs({
   centered: true,
@@ -539,6 +542,14 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
   }, [item, controls, viewState.globalViewingControlOptions]);
 
   const renderViewingControlsMenu = () => {
+    const canReposition =
+      RepositionableMixin.isMixedInto(item) &&
+      item.isRepositionable === true &&
+      viewState.terria.mainViewer.viewerMode === ViewerMode.Cesium &&
+      viewState.terria.currentViewer instanceof Cesium &&
+      !item.isLoadingMapItems &&
+      item.mapItems.length > 0;
+
     const canSplit =
       controls.compare &&
       !item.terria.configParameters.disableSplitter &&
@@ -571,6 +582,32 @@ const ViewingControls: React.FC<PropsType> = observer((props) => {
             </ViewingControlMenuButton>
           </li>
         ))}
+        {canReposition ? (
+          <li key={"workbench.repositionItem"}>
+            <ViewingControlMenuButton
+              onClick={() => {
+                const cesium = viewState.terria.currentViewer;
+                if (cesium instanceof Cesium) {
+                  viewState.openTool({
+                    toolName: "Reposition layer",
+                    getToolComponent: () =>
+                      import("../../Tools/RepositionLayer/RepositionLayerTool").then(
+                        (module) => module.default
+                      ),
+                    params: { item, cesium, viewState }
+                  });
+                  setIsOpen(false);
+                }
+              }}
+              title="Move or rotate this layer"
+            >
+              <BoxViewingControl>
+                <StyledIcon glyph={Icon.GLYPHS.editor} />
+                <span>Reposition</span>
+              </BoxViewingControl>
+            </ViewingControlMenuButton>
+          </li>
+        ) : null}
         {canSplit ? (
           <li key={"workbench.splitItem"}>
             <ViewingControlMenuButton
