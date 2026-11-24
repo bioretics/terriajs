@@ -15,6 +15,7 @@ import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import I3SCatalogItem from "../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
 import CompositeCatalogItem from "../../lib/Models/Catalog/CatalogItems/CompositeCatalogItem";
 import IonImageryCatalogItem from "../../lib/Models/Catalog/CatalogItems/IonImageryCatalogItem";
+import { exportRepositionableCatalog } from "../../lib/Models/RepositionableCatalogExport";
 
 describe("RepositionableLayer", function () {
   it("marks 3D Tiles catalog items as repositionable", function () {
@@ -191,5 +192,24 @@ describe("RepositionableLayer", function () {
     harness.controller.dispose();
 
     expect(harness.cesium.dataSources.remove).toHaveBeenCalledTimes(1);
+  });
+
+  it("exports definition and user strata in a reloadable init source", async function () {
+    const terria = new Terria();
+    const item = new GltfCatalogItem("repositioned-layer", terria);
+    item.setTrait(CommonStrata.definition, "name", "Repositioned Layer");
+    item.setTrait(CommonStrata.user, "isRepositionable", true);
+
+    const exported = exportRepositionableCatalog(item);
+    const json = JSON.parse(await exported.blob.text());
+
+    expect(exported.filename).toBe("repositioned-layer.json");
+    expect(json.workbench).toEqual(["repositioned-layer"]);
+    expect(json.models["repositioned-layer"].strata.definition.name).toBe(
+      "Repositioned Layer"
+    );
+    expect(json.models["repositioned-layer"].strata.user.isRepositionable).toBe(
+      true
+    );
   });
 });

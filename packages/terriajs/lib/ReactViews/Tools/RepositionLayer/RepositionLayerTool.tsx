@@ -19,6 +19,8 @@ import ViewerMode from "../../../Models/ViewerMode";
 import { StyledButton } from "../../../Styled/Button";
 import Text from "../../../Styled/Text";
 import Checkbox from "../../../Styled/Checkbox";
+import FileSaver from "file-saver";
+import { exportRepositionableCatalog } from "../../../Models/RepositionableCatalogExport";
 
 interface Props {
   viewState: ViewState;
@@ -72,6 +74,15 @@ const RepositionLayerTool: FC<Props> = observer(
           ? await controller.clampToGround()
           : false;
       setClampStatus(success ? "success" : "unavailable");
+    });
+
+    const exportCatalog = action(() => {
+      try {
+        const exported = exportRepositionableCatalog(item);
+        FileSaver.saveAs(exported.blob, exported.filename);
+      } catch (error) {
+        viewState.terria.raiseErrorToUser(error);
+      }
     });
 
     useEffect(() => {
@@ -193,6 +204,7 @@ const RepositionLayerTool: FC<Props> = observer(
             </StyledButton>
           )}
           <StyledButton onClick={reset}>Reset position</StyledButton>
+          <StyledButton onClick={exportCatalog}>Export catalog</StyledButton>
           <StyledButton onClick={() => close(false)}>Cancel</StyledButton>
           <StyledButton primary onClick={() => close(true)}>
             Save
