@@ -111,6 +111,7 @@ type RerPoiShortReportKey = "viewingLabeled" | "viewingUnlabeled";
 
 /** Tile size of the Google-standard / Leaflet Web Mercator pyramid. */
 const WEB_MERCATOR_TILE_SIZE = 256;
+const POI_TOP_DOWN_TILT_DEGREES = 10;
 
 export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   static readonly type = RER_POI_CATALOG_ITEM_TYPE;
@@ -166,6 +167,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
   private transientShortReportTimer: ReturnType<typeof setTimeout> | undefined;
 
   private readonly onDynamicViewportChanged = () => {
+    this.updatePoiDepthTesting();
     if (!this.isShownOnMainMap) return;
 
     const isPastLimit = this.isCameraPastTiltLimit();
@@ -730,6 +732,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         this.lastRenderedTilesSignature = this.getRenderedTilesSignature();
       }
 
+      this.updatePoiDepthTesting();
       this.onDynamicViewportChanged();
       return;
     }
@@ -746,6 +749,29 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         map.off("resize", this.onDynamicViewportChanged);
       };
       this.onDynamicViewportChanged();
+    }
+  }
+
+  private updatePoiDepthTesting() {
+    const cesium = this.terria.cesium;
+    if (!cesium) return;
+
+    const tiltDegrees = CesiumMath.toDegrees(
+      CesiumMath.clamp(
+        cesium.scene.camera.pitch + CesiumMath.PI_OVER_TWO,
+        0,
+        CesiumMath.PI_OVER_TWO
+      )
+    );
+    const disableDepthTestDistance =
+      tiltDegrees <= POI_TOP_DOWN_TILT_DEGREES ? Number.POSITIVE_INFINITY : 0;
+
+    for (const cache of [this.unlabeledEntityCache, this.labeledEntityCache]) {
+      for (const entity of cache?.liveEntityByObjectId.values() ?? []) {
+        if (entity.billboard) {
+          entity.billboard.disableDepthTestDistance = disableDepthTestDistance;
+        }
+      }
     }
   }
 
@@ -1077,6 +1103,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
             };
           });
           this.tagEntitiesWithCatalogItem(unlabeledDataSource);
+          this.updatePoiDepthTesting();
 
           await this.ensureLabeledEntityCache(nextQuery, true);
 
@@ -1247,6 +1274,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         runInAction(() => {
           this.labeledEntityCache = labeledCache;
         });
+        this.updatePoiDepthTesting();
       } catch (error) {
         console.warn(
           "[RerPoiCatalogItem] Failed to create labeled POI cache",
@@ -1706,6 +1734,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
         const id = this.readObjectIdFromEntity(entity, now);
         if (id) cache.liveEntityByObjectId.set(id, entity);
       }
+      this.updatePoiDepthTesting();
     }
   }
 
@@ -1752,6 +1781,7 @@ export default class RerPoiCatalogItem extends ArcGisFeatureServerCatalogItem {
       dataSource.entities.values,
       this.getRerPoiStylingOptions(options?.showLabels ?? false)
     );
+    this.updatePoiDepthTesting();
     return dataSource;
   }
 

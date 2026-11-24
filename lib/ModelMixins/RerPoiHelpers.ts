@@ -50,7 +50,9 @@ const MARKER_SYMBOL_PROPERTY = "marker-symbol";
 const MARKER_COLOR_PROPERTY = "marker-color";
 
 const BILLBOARD_VERTICAL_ORIGIN = new ConstantProperty(VerticalOrigin.BOTTOM);
-const DEPTH_TEST_DISTANCE = new ConstantProperty(Number.POSITIVE_INFINITY);
+// POIs must honour the globe's terrain-depth setting. Cesium otherwise gives
+// clamped billboards a near-camera no-depth-test default.
+const DEPTH_TEST_DISTANCE = new ConstantProperty(0);
 
 type LabelStyleOptions = {
   labelTextColor: string;
