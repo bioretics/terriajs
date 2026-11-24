@@ -264,7 +264,7 @@ class StoryPanel extends Component<Props, State> {
           >
             <Box
               backgroundColor={this.props.theme.dark}
-              css={{ color: "white", cursor: "move" }}
+              css={{ color: this.props.theme.textLight, cursor: "move" }}
               paddedRatio={3}
               column
               className="drag-handle"
@@ -282,7 +282,7 @@ class StoryPanel extends Component<Props, State> {
             >
               <Box
                 css={{
-                  backgroundColor: "rgba(255, 255, 255, 0.85)",
+                  backgroundColor: this.props.theme.overlayInvert,
                   backdropFilter: this.props.theme.blur
                 }}
               >
@@ -290,7 +290,7 @@ class StoryPanel extends Component<Props, State> {
               </Box>
               <Box
                 backgroundColor={this.props.theme.dark}
-                css={{ color: "white" }}
+                css={{ color: this.props.theme.textLight }}
                 paddedHorizontally={3}
                 fullWidth
               >

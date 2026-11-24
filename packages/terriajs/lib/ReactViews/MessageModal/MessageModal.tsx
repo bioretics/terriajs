@@ -30,17 +30,17 @@ const AttributionText = styled(Text).attrs(() => ({ medium: true }))`
   }
 `;
 
-const DataAttributionBox = styled(Box).attrs({
+const DataAttributionBox = styled(Box).attrs((p) => ({
   position: "absolute",
   styledWidth: "500px",
   styledMaxHeight: "320px",
-  backgroundColor: "white",
+  backgroundColor: p.theme.modalBg,
   rounded: true,
   paddedRatio: 4,
   overflowY: "auto",
   scroll: true,
   column: true
-})`
+}))`
   z-index: ${MESSAGE_MODAL_Z_INDEX};
   left: 50%;
   top: 50%;

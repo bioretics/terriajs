@@ -78,7 +78,7 @@ const commonStyles = css<InputProps | TextAreaProps>`
     props.white &&
     `
   color: ${props.theme.textDark};
-  background: #FFFFFF;
+  background: ${props.theme.textLight};
 `}
   ${(props) => props.fullHeight && `height: 100%;`}
   ${(props) => props.styledWidth && `width: ${props.styledWidth};`}

@@ -22,7 +22,7 @@
     &:hover,
     &:focus {
       background: variables.$color-primary;
-      color: orange;
+      color: variables.$dropdown-hover-color;
       text-decoration: none;
     }
   }
@@ -32,7 +32,7 @@
   // largely to undo .btn--dropdown
   // It would be better to add a class to the Add Data dropdown instead.
   z-index: 999;
-  color: white; // TODO
+  color: variables.$text-light; // TODO
   font-family: variables.$font-pop;
   border: none;
   padding: 1px 8px;

@@ -20,7 +20,7 @@
   position: relative;
   background-color: variables.$chart-panel-header;
   font-size: variables.$font-size-mid-small;
-  fill: #fff;
+  fill: variables.$text-light;
   border-radius: 8px 8px 0 0;
 }
 
@@ -89,7 +89,7 @@
   svg {
     height: 15px;
     width: 15px;
-    fill: #fff;
+    fill: variables.$text-light;
   }
 
   &:hover,

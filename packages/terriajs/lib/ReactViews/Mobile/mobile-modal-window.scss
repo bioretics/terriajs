@@ -37,7 +37,7 @@
 
 .button {
   composes: btn from "../../Sass/common/_buttons.scss";
-  color: #fff;
+  color: variables.$text-light;
 
   width: auto;
 }
@@ -71,8 +71,8 @@
   height: 18px;
   width: 18px;
   margin: 6px;
-  fill: #ffffff;
-  stroke: #ffffff;
+  fill: variables.$text-light;
+  stroke: variables.$text-light;
 }
 
 .data-catalog {

@@ -1,3 +1,5 @@
+@use "../../../../Sass/common/_variables";
+
 .emergencyPlansBtn {
   composes: btn from "../../../../Sass/common/_buttons.scss";
   composes: btn--map from "../../../../Sass/common/_buttons.scss";
@@ -5,7 +7,7 @@
   &:hover,
   &:focus {
     svg {
-      fill: #ffffff;
+      fill: variables.$text-light;
     }
   }
 }

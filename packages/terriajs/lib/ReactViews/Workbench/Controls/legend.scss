@@ -41,11 +41,11 @@
 
 .legend--svg {
   text {
-    fill: #fff;
+    fill: variables.$text-light;
   }
 
   :global .tick-mark {
-    stroke: #fff;
+    stroke: variables.$text-light;
   }
 
   svg {
@@ -54,7 +54,7 @@
 
     :global rect.background {
       width: 100%;
-      fill: rgba(#fff, 0.15);
+      fill: variables.$overlay;
     }
   }
 }
@@ -63,7 +63,7 @@
   font-family: variables.$font-base;
 
   svg {
-    fill: #fff;
+    fill: variables.$text-light;
   }
 }
 

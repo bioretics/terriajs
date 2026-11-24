@@ -17,7 +17,7 @@ const CatalogGroupButton = styled.button`
       color: ${props.theme.textLight};
       background-color: ${props.theme.modalHighlight};
       svg {
-        fill: white;
+        fill: ${props.theme.textLight};
       }
     }
     ${
@@ -26,7 +26,7 @@ const CatalogGroupButton = styled.button`
         color: ${props.theme.textLight};
         background-color: ${props.theme.modalHighlight};
         svg {
-          fill: white;
+          fill: ${props.theme.textLight};
         }
       `
     }

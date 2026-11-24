@@ -118,10 +118,10 @@ interface XAxisProps {
 export const XAxis = memo(({ scale, ...restProps }: XAxisProps) => {
   return (
     <AxisBottom
-      stroke="#efefef"
-      tickStroke="#efefef"
+      stroke={LABEL_COLOR}
+      tickStroke={LABEL_COLOR}
       tickLabelProps={() => ({
-        fill: "#efefef",
+        fill: LABEL_COLOR,
         textAnchor: "middle",
         fontSize: 12,
         fontFamily: "Arial"

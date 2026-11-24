@@ -7,7 +7,7 @@ import Styles from "./query-window.scss";
 import classNames from "classnames";
 import QueryTabAggregation from "./QueryTabAggregation";
 import QueryTabTable from "./QueryTabTable";
-import styled from "styled-components";
+import styled, { useTheme } from "styled-components";
 import { Button } from "../../Styled/Button";
 import QueryableCatalogItemMixin from "../../ModelMixins/QueryableCatalogItemMixin";
 import Terria from "../../Models/Terria";
@@ -37,6 +37,7 @@ export const QueryWindowElementName = "QueryData";
 export default observer<React.FC>(function QueryWindow() {
   const { t } = useTranslation();
   const viewState = useViewState();
+  const theme = useTheme();
 
   const [currentTab, setCurrentTab] = React.useState<string>("chartView");
 
@@ -79,7 +80,7 @@ export default observer<React.FC>(function QueryWindow() {
                 style={{
                   marginTop: "17px",
                   marginLeft: "10px",
-                  color: "white"
+                  color: theme.textLight
                 }}
               >
                 <ButtonTab

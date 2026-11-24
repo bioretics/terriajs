@@ -72,7 +72,7 @@ $btn-setting-size: 35px;
   text-align: center;
   width: 100%;
   line-height: 4;
-  background: rgba(#fff, 0.15);
+  background: variables.$overlay;
   border: 1px solid transparent;
   &:hover {
     border: variables.$border-style;
@@ -216,7 +216,7 @@ $btn-setting-size: 35px;
   padding: variables.$padding variables.$padding * 2;
   border-bottom: 2px solid transparent;
   li[aria-selected="true"] & {
-    background: #fff;
+    background: variables.$modal-selected-tab-bg;
     color: variables.$modal-highlight;
   }
 }

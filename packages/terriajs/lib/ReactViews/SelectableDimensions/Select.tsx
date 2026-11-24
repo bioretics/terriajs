@@ -49,7 +49,7 @@ export const SelectableDimensionEnum: FC<{
         }),
         option: (baseStyles) => ({
           ...baseStyles,
-          color: "white"
+          color: theme.textLight
         })
       }}
       options={options}
@@ -68,7 +68,7 @@ export const SelectableDimensionEnum: FC<{
           neutral0: theme.darkLighter,
           neutral10: theme.grey,
           neutral20: theme.grey,
-          neutral80: "white",
+          neutral80: theme.textLight,
           primary25: theme.grey,
           primary50: theme.colorPrimary,
           primary75: theme.colorPrimary,
@@ -85,7 +85,7 @@ export const SelectableDimensionEnum: FC<{
         }),
         option: (baseStyles) => ({
           ...baseStyles,
-          color: "white"
+          color: theme.textLight
         })
       }}
       options={options}
@@ -104,7 +104,7 @@ export const SelectableDimensionEnum: FC<{
           neutral0: theme.darkLighter,
           neutral10: theme.grey,
           neutral20: theme.grey,
-          neutral80: "white",
+          neutral80: theme.textLight,
           primary25: theme.grey,
           primary50: theme.colorPrimary,
           primary75: theme.colorPrimary,

@@ -16,7 +16,7 @@
   &:hover,
   &:focus {
     svg {
-      fill: #ffffff;
+      fill: variables.$text-light;
     }
   }
 }

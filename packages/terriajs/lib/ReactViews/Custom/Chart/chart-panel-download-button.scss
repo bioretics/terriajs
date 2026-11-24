@@ -5,13 +5,13 @@
   composes: btn from "../../../Sass/common/_buttons.scss";
 
   padding: 10px;
-  color: #fff;
+  color: variables.$text-light;
   float: right;
   margin-right: variables.$input-height;
   svg {
     height: 20px;
     width: 20px;
-    fill: #ffffff;
+    fill: variables.$text-light;
     display: inline-block;
     vertical-align: bottom;
   }

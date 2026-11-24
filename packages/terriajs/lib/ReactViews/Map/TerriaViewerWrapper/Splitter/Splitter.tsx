@@ -90,7 +90,7 @@ export const Splitter: FC<ISplitterProps> = observer(
         >
           <StyledIcon
             glyph={GLYPHS.splitter}
-            fillColor="white"
+            fillColor={theme.textLight}
             styledWidth="20px"
             styledHeight="20px"
           />
