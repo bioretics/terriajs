@@ -1,14 +1,18 @@
 import { action } from "mobx";
 import { observer } from "mobx-react";
-import { FC, useEffect, useRef, useState } from "react";
+import { FC, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { runInAction } from "mobx";
 import Cesium3dTilesMixin from "../../../ModelMixins/Cesium3dTilesMixin";
 import GltfMixin from "../../../ModelMixins/GltfMixin";
-import Repositionable3DTiles from "../../../Models/Repositionable3DTiles";
+import Repositionable3DTiles, {
+  TransformationSnapshot
+} from "../../../Models/Repositionable3DTiles";
 import RepositionableGltf from "../../../Models/RepositionableGltf";
 import RepositionableI3S from "../../../Models/RepositionableI3S";
-import RepositionableComposite from "../../../Models/RepositionableComposite";
+import RepositionableComposite, {
+  RepositionableCompositeSnapshot
+} from "../../../Models/RepositionableComposite";
 import RepositionableImagery from "../../../Models/RepositionableImagery";
 import I3SCatalogItem from "../../../Models/Catalog/CatalogItems/I3SCatalogItem";
 import CompositeCatalogItem from "../../../Models/Catalog/CatalogItems/CompositeCatalogItem";
@@ -61,6 +65,17 @@ interface Props {
   cesium: Cesium;
 }
 
+interface RepositionController {
+  save(): void;
+  cancel(): void;
+  reset(): void;
+  clampToGround?(): Promise<boolean>;
+  getWholeTransformation?(): TransformationSnapshot | undefined;
+  setWholeTransformation?(transformation: TransformationSnapshot): void;
+  changeSelectedPiece?(): void;
+  refreshSelectedPiece?(): boolean;
+}
+
 const RepositionLayerTool: FC<Props> = observer(
   ({ viewState, item, cesium }) => {
     const repositionableItem = item as BaseModel & {
@@ -72,6 +87,15 @@ const RepositionLayerTool: FC<Props> = observer(
     const [compositeMode, setCompositeMode] = useState<"whole" | "pieces">(
       "whole"
     );
+    const compositeModeRef = useRef(compositeMode);
+    compositeModeRef.current = compositeMode;
+    const [selectedCompositePart, setSelectedCompositePart] =
+      useState<EditableTransformationItem>();
+    const [wholeTransformVersion, setWholeTransformVersion] = useState(0);
+    const compositeSessionRef = useRef<{
+      item: BaseModel;
+      snapshots?: RepositionableCompositeSnapshot[];
+    }>({ item });
     const [clampStatus, setClampStatus] = useState<
       "idle" | "working" | "success" | "unavailable"
     >("idle");
@@ -103,15 +127,30 @@ const RepositionLayerTool: FC<Props> = observer(
       "idle" | "invalid" | "applied"
     >("idle");
     const editableItem = isEditableTransformationItem(item) ? item : undefined;
-    const controllerRef = useRef<
-      | {
-          save(): void;
-          cancel(): void;
-          reset(): void;
-          clampToGround?(): Promise<boolean>;
-        }
-      | undefined
-    >(undefined);
+    const activeEditableItem =
+      item instanceof CompositeCatalogItem && compositeMode === "pieces"
+        ? selectedCompositePart
+        : editableItem;
+    const controllerRef = useRef<RepositionController | undefined>(undefined);
+    const handlePieceSelected = useCallback((part?: BaseModel) => {
+      setSelectedCompositePart(
+        part && isEditableTransformationItem(part) ? part : undefined
+      );
+      setCoordinateStatus("idle");
+    }, []);
+    const handleWholeTransformationChange = useCallback(() => {
+      setWholeTransformVersion((version) => version + 1);
+    }, []);
+    const wholeCompositeTransformation =
+      item instanceof CompositeCatalogItem && compositeMode === "whole"
+        ? controllerRef.current?.getWholeTransformation?.()
+        : undefined;
+    const wholeCompositeLatitude = wholeCompositeTransformation?.latitude;
+    const wholeCompositeLongitude = wholeCompositeTransformation?.longitude;
+    const wholeCompositeHeight = wholeCompositeTransformation?.height;
+    const wholeCompositeHeading = wholeCompositeTransformation?.heading;
+    const wholeCompositePitch = wholeCompositeTransformation?.pitch;
+    const wholeCompositeRoll = wholeCompositeTransformation?.roll;
 
     const close = action((save: boolean) => {
       if (save) {
@@ -119,11 +158,13 @@ const RepositionLayerTool: FC<Props> = observer(
       } else {
         controllerRef.current?.cancel();
       }
+      compositeSessionRef.current.snapshots = undefined;
       viewState.closeTool();
     });
 
     const reset = action(() => {
       controllerRef.current?.reset();
+      compositeSessionRef.current.snapshots = undefined;
       viewState.closeTool();
     });
 
@@ -147,7 +188,9 @@ const RepositionLayerTool: FC<Props> = observer(
     });
 
     const applyCoordinates = action(() => {
-      if (!editableItem) return;
+      const isWholeComposite =
+        item instanceof CompositeCatalogItem && compositeMode === "whole";
+      if (!activeEditableItem && !isWholeComposite) return;
       const values = {
         latitude: Number(coordinateDraft.latitude),
         longitude: Number(coordinateDraft.longitude),
@@ -156,7 +199,7 @@ const RepositionLayerTool: FC<Props> = observer(
         pitch: Number(coordinateDraft.pitch),
         roll: Number(coordinateDraft.roll),
         scale:
-          editableItem.scale === undefined
+          activeEditableItem?.scale === undefined
             ? undefined
             : Number(coordinateDraft.scale)
       };
@@ -174,21 +217,39 @@ const RepositionLayerTool: FC<Props> = observer(
         return;
       }
 
-      controllerRef.current?.cancel();
+      if (isWholeComposite) {
+        controllerRef.current?.setWholeTransformation?.({
+          latitude: values.latitude,
+          longitude: values.longitude,
+          height: values.height,
+          heading: values.heading,
+          pitch: values.pitch,
+          roll: values.roll
+        });
+        setCoordinateStatus("applied");
+        return;
+      }
+
+      if (!activeEditableItem) return;
+      const isSelectedCompositePart =
+        item instanceof CompositeCatalogItem && compositeMode === "pieces";
+      if (!isSelectedCompositePart) {
+        controllerRef.current?.cancel();
+      }
       try {
         runInAction(() => {
           const originResult = updateModelFromJson(
-            editableItem.origin,
+            activeEditableItem.origin,
             CommonStrata.user,
             {
               latitude: values.latitude,
               longitude: values.longitude,
-              height: is2D ? editableItem.origin.height : values.height
+              height: is2D ? activeEditableItem.origin.height : values.height
             }
           );
           if (originResult.error) throw originResult.error;
           const rotationResult = updateModelFromJson(
-            editableItem.rotation,
+            activeEditableItem.rotation,
             CommonStrata.user,
             {
               heading: values.heading,
@@ -198,49 +259,93 @@ const RepositionLayerTool: FC<Props> = observer(
           );
           if (rotationResult.error) throw rotationResult.error;
           if (values.scale !== undefined) {
-            editableItem.setTrait(CommonStrata.user, "scale", values.scale);
+            activeEditableItem.setTrait(
+              CommonStrata.user,
+              "scale",
+              values.scale
+            );
           }
         });
+        if (
+          isSelectedCompositePart &&
+          !controllerRef.current?.refreshSelectedPiece?.()
+        ) {
+          throw new Error("Unable to refresh the selected composite part.");
+        }
       } catch (error) {
         viewState.terria.raiseErrorToUser(error);
-        setControllerGeneration((generation) => generation + 1);
+        if (!isSelectedCompositePart) {
+          setControllerGeneration((generation) => generation + 1);
+        }
         return;
       }
       setCoordinateStatus("applied");
-      setControllerGeneration((generation) => generation + 1);
+      if (!isSelectedCompositePart) {
+        setControllerGeneration((generation) => generation + 1);
+      }
     });
 
     useEffect(() => {
-      if (!editableItem) return;
+      if (
+        !activeEditableItem &&
+        wholeCompositeLatitude === undefined &&
+        wholeCompositeLongitude === undefined &&
+        wholeCompositeHeight === undefined &&
+        wholeCompositeHeading === undefined &&
+        wholeCompositePitch === undefined &&
+        wholeCompositeRoll === undefined
+      ) {
+        return;
+      }
+      const transformation = activeEditableItem
+        ? {
+            latitude: activeEditableItem.origin.latitude,
+            longitude: activeEditableItem.origin.longitude,
+            height: activeEditableItem.origin.height,
+            heading: activeEditableItem.rotation.heading,
+            pitch: activeEditableItem.rotation.pitch,
+            roll: activeEditableItem.rotation.roll,
+            scale: activeEditableItem.scale
+          }
+        : {
+            latitude: wholeCompositeLatitude,
+            longitude: wholeCompositeLongitude,
+            height: wholeCompositeHeight,
+            heading: wholeCompositeHeading,
+            pitch: wholeCompositePitch,
+            roll: wholeCompositeRoll
+          };
+      if (!transformation) return;
       setCoordinateDraft({
-        latitude: formatInputValue(editableItem.origin.latitude),
-        longitude: formatInputValue(editableItem.origin.longitude),
-        height: formatInputValue(editableItem.origin.height),
-        heading: formatInputValue(editableItem.rotation.heading),
-        pitch: formatInputValue(editableItem.rotation.pitch),
-        roll: formatInputValue(editableItem.rotation.roll),
-        scale: formatInputValue(editableItem.scale)
+        latitude: formatInputValue(transformation.latitude),
+        longitude: formatInputValue(transformation.longitude),
+        height: formatInputValue(transformation.height),
+        heading: formatInputValue(transformation.heading),
+        pitch: formatInputValue(transformation.pitch),
+        roll: formatInputValue(transformation.roll),
+        scale: formatInputValue(transformation.scale)
       });
     }, [
-      editableItem,
-      editableItem?.origin.latitude,
-      editableItem?.origin.longitude,
-      editableItem?.origin.height,
-      editableItem?.rotation.heading,
-      editableItem?.rotation.pitch,
-      editableItem?.rotation.roll,
-      editableItem?.scale
+      activeEditableItem,
+      activeEditableItem?.origin.latitude,
+      activeEditableItem?.origin.longitude,
+      activeEditableItem?.origin.height,
+      activeEditableItem?.rotation.heading,
+      activeEditableItem?.rotation.pitch,
+      activeEditableItem?.rotation.roll,
+      activeEditableItem?.scale,
+      wholeCompositeLatitude,
+      wholeCompositeLongitude,
+      wholeCompositeHeight,
+      wholeCompositeHeading,
+      wholeCompositePitch,
+      wholeCompositeRoll,
+      wholeTransformVersion,
+      controllerGeneration
     ]);
 
     useEffect(() => {
-      let controller:
-        | {
-            save(): void;
-            cancel(): void;
-            reset(): void;
-            clampToGround?(): Promise<boolean>;
-          }
-        | undefined;
+      let controller: RepositionController | undefined;
       if (Cesium3dTilesMixin.isMixedInto(item)) {
         controller = Repositionable3DTiles.create(item, cesium);
       } else if (GltfMixin.isMixedInto(item)) {
@@ -248,16 +353,34 @@ const RepositionLayerTool: FC<Props> = observer(
       } else if (item instanceof I3SCatalogItem) {
         controller = RepositionableI3S.create(item, cesium);
       } else if (item instanceof CompositeCatalogItem) {
+        if (compositeSessionRef.current.item !== item) {
+          compositeSessionRef.current = { item };
+        }
         controller = RepositionableComposite.create(
           item,
           cesium,
-          compositeMode
+          compositeMode,
+          {
+            onPieceSelected: handlePieceSelected,
+            onWholeTransformationChange: handleWholeTransformationChange,
+            initialSnapshots: compositeSessionRef.current.snapshots
+          }
         );
+        if (
+          controller instanceof RepositionableComposite &&
+          compositeSessionRef.current.snapshots === undefined
+        ) {
+          compositeSessionRef.current.snapshots =
+            controller.getInitialSnapshots();
+        }
       } else if (item instanceof IonImageryCatalogItem) {
         controller = RepositionableImagery.create(item, cesium);
       }
 
       controllerRef.current = controller;
+      if (item instanceof CompositeCatalogItem) {
+        setWholeTransformVersion((version) => version + 1);
+      }
       if (!controller) {
         viewState.closeTool();
       }
@@ -272,10 +395,33 @@ const RepositionLayerTool: FC<Props> = observer(
 
       return () => {
         document.removeEventListener("keydown", onKeyDown);
-        controllerRef.current?.cancel();
+        if (
+          item instanceof CompositeCatalogItem &&
+          compositeModeRef.current !== compositeMode
+        ) {
+          controllerRef.current?.save();
+        } else {
+          controllerRef.current?.cancel();
+        }
         controllerRef.current = undefined;
       };
-    }, [item, cesium, viewState, compositeMode, controllerGeneration]);
+    }, [
+      item,
+      cesium,
+      viewState,
+      compositeMode,
+      controllerGeneration,
+      handlePieceSelected,
+      handleWholeTransformationChange
+    ]);
+
+    const showCoordinateEditor =
+      activeEditableItem !== undefined ||
+      wholeCompositeTransformation !== undefined;
+    const selectingCompositePart =
+      item instanceof CompositeCatalogItem &&
+      compositeMode === "pieces" &&
+      selectedCompositePart === undefined;
 
     return (
       <Panel>
@@ -302,7 +448,28 @@ const RepositionLayerTool: FC<Props> = observer(
               </Checkbox>
             </ModeControl>
           )}
-        {editableItem && (
+        {item instanceof CompositeCatalogItem && compositeMode === "pieces" && (
+          <PartSelection>
+            {selectedCompositePart ? (
+              <>
+                <Text small textLight>
+                  Part selected. Edit its transformation below.
+                </Text>
+                <StyledButton
+                  primary
+                  onClick={() => controllerRef.current?.changeSelectedPiece?.()}
+                >
+                  Change selected part
+                </StyledButton>
+              </>
+            ) : (
+              <Text small textLight>
+                Click a 3D Tiles part in the scene to select it for editing.
+              </Text>
+            )}
+          </PartSelection>
+        )}
+        {showCoordinateEditor && (
           <CoordinateEditor>
             <SectionTitle>Position and orientation</SectionTitle>
             <FieldGrid>
@@ -363,7 +530,7 @@ const RepositionLayerTool: FC<Props> = observer(
                   }}
                 />
               </Field>
-              {editableItem.scale !== undefined && (
+              {activeEditableItem?.scale !== undefined && (
                 <Field>
                   <FieldLabel htmlFor="reposition-scale">Scale</FieldLabel>
                   <StyledInput
@@ -456,9 +623,11 @@ const RepositionLayerTool: FC<Props> = observer(
           </CoordinateEditor>
         )}
         <InteractionHint>
-          {item instanceof IonImageryCatalogItem
-            ? "Drag a white face to move the image region."
-            : "Drag white faces to move the layer and colored edges to rotate it."}
+          {selectingCompositePart
+            ? "Select a composite part by clicking it in the scene."
+            : item instanceof IonImageryCatalogItem
+              ? "Drag a white face to move the image region."
+              : "Drag white faces to move the layer and colored edges to rotate it."}
         </InteractionHint>
         {is2D ? (
           <Legend>
@@ -607,6 +776,12 @@ const Legend = styled.div`
 `;
 
 const ModeControl = styled.div`
+  margin-top: 10px;
+`;
+
+const PartSelection = styled.div`
+  display: grid;
+  gap: 8px;
   margin-top: 10px;
 `;
 

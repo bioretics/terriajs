@@ -99,8 +99,15 @@ export function previewWholeTransformation(
     new Quaternion()
   );
 
+  const is2DRotationChanged =
+    is2D &&
+    !Quaternion.equalsEpsilon(
+      aggregateWorldRotation,
+      Quaternion.IDENTITY,
+      0.000001
+    );
   let transformedItemMatrix: Matrix4;
-  if (!is2D) {
+  if (!is2D || is2DRotationChanged) {
     const centerOrigin = Matrix4.fromTranslation(
       Cartesian3.negate(initialAggregateCenter, new Cartesian3())
     );
@@ -139,12 +146,16 @@ export function previewWholeTransformation(
   );
 
   if (is2D) {
-    const hpr = Transforms.fixedFrameToHeadingPitchRoll(modelMatrix);
-    HeadingPitchRollTraits.setFromHeadingPitchRoll(
-      item.rotation,
-      CommonStrata.user,
-      new HeadingPitchRoll(hpr.heading, 0, 0)
-    );
+    if (is2DRotationChanged) {
+      const hpr = Transforms.fixedFrameToHeadingPitchRoll(
+        transformedItemMatrix
+      );
+      HeadingPitchRollTraits.setFromHeadingPitchRoll(
+        item.rotation,
+        CommonStrata.user,
+        new HeadingPitchRoll(hpr.heading, 0, 0)
+      );
+    }
   } else {
     const hpr = Transforms.fixedFrameToHeadingPitchRoll(transformedItemMatrix);
     HeadingPitchRollTraits.setFromHeadingPitchRoll(

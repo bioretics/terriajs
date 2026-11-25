@@ -1,4 +1,6 @@
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
+import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
 import RepositionableBoxDrawing, {
   RepositionableBoxDrawingChangeParams
 } from "../../lib/Models/RepositionableBoxDrawing";
@@ -15,6 +17,10 @@ import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import I3SCatalogItem from "../../lib/Models/Catalog/CatalogItems/I3SCatalogItem";
 import CompositeCatalogItem from "../../lib/Models/Catalog/CatalogItems/CompositeCatalogItem";
 import IonImageryCatalogItem from "../../lib/Models/Catalog/CatalogItems/IonImageryCatalogItem";
+import {
+  createCompositeTransform,
+  getCompositeTransformation
+} from "../../lib/Models/RepositionableComposite";
 import { exportRepositionableCatalog } from "../../lib/Models/RepositionableCatalogExport";
 
 describe("RepositionableLayer", function () {
@@ -51,6 +57,34 @@ describe("RepositionableLayer", function () {
     const item = new IonImageryCatalogItem("test", terria);
 
     expect(RepositionableMixin.isMixedInto(item)).toBeTrue();
+  });
+
+  it("round-trips editable whole-composite coordinates and rotation", function () {
+    const initial = Matrix4.fromTranslationQuaternionRotationScale(
+      Cartesian3.fromDegrees(-122.3, 37.8, 41),
+      Quaternion.IDENTITY,
+      new Cartesian3(250, 250, 250)
+    );
+    const requested = {
+      latitude: 47.6,
+      longitude: -122.3,
+      height: 85,
+      heading: 23,
+      pitch: -8,
+      roll: 12
+    };
+
+    const updated = createCompositeTransform(initial, requested);
+    const actual = getCompositeTransformation(updated);
+
+    expect(actual).toBeDefined();
+    expect(actual?.latitude).toBeCloseTo(requested.latitude, 6);
+    expect(actual?.longitude).toBeCloseTo(requested.longitude, 6);
+    expect(actual?.height).toBeCloseTo(requested.height, 3);
+    expect(actual?.heading).toBeCloseTo(requested.heading, 6);
+    expect(actual?.pitch).toBeCloseTo(requested.pitch, 6);
+    expect(actual?.roll).toBeCloseTo(requested.roll, 6);
+    expect(Matrix4.getScale(updated, new Cartesian3()).x).toBeCloseTo(250);
   });
 
   it("requires the catalog reposition flag", function () {

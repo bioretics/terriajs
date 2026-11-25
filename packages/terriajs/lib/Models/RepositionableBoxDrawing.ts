@@ -398,6 +398,19 @@ export default class RepositionableBoxDrawing {
     this.updateBox();
   }
 
+  public getTransform(): Matrix4 {
+    return Matrix4.clone(this.modelMatrix, new Matrix4());
+  }
+
+  public setTransformAndNotify(transform: Matrix4): void {
+    this.setTransform(transform);
+    this.onChange?.({
+      modelMatrix: this.modelMatrix,
+      translationRotationScale: this.trs,
+      isFinished: true
+    });
+  }
+
   get keepBoxAboveGround() {
     return this._keepBoxAboveGround;
   }
