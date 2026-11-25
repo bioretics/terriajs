@@ -18,6 +18,8 @@ import RepositionableLayer, {
   RepositionableLayerAdapter,
   getDefaultTrait
 } from "./RepositionableLayer";
+import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
+import CesiumMath from "terriajs-cesium/Source/Core/Math";
 
 type RepositionableItem = Cesium3dTilesMixin.Instance;
 
@@ -45,20 +47,86 @@ export function snapshotTransformation(
   };
 }
 
+/**
+ * Catalog baseline matrix: tileset root transform + definition-stratum traits only.
+ * Mirrors {@link Cesium3dTilesMixin} model-matrix composition without user overrides.
+ */
+function catalogModelMatrixForItem(item: RepositionableItem): Matrix4 {
+  const rootTransform = Matrix4.clone(
+    (item as unknown as { originalRootTransform: Matrix4 })
+      .originalRootTransform
+  );
+  let scale = Matrix4.getScale(rootTransform, new Cartesian3());
+  const position = Matrix4.getTranslation(rootTransform, new Cartesian3());
+  let orientation = Quaternion.fromRotationMatrix(
+    Matrix4.getRotation(rootTransform, new Matrix3())
+  );
+
+  const origin = getDefaultTrait<LatLonHeightTraits>(item, "origin");
+  if (origin?.latitude !== undefined && origin?.longitude !== undefined) {
+    const positionFromLatLng = Cartesian3.fromDegrees(
+      origin.longitude,
+      origin.latitude,
+      origin.height
+    );
+    position.x = positionFromLatLng.x;
+    position.y = positionFromLatLng.y;
+    if (origin.height !== undefined) {
+      position.z = positionFromLatLng.z;
+    }
+  }
+
+  const rotation = getDefaultTrait<HeadingPitchRollTraits>(item, "rotation");
+  if (
+    rotation?.heading !== undefined &&
+    rotation?.pitch !== undefined &&
+    rotation?.roll !== undefined
+  ) {
+    const hpr = HeadingPitchRoll.fromDegrees(
+      rotation.heading,
+      rotation.pitch,
+      rotation.roll
+    );
+    orientation = Transforms.headingPitchRollQuaternion(position, hpr);
+  }
+
+  const scaleTrait = getDefaultTrait<number>(item, "scale");
+  if (scaleTrait !== undefined) {
+    scale = new Cartesian3(scaleTrait, scaleTrait, scaleTrait);
+  }
+
+  return Matrix4.fromTranslationQuaternionRotationScale(
+    position,
+    orientation,
+    scale
+  );
+}
+
+function transformationSnapshotFromModelMatrix(
+  transform: Matrix4
+): TransformationSnapshot | undefined {
+  const position = Matrix4.getTranslation(transform, new Cartesian3());
+  const cartographic = Ellipsoid.WGS84.cartesianToCartographic(position);
+  if (!cartographic) return;
+  const rotation = Transforms.fixedFrameToHeadingPitchRoll(transform);
+  const matrixScale = Matrix4.getScale(transform, new Cartesian3()).x;
+  return {
+    latitude: CesiumMath.toDegrees(cartographic.latitude),
+    longitude: CesiumMath.toDegrees(cartographic.longitude),
+    height: cartographic.height,
+    heading: CesiumMath.toDegrees(rotation.heading),
+    pitch: CesiumMath.toDegrees(rotation.pitch),
+    roll: CesiumMath.toDegrees(rotation.roll),
+    scale: Number.isFinite(matrixScale) ? matrixScale : undefined
+  };
+}
+
 export function defaultTransformation(
   item: RepositionableItem
 ): TransformationSnapshot {
-  const origin = getDefaultTrait<LatLonHeightTraits>(item, "origin");
-  const rotation = getDefaultTrait<HeadingPitchRollTraits>(item, "rotation");
-  return {
-    latitude: origin?.latitude,
-    longitude: origin?.longitude,
-    height: origin?.height,
-    heading: rotation?.heading,
-    pitch: rotation?.pitch,
-    roll: rotation?.roll,
-    scale: getDefaultTrait<number>(item, "scale")
-  };
+  return (
+    transformationSnapshotFromModelMatrix(catalogModelMatrixForItem(item)) ?? {}
+  );
 }
 
 export function restoreTransformation(
@@ -318,22 +386,7 @@ export default class Repositionable3DTiles extends RepositionableLayer<
         roll: item.rotation.roll,
         scale: item.scale
       }),
-      defaultSnapshot: () => {
-        const origin = getDefaultTrait<LatLonHeightTraits>(item, "origin");
-        const rotation = getDefaultTrait<HeadingPitchRollTraits>(
-          item,
-          "rotation"
-        );
-        return {
-          latitude: origin?.latitude,
-          longitude: origin?.longitude,
-          height: origin?.height,
-          heading: rotation?.heading,
-          pitch: rotation?.pitch,
-          roll: rotation?.roll,
-          scale: getDefaultTrait<number>(item, "scale")
-        };
-      },
+      defaultSnapshot: () => defaultTransformation(item),
       originPosition: () =>
         Matrix4.getTranslation(item.modelMatrix, new Cartesian3()),
       preview: (modelMatrix) => {
