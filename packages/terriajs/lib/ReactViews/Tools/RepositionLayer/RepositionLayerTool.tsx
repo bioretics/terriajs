@@ -74,6 +74,7 @@ interface RepositionController {
   save(): void;
   cancel(): void;
   reset(): void;
+  restoreToDefault?(): void;
   clampToGround?(): Promise<boolean>;
   getWholeTransformation?(): TransformationSnapshot | undefined;
   setWholeTransformation?(transformation: TransformationSnapshot): void;
@@ -106,6 +107,7 @@ const RepositionLayerTool: FC<Props> = observer(
     }>({ item });
     const originMarkerItemRef = useRef(item);
     const initialOriginPositionRef = useRef<Cartesian3>();
+    const resetInPlaceRef = useRef(false);
     const [clampStatus, setClampStatus] = useState<
       "idle" | "working" | "success" | "unavailable"
     >("idle");
@@ -174,10 +176,13 @@ const RepositionLayerTool: FC<Props> = observer(
     });
 
     const reset = action(() => {
-      controllerRef.current?.reset();
-      compositeSessionRef.current = { item };
-      initialOriginPositionRef.current = undefined;
-      viewState.closeTool();
+      controllerRef.current?.restoreToDefault?.();
+      resetInPlaceRef.current = true;
+      setCoordinateStatus("idle");
+      setClampStatus("idle");
+      setSelectedCompositePart(undefined);
+      setWholeTransformVersion((version) => version + 1);
+      setControllerGeneration((generation) => generation + 1);
     });
 
     const clampToGround = action(async () => {
@@ -430,7 +435,10 @@ const RepositionLayerTool: FC<Props> = observer(
 
       return () => {
         document.removeEventListener("keydown", onKeyDown);
-        if (
+        if (resetInPlaceRef.current) {
+          resetInPlaceRef.current = false;
+          controllerRef.current?.save();
+        } else if (
           item instanceof CompositeCatalogItem &&
           compositeModeRef.current !== compositeMode
         ) {

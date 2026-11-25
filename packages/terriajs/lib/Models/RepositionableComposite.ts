@@ -368,6 +368,10 @@ export default class RepositionableComposite {
     }
   }
 
+  restoreToDefault() {
+    this.restoreSnapshots(this.defaultSnapshots);
+  }
+
   async clampToGround(): Promise<boolean> {
     if (this.wholeController) {
       return this.wholeController.clampToGround();

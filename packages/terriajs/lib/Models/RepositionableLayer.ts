@@ -127,6 +127,11 @@ export default class RepositionableLayer<
     this.dispose();
   }
 
+  restoreToDefault() {
+    if (this.finished) return;
+    this.adapter.restore(this.adapter.defaultSnapshot());
+  }
+
   async clampToGround(): Promise<boolean> {
     if (this.finished) return false;
     return this.boxDrawing.clampToGroundOnce();

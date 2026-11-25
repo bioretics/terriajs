@@ -243,6 +243,17 @@ describe("RepositionableLayer", function () {
     expect(harness.deactivated).toBeTrue();
   });
 
+  it("restores defaults in place without ending the session", function () {
+    const harness = createHarness();
+
+    harness.controller.restoreToDefault();
+
+    expect(harness.restoredSnapshot).toBe("default");
+    expect(harness.deactivated).toBeFalse();
+    expect(harness.boxDrawing.dataSource.show).toBeTrue();
+    expect(harness.cesium.isFeaturePickingPaused).toBeTrue();
+  });
+
   it("delegates ground clamping to BoxDrawing", async function () {
     const harness = createHarness();
 
