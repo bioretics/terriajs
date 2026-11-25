@@ -1,6 +1,6 @@
 import { action } from "mobx";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
-import BoxDrawing from "./BoxDrawing";
+import RepositionableBoxDrawing from "./RepositionableBoxDrawing";
 import Cesium from "./Cesium";
 import { BaseModel } from "./Definition/Model";
 
@@ -13,7 +13,7 @@ export interface RepositionableLayerAdapter<
   defaultSnapshot(): TSnapshot;
   preview(modelMatrix: Matrix4): void;
   restore(snapshot: TSnapshot): void;
-  activate?(boxDrawing: BoxDrawing): void;
+  activate?(boxDrawing: RepositionableBoxDrawing): void;
   deactivate?(): void;
 }
 
@@ -52,7 +52,7 @@ export default class RepositionableLayer<
   constructor(
     readonly adapter: RepositionableLayerAdapter<TSnapshot, TItem>,
     readonly cesium: Cesium,
-    readonly boxDrawing: BoxDrawing
+    readonly boxDrawing: RepositionableBoxDrawing
   ) {
     this.snapshot = adapter.snapshot();
     this.previousFeaturePickingPaused = cesium.isFeaturePickingPaused;

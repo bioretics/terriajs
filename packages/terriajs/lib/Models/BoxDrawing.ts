@@ -13,6 +13,7 @@ import Cartographic from "terriajs-cesium/Source/Core/Cartographic";
 import Color from "terriajs-cesium/Source/Core/Color";
 import Ellipsoid from "terriajs-cesium/Source/Core/Ellipsoid";
 import EllipsoidTerrainProvider from "terriajs-cesium/Source/Core/EllipsoidTerrainProvider";
+import HeadingPitchRoll from "terriajs-cesium/Source/Core/HeadingPitchRoll";
 import IntersectionTests from "terriajs-cesium/Source/Core/IntersectionTests";
 import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
 import KeyboardEventModifier from "terriajs-cesium/Source/Core/KeyboardEventModifier";
@@ -93,8 +94,6 @@ type Side = Entity &
  */
 type Edge = Entity & Updatable & Interactable;
 
-type EdgeKind = "vertical" | "horizontal" | "free";
-
 /**
  * Style for a box side
  */
@@ -158,7 +157,7 @@ export type BoxDrawingChangeParams = {
   isFinished: boolean;
 };
 
-export type BoxDrawingOptions = {
+type BoxDrawingOptions = {
   /**
    * When true, prevents the box from going underground. Note that we only use
    * the center of the bottom face to detect if the box is underground. For
@@ -183,18 +182,6 @@ export type BoxDrawingOptions = {
    * Defaults to `false`, i.e top and bottom sides are draggable and dragging them changes the box height.
    */
   disableVerticalMovement?: boolean;
-
-  /**
-   * Translation axes that may be changed through interactions.
-   * Defaults to all axes.
-   */
-  allowedTranslationAxes?: ("x" | "y" | "z")[];
-
-  /**
-   * Rotation kinds that may be changed through interactions.
-   * `map-normal` allows heading/yaw only around the ellipsoid surface normal.
-   */
-  allowedRotationAxes?: ("heading" | "pitch" | "roll" | "map-normal")[];
 };
 
 // The 6 box sides defined as planes in local coordinate space.
@@ -256,10 +243,6 @@ export default class BoxDrawing {
   private drawNonUniformScaleGrips: boolean;
 
   public disableVerticalMovement: boolean;
-  public allowedTranslationAxes: ("x" | "y" | "z")[];
-  public allowedRotationAxes:
-    | ("heading" | "pitch" | "roll" | "map-normal")[]
-    | undefined;
 
   public keepHeightSteadyWhenMovingLaterally = true;
 
@@ -309,12 +292,6 @@ export default class BoxDrawing {
     this.keepBoxAboveGround = options.keepBoxAboveGround ?? false;
     this.drawNonUniformScaleGrips = options.drawNonUniformScaleGrips ?? true;
     this.disableVerticalMovement = options.disableVerticalMovement ?? false;
-    this.allowedTranslationAxes = options.allowedTranslationAxes ?? [
-      "x",
-      "y",
-      "z"
-    ];
-    this.allowedRotationAxes = options.allowedRotationAxes;
     this.onChange = options.onChange;
     this.dataSource = new Proxy(new CustomDataSource(), {
       set: (target, prop, value) => {
@@ -435,20 +412,6 @@ export default class BoxDrawing {
     this.edges.forEach((edge) => (edge.show = enable));
   }
 
-  private isEdgeAllowed(edgeKind: EdgeKind): boolean {
-    if (this.allowedRotationAxes === undefined) return true;
-    if (this.allowedRotationAxes.includes("map-normal")) {
-      return edgeKind === "vertical";
-    }
-    return (
-      (edgeKind === "vertical" &&
-        this.allowedRotationAxes.includes("heading")) ||
-      (edgeKind === "horizontal" &&
-        this.allowedRotationAxes.includes("pitch")) ||
-      (edgeKind === "free" && this.allowedRotationAxes.includes("roll"))
-    );
-  }
-
   /**
    * Moves the box by the provided moveStep with optional clamping applied so that the
    * box does not go underground.
@@ -465,26 +428,6 @@ export default class BoxDrawing {
         moveStep,
         scratchNewPosition
       );
-
-      if (
-        !this.allowedTranslationAxes.includes("z") &&
-        this.allowedTranslationAxes.includes("x") &&
-        this.allowedTranslationAxes.includes("y")
-      ) {
-        const ellipsoid = Ellipsoid.WGS84;
-        const currentCartographic = Cartographic.fromCartesian(
-          this.trs.translation,
-          ellipsoid,
-          scratchCartographic
-        );
-        const nextCartographic = Cartographic.fromCartesian(
-          nextPosition,
-          ellipsoid,
-          new Cartographic()
-        );
-        nextCartographic.height = currentCartographic.height;
-        Cartographic.toCartesian(nextCartographic, ellipsoid, nextPosition);
-      }
 
       if (this.keepBoxAboveGround) {
         const cartographic = Cartographic.fromCartesian(
@@ -582,58 +525,6 @@ export default class BoxDrawing {
       this.moveBoxWithClamping(Cartesian3.ZERO);
       this.updateBox();
     });
-  }
-
-  async clampToGroundOnce(): Promise<boolean> {
-    if (!this.allowedTranslationAxes.includes("z")) {
-      return false;
-    }
-
-    const terrainProvider = this.scene.terrainProvider;
-    if (!terrainProvider) {
-      return false;
-    }
-
-    const current = Cartographic.fromCartesian(
-      this.trs.translation,
-      Ellipsoid.WGS84,
-      new Cartographic()
-    );
-    let groundHeight = 0;
-
-    if (!(terrainProvider instanceof EllipsoidTerrainProvider)) {
-      try {
-        const [sample] = await sampleTerrainMostDetailed(terrainProvider, [
-          new Cartographic(current.longitude, current.latitude, 0)
-        ]);
-        if (sample.height === undefined || !Number.isFinite(sample.height)) {
-          return false;
-        }
-        groundHeight = sample.height;
-      } catch {
-        return false;
-      }
-    }
-
-    const boxHalfHeight = this.trs.scale.z / 2;
-    const desiredHeight = groundHeight + boxHalfHeight;
-    if (!Number.isFinite(desiredHeight)) {
-      return false;
-    }
-
-    const position = Cartographic.toCartesian(
-      new Cartographic(current.longitude, current.latitude, desiredHeight),
-      Ellipsoid.WGS84
-    );
-    this.setPosition(position);
-    if (this.onChange) {
-      this.onChange?.({
-        modelMatrix: this.modelMatrix,
-        translationRotationScale: this.trs,
-        isFinished: true
-      });
-    }
-    return true;
   }
 
   /**
@@ -890,27 +781,7 @@ export default class BoxDrawing {
     });
 
     localEdges.forEach((localEdge) => {
-      const edgeKind: EdgeKind =
-        localEdge[1].z - localEdge[0].z !== 0 ? "vertical" : "horizontal";
-      const edge = this.createEdge(localEdge, edgeKind);
-      this.dataSource.entities.add(edge);
-      this.edges.push(edge);
-    });
-
-    // Diagonal handles provide a trackball-style free 3D rotation affordance.
-    const bottomCornerVectors = CORNER_POINT_VECTORS.map((corner) => {
-      const bottomCorner = Cartesian3.clone(corner, new Cartesian3());
-      bottomCorner.z *= -1;
-      return bottomCorner;
-    });
-    const diagonalEdges: [Cartesian3, Cartesian3][] = [
-      [CORNER_POINT_VECTORS[0], CORNER_POINT_VECTORS[2]],
-      [CORNER_POINT_VECTORS[1], CORNER_POINT_VECTORS[3]],
-      [bottomCornerVectors[0], bottomCornerVectors[2]],
-      [bottomCornerVectors[1], bottomCornerVectors[3]]
-    ];
-    diagonalEdges.forEach((diagonalEdge) => {
-      const edge = this.createEdge(diagonalEdge, "free");
+      const edge = this.createEdge(localEdge);
       this.dataSource.entities.add(edge);
       this.edges.push(edge);
     });
@@ -975,9 +846,9 @@ export default class BoxDrawing {
         ? Axis.Y
         : Axis.Z;
     const style: Readonly<SideStyle> = {
-      fillColor: Color.WHITE.withAlpha(0.18),
+      fillColor: Color.WHITE.withAlpha(0.1),
       outlineColor: Color.WHITE,
-      highlightFillColor: Color.WHITE.withAlpha(0.3),
+      highlightFillColor: Color.WHITE.withAlpha(0.2),
       highlightOutlineColor: Color.CYAN
     };
     let isHighlighted = false;
@@ -1325,20 +1196,18 @@ export default class BoxDrawing {
   /**
    * Creates edges for the side specified as plane in local coordinates.
    */
-  private createEdge(
-    localEdge: [Cartesian3, Cartesian3],
-    edgeKind: EdgeKind
-  ): Edge {
+  private createEdge(localEdge: [Cartesian3, Cartesian3]): Edge {
     const scene = this.scene;
     const style = {
-      verticalColor: Color.CYAN.withAlpha(0.85),
-      horizontalColor: Color.YELLOW.withAlpha(0.85),
-      freeColor: Color.ORANGE.withAlpha(0.9),
-      highlightColor: Color.WHITE
+      color: Color.WHITE.withAlpha(0.1),
+      highlightColor: Color.CYAN.withAlpha(0.7)
     };
     const position1 = new Cartesian3();
     const position2 = new Cartesian3();
     const positions = [position1, position2];
+
+    // Only vertical edges are draggable
+    const isDraggableEdge = localEdge[1].z - localEdge[0].z !== 0;
 
     const update = () => {
       Matrix4.multiplyByPoint(this.modelMatrix, localEdge[0], position1);
@@ -1350,206 +1219,70 @@ export default class BoxDrawing {
       polyline: {
         show: true,
         positions: new CallbackProperty(() => positions, false),
-        width: new CallbackProperty(
-          () => (this.enableRotation && this.isEdgeAllowed(edgeKind) ? 10 : 0),
-          false
-        ),
+        width: new CallbackProperty(() => (isDraggableEdge ? 10 : 0), false),
         material: new ColorMaterialProperty(
-          new CallbackProperty(() => {
-            if (isHighlighted) return style.highlightColor;
-            if (edgeKind === "vertical") return style.verticalColor;
-            if (edgeKind === "horizontal") return style.horizontalColor;
-            return style.freeColor;
-          }, false)
+          new CallbackProperty(
+            () => (isHighlighted ? style.highlightColor : style.color),
+            false
+          )
         ) as any,
         arcType: ArcType.NONE
       }
     }) as Edge;
 
-    const axisLocal = Cartesian3.normalize(
-      Cartesian3.subtract(localEdge[1], localEdge[0], new Cartesian3()),
-      new Cartesian3()
-    );
-    const previousTrackballVector = new Cartesian3();
-    const scratchAxisWorld = new Cartesian3();
-    const scratchAxisScreen = new Cartesian2();
-    const scratchDrag = new Cartesian2();
-    const scratchPerpendicular = new Cartesian2();
-    const scratchRotation = new Quaternion();
-    const scratchTrackballEnd = new Cartesian3();
-
-    const getScreenAxis = () => {
-      const center = scene.cartesianToCanvasCoordinates(
-        this.trs.translation,
-        scratchAxisScreen
-      );
-      if (!center) return undefined;
-
-      Matrix4.multiplyByPointAsVector(
-        this.modelMatrix,
-        axisLocal,
-        scratchAxisWorld
-      );
-      const axisPoint = Cartesian3.add(
-        this.trs.translation,
-        Cartesian3.multiplyByScalar(
-          Cartesian3.normalize(scratchAxisWorld, scratchAxisWorld),
-          Math.max(Cartesian3.maximumComponent(this.trs.scale), 1),
-          scratchAxisWorld
-        ),
-        new Cartesian3()
-      );
-      const axisCanvas = scene.cartesianToCanvasCoordinates(axisPoint);
-      if (!axisCanvas) return undefined;
-
-      scratchAxisScreen.x = axisCanvas.x - center.x;
-      scratchAxisScreen.y = axisCanvas.y - center.y;
-      return scratchAxisScreen;
-    };
-
-    const getTrackballVector = (
-      position: Cartesian2,
-      result: Cartesian3
-    ): Cartesian3 => {
-      const center = scene.cartesianToCanvasCoordinates(this.trs.translation);
-      const radius = Math.max(
-        40,
-        Math.min(scene.canvas.clientWidth, scene.canvas.clientHeight) * 0.18
-      );
-      if (!center) return Cartesian3.UNIT_Z.clone(result);
-
-      const x = (position.x - center.x) / radius;
-      const y = (center.y - position.y) / radius;
-      const lengthSquared = x * x + y * y;
-      const z = lengthSquared <= 1 ? Math.sqrt(1 - lengthSquared) : 0;
-      Cartesian3.clone(new Cartesian3(x, y, z), result);
-      return Cartesian3.normalize(result, result);
-    };
-
     const onMouseOver = () => {
-      if (!this.isEdgeAllowed(edgeKind)) return;
-      isHighlighted = true;
-      setCustomCanvasCursor(scene, "rotate", "pointer");
+      if (isDraggableEdge) {
+        isHighlighted = true;
+        setCustomCanvasCursor(scene, "rotate", "pointer");
+      }
     };
 
     const onMouseOut = () => {
-      isHighlighted = false;
-      setCanvasCursor(scene, "auto");
+      if (isDraggableEdge) {
+        isHighlighted = false;
+        setCanvasCursor(scene, "auto");
+      }
     };
 
-    const onPick = (click: MouseClick) => {
-      if (!this.isEdgeAllowed(edgeKind)) return;
-      isHighlighted = true;
-      setCustomCanvasCursor(scene, "rotate", "pointer");
-      if (edgeKind === "free") {
-        getTrackballVector(click.position, previousTrackballVector);
+    const onPick = () => {
+      if (isDraggableEdge) {
+        isHighlighted = true;
+        setCustomCanvasCursor(scene, "rotate", "pointer");
       }
     };
 
     const onRelease = () => {
-      isHighlighted = false;
-      setCanvasCursor(scene, "auto");
-      this.onChange?.({
-        isFinished: true,
-        modelMatrix: this.modelMatrix,
-        translationRotationScale: this.trs
-      });
+      if (isDraggableEdge) {
+        isHighlighted = false;
+        setCanvasCursor(scene, "auto");
+        this.onChange?.({
+          isFinished: true,
+          modelMatrix: this.modelMatrix,
+          translationRotationScale: this.trs
+        });
+      }
     };
 
-    const rotateBoxOnDrag = (mouseMove: MouseMove) => {
-      if (!this.isEdgeAllowed(edgeKind)) return;
-      if (edgeKind === "free") {
-        getTrackballVector(mouseMove.endPosition, scratchTrackballEnd);
-        const axis = Cartesian3.cross(
-          previousTrackballVector,
-          scratchTrackballEnd,
-          scratchAxisWorld
-        );
-        const axisMagnitude = Cartesian3.magnitude(axis);
-        if (axisMagnitude > 1e-6) {
-          Cartesian3.normalize(axis, axis);
-          const angle = Math.atan2(
-            axisMagnitude,
-            Cartesian3.dot(previousTrackballVector, scratchTrackballEnd)
-          );
-          const worldAxis = Cartesian3.add(
-            Cartesian3.multiplyByScalar(
-              scene.camera.right,
-              axis.x,
-              new Cartesian3()
-            ),
-            Cartesian3.multiplyByScalar(
-              scene.camera.up,
-              axis.y,
-              new Cartesian3()
-            ),
-            new Cartesian3()
-          );
-          Cartesian3.add(
-            worldAxis,
-            Cartesian3.multiplyByScalar(
-              scene.camera.direction,
-              axis.z,
-              new Cartesian3()
-            ),
-            worldAxis
-          );
-          Quaternion.fromAxisAngle(worldAxis, angle, scratchRotation);
-          Quaternion.multiply(
-            scratchRotation,
-            this.trs.rotation,
-            this.trs.rotation
-          );
-        }
-        Cartesian3.clone(scratchTrackballEnd, previousTrackballVector);
-      } else {
-        const screenAxis = getScreenAxis();
-        Cartesian2.subtract(
-          mouseMove.endPosition,
-          mouseMove.startPosition,
-          scratchDrag
-        );
-        let angle: number;
-        if (edgeKind === "vertical") {
-          // Preserve the established vertical-edge yaw interaction.
-          angle = -scratchDrag.x * 0.05;
-          if (this.allowedRotationAxes?.includes("map-normal")) {
-            const surfaceNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(
-              this.trs.translation,
-              scratchAxisWorld
-            );
-            Quaternion.fromAxisAngle(surfaceNormal, angle, scratchRotation);
-            Quaternion.multiply(
-              scratchRotation,
-              this.trs.rotation,
-              this.trs.rotation
-            );
-            this.updateBox();
-            this.updateEntitiesOnOrientationChange();
-            this.onChange?.({
-              isFinished: false,
-              modelMatrix: this.modelMatrix,
-              translationRotationScale: this.trs
-            });
-            return;
-          }
-        } else if (screenAxis && Cartesian2.magnitude(screenAxis) > 1e-6) {
-          Cartesian2.normalize(screenAxis, scratchPerpendicular);
-          const perpendicularX = scratchPerpendicular.x;
-          scratchPerpendicular.x = -scratchPerpendicular.y;
-          scratchPerpendicular.y = perpendicularX;
-          angle = Cartesian2.dot(scratchDrag, scratchPerpendicular) * 0.05;
-        } else {
-          angle = -scratchDrag.y * 0.05;
-        }
+    const scratchHpr = new HeadingPitchRoll(0, 0, 0);
 
-        Quaternion.fromAxisAngle(axisLocal, angle, scratchRotation);
-        Quaternion.multiply(
-          this.trs.rotation,
-          scratchRotation,
-          this.trs.rotation
-        );
+    const rotateBoxOnDrag = (mouseMove: MouseMove) => {
+      if (!isDraggableEdge) {
+        return;
       }
+
+      const dx = mouseMove.endPosition.x - mouseMove.startPosition.x;
+      const sensitivity = 0.05;
+      const hpr = scratchHpr;
+      // -dx because the screen coordinates is opposite to local coordinates space.
+      hpr.heading = -dx * sensitivity;
+      hpr.pitch = 0;
+      hpr.roll = 0;
+
+      Quaternion.multiply(
+        this.trs.rotation,
+        Quaternion.fromHeadingPitchRoll(hpr),
+        this.trs.rotation
+      );
 
       this.updateBox();
       this.updateEntitiesOnOrientationChange();

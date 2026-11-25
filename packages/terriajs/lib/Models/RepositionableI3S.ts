@@ -9,7 +9,7 @@ import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import I3SCatalogItem from "./Catalog/CatalogItems/I3SCatalogItem";
 import HeadingPitchRollTraits from "../Traits/TraitsClasses/HeadingPitchRollTraits";
 import LatLonHeightTraits from "../Traits/TraitsClasses/LatLonHeightTraits";
-import BoxDrawing from "./BoxDrawing";
+import createRepositionableBoxDrawing from "./createRepositionableBoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
@@ -63,13 +63,11 @@ export default class RepositionableI3S extends RepositionableLayer<
       initialWorldRotation,
       new Cartesian3(radius, radius, radius)
     );
-    const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
-      keepBoxAboveGround: false,
-      disableVerticalMovement: is2D,
-      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
-      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
-      drawNonUniformScaleGrips: false
-    });
+    const boxDrawing = createRepositionableBoxDrawing(
+      cesium,
+      editorTransform,
+      is2D
+    );
 
     const preview = (modelMatrix: Matrix4) => {
       const editorPosition = Matrix4.getTranslation(
@@ -202,9 +200,7 @@ export default class RepositionableI3S extends RepositionableLayer<
         });
       }
     };
-
     super(adapter, cesium, boxDrawing);
-    boxDrawing.enableScaling = false;
     boxDrawing.enableRotation = true;
   }
 

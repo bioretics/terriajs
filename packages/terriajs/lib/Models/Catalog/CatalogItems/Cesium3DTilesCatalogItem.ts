@@ -17,7 +17,7 @@ import Cesium3DTilesCatalogItemTraits from "../../../Traits/TraitsClasses/Cesium
 import CreateModel from "../../Definition/CreateModel";
 import { ModelConstructorParameters } from "../../Definition/Model";
 import { ItemSearchResult } from "../../ItemSearchProviders/ItemSearchProvider";
-import BoxDrawing from "../../BoxDrawing";
+import RepositionableBoxDrawing from "../../RepositionableBoxDrawing";
 
 // A property name used for tagging a search result feature for highlighting/hiding.
 const SEARCH_RESULT_TAG = "terriajs_search_result";
@@ -31,7 +31,7 @@ export default class Cesium3DTilesCatalogItem extends SearchableItemMixin(
   readonly type = Cesium3DTilesCatalogItem.type;
 
   @observable.ref
-  repositionBoxDrawing?: BoxDrawing;
+  repositionBoxDrawing?: RepositionableBoxDrawing;
 
   @override
   get mapItems() {

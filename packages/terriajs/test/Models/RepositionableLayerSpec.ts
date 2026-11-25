@@ -1,7 +1,7 @@
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
-import BoxDrawing, {
-  BoxDrawingChangeParams
-} from "../../lib/Models/BoxDrawing";
+import RepositionableBoxDrawing, {
+  RepositionableBoxDrawingChangeParams
+} from "../../lib/Models/RepositionableBoxDrawing";
 import Cesium from "../../lib/Models/Cesium";
 import RepositionableLayer, {
   RepositionableLayerAdapter
@@ -80,7 +80,7 @@ describe("RepositionableLayer", function () {
         .createSpy("clampToGroundOnce")
         .and.returnValue(Promise.resolve(true)),
       stopInteractions: jasmine.createSpy("stopInteractions")
-    } as unknown as BoxDrawing;
+    } as unknown as RepositionableBoxDrawing;
 
     const cesium = {
       isFeaturePickingPaused: false,
@@ -140,7 +140,7 @@ describe("RepositionableLayer", function () {
     harness.boxDrawing.onChange?.({
       modelMatrix: Matrix4.IDENTITY,
       isFinished: false
-    } as BoxDrawingChangeParams);
+    } as RepositionableBoxDrawingChangeParams);
 
     expect(harness.previewCount).toBe(1);
   });

@@ -12,7 +12,7 @@ import Color from "terriajs-cesium/Source/Core/Color";
 import IonImageryCatalogItem from "./Catalog/CatalogItems/IonImageryCatalogItem";
 import { ImageryParts } from "../ModelMixins/MappableMixin";
 import { RectangleTraits } from "../Traits/TraitsClasses/MappableTraits";
-import BoxDrawing from "./BoxDrawing";
+import createRepositionableBoxDrawing from "./createRepositionableBoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
@@ -79,14 +79,12 @@ export default class RepositionableImagery extends RepositionableLayer<
       Quaternion.IDENTITY,
       new Cartesian3(widthMeters, heightMeters, 100)
     );
-    const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
-      keepBoxAboveGround: true,
-      disableVerticalMovement: is2D,
-      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
-      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
-      drawNonUniformScaleGrips: false
-    });
-    boxDrawing.enableScaling = false;
+    const boxDrawing = createRepositionableBoxDrawing(
+      cesium,
+      editorTransform,
+      is2D,
+      { keepBoxAboveGround: true }
+    );
     boxDrawing.enableRotation = !is2D;
     boxDrawing.dataSource.entities.add(
       new Entity({

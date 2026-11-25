@@ -13,7 +13,7 @@ import BoundingSphere from "terriajs-cesium/Source/Core/BoundingSphere";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
-import BoxDrawing from "./BoxDrawing";
+import createRepositionableBoxDrawing from "./createRepositionableBoxDrawing";
 import ViewerMode from "./ViewerMode";
 import RepositionableLayer, {
   RepositionableLayerAdapter
@@ -98,14 +98,11 @@ export default class RepositionableComposite {
       Quaternion.IDENTITY,
       new Cartesian3(aggregateRadius, aggregateRadius, aggregateRadius)
     );
-    const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
-      keepBoxAboveGround: false,
-      disableVerticalMovement: is2D,
-      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
-      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
-      drawNonUniformScaleGrips: false
-    });
-    boxDrawing.enableScaling = false;
+    const boxDrawing = createRepositionableBoxDrawing(
+      cesium,
+      editorTransform,
+      is2D
+    );
     boxDrawing.enableRotation = true;
 
     const initialItemMatrices = new Map(

@@ -8,7 +8,8 @@ import Cesium3DTileset from "terriajs-cesium/Source/Scene/Cesium3DTileset";
 import Cesium3dTilesMixin from "../ModelMixins/Cesium3dTilesMixin";
 import HeadingPitchRollTraits from "../Traits/TraitsClasses/HeadingPitchRollTraits";
 import LatLonHeightTraits from "../Traits/TraitsClasses/LatLonHeightTraits";
-import BoxDrawing from "./BoxDrawing";
+import RepositionableBoxDrawing from "./RepositionableBoxDrawing";
+import createRepositionableBoxDrawing from "./createRepositionableBoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
@@ -287,13 +288,11 @@ export default class Repositionable3DTiles extends RepositionableLayer<
       new Cartesian3(radius, radius, radius)
     );
 
-    const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
-      keepBoxAboveGround: false,
-      disableVerticalMovement: is2D,
-      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
-      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
-      drawNonUniformScaleGrips: false
-    });
+    const boxDrawing = createRepositionableBoxDrawing(
+      cesium,
+      editorTransform,
+      is2D
+    );
     const adapter: RepositionableLayerAdapter<
       TransformationSnapshot,
       RepositionableItem
@@ -354,17 +353,20 @@ export default class Repositionable3DTiles extends RepositionableLayer<
       },
       activate: (boxDrawing) => {
         (
-          item as unknown as { repositionBoxDrawing?: BoxDrawing }
+          item as unknown as {
+            repositionBoxDrawing?: RepositionableBoxDrawing;
+          }
         ).repositionBoxDrawing = boxDrawing;
       },
       deactivate: () => {
         (
-          item as unknown as { repositionBoxDrawing?: BoxDrawing }
+          item as unknown as {
+            repositionBoxDrawing?: RepositionableBoxDrawing;
+          }
         ).repositionBoxDrawing = undefined;
       }
     };
     super(adapter, cesium, boxDrawing);
-    boxDrawing.enableScaling = false;
     boxDrawing.enableRotation = true;
   }
 

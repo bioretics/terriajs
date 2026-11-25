@@ -7,7 +7,7 @@ import Transforms from "terriajs-cesium/Source/Core/Transforms";
 import GltfMixin from "../ModelMixins/GltfMixin";
 import HeadingPitchRollTraits from "../Traits/TraitsClasses/HeadingPitchRollTraits";
 import LatLonHeightTraits from "../Traits/TraitsClasses/LatLonHeightTraits";
-import BoxDrawing from "./BoxDrawing";
+import createRepositionableBoxDrawing from "./createRepositionableBoxDrawing";
 import Cesium from "./Cesium";
 import CommonStrata from "./Definition/CommonStrata";
 import updateModelFromJson from "./Definition/updateModelFromJson";
@@ -99,13 +99,11 @@ export default class RepositionableGltf extends RepositionableLayer<
       itemRotation,
       new Cartesian3(radius, radius, radius)
     );
-    const boxDrawing = BoxDrawing.fromTransform(cesium, editorTransform, {
-      keepBoxAboveGround: false,
-      disableVerticalMovement: is2D,
-      allowedTranslationAxes: is2D ? ["x", "y"] : ["x", "y", "z"],
-      allowedRotationAxes: is2D ? ["map-normal"] : undefined,
-      drawNonUniformScaleGrips: false
-    });
+    const boxDrawing = createRepositionableBoxDrawing(
+      cesium,
+      editorTransform,
+      is2D
+    );
 
     const adapter: RepositionableLayerAdapter<
       TransformationSnapshot,
@@ -165,9 +163,7 @@ export default class RepositionableGltf extends RepositionableLayer<
         }
       }
     };
-
     super(adapter, cesium, boxDrawing);
-    boxDrawing.enableScaling = false;
     boxDrawing.enableRotation = true;
   }
 

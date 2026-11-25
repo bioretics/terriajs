@@ -3,10 +3,15 @@ import Cesium from "../../lib/Models/Cesium";
 import Terria from "../../lib/Models/Terria";
 import TerriaViewer from "../../lib/ViewModels/TerriaViewer";
 import BoxDrawing from "../../lib/Models/BoxDrawing";
+import { isSideEntity } from "../../lib/Models/BoxDrawing";
+import RepositionableBoxDrawing from "../../lib/Models/RepositionableBoxDrawing";
+import createRepositionableBoxDrawing from "../../lib/Models/createRepositionableBoxDrawing";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import TranslationRotationScale from "terriajs-cesium/Source/Core/TranslationRotationScale";
 import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Quaternion from "terriajs-cesium/Source/Core/Quaternion";
+import JulianDate from "terriajs-cesium/Source/Core/JulianDate";
+import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 
 describe("BoxDrawing", function () {
   let terria: Terria;
@@ -53,18 +58,106 @@ describe("BoxDrawing", function () {
     });
 
     it("can be constrained to map-plane translation and heading", function () {
-      const boxDrawing = BoxDrawing.fromTransform(cesium, Matrix4.IDENTITY, {
-        disableVerticalMovement: true,
-        allowedTranslationAxes: ["x", "y"],
-        allowedRotationAxes: ["map-normal"],
-        drawNonUniformScaleGrips: false
-      });
+      const boxDrawing = RepositionableBoxDrawing.fromTransform(
+        cesium,
+        Matrix4.IDENTITY,
+        {
+          disableVerticalMovement: true,
+          allowedTranslationAxes: ["x", "y"],
+          allowedRotationAxes: ["map-normal"],
+          drawNonUniformScaleGrips: false
+        }
+      );
 
       expect(boxDrawing.disableVerticalMovement).toBeTrue();
       expect(boxDrawing.allowedTranslationAxes).toEqual(["x", "y"]);
       expect(boxDrawing.allowedRotationAxes).toEqual(["map-normal"]);
       boxDrawing.enableScaling = false;
       expect(boxDrawing.enableScaling).toBeFalse();
+    });
+
+    it("creates a reposition box with per-tool 2D interaction constraints", function () {
+      const boxDrawing = createRepositionableBoxDrawing(
+        cesium,
+        Matrix4.IDENTITY,
+        true
+      );
+
+      expect(boxDrawing.disableVerticalMovement).toBeTrue();
+      expect(boxDrawing.allowedTranslationAxes).toEqual(["x", "y"]);
+      expect(boxDrawing.allowedRotationAxes).toEqual(["map-normal"]);
+      expect(boxDrawing.enableScaling).toBeFalse();
+    });
+
+    it("keeps all translation and rotation axes available in 3D", function () {
+      const boxDrawing = createRepositionableBoxDrawing(
+        cesium,
+        Matrix4.IDENTITY,
+        false
+      );
+
+      expect(boxDrawing.disableVerticalMovement).toBeFalse();
+      expect(boxDrawing.allowedTranslationAxes).toEqual(["x", "y", "z"]);
+      expect(boxDrawing.allowedRotationAxes).toEqual([
+        "heading",
+        "pitch",
+        "roll"
+      ]);
+      expect(boxDrawing.enableScaling).toBeFalse();
+    });
+
+    it("keeps clip-box styling independent from reposition styling", function () {
+      const clipBoxDrawing = BoxDrawing.fromTransform(cesium, Matrix4.IDENTITY);
+      const repositionBoxDrawing = createRepositionableBoxDrawing(
+        cesium,
+        Matrix4.IDENTITY,
+        false
+      );
+      const clipSide =
+        clipBoxDrawing.dataSource.entities.values.find(isSideEntity);
+      const repositionSide =
+        repositionBoxDrawing.dataSource.entities.values.find(isSideEntity);
+      if (!clipSide || !repositionSide) {
+        throw new Error("Expected both box drawings to contain a side");
+      }
+      const getFirstEdgeColor = (
+        boxDrawing: BoxDrawing | RepositionableBoxDrawing
+      ) => {
+        const edge = boxDrawing.dataSource.entities.values.find(
+          (entity) => entity.polyline?.material instanceof ColorMaterialProperty
+        );
+        const material = edge?.polyline?.material;
+        return material instanceof ColorMaterialProperty
+          ? material.color?.getValue(JulianDate.now())
+          : undefined;
+      };
+
+      expect(clipSide?.plane.outlineWidth?.getValue(JulianDate.now())).toBe(1);
+      expect(
+        repositionSide?.plane.outlineWidth?.getValue(JulianDate.now())
+      ).toBe(3);
+      expect(clipBoxDrawing.enableScaling).toBeTrue();
+      expect(repositionBoxDrawing.enableScaling).toBeFalse();
+
+      const clipMaterial = clipSide.plane.material;
+      const repositionMaterial = repositionSide.plane.material;
+      if (
+        !(clipMaterial instanceof ColorMaterialProperty) ||
+        !clipMaterial.color ||
+        !(repositionMaterial instanceof ColorMaterialProperty) ||
+        !repositionMaterial.color
+      ) {
+        throw new Error("Expected box sides to use color materials");
+      }
+      const clipFill = clipMaterial.color.getValue(JulianDate.now());
+      const repositionFill = repositionMaterial.color.getValue(
+        JulianDate.now()
+      );
+      expect(clipFill?.alpha).toBeCloseTo(0.1);
+      expect(repositionFill?.alpha).toBeCloseTo(0.18);
+
+      expect(getFirstEdgeColor(clipBoxDrawing)?.alpha).toBeCloseTo(0.1);
+      expect(getFirstEdgeColor(repositionBoxDrawing)?.alpha).toBeCloseTo(0.85);
     });
   });
 
