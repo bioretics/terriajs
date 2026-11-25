@@ -178,6 +178,7 @@ export default class RepositionableI3S extends RepositionableLayer<
           scale: getDefaultTrait<number>(item, "scale")
         };
       },
+      originPosition: () => LatLonHeightTraits.toCartesian(item.origin),
       preview,
       restore: (snapshot) => {
         updateModelFromJson(item.origin, CommonStrata.user, {

@@ -2,6 +2,7 @@ import { action } from "mobx";
 import { observer } from "mobx-react";
 import { FC, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import { runInAction } from "mobx";
 import Cesium3dTilesMixin from "../../../ModelMixins/Cesium3dTilesMixin";
 import GltfMixin from "../../../ModelMixins/GltfMixin";
@@ -27,6 +28,10 @@ import Checkbox from "../../../Styled/Checkbox";
 import FileSaver from "file-saver";
 import { exportRepositionableCatalog } from "../../../Models/RepositionableCatalogExport";
 import { REPOSITIONABLE_BOX_DRAWING_STYLE } from "../../../Models/createRepositionableBoxDrawing";
+import {
+  REPOSITIONABLE_ORIGIN_COLOR,
+  REPOSITIONABLE_ORIGINAL_ORIGIN_COLOR
+} from "../../../Models/RepositionableBoxDrawing";
 import CommonStrata from "../../../Models/Definition/CommonStrata";
 import updateModelFromJson from "../../../Models/Definition/updateModelFromJson";
 import { StyledInput } from "../../../Styled/Input";
@@ -72,6 +77,8 @@ interface RepositionController {
   clampToGround?(): Promise<boolean>;
   getWholeTransformation?(): TransformationSnapshot | undefined;
   setWholeTransformation?(transformation: TransformationSnapshot): void;
+  getOriginalOriginPosition?(): Cartesian3 | undefined;
+  setOriginalOriginPosition?(position?: Cartesian3): void;
   changeSelectedPiece?(): void;
   refreshSelectedPiece?(): boolean;
 }
@@ -95,7 +102,10 @@ const RepositionLayerTool: FC<Props> = observer(
     const compositeSessionRef = useRef<{
       item: BaseModel;
       snapshots?: RepositionableCompositeSnapshot[];
+      initialOriginPosition?: Cartesian3;
     }>({ item });
+    const originMarkerItemRef = useRef(item);
+    const initialOriginPositionRef = useRef<Cartesian3>();
     const [clampStatus, setClampStatus] = useState<
       "idle" | "working" | "success" | "unavailable"
     >("idle");
@@ -158,13 +168,15 @@ const RepositionLayerTool: FC<Props> = observer(
       } else {
         controllerRef.current?.cancel();
       }
-      compositeSessionRef.current.snapshots = undefined;
+      compositeSessionRef.current = { item };
+      initialOriginPositionRef.current = undefined;
       viewState.closeTool();
     });
 
     const reset = action(() => {
       controllerRef.current?.reset();
-      compositeSessionRef.current.snapshots = undefined;
+      compositeSessionRef.current = { item };
+      initialOriginPositionRef.current = undefined;
       viewState.closeTool();
     });
 
@@ -345,6 +357,12 @@ const RepositionLayerTool: FC<Props> = observer(
     ]);
 
     useEffect(() => {
+      if (originMarkerItemRef.current !== item) {
+        originMarkerItemRef.current = item;
+        initialOriginPositionRef.current = undefined;
+        compositeSessionRef.current = { item };
+      }
+
       let controller: RepositionController | undefined;
       if (Cesium3dTilesMixin.isMixedInto(item)) {
         controller = Repositionable3DTiles.create(item, cesium);
@@ -363,7 +381,9 @@ const RepositionLayerTool: FC<Props> = observer(
           {
             onPieceSelected: handlePieceSelected,
             onWholeTransformationChange: handleWholeTransformationChange,
-            initialSnapshots: compositeSessionRef.current.snapshots
+            initialSnapshots: compositeSessionRef.current.snapshots,
+            initialOriginPosition:
+              compositeSessionRef.current.initialOriginPosition
           }
         );
         if (
@@ -378,6 +398,21 @@ const RepositionLayerTool: FC<Props> = observer(
       }
 
       controllerRef.current = controller;
+      if (controller) {
+        const originalOriginPosition =
+          initialOriginPositionRef.current ??
+          controller.getOriginalOriginPosition?.();
+        if (originalOriginPosition) {
+          initialOriginPositionRef.current = Cartesian3.clone(
+            originalOriginPosition
+          );
+          controller.setOriginalOriginPosition?.(originalOriginPosition);
+          if (item instanceof CompositeCatalogItem) {
+            compositeSessionRef.current.initialOriginPosition =
+              Cartesian3.clone(originalOriginPosition);
+          }
+        }
+      }
       if (item instanceof CompositeCatalogItem) {
         setWholeTransformVersion((version) => version + 1);
       }
@@ -629,6 +664,18 @@ const RepositionLayerTool: FC<Props> = observer(
               ? "Drag a white face to move the image region."
               : "Drag white faces to move the layer and colored edges to rotate it."}
         </InteractionHint>
+        {!(item instanceof IonImageryCatalogItem) && (
+          <Legend>
+            <LegendItem>
+              <OriginSwatch />
+              <span>Model origin (0, 0, 0)</span>
+            </LegendItem>
+            <LegendItem>
+              <OriginalOriginSwatch />
+              <span>Position when editing started</span>
+            </LegendItem>
+          </Legend>
+        )}
         {is2D ? (
           <Legend>
             <LegendItem>
@@ -816,6 +863,24 @@ const FaceSwatch = styled.span`
 
 const DisabledFaceSwatch = styled(FaceSwatch)`
   opacity: 0.35;
+`;
+
+const OriginSwatch = styled.span`
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: ${REPOSITIONABLE_ORIGIN_COLOR.toCssColorString()};
+`;
+
+const OriginalOriginSwatch = styled.span`
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  border: 3px solid ${REPOSITIONABLE_ORIGINAL_ORIGIN_COLOR.toCssColorString()};
+  border-radius: 50%;
+  background: transparent;
 `;
 
 const EdgeSwatch = styled.span<{ color: string; diagonal?: boolean }>`

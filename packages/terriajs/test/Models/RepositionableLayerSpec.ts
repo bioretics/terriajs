@@ -104,6 +104,7 @@ describe("RepositionableLayer", function () {
     let previewCount = 0;
     let activated = false;
     let deactivated = false;
+    const originPosition = Cartesian3.fromDegrees(-122.3, 37.8, 41);
 
     const item = {} as BaseModel;
     const boxDrawing = {
@@ -113,13 +114,17 @@ describe("RepositionableLayer", function () {
       clampToGroundOnce: jasmine
         .createSpy("clampToGroundOnce")
         .and.returnValue(Promise.resolve(true)),
+      setOriginMarkerPosition: jasmine.createSpy("setOriginMarkerPosition"),
+      setOriginalOriginMarkerPosition: jasmine.createSpy(
+        "setOriginalOriginMarkerPosition"
+      ),
       stopInteractions: jasmine.createSpy("stopInteractions")
     } as unknown as RepositionableBoxDrawing;
 
     const cesium = {
       isFeaturePickingPaused: false,
       dataSources: {
-        add: jasmine.createSpy("add").and.returnValue(true),
+        add: jasmine.createSpy("add").and.returnValue(Promise.resolve(true)),
         remove: jasmine.createSpy("remove").and.returnValue(true)
       }
     } as unknown as Cesium;
@@ -128,6 +133,7 @@ describe("RepositionableLayer", function () {
       item,
       snapshot: () => "original",
       defaultSnapshot: () => "default",
+      originPosition: () => originPosition,
       preview: () => {
         previewCount++;
       },
@@ -147,6 +153,7 @@ describe("RepositionableLayer", function () {
       controller,
       adapter,
       boxDrawing,
+      originPosition,
       cesium,
       get restoredSnapshot() {
         return restoredSnapshot;
@@ -163,13 +170,20 @@ describe("RepositionableLayer", function () {
     };
   }
 
-  it("captures the adapter snapshot and previews matrix changes", function () {
+  it("captures the adapter snapshot and previews matrix changes", async function () {
     const harness = createHarness();
+    await Promise.resolve();
 
     expect(harness.controller.snapshot).toBe("original");
     expect(harness.activated).toBeTrue();
     expect(harness.cesium.isFeaturePickingPaused).toBeTrue();
     expect(harness.boxDrawing.dataSource.show).toBeTrue();
+    expect(harness.boxDrawing.setOriginMarkerPosition).toHaveBeenCalledWith(
+      harness.originPosition
+    );
+    expect(
+      harness.boxDrawing.setOriginalOriginMarkerPosition
+    ).toHaveBeenCalledWith(harness.originPosition);
 
     harness.boxDrawing.onChange?.({
       modelMatrix: Matrix4.IDENTITY,
@@ -177,6 +191,25 @@ describe("RepositionableLayer", function () {
     } as RepositionableBoxDrawingChangeParams);
 
     expect(harness.previewCount).toBe(1);
+    expect(harness.boxDrawing.setOriginMarkerPosition).toHaveBeenCalledTimes(2);
+  });
+
+  it("preserves and updates the original origin marker", function () {
+    const harness = createHarness();
+    const updatedOrigin = Cartesian3.fromDegrees(-122.31, 37.81, 42);
+
+    expect(harness.controller.getOriginalOriginPosition()).toEqual(
+      harness.originPosition
+    );
+
+    harness.controller.setOriginalOriginPosition(updatedOrigin);
+
+    expect(harness.controller.getOriginalOriginPosition()).toEqual(
+      updatedOrigin
+    );
+    expect(
+      harness.boxDrawing.setOriginalOriginMarkerPosition
+    ).toHaveBeenCalledWith(updatedOrigin);
   });
 
   it("restore on cancel and cleanly disposes", function () {

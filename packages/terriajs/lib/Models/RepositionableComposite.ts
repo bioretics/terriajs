@@ -30,6 +30,7 @@ type RepositionableItem = Cesium3dTilesMixin.Instance;
 export interface RepositionableCompositeSnapshot {
   item: RepositionableItem;
   snapshot: TransformationSnapshot;
+  originPosition: Cartesian3;
 }
 
 export function getCompositeTransformation(
@@ -80,6 +81,7 @@ export default class RepositionableComposite {
   private selectedPiece?: RepositionableItem;
   private selectionHandler?: ScreenSpaceEventHandler;
   private readonly previousFeaturePickingPaused: boolean;
+  private initialCompositeOriginPosition?: Cartesian3;
   private readonly wholeController?: RepositionableLayer<
     RepositionableCompositeSnapshot[],
     CompositeCatalogItem
@@ -98,19 +100,29 @@ export default class RepositionableComposite {
       item: RepositionableItem | undefined
     ) => void,
     private readonly onWholeTransformationChange?: () => void,
-    initialSnapshots?: RepositionableCompositeSnapshot[]
+    initialSnapshots?: RepositionableCompositeSnapshot[],
+    initialCompositeOriginPosition?: Cartesian3
   ) {
     this.wholeController = wholeController;
     this.previousFeaturePickingPaused = cesium.isFeaturePickingPaused;
+    this.initialCompositeOriginPosition = initialCompositeOriginPosition;
     this.initialSnapshots =
       initialSnapshots ??
       memberItems.map((member) => ({
         item: member,
-        snapshot: snapshotTransformation(member)
+        snapshot: snapshotTransformation(member),
+        originPosition: Matrix4.getTranslation(
+          member.modelMatrix,
+          new Cartesian3()
+        )
       }));
     this.defaultSnapshots = memberItems.map((member) => ({
       item: member,
-      snapshot: defaultTransformation(member)
+      snapshot: defaultTransformation(member),
+      originPosition: Matrix4.getTranslation(
+        member.modelMatrix,
+        new Cartesian3()
+      )
     }));
     if (mode === "pieces") {
       this.beginPieceSelection();
@@ -129,6 +141,7 @@ export default class RepositionableComposite {
       onPieceSelected?: (item: RepositionableItem | undefined) => void;
       onWholeTransformationChange?: () => void;
       initialSnapshots?: RepositionableCompositeSnapshot[];
+      initialOriginPosition?: Cartesian3;
     }
   ): RepositionableComposite | undefined {
     if (item.isLoadingMapItems) return;
@@ -137,19 +150,6 @@ export default class RepositionableComposite {
       Cesium3dTilesMixin.isMixedInto
     );
     if (memberItems.length === 0) return;
-
-    if (mode === "pieces") {
-      return new RepositionableComposite(
-        item,
-        cesium,
-        memberItems,
-        mode,
-        undefined,
-        callbacks?.onPieceSelected,
-        callbacks?.onWholeTransformationChange,
-        callbacks?.initialSnapshots
-      );
-    }
 
     const tilesets: Cesium3DTileset[] = [];
     memberItems.forEach((member) => {
@@ -164,6 +164,22 @@ export default class RepositionableComposite {
     const aggregateCenter = BoundingSphere.fromBoundingSpheres(
       tilesets.map((tileset) => tileset.boundingSphere)
     ).center;
+    const initialCompositeOriginPosition =
+      callbacks?.initialOriginPosition ?? Cartesian3.clone(aggregateCenter);
+    if (mode === "pieces") {
+      return new RepositionableComposite(
+        item,
+        cesium,
+        memberItems,
+        mode,
+        undefined,
+        callbacks?.onPieceSelected,
+        callbacks?.onWholeTransformationChange,
+        callbacks?.initialSnapshots,
+        initialCompositeOriginPosition
+      );
+    }
+
     const aggregateRadius = Math.max(
       ...tilesets.map(
         (tileset) =>
@@ -200,13 +216,23 @@ export default class RepositionableComposite {
       snapshot: () =>
         memberItems.map((member) => ({
           item: member,
-          snapshot: snapshotTransformation(member)
+          snapshot: snapshotTransformation(member),
+          originPosition: Matrix4.getTranslation(
+            member.modelMatrix,
+            new Cartesian3()
+          )
         })),
       defaultSnapshot: () =>
         memberItems.map((member) => ({
           item: member,
-          snapshot: defaultTransformation(member)
+          snapshot: defaultTransformation(member),
+          originPosition: Matrix4.getTranslation(
+            member.modelMatrix,
+            new Cartesian3()
+          )
         })),
+      originPosition: () =>
+        Matrix4.getTranslation(boxDrawing.getTransform(), new Cartesian3()),
       preview: (modelMatrix) => {
         memberItems.forEach((member) => {
           const initialItemMatrix = initialItemMatrices.get(member);
@@ -233,6 +259,7 @@ export default class RepositionableComposite {
       cesium,
       boxDrawing
     );
+    wholeController.setOriginalOriginPosition(initialCompositeOriginPosition);
     return new RepositionableComposite(
       item,
       cesium,
@@ -241,12 +268,35 @@ export default class RepositionableComposite {
       wholeController,
       callbacks?.onPieceSelected,
       callbacks?.onWholeTransformationChange,
-      callbacks?.initialSnapshots
+      callbacks?.initialSnapshots,
+      initialCompositeOriginPosition
     );
   }
 
   getInitialSnapshots(): RepositionableCompositeSnapshot[] {
     return this.initialSnapshots;
+  }
+
+  getOriginalOriginPosition(): Cartesian3 | undefined {
+    if (this.activePieceController) {
+      return this.activePieceController.getOriginalOriginPosition();
+    }
+    return this.initialCompositeOriginPosition
+      ? Cartesian3.clone(this.initialCompositeOriginPosition)
+      : undefined;
+  }
+
+  setOriginalOriginPosition(position?: Cartesian3) {
+    if (this.activePieceController) {
+      this.activePieceController.setOriginalOriginPosition(position);
+      return;
+    }
+    this.initialCompositeOriginPosition = position
+      ? Cartesian3.clone(position)
+      : undefined;
+    if (this.mode === "whole") {
+      this.wholeController?.setOriginalOriginPosition(position);
+    }
   }
 
   getWholeTransformation(): TransformationSnapshot | undefined {
@@ -281,6 +331,10 @@ export default class RepositionableComposite {
       this.cesium
     );
     if (!controller) return false;
+    const initialOriginPosition = this.initialSnapshots.find(
+      ({ item }) => item === this.selectedPiece
+    )?.originPosition;
+    controller.setOriginalOriginPosition(initialOriginPosition);
     this.activePieceController = controller;
     return true;
   }
@@ -359,6 +413,10 @@ export default class RepositionableComposite {
         this.selectionHandler = undefined;
         this.selectedPiece = member;
         this.activePieceController = controller;
+        const initialOriginPosition = this.initialSnapshots.find(
+          ({ item: candidate }) => candidate === member
+        )?.originPosition;
+        controller.setOriginalOriginPosition(initialOriginPosition);
         this.onPieceSelected?.(member);
       },
       ScreenSpaceEventType.LEFT_CLICK

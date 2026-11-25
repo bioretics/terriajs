@@ -135,6 +135,7 @@ export default class RepositionableGltf extends RepositionableLayer<
           scale: getDefaultTrait<number>(item, "scale")
         };
       },
+      originPosition: () => Cartesian3.clone(item.cesiumPosition),
       preview: (modelMatrix) => {
         previewModelMatrix(
           item,

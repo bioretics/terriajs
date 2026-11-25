@@ -334,6 +334,8 @@ export default class Repositionable3DTiles extends RepositionableLayer<
           scale: getDefaultTrait<number>(item, "scale")
         };
       },
+      originPosition: () =>
+        Matrix4.getTranslation(item.modelMatrix, new Cartesian3()),
       preview: (modelMatrix) => {
         previewModelMatrix(
           item,

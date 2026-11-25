@@ -1,4 +1,5 @@
 import { action } from "mobx";
+import Cartesian3 from "terriajs-cesium/Source/Core/Cartesian3";
 import Matrix4 from "terriajs-cesium/Source/Core/Matrix4";
 import RepositionableBoxDrawing from "./RepositionableBoxDrawing";
 import Cesium from "./Cesium";
@@ -13,6 +14,7 @@ export interface RepositionableLayerAdapter<
   defaultSnapshot(): TSnapshot;
   preview(modelMatrix: Matrix4): void;
   restore(snapshot: TSnapshot): void;
+  originPosition?(): Cartesian3 | undefined;
   activate?(boxDrawing: RepositionableBoxDrawing): void;
   deactivate?(): void;
 }
@@ -44,6 +46,7 @@ export default class RepositionableLayer<
   TItem extends BaseModel = BaseModel
 > {
   readonly snapshot: TSnapshot;
+  private originalOriginPosition?: Cartesian3;
   private readonly previousFeaturePickingPaused: boolean;
   private finished = false;
   private disposed = false;
@@ -55,12 +58,18 @@ export default class RepositionableLayer<
     readonly boxDrawing: RepositionableBoxDrawing
   ) {
     this.snapshot = adapter.snapshot();
+    this.originalOriginPosition = adapter.originPosition?.();
     this.previousFeaturePickingPaused = cesium.isFeaturePickingPaused;
     cesium.isFeaturePickingPaused = true;
 
     this.boxDrawing.onChange = action(({ modelMatrix }) => {
       adapter.preview(modelMatrix);
+      this.boxDrawing.setOriginMarkerPosition(adapter.originPosition?.());
     });
+    this.boxDrawing.setOriginMarkerPosition(adapter.originPosition?.());
+    this.boxDrawing.setOriginalOriginMarkerPosition(
+      this.originalOriginPosition
+    );
     adapter.activate?.(this.boxDrawing);
     const itemMapItems = (
       this.adapter.item as unknown as { mapItems?: unknown[] }
@@ -81,6 +90,21 @@ export default class RepositionableLayer<
 
   get item(): TItem {
     return this.adapter.item;
+  }
+
+  getOriginalOriginPosition(): Cartesian3 | undefined {
+    return this.originalOriginPosition
+      ? Cartesian3.clone(this.originalOriginPosition)
+      : undefined;
+  }
+
+  setOriginalOriginPosition(position?: Cartesian3) {
+    this.originalOriginPosition = position
+      ? Cartesian3.clone(position)
+      : undefined;
+    this.boxDrawing.setOriginalOriginMarkerPosition(
+      this.originalOriginPosition
+    );
   }
 
   save() {

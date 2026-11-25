@@ -28,6 +28,7 @@ import ScreenSpaceEventHandler from "terriajs-cesium/Source/Core/ScreenSpaceEven
 import ScreenSpaceEventType from "terriajs-cesium/Source/Core/ScreenSpaceEventType";
 import TranslationRotationScale from "terriajs-cesium/Source/Core/TranslationRotationScale";
 import CallbackProperty from "terriajs-cesium/Source/DataSources/CallbackProperty";
+import ConstantPositionProperty from "terriajs-cesium/Source/DataSources/ConstantPositionProperty";
 import ColorMaterialProperty from "terriajs-cesium/Source/DataSources/ColorMaterialProperty";
 import CustomDataSource from "terriajs-cesium/Source/DataSources/CustomDataSource";
 import Entity from "terriajs-cesium/Source/DataSources/Entity";
@@ -44,6 +45,9 @@ export type ChangeEvent = {
   isFinished: boolean;
   modelMatrix: Matrix4;
 };
+
+export const REPOSITIONABLE_ORIGIN_COLOR = Color.MAGENTA;
+export const REPOSITIONABLE_ORIGINAL_ORIGIN_COLOR = Color.LIME;
 
 export type ChangeEventHandler = (event: ChangeEvent) => void;
 
@@ -287,6 +291,9 @@ export default class RepositionableBoxDrawing {
 
   private readonly edges: Edge[] = [];
 
+  private originMarker?: Entity;
+  private originalOriginMarker?: Entity;
+
   private isHeightUpdateInProgress: boolean = false;
   private terrainHeightEstimate: number = 0;
 
@@ -409,6 +416,64 @@ export default class RepositionableBoxDrawing {
       translationRotationScale: this.trs,
       isFinished: true
     });
+  }
+
+  public setOriginMarkerPosition(position?: Cartesian3): void {
+    if (!position) {
+      if (this.originMarker) {
+        this.dataSource.entities.remove(this.originMarker);
+        this.originMarker = undefined;
+      }
+      return;
+    }
+
+    if (!this.originMarker) {
+      this.originMarker = this.dataSource.entities.add(
+        new Entity({
+          id: "reposition-model-origin",
+          position: new ConstantPositionProperty(position),
+          point: {
+            pixelSize: 14,
+            color: REPOSITIONABLE_ORIGIN_COLOR,
+            outlineColor: Color.WHITE,
+            outlineWidth: 3,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY
+          }
+        })
+      );
+      return;
+    }
+
+    this.originMarker.position = new ConstantPositionProperty(position);
+  }
+
+  public setOriginalOriginMarkerPosition(position?: Cartesian3): void {
+    if (!position) {
+      if (this.originalOriginMarker) {
+        this.dataSource.entities.remove(this.originalOriginMarker);
+        this.originalOriginMarker = undefined;
+      }
+      return;
+    }
+
+    if (!this.originalOriginMarker) {
+      this.originalOriginMarker = this.dataSource.entities.add(
+        new Entity({
+          id: "reposition-original-map-origin",
+          position: new ConstantPositionProperty(position),
+          point: {
+            pixelSize: 22,
+            color: Color.TRANSPARENT,
+            outlineColor: REPOSITIONABLE_ORIGINAL_ORIGIN_COLOR,
+            outlineWidth: 4,
+            disableDepthTestDistance: Number.POSITIVE_INFINITY
+          }
+        })
+      );
+      return;
+    }
+
+    this.originalOriginMarker.position = new ConstantPositionProperty(position);
   }
 
   get keepBoxAboveGround() {
