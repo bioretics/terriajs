@@ -97,6 +97,46 @@ export const WelcomeMessagePure = (props) => {
   const [shouldOpenSearch, setShouldOpenSearch] = useState(false);
   const modalRef = useRef(null);
   const welcomeMessageRef = useRef(null);
+  const welcomeVideo = viewState.terria.configParameters.welcomeMessageVideo;
+  const hideWelcomeMessageVideo = Boolean(
+    viewState.terria.configParameters.hideWelcomeMessageVideo
+  );
+  const welcomeVideoUrl = hideWelcomeMessageVideo
+    ? undefined
+    : welcomeVideo?.videoUrl;
+  const hasWelcomeVideo = Boolean(welcomeVideoUrl);
+  const welcomePlaceholderImage = hideWelcomeMessageVideo
+    ? undefined
+    : welcomeVideo?.placeholderImage;
+  const welcomeMessageImageUrl =
+    viewState.terria.configParameters.welcomeMessageImageUrl;
+  const welcomeMessageImagePlacement =
+    viewState.terria.configParameters.welcomeMessageImagePlacement ??
+    "insteadOfVideo";
+  const welcomeMessageImageHeight =
+    viewState.terria.configParameters.welcomeMessageImageHeight ?? "160px";
+  const showWelcomeMessageImageInstead =
+    Boolean(welcomeMessageImageUrl) &&
+    welcomeMessageImagePlacement === "insteadOfVideo" &&
+    !viewState.useSmallScreenInterface;
+  const showWelcomeMessageImageUnder =
+    Boolean(welcomeMessageImageUrl) &&
+    welcomeMessageImagePlacement === "underVideo" &&
+    !viewState.useSmallScreenInterface;
+  const showWelcomeMediaVideo =
+    !hideWelcomeMessageVideo &&
+    !showWelcomeMessageImageInstead &&
+    (hasWelcomeVideo || welcomePlaceholderImage);
+  const showWelcomeMedia =
+    !viewState.useSmallScreenInterface &&
+    (showWelcomeMediaVideo || showWelcomeMessageImageInstead);
+  const welcomeLogoUrl =
+    viewState.terria.configParameters.welcomeMessageLogoUrl;
+  const welcomeLogoHeight =
+    viewState.terria.configParameters.welcomeMessageLogoHeight ?? "60px";
+  const hideWelcomeMessageTitle = Boolean(
+    viewState.terria.configParameters.hideWelcomeMessageTitle
+  );
   // const {
   //   WelcomeMessagePrimaryBtnClick,
   //   WelcomeMessageSecondaryBtnClick
@@ -170,17 +210,14 @@ export const WelcomeMessagePure = (props) => {
           fullHeight
           centered
         >
-          <VideoGuide
-            viewState={viewState}
-            videoLink={
-              viewState.terria.configParameters.welcomeMessageVideo.videoUrl
-            }
-            background={
-              viewState.terria.configParameters.welcomeMessageVideo
-                .placeholderImage
-            }
-            videoName={WELCOME_MESSAGE_VIDEO}
-          />
+          {hasWelcomeVideo && (
+            <VideoGuide
+              viewState={viewState}
+              videoLink={welcomeVideoUrl}
+              background={welcomePlaceholderImage}
+              videoName={WELCOME_MESSAGE_VIDEO}
+            />
+          )}
           <SlideUpFadeIn isVisible={welcomeVisible} nodeRef={welcomeMessageRef}>
             <Box
               ref={welcomeMessageRef}
@@ -212,18 +249,38 @@ export const WelcomeMessagePure = (props) => {
                   viewState.useSmallScreenInterface ? "100%" : "83.33333%"
                 }
               >
-                <Text
-                  bold
-                  textLight
-                  styledFontSize={
-                    viewState.useSmallScreenInterface ? "26px" : "36px"
-                  }
-                  textAlignCenter={viewState.useSmallScreenInterface}
-                  styledLineHeight={"49px"}
-                >
-                  {t(($) => $.welcomeMessage.title)}
-                </Text>
-                <Spacing bottom={3} />
+                {welcomeLogoUrl && (
+                  <>
+                    <Box fullWidth centered>
+                      <img
+                        src={welcomeLogoUrl}
+                        alt=""
+                        css={`
+                          height: ${welcomeLogoHeight};
+                          width: auto;
+                          max-width: 100%;
+                        `}
+                      />
+                    </Box>
+                    <Spacing bottom={hideWelcomeMessageTitle ? 3 : 5} />
+                  </>
+                )}
+                {!hideWelcomeMessageTitle && (
+                  <>
+                    <Text
+                      bold
+                      textLight
+                      styledFontSize={
+                        viewState.useSmallScreenInterface ? "26px" : "36px"
+                      }
+                      textAlignCenter={viewState.useSmallScreenInterface}
+                      styledLineHeight={"49px"}
+                    >
+                      {t(($) => $.welcomeMessage.title)}
+                    </Text>
+                    <Spacing bottom={3} />
+                  </>
+                )}
                 <Text
                   textLight
                   medium
@@ -247,31 +304,61 @@ export const WelcomeMessagePure = (props) => {
                 </Text>
               </Box>
               <Spacing bottom={6} />
-              {!viewState.useSmallScreenInterface && (
-                <>
-                  <Text bold textLight extraLarge>
-                    {
-                      viewState.terria.configParameters.welcomeMessageVideo
-                        .videoTitle
-                    }
-                  </Text>
-                  <Spacing bottom={2} />
-                </>
-              )}
+              {!viewState.useSmallScreenInterface &&
+                hasWelcomeVideo &&
+                welcomeVideo?.videoTitle && (
+                  <>
+                    <Text bold textLight extraLarge>
+                      {welcomeVideo.videoTitle}
+                    </Text>
+                    <Spacing bottom={2} />
+                  </>
+                )}
               <Box fullWidth styledMinHeight={"160px"}>
-                {!viewState.useSmallScreenInterface &&
-                  viewState.terria.configParameters.welcomeMessageVideo
-                    .videoUrl && (
-                    <>
-                      <Box
-                        col6
-                        centered
-                        backgroundImage={
-                          viewState.terria.configParameters.welcomeMessageVideo
-                            .placeholderImage
-                        }
-                        backgroundBlackOverlay={0.5}
-                      >
+                {showWelcomeMedia && (
+                  <>
+                    <Box
+                      col6
+                      centered
+                      styledMinHeight={"160px"}
+                      data-testid={
+                        showWelcomeMessageImageInstead
+                          ? "welcome-message-image"
+                          : "welcome-message-media"
+                      }
+                      backgroundImage={
+                        showWelcomeMessageImageInstead
+                          ? undefined
+                          : welcomePlaceholderImage
+                      }
+                      backgroundBlackOverlay={
+                        showWelcomeMediaVideo && hasWelcomeVideo
+                          ? 0.5
+                          : undefined
+                      }
+                      css={
+                        showWelcomeMediaVideo && welcomePlaceholderImage
+                          ? `
+                              background-size: contain;
+                              background-repeat: no-repeat;
+                              background-position: center;
+                            `
+                          : undefined
+                      }
+                    >
+                      {showWelcomeMessageImageInstead && (
+                        <img
+                          src={welcomeMessageImageUrl}
+                          alt=""
+                          css={`
+                            height: ${welcomeMessageImageHeight};
+                            width: auto;
+                            max-width: 100%;
+                            object-fit: contain;
+                          `}
+                        />
+                      )}
+                      {showWelcomeMediaVideo && hasWelcomeVideo && (
                         <RawButton
                           fullWidth
                           fullHeight
@@ -290,10 +377,11 @@ export const WelcomeMessagePure = (props) => {
                             `}
                           />
                         </RawButton>
-                      </Box>
-                      <Spacing right={5} />
-                    </>
-                  )}
+                      )}
+                    </Box>
+                    <Spacing right={5} />
+                  </>
+                )}
                 <Box styledMargin={"0 auto"} displayInlineBlock>
                   {!viewState.useSmallScreenInterface && (
                     <>
@@ -347,6 +435,27 @@ export const WelcomeMessagePure = (props) => {
                   )}
                 </Box>
               </Box>
+              {showWelcomeMessageImageUnder && (
+                <>
+                  <Spacing bottom={4} />
+                  <Box
+                    fullWidth
+                    centered
+                    data-testid="welcome-message-image-under"
+                  >
+                    <img
+                      src={welcomeMessageImageUrl}
+                      alt=""
+                      css={`
+                        height: ${welcomeMessageImageHeight};
+                        width: auto;
+                        max-width: 100%;
+                        object-fit: contain;
+                      `}
+                    />
+                  </Box>
+                </>
+              )}
               {!viewState.useSmallScreenInterface && <Spacing bottom={13} />}
               <Box fullWidth centered>
                 <RawButton onClick={handleClose.bind(null, true)}>

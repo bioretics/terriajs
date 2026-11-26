@@ -231,6 +231,37 @@ export const ConfigParametersSchema = z.strictObject({
   openAddData: z.boolean(),
   showWelcomeMessage: z.boolean(),
   /**
+   * Optional logo image URL shown above the welcome message title.
+   */
+  welcomeMessageLogoUrl: z.string().optional(),
+  /**
+   * CSS height for the welcome message logo (e.g. "52px").
+   */
+  welcomeMessageLogoHeight: z.string().optional(),
+  /**
+   * When true, hide the welcome message title text (e.g. logo-only branding).
+   */
+  hideWelcomeMessageTitle: z.boolean().optional(),
+  /**
+   * When true, hide the welcome message video area (thumbnail, title, and player).
+   */
+  hideWelcomeMessageVideo: z.boolean().optional(),
+  /**
+   * Optional image in the welcome message (e.g. illustration beside action buttons).
+   */
+  welcomeMessageImageUrl: z.string().optional(),
+  /**
+   * CSS height for `welcomeMessageImageUrl` (e.g. "160px").
+   */
+  welcomeMessageImageHeight: z.string().optional(),
+  /**
+   * `insteadOfVideo`: image in the video thumbnail column; `underVideo`: below the
+   * video/buttons row.
+   */
+  welcomeMessageImagePlacement: z
+    .enum(["insteadOfVideo", "underVideo"])
+    .optional(),
+  /**
    * True to display in-app guides.
    */
   showInAppGuides: z.boolean(),

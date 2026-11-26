@@ -45,7 +45,6 @@ describe("WelcomeMessage", function () {
       localScreen.getByText("welcomeMessage.welcomeMessage")
     ).toBeVisible();
 
-    expect(localScreen.getByText("Getting started with the map")).toBeVisible();
     expect(
       localScreen.getByRole("button", { name: "welcomeMessage.tourBtnText" })
     ).toBeVisible();
@@ -60,6 +59,146 @@ describe("WelcomeMessage", function () {
     expect(
       localScreen.getByRole("button", { name: "welcomeMessage.dismissText" })
     ).toBeVisible();
+  });
+
+  it("hides the video area when hideWelcomeMessageVideo is true", function () {
+    runInAction(() => {
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "showWelcomeMessage",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "hideWelcomeMessageVideo",
+        true
+      );
+    });
+    const { container } = renderWithContexts(<WelcomeMessage />, viewState);
+    const localScreen = within(container);
+
+    expect(
+      localScreen.queryByTestId("welcome-message-media")
+    ).not.toBeInTheDocument();
+    expect(
+      localScreen.queryByText("Getting started with the map")
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows welcomeMessageImageUrl in the video column when insteadOfVideo", function () {
+    runInAction(() => {
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "showWelcomeMessage",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "hideWelcomeMessageVideo",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageImageUrl",
+        "https://example.com/welcome-art.png"
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageImagePlacement",
+        "insteadOfVideo"
+      );
+    });
+    const { container } = renderWithContexts(<WelcomeMessage />, viewState);
+    const localScreen = within(container);
+    const image = localScreen
+      .getByTestId("welcome-message-image")
+      .querySelector("img");
+
+    expect(image).toHaveAttribute("src", "https://example.com/welcome-art.png");
+  });
+
+  it("shows welcomeMessageImageUrl below the action row when underVideo", function () {
+    runInAction(() => {
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "showWelcomeMessage",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageImageUrl",
+        "https://example.com/welcome-under.png"
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageImagePlacement",
+        "underVideo"
+      );
+    });
+    const { container } = renderWithContexts(<WelcomeMessage />, viewState);
+    const localScreen = within(container);
+    const image = localScreen
+      .getByTestId("welcome-message-image-under")
+      .querySelector("img");
+
+    expect(image).toHaveAttribute(
+      "src",
+      "https://example.com/welcome-under.png"
+    );
+    expect(localScreen.getByTestId("welcome-message-media")).toBeVisible();
+  });
+
+  it("shows a static image when placeholderImage is set without a video", function () {
+    runInAction(() => {
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "showWelcomeMessage",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageVideo",
+        {
+          videoUrl: "",
+          videoTitle: "",
+          placeholderImage: "https://example.com/welcome.png"
+        }
+      );
+    });
+    const { container } = renderWithContexts(<WelcomeMessage />, viewState);
+    const localScreen = within(container);
+
+    expect(localScreen.getByTestId("welcome-message-media")).toBeVisible();
+  });
+
+  it("shows a configurable logo and can hide the title", function () {
+    runInAction(() => {
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "showWelcomeMessage",
+        true
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "welcomeMessageLogoUrl",
+        "https://example.com/logo.png"
+      );
+      terria.configParameters.setValue(
+        ConfigStrata.definition,
+        "hideWelcomeMessageTitle",
+        true
+      );
+    });
+    const { container } = renderWithContexts(<WelcomeMessage />, viewState);
+    const localScreen = within(container);
+
+    expect(localScreen.getByRole("img")).toHaveAttribute(
+      "src",
+      "https://example.com/logo.png"
+    );
+    expect(
+      localScreen.queryByText("welcomeMessage.title")
+    ).not.toBeInTheDocument();
   });
 
   it("doesn't render when showWelcomeMessage is set to false in config file", function () {
