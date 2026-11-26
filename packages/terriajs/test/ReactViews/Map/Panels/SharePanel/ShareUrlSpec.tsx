@@ -24,7 +24,7 @@ describe("ShareUrl", function () {
       terria
     });
     shareDataService = new ShareDataService({ terria });
-    shareDataService.init({ newShareUrlPrefix: "g" });
+    shareDataService.init({ sharePrefix: "g" });
     spyOn(shareDataService, "getShareToken").and.callFake(() =>
       Promise.reject(
         TerriaError.from(

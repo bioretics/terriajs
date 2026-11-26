@@ -2372,6 +2372,7 @@ async function interpretHash(
         [
           "clean",
           "hideWelcomeMessage",
+          "experimentalNewUi",
           "start",
           "share",
           "profile",
@@ -2406,6 +2407,15 @@ async function interpretHash(
       ConfigStrata.url,
       "showWelcomeMessage",
       false
+    );
+  }
+
+  // Tries the new UI on any map, without changing its config
+  if (isDefined(hashProperties.experimentalNewUi)) {
+    terria.configParameters.setValue(
+      ConfigStrata.url,
+      "experimentalNewUi",
+      true
     );
   }
 

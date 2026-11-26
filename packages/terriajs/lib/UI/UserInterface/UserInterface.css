@@ -1,0 +1,32 @@
+/* The new UI's global CSS: the design system's base styles, and nothing else.
+   The layers' order is set by layerOrder.ts, first in the page */
+@import url("@terria/design-system/tokens.css");
+@import url("@terria/design-system/reset.css");
+@import url("@terria/design-system/base.css");
+@import url("@terria/design-system/typography.css");
+@import url("@terria/design-system/layout.css");
+@import url("@terria/design-system/fonts.css");
+
+@layer tjs.components {
+  .tjs-user-interface {
+    display: grid;
+    grid-template:
+      "side map" 1fr
+      "side dock" auto
+      / auto 1fr;
+    block-size: 100dvh;
+  }
+
+  .tjs-user-interface__side-panel {
+    grid-area: side;
+  }
+
+  .tjs-user-interface__map {
+    position: relative;
+    grid-area: map;
+  }
+
+  .tjs-user-interface__bottom-dock {
+    grid-area: dock;
+  }
+}

@@ -129,7 +129,9 @@ function configureWebpack({
     test: /\.(png|jpg|svg|gif)$/,
     include: [
       path.resolve(terriaJSBasePath) + path.sep,
-      path.resolve(cesiumDir)
+      path.resolve(cesiumDir),
+      // The images Leaflet's stylesheet refers to, for the new UI's map
+      path.dirname(require.resolve("leaflet/package.json"))
     ],
     exclude: [path.resolve(terriaJSBasePath, "wwwroot", "images", "icons")],
     type: "asset" // inlines if file size < 8KB
@@ -244,6 +246,34 @@ function configureWebpack({
       ]
     });
   }
+
+  // Plain CSS: the new UI's (lib/UI) and the design system's, which sit in
+  // cascade layers, so they're extracted as they are, without CSS modules.
+  // TinyMCE's CSS is inlined as text by its own rule above
+  if (MiniCssExtractPlugin) {
+    config.module.rules.push({
+      test: /\.css$/,
+      exclude: [path.dirname(require.resolve("tinymce/package.json"))],
+      use: [
+        {
+          loader: MiniCssExtractPlugin.loader,
+          // A URL in a stylesheet is relative to the stylesheet, which is
+          // emitted beside the fonts, not to the page that publicPath is for
+          options: { publicPath: "./" }
+        },
+        {
+          loader: require.resolve("css-loader"),
+          options: { sourceMap: true }
+        }
+      ]
+    });
+  }
+
+  // The design system's font, Inter, imported by its fonts.css
+  config.module.rules.push({
+    test: /\.woff2?$/,
+    type: "asset/resource"
+  });
 
   // Alias react and react-dom to the one used by the building folder - apparently we can rely on the dir always being
   // called node_modules https://github.com/npm/npm/issues/2734

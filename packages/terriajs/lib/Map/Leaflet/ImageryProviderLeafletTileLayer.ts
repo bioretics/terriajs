@@ -179,28 +179,30 @@ export default class ImageryProviderLeafletTileLayer extends L.TileLayer {
       }
     };
 
-    L.DomEvent.on(tile, "error", (e) => {
-      const level = (this as any)._getLevelFromZ(coords);
-      const message = i18next.t(($) => $.map.cesium.failedToObtain, {
-        x: coords.x,
-        y: coords.y,
-        level
-      });
-      this._requestImageError = TileProviderError.reportError(
-        this._requestImageError!, // TODO: Cesium type definitions incorrectly forbid undefined
-        this.imageryProvider,
-        this.imageryProvider.errorEvent,
-        message,
-        coords.x,
-        coords.y,
-        level,
-        e as any
-        // TODO: bring terriajs-cesium retry logic to cesium
-        //doRequest
-      );
-    });
+    L.DomEvent.on(tile, "error", (e) => this._reportTileError(coords, e));
 
     return tile;
+  }
+
+  protected _reportTileError(coords: L.Coords, e: unknown) {
+    const level = this._getLevelFromZ(coords);
+    const message = i18next.t(($) => $.map.cesium.failedToObtain, {
+      x: coords.x,
+      y: coords.y,
+      level
+    });
+    this._requestImageError = TileProviderError.reportError(
+      this._requestImageError!, // TODO: Cesium type definitions incorrectly forbid undefined
+      this.imageryProvider,
+      this.imageryProvider.errorEvent,
+      message,
+      coords.x,
+      coords.y,
+      level,
+      e as any
+      // TODO: bring terriajs-cesium retry logic to cesium
+      //doRequest
+    );
   }
 
   getTileUrl(tilePoint: L.Coords): string {

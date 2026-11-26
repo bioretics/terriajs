@@ -5,11 +5,12 @@ import MenuItem from "terriajs/lib/ReactViews/StandardUserInterface/customizable
 import StandardUserInterface from "terriajs/lib/ReactViews/StandardUserInterface/StandardUserInterface";
 import packageJson from "../../package.json";
 import version from "../../version";
+import Variables from "../Styles/variables.scss";
+import "./global.scss";
 
-export const TerriaUserInterface = ({ terria, viewState, themeOverrides }) => {
+export const TerriaUserInterface = ({ terria, viewState }) => {
   // Print version to console
   console.log("rer3d-map v." + packageJson.version);
-
   const relatedMaps = viewState.terria.configParameters.relatedMaps;
   const aboutButtonHrefUrl =
     viewState.terria.configParameters.aboutButtonHrefUrl;
@@ -18,7 +19,7 @@ export const TerriaUserInterface = ({ terria, viewState, themeOverrides }) => {
     <StandardUserInterface
       terria={terria}
       viewState={viewState}
-      themeOverrides={themeOverrides}
+      themeOverrides={Variables}
       version={version}
     >
       <MenuLeft>
@@ -54,6 +55,5 @@ export const TerriaUserInterface = ({ terria, viewState, themeOverrides }) => {
 
 TerriaUserInterface.propTypes = {
   terria: PropTypes.object.isRequired,
-  viewState: PropTypes.object.isRequired,
-  themeOverrides: PropTypes.object
+  viewState: PropTypes.object.isRequired
 };

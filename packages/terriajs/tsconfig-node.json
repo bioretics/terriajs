@@ -6,5 +6,8 @@
     "outDir": "dist",
     "types": ["terriajs-cesium"]
   },
-  "include": ["./lib/**/*"]
+  "include": ["./lib/**/*"],
+  // The new UI runs in the browser only, built by an app's webpack once the
+  // design system is built, so it isn't part of the node build
+  "exclude": ["./lib/UI/**"]
 }

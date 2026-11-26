@@ -34,6 +34,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # The steps below run terriajs' tools directly, not through turbo, so the
+      # packages it depends on, such as the design system, are built here first
+      - name: Build TerriaJS dependencies
+        run: pnpm exec turbo run build --filter="terriajs^..."
+
       - name: Check formatting with oxfmt
         run: pnpm format:check
 
@@ -42,6 +47,16 @@ jobs:
       # is stale — run `pnpm sync-readme` after editing the package README.
       - name: Check README parity
         run: pnpm sync-readme && git diff --exit-code -- README.md
+
+      # The new UI (lib/UI): its CSS lint, and its Vitest tests in Chromium
+      - name: Lint the new UI's CSS
+        run: pnpm --filter terriajs lint:css
+
+      - name: Install the new UI tests' browser
+        run: pnpm --filter terriajs exec playwright install --with-deps chromium
+
+      - name: Test the new UI
+        run: pnpm --filter terriajs test:ui
 
       - name: Type-check TerriaMap
         run: pnpm --filter terriajs-map typecheck
