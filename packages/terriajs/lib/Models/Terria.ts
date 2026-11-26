@@ -95,6 +95,7 @@ import { ErrorServiceProvider } from "./ErrorServiceProviders/ErrorService";
 import StubErrorServiceProvider from "./ErrorServiceProviders/StubErrorServiceProvider";
 import TerriaFeature from "./Feature/Feature";
 import GlobeOrMap from "./GlobeOrMap";
+import { observeGlobeTranslucency } from "./GlobeTranslucency/syncGlobeTranslucencyState";
 import IElementConfig from "./IElementConfig";
 import InitSource, {
   InitSourceData,
@@ -439,10 +440,15 @@ export default class Terria {
 
   @observable depthTestAgainstTerrainEnabled = false;
 
+  /** Uniform opacity of the 3D terrain/globe surface (0–1). Imagery basemap opacity is separate. */
+  @observable terrainOpacity = 1.0;
+
   @observable globeTranslucencyEnabled = false;
 
   /** ID of the layer that currently owns globe clipping (one at a time). */
   @observable activeGlobeClippingItemId: string | undefined = undefined;
+
+  private readonly _disposeGlobeTranslucencyObserver: () => void;
 
   @observable enableCollisionDetection = true;
 
@@ -592,6 +598,8 @@ export default class Terria {
       },
       { scheduler: (run) => run() }
     );
+
+    this._disposeGlobeTranslucencyObserver = observeGlobeTranslucency(this);
   }
 
   /** Raise error to user.
@@ -1145,6 +1153,13 @@ export default class Terria {
     if (!isNaN(baseMaximumScreenSpaceError)) {
       this.setBaseMaximumScreenSpaceError(baseMaximumScreenSpaceError);
     }
+
+    const terrainOpacity = parseFloat(
+      this.getLocalProperty("terrainOpacity")?.toString() || ""
+    );
+    if (!isNaN(terrainOpacity) && terrainOpacity >= 0 && terrainOpacity <= 1) {
+      this.setTerrainOpacity(terrainOpacity);
+    }
   }
 
   @action
@@ -1155,6 +1170,11 @@ export default class Terria {
   @action
   setBaseMaximumScreenSpaceError(baseMaximumScreenSpaceError: number): void {
     this.baseMaximumScreenSpaceError = baseMaximumScreenSpaceError;
+  }
+
+  @action
+  setTerrainOpacity(terrainOpacity: number): void {
+    this.terrainOpacity = Math.min(1, Math.max(0, terrainOpacity));
   }
 
   async loadPersistedOrInitBaseMap(): Promise<void> {
@@ -1967,6 +1987,13 @@ export default class Terria {
         if (isJsonBoolean(initData.settings.depthTestAgainstTerrainEnabled)) {
           this.depthTestAgainstTerrainEnabled =
             initData.settings.depthTestAgainstTerrainEnabled;
+        }
+        if (isJsonNumber(initData.settings.terrainOpacity)) {
+          this.setTerrainOpacity(initData.settings.terrainOpacity);
+          this.setLocalProperty(
+            "terrainOpacity",
+            this.terrainOpacity.toString()
+          );
         }
         if (isJsonBoolean(initData.settings.storyAutoStart)) {
           this._storyAutoStartFromInitSource = initData.settings.storyAutoStart;

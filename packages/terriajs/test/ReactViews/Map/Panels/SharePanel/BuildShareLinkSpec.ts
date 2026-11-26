@@ -544,6 +544,7 @@ describe("BuildShareLink", function () {
       await terria.mainViewer.setBaseMap(testBaseMap);
       terria.terrainSplitDirection = SplitDirection.LEFT;
       terria.depthTestAgainstTerrainEnabled = true;
+      terria.setTerrainOpacity(0.6);
 
       const shareLink = buildShareLink(terria, viewState);
       const params = decodeAndParseStartHash(shareLink);
@@ -557,7 +558,8 @@ describe("BuildShareLink", function () {
         alwaysShowTimeline: true,
         baseMapId: "test-basemap",
         terrainSplitDirection: -1,
-        depthTestAgainstTerrainEnabled: true
+        depthTestAgainstTerrainEnabled: true,
+        terrainOpacity: 0.6
       });
     });
   });

@@ -165,7 +165,9 @@
       "globeTranslucencyEnabled": "Da vicino il terreno è trasparente",
       "globeTranslucencyEnabledTitle": "Se attivo, il terreno diventa trasparente man mano che la camera gli si avvicina, permettendo di vedere le caratteristiche sottostanti",
       "enableCollisionDetection": "Evita che la camera vada sotto il terreno",
-      "enableCollisionDetectionTitle": "Se attivo, evita che la camera possa andare sotto il terreno. In casi particolari, in presenza di elementi nel sottosuolo, può essere utile scendere con la visualizzazione sotto il terreno."
+      "enableCollisionDetectionTitle": "Se attivo, evita che la camera possa andare sotto il terreno. In casi particolari, in presenza di elementi nel sottosuolo, può essere utile scendere con la visualizzazione sotto il terreno.",
+      "terrainOpacity": "Opacità terreno:",
+      "terrainOpacityTitle": "Regola la trasparenza generale della superficie del terreno in 3D"
     }
   },
   "toolsPanel": {

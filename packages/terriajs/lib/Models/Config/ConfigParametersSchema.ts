@@ -259,6 +259,10 @@ export const ConfigParametersSchema = z.strictObject({
    */
   disableBaseMapOpacityControl: z.boolean(),
   /**
+   * True to disable the terrain opacity slider in the map settings panel.
+   */
+  disableTerrainOpacityControl: z.boolean(),
+  /**
    * Zoom preview map on previewed item
    */
   zoomMapOnPreviewedItem: z.boolean(),
@@ -647,6 +651,7 @@ export const CONFIG_DEFAULTS: z.output<typeof ConfigParametersSchema> = {
   disableShareEmbed: false,
   disableUserAddedData: false,
   disableBaseMapOpacityControl: false,
+  disableTerrainOpacityControl: false,
   zoomMapOnPreviewedItem: false,
   cesiumIonDisableDefaultToken: false,
 

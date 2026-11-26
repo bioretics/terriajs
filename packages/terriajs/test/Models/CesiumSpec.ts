@@ -32,6 +32,7 @@ import GeoJsonCatalogItem from "../../lib/Models/Catalog/CatalogItems/GeoJsonCat
 import CatalogMemberFactory from "../../lib/Models/Catalog/CatalogMemberFactory";
 import WebMapServiceCatalogItem from "../../lib/Models/Catalog/Ows/WebMapServiceCatalogItem";
 import Cesium from "../../lib/Models/Cesium";
+import { attachGlobeTranslucencySync } from "../../lib/Models/GlobeTranslucency/syncGlobeTranslucencyState";
 import CommonStrata from "../../lib/Models/Definition/CommonStrata";
 import CreateModel from "../../lib/Models/Definition/CreateModel";
 import createStratumInstance from "../../lib/Models/Definition/createStratumInstance";
@@ -62,6 +63,7 @@ describeIfSupported("Cesium Model", function () {
   let terriaViewer: TerriaViewer;
   let container: HTMLElement;
   let cesium: Cesium;
+  let disposeGlobeTranslucencySync: (() => void) | undefined;
   let terriaProgressEvt: jasmine.Spy;
   let viewerItems: IObservableValue<MappableMixin.Instance[]>;
 
@@ -84,6 +86,7 @@ describeIfSupported("Cesium Model", function () {
     terriaProgressEvt = spyOn(terria.tileLoadProgressEvent, "raiseEvent");
 
     cesium = new Cesium(terriaViewer, container);
+    disposeGlobeTranslucencySync = attachGlobeTranslucencySync(cesium);
 
     // TODO: some specs results in calls to ION api for fetching terrain which
     // we should avoid. Ideally we do this after splitting terrain handling
@@ -91,6 +94,8 @@ describeIfSupported("Cesium Model", function () {
   });
 
   afterEach(function () {
+    disposeGlobeTranslucencySync?.();
+    disposeGlobeTranslucencySync = undefined;
     cesium.destroy();
     document.body.removeChild(container);
   });
@@ -1080,6 +1085,49 @@ describeIfSupported("Cesium Model", function () {
 
       baseMap.setTrait(CommonStrata.user, "opacity", -1);
       expect(cesium.scene.globe.translucency.enabled).toBe(true);
+    });
+
+    it("keeps the globe translucent when base map returns to opaque but terrain opacity is below 1", async function () {
+      baseMap.setTrait(CommonStrata.user, "opacity", 0.5);
+      await terriaViewer.setBaseMap(baseMap);
+
+      terria.setTerrainOpacity(0.5);
+      baseMap.setTrait(CommonStrata.user, "opacity", 1);
+
+      const globe = cesium.scene.globe;
+      expect(globe.translucency.enabled).toBe(true);
+      expect(globe.translucency.frontFaceAlpha).toBe(0.5);
+    });
+  });
+
+  describe("terrain opacity", function () {
+    it("leaves the globe opaque at the default terrain opacity", function () {
+      const globe = cesium.scene.globe;
+      expect(globe.translucency.enabled).toBe(false);
+      expect(globe.translucency.frontFaceAlpha).toBe(1);
+    });
+
+    it("applies uniform translucency when terrain opacity is below 1", function () {
+      terria.setTerrainOpacity(0.5);
+
+      const globe = cesium.scene.globe;
+      expect(globe.translucency.enabled).toBe(true);
+      expect(globe.translucency.frontFaceAlpha).toBe(0.5);
+      expect(globe.translucency.backFaceAlpha).toBe(0);
+      expect(globe.showGroundAtmosphere).toBe(true);
+      expect(globe.baseColor).toEqual(Color.BLUE);
+    });
+
+    it("restores opaque globe settings when terrain opacity returns to 1", function () {
+      terria.setTerrainOpacity(0.5);
+      terria.setTerrainOpacity(1);
+
+      const globe = cesium.scene.globe;
+      expect(globe.translucency.enabled).toBe(false);
+      expect(globe.translucency.frontFaceAlpha).toBe(1);
+      expect(globe.translucency.backFaceAlpha).toBe(1);
+      expect(globe.showGroundAtmosphere).toBe(true);
+      expect(globe.baseColor).toEqual(Color.BLUE);
     });
   });
 

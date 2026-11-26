@@ -331,7 +331,9 @@
       "globeTranslucencyEnabled": "Terrain became translucent approaching the surface",
       "globeTranslucencyEnabledTitle": "Check to start making the terrain become translucent when the camera is close to the surface",
       "enableCollisionDetection": "Avoid camera collisions with the terrain",
-      "enableCollisionDetectionTitle": "Check to avoid the camera collisions with the terrain"
+      "enableCollisionDetectionTitle": "Check to avoid the camera collisions with the terrain",
+      "terrainOpacity": "Terrain opacity:",
+      "terrainOpacityTitle": "Adjust overall transparency of the 3D terrain surface"
     }
   },
   "feedback": {

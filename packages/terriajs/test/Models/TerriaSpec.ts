@@ -1714,7 +1714,8 @@ describe("TerriaSpec", function () {
             alwaysShowTimeline: true,
             baseMapId: "basemap-natural-earth-II",
             terrainSplitDirection: -1,
-            depthTestAgainstTerrainEnabled: true
+            depthTestAgainstTerrainEnabled: true,
+            terrainOpacity: 0.75
           }
         }
       });
@@ -1732,6 +1733,7 @@ describe("TerriaSpec", function () {
 
       expect(terria.terrainSplitDirection).toBe(SplitDirection.LEFT);
       expect(terria.depthTestAgainstTerrainEnabled).toBeTruthy();
+      expect(terria.terrainOpacity).toBe(0.75);
     });
   });
 

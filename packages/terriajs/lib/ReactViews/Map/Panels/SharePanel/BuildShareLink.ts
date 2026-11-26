@@ -399,7 +399,8 @@ function addViewSettings(
     alwaysShowTimeline: terria.timelineStack.alwaysShowingTimeline,
     baseMapId: viewer.baseMap?.uniqueId,
     terrainSplitDirection: terria.terrainSplitDirection,
-    depthTestAgainstTerrainEnabled: terria.depthTestAgainstTerrainEnabled
+    depthTestAgainstTerrainEnabled: terria.depthTestAgainstTerrainEnabled,
+    terrainOpacity: terria.terrainOpacity
   };
 
   if (isDefined(viewState)) {
