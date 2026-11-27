@@ -420,6 +420,14 @@
       "serviceErrorMessage": "Questo servizio non ha dettagli disponibili.",
       "dataSourceErrorMessage": "Questa fonte di dati non ha dettagli disponibili."
     },
+    "waterSurface": {
+      "enableDepthTest": "**Nota:** per vedere solo le zone allagate, attiva «Il terreno nasconde caratteristiche sotterranee» nelle impostazioni della mappa.",
+      "errorTitle": "Impossibile simulare l'allagamento",
+      "noRiverLine": "I dati del corso d'acqua non contengono linee. Usa un file GeoJSON con una LineString o una MultiLineString.",
+      "noSeaArea": "L'area da allagare non è definita. Imposta il `rectangle` del layer.",
+      "noTerrain": "**Nota:** il terreno 3D non è attivo, quindi il profilo del fiume non è stato ricavato e l'acqua è disegnata a quota 0. Attiva il terreno nelle impostazioni della mappa.",
+      "waterRise": "Innalzamento (m)"
+    },
     "geoJson": {
       "firefox": "Mozilla Firefox",
       "chrome": "Google Chrome",

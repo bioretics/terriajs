@@ -1208,6 +1208,14 @@
       "error": "Error",
       "unableToRetrieve": "Unable to retrieve feature details from:\n\n{{url}}"
     },
+    "waterSurface": {
+      "enableDepthTest": "**Note:** to see only the flooded areas, turn on \"Terrain hides underground features\" in the map settings.",
+      "errorTitle": "Unable to simulate the flood",
+      "noRiverLine": "The river data contains no lines. Use a GeoJSON file with a LineString or MultiLineString.",
+      "noSeaArea": "The area to flood is not defined. Set the item's `rectangle`.",
+      "noTerrain": "**Note:** 3D terrain is off, so the river profile could not be read and the water is drawn at height 0. Turn terrain on in the map settings.",
+      "waterRise": "Water rise (m)"
+    },
     "gpx": {
       "name": "GPX",
       "dataSourceErrorMessage": "This data source does not have any details available.",
