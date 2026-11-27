@@ -1,0 +1,43 @@
+{
+  "viewerMode": "3d",
+  "settings": {
+    "depthTestAgainstTerrainEnabled": true
+  },
+  "catalog": [
+    {
+      "type": "group",
+      "name": "POC allagamenti",
+      "isOpen": true,
+      "members": [
+        {
+          "type": "river-flood",
+          "id": "poc-allagamenti-secchia",
+          "name": "Piena del Secchia (Rubiera - Modena nord)",
+          "url": "data/poc_allagamenti/secchia.geojson",
+          "waterRise": 2,
+          "halfWidth": 1000,
+          "description": "Simulazione visiva dell'innalzamento del Secchia: la superficie dell'acqua segue il profilo del fiume ricavato dal terreno, alzato del valore scelto. Non è un modello idraulico: allaga ogni zona più bassa del livello entro la larghezza indicata, anche se non collegata al fiume (per esempio dietro gli argini).",
+          "info": [
+            {
+              "name": "Fonte",
+              "content": "Asse del corso d'acqua: DBTR Regione Emilia-Romagna, layer FIU_Corso_di_acqua_naturale."
+            }
+          ]
+        },
+        {
+          "type": "sea-level-rise",
+          "id": "poc-allagamenti-mare-ravenna",
+          "name": "Innalzamento del mare (Ravenna - Comacchio)",
+          "rectangle": {
+            "west": 12.15,
+            "south": 44.35,
+            "east": 12.4,
+            "north": 44.75
+          },
+          "waterRise": 1,
+          "description": "Simulazione visiva dell'innalzamento del livello del mare. Il livello medio del mare è calcolato con il geoide EGM96 al centro dell'area. Tutte le zone più basse del livello vengono allagate, comprese quelle protette da argini."
+        }
+      ]
+    }
+  ]
+}
