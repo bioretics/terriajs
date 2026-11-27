@@ -1,0 +1,22 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "name": "straight river" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.0, 44.0],
+          [11.005, 44.0],
+          [11.01, 44.0]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "name": "gauge" },
+      "geometry": { "type": "Point", "coordinates": [11.0, 44.0] }
+    }
+  ]
+}
