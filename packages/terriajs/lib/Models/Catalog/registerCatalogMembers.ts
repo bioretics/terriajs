@@ -53,6 +53,8 @@ import ArcGisPortalItemReference from "./Esri/ArcGisPortalItemReference";
 import ArcGisTerrainCatalogItem from "./Esri/ArcGisTerrainCatalogItem";
 import AssImpCatalogItem from "./Gltf/AssImpCatalogItem";
 import GltfCatalogItem from "./Gltf/GltfCatalogItem";
+import RiverFloodCatalogItem from "./CatalogItems/RiverFloodCatalogItem";
+import SeaLevelRiseCatalogItem from "./CatalogItems/SeaLevelRiseCatalogItem";
 import GtfsCatalogItem from "./Gtfs/GtfsCatalogItem";
 import CswCatalogGroup from "./Ows/CswCatalogGroup";
 import SensorObservationServiceCatalogItem from "./Ows/SensorObservationServiceCatalogItem";
@@ -105,6 +107,14 @@ export default function registerCatalogMembers() {
     WebMapTileServiceCatalogItem
   );
   CatalogMemberFactory.register(GltfCatalogItem.type, GltfCatalogItem);
+  CatalogMemberFactory.register(
+    RiverFloodCatalogItem.type,
+    RiverFloodCatalogItem
+  );
+  CatalogMemberFactory.register(
+    SeaLevelRiseCatalogItem.type,
+    SeaLevelRiseCatalogItem
+  );
   CatalogMemberFactory.register(GeoJsonCatalogItem.type, GeoJsonCatalogItem);
   CatalogMemberFactory.register(GpxCatalogItem.type, GpxCatalogItem);
   CatalogMemberFactory.register(GeoRssCatalogItem.type, GeoRssCatalogItem);
