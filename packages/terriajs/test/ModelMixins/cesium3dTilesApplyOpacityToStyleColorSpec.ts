@@ -4,13 +4,13 @@ import "../SpecMain";
 describe("applyOpacityToStyleColor", function () {
   it("wraps a non-CSS color expression", function () {
     expect(applyOpacityToStyleColor("vec4(${Height})")).toBe(
-      "color((vec4(${Height})), ${opacity})"
+      "color(vec4(${Height}), ${opacity})"
     );
   });
 
   it("wraps color() expressions", function () {
     expect(applyOpacityToStyleColor("color('white')")).toBe(
-      "color((color('white')), ${opacity})"
+      "color('white', ${opacity})"
     );
   });
 
@@ -35,7 +35,7 @@ describe("applyOpacityToStyleColor", function () {
       })
     ).toEqual({
       conditions: [
-        ["true", "color((color('dodgerblue')), ${opacity})"],
+        ["true", "color('dodgerblue', ${opacity})"],
         ["${Height} > 100", "color('#ff0000', ${opacity})"]
       ]
     });

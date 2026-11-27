@@ -4,6 +4,9 @@ import JsonValue, { isJsonObject, JsonArray } from "../Core/Json";
 
 const OPACITY_EXPRESSION = "${opacity}";
 
+/** Single-argument `color('literal')` / `color("literal")` from the 3D Tiles style language. */
+const SINGLE_ARG_COLOR_LITERAL = /^color\s*\(\s*(['"])([^'"]*)\1\s*\)\s*$/;
+
 function expressionReferencesOpacity(expr: string): boolean {
   return expr.includes(OPACITY_EXPRESSION);
 }
@@ -18,7 +21,16 @@ function wrapColorExpression(expr: string): string {
     return `color('${expr}', ${OPACITY_EXPRESSION})`;
   }
 
-  return `color((${expr}), ${OPACITY_EXPRESSION})`;
+  const literalColor = expr.match(SINGLE_ARG_COLOR_LITERAL);
+  if (literalColor !== null) {
+    const quote = literalColor[1];
+    const name = literalColor[2];
+    return `color(${quote}${name}${quote}, ${OPACITY_EXPRESSION})`;
+  }
+
+  // Cesium `color()` expects a string/CSS literal or expression as the first arg, not
+  // another Color (nested `color((color('red')), …)` throws at runtime: color.trim is not a function).
+  return `color(${expr}, ${OPACITY_EXPRESSION})`;
 }
 
 /**

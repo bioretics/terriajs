@@ -103,7 +103,7 @@ describe("Cesium3DTilesCatalogItemSpec", function () {
     it("creates the style correctly", function () {
       expect(style.show._expression).toBe("${Height} > 30");
       expect(style.color._expression).toBe(
-        "color((vec4(${Height})), ${opacity})"
+        "color(vec4(${Height}), ${opacity})"
       );
     });
 
@@ -128,9 +128,7 @@ describe("Cesium3DTilesCatalogItemSpec", function () {
 
       style = item.cesiumTileStyle;
 
-      expect(style.color._expression).toBe(
-        "color((color('cyan')), ${opacity})"
-      );
+      expect(style.color._expression).toBe("color('cyan', ${opacity})");
     });
 
     it("applies opacity to color conditions", function () {
@@ -144,7 +142,7 @@ describe("Cesium3DTilesCatalogItemSpec", function () {
       style = item.cesiumTileStyle;
 
       expect(style.color._conditions).toEqual([
-        ["true", "color((color('#fff')), ${opacity})"]
+        ["true", "color('#fff', ${opacity})"]
       ]);
     });
 
