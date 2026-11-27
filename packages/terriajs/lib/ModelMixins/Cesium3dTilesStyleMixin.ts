@@ -5,8 +5,8 @@ import Model, { BaseModel } from "../Models/Definition/Model";
 import Cesium3dTilesTraits from "../Traits/TraitsClasses/Cesium3dTilesTraits";
 import clone from "terriajs-cesium/Source/Core/clone";
 import { computed, makeObservable, override, runInAction, toJS } from "mobx";
-import Color from "terriajs-cesium/Source/Core/Color";
 import LoadableStratum from "../Models/Definition/LoadableStratum";
+import { applyOpacityToStyleColor } from "./cesium3dTilesApplyOpacityToStyleColor";
 import StratumOrder from "../Models/Definition/StratumOrder";
 
 class Cesium3dTilesStyleStratum extends LoadableStratum(Cesium3dTilesTraits) {
@@ -138,12 +138,8 @@ function Cesium3dTilesStyleMixin<T extends AbstractConstructor<BaseType>>(
           "(${COLOR}.b === undefined ? 1 : ${COLOR}.b) * 255," +
           "${opacity}" +
           "))";
-      } else if (typeof style.color === "string") {
-        // Check if the color specified is just a css color
-        const cssColor = Color.fromCssColorString(style.color);
-        if (isDefined(cssColor)) {
-          style.color = `color('${style.color}', \${opacity})`;
-        }
+      } else {
+        style.color = applyOpacityToStyleColor(style.color);
       }
 
       if (isDefined(this.showExpressionFromFilters)) {

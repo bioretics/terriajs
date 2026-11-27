@@ -102,7 +102,9 @@ describe("Cesium3DTilesCatalogItemSpec", function () {
 
     it("creates the style correctly", function () {
       expect(style.show._expression).toBe("${Height} > 30");
-      expect(style.color._expression).toBe("vec4(${Height})");
+      expect(style.color._expression).toBe(
+        "color((vec4(${Height})), ${opacity})"
+      );
     });
 
     it("reflects changes to the catalog item's opacity in its style", async function () {
@@ -116,6 +118,46 @@ describe("Cesium3DTilesCatalogItemSpec", function () {
       await item.loadMapItems();
 
       expect(style.color._expression).toBe("color('#ff0000', ${opacity})");
+    });
+
+    it("applies opacity to non-CSS color expressions", function () {
+      item.setTrait("definition", "style", {
+        color: "color('cyan')"
+      });
+      item.setTrait("user", "opacity", 0.6);
+
+      style = item.cesiumTileStyle;
+
+      expect(style.color._expression).toBe(
+        "color((color('cyan')), ${opacity})"
+      );
+    });
+
+    it("applies opacity to color conditions", function () {
+      item.setTrait("definition", "style", {
+        color: {
+          conditions: [["true", "color('#fff')"]]
+        }
+      });
+      item.setTrait("user", "opacity", 0.5);
+
+      style = item.cesiumTileStyle;
+
+      expect(style.color._conditions).toEqual([
+        ["true", "color((color('#fff')), ${opacity})"]
+      ]);
+    });
+
+    it("uses the point-cloud color path when style has no color", function () {
+      item.setTrait("definition", "style", {
+        show: "true"
+      });
+      item.setTrait("user", "opacity", 0.7);
+
+      style = item.cesiumTileStyle;
+
+      expect(style.color._expression).toContain("${COLOR}");
+      expect(style.color._expression).toContain("${opacity}");
     });
 
     describe("when filters are specified", function () {
